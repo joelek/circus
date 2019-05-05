@@ -56,7 +56,7 @@ let send_data = (file, request, response) => {
   if ((parts2 = /^bytes\=((?:[0-9])|(?:[1-9][0-9]+))\-((?:[0-9])|(?:[1-9][0-9]+))?$/.exec(request.headers.range)) != null) {
     let offset = parseInt(parts2[1]);
     let offset2 = parts2[2] ? parseInt(parts2[2]) : null;
-    if (offset2 === null || offset2 - offset + 1 > 1048576) {
+    if (offset2 === null) {
       offset2 = Math.min(offset + 1048576, size) - 1;
     }
     if (offset >= size || offset2 >= size || offset2 < offset) {
@@ -72,10 +72,16 @@ let send_data = (file, request, response) => {
       'Content-Type': file.mime,
       'Content-Length': `${length}`
     });
-    let buffer = Buffer.alloc(length);
-    fs.readSync(fd, buffer, 0, length, offset);
-    response.end(buffer, 'binary');
-    console.log(`sending bytes ${offset} to ${offset2}`);
+    var s = fs.createReadStream(filename, {
+      start: offset,
+      end: offset2
+    });
+    s.on('open', function () {
+      s.pipe(response);
+    });
+    s.on('error', function (error) {
+      response.end();
+    });
   } else {
     var s = fs.createReadStream(filename);
     s.on('open', function () {
