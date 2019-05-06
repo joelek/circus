@@ -45,7 +45,7 @@ let pick_from_queue = () => {
     });
   } else {
     setTimeout(() => {
-      queue = generate_queue([], '../queue/');
+      queue = generate_queue([], '../queue/video/');
       pick_from_queue();
     }, 1000*10);
   }
