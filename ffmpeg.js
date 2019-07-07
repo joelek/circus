@@ -120,7 +120,7 @@ let interlace_detect = (path, cb) => {
     let re;
     let parts;
     let imode = 'unknown';
-    re = /\[Parsed_idet_[0-9]+\s+@\s+[0-9a-fA-F]{16}\]\s+Single\s+frame\s+detection:\s+TFF:\s*([0-9]+)\s+BFF:\s*([0-9]+)\s+Progressive:\s*([0-9]+)\s+Undetermined:\s*([0-9]+)/;
+    re = /\[Parsed_idet_[0-9]+\s+@\s+[0-9a-fA-F]{16}\]\s+Multi\s+frame\s+detection:\s+TFF:\s*([0-9]+)\s+BFF:\s*([0-9]+)\s+Progressive:\s*([0-9]+)\s+Undetermined:\s*([0-9]+)/;
     parts = re.exec(stderr);
     if (parts !== null) {
       let tff = parseInt(parts[1]);
