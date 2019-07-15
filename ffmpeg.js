@@ -167,7 +167,7 @@ let crop_detect = (path, picture, cb) => {
       y1s[y1]++;
       y2s[y2]++;
     }
-    if (samples.length === 0) {
+    if (samples === 0) {
       throw new Error();
     }
     let crop = {
