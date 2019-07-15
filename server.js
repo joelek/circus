@@ -121,7 +121,7 @@ let httpsServer = https.createServer({
   })
   .on('request', (request, response) => {
     console.log(`${new Date().toUTCString()}:${request.method}:${request.url}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, 2));
-    if (['joels.local', 'ap.joelek.se'].indexOf(request.headers.host) === -1) {
+    if (!/ap[.]joelek[.]se(:[0-9]+)?$/.test(request.headers.host)) {
       console.log('dropped', JSON.stringify(request.headers, null, 2));
       response.writeHead(400);
       response.end();
