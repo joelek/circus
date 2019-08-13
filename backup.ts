@@ -79,8 +79,9 @@ let save_db = (filename: string, db: Record<string, any>, cb: { (): void }) => {
   cb();
 };
 
-let analyze = (dir: string) => {
-	libcp.exec(`makemkvcon info file:${dir} --robot --minlength=0`, (error, stdout, stderr) => {
+let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
+	libcp.exec(`makemkvcon info disc:0 --robot --minlength=0`, (error, stdout, stderr) => {
+		let content = new Array<Content>();
 		let lines = stdout.split(/\r?\n/);
 		lines.map((line) => {
 			let parts = line.split(':');
@@ -134,6 +135,14 @@ let analyze = (dir: string) => {
 					process.stdout.write(` unhandled:${line}\n`);
 				}
 			} else if (type === 'TINFO') {
+				if (!content[args[0]]) {
+					content[args[0]] = {
+						"type": "unknown",
+						"selector": "",
+						"title": "",
+						"year": 0
+					}
+				}
 				process.stdout.write(`title:${args[0]} attribute:${args[1]}`);
 				if (false) {
 				} else if (args[1] === 8) {
@@ -144,10 +153,13 @@ let analyze = (dir: string) => {
 					process.stdout.write(` bytes:${args[3]}\n`);
 				} else if (args[1] === 24) {
 					process.stdout.write(` dvdtitle:${args[3]}\n`);
+					content[args[0]].selector = `${args[3]}:`
 				} else if (args[1] === 25) {
 					process.stdout.write(` segment_count:${args[3]}\n`);
 				} else if (args[1] === 26) {
+					let str = args[3].split(',').map((run) => run.split('-').map(f => `@${f}`).join('-')).join(',');
 					process.stdout.write(` cells:${args[3]}\n`);
+					content[args[0]].selector += str;
 				} else if (args[1] === 27) {
 					process.stdout.write(` filename:${args[3]}\n`);
 				} else {
@@ -157,6 +169,7 @@ let analyze = (dir: string) => {
 				process.stdout.write(`${line}\n`);
 			}
 		});
+		cb(content);
 	});
 };
 
@@ -167,29 +180,59 @@ let analyze = (dir: string) => {
 
 let dir = 'F:\\VIDEO_TS'
 
-compute_hash(dir, (hash) => {
-	let val = db[hash] as undefined | [ { dvdtitle: string, cells: string, title: string } ];
-	if (val) {
-		val.forEach((v) => {
-			let manual = v.dvdtitle + ':' + v.cells.split(',').map((run) => run.split('-').map(f => `@${f}`).join('-')).join(',');
+interface Content {
+	type: string,
+	selector: string,
+	title: string,
+	year: number
+}
+
+let get_content = (dir, cb: { (hash: string, c: Array<Content>): void }): void => {
+	compute_hash(dir, (hash) => {
+		let val = db[hash] as undefined | { type: string, content: Array<Content> };
+		if (val) {
+			cb(hash, val.content);
+		} else {
+			analyze(dir, (content) => {
+				db[hash] = {
+					type: "dvd",
+					content: content
+				};
+				save_db('../store/discdb.json', db, () => {
+					cb(hash, content);
+				});
+			});
+		}
+	});
+};
+
+get_content(dir, (hash, content) => {
+	let index = 0;
+	let done = () => {
+		process.exit();
+	};
+	let next = () => {
+		if (index < content.length) {
+			let ct = content[index];
 			let cp = libcp.spawn('makemkvcon', [
 				'mkv',
-				`file:${dir}`,
+				`disc:0`,
 				'',
-				`--manual=${manual}`,
+				`--manual=${ct.selector}`,
 				'--robot',
 				'../temp/'
 			]);
 			cp.stdout.pipe(process.stdout);
 			process.stdin.pipe(process.stdin);
-			cp.on('close', (code) => {
-				let title = encodeURIComponent(v.title);
-				libfs.rename('../temp/title_t00.mkv', `../temp/${title}.mkv`, () => {
-					process.exit(code);
+			cp.on('close', () => {
+				libfs.rename(`../temp/title_t${('00' + index).slice(-2)}.mkv`, `../temp/${hash}.${('000' + index).slice(-3)}.mkv`, () => {
+					index++;
+					next();
 				});
 			});
-		});
-	} else {
-		analyze(dir)
-	}
+		} else {
+			done();
+		}
+	};
+	next();
 });
