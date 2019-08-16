@@ -4,6 +4,8 @@ import * as libpath from 'path';
 import * as libcrypto from 'crypto';
 import * as librl from 'readline';
 
+// angles?
+
 let compute_hash = (root: string, cb: { (h: string): void }): void => {
 	let hash = libcrypto.createHash('sha256');
 	function async(root: string, cb: { (): void }): void {
@@ -127,6 +129,8 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 					process.stdout.write(` stream_delay_ms:${args[4]}\n`);
 				} else if (args[2] === 38) {
 					process.stdout.write(` default_flag:${args[4]}\n`);
+				} else if (args[2] === 39) {
+					process.stdout.write(` unknown:${args[4]}\n`);
 				} else if (args[2] === 40) {
 					process.stdout.write(` stereo:${args[4]}\n`);
 				} else if (args[2] === 42) {
@@ -137,10 +141,13 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 			} else if (type === 'TINFO') {
 				if (!content[args[0]]) {
 					content[args[0]] = {
-						"type": "unknown",
+						"type": "feature|episode|extra",
 						"selector": "",
 						"title": "",
-						"year": 0
+						"year": 0,
+						"show": "",
+						"season": 0,
+						"episode": 0
 					}
 				}
 				process.stdout.write(`title:${args[0]} attribute:${args[1]}`);
@@ -149,19 +156,28 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 					process.stdout.write(` chapters:${args[3]}\n`);
 				} else if (args[1] === 9) {
 					process.stdout.write(` length:${args[3]}\n`);
+					content[args[0]].title = args[3];
+				} else if (args[1] === 10) {
+					process.stdout.write(` bytes_friendly:${args[3]}\n`);
 				} else if (args[1] === 11) {
 					process.stdout.write(` bytes:${args[3]}\n`);
 				} else if (args[1] === 24) {
 					process.stdout.write(` dvdtitle:${args[3]}\n`);
-					content[args[0]].selector = `${args[3]}:`
+					content[args[0]].selector = `${args[3]}:`;
 				} else if (args[1] === 25) {
 					process.stdout.write(` segment_count:${args[3]}\n`);
 				} else if (args[1] === 26) {
-					let str = args[3].split(',').map((run) => run.split('-').map(f => `@${f}`).join('-')).join(',');
 					process.stdout.write(` cells:${args[3]}\n`);
-					content[args[0]].selector += str;
+					let ranges = args[3].split(',').map((run) => run.split('-').map(k => `@${k}`).join('-')).join(',');
+					content[args[0]].selector += ranges;
 				} else if (args[1] === 27) {
 					process.stdout.write(` filename:${args[3]}\n`);
+				} else if (args[1] === 30) {
+					process.stdout.write(` string:${args[3]}\n`);
+				} else if (args[1] === 31) {
+					process.stdout.write(` html:${args[3]}\n`);
+				} else if (args[1] === 33) {
+					process.stdout.write(` unknown:${args[3]}\n`);
 				} else {
 					process.stdout.write(` unhandled:${line}\n`);
 				}
@@ -173,18 +189,16 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 	});
 };
 
-
-
-
-
-
 let dir = 'F:\\VIDEO_TS'
 
 interface Content {
-	type: string,
-	selector: string,
-	title: string,
-	year: number
+	type: string;
+	selector: string;
+	title: string;
+	year: number;
+	show: string;
+	season: number;
+	episode: number;
 }
 
 let get_content = (dir, cb: { (hash: string, c: Array<Content>): void }): void => {
@@ -207,32 +221,22 @@ let get_content = (dir, cb: { (hash: string, c: Array<Content>): void }): void =
 };
 
 get_content(dir, (hash, content) => {
-	let index = 0;
-	let done = () => {
-		process.exit();
-	};
-	let next = () => {
-		if (index < content.length) {
-			let ct = content[index];
-			let cp = libcp.spawn('makemkvcon', [
-				'mkv',
-				`disc:0`,
-				'',
-				`--manual=${ct.selector}`,
-				'--robot',
-				'../temp/'
-			]);
-			cp.stdout.pipe(process.stdout);
-			process.stdin.pipe(process.stdin);
-			cp.on('close', () => {
-				libfs.rename(`../temp/title_t${('00' + index).slice(-2)}.mkv`, `../temp/${hash}.${('000' + index).slice(-3)}.mkv`, () => {
-					index++;
-					next();
-				});
-			});
-		} else {
-			done();
+	let content_to_rip = content.filter((ct) => ['feature', 'episode'].indexOf(ct.type) >= 0);
+	let selector = content_to_rip.map(ct => ct.selector).join(' ');
+	let cp = libcp.spawn('makemkvcon', [
+		'mkv',
+		`disc:0`,
+		'all',
+		`--manual=${selector}`,
+		'../temp/'
+	]);
+	cp.stdout.pipe(process.stdout);
+	process.stdin.pipe(process.stdin);
+	cp.on('close', () => {
+		for (let i = 0; i < content_to_rip.length; i++) {
+			let dvdtitle = content_to_rip[i].selector.split(':')[0];
+			libfs.renameSync(`../temp/title_t${('00' + i).slice(-2)}.mkv`, `../temp/${hash}.${('000' + dvdtitle).slice(-3)}.mkv`);
 		}
-	};
-	next();
+		process.exit();
+	});
 });
