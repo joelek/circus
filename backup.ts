@@ -130,6 +130,7 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 			let args = JSON.parse(`[${parts.join(':')}]`);
 			if (false) {
 			} else if (type === 'SINFO') {
+/*
 				process.stdout.write(`title:${args[0]} stream:${args[1]}`);
 				if (false) {
 				} else if (args[2] === 1) {
@@ -177,6 +178,7 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 				} else {
 					process.stdout.write(` unhandled:${line}\n`);
 				}
+*/
 			} else if (type === 'TINFO') {
 				if (!content[args[0]]) {
 					let type = a_type === 'show' ? 'episode' : a_type === 'movie' ? 'movie' : 'unknown';
