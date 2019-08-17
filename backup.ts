@@ -6,6 +6,45 @@ import * as librl from 'readline';
 
 // angles?
 
+let a_type = null;
+let a_show = '';
+let a_season = 0;
+let a_title = '';
+let a_year = 0;
+let a_min = 0;
+let a_max = Infinity;
+
+let length_to_seconds = (string: string): number => {
+	let parts;
+	if ((parts = /^([0-9]):([0-9][0-9]):([0-9][0-9])$/.exec(string)) != null) {
+		let h = Number.parseInt(parts[1]);
+		let m = Number.parseInt(parts[2]);
+		let s = Number.parseInt(parts[3]);
+		return (((h * 60) + m) * 60) + s;
+	}
+	return 0;
+};
+
+process.argv.slice(2).forEach((arg) => {
+	let parts;
+	if (false) {
+	} else if ((parts = /^--type=(show|movie)$/.exec(arg)) != null) {
+		a_type = parts[1];
+	} else if ((parts = /^--minlength=([0-9]+)$/.exec(arg)) != null) {
+		a_min = Number.parseInt(parts[1]);
+	} else if ((parts = /^--maxlength=([0-9]+)$/.exec(arg)) != null) {
+		a_max = Number.parseInt(parts[1]);
+	} else if ((parts = /^--show=(.+)$/.exec(arg)) != null) {
+		a_show = parts[1];
+	} else if ((parts = /^--title=(.+)$/.exec(arg)) != null) {
+		a_title = parts[1];
+	} else if ((parts = /^--season=([0-9]+)$/.exec(arg)) != null) {
+		a_season = Number.parseInt(parts[1]);
+	} else if ((parts = /^--year=([0-9]+)$/.exec(arg)) != null) {
+		a_year = Number.parseInt(parts[1]);
+	}
+});
+
 let compute_hash = (root: string, cb: { (h: string): void }): void => {
 	let hash = libcrypto.createHash('sha256');
 	function async(root: string, cb: { (): void }): void {
@@ -82,7 +121,7 @@ let save_db = (filename: string, db: Record<string, any>, cb: { (): void }) => {
 };
 
 let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
-	libcp.exec(`makemkvcon info disc:0 --robot --minlength=0`, (error, stdout, stderr) => {
+	libcp.exec(`makemkvcon info disc:0 --robot --minlength=${a_min}`, (error, stdout, stderr) => {
 		let content = new Array<Content>();
 		let lines = stdout.split(/\r?\n/);
 		lines.map((line) => {
@@ -140,13 +179,15 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 				}
 			} else if (type === 'TINFO') {
 				if (!content[args[0]]) {
+					let type = a_type === 'show' ? 'episode' : a_type === 'movie' ? 'movie' : 'unknown';
 					content[args[0]] = {
-						"type": "feature|episode|extra",
+						"type": type,
 						"selector": "",
-						"title": "",
-						"year": 0,
-						"show": "",
-						"season": 0,
+						"length": 0,
+						"title": a_title,
+						"year": a_year,
+						"show": a_show,
+						"season": a_season,
 						"episode": 0
 					}
 				}
@@ -156,7 +197,7 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 					process.stdout.write(` chapters:${args[3]}\n`);
 				} else if (args[1] === 9) {
 					process.stdout.write(` length:${args[3]}\n`);
-					content[args[0]].title = args[3];
+					content[args[0]].length = length_to_seconds(args[3]);
 				} else if (args[1] === 10) {
 					process.stdout.write(` bytes_friendly:${args[3]}\n`);
 				} else if (args[1] === 11) {
@@ -185,6 +226,7 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 				process.stdout.write(`${line}\n`);
 			}
 		});
+		content = content.filter((ct) => ct.length < a_max);
 		cb(content);
 	});
 };
@@ -194,6 +236,7 @@ let dir = 'F:\\VIDEO_TS'
 interface Content {
 	type: string;
 	selector: string;
+	length: number;
 	title: string;
 	year: number;
 	show: string;
@@ -221,7 +264,7 @@ let get_content = (dir, cb: { (hash: string, c: Array<Content>): void }): void =
 };
 
 get_content(dir, (hash, content) => {
-	let content_to_rip = content.filter((ct) => ['feature', 'episode'].indexOf(ct.type) >= 0);
+	let content_to_rip = content.filter((ct) => ['movie', 'episode'].indexOf(ct.type) >= 0);
 	let selector = content_to_rip.map(ct => ct.selector).join(' ');
 	let cp = libcp.spawn('makemkvcon', [
 		'mkv',
