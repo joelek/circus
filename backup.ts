@@ -184,6 +184,7 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 					let type = a_type === 'show' ? 'episode' : a_type === 'movie' ? 'movie' : 'unknown';
 					content[args[0]] = {
 						"type": type,
+						"filename": "title",
 						"selector": "",
 						"length": 0,
 						"title": a_title,
@@ -195,15 +196,20 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 				}
 				process.stdout.write(`title:${args[0]} attribute:${args[1]}`);
 				if (false) {
+				} else if (args[1] === 2) {
+					process.stdout.write(` filename_base:${args[3]}\n`);
+					content[args[0]].filename = args[3];
 				} else if (args[1] === 8) {
 					process.stdout.write(` chapters:${args[3]}\n`);
 				} else if (args[1] === 9) {
 					process.stdout.write(` length:${args[3]}\n`);
 					content[args[0]].length = length_to_seconds(args[3]);
 				} else if (args[1] === 10) {
-					process.stdout.write(` bytes_friendly:${args[3]}\n`);
+					process.stdout.write(` size:${args[3]}\n`);
 				} else if (args[1] === 11) {
 					process.stdout.write(` bytes:${args[3]}\n`);
+				} else if (args[1] === 16) {
+					process.stdout.write(` bluray_playlist:${args[3]}\n`);
 				} else if (args[1] === 24) {
 					process.stdout.write(` dvdtitle:${args[3]}\n`);
 					content[args[0]].selector = `${args[3]}:`;
@@ -215,6 +221,10 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 					content[args[0]].selector += ranges;
 				} else if (args[1] === 27) {
 					process.stdout.write(` filename:${args[3]}\n`);
+				} else if (args[1] === 28) {
+					process.stdout.write(` language_code:${args[3]}\n`);
+				} else if (args[1] === 29) {
+					process.stdout.write(` language:${args[3]}\n`);
 				} else if (args[1] === 30) {
 					process.stdout.write(` string:${args[3]}\n`);
 				} else if (args[1] === 31) {
@@ -233,10 +243,11 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 	});
 };
 
-let dir = 'F:\\VIDEO_TS'
+let dir = 'F:\\'
 
 interface Content {
 	type: string;
+	filename: string;
 	selector: string;
 	length: number;
 	title: string;
@@ -280,7 +291,7 @@ get_content(dir, (hash, content) => {
 	cp.on('close', () => {
 		for (let i = 0; i < content_to_rip.length; i++) {
 			let dvdtitle = content_to_rip[i].selector.split(':')[0];
-			libfs.renameSync(`../temp/title_t${('00' + i).slice(-2)}.mkv`, `../temp/${hash}.${('000' + dvdtitle).slice(-3)}.mkv`);
+			libfs.renameSync(`../temp/${content_to_rip[i].filename}_t${('00' + i).slice(-2)}.mkv`, `../temp/${hash}.${('000' + dvdtitle).slice(-3)}.mkv`);
 		}
 		process.exit();
 	});
