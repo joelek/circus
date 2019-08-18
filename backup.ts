@@ -129,6 +129,27 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 			let type = parts.shift() as string;
 			let args = JSON.parse(`[${parts.join(':')}]`);
 			if (false) {
+			} else if (type === 'CINFO') {
+				if (false) {
+				} else if (args[0] === 1) {
+					process.stdout.write(` disc_type:${args[1]}\n`);
+				} else if (args[0] === 2) {
+					process.stdout.write(` title:${args[1]}\n`);
+				} else if (args[0] === 28) {
+					process.stdout.write(` language_code:${args[1]}\n`);
+				} else if (args[0] === 29) {
+					process.stdout.write(` language:${args[1]}\n`);
+				} else if (args[0] === 30) {
+					process.stdout.write(` title:${args[1]}\n`);
+				} else if (args[0] === 31) {
+					process.stdout.write(` html:${args[1]}\n`);
+				} else if (args[0] === 32) {
+					process.stdout.write(` media_title:${args[1]}\n`);
+				} else if (args[0] === 33) {
+					process.stdout.write(` unknown:${args[1]}\n`);
+				} else {
+					process.stdout.write(` unhandled:${line}\n`);
+				}
 			} else if (type === 'SINFO') {
 /*
 				process.stdout.write(`title:${args[0]} stream:${args[1]}`);
