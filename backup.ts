@@ -122,7 +122,7 @@ let save_db = (filename: string, db: Record<string, any>, cb: { (): void }) => {
 
 let analyze = (dir: string, cb: { (type: string, content: Array<Content>): void }) => {
 	libcp.exec(`makemkvcon info disc:0 --robot --minlength=0`, (error, stdout, stderr) => {
-		let type = 'unknown';
+		let dtype = 'unknown';
 		let content = new Array<Content>();
 		let lines = stdout.split(/\r?\n/);
 		lines.map((line) => {
@@ -139,9 +139,9 @@ let analyze = (dir: string, cb: { (type: string, content: Array<Content>): void 
 					process.stdout.write(` disc_type:${args[2]}\n`);
 					if (false) {
 					} else if (args[2] === 'Blu-ray disc') {
-						type = 'bluray';
+						dtype = 'bluray';
 					} else if (args[2] === 'DVD disc') {
-						type = 'dvd';
+						dtype = 'dvd';
 					}
 				} else if (args[0] === 2) {
 					process.stdout.write(` title:${args[2]}\n`);
@@ -269,7 +269,7 @@ let analyze = (dir: string, cb: { (type: string, content: Array<Content>): void 
 			}
 		});
 		content = content.filter((ct) => ct.length <= a_max && ct.length >= a_min);
-		cb(type, content);
+		cb(dtype, content);
 	});
 };
 
