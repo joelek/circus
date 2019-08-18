@@ -137,7 +137,7 @@ let analyze = (dir: string, cb: { (type: string, content: Array<Content>): void 
 					if (false) {
 					} else if (args[2] === 'Blu-ray disc') {
 						type = 'bluray';
-					} else if (args[2] === 'banana') {
+					} else if (args[2] === 'DVD disc') {
 						type = 'dvd';
 					}
 				} else if (args[0] === 2) {
