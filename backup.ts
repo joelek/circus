@@ -121,7 +121,7 @@ let save_db = (filename: string, db: Record<string, any>, cb: { (): void }) => {
 };
 
 let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
-	libcp.exec(`makemkvcon info disc:0 --robot --minlength=${a_min}`, (error, stdout, stderr) => {
+	libcp.exec(`makemkvcon info disc:0 --robot --minlength=0`, (error, stdout, stderr) => {
 		let content = new Array<Content>();
 		let lines = stdout.split(/\r?\n/);
 		lines.map((line) => {
@@ -258,7 +258,7 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 				process.stdout.write(`${line}\n`);
 			}
 		});
-		content = content.filter((ct) => ct.length < a_max);
+		content = content.filter((ct) => ct.length <= a_max && ct.length >= a_min);
 		cb(content);
 	});
 };
@@ -304,6 +304,7 @@ get_content(dir, (hash, content) => {
 		`disc:0`,
 		'all',
 		`--manual=${selector}`,
+		' --minlength=0',
 		'../temp/'
 	]);
 	cp.stdout.pipe(process.stdout);
