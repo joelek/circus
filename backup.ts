@@ -9,6 +9,7 @@ import * as librl from 'readline';
 let a_type = 'unknown';
 let a_show = '';
 let a_season = 0;
+let a_episode = null;
 let a_title = '';
 let a_year = 0;
 let a_min = 0;
@@ -42,6 +43,8 @@ process.argv.slice(2).forEach((arg) => {
 		a_season = Number.parseInt(parts[1]);
 	} else if ((parts = /^--year=([0-9]+)$/.exec(arg)) != null) {
 		a_year = Number.parseInt(parts[1]);
+	} else if ((parts = /^--episode=([0-9]+)$/.exec(arg)) != null) {
+		a_episode = Number.parseInt(parts[1]);
 	}
 });
 
@@ -221,7 +224,7 @@ let analyze = (dir: string, cb: { (type: string, content: Array<Content>): void 
 						"year": a_year,
 						"show": a_show,
 						"season": a_season,
-						"episode": 0
+						"episode": a_episode === null ? 0 : a_episode++
 					}
 				}
 				process.stdout.write(`title:${args[0]} attribute:${args[1]}`);
