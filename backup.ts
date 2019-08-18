@@ -289,6 +289,7 @@ interface Content {
 
 let get_content = (dir, cb: { (hash: string, c: Array<Content>): void }): void => {
 	compute_hash(dir, (hash) => {
+		process.stdout.write(`Determined disc id as "${hash}".\n`);
 		let val = db[hash] as undefined | { type: string, content: Array<Content> };
 		if (val) {
 			cb(hash, val.content);
