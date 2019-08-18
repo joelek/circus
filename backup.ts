@@ -130,6 +130,9 @@ let analyze = (dir: string, cb: { (type: string, content: Array<Content>): void 
 			let type = parts.shift() as string;
 			let args = JSON.parse(`[${parts.join(':')}]`);
 			if (false) {
+			} else if (type === 'MSG') {
+			} else if (type === 'DRV') {
+			} else if (type === 'TCOUNT') {
 			} else if (type === 'CINFO') {
 				if (false) {
 				} else if (args[0] === 1) {
