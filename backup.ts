@@ -310,7 +310,7 @@ let get_content = (dir, cb: { (hash: string, type: string, c: Array<Content>): v
 	});
 };
 
-let backup_dvd = (content: Array<Content>, cb: { (): void }) => {
+let backup_dvd = (hash: string, content: Array<Content>, cb: { (): void }) => {
 	let selector = content.map(ct => ct.selector).join(' ');
 	let cp = libcp.spawn('makemkvcon', [
 		'mkv',
@@ -323,11 +323,15 @@ let backup_dvd = (content: Array<Content>, cb: { (): void }) => {
 	cp.stdout.pipe(process.stdout);
 	process.stdin.pipe(process.stdin);
 	cp.on('close', () => {
+		for (let i = 0; i < content.length; i++) {
+			let dvdtitle = content[i].selector.split(':')[0];
+			libfs.renameSync(`../temp/${content[i].filename}_t${('00' + i).slice(-2)}.mkv`, `../temp/${hash}.${('000' + dvdtitle).slice(-3)}.mkv`);
+		}
 		cb();
 	});
 };
 
-let backup_bluray = (content: Array<Content>, cb: { (): void }) => {
+let backup_bluray = (hash: string, content: Array<Content>, cb: { (): void }) => {
 	let index = 0;
 	let next = () => {
 		if (index < content.length) {
@@ -345,6 +349,10 @@ let backup_bluray = (content: Array<Content>, cb: { (): void }) => {
 				next();
 			});
 		} else {
+		for (let i = 0; i < content.length; i++) {
+			let dvdtitle = content[i].selector.split(':')[0];
+			libfs.renameSync(`../temp/${content[i].filename}_t${('00' + dvdtitle).slice(-2)}.mkv`, `../temp/${hash}.${('000' + dvdtitle).slice(-3)}.mkv`);
+		}
 			cb();
 		}
 	};
@@ -354,17 +362,13 @@ let backup_bluray = (content: Array<Content>, cb: { (): void }) => {
 get_content(dir, (hash, type, content) => {
 	let content_to_rip = content.filter((ct) => ['movie', 'episode'].indexOf(ct.type) >= 0);
 	let callback = () => {
-		for (let i = 0; i < content_to_rip.length; i++) {
-			let dvdtitle = content_to_rip[i].selector.split(':')[0];
-			libfs.renameSync(`../temp/${content_to_rip[i].filename}_t${('00' + i).slice(-2)}.mkv`, `../temp/${hash}.${('000' + dvdtitle).slice(-3)}.mkv`);
-		}
 		process.exit(0);
 	};
 	if (false) {
 	} else if (type === 'dvd') {
-		backup_dvd(content_to_rip, callback);
+		backup_dvd(hash, content_to_rip, callback);
 	} else if (type === 'bluray') {
-		backup_bluray(content_to_rip, callback);
+		backup_bluray(hash, content_to_rip, callback);
 	} else {
 		process.stdout.write('bad disc type!\n');
 	}
