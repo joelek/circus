@@ -132,21 +132,21 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 			} else if (type === 'CINFO') {
 				if (false) {
 				} else if (args[0] === 1) {
-					process.stdout.write(` disc_type:${args[1]}\n`);
+					process.stdout.write(` disc_type:${args[2]}\n`);
 				} else if (args[0] === 2) {
-					process.stdout.write(` title:${args[1]}\n`);
+					process.stdout.write(` title:${args[2]}\n`);
 				} else if (args[0] === 28) {
-					process.stdout.write(` language_code:${args[1]}\n`);
+					process.stdout.write(` language_code:${args[2]}\n`);
 				} else if (args[0] === 29) {
-					process.stdout.write(` language:${args[1]}\n`);
+					process.stdout.write(` language:${args[2]}\n`);
 				} else if (args[0] === 30) {
-					process.stdout.write(` title:${args[1]}\n`);
+					process.stdout.write(` title:${args[2]}\n`);
 				} else if (args[0] === 31) {
-					process.stdout.write(` html:${args[1]}\n`);
+					process.stdout.write(` html:${args[2]}\n`);
 				} else if (args[0] === 32) {
-					process.stdout.write(` media_title:${args[1]}\n`);
+					process.stdout.write(` media_title:${args[2]}\n`);
 				} else if (args[0] === 33) {
-					process.stdout.write(` unknown:${args[1]}\n`);
+					process.stdout.write(` unknown:${args[2]}\n`);
 				} else {
 					process.stdout.write(` unhandled:${line}\n`);
 				}
