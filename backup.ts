@@ -120,8 +120,9 @@ let save_db = (filename: string, db: Record<string, any>, cb: { (): void }) => {
   cb();
 };
 
-let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
+let analyze = (dir: string, cb: { (type: string, content: Array<Content>): void }) => {
 	libcp.exec(`makemkvcon info disc:0 --robot --minlength=0`, (error, stdout, stderr) => {
+		let type = 'unknown';
 		let content = new Array<Content>();
 		let lines = stdout.split(/\r?\n/);
 		lines.map((line) => {
@@ -133,6 +134,12 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 				if (false) {
 				} else if (args[0] === 1) {
 					process.stdout.write(` disc_type:${args[2]}\n`);
+					if (false) {
+					} else if (args[2] === 'Blu-ray disc') {
+						type = 'bluray';
+					} else if (args[2] === 'banana') {
+						type = 'dvd';
+					}
 				} else if (args[0] === 2) {
 					process.stdout.write(` title:${args[2]}\n`);
 				} else if (args[0] === 28) {
@@ -259,7 +266,7 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 			}
 		});
 		content = content.filter((ct) => ct.length <= a_max && ct.length >= a_min);
-		cb(content);
+		cb(type, content);
 	});
 };
 
@@ -283,9 +290,9 @@ let get_content = (dir, cb: { (hash: string, c: Array<Content>): void }): void =
 		if (val) {
 			cb(hash, val.content);
 		} else {
-			analyze(dir, (content) => {
+			analyze(dir, (type, content) => {
 				db[hash] = {
-					type: "dvd",
+					type: type,
 					content: content
 				};
 				save_db('../store/discdb.json', db, () => {
