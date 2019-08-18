@@ -6,7 +6,7 @@ import * as librl from 'readline';
 
 // angles?
 
-let a_type = null;
+let a_type = 'unknown';
 let a_show = '';
 let a_season = 0;
 let a_title = '';
@@ -28,7 +28,7 @@ let length_to_seconds = (string: string): number => {
 process.argv.slice(2).forEach((arg) => {
 	let parts;
 	if (false) {
-	} else if ((parts = /^--type=(show|movie)$/.exec(arg)) != null) {
+	} else if ((parts = /^--type=(episode|movie)$/.exec(arg)) != null) {
 		a_type = parts[1];
 	} else if ((parts = /^--minlength=([0-9]+)$/.exec(arg)) != null) {
 		a_min = Number.parseInt(parts[1]);
@@ -202,9 +202,8 @@ let analyze = (dir: string, cb: { (content: Array<Content>): void }) => {
 */
 			} else if (type === 'TINFO') {
 				if (!content[args[0]]) {
-					let type = a_type === 'show' ? 'episode' : a_type === 'movie' ? 'movie' : 'unknown';
 					content[args[0]] = {
-						"type": type,
+						"type": a_type,
 						"filename": "title",
 						"selector": "",
 						"length": 0,
