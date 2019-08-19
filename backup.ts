@@ -352,10 +352,10 @@ let backup_bluray = (hash: string, content: Array<Content>, cb: { (): void }) =>
 				next();
 			});
 		} else {
-		for (let i = 0; i < content.length; i++) {
-			let dvdtitle = content[i].selector.split(':')[0];
-			libfs.renameSync(`../temp/${content[i].filename}_t${('00' + dvdtitle).slice(-2)}.mkv`, `../temp/${hash}.${('000' + dvdtitle).slice(-3)}.mkv`);
-		}
+			for (let i = 0; i < content.length; i++) {
+				let dvdtitle = content[i].selector.split(':')[0];
+				libfs.renameSync(`../temp/${content[i].filename}_t${('00' + dvdtitle).slice(-2)}.mkv`, `../temp/${hash}.${('000' + dvdtitle).slice(-3)}.mkv`);
+			}
 			cb();
 		}
 	};
