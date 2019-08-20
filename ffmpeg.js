@@ -258,6 +258,7 @@ let encode_hardware = (filename, outfile, picture, rect, imode, bm, cb, framesel
   picture = {...picture};
   let is_dvd_pal = picture.dimx === 720 && picture.dimy === 576 && picture.fpsx === 25 && picture.fpsy === 1;
   let is_dvd_ntsc = picture.dimx === 720 && picture.dimy === 480 && picture.fpsx === 30000 && picture.fpsy === 1001;
+	let is_fhd = picture.dimx === 1920 && picture.dimy === 1080;
   if (is_dvd_pal) {
     picture.color_space = 'bt470bg'; // kr = 0.299, kb = 0.114 [bt709 is 0.2126, 0.0722]
     picture.color_transfer = 'bt470bg'; // gamma 2.8 (often too dark) bt470m is 2.2
@@ -268,12 +269,12 @@ let encode_hardware = (filename, outfile, picture, rect, imode, bm, cb, framesel
     picture.color_transfer = 'smpte170m'; // 4.5l (l < 0.018), 1.099l^0.45 - 0.099 (else) [identical to bt709]
     picture.color_primaries = 'smpte170m'; // 0.310 0.595 0.155 0.070 0.630 0.340      0.3127 0.3290
     picture.color_range = 'tv';
-  }
-/*
-  picture.color_space = 'unknown';
-  picture.color_transfer = 'unknown';
-  picture.color_primaries = 'unknown';
-*/
+  } else {
+	  picture.color_space = 'unknown';
+	  picture.color_transfer = 'unknown';
+	  picture.color_primaries = 'unknown';
+    picture.color_range = 'tv';
+	}
   let md = [];
 	if (opt_content == null) {
 	  let path = filename.split(libpath.sep);
@@ -327,7 +328,7 @@ let encode_hardware = (filename, outfile, picture, rect, imode, bm, cb, framesel
   }
   let farx = rect.darx;
   let fary = rect.dary;
-  let fh = 540;
+  let fh = is_fhd ? picture.dimx*fary/farx : 540;
   if (rect.darx === 64 && rect.dary === 27) {
     //farx = 16;
     //fary = 9;
@@ -425,12 +426,12 @@ let encode = (filename, outfile, picture, rect, imode, bm, cb, frameselection = 
     picture.color_transfer = 'smpte170m'; // 4.5l (l < 0.018), 1.099l^0.45 - 0.099 (else) [identical to bt709]
     picture.color_primaries = 'smpte170m'; // 0.310 0.595 0.155 0.070 0.630 0.340 0.3127 0.3290
     picture.color_range = 'tv';
-  }
-/*
-  picture.color_space = 'unknown';
-  picture.color_transfer = 'unknown';
-  picture.color_primaries = 'unknown';
-*/
+  } else {
+	  picture.color_space = 'unknown';
+	  picture.color_transfer = 'unknown';
+	  picture.color_primaries = 'unknown';
+    picture.color_range = 'tv';
+	}
   let path = filename.split(libpath.sep);
   let file = path.pop();
   let name = file.split('.').slice(0, -1).join('.');
