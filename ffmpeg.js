@@ -305,6 +305,8 @@ let encode_hardware = (filename, outfile, picture, rect, imode, bm, cb, framesel
 	      ];
 	    }
 	  }
+	  let comment = config.comment;
+	  md.push('-metadata', `comment=${comment}`);
 	} else {
 		if (opt_content.type === 'episode') {
 	    md = [
@@ -339,8 +341,6 @@ let encode_hardware = (filename, outfile, picture, rect, imode, bm, cb, framesel
   let wh = ((fh*farx/fary) >> 1);
   let w = (wh << 1);
   let h = (hh << 1);
-  let comment = config.comment;
-  md.push('-metadata', `comment=${comment}`);
   if (picture.color_transfer === 'bt470bg') {
     picture.color_transfer = 'smpte170m';
   }
