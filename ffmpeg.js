@@ -575,7 +575,7 @@ let determine_quality2 = (filename, cb) => {
   });
 };
 
-let determine_quality = (filename, cb) => {
+let determine_quality = (filename, cb, basename = null) => {
   let id1 = libcrypto.randomBytes(16).toString('hex');
   let id2 = libcrypto.randomBytes(16).toString('hex');
   create_temp_dir((wd, id) => {
@@ -589,7 +589,7 @@ let determine_quality = (filename, cb) => {
           });
         }, `select='between(mod(n\\,250)\\,0\\,1)',`, [ '-vsync', '0' ], ['-an']);
       }, `select='between(mod(n\\,250)\\,0\\,0)',`, [ '-vsync', '0' ], ['-an']);
-    });
+    }, basename);
   });
 };
 
@@ -608,6 +608,7 @@ let get_metadata = (filename, cb, basename = null) => {
 		basename = filename;
 	}
   let key = basename.split(libpath.sep).slice(2).join(':');
+	process.stdout.write(`Database key: ${key}\n`);
   let md = queue_metadata[key];
   if (md) {
     cb(md.picture, md.rect, md.imode);
@@ -635,7 +636,7 @@ let get_qmetadata = (filename, cb, basename = null) => {
       save_quality_metadata(() => {
         cb(stats.quality);
       });
-    });
+    }, basename);
   }
 };
 

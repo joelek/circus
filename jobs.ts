@@ -7,11 +7,17 @@ import * as vobsub from './vobsub';
 import * as ffmpeg from './ffmpeg';
 let config = require('../store/config.json');
 
-let move_file = (filename: string): void => {
-  let paths = ['..', 'media', ...filename.split(libpath.sep).slice(2) ];
-  let file = paths.pop();
-  libfs.mkdirSync(libpath.join(...paths), { recursive: true });
-  libfs.renameSync(filename, libpath.join(...paths, file));
+let move_files = (filenames: string[], basename: string): void => {
+	filenames.forEach((filename) => {
+	  let dirs = filename.split(libpath.sep);
+	  let file = dirs.pop();
+		let parts = file.split('.');
+		let ending = parts.slice(2).join('.');
+		let targetdir = basename.split(libpath.sep);
+		targetdir.pop();
+	  libfs.mkdirSync(targetdir.join(libpath.sep), { recursive: true });
+	  libfs.renameSync(filename, basename + '.' + ending);
+	});
 };
 
 let generate_queue = (files: Array<string>, node: string): Array<string> => {
@@ -100,18 +106,24 @@ let pick_from_queue = (): void => {
     let input = queue.splice(index, 1)[0];
 		let mi = get_media_info(input);
 		if (mi) {
-			let basename = input;
+			let basename = null;
 			let ct = mi.content;
-			if (mi.type === 'episode') {
+			if (ct.type === 'episode') {
 				basename = `../media/video/shows/${pathify(ct.show)}-${pathify(config.suffix)}/s${('00' + ct.season).slice(-2)}/${pathify(ct.show)}-s${('00' + ct.season).slice(-2)}e${('00' + ct.episode).slice(-2)}-${pathify(ct.title)}-${pathify(config.suffix)}`;
-			} else if (mi.type === 'movie') {
+				basename = libpath.join(basename);
+			} else if (ct.type === 'movie') {
 				basename = `../media/video/movies/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}}-${pathify(config.suffix)}/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}}-${pathify(config.suffix)}`;
+				basename = libpath.join(basename);
 			}
+			process.stdout.write(`Basename set to ${basename}\n`);
 			if (mi.type === 'dvd') {
 				vobsub(input, (outputs) => {
-					ffmpeg.transcode(input, (output) => {
+					ffmpeg.transcode(input, (code, output) => {
+						if (basename) {
+							move_files([...[], output], basename);
+						}
 						pick_from_queue();
-					}, mi, basename);
+					}, ct, basename);
 				});
 			}
 			return;
