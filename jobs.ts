@@ -103,15 +103,15 @@ let pick_from_queue = (): void => {
 			let basename = input;
 			let ct = mi.content;
 			if (mi.type === 'episode') {
-				basename = `../jobs/media/shows/${pathify(ct.show)}-${pathify(config.suffix)}/s${('00' + ct.season).slice(-2)}/${pathify(ct.show)}-s${('00' + ct.season).slice(-2)}e${('00' + ct.episode).slice(-2)}-${pathify(ct.title)}-${pathify(config.suffix)}`;
+				basename = `../media/video/shows/${pathify(ct.show)}-${pathify(config.suffix)}/s${('00' + ct.season).slice(-2)}/${pathify(ct.show)}-s${('00' + ct.season).slice(-2)}e${('00' + ct.episode).slice(-2)}-${pathify(ct.title)}-${pathify(config.suffix)}`;
 			} else if (mi.type === 'movie') {
-				basename = `../jobs/media/movies/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}}-${pathify(config.suffix)}/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}}-${pathify(config.suffix)}`;
+				basename = `../media/video/movies/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}}-${pathify(config.suffix)}/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}}-${pathify(config.suffix)}`;
 			}
 			if (mi.type === 'dvd') {
 				vobsub(input, (outputs) => {
 					ffmpeg.transcode(input, (output) => {
 						pick_from_queue();
-					}, mi);
+					}, mi, basename);
 				});
 			}
 			return;
