@@ -643,9 +643,7 @@ let transcode = (filename, cb, opt_content_info = null, basename = null) => {
   let path = filename.split(libpath.sep);
   let file = path.pop();
   let name = file.split('.').slice(0, -1).join('.');
-  let outdir = ['..', 'temp', ...path.slice(2)];
-  let outfile = libpath.join(...outdir, `${name}.mp4`);
-  libfs.mkdirSync(libpath.join(...outdir), { recursive: true });
+  let outfile = libpath.join(...path, `${name}.mp4`);
   get_metadata(filename, (picture, rect, imode) => {
     get_qmetadata(filename, (quality) => {
       let bm = (1 - quality)/0.05;
