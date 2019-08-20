@@ -603,8 +603,11 @@ let determine_metadata = (filename, cb) => {
   });
 };
 
-let get_metadata = (filename, cb) => {
-  let key = filename.split(libpath.sep).slice(2).join(':');
+let get_metadata = (filename, cb, basename = null) => {
+	if (basename == null) {
+		basename = filename;
+	}
+  let key = basename.split(libpath.sep).slice(2).join(':');
   let md = queue_metadata[key];
   if (md) {
     cb(md.picture, md.rect, md.imode);
@@ -618,8 +621,11 @@ let get_metadata = (filename, cb) => {
   }
 };
 
-let get_qmetadata = (filename, cb) => {
-  let key = filename.split(libpath.sep).slice(2).join(':');
+let get_qmetadata = (filename, cb, basename = null) => {
+	if (basename == null) {
+		basename = filename;
+	}
+  let key = basename.split(libpath.sep).slice(2).join(':');
   let md = quality_metadata[key];
   if (md) {
     cb(md.quality);
@@ -633,7 +639,7 @@ let get_qmetadata = (filename, cb) => {
   }
 };
 
-let transcode = (filename, cb, opt_content_info = null) => {
+let transcode = (filename, cb, opt_content_info = null, basename = null) => {
   let path = filename.split(libpath.sep);
   let file = path.pop();
   let name = file.split('.').slice(0, -1).join('.');
@@ -645,8 +651,8 @@ let transcode = (filename, cb, opt_content_info = null) => {
       let bm = (1 - quality)/0.05;
       let extraopts = []; // ['-ss', '10:00', '-t', '30'];
       encode_hardware(filename, outfile, picture, rect, imode, bm, cb, '', extraopts, [], quality, opt_content_info);
-    });
-  });
+    }, basename);
+  }, basename);
 };
 
 if (process.argv[2] && process.argv[3]) {
