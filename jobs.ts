@@ -3,8 +3,9 @@ import * as libfs from 'fs';
 import * as libpath from 'path';
 import * as libcrypto from 'crypto';
 import * as librl from 'readline';
-
-let queue = new Array<string>();
+import * as vobsub from './vobsub';
+import * as ffmpeg from './ffmpeg';
+let config = require('../store/config.json');
 
 let move_file = (filename: string): void => {
   let paths = ['..', 'media', ...filename.split(libpath.sep).slice(2) ];
@@ -27,36 +28,51 @@ let generate_queue = (files: Array<string>, node: string): Array<string> => {
   return files;
 };
 
-interface EpisodeMetadata {
+let queue = generate_queue([], '../jobs/queue/');
+
+interface Metadata {
+	asEpisode(): EpisodeMetadata;
+	asMovie(): MovieMetadata;
+}
+
+interface EpisodeMetadata extends Metadata {
 	season: number;
 	episode: number;
 	show: string;
 	title: string;
+	basename: string;
 }
 
-interface MovieMetadata {
+interface MovieMetadata extends Metadata {
 	title: string;
 	year: number;
+	basename: string;
+}
+
+interface Content {
+  type: string;
+  selector: string;
+  title: string;
+  year: number;
+  show: string;
+  season: number;
+  episode: number;
 }
 
 interface DatabaseEntry {
 	type: string;
-	content: Array<{
-    type: string;
-    selector: string;
-    title: string;
-    year: number;
-    show: string;
-    season: number;
-    episode: number;
-	}>;
+	content: Array<Content>;
 }
 
 interface Database {
 	[key: string]: DatabaseEntry;
 }
 
-let get_media_info = (path: string): null | EpisodeMetadata | MovieMetadata => {
+let pathify = (string: string): string => {
+	return encodeURIComponent(string.split(' ').join('_').split('-').join('_').toLowerCase());
+};
+
+let get_media_info = (path: string): { type: string, content: Content } | undefined => {
 	let filename = path.split(libpath.sep).pop();
 	let string = libfs.readFileSync('../store/discdb.json', 'utf8');
 	let database = JSON.parse(string) as Database;
@@ -64,25 +80,18 @@ let get_media_info = (path: string): null | EpisodeMetadata | MovieMetadata => {
 	let hash = parts[0];
 	let title = Number.parseInt(parts[1]);
 	let entry = database[hash];
-	if (entry) {
-		let ct = entry.content.find(ct => Number.parseInt(ct.selector.split(':')[0]) === title);
-		if (ct) {
-			if (ct.type === 'episode') {
-				return {
-					season: ct.season,
-					episode: ct.episode,
-					show: ct.show,
-					title: ct.title
-				};
-			} else if (ct.type === 'movie') {
-				return {
-					title: ct.title,
-					year: ct.year
-				};
-			}
+	let mi = entry.content.find(ct => Number.parseInt(ct.selector.split(':')[0]) === title);
+	if (mi) {
+		return {
+			type: entry.type,
+			content: mi
+		}
+	} else {
+		return {
+			type: "unknown",
+			content: null
 		}
 	}
-	return null;
 };
 
 let pick_from_queue = (): void => {
@@ -90,13 +99,26 @@ let pick_from_queue = (): void => {
     let index = (Math.random() * queue.length) | 0;
     let input = queue.splice(index, 1)[0];
 		let mi = get_media_info(input);
-		console.log(mi);
+		if (mi) {
+			let basename = input;
+			let ct = mi.content;
+			if (mi.type === 'episode') {
+				basename = `../jobs/media/shows/${pathify(ct.show)}-${pathify(config.suffix)}/s${('00' + ct.season).slice(-2)}/${pathify(ct.show)}-s${('00' + ct.season).slice(-2)}e${('00' + ct.episode).slice(-2)}-${pathify(ct.title)}-${pathify(config.suffix)}`;
+			} else if (mi.type === 'movie') {
+				basename = `../jobs/media/movies/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}}-${pathify(config.suffix)}/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}}-${pathify(config.suffix)}`;
+			}
+			if (mi.type === 'dvd') {
+				vobsub(input, (outputs) => {
+					ffmpeg.transcode(input, (output) => {
+						pick_from_queue();
+					}, mi);
+				});
+			}
+			return;
+		}
 		pick_from_queue();
   } else {
-    setTimeout(() => {
-      queue = generate_queue([], '../temp/ready/');
-      pick_from_queue();
-    }, 1000*10);
+    process.exit(0);
   }
 };
 

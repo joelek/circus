@@ -254,7 +254,7 @@ let create_temp_dir = (cb) => {
   cb(wd, id);
 };
 
-let encode_hardware = (filename, outfile, picture, rect, imode, bm, cb, frameselection = '', extraopts = [], overrides = [], q = 1) => {
+let encode_hardware = (filename, outfile, picture, rect, imode, bm, cb, frameselection = '', extraopts = [], overrides = [], q = 1, opt_content = null) => {
   picture = {...picture};
   let is_dvd_pal = picture.dimx === 720 && picture.dimy === 576 && picture.fpsx === 25 && picture.fpsy === 1;
   let is_dvd_ntsc = picture.dimx === 720 && picture.dimy === 480 && picture.fpsx === 30000 && picture.fpsy === 1001;
@@ -274,34 +274,51 @@ let encode_hardware = (filename, outfile, picture, rect, imode, bm, cb, framesel
   picture.color_transfer = 'unknown';
   picture.color_primaries = 'unknown';
 */
-  let path = filename.split(libpath.sep);
-  let file = path.pop();
-  let name = file.split('.').slice(0, -1).join('.');
-  let parts;
-  parts = /^([a-z0-9_]+)-s([0-9]+)e([0-9]+)-([a-z0-9_]+)-/.exec(name);
   let md = [];
-  if (parts !== null) {
-    let show = parts[1].split('_').join(' ');
-    let season_number = parseInt(parts[2]);
-    let episode_number = parseInt(parts[3]);
-    let episode_title = parts[4].split('_').join(' ');
-    md = [
-      '-metadata', `show=${show}`,
-      '-metadata', `season_number=${season_number}`,
-      '-metadata', `episode_sort=${episode_number}`,
-      '-metadata', `episode_id=${episode_title}`
-    ];
-  } else {
-    parts = /^([a-z0-9_]+)-([0-9]{4})-/.exec(name);
-    if (parts !== null) {
-      let title = parts[1].split('_').join(' ');
-      let year = parseInt(parts[2]);
+	if (opt_content == null) {
+	  let path = filename.split(libpath.sep);
+	  let file = path.pop();
+	  let name = file.split('.').slice(0, -1).join('.');
+	  let parts;
+	  parts = /^([a-z0-9_]+)-s([0-9]+)e([0-9]+)-([a-z0-9_]+)-/.exec(name);
+
+	  if (parts !== null) {
+	    let show = parts[1].split('_').join(' ');
+	    let season_number = parseInt(parts[2]);
+	    let episode_number = parseInt(parts[3]);
+	    let episode_title = parts[4].split('_').join(' ');
+	    md = [
+	      '-metadata', `show=${show}`,
+	      '-metadata', `season_number=${season_number}`,
+	      '-metadata', `episode_sort=${episode_number}`,
+	      '-metadata', `episode_id=${episode_title}`
+	    ];
+	  } else {
+	    parts = /^([a-z0-9_]+)-([0-9]{4})-/.exec(name);
+	    if (parts !== null) {
+	      let title = parts[1].split('_').join(' ');
+	      let year = parseInt(parts[2]);
+	      md = [
+	        '-metadata', `title=${title}`,
+	        '-metadata', `date=${year}`
+	      ];
+	    }
+	  }
+	} else {
+		if (opt_content.type === 'episode') {
+	    md = [
+	      '-metadata', `show=${opt_content.show}`,
+	      '-metadata', `season_number=${opt_content.season}`,
+	      '-metadata', `episode_sort=${opt_content.episode}`,
+	      '-metadata', `episode_id=${opt_content.title}`
+	    ];
+		} else if (opt_content.type === 'movie') {
       md = [
-        '-metadata', `title=${title}`,
-        '-metadata', `date=${year}`
+        '-metadata', `title=${opt_content.title}`,
+        '-metadata', `date=${opt_content.year}`
       ];
-    }
-  }
+		}
+	}
   let interlace = '';
   if (imode === 'tff') {
     interlace = 'yadif=0:0:0,';
@@ -615,7 +632,7 @@ let get_qmetadata = (filename, cb) => {
   }
 };
 
-let transcode = (filename, cb) => {
+let transcode = (filename, cb, opt_content_info = null) => {
   let path = filename.split(libpath.sep);
   let file = path.pop();
   let name = file.split('.').slice(0, -1).join('.');
@@ -626,7 +643,7 @@ let transcode = (filename, cb) => {
     get_qmetadata(filename, (quality) => {
       let bm = (1 - quality)/0.05;
       let extraopts = []; // ['-ss', '10:00', '-t', '30'];
-      encode_hardware(filename, outfile, picture, rect, imode, bm, cb, '', extraopts, [], quality);
+      encode_hardware(filename, outfile, picture, rect, imode, bm, cb, '', extraopts, [], quality, opt_content_info);
     });
   });
 };
