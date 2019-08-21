@@ -120,8 +120,9 @@ let pick_from_queue = (): void => {
 				vobsub(input, (outputs) => {
 					ffmpeg.transcode(input, (code, output) => {
 						if (basename) {
-							move_files([...[], output], basename);
+							move_files([...outputs, output], basename);
 						}
+						// archive file
 						pick_from_queue();
 					}, ct, basename);
 				});
