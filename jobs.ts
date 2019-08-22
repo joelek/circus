@@ -75,7 +75,7 @@ interface Database {
 }
 
 let pathify = (string: string): string => {
-	return encodeURIComponent(string.split(' ').join('_').split('-').join('_').toLowerCase());
+	return encodeURIComponent(string.split(' ').join('_').split('-').join('_').split('ñ').join('n').toLowerCase());
 };
 
 let get_media_info = (path: string): { type: string, content: Content } | undefined => {
@@ -100,6 +100,12 @@ let get_media_info = (path: string): { type: string, content: Content } | undefi
 	}
 };
 
+let archive_file = (path: string): void => {
+  let dirs = path.split(libpath.sep);
+  let file = dirs.pop();
+  libfs.renameSync(path, libpath.join('../jobs/archive/', file));
+};
+
 let pick_from_queue = (): void => {
   if (queue.length > 0) {
     let index = (Math.random() * queue.length) | 0;
@@ -122,7 +128,7 @@ let pick_from_queue = (): void => {
 						if (basename) {
 							move_files([...outputs, output], basename);
 						}
-						// archive file
+						archive_file(input);
 						pick_from_queue();
 					}, ct, basename);
 				});
