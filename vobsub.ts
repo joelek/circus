@@ -2,7 +2,7 @@ import * as libfs from 'fs';
 import * as libcp from 'child_process';
 import * as libpath from 'path';
 import * as libcrypto from 'crypto';
-import * as pgssub from 'pgssub';
+import * as pgssub from './pgssub';
 
 type Image = {
   frame: Buffer,
