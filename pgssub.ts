@@ -32,7 +32,7 @@ function parse_bitmap(chunk: { buffer: Buffer, offset: number }): void {
 	let bmp = Buffer.alloc(w * h);
 	let x = 0;
 	let y = 0;
-	while ((x < w) && (y < h)) {
+	while (y < h) {
 		let index = chunk.buffer.readUInt8(chunk.offset); chunk.offset += 1;
 		let count = 1;
 		if (index === 0) {
@@ -42,7 +42,8 @@ function parse_bitmap(chunk: { buffer: Buffer, offset: number }): void {
 			if (fb === 0) {
 				count = ((b1 & 0x3F) >> 0);
 				if (count === 0) {
-					count = w - x;
+					x = 0;
+					y += 1;
 				}
 			} else {
 				let b2 = chunk.buffer.readUInt8(chunk.offset); chunk.offset += 1;
@@ -56,10 +57,6 @@ function parse_bitmap(chunk: { buffer: Buffer, offset: number }): void {
 		}
 		for (let i = 0; i < count; i++) {
 			bmp.writeUInt8(index, (y * w) + x); x += 1;
-			if (x >= w) {
-				x = 0;
-				y += 1;
-			}
 		}
 	}
 	libfs.writeFileSync('../temp/test.raw', bmp);
