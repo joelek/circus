@@ -344,10 +344,15 @@ function invert_colors(bitmap: bmp.Bitmap): bmp.Bitmap {
 	};
 }
 
-let bitmap = parse_pgssub({ buffer: libfs.readFileSync(process.argv[2]), offset: 0 });
-bitmap = trim_transparent_region(bitmap);
-bitmap = convert_to_brightness(bitmap);
-bitmap = blend_onto_black_background(bitmap);
-bitmap = invert_colors(bitmap);
-let writable = libfs.createWriteStream('../temp/test.bmp');
-bmp.write_to(bitmap, writable);
+function parse_pgssub_as_bmp(buffer: Buffer): bmp.Bitmap {
+	let bitmap = parse_pgssub({ buffer: buffer, offset: 0 });
+	bitmap = trim_transparent_region(bitmap);
+	bitmap = convert_to_brightness(bitmap);
+	bitmap = blend_onto_black_background(bitmap);
+	bitmap = invert_colors(bitmap);
+	return bitmap;
+}
+
+export {
+	parse_pgssub_as_bmp
+};

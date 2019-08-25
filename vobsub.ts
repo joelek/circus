@@ -3,6 +3,7 @@ import * as libcp from 'child_process';
 import * as libpath from 'path';
 import * as libcrypto from 'crypto';
 import * as pgssub from './pgssub';
+import * as bmp from './bmp';
 
 type Image = {
   frame: Buffer,
@@ -14,14 +15,7 @@ type Image = {
   pts_end: number
 };
 
-let read_bluray_sub = (filename: string): Image => {
-	return null;
-};
-
-let read_file = (filename: string, tb: string, codec: string): Image => {
-	if (codec === 'hdmv_pgs_subtitle') {
-		return read_bluray_sub(filename);
-	}
+let read_file = (filename: string, tb: string): Image => {
   let tf: number = 0;
   let bf: number = 0;
   let w: number = 0;
@@ -411,8 +405,17 @@ let convert_to_bmp = (jobid: string, ed: string, tb: string, codec: string, cb: 
   libfs.readdirSync(node).map((subnode) => {
     let innode = libpath.join(node, subnode);
     let name = subnode.split('.').slice(0, -1).join('.');
-    let outnode = libpath.join('../temp/', jobid, 'bmp');
-    write_file(read_file(innode, tb, codec), outnode, ed);
+	let outnode = libpath.join('../temp/', jobid, 'bmp');
+	if (codec === 'hdmv_pgs_subtitle') {
+		let buffer = libfs.readFileSync(innode);
+		let bitmap = pgssub.parse_pgssub_as_bmp(buffer);
+		let pts = parseInt(innode.split(libpath.sep).pop().split('.')[0], 10);
+		let output_filename = `${('00000000' + pts).slice(-8)}_${('00000000' + pts).slice(-8)}.bmp`;
+		let output_path = libpath.join(outnode, output_filename);
+		bmp.write_to(bitmap, libfs.createWriteStream(output_path));
+	} else {
+		write_file(read_file(innode, tb), outnode, ed);
+	}
   });
   cb(0);
 };
