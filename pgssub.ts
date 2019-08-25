@@ -233,25 +233,7 @@ function parse_pgssub(chunk: { buffer: Buffer, offset: number }): bmp.Bitmap {
 	};
 }
 
-function trim_transparent_region(bitmap: bmp.Bitmap): bmp.Bitmap {
-	let y0 = 0;
-	outer: for (; y0 < bitmap.h; y0++) {
-		inner: for (let x = 0; x < bitmap.w; x++) {
-			let k = bitmap.buffer.readUInt8((y0 * bitmap.w) + x);
-			if (bitmap.palette.readUInt8((k * 4) + 3) > 0) {
-				break outer;
-			}
-		}
-	}
-	let y1 = bitmap.h - 1;
-	outer: for (; y1 > y0; y1--) {
-		inner: for (let x = 0; x < bitmap.w; x++) {
-			let k = bitmap.buffer.readUInt8((y1 * bitmap.w) + x);
-			if (bitmap.palette.readUInt8((k * 4) + 3) > 0) {
-				break outer;
-			}
-		}
-	}
+function trim_transparent_border(bitmap: bmp.Bitmap): bmp.Bitmap {
 	let x0 = 0;
 	outer: for (; x0 < bitmap.w; x0++) {
 		inner: for (let y = 0; y < bitmap.h; y++) {
@@ -270,8 +252,34 @@ function trim_transparent_region(bitmap: bmp.Bitmap): bmp.Bitmap {
 			}
 		}
 	}
-	let w = x1 - x0;
-	let h = y1 - y0;
+	let y0 = 0;
+	outer: for (; y0 < bitmap.h; y0++) {
+		inner: for (let x = x0; x <= x1; x++) {
+			let k = bitmap.buffer.readUInt8((y0 * bitmap.w) + x);
+			if (bitmap.palette.readUInt8((k * 4) + 3) > 0) {
+				break outer;
+			}
+		}
+	}
+	let y1 = bitmap.h - 1;
+	outer: for (; y1 > y0; y1--) {
+		inner: for (let x = x0; x <= x1; x++) {
+			let k = bitmap.buffer.readUInt8((y1 * bitmap.w) + x);
+			if (bitmap.palette.readUInt8((k * 4) + 3) > 0) {
+				break outer;
+			}
+		}
+	}
+	x0 -= 4;
+	x1 += 4;
+	y0 -= 4;
+	y1 += 4;
+	x0 = (x0 > 0) ? x0 : 0;
+	x1 = (x1 < bitmap.w) ? x1 : bitmap.w - 1;
+	y0 = (y0 > 0) ? y0 : 0;
+	y1 = (y1 < bitmap.h) ? y1 : bitmap.h - 1;
+	let w = x1 - x0 + 1;
+	let h = y1 - y0 + 1;
 	let buffer = Buffer.alloc(w * h);
 	for (let y = 0; y < h; y++) {
 		bitmap.buffer.copy(buffer, (y * w), ((y0 + y) * bitmap.w) + x0, ((y0 + y) * bitmap.w) + x1);
@@ -346,7 +354,7 @@ function invert_colors(bitmap: bmp.Bitmap): bmp.Bitmap {
 
 function parse_pgssub_as_bmp(buffer: Buffer): bmp.Bitmap {
 	let bitmap = parse_pgssub({ buffer: buffer, offset: 0 });
-	bitmap = trim_transparent_region(bitmap);
+	bitmap = trim_transparent_border(bitmap);
 	bitmap = convert_to_brightness(bitmap);
 	bitmap = blend_onto_black_background(bitmap);
 	bitmap = invert_colors(bitmap);

@@ -412,7 +412,7 @@ let convert_to_bmp = (jobid: string, ed: string, tb: string, codec: string, cb: 
 		let pts = parseInt(innode.split(libpath.sep).pop().split('.')[0], 10);
 		let output_filename = `${('00000000' + pts).slice(-8)}_${('00000000' + pts).slice(-8)}.bmp`;
 		let output_path = libpath.join(outnode, output_filename);
-		bmp.write_to(bitmap, libfs.createWriteStream(output_path));
+		bmp.write_to(bitmap, output_path);
 	} else {
 		write_file(read_file(innode, tb), outnode, ed);
 	}
