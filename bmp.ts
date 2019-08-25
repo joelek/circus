@@ -1,5 +1,3 @@
-import * as libfs from "fs";
-
 type Bitmap = {
 	w: number,
 	h: number,
@@ -7,8 +5,8 @@ type Bitmap = {
 	palette: Buffer
 };
 
-function write_to(bitmap: Bitmap, filename: string): void {
-	let file = libfs.openSync(filename, 'w');
+function write_to(bitmap: Bitmap): Buffer {
+	let buffers = new Array<Buffer>();
 	let stride = (((bitmap.w + 3) >> 2) << 2);
 	let bmp_header = Buffer.alloc(14);
 	bmp_header.set(Buffer.from('BM', 'binary'), 0);
@@ -16,7 +14,7 @@ function write_to(bitmap: Bitmap, filename: string): void {
 	bmp_header.writeUInt16LE(0, 6);
 	bmp_header.writeUInt16LE(0, 8);
 	bmp_header.writeUInt32LE(14 + 40 + 256 * 4, 10);
-	libfs.writeSync(file, bmp_header);
+	buffers.push(bmp_header);
 	let dib_header = Buffer.alloc(40);
 	dib_header.writeUInt32LE(40, 0);
 	dib_header.writeUInt32LE(bitmap.w, 4);
@@ -29,14 +27,14 @@ function write_to(bitmap: Bitmap, filename: string): void {
 	dib_header.writeUInt32LE(2835, 28);
 	dib_header.writeUInt32LE(0, 32);
 	dib_header.writeUInt32LE(0, 36);
-	libfs.writeSync(file, dib_header);
-	libfs.writeSync(file, bitmap.palette);
-	let row = Buffer.alloc(stride);
+	buffers.push(dib_header);
+	buffers.push(bitmap.palette);
 	for (let y = bitmap.h - 1; y >= 0; y--) {
+		let row = Buffer.alloc(stride);
 		bitmap.buffer.copy(row, 0, (y * bitmap.w), (y * bitmap.w) + bitmap.w);
-		libfs.writeSync(file, row);
+		buffers.push(row);
 	}
-	libfs.closeSync(file);
+	return Buffer.concat(buffers);
 }
 
 export {

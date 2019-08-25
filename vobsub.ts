@@ -412,7 +412,10 @@ let convert_to_bmp = (jobid: string, ed: string, tb: string, codec: string, cb: 
 		let pts = parseInt(innode.split(libpath.sep).pop().split('.')[0], 10);
 		let output_filename = `${('00000000' + pts).slice(-8)}_${('00000000' + pts).slice(-8)}.bmp`;
 		let output_path = libpath.join(outnode, output_filename);
-		bmp.write_to(bitmap, output_path);
+		let bmp_file = bmp.write_to(bitmap);
+		let fd = libfs.openSync(output_path, 'w');
+		libfs.writeSync(fd, bmp_file);
+		libfs.closeSync(fd);
 	} else {
 		write_file(read_file(innode, tb), outnode, ed);
 	}
@@ -422,26 +425,49 @@ let convert_to_bmp = (jobid: string, ed: string, tb: string, codec: string, cb: 
 
 type Subtitle = { pts_start: number, pts_end: number, text: string, lines: string[] };
 
-let ocr = (jobid: string, lang: string, cb: { (st: Subtitle[]): void }): void => {
+let ocr = (jobid: string, lang: string, duration: number, cb: { (st: Subtitle[]): void }): void => {
   process.stdout.write(`Recognizing "${lang}" subtitles...\n`);
   let node = libpath.join('../temp/', jobid, 'bmp');
   let subtitles: Array<Subtitle> = [];
   try {
     libfs.readdirSync(node).map((subnode) => {
-      let input = libpath.join(node, subnode);
-      let text = libcp.execSync(`tesseract ${input} stdout --psm 6 --oem 1 -l ${lang}`).toString('utf8');
-      text = text.split('|').join('I').split('=').join('-').split('~').join('-').split('«').join('-').split('{').join('(').split('}').join(')').split('»').join('-').split('--').join('-');
-      let lines = text.split('\r\n').reduce((lines, line) => {
-        lines.push(...line.split('\n'));
-        return lines;
-      }, []).filter((line) => line.length > 0);
-      let name = subnode.split('.').slice(0, -1).join('.');
-      let pts_start = parseInt(name.split('_')[0], 10);
-      let pts_end = parseInt(name.split('_')[1], 10);
-      process.stdout.write(pts_start + ' to ' + pts_end + '\r\n' + text);
-      subtitles.push({ pts_start, pts_end, text, lines });
+		let input = libpath.join(node, subnode);
+		let fd = libfs.openSync(input, 'r');
+		let head = Buffer.alloc(8);
+		libfs.readSync(fd, head, 0, 8, 18);
+		libfs.closeSync(fd);
+		let w = head.readUInt32LE(0);
+		let h = head.readUInt32LE(4);
+		let text = ''
+		if (w > 0 && h > 0) {
+			text = libcp.execSync(`tesseract ${input} stdout --psm 6 --oem 1 -l ${lang}`).toString('utf8');
+			text = text.split('|').join('I').split('=').join('-').split('~').join('-').split('«').join('-').split('{').join('(').split('}').join(')').split('»').join('-').split('--').join('-');
+		}
+		let lines = text.split('\r\n').reduce((lines, line) => {
+			lines.push(...line.split('\n'));
+			return lines;
+		}, []).filter((line) => line.length > 0);
+		let name = subnode.split('.').slice(0, -1).join('.');
+		let pts_start = parseInt(name.split('_')[0], 10);
+		let pts_end = parseInt(name.split('_')[1], 10);
+		process.stdout.write(pts_start + ' to ' + pts_end + '\r\n' + text);
+		subtitles.push({ pts_start, pts_end, text, lines });
     });
   } catch (error) {}
+  subtitles = subtitles.sort((a, b) => {
+	return a.pts_start - b.pts_start;
+  });
+  if (subtitles.length > 0) {
+	for (let i = 0; i < subtitles.length - 1; i++) {
+	  if (subtitles[i].pts_start === subtitles[i].pts_end) {
+		subtitles[i].pts_end = subtitles[i+1].pts_start;
+	  }
+	}
+	if (subtitles[subtitles.length - 1].pts_start === subtitles[subtitles.length - 1].pts_end) {
+	  subtitles[subtitles.length - 1].pts_end = duration;
+	}
+  }
+  subtitles = subtitles.filter(st => st.lines.length > 0);
   cb(subtitles);
 };
 
@@ -576,28 +602,11 @@ let extract = (filename: string, cb: { (outputs: string[]): void }): void => {
         let duration = subs[i].dur;
         extract_vobsub(filename, i, (jobid) => {
           convert_to_bmp(jobid, ed, time_base, subs[i].codec, (code) => {
-            ocr(jobid, lang, (subtitles) => {
-              subtitles = subtitles.sort((a, b) => {
-                return a.pts_start - b.pts_start;
-              });
-              if (subtitles.length > 0) {
-                for (let i = 0; i < subtitles.length - 1; i++) {
-                  if (subtitles[i].pts_start === subtitles[i].pts_end) {
-                    subtitles[i].pts_end = subtitles[i+1].pts_start;
-                  }
-                }
-                if (subtitles[subtitles.length - 1].pts_start === subtitles[subtitles.length - 1].pts_end) {
-                  subtitles[subtitles.length - 1].pts_end = duration;
-                }
-              }
+            ocr(jobid, lang, duration, (subtitles) => {
               let webvtt = `WEBVTT { "language": "${lang}", "count": ${subtitles.length} }\r\n\r\n`;
               for (let i = 0; i < subtitles.length; i++) {
                 webvtt += to_timecode(subtitles[i].pts_start) + ' --> ' + to_timecode(subtitles[i].pts_end) + '\r\n';
-                if (subtitles[i].lines.length > 0) {
-                  webvtt += subtitles[i].lines.join('\r\n') + '\r\n\r\n';
-                } else {
-                  webvtt += '???\r\n\r\n';
-                }
+                webvtt += subtitles[i].lines.join('\r\n') + '\r\n\r\n';
               }
               let directories = filename.split(libpath.sep);
               let file = directories.pop();

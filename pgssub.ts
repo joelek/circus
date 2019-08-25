@@ -270,6 +270,7 @@ function trim_transparent_border(bitmap: bmp.Bitmap): bmp.Bitmap {
 			}
 		}
 	}
+	/*
 	x0 -= 4;
 	x1 += 4;
 	y0 -= 4;
@@ -278,11 +279,12 @@ function trim_transparent_border(bitmap: bmp.Bitmap): bmp.Bitmap {
 	x1 = (x1 < bitmap.w) ? x1 : bitmap.w - 1;
 	y0 = (y0 > 0) ? y0 : 0;
 	y1 = (y1 < bitmap.h) ? y1 : bitmap.h - 1;
+	*/
 	let w = x1 - x0 + 1;
 	let h = y1 - y0 + 1;
 	let buffer = Buffer.alloc(w * h);
 	for (let y = 0; y < h; y++) {
-		bitmap.buffer.copy(buffer, (y * w), ((y0 + y) * bitmap.w) + x0, ((y0 + y) * bitmap.w) + x1);
+		bitmap.buffer.copy(buffer, (y * w), ((y0 + y) * bitmap.w) + x0, ((y0 + y) * bitmap.w) + x0 + w);
 	}
 	return {
 		...bitmap,
