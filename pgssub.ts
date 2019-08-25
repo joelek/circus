@@ -180,7 +180,7 @@ function parse_pgssub(chunk: { buffer: Buffer, offset: number }): bmp.Bitmap {
 		palette.writeUInt8(16, (i * 4) + 0);
 		palette.writeUInt8(0, (i * 4) + 1);
 		palette.writeUInt8(0, (i * 4) + 2);
-		palette.writeUInt8(255, (i * 4) + 3);
+		palette.writeUInt8(0, (i * 4) + 3);
 	}
 	let bitmaps = new Array<Bitmap>(0);
 	let times = new Array<Times>(0);
@@ -233,18 +233,121 @@ function parse_pgssub(chunk: { buffer: Buffer, offset: number }): bmp.Bitmap {
 	};
 }
 
-let image = parse_pgssub({ buffer: libfs.readFileSync(process.argv[2]), offset: 0 });
-for (let i = 0; i < 256; i++) {
-	let y = image.palette.readUInt8((i * 4) + 0);
-	let u = image.palette.readUInt8((i * 4) + 1);
-	let v = image.palette.readUInt8((i * 4) + 2);
-	let o = image.palette.readUInt8((i * 4) + 3);
-	let k = ((y - 16) / (235 - 16) * o) | 0;
-	o = 255;
-	image.palette.writeUInt8(k, (i * 4) + 0);
-	image.palette.writeUInt8(k, (i * 4) + 1);
-	image.palette.writeUInt8(k, (i * 4) + 2);
-	image.palette.writeUInt8(o, (i * 4) + 3);
+function trim_transparent_region(bitmap: bmp.Bitmap): bmp.Bitmap {
+	let y0 = 0;
+	outer: for (; y0 < bitmap.h; y0++) {
+		inner: for (let x = 0; x < bitmap.w; x++) {
+			let k = bitmap.buffer.readUInt8((y0 * bitmap.w) + x);
+			if (bitmap.palette.readUInt8((k * 4) + 3) > 0) {
+				break outer;
+			}
+		}
+	}
+	let y1 = bitmap.h - 1;
+	outer: for (; y1 > y0; y1--) {
+		inner: for (let x = 0; x < bitmap.w; x++) {
+			let k = bitmap.buffer.readUInt8((y1 * bitmap.w) + x);
+			if (bitmap.palette.readUInt8((k * 4) + 3) > 0) {
+				break outer;
+			}
+		}
+	}
+	let x0 = 0;
+	outer: for (; x0 < bitmap.w; x0++) {
+		inner: for (let y = 0; y < bitmap.h; y++) {
+			let k = bitmap.buffer.readUInt8((y * bitmap.w) + x0);
+			if (bitmap.palette.readUInt8((k * 4) + 3) > 0) {
+				break outer;
+			}
+		}
+	}
+	let x1 = bitmap.w - 1;
+	outer: for (; x1 > x0; x1--) {
+		inner: for (let y = 0; y < bitmap.h; y++) {
+			let k = bitmap.buffer.readUInt8((y * bitmap.w) + x1);
+			if (bitmap.palette.readUInt8((k * 4) + 3) > 0) {
+				break outer;
+			}
+		}
+	}
+	let w = x1 - x0;
+	let h = y1 - y0;
+	let buffer = Buffer.alloc(w * h);
+	for (let y = 0; y < h; y++) {
+		bitmap.buffer.copy(buffer, (y * w), ((y0 + y) * bitmap.w) + x0, ((y0 + y) * bitmap.w) + x1);
+	}
+	return {
+		...bitmap,
+		w,
+		h,
+		buffer
+	};
 }
-let writable = libfs.createWriteStream('../temp/test.bmp', { encoding: 'binary' });
-bmp.write_to(image, writable);
+
+function convert_to_brightness(bitmap: bmp.Bitmap): bmp.Bitmap {
+	let palette = Buffer.alloc(256 * 4);
+	for (let i = 0; i < 256; i++) {
+		let y = bitmap.palette.readUInt8((i * 4) + 0);
+		let o = bitmap.palette.readUInt8((i * 4) + 3);
+		let b = ((Math.max(16, Math.min(y, 235)) - 16) / (235 - 16) * 255) | 0;
+		palette.writeUInt8(b, (i * 4) + 0);
+		palette.writeUInt8(b, (i * 4) + 1);
+		palette.writeUInt8(b, (i * 4) + 2);
+		palette.writeUInt8(o, (i * 4) + 3);
+	}
+	return {
+		...bitmap,
+		palette
+	};
+}
+
+function blend_onto_black_background(bitmap: bmp.Bitmap): bmp.Bitmap {
+	let palette = Buffer.alloc(256 * 4);
+	for (let i = 0; i < 256; i++) {
+		let r = bitmap.palette.readUInt8((i * 4) + 0);
+		let g = bitmap.palette.readUInt8((i * 4) + 1);
+		let b = bitmap.palette.readUInt8((i * 4) + 2);
+		let o = bitmap.palette.readUInt8((i * 4) + 3);
+		r = (r * (o / 255)) | 0;
+		g = (g * (o / 255)) | 0;
+		b = (b * (o / 255)) | 0;
+		o = 255;
+		palette.writeUInt8(r, (i * 4) + 0);
+		palette.writeUInt8(g, (i * 4) + 1);
+		palette.writeUInt8(b, (i * 4) + 2);
+		palette.writeUInt8(o, (i * 4) + 3);
+	}
+	return {
+		...bitmap,
+		palette
+	};
+}
+
+function invert_colors(bitmap: bmp.Bitmap): bmp.Bitmap {
+	let palette = Buffer.alloc(256 * 4);
+	for (let i = 0; i < 256; i++) {
+		let r = bitmap.palette.readUInt8((i * 4) + 0);
+		let g = bitmap.palette.readUInt8((i * 4) + 1);
+		let b = bitmap.palette.readUInt8((i * 4) + 2);
+		let o = bitmap.palette.readUInt8((i * 4) + 3);
+		r = 255 - r;
+		g = 255 - g;
+		b = 255 - b;
+		palette.writeUInt8(r, (i * 4) + 0);
+		palette.writeUInt8(g, (i * 4) + 1);
+		palette.writeUInt8(b, (i * 4) + 2);
+		palette.writeUInt8(o, (i * 4) + 3);
+	}
+	return {
+		...bitmap,
+		palette
+	};
+}
+
+let bitmap = parse_pgssub({ buffer: libfs.readFileSync(process.argv[2]), offset: 0 });
+bitmap = trim_transparent_region(bitmap);
+bitmap = convert_to_brightness(bitmap);
+bitmap = blend_onto_black_background(bitmap);
+bitmap = invert_colors(bitmap);
+let writable = libfs.createWriteStream('../temp/test.bmp');
+bmp.write_to(bitmap, writable);
