@@ -122,7 +122,7 @@ let pick_from_queue = (): void => {
 				basename = libpath.join(basename);
 			}
 			process.stdout.write(`Basename set to ${basename}\n`);
-			if (mi.type === 'dvd') {
+			if (mi.type === 'dvd' || mi.type === 'bluray') {
 				vobsub(input, (outputs) => {
 					ffmpeg.transcode(input, (code, output) => {
 						if (basename) {
