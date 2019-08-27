@@ -270,9 +270,9 @@ let encode_hardware = (filename, outfile, picture, rect, imode, bm, cb, framesel
     picture.color_primaries = 'smpte170m'; // 0.310 0.595 0.155 0.070 0.630 0.340      0.3127 0.3290
     picture.color_range = 'tv';
   } else {
-	  picture.color_space = 'unknown';
-	  picture.color_transfer = 'unknown';
-	  picture.color_primaries = 'unknown';
+	  picture.color_space = 'bt709';
+	  picture.color_transfer = 'bt709';
+	  picture.color_primaries = 'bt709';
     picture.color_range = 'tv';
 	}
   let md = [];
@@ -426,12 +426,12 @@ let encode = (filename, outfile, picture, rect, imode, bm, cb, frameselection = 
     picture.color_transfer = 'smpte170m'; // 4.5l (l < 0.018), 1.099l^0.45 - 0.099 (else) [identical to bt709]
     picture.color_primaries = 'smpte170m'; // 0.310 0.595 0.155 0.070 0.630 0.340 0.3127 0.3290
     picture.color_range = 'tv';
-  } else {
-	  picture.color_space = 'unknown';
-	  picture.color_transfer = 'unknown';
-	  picture.color_primaries = 'unknown';
-    picture.color_range = 'tv';
-	}
+  }  else {
+	picture.color_space = 'bt709';
+	picture.color_transfer = 'bt709';
+	picture.color_primaries = 'bt709';
+  picture.color_range = 'tv';
+  }
   let path = filename.split(libpath.sep);
   let file = path.pop();
   let name = file.split('.').slice(0, -1).join('.');
