@@ -3,6 +3,7 @@
 #include <cmath>
 #include <streambuf>
 #include <vector>
+#include <unistd.h>
 
 #include <CL/cl.hpp>
 
@@ -464,6 +465,7 @@ std::cerr << "W: " << W << " H: " << H << " TH: " << TH << "\n";
           shorts[i] = s*65535;
         }
 */
+		usleep(1000);
       }
       frames_read += total_frames_read;
       auto total_frames_written = 0;
