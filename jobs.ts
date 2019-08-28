@@ -118,7 +118,7 @@ let pick_from_queue = (): void => {
 				basename = `../media/video/shows/${pathify(ct.show)}-${pathify(config.suffix)}/s${('00' + ct.season).slice(-2)}/${pathify(ct.show)}-s${('00' + ct.season).slice(-2)}e${('00' + ct.episode).slice(-2)}-${pathify(ct.title)}-${pathify(config.suffix)}`;
 				basename = libpath.join(basename);
 			} else if (ct.type === 'movie') {
-				basename = `../media/video/movies/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}}-${pathify(config.suffix)}/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}}-${pathify(config.suffix)}`;
+				basename = `../media/video/movies/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}-${pathify(config.suffix)}/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}-${pathify(config.suffix)}`;
 				basename = libpath.join(basename);
 			}
 			process.stdout.write(`Basename set to ${basename}\n`);
