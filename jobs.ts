@@ -75,7 +75,7 @@ interface Database {
 }
 
 let pathify = (string: string): string => {
-	return encodeURIComponent(string.split(' ').join('_').split('-').join('_').split('ñ').join('n').toLowerCase());
+	return encodeURIComponent(string.split('/').join('_').split(' ').join('_').split('-').join('_').split('ñ').join('n').split(':').join('').toLowerCase());
 };
 
 let get_media_info = (path: string): { type: string, content: Content } | undefined => {
