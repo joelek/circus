@@ -5,7 +5,7 @@ import * as libcrypto from 'crypto';
 import * as librl from 'readline';
 import * as vobsub from './vobsub';
 import * as ffmpeg from './ffmpeg';
-let config = require('../store/config.json');
+import * as utils from './source/utils';
 
 let move_files = (filenames: string[], basename: string): void => {
 	filenames.forEach((filename) => {
@@ -74,10 +74,6 @@ interface Database {
 	[key: string]: DatabaseEntry;
 }
 
-let pathify = (string: string): string => {
-	return encodeURIComponent(string.split('/').join('_').split(' ').join('_').split('-').join('_').split('ñ').join('n').split(':').join('').toLowerCase());
-};
-
 let get_media_info = (path: string): { type: string, content: Content } | undefined => {
 	let filename = path.split(libpath.sep).pop();
 	let string = libfs.readFileSync('../store/discdb.json', 'utf8');
@@ -115,10 +111,10 @@ let pick_from_queue = (): void => {
 			let basename = null;
 			let ct = mi.content;
 			if (ct.type === 'episode') {
-				basename = `../media/video/shows/${pathify(ct.show)}-${pathify(config.suffix)}/s${('00' + ct.season).slice(-2)}/${pathify(ct.show)}-s${('00' + ct.season).slice(-2)}e${('00' + ct.episode).slice(-2)}-${pathify(ct.title)}-${pathify(config.suffix)}`;
+				basename = `../media/video/shows/${utils.pathify(ct.show)}-${utils.pathify(utils.config.suffix)}/s${('00' + ct.season).slice(-2)}/${utils.pathify(ct.show)}-s${('00' + ct.season).slice(-2)}e${('00' + ct.episode).slice(-2)}-${utils.pathify(ct.title)}-${utils.pathify(utils.config.suffix)}`;
 				basename = libpath.join(basename);
 			} else if (ct.type === 'movie') {
-				basename = `../media/video/movies/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}-${pathify(config.suffix)}/${pathify(ct.title)}-${('0000' + ct.year).slice(-4)}-${pathify(config.suffix)}`;
+				basename = `../media/video/movies/${utils.pathify(ct.title)}-${('0000' + ct.year).slice(-4)}-${utils.pathify(utils.config.suffix)}/${utils.pathify(ct.title)}-${('0000' + ct.year).slice(-4)}-${utils.pathify(utils.config.suffix)}`;
 				basename = libpath.join(basename);
 			}
 			process.stdout.write(`Basename set to ${basename}\n`);
