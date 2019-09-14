@@ -55,8 +55,8 @@ let get_poster = (metadata, cb) => {
 };
 
 let scrape_data = () => {
-  let cache = require('../store/metadata.json');
-  let media = require('../store/media.json');
+  let cache = require('./private/db/metadata.json');
+  let media = require('./private/db/media.json');
   let queue = media.video.movies.slice();
   let done = () => {
     let sorted = [];
@@ -79,7 +79,7 @@ let scrape_data = () => {
     sorted.forEach((entry) => {
       out[entry.key] = entry.value;
     });
-    let fd = libfs.openSync('../store/metadata.json', 'w');
+    let fd = libfs.openSync('./private/db/metadata.json', 'w');
     libfs.writeSync(fd, JSON.stringify(out, null, 2));
     libfs.closeSync(fd);
     process.exit(0);

@@ -1,7 +1,7 @@
-let media = require('../store/media.json');
+let media = require('./private/db/media.json');
 let cc = require('./cc.js');
 let auth = require('./auth.js');
-let lists = require('../store/lists.json');
+let lists = require('./private/db/lists.json');
 
 let tracks_index = {};
 

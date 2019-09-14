@@ -8,7 +8,7 @@ let gmedia = null;
 let gtoken = null;
 let gplayer = null;
 
-let media = require('../store/media.json');
+let media = require('./private/db/media.json');
 
 let make_media_object = () => {
   if (gcontext === null || gindex === null) {

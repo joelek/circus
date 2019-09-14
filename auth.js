@@ -1,6 +1,6 @@
 let crypto = require('crypto');
 let tokens = [];
-let users = require('../store/users.json');
+let users = require('./private/db/users.json');
 
 function password_generate(password) {
   let cost = 14;

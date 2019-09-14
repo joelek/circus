@@ -29,7 +29,7 @@ namespace libmdns {
   };
 
   let parse_name = (buffer: Buffer, offset: number): { value: string, offset: number } => {
-    let labels = [];
+    let labels = new Array<string>();
     while (true) {
       let length = buffer.readUInt8(offset);
       if (length === 0) {
@@ -127,25 +127,25 @@ namespace libmdns {
     let ancount = header.readUInt16BE(6);
     let nscount = header.readUInt16BE(8);
     let arcount = header.readUInt16BE(10);
-    let questions = [];
+    let questions = new Array<{ value: string, offset: number }>();
     for (let i = 0; i < qdcount; i++) {
       let result = parse_question(buffer, offset);
       questions.push(result);
       offset = result.offset;
     }
-    let answers = [];
+    let answers = new Array<{ name: string, data: string, offset: number } >();
     for (let i = 0; i < ancount; i++) {
       let result = parse_record(buffer, offset);
       answers.push(result);
       offset = result.offset;
     }
-    let authorities = [];
+    let authorities = new Array<{ name: string, data: string, offset: number } >();
     for (let i = 0; i < nscount; i++) {
       let result = parse_record(buffer, offset);
       authorities.push(result);
       offset = result.offset;
     }
-    let additionals = [];
+    let additionals = new Array<{ name: string, data: string, offset: number } >();
     for (let i = 0; i < arcount; i++) {
       let result = parse_record(buffer, offset);
       additionals.push(result);

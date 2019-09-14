@@ -103,7 +103,7 @@ let send_data = (file, request, response) => {
   }
 };
 
-let media = require('../store/media.json');
+let media = require('./private/db/media.json');
 
 let httpServer = http.createServer()
   .on('request', (request, response) => {
@@ -115,9 +115,9 @@ let httpServer = http.createServer()
   .listen(80);
 
 let httpsServer = https.createServer({
-    cert: fs.readFileSync("../store/certs/live/ap.joelek.se/fullchain.pem"),
-    dhparam: fs.readFileSync("../store/dhparam.pem"),
-    key: fs.readFileSync("../store/certs/live/ap.joelek.se/privkey.pem")
+    cert: fs.readFileSync("./private/certs/live/ap.joelek.se/fullchain.pem"),
+    dhparam: fs.readFileSync("./private/certs/dhparam.pem"),
+    key: fs.readFileSync("./private/certs/live/ap.joelek.se/privkey.pem")
   })
   .on('request', (request, response) => {
     console.log(`${new Date().toUTCString()}:${request.method}:${request.url}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, 2));
