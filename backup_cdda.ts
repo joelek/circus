@@ -2,6 +2,7 @@ import * as libcp from 'child_process';
 import * as libcrypto from 'crypto';
 import * as librl from 'readline';
 import * as libhttp from 'http';
+import * as libhttps from 'https';
 import * as libfs from 'fs';
 import * as utils from './source/utils';
 
@@ -33,6 +34,8 @@ type DiscMetadata = {
 type CDDA_TRACK = {
 	track_number: number;
 	track_index: number;
+	offset: number;
+	length: number;
 	duration_ms: number;
 };
 
@@ -125,6 +128,8 @@ function parse_toc(buffer: Buffer): CDDA_TOC {
 			tracks.push({
 				track_number,
 				track_index,
+				offset: sectors1,
+				length: sectors2 - sectors1,
 				duration_ms
 			});
 		}
@@ -378,51 +383,56 @@ function make_disc_from_toc(toc: CDDA_TOC): DiscMetadata {
 }
 
 function get_disc_from_ws(toc: CDDA_TOC, cb: Callback<DiscMetadata>): void {
-	let disc = make_disc_from_toc(toc);
-	let http = libhttp.createServer((request, response) => {
-		if (false) {
-		} else if (request.url === `/${toc.disc_id}`) {
+	let mb_disc_id = get_mb_disc_id(toc);
+	log(`Disc id (Musicbrainz): ${mb_disc_id}`);
+	get_mb_data(mb_disc_id, (data) => {
+		let disc = get_disc_metadata_from_mb(data);
+		disc.id = toc.disc_id;
+		let http = libhttp.createServer((request, response) => {
 			if (false) {
-			} else if (request.method === `GET`) {
-				response.writeHead(200, {
-					'content-type': `text/html; charset=utf-8`
-				});
-				return response.end(make_form_for_disc(disc));
-			} else if (request.method === `POST`) {
-				let chunks = new Array<Buffer>();
-				request.on(`data`, (chunk) => {
-					chunks.push(Buffer.from(chunk, `binary`));
-				});
-				request.on(`end`, () => {
-					let buffer = Buffer.concat(chunks);
-					let qs = buffer.toString(`utf-8`);
-					disc = get_disc_from_qs(toc, qs);
-					if (is_disc_valid(disc)) {
-						response.writeHead(200, {
-							'content-type': `text/html; charset=utf-8`
-						});
-						response.end(`<!doctype html>\n<html><head>\n<meta charset="utf-8" />\n<title>Disco</title>\n</head>\n<body>\n<p>Thanks!</p>\n</body>\n</html>`);
-						return http.close(() => {
-							cb(disc);
-						});
-					} else {
-						response.writeHead(200, {
-							'content-type': `text/html; charset=utf-8`
-						});
-						return response.end(make_form_for_disc(disc));
-					}
-				});
+			} else if (request.url === `/${toc.disc_id}`) {
+				if (false) {
+				} else if (request.method === `GET`) {
+					response.writeHead(200, {
+						'content-type': `text/html; charset=utf-8`
+					});
+					return response.end(make_form_for_disc(disc));
+				} else if (request.method === `POST`) {
+					let chunks = new Array<Buffer>();
+					request.on(`data`, (chunk) => {
+						chunks.push(Buffer.from(chunk, `binary`));
+					});
+					request.on(`end`, () => {
+						let buffer = Buffer.concat(chunks);
+						let qs = buffer.toString(`utf-8`);
+						disc = get_disc_from_qs(toc, qs);
+						if (is_disc_valid(disc)) {
+							response.writeHead(200, {
+								'content-type': `text/html; charset=utf-8`
+							});
+							response.end(`<!doctype html>\n<html><head>\n<meta charset="utf-8" />\n<title>Disco</title>\n</head>\n<body>\n<p>Thanks!</p>\n</body>\n</html>`);
+							return http.close(() => {
+								cb(disc);
+							});
+						} else {
+							response.writeHead(200, {
+								'content-type': `text/html; charset=utf-8`
+							});
+							return response.end(make_form_for_disc(disc));
+						}
+					});
+				} else {
+					response.writeHead(405);
+					return response.end();
+				}
 			} else {
-				response.writeHead(405);
+				response.writeHead(404);
 				return response.end();
 			}
-		} else {
-			response.writeHead(404);
-			return response.end();
-		}
-	});
-	http.listen(80, () => {
-		log(`Please supply disc metadata at: http://localhost/${toc.disc_id}`);
+		});
+		http.listen(80, () => {
+			log(`Please supply disc metadata at: http://localhost/${toc.disc_id}`);
+		});
 	});
 }
 
@@ -488,6 +498,117 @@ function backup_disc(disc: DiscMetadata, cb: Callback<void>): void {
 	return iterator(0);
 }
 
+type MB_ARTIST_CREDIT = {
+	'name': string;
+};
+
+type MB_TRACK  = {
+	'title': string;
+	'artist-credit': Array<MB_ARTIST_CREDIT>;
+};
+
+type MB_MEDIA = {
+	'tracks': Array<MB_TRACK>;
+	'position': number;
+};
+
+type MB_RELEASE = {
+	'id': string;
+	'date': string;
+	'title': string;
+	'artist-credit': Array<MB_ARTIST_CREDIT>;
+	'media': Array<MB_MEDIA>;
+};
+
+type MB = {
+	releases: Array<MB_RELEASE>;
+};
+
+function get_mb_disc_id(toc: CDDA_TOC): string {
+	let n = toc.tracks.length - 1;
+	let buffer = Buffer.alloc(6 + (4 * 99));
+	let offset = 0;
+	buffer.writeUInt8(toc.tracks[0].track_number, offset); offset += 1;
+	buffer.writeUInt8(toc.tracks[n].track_number, offset); offset += 1;
+	buffer.writeUInt32BE(toc.tracks[n].offset + toc.tracks[n].length, offset); offset += 4;
+	for (let i = 0; i < toc.tracks.length; i++) {
+		buffer.writeUInt32BE(toc.tracks[i].offset, offset); offset += 4;
+	}
+	for (let i = toc.tracks.length; i < 99; i++) {
+		buffer.writeUInt32BE(0, offset); offset += 4;
+	}
+	let hex = buffer.toString(`hex`).toUpperCase();
+	let hash = libcrypto.createHash(`sha1`);
+	hash.update(hex);
+	let digest = hash.digest(`base64`).split(`+`).join(`.`).split(`/`).join(`_`).split(`=`).join(`-`);
+	return digest;
+}
+
+function get_mb_data(mb_disc_id: string, cb: Callback<MB | null>): void {
+	libhttps.request(`https://musicbrainz.org/ws/2/discid/${mb_disc_id}?fmt=json&inc=artist-credits+recordings`, {
+		method: `GET`,
+		headers: {
+			'User-Agent': `Disco/0.0.1 (  )`
+		}
+	}, (response) => {
+		response.setEncoding('binary');
+		let chunks = new Array<Buffer>();
+		response.on('data', (chunk) => {
+			chunks.push(Buffer.from(chunk, 'binary'));
+		});
+		response.on('end', () => {
+			let buffer = Buffer.concat(chunks);
+			let string = buffer.toString('utf8');
+			try {
+				let json = JSON.parse(string);
+				cb(json); // TODO: Assert type compatibility.
+			} catch (error) {
+				cb(null);
+			}
+		});
+	}).end();
+}
+
+function get_disc_metadata_from_mb(mb: MB): DiscMetadata | null {
+	let parts: RegExpExecArray | null;
+	if (mb.releases.length === 0) {
+		return null;
+	}
+	let release = mb.releases[0];
+	if (release.media.length === 0) {
+		return null;
+	}
+	let media = release.media[0];
+	let id = release.id;
+	let artists = release[`artist-credit`].map((ac) => ac.name);
+	let title = release.title;
+	let number = media.position;
+	let year = 0;
+	if ((parts = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec(release.date)) !== null) {
+		year = Number.parseInt(parts[1]);
+	}
+	let tracks = media.tracks.map((track, index) => {
+		let title = track.title;
+		let artists = track[`artist-credit`].map((ac) => ac.name);
+		let duration_ms = 0;
+		let number = index + 1;
+		return {
+			title,
+			artists,
+			duration_ms,
+			index,
+			number
+		};
+	});
+	return {
+		id,
+		artists,
+		title,
+		number,
+		year,
+		tracks
+	};
+}
 
 
 
@@ -500,8 +621,9 @@ function backup_disc(disc: DiscMetadata, cb: Callback<void>): void {
 
 
 
- get_disc((disc) => {
-	 return backup_disc(disc, () => {
+
+get_disc((disc) => {
+	backup_disc(disc, () => {
 		process.exit(0);
-	 })
- });
+	})
+});
