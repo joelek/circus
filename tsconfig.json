@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"noImplicitAny": false,
+		"noImplicitAny": true,
 		"strictNullChecks":  true,
 		"types": [
 			"node"
