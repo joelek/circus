@@ -52,6 +52,7 @@ let send_data = (file, request, response) => {
   let filename = file.path.join(path.sep);
   let fd = fs.openSync(filename, 'r');
   let size = fs.fstatSync(fd).size;
+  fs.closeSync(fd);
   let parts2;
   if ((parts2 = /^bytes\=((?:[0-9])|(?:[1-9][0-9]+))\-((?:[0-9])|(?:[1-9][0-9]+))?$/.exec(request.headers.range)) != null) {
     let offset = parseInt(parts2[1]);
