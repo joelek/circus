@@ -2,7 +2,7 @@ let crypto = require('crypto');
 let fs = require('fs');
 let path = require('path');
 
-let media_root = '../media/';
+let media_root = './private/media/';
 
 let db = {
   audio: {
