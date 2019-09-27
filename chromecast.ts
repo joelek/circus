@@ -190,7 +190,11 @@ namespace libmdns {
 		socket.send(Buffer.concat([header, body]), MDNS_PORT, MDNS_ADDRESS);
 	};
 
-	export let observe = (host: string, timeout: number, observer: Observer): { cancel(): void } => {
+	interface Cancellable {
+		cancel(): void;
+	}
+
+	export let observe = (host: string, timeout: number, observer: Observer): Cancellable => {
 		let obs = observers[host];
 		if (obs === undefined) {
 			obs = new Array<Observer>();
