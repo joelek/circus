@@ -1,13 +1,13 @@
 {
-  "dependencies": {
-    "@types/node": "^10.12.18",
-    "castv2-client": "^1.2.0",
-    "greenlock-cli": "^2.3.1",
-    "node-dns-sd": "^0.3.0"
-  },
-  "scripts": {
-    "greenlock": "node ./node_modules/greenlock-cli/bin/greenlock.js certonly --standalone --acme-version draft-11 --acme-url https://acme-v02.api.letsencrypt.org/directory --agree-tos --email contact@joelek.se --domains ap.joelek.se --config-dir ./private/certs/",
-    "index": "node ./index.js > ./private/db/media.json",
-    "server": "node ./server.js"
-  }
+	"dependencies": {
+		"@types/node": "^10.12.18",
+		"castv2-client": "^1.2.0",
+		"greenlock-cli": "^2.3.1",
+		"node-dns-sd": "^0.3.0"
+	},
+	"scripts": {
+		"greenlock": "node ./node_modules/greenlock-cli/bin/greenlock.js certonly --standalone --acme-version draft-11 --acme-url https://acme-v02.api.letsencrypt.org/directory --agree-tos --email contact@joelek.se --domains ap.joelek.se --config-dir ./private/certs/",
+		"index": "node ./index.js > ./private/db/media.json",
+		"server": "node ./server.js"
+	}
 }
