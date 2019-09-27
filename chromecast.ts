@@ -151,7 +151,7 @@ namespace libmdns {
 			additionals.push(result);
 			offset = result.offset;
 		}
-		console.log(JSON.stringify(rcache, null, 2));
+		console.log(JSON.stringify(rcache, null, "\t"));
 	};
 
 	const MDNS_ADDRESS = '224.0.0.251';

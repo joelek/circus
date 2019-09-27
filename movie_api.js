@@ -80,7 +80,7 @@ let scrape_data = () => {
 			out[entry.key] = entry.value;
 		});
 		let fd = libfs.openSync('./private/db/metadata.json', 'w');
-		libfs.writeSync(fd, JSON.stringify(out, null, 2));
+		libfs.writeSync(fd, JSON.stringify(out, null, "\t"));
 		libfs.closeSync(fd);
 		process.exit(0);
 	};

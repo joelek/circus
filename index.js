@@ -590,4 +590,4 @@ db.video.movies.forEach((movie) => {
 	}
 });
 
-console.log(JSON.stringify(db, null, 2));
+console.log(JSON.stringify(db, null, "\t"));

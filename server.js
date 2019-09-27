@@ -121,9 +121,9 @@ let httpsServer = https.createServer({
 		key: fs.readFileSync("./private/certs/live/ap.joelek.se/privkey.pem")
 	})
 	.on('request', (request, response) => {
-		console.log(`${new Date().toUTCString()}:${request.method}:${request.url}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, 2));
+		console.log(`${new Date().toUTCString()}:${request.method}:${request.url}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, "\t"));
 		if (!/ap[.]joelek[.]se(:[0-9]+)?$/.test(request.headers.host)) {
-			console.log('dropped', JSON.stringify(request.headers, null, 2));
+			console.log('dropped', JSON.stringify(request.headers, null, "\t"));
 			response.writeHead(400);
 			response.end();
 			return;
@@ -146,7 +146,7 @@ let httpsServer = https.createServer({
 			response.end(`<!doctype html><html><head><base href="/"/><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0" name="viewport"/></head><body><script>${fs.readFileSync('client.js')}</script></body></html>`);
 			return;
 		}
-		console.log('unhandled', JSON.stringify(request.headers, null, 2));
+		console.log('unhandled', JSON.stringify(request.headers, null, "\t"));
 		response.writeHead(400);
 		response.end();
 		return;
