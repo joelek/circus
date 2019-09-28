@@ -151,17 +151,6 @@ let set_context = (ctx) => {
 let set_context_metadata = (md) => {
 	metadata = md;
 };
-let get_route = (pathname = window.location.pathname, basehref = document.head.querySelector('base[href]').getAttribute('href')) => {
-	let pn = pathname.split('/');
-	let bh = basehref.split('/');
-	let i = 0;
-	while (i < pn.length && i < bh.length && pn[i] === bh[i]) {
-		i++;
-	}
-	let uri = pn.slice(i).join('/');
-	//return uri === '' ? './' : uri;
-	return uri;
-};
 let updateviewforuri = (uri) => {
 	while (mount.hasChildNodes()) {
 		mount.removeChild(mount.lastChild);
@@ -395,6 +384,17 @@ let updateviewforuri = (uri) => {
 		});
 		mount.appendChild(v);
 	}
+};
+let get_route = (pathname = window.location.pathname, basehref = document.head.querySelector('base[href]').getAttribute('href')) => {
+	let pn = pathname.split('/');
+	let bh = basehref.split('/');
+	let i = 0;
+	while (i < pn.length && i < bh.length && pn[i] === bh[i]) {
+		i++;
+	}
+	let uri = pn.slice(i).join('/');
+	//return uri === '' ? './' : uri;
+	return uri;
 };
 let navigate = (uri) => {
 	if (window.history.state === null) {
