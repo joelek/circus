@@ -18,7 +18,8 @@ let db = {
 		shows: [],
 		seasons: [],
 		episodes: [],
-		subtitles: []
+		subtitles: [],
+		cues: []
 	},
 	files: []
 };
@@ -565,7 +566,9 @@ db.video.episodes.forEach((episode) => {
 	for (let i = 0; i < vtt_files.length; i++) {
 		let vttbasename = vtt_files[i].path[vtt_files[i].path.length-1].split('.')[0];
 		if (basename === vttbasename) {
+			let subtitle_id = get_id_for(vtt_files[i].file_id);
 			add_subtitle({
+				subtitle_id: subtitle_id,
 				episode_id: episode.episode_id,
 				movie_id: null,
 				file_id: vtt_files[i].file_id
@@ -581,7 +584,9 @@ db.video.movies.forEach((movie) => {
 	for (let i = 0; i < vtt_files.length; i++) {
 		let vttbasename = vtt_files[i].path[vtt_files[i].path.length-1].split('.')[0];
 		if (basename === vttbasename) {
+			let subtitle_id = get_id_for(vtt_files[i].file_id);
 			add_subtitle({
+				subtitle_id: subtitle_id,
 				episode_id: null,
 				movie_id: movie.movie_id,
 				file_id: vtt_files[i].file_id
