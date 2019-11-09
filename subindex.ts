@@ -68,7 +68,7 @@ type SubtitleDatabase = {
 let subtitles = {
 	words: new Map<string, Set<string>>()
 };
-let media = JSON.parse(require("./private/db/media.json")) as MediaDatabase;
+let media = JSON.parse(libfs.readFileSync("./private/db/media.json", { encoding: "utf8" })) as MediaDatabase;
 let file_index = new Map<string, FileEntry>();
 media.files.forEach((file_entry) => {
 	file_index.set(file_entry.file_id, file_entry);
@@ -96,3 +96,21 @@ media.video.subtitles.forEach((link_entry) => {
 		});
 	});
 });
+libfs.writeFileSync("./private/db/subtitles.json", JSON.stringify(subtitles, (key, value) => {
+	if (false) {
+	} else if (value instanceof Map) {
+		return Array.from(value).reduce((object, [key, value]) => {
+			// @ts-ignore
+			object[key] = value;
+			return object;
+		}, {});
+	} else if (value instanceof Set) {
+		return Array.from(value).reduce((object, value) => {
+			// @ts-ignore
+			object.push(value);
+			return object;
+		}, []);
+	} else {
+		return value;
+	}
+}, "\t"));
