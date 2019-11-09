@@ -1,4 +1,5 @@
 import * as libfs from "fs";
+import * as libcrypto from "crypto";
 import * as libvtt from "./vtt";
 import * as libreader from "./reader";
 
@@ -54,20 +55,40 @@ type MediaDatabase = {
 	files: Array<FileEntry>;
 };
 
-type SubtitleEntry = {
-	episode_id: string | null;
-	movie_id: string | null;
-	offset_ms: number;
-	duration_ms: number;
+type CueEntry = {
+	cue_id: string;
+	link_entry: LinkEntry;
+	cue: libvtt.Cue;
 };
 
 type SubtitleDatabase = {
+	cues: Array<CueEntry>;
 	words: Map<string, Set<string>>;
 };
 
+let cue_index = new Map<string, CueEntry>();
 let subtitles = {
+	cues: new Array<CueEntry>(),
 	words: new Map<string, Set<string>>()
 };
+function getCueEntry(link_entry: LinkEntry, cue: libvtt.Cue): CueEntry {
+	let hash = libcrypto.createHash("md5");
+	hash.update(link_entry.file_id);
+	hash.update("" + cue.start_ms);
+	let cue_id = hash.digest("hex");
+	let cue_entry = cue_index.get(cue_id);
+	if (cue_entry !== undefined) {
+		return cue_entry;
+	}
+	cue_entry = {
+		cue_id,
+		link_entry,
+		cue
+	};
+	cue_index.set(cue_id, cue_entry);
+	subtitles.cues.push(cue_entry);
+	return cue_entry;
+}
 let media = JSON.parse(libfs.readFileSync("./private/db/media.json", { encoding: "utf8" })) as MediaDatabase;
 let file_index = new Map<string, FileEntry>();
 media.files.forEach((file_entry) => {
@@ -82,16 +103,17 @@ media.video.subtitles.forEach((link_entry) => {
 	let reader = new libreader.Reader(string);
 	let track = libvtt.readTrack(reader);
 	track.body.cues.forEach((cue) => {
+		let cue_entry = getCueEntry(link_entry, cue);
 		cue.lines.forEach((line) => {
 			let clean = line.toLowerCase().replace(/[^a-z ]/g, "").replace(/[ ]+/g, " ");
-			let words = clean.split(" ");
+			let words = clean.split(" ").filter((word) => word.length >= 4);
 			words.forEach((word) => {
 				let words = subtitles.words.get(word);
 				if (words === undefined) {
 					words = new Set<string>();
 					subtitles.words.set(word, words);
 				}
-				words.add((file_entry as FileEntry).file_id); // TSBUG
+				words.add(cue_entry.cue_id);
 			});
 		});
 	});
