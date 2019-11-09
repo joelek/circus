@@ -1,5 +1,9 @@
 {
 	"compilerOptions": {
+		"lib": [
+			"es5",
+			"es6"
+		],
 		"noImplicitAny": true,
 		"strictNullChecks":  true,
 		"types": [
