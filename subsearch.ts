@@ -3,50 +3,18 @@ import * as libcp from "child_process";
 import * as libdatabase from "./database";
 import * as libutils from "./utils";
 
-function getSearchTerms(string: string): Array<string> {
-	let clean = string.toLowerCase().replace(/[^a-z ]/g, "").replace(/[ ]+/g, " "); // IMPROVE
-	let terms = clean.split(" ").filter((word) => word.length >= 4);
-	return terms;
-}
-
-// Index subtitles on words.
 let media = JSON.parse(libfs.readFileSync("./private/db/media.json", "utf8")) as libdatabase.MediaDatabase;
-let cue_search_index = new Map<string, Set<string>>();
-media.video.cues.forEach((cue_entry) => {
-	cue_entry.lines.forEach((line) => {
-		let terms = getSearchTerms(line);
-		terms.forEach((term) => {
-			let cues = cue_search_index.get(term);
-			if (cues === undefined) {
-				cues = new Set<string>();
-				cue_search_index.set(term, cues);
-			}
-			cues.add(cue_entry.cue_id);
-		});
-	});
-});
-libfs.writeFileSync("./private/db/subtitles.json", JSON.stringify(cue_search_index, (key, value) => {
-	if (false) {
-	} else if (value instanceof Map) {
-		return Array.from(value).reduce((object, [key, value]) => {
-			// @ts-ignore
-			object[key] = value;
-			return object;
-		}, {});
-	} else if (value instanceof Set) {
-		return Array.from(value).reduce((object, value) => {
-			// @ts-ignore
-			object.push(value);
-			return object;
-		}, []);
-	} else {
-		return value;
+let cue_search_index = JSON.parse(libfs.readFileSync("./private/db/subtitles.json", "utf8"), (key, value) => {
+	if (value instanceof Array) {
+		return new Set<string>(value);
 	}
-}, "\t"));
-
-// Search
+	if (value instanceof Object) {
+		return new Map<string, Set<string>>(Object.keys(value).map(k => [k, value[k]]));
+	}
+	return value;
+}) as libdatabase.SubtitlesDatabase;
 let query = process.argv[2];
-let terms = getSearchTerms(query);
+let terms = libutils.getSearchTerms(query);
 let cue_id_sets = terms.map((term) => {
 	let cues = cue_search_index.get(term);
 	if (cues !== undefined) {

@@ -60,6 +60,8 @@ type MediaDatabase = {
 	files: Array<FileEntry>;
 };
 
+type SubtitlesDatabase = Map<string, Set<string>>;
+
 export {
 	MovieEntry,
 	ShowEntry,
@@ -68,5 +70,6 @@ export {
 	SubtitleEntry,
 	CueEntry,
 	FileEntry,
-	MediaDatabase
+	MediaDatabase,
+	SubtitlesDatabase
 };

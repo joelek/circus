@@ -3,6 +3,7 @@ import * as libcrypto from "crypto";
 import * as libvtt from "./vtt";
 import * as libreader from "./reader";
 import * as libdatabase from "./database";
+import * as libutils from "./utils";
 
 let media = JSON.parse(libfs.readFileSync("./private/db/media.json", "utf8")) as libdatabase.MediaDatabase;
 let file_index = new Map<string, libdatabase.FileEntry>();
@@ -15,7 +16,9 @@ media.video.subtitles.forEach((subtitle_entry) => {
 	if (file_entry === undefined) {
 		return;
 	}
-	let string = libfs.readFileSync([ ".", ...file_entry.path ].join("/"), "utf8");
+	let path = [ ".", ...file_entry.path ].join("/");
+	console.log(path);
+	let string = libfs.readFileSync(path, "utf8");
 	let reader = new libreader.Reader(string);
 	let track = libvtt.readTrack(reader);
 	track.body.cues.forEach((cue) => {
@@ -37,3 +40,35 @@ media.video.subtitles.forEach((subtitle_entry) => {
 	});
 });
 libfs.writeFileSync("./private/db/media.json", JSON.stringify(media, null, "\t"), "utf8");
+let cue_search_index = new Map<string, Set<string>>();
+media.video.cues.forEach((cue_entry) => {
+	cue_entry.lines.forEach((line) => {
+		let terms = libutils.getSearchTerms(line);
+		terms.forEach((term) => {
+			let cues = cue_search_index.get(term);
+			if (cues === undefined) {
+				cues = new Set<string>();
+				cue_search_index.set(term, cues);
+			}
+			cues.add(cue_entry.cue_id);
+		});
+	});
+});
+libfs.writeFileSync("./private/db/subtitles.json", JSON.stringify(cue_search_index, (key, value) => {
+	if (false) {
+	} else if (value instanceof Map) {
+		return Array.from(value).reduce((object, [key, value]) => {
+			// @ts-ignore
+			object[key] = value;
+			return object;
+		}, {});
+	} else if (value instanceof Set) {
+		return Array.from(value).reduce((object, value) => {
+			// @ts-ignore
+			object.push(value);
+			return object;
+		}, []);
+	} else {
+		return value;
+	}
+}, "\t"));

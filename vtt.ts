@@ -40,7 +40,8 @@ function readTimecode(reader: libreader.Reader): number {
 	let string = reader.read(12);
 	let parts = /^([0-9][0-9])[:]([0-5][0-9])[:]([0-5][0-9])[.]([0-9][0-9][0-9])$/.exec(string);
 	if (parts === null) {
-		throw new Error(libutils.join("Expected a valid timecode but read ", DQ, string, DQ, "!"));
+		console.log(libutils.join("Expected a valid timecode but read ", DQ, string, DQ, "!"));
+		return 0;
 	}
 	let hours = parseInt(parts[1], 10);
 	let minutes = parseInt(parts[2], 10);
@@ -56,7 +57,7 @@ function readCue(reader: libreader.Reader): Cue {
 	readBlank(reader);
 	let duration_ms = end_ms - start_ms;
 	if (duration_ms < 0) {
-		throw new Error(libutils.join("Expected a positive duration but read ", start_ms, " and ", end_ms, "!"));
+		console.log(libutils.join("Expected a positive duration but read ", start_ms, " and ", end_ms, "!"));
 	}
 	let lines = new Array<string>();
 	while (true) {

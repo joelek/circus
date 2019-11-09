@@ -4,6 +4,12 @@ function join(...parameters: any): string {
 	}).join("");
 }
 
+function getSearchTerms(string: string): Array<string> {
+	let clean = string.toLowerCase().replace(/[^a-z ]/g, "").replace(/[ ]+/g, " "); // IMPROVE
+	let terms = clean.split(" ").filter((word) => word.length >= 4);
+	return terms;
+}
+
 function formatTimestamp(ms: number): string {
 	let s = Math.floor(ms / 1000);
 	ms -= (s * 1000);
@@ -20,5 +26,6 @@ function formatTimestamp(ms: number): string {
 
 export {
 	join,
+	getSearchTerms,
 	formatTimestamp
 };
