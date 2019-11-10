@@ -1,3 +1,48 @@
+type Entry = {
+
+};
+
+type Index<T extends Entry> = {
+	[id: string]: T | undefined;
+};
+
+type ArtistEntry = {
+	artist_id: string;
+	title: string;
+};
+
+type AlbumEntry = {
+	album_id: string;
+	title: string;
+	year: number;
+	cover_file_id: string | null;
+};
+
+type DiscEntry = {
+	disc_id: string;
+	album_id: string;
+	number: number;
+};
+
+type TrackEntry = {
+	track_id: string;
+	disc_id: string;
+	file_id: string;
+	title: string;
+	number: number;
+	duration: number;
+};
+
+type AlbumArtistEntry = {
+	album_id: string;
+	artist_id: string;
+};
+
+type TrackArtistEntry = {
+	track_id: string;
+	artist_id: string;
+};
+
 type MovieEntry = {
 	movie_id: string;
 	file_id: string;
@@ -48,7 +93,14 @@ type FileEntry = {
 };
 
 type MediaDatabase = {
-	audio: {};
+	audio: {
+		artists: Array<ArtistEntry>;
+		albums: Array<AlbumEntry>;
+		discs: Array<DiscEntry>;
+		tracks: Array<TrackEntry>;
+		album_artists: Array<AlbumArtistEntry>;
+		track_artists: Array<TrackArtistEntry>;
+	};
 	video: {
 		movies: Array<MovieEntry>;
 		shows: Array<ShowEntry>;
@@ -63,6 +115,14 @@ type MediaDatabase = {
 type SubtitlesDatabase = Map<string, Set<string>>;
 
 export {
+	Entry,
+	Index,
+	ArtistEntry,
+	AlbumEntry,
+	DiscEntry,
+	TrackEntry,
+	AlbumArtistEntry,
+	TrackArtistEntry,
 	MovieEntry,
 	ShowEntry,
 	SeasonEntry,

@@ -1,144 +1,156 @@
-let crypto = require('crypto');
-let fs = require('fs');
-let path = require('path');
+import * as libcrypto from "crypto";
+import * as libfs from "fs";
+import * as libpath from "path";
+import * as libdb from "./database";
 
 let media_root = './private/media/';
 
 let db = {
 	audio: {
-		artists: [],
-		albums: [],
-		discs: [],
-		tracks: [],
-		album_artists: [],
-		track_artists: []
+		artists: new Array<libdb.ArtistEntry>(),
+		albums: new Array<libdb.AlbumEntry>(),
+		discs: new Array<libdb.DiscEntry>(),
+		tracks: new Array<libdb.TrackEntry>(),
+		album_artists: new Array<libdb.AlbumArtistEntry>(),
+		track_artists: new Array<libdb.TrackArtistEntry>()
 	},
 	video: {
-		movies: [],
-		shows: [],
-		seasons: [],
-		episodes: [],
-		subtitles: [],
-		cues: []
+		movies: new Array<libdb.MovieEntry>(),
+		shows: new Array<libdb.ShowEntry>(),
+		seasons: new Array<libdb.SeasonEntry>(),
+		episodes: new Array<libdb.EpisodeEntry>(),
+		subtitles: new Array<libdb.SubtitleEntry>(),
+		cues: new Array<libdb.CueEntry>()
 	},
-	files: []
+	files: new Array<libdb.FileEntry>()
 };
 
-let movies_index = {};
-let shows_index = {};
-let seasons_index = {};
-let episodes_index = {};
+let movies_index: libdb.Index<libdb.MovieEntry> = {};
+let shows_index: libdb.Index<libdb.ShowEntry> = {};
+let seasons_index: libdb.Index<libdb.SeasonEntry> = {};
+let episodes_index: libdb.Index<libdb.EpisodeEntry> = {};
+let subtitles_index: libdb.Index<libdb.SubtitleEntry> = {};
+let cues_index: libdb.Index<libdb.CueEntry> = {};
 
-let artists_index = {};
-let albums_index = {};
-let discs_index = {};
-let tracks_index = {};
-let album_artists_index = {};
-let track_artists_index = {};
+let artists_index: libdb.Index<libdb.ArtistEntry> = {};
+let albums_index: libdb.Index<libdb.AlbumEntry> = {};
+let discs_index: libdb.Index<libdb.DiscEntry> = {};
+let tracks_index: libdb.Index<libdb.TrackEntry> = {};
+let album_artists_index: libdb.Index<libdb.AlbumArtistEntry> = {};
+let track_artists_index: libdb.Index<libdb.TrackArtistEntry> = {};
 
-let files_index = {};
+let files_index: libdb.Index<libdb.FileEntry> = {};
 
-let add_movie = (movie) => {
+let add_movie = (movie: libdb.MovieEntry): void => {
 	if (!(movie.movie_id in movies_index)) {
 		movies_index[movie.movie_id] = movie;
 		db.video.movies.push(movie);
 	}
 };
 
-let add_show = (show) => {
+let add_show = (show: libdb.ShowEntry): void => {
 	if (!(show.show_id in shows_index)) {
 		shows_index[show.show_id] = show;
 		db.video.shows.push(show);
 	}
 };
 
-let add_season = (season) => {
+let add_season = (season: libdb.SeasonEntry): void => {
 	if (!(season.season_id in seasons_index)) {
 		seasons_index[season.season_id] = season;
 		db.video.seasons.push(season);
 	}
 };
 
-let add_episode = (episode) => {
+let add_episode = (episode: libdb.EpisodeEntry): void => {
 	if (!(episode.episode_id in episodes_index)) {
 		episodes_index[episode.episode_id] = episode;
 		db.video.episodes.push(episode);
 	}
 };
 
-let add_artist = (artist) => {
+let add_artist = (artist: libdb.ArtistEntry): void => {
 	if (!(artist.artist_id in artists_index)) {
 		artists_index[artist.artist_id] = artist;
 		db.audio.artists.push(artist);
 	}
 };
 
-let add_album = (album) => {
+let add_album = (album: libdb.AlbumEntry): void => {
 	if (!(album.album_id in albums_index)) {
 		albums_index[album.album_id] = album;
 		db.audio.albums.push(album);
 	}
 };
 
-let add_disc = (disc) => {
+let add_disc = (disc: libdb.DiscEntry): void => {
 	if (!(disc.disc_id in discs_index)) {
 		discs_index[disc.disc_id] = disc;
 		db.audio.discs.push(disc);
 	}
 };
 
-let add_track = (track) => {
+let add_track = (track: libdb.TrackEntry): void => {
 	if (!(track.track_id in tracks_index)) {
 		tracks_index[track.track_id] = track;
 		db.audio.tracks.push(track);
 	}
 };
 
-let add_album_artist = (album_artist) => {
-	if (!(album_artist.album_id in album_artists_index)) {
-		album_artists_index[album_artist.album_id] = [];
-	}
-	if (album_artists_index[album_artist.album_id].indexOf(album_artist.artist_id) === -1) {
-		album_artists_index[album_artist.album_id].push(album_artist.artist_id);
+let add_album_artist = (album_artist: libdb.AlbumArtistEntry): void => {
+	let key = Array.of(album_artist.album_id, album_artist.artist_id).join(":");
+	if (!(key in album_artists_index)) {
+		album_artists_index[key] = album_artist;
 		db.audio.album_artists.push(album_artist);
 	}
 };
 
-let add_track_artist = (track_artist) => {
-	if (!(track_artist.track_id in track_artists_index)) {
-		track_artists_index[track_artist.track_id] = [];
-	}
-	if (track_artists_index[track_artist.track_id].indexOf(track_artist.artist_id) === -1) {
-		track_artists_index[track_artist.track_id].push(track_artist.artist_id);
+let add_track_artist = (track_artist: libdb.TrackArtistEntry): void => {
+	let key = Array.of(track_artist.track_id, track_artist.artist_id).join(":");
+	if (!(key in track_artists_index)) {
+		track_artists_index[key] = track_artist;
 		db.audio.track_artists.push(track_artist);
 	}
 };
 
-let add_subtitle = (subtitle) => {
+let add_subtitle = (subtitle: libdb.SubtitleEntry): void => {
 	db.video.subtitles.push(subtitle);
 };
 
-let add_file = (file) => {
+let add_file = (file: libdb.FileEntry): void => {
 	if (!(file.file_id in files_index)) {
 		files_index[file.file_id] = file;
 		db.files.push(file);
 	}
 };
 
-let decode_id3v24_synchsafe_integer = (b) => {
+let decode_id3v24_syncsafe_integer = (b: Buffer): number => {
 	return ((b[0] & 0x7F) << 21) | ((b[1] & 0x7F) << 14) | ((b[2] & 0x7F) << 7) | ((b[3] & 0x7F) << 0);
 };
 
-let read_id3v24_tag = (file) => {
-	let fd = fs.openSync(file, 'r');
+type ID3Tag = {
+	track_title: string | null;
+	album_name: string | null;
+	year: number | null;
+	track: number | null;
+	tracks: number | null;
+	disc: number | null;
+	discs: number | null;
+	track_artist_name: string | null;
+	album_artist_name: string | null;
+	duration: number;
+};
+
+let read_id3v24_tag = (file: string): ID3Tag => {
+	let fd = libfs.openSync(file, 'r');
 	let headerid3 = Buffer.alloc(10);
-	fs.readSync(fd, headerid3, 0, headerid3.length, null);
-	if (headerid3.slice(0, 5).toString() !== 'ID3\4\0') {
+	libfs.readSync(fd, headerid3, 0, headerid3.length, null);
+	if (headerid3.slice(0, 5).toString() !== 'ID3\x04\x00') {
 		throw new Error();
 	}
-	let length = decode_id3v24_synchsafe_integer(headerid3.slice(6, 6 + 4));
+	let length = decode_id3v24_syncsafe_integer(headerid3.slice(6, 6 + 4));
 	let body = Buffer.alloc(length);
-	fs.readSync(fd, body, 0, body.length, null);
+	libfs.readSync(fd, body, 0, body.length, null);
 	let tag = {
 		track_title: null,
 		album_name: null,
@@ -149,12 +161,12 @@ let read_id3v24_tag = (file) => {
 		discs: null,
 		track_artist_name: null,
 		album_artist_name: null,
-		duration: null
-	};
+		duration: 0
+	} as ID3Tag;
 	let offset = 0;
 	while (offset < body.length) {
 		let frame_id = body.slice(offset, offset + 4).toString();
-		let length = decode_id3v24_synchsafe_integer(body.slice(offset + 4, offset + 4 + 4));
+		let length = decode_id3v24_syncsafe_integer(body.slice(offset + 4, offset + 4 + 4));
 		let flags = body.slice(offset + 8, offset + 8 + 2);
 		let data = body.slice(offset + 10, offset + 10 + length);
 		offset += 10 + length;
@@ -197,7 +209,7 @@ let read_id3v24_tag = (file) => {
 		}
 	}
 	let header = Buffer.alloc(4);
-	fs.readSync(fd, header, 0, header.length, null);
+	libfs.readSync(fd, header, 0, header.length, null);
 	let sync = ((header[0] & 0xFF) << 3) | ((header[1] & 0xE0) >> 5);
 	let version = ((header[1] & 0x18) >> 3);
 	let layer = ((header[1] & 0x06) >> 1);
@@ -205,7 +217,7 @@ let read_id3v24_tag = (file) => {
 	let bitrate = ((header[2] & 0xF0) >> 4);
 	let sample_rate = ((header[2] & 0x0C) >> 2);
 	let padded = ((header[2] & 0x02) >> 1);
-	let private = ((header[2] & 0x01) >> 0);
+	let priv = ((header[2] & 0x01) >> 0);
 	let channels = ((header[3] & 0xC0) >> 6);
 	let modext = ((header[3] & 0x30) >> 4);
 	let copyrighted = ((header[3] & 0x08) >> 3);
@@ -218,7 +230,7 @@ let read_id3v24_tag = (file) => {
 			if (padded) slots++;
 			let bytes = slots * 1;
 			let body = Buffer.alloc(bytes - 4);
-			fs.readSync(fd, body, 0, body.length, null);
+			libfs.readSync(fd, body, 0, body.length, null);
 			let zeroes = body.slice(0, 0 + 32);
 			let xing = body.slice(32, 32 + 4);
 			if (xing.toString('binary') === 'Xing') {
@@ -247,82 +259,105 @@ let read_id3v24_tag = (file) => {
 	return tag;
 };
 
-let get_id_for = (string) => {
-	const hash = crypto.createHash('md5');
+let get_id_for = (string: string): string => {
+	const hash = libcrypto.createHash('md5');
 	hash.update(string);
 	return hash.digest('hex');
 };
 
-let visit_audio = (node) => {
+let visit_audio = (node: string): void => {
 	let tag = read_id3v24_tag(node);
-	node = node.split(path.sep);
-	let file_id = get_id_for(`${node.join(':')}`);
-	let album_artist_id = get_id_for(`${tag.album_artist_name}`);
-	let track_artist_id = get_id_for(`${tag.track_artist_name}`);
-	let album_id = get_id_for(`${tag.album_artist_name}:${tag.album_name}:${tag.year}`);
-	let disc_id = get_id_for(`${tag.album_artist_name}:${tag.album_name}:${tag.year}:${tag.disc}`);
-	let track_id = get_id_for(`${tag.album_artist_name}:${tag.album_name}:${tag.year}:${tag.disc}:${tag.track}`);
-	add_artist({
-		artist_id: album_artist_id,
-		title: tag.album_artist_name
-	});
-	add_artist({
-		artist_id: track_artist_id,
-		title: tag.track_artist_name
-	});
-	add_album({
-		album_id: album_id,
-		title: tag.album_name,
-		year: tag.year,
-		cover_file_id: null
-	});
-	add_disc({
-		disc_id: disc_id,
-		album_id: album_id,
-		number: tag.disc
-	});
-	add_track({
-		track_id: track_id,
-		disc_id: disc_id,
-		file_id: file_id,
-		title: tag.track_title,
-		number: tag.track,
-		duration: tag.duration
-	});
-	add_album_artist({
-		album_id: album_id,
-		artist_id: album_artist_id
-	});
-	add_track_artist({
-		track_id: track_id,
-		artist_id: track_artist_id
-	});
+	let nodes = node.split(libpath.sep);
+	let file_id = get_id_for(`${nodes.join(':')}`);
 	add_file({
 		file_id: file_id,
-		path: node,
+		path: nodes,
 		mime: 'audio/mp3'
 	});
+	if (tag.album_artist_name !== null && tag.album_name !== null && tag.year !== null && tag.disc !== null && tag.track !== null && tag.track_title !== null) {
+		let album_id = get_id_for(`${tag.album_artist_name}:${tag.album_name}:${tag.year}`);
+		add_album({
+			album_id: album_id,
+			title: tag.album_name,
+			year: tag.year,
+			cover_file_id: null
+		});
+		let album_artist_id = get_id_for(`${tag.album_artist_name}`);
+		add_artist({
+			artist_id: album_artist_id,
+			title: tag.album_artist_name
+		});
+		add_album_artist({
+			album_id: album_id,
+			artist_id: album_artist_id
+		});
+		let disc_id = get_id_for(`${tag.album_artist_name}:${tag.album_name}:${tag.year}:${tag.disc}`);
+		add_disc({
+			disc_id: disc_id,
+			album_id: album_id,
+			number: tag.disc
+		});
+		let track_id = get_id_for(`${tag.album_artist_name}:${tag.album_name}:${tag.year}:${tag.disc}:${tag.track}`);
+		add_track({
+			track_id: track_id,
+			disc_id: disc_id,
+			file_id: file_id,
+			title: tag.track_title,
+			number: tag.track,
+			duration: tag.duration
+		});
+		if (tag.track_artist_name !== null) {
+			let track_artist_id = get_id_for(`${tag.track_artist_name}`);
+			add_artist({
+				artist_id: track_artist_id,
+				title: tag.track_artist_name
+			});
+			add_track_artist({
+				track_id: track_id,
+				artist_id: track_artist_id
+			});
+		}
+	}
 };
 
-let decode_mp4_length = (b) => {
+let decode_mp4_length = (b: Buffer): number => {
 	return (b[0] * 256*256*256) + ((b[1] << 16) | (b[2] << 8) | (b[3] << 0));
 };
 
-let read_mp4_atom = (fds) => {
+type FileDescriptor = {
+	fd: number;
+	offset: number;
+};
+
+type MP4AtomHeader = {
+	kind: string;
+	length: number;
+};
+
+let read_mp4_atom = (fds: FileDescriptor): MP4AtomHeader => {
 	let header = Buffer.alloc(8);
-	fds.offset += fs.readSync(fds.fd, header, 0, header.length, fds.offset);
+	fds.offset += libfs.readSync(fds.fd, header, 0, header.length, fds.offset);
 	let length = decode_mp4_length(header.slice(0, 0 + 4));
 	let kind = header.slice(4, 4 + 4).toString('binary');
 	return { kind, length };
 };
 
-let read_mp4_atom_body = (fds, atom) => {
+let read_mp4_atom_body = (fds: FileDescriptor, atom: MP4AtomHeader): Buffer => {
 	let body = Buffer.alloc(atom.length - 8);
-	fds.offset += fs.readSync(fds.fd, body, 0, body.length, fds.offset);
+	fds.offset += libfs.readSync(fds.fd, body, 0, body.length, fds.offset);
 	return body;
 };
 
-let visit_atom = (tag, fds, path, maxlength) => {
+type MP4Tag = {
+	show: string | null;
+	season: number | null;
+	episode: number | null;
+	title: string | null;
+	year: number | null;
+	duration: number;
+};
+
+let visit_atom = (tag: MP4Tag, fds: FileDescriptor, path: string, maxlength: number): void => {
 	let length = 0;
 	while (length < maxlength) {
 		let atom = read_mp4_atom(fds);
@@ -373,9 +408,9 @@ let visit_atom = (tag, fds, path, maxlength) => {
 	}
 };
 
-let read_mp4_tag = (file) => {
+let read_mp4_tag = (file: string): MP4Tag => {
 	let fds = {
-		fd: fs.openSync(file, 'r'),
+		fd: libfs.openSync(file, 'r'),
 		offset: 0
 	};
 	let header = read_mp4_atom(fds);
@@ -389,22 +424,45 @@ let read_mp4_tag = (file) => {
 		episode: null,
 		title: null,
 		year: null,
-		duration: null
+		duration: 0
 	};
 	visit_atom(tag, fds, '', header.length);
 	return tag;
 };
 
-let visit_video = (node) => {
+let visit_video = (node: string): void => {
 	let tag = read_mp4_tag(node);
-	node = node.split(path.sep);
-	let file_id = get_id_for(`${node.join(':')}`);
+	let nodes = node.split(libpath.sep);
+	let file_id = get_id_for(`${nodes.join(':')}`);
 	add_file({
 		file_id: file_id,
-		path: node,
+		path: nodes,
 		mime: 'video/mp4'
 	});
-	if (tag.show === null || tag.season === null || tag.episode === null) {
+	if (tag.show !== null && tag.season !== null && tag.episode !== null && tag.title !== null) {
+		let show_id = get_id_for(`${tag.show}`);
+		let season_id = get_id_for(`${tag.show}:${tag.season}`);
+		let episode_id = get_id_for(`${tag.show}:${tag.season}:${tag.episode}`);
+		add_show({
+			show_id: show_id,
+			title: tag.show
+		});
+		add_season({
+			season_id: season_id,
+			show_id: show_id,
+			number: tag.season
+		});
+		add_episode({
+			episode_id: episode_id,
+			season_id: season_id,
+			file_id: file_id,
+			title: tag.title,
+			number: tag.episode,
+			duration: tag.duration
+		});
+		return;
+	}
+	if (tag.title !== null && tag.year !== null) {
 		let movie_id = get_id_for(`${tag.title}:${tag.year}`);
 		add_movie({
 			movie_id: movie_id,
@@ -415,92 +473,72 @@ let visit_video = (node) => {
 		});
 		return;
 	}
-	let show_id = get_id_for(`${tag.show}`);
-	let season_id = get_id_for(`${tag.show}:${tag.season}`);
-	let episode_id = get_id_for(`${tag.show}:${tag.season}:${tag.episode}`);
-	add_show({
-		show_id: show_id,
-		title: tag.show
-	});
-	add_season({
-		season_id: season_id,
-		show_id: show_id,
-		number: tag.season
-	});
-	add_episode({
-		episode_id: episode_id,
-		season_id: season_id,
-		file_id: file_id,
-		title: tag.title,
-		number: tag.episode,
-		duration: tag.duration
-	});
 };
 
-let parse_png = (node) => {
+let parse_png = (node: string): void => {
 	let fds = {
-		fd: fs.openSync(node, 'r'),
+		fd: libfs.openSync(node, 'r'),
 		offset: 0
 	};
 	let buffer = Buffer.alloc(8);
-	fds.offset += fs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
+	fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
 	if (buffer.toString('binary') !== '\u0089PNG\u000D\u000A\u001A\u000A') {
 		throw new Error();
 	}
-	node = node.split(path.sep);
-	let file_id = get_id_for(`${node.join(':')}`);
+	let nodes = node.split(libpath.sep);
+	let file_id = get_id_for(`${nodes.join(':')}`);
 	add_file({
 		file_id: file_id,
-		path: node,
+		path: nodes,
 		mime: 'image/png'
 	});
 };
 
-let parse_jpeg = (node) => {
+let parse_jpeg = (node: string): void => {
 	let fds = {
-		fd: fs.openSync(node, 'r'),
+		fd: libfs.openSync(node, 'r'),
 		offset: 0
 	};
 	let buffer = Buffer.alloc(10);
-	fds.offset += fs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
+	fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
 	if (buffer.toString('binary') !== '\u00FF\u00D8\u00FF\u00E0\u0000\u0010JFIF') {
 		throw new Error();
 	}
-	node = node.split(path.sep);
-	let file_id = get_id_for(`${node.join(':')}`);
+	let nodes = node.split(libpath.sep);
+	let file_id = get_id_for(`${nodes.join(':')}`);
 	add_file({
 		file_id: file_id,
-		path: node,
+		path: nodes,
 		mime: 'image/jpeg'
 	});
 };
 
-let parse_vtt = (node) => {
+let parse_vtt = (node: string): void => {
 	let fds = {
-		fd: fs.openSync(node, 'r'),
+		fd: libfs.openSync(node, 'r'),
 		offset: 0
 	};
 	let buffer = Buffer.alloc(1024);
-	fds.offset += fs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
+	fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
 	let str = buffer.toString('utf8');
 	let lines = str.split('\r\n').reduce((lines, line) => {
 		lines.push(...line.split('\n'));
 		return lines;
-	}, []);
+	}, new Array<string>());
 	if (lines[0].substr(0, 6) !== 'WEBVTT') {
 		throw new Error();
 	}
 	let metadata = lines[0].substr(7);
-	node = node.split(path.sep);
-	let file_id = get_id_for(`${node.join(':')}`);
+	let nodes = node.split(libpath.sep);
+	let file_id = get_id_for(`${nodes.join(':')}`);
 	add_file({
 		file_id: file_id,
-		path: node,
+		path: nodes,
 		mime: 'text/vtt'
 	});
 };
 
-let visit_image = (node) => {
+let visit_image = (node: string): void => {
 	try {
 		return parse_png(node);
 	} catch (error) {}
@@ -510,18 +548,18 @@ let visit_image = (node) => {
 	throw new Error();
 };
 
-let visit_subtitle = (node) => {
+let visit_subtitle = (node: string): void => {
 	try {
 		return parse_vtt(node);
 	} catch (error) {}
 	throw new Error();
 };
 
-let visit = (node) => {
-	let stat = fs.statSync(node);
+let visit = (node: string): void => {
+	let stat = libfs.statSync(node);
 	if (stat.isDirectory()) {
-		fs.readdirSync(node).map((subnode) => {
-			return path.join(node, subnode);
+		libfs.readdirSync(node).map((subnode) => {
+			return libpath.join(node, subnode);
 		}).map(visit);
 	} else if (stat.isFile()) {
 		try {
@@ -545,12 +583,21 @@ let image_files = db.files.filter(im => /^image[/]/.test(im.mime));
 
 db.audio.tracks.forEach((track) => {
 	let track_file = files_index[track.file_id];
+	if (track_file === undefined) {
+		return;
+	}
 	for (let i = track_file.path.length - 2; i >= 0; i--) {
 		let path = track_file.path[i];
 		let image_file = image_files.find((im) => im.path.slice(-1)[0].split('.')[0] === path);
-		if (image_file) {
+		if (image_file !== undefined) {
 			let disc = discs_index[track.disc_id];
+			if (disc === undefined) {
+				continue;
+			}
 			let album = albums_index[disc.album_id];
+			if (album === undefined) {
+				continue;
+			}
 			album.cover_file_id = image_file.file_id;
 			break;
 		}
@@ -561,6 +608,9 @@ let vtt_files = db.files.filter(file => /^text[/]vtt$/.test(file.mime));
 
 db.video.episodes.forEach((episode) => {
 	let episode_file = files_index[episode.file_id];
+	if (episode_file === undefined) {
+		return;
+	}
 	let filename = episode_file.path[episode_file.path.length-1];
 	let basename = filename.split('.').slice(0, -1).join('.');
 	for (let i = 0; i < vtt_files.length; i++) {
@@ -579,6 +629,9 @@ db.video.episodes.forEach((episode) => {
 
 db.video.movies.forEach((movie) => {
 	let movie_file = files_index[movie.file_id];
+	if (movie_file === undefined) {
+		return;
+	}
 	let filename = movie_file.path[movie_file.path.length-1];
 	let basename = filename.split('.').slice(0, -1).join('.');
 	for (let i = 0; i < vtt_files.length; i++) {
