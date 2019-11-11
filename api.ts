@@ -514,28 +514,28 @@ class AudiolistRoute implements Route {
 			})
 			.map((audiolist_item) => {
 				let track = tracks_index[audiolist_item.track_id];
-				if (track === undefined) {
-					return null;
-				}
-				let artists = media.audio.track_artists
-					.filter((track_artist) => {
-						return track_artist.track_id === (track as libdb.TrackEntry).track_id;
-					}).map((track_artist) => {
-						return artists_index[track_artist.artist_id];
-					}).filter((artist) => {
-						return artist !== undefined;
-					}) as Array<libdb.ArtistEntry>;
-				let disc = discs_index[track.disc_id];
-				if (disc !== undefined) {
-					let album = albums_index[disc.album_id];
-					if (album !== undefined) {
-						return {
-							track: {
-								...track
-							}
-						};
+				if (track !== undefined) {
+					let artists = media.audio.track_artists
+						.filter((track_artist) => {
+							return track_artist.track_id === (track as libdb.TrackEntry).track_id;
+						}).map((track_artist) => {
+							return artists_index[track_artist.artist_id];
+						}).filter((artist) => {
+							return artist !== undefined;
+						}) as Array<libdb.ArtistEntry>;
+					let disc = discs_index[track.disc_id];
+					if (disc !== undefined) {
+						let album = albums_index[disc.album_id];
+						if (album !== undefined) {
+							return {
+								track: {
+									...track
+								}
+							};
+						}
 					}
 				}
+				return null;
 			});
 		let payload = {
 			...audiolist,
