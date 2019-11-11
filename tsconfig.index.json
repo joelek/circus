@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"lib": [
+			"es5",
+			"es6"
+		],
+		"outFile": "./index.js",
+		"types": [
+			"node"
+		]
+	},
+	"extends": "./tsconfig.common.json",
+	"files": [
+		"./database.ts",
+		"./index.ts"
+	]
+	"references": [
+		{
+			"path": "./node_modules/@joelek/ts-define/projects/define/",
+			"prepend": true
+		}
+	]
+}
