@@ -76,6 +76,7 @@ type SubtitleEntry = {
 	episode_id: string | null;
 	movie_id: string | null;
 	file_id: string;
+	language: string | null;
 };
 
 type CueEntry = {
@@ -114,6 +115,28 @@ type MediaDatabase = {
 
 type SubtitlesDatabase = Map<string, Set<string>>;
 
+type UserEntry = {
+	user_id: string;
+	username: string;
+	password: string;
+};
+
+type AudiolistItemEntry = {
+	audiolist_id: string;
+	track_id: string;
+	number: number;
+};
+
+type AudiolistEntry = {
+	audiolist_id: string;
+	title: string;
+};
+
+type ListDatabase = {
+	audiolists: Array<AudiolistEntry>;
+	audiolist_items: Array<AudiolistItemEntry>;
+};
+
 export {
 	Entry,
 	Index,
@@ -131,5 +154,9 @@ export {
 	CueEntry,
 	FileEntry,
 	MediaDatabase,
-	SubtitlesDatabase
+	SubtitlesDatabase,
+	UserEntry,
+	AudiolistItemEntry,
+	AudiolistEntry,
+	ListDatabase
 };

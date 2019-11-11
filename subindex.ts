@@ -21,6 +21,10 @@ media.video.subtitles.forEach((subtitle_entry) => {
 	let string = libfs.readFileSync(path, "utf8");
 	let reader = new libreader.Reader(string);
 	let track = libvtt.readTrack(reader);
+	let metadata = JSON.parse(track.head.metadata);
+	if (typeof metadata === "object" && typeof metadata.langauge === "string") {
+		subtitle_entry.language = metadata.language;
+	}
 	track.body.cues.forEach((cue) => {
 		let hash = libcrypto.createHash("md5");
 		hash.update(subtitle_entry.file_id);

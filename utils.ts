@@ -5,8 +5,8 @@ function join(...parameters: any): string {
 }
 
 function getSearchTerms(string: string): Array<string> {
-	let clean = string.toLowerCase().replace(/[^a-z ]/g, "").replace(/[ ]+/g, " "); // IMPROVE
-	let terms = clean.split(" ").filter((word) => word.length >= 4);
+	let clean = string.toLowerCase().replace(/[^a-z ]/g, "").replace(/[ ]+/g, " ");
+	let terms = clean.split(" ").filter((word) => word.length >= 3);
 	return terms;
 }
 

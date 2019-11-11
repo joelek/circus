@@ -621,7 +621,8 @@ db.video.episodes.forEach((episode) => {
 				subtitle_id: subtitle_id,
 				episode_id: episode.episode_id,
 				movie_id: null,
-				file_id: vtt_files[i].file_id
+				file_id: vtt_files[i].file_id,
+				language: null
 			});
 		}
 	}
@@ -642,7 +643,8 @@ db.video.movies.forEach((movie) => {
 				subtitle_id: subtitle_id,
 				episode_id: null,
 				movie_id: movie.movie_id,
-				file_id: vtt_files[i].file_id
+				file_id: vtt_files[i].file_id,
+				language: null
 			});
 		}
 	}

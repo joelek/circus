@@ -1,13 +1,24 @@
 #!/usr/bin/env node
 
-let fs = require('fs');
-let http = require('http');
-let https = require('https');
-let path = require('path');
-let api = require('./api');
-let auth = require('./auth');
+import * as libfs from "fs";
+import * as libhttp from "http";
+import * as libhttps from "https";
+import * as libpath from "path";
+import * as liburl from "url";
+import * as api from "./api";
+import * as auth from "./auth";
+import * as libdb from "./database";
 
-let get_path_segments = (path) => {
+let media = require('./private/db/media.json') as libdb.MediaDatabase;
+
+let files_index: libdb.Index<libdb.FileEntry> = {};
+
+for (let i = 0; i < media.files.length; i++) {
+	let file = media.files[i];
+	files_index[file.file_id] = file;
+}
+
+let get_path_segments = (path: string): Array<string> => {
 	let raw_path_segments = path.split('/');
 	let path_segments = [];
 	for (let raw_path_segment of raw_path_segments) {
@@ -29,8 +40,8 @@ let get_path_segments = (path) => {
 	return path_segments;
 };
 
-let filter_headers = (headers, keys) => {
-	let out = {};
+let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>): Partial<libhttp.IncomingHttpHeaders> => {
+	let out: Partial<libhttp.IncomingHttpHeaders> = {};
 	for (let key in headers) {
 		if (keys.indexOf(key) >= 0) {
 			out[key] = headers[key];
@@ -39,22 +50,24 @@ let filter_headers = (headers, keys) => {
 	return out;
 };
 
-var liburl = require('url');
-
-let send_data = (file, request, response) => {
+let send_data = (file: libdb.FileEntry, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
+	if (request.url === undefined) {
+		throw new Error();
+	}
 	try {
 		var url = liburl.parse(request.url, true);
-		auth.getUsername(url.query.token);
+		auth.getUsername(url.query.token as string);
 	} catch (error) {
 		response.writeHead(401, {});
 		return response.end();
 	}
-	let filename = file.path.join(path.sep);
-	let fd = fs.openSync(filename, 'r');
-	let size = fs.fstatSync(fd).size;
-	fs.closeSync(fd);
+	let filename = file.path.join(libpath.sep);
+	let fd = libfs.openSync(filename, 'r');
+	let size = libfs.fstatSync(fd).size;
+	libfs.closeSync(fd);
 	let parts2;
-	if ((parts2 = /^bytes\=((?:[0-9])|(?:[1-9][0-9]+))\-((?:[0-9])|(?:[1-9][0-9]+))?$/.exec(request.headers.range)) != null) {
+	let range = request.headers.range;
+	if (range !== undefined && (parts2 = /^bytes\=((?:[0-9])|(?:[1-9][0-9]+))\-((?:[0-9])|(?:[1-9][0-9]+))?$/.exec(range)) != null) {
 		let offset = parseInt(parts2[1]);
 		let offset2 = parts2[2] ? parseInt(parts2[2]) : null;
 		if (offset2 === null) {
@@ -73,7 +86,7 @@ let send_data = (file, request, response) => {
 			'Content-Type': file.mime,
 			'Content-Length': `${length}`
 		});
-		var s = fs.createReadStream(filename, {
+		var s = libfs.createReadStream(filename, {
 			start: offset,
 			end: offset2
 		});
@@ -84,7 +97,7 @@ let send_data = (file, request, response) => {
 			response.end();
 		});
 	} else {
-		var s = fs.createReadStream(filename);
+		var s = libfs.createReadStream(filename);
 		s.on('open', function () {
 			response.writeHead(200, {
 				'Access-Control-Allow-Origin': '*',
@@ -104,9 +117,7 @@ let send_data = (file, request, response) => {
 	}
 };
 
-let media = require('./private/db/media.json');
-
-let httpServer = http.createServer()
+let httpServer = libhttp.createServer()
 	.on('request', (request, response) => {
 		response.writeHead(307, {
 			'Location': `https://${request.headers['host']}${request.url}`
@@ -115,12 +126,11 @@ let httpServer = http.createServer()
 	})
 	.listen(80);
 
-let httpsServer = https.createServer({
-		cert: fs.readFileSync("./private/certs/live/ap.joelek.se/fullchain.pem"),
-		dhparam: fs.readFileSync("./private/certs/dhparam.pem"),
-		key: fs.readFileSync("./private/certs/live/ap.joelek.se/privkey.pem")
-	})
-	.on('request', (request, response) => {
+let httpsServer = libhttps.createServer({
+		cert: libfs.readFileSync("./private/certs/live/ap.joelek.se/fullchain.pem"),
+		dhparam: libfs.readFileSync("./private/certs/dhparam.pem"),
+		key: libfs.readFileSync("./private/certs/live/ap.joelek.se/privkey.pem")
+	}).on('request', (request, response) => {
 		console.log(`${new Date().toUTCString()}:${request.method}:${request.url}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, "\t"));
 		if (!/ap[.]joelek[.]se(:[0-9]+)?$/.test(request.headers.host)) {
 			console.log('dropped', JSON.stringify(request.headers, null, "\t"));
@@ -128,22 +138,25 @@ let httpsServer = https.createServer({
 			response.end();
 			return;
 		}
-		let parts;
+		let parts: RegExpExecArray | null;
 		if (request.method === 'GET' && request.url === '/favicon.ico') {
 			response.writeHead(404);
 			response.end();
 			return;
 		}
 		if (request.method === 'GET' && (parts = /^[/]files[/]([0-9a-f]{32})[/]/.exec(request.url)) !== null) {
-			let k = media.files.find(file => file.file_id === parts[1]);
-			return send_data(k, request, response);
+			let file_id = parts[1];
+			let file = media.files.find(file => file.file_id === file_id);
+			if (file !== undefined) {
+				return send_data(file, request, response);
+			}
 		}
 		if (/^[/]api[/]/.test(request.url)) {
-			return api(request, response);
+			return api.handleRequest(request, response);
 		}
 		if (request.method === 'GET') {
 			response.writeHead(200);
-			response.end(`<!doctype html><html><head><base href="/"/><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0" name="viewport"/></head><body><script>${fs.readFileSync('client.js')}</script></body></html>`);
+			response.end(`<!doctype html><html><head><base href="/"/><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0" name="viewport"/></head><body><script>${libfs.readFileSync('client.js')}</script></body></html>`);
 			return;
 		}
 		console.log('unhandled', JSON.stringify(request.headers, null, "\t"));
