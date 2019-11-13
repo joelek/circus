@@ -13,7 +13,7 @@
 	"files": [
 		"./database.ts",
 		"./index.ts"
-	]
+	],
 	"references": [
 		{
 			"path": "./node_modules/@joelek/ts-define/projects/define/",

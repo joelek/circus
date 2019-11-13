@@ -12,11 +12,12 @@
 	"extends": "./tsconfig.common.json",
 	"files": [
 		"./api.ts",
+		"./api_response.ts",
 		"./auth.ts",
 		"./cc.ts",
 		"./database.ts",
 		"./server.ts"
-	]
+	],
 	"references": [
 		{
 			"path": "./node_modules/@joelek/ts-define/projects/define/",

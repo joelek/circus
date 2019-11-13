@@ -406,6 +406,12 @@ define("auth", ["require", "exports", "crypto"], function (require, exports, lib
     }
     exports.getUsername = getUsername;
 });
+define("api_response", ["require", "exports"], function (require, exports) {
+    "use strict";
+    exports.__esModule = true;
+    ;
+    ;
+});
 define("api", ["require", "exports", "cc", "auth"], function (require, exports, libcc, libauth) {
     "use strict";
     exports.__esModule = true;
@@ -558,7 +564,8 @@ define("api", ["require", "exports", "cc", "auth"], function (require, exports, 
                 var tracks = media.audio.tracks.filter(function (track) {
                     return track.disc_id === disc.disc_id;
                 });
-                return __assign(__assign({}, disc), { tracks: tracks });
+                var payload = __assign(__assign({}, disc), { tracks: tracks });
+                return payload;
             });
             var payload = __assign(__assign({}, album), { discs: discs });
             response.writeHead(200);
@@ -672,9 +679,11 @@ define("api", ["require", "exports", "cc", "auth"], function (require, exports, 
                         .filter(function (subtitle) {
                         return subtitle.episode_id === episode.episode_id;
                     });
-                    return __assign(__assign({}, episode), { subtitles: subtitles });
+                    var payload = __assign(__assign({}, episode), { subtitles: subtitles });
+                    return payload;
                 });
-                return __assign(__assign({}, season), { episodes: episodes });
+                var payload = __assign(__assign({}, season), { episodes: episodes });
+                return payload;
             });
             var payload = __assign(__assign({}, show), { seasons: seasons });
             response.writeHead(200);
@@ -715,14 +724,15 @@ define("api", ["require", "exports", "cc", "auth"], function (require, exports, 
                 throw new Error();
             }
             var chunk = parts[1];
+            var payload = {};
             try {
                 libauth.getUsername(chunk);
                 response.writeHead(200);
-                return response.end(JSON.stringify({}));
+                return response.end(JSON.stringify(payload));
             }
             catch (error) { }
             response.writeHead(401);
-            return response.end(JSON.stringify({}));
+            return response.end(JSON.stringify(payload));
         };
         AuthWithTokenRoute.prototype.handlesRequest = function (request) {
             return request.method === 'POST' && request.url !== undefined && /^[/]api[/]auth[/][?]token[=]([0-9a-f]{64})/.test(request.url);
@@ -741,20 +751,22 @@ define("api", ["require", "exports", "cc", "auth"], function (require, exports, 
                 data += chunk;
             }).on('end', function () {
                 try {
-                    var body = JSON.parse(data);
-                    if (body == null || body.constructor !== Object) {
+                    var json = JSON.parse(data);
+                    if (json == null || json.constructor !== Object) {
                         throw new Error();
                     }
+                    if (json.username == null || json.username.constructor !== String) {
+                        throw new Error();
+                    }
+                    if (json.password == null || json.password.constructor !== String) {
+                        throw new Error();
+                    }
+                    var body = json;
                     var username = body.username;
-                    if (username == null || username.constructor !== String) {
-                        throw new Error();
-                    }
                     var password = body.password;
-                    if (password == null || password.constructor !== String) {
-                        throw new Error();
-                    }
+                    var token = libauth.getToken(username, password);
                     var payload = {
-                        token: libauth.getToken(username, password)
+                        token: token
                     };
                     response.writeHead(200);
                     response.end(JSON.stringify(payload));
@@ -852,14 +864,14 @@ define("api", ["require", "exports", "cc", "auth"], function (require, exports, 
                     if (disc !== undefined) {
                         var album = albums_index[disc.album_id];
                         if (album !== undefined) {
-                            return {
-                                track: __assign({}, track)
-                            };
+                            var payload_1 = __assign(__assign({}, audiolist_item), { track: track });
+                            return payload_1;
                         }
                     }
                 }
                 return null;
-            });
+            })
+                .filter(function (audiolist_item) { return audiolist_item !== null; });
             var payload = __assign(__assign({}, audiolist), { items: items });
             response.writeHead(200);
             response.end(JSON.stringify(payload));
