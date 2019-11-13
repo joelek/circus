@@ -12,7 +12,7 @@ var __assign = (this && this.__assign) || function () {
 };
 var define = (function () {
     var moduleStates = new Map();
-    var require2 = function (name) {
+    var req = function (name) {
         // @ts-ignore
         return require(name);
     };
@@ -35,7 +35,7 @@ var define = (function () {
         for (var _i = 0, _a = moduleState.dependencies; _i < _a.length; _i++) {
             var dependency = _a[_i];
             if (dependency === "require") {
-                exports.push(require2);
+                exports.push(req);
                 continue;
             }
             if (dependency === "module") {
@@ -47,7 +47,7 @@ var define = (function () {
                 continue;
             }
             try {
-                exports.push(require2(dependency));
+                exports.push(req(dependency));
                 continue;
             }
             catch (error) { }
@@ -899,6 +899,27 @@ define("api", ["require", "exports", "cc", "auth"], function (require, exports, 
         };
         return AudiolistsRoute;
     }());
+    var CuesRoute = /** @class */ (function () {
+        function CuesRoute() {
+        }
+        CuesRoute.prototype.handleRequest = function (request, response) {
+            if (request.url === undefined) {
+                throw new Error();
+            }
+            var url = request.url;
+            var cues = new Array();
+            cues.push(media.video.cues[0]);
+            var payload = {
+                cues: cues
+            };
+            response.writeHead(200);
+            response.end(JSON.stringify(payload));
+        };
+        CuesRoute.prototype.handlesRequest = function (request) {
+            return request.method === 'POST' && request.url !== undefined && /^[/]api[/]video[/]cues[/]/.test(request.url);
+        };
+        return CuesRoute;
+    }());
     var router = new Router()
         .registerRoute(new AuthWithTokenRoute())
         .registerRoute(new AuthRoute())
@@ -912,7 +933,8 @@ define("api", ["require", "exports", "cc", "auth"], function (require, exports, 
         .registerRoute(new ShowRoute())
         .registerRoute(new ShowsRoute())
         .registerRoute(new AudiolistRoute())
-        .registerRoute(new AudiolistsRoute());
+        .registerRoute(new AudiolistsRoute())
+        .registerRoute(new CuesRoute());
     var handleRequest = function (request, response) {
         try {
             router.route(request, response);

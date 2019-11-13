@@ -1,6 +1,6 @@
 var define = (function () {
     var moduleStates = new Map();
-    var require2 = function (name) {
+    var req = function (name) {
         // @ts-ignore
         return require(name);
     };
@@ -23,7 +23,7 @@ var define = (function () {
         for (var _i = 0, _a = moduleState.dependencies; _i < _a.length; _i++) {
             var dependency = _a[_i];
             if (dependency === "require") {
-                exports.push(require2);
+                exports.push(req);
                 continue;
             }
             if (dependency === "module") {
@@ -35,7 +35,7 @@ var define = (function () {
                 continue;
             }
             try {
-                exports.push(require2(dependency));
+                exports.push(req(dependency));
                 continue;
             }
             catch (error) { }
@@ -467,6 +467,46 @@ define("client", ["require", "exports"], function (require, exports) {
                 }
             });
         }
+        else if ((parts = /^video[/]cues[/]/.exec(uri)) !== null) {
+            var wrapper = document.createElement("div");
+            var searchbox_1 = document.createElement("input");
+            wrapper.appendChild(searchbox_1);
+            var searchbutton = document.createElement("button");
+            searchbutton.textContent = "Search";
+            wrapper.appendChild(searchbutton);
+            var results_1 = document.createElement("div");
+            wrapper.appendChild(results_1);
+            var cb_2 = function () {
+                var query = searchbox_1.value;
+                if (query !== "") {
+                    req("/api/video/cues/", { query: query }, function (status, response) {
+                        while (results_1.lastChild !== null) {
+                            results_1.removeChild(results_1.lastChild);
+                        }
+                        for (var _i = 0, _a = response.cues; _i < _a.length; _i++) {
+                            var cue = _a[_i];
+                            var d = document.createElement('div');
+                            var p = document.createElement("pre");
+                            p.innerText = "" + cue.lines.join("\n");
+                            d.appendChild(p);
+                            d.addEventListener('click', function () {
+                                // TODO
+                            });
+                            results_1.appendChild(d);
+                        }
+                    });
+                }
+            };
+            searchbox_1.addEventListener("keyup", function (event) {
+                if (event.keyCode === 13) {
+                    cb_2();
+                }
+            });
+            searchbutton.addEventListener("click", function () {
+                cb_2();
+            });
+            mount.appendChild(wrapper);
+        }
         else if ((parts = /^video[/]/.exec(uri)) !== null) {
             var d = document.createElement('div');
             d.innerText = 'Shows';
@@ -478,6 +518,12 @@ define("client", ["require", "exports"], function (require, exports) {
             d.innerText = 'Movies';
             d.addEventListener('click', function () {
                 navigate('video/movies/');
+            });
+            mount.appendChild(d);
+            d = document.createElement('div');
+            d.innerText = 'Cues';
+            d.addEventListener('click', function () {
+                navigate('video/cues/');
             });
             mount.appendChild(d);
         }

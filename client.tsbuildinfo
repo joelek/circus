@@ -1,0 +1,55 @@
+{
+  "bundle": {
+    "commonSourceDirectory": "./",
+    "sourceFiles": [
+      "./database.ts",
+      "./api_response.ts",
+      "./client.ts"
+    ],
+    "js": {
+      "sections": [
+        {
+          "pos": 0,
+          "end": 2260,
+          "kind": "prepend",
+          "data": "./node_modules/@joelek/ts-define/build/define.js",
+          "texts": [
+            {
+              "pos": 0,
+              "end": 2260,
+              "kind": "text"
+            }
+          ]
+        },
+        {
+          "pos": 2260,
+          "end": 24962,
+          "kind": "text"
+        }
+      ]
+    },
+    "dts": {
+      "sections": [
+        {
+          "pos": 0,
+          "end": 380,
+          "kind": "prepend",
+          "data": "./node_modules/@joelek/ts-define/build/define.d.ts",
+          "texts": [
+            {
+              "pos": 0,
+              "end": 380,
+              "kind": "text"
+            }
+          ]
+        },
+        {
+          "pos": 380,
+          "end": 6464,
+          "kind": "text"
+        }
+      ]
+    }
+  },
+  "version": "3.6.3"
+}

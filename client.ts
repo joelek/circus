@@ -379,6 +379,44 @@ let updateviewforuri = (uri: string): void => {
 				mount.appendChild(d);
 			}
 		});
+	} else if ((parts = /^video[/]cues[/]/.exec(uri)) !== null) {
+		let wrapper = document.createElement("div");
+		let searchbox = document.createElement("input");
+		wrapper.appendChild(searchbox);
+		let searchbutton = document.createElement("button");
+		searchbutton.textContent = "Search";
+		wrapper.appendChild(searchbutton);
+		let results = document.createElement("div");
+		wrapper.appendChild(results);
+		let cb = () => {
+			let query = searchbox.value;
+			if (query !== "") {
+				req<api_response.CuesRequest, api_response.CuesResponse>(`/api/video/cues/`, { query }, (status, response) => {
+					while (results.lastChild !== null) {
+						results.removeChild(results.lastChild);
+					}
+					for (let cue of response.cues) {
+						let d = document.createElement('div');
+						let p = document.createElement("pre");
+						p.innerText = `${cue.lines.join("\n")}`;
+						d.appendChild(p);
+						d.addEventListener('click', () => {
+							// TODO
+						});
+						results.appendChild(d);
+					}
+				});
+			}
+		};
+		searchbox.addEventListener("keyup", (event) => {
+			if (event.keyCode === 13) {
+				cb();
+			}
+		});
+		searchbutton.addEventListener("click", () => {
+			cb();
+		});
+		mount.appendChild(wrapper);
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
 		let d = document.createElement('div');
 		d.innerText = 'Shows';
@@ -390,6 +428,12 @@ let updateviewforuri = (uri: string): void => {
 		d.innerText = 'Movies';
 		d.addEventListener('click', () => {
 			navigate('video/movies/');
+		});
+		mount.appendChild(d);
+		d = document.createElement('div');
+		d.innerText = 'Cues';
+		d.addEventListener('click', () => {
+			navigate('video/cues/');
 		});
 		mount.appendChild(d);
 	} else {

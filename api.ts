@@ -580,6 +580,30 @@ class AudiolistsRoute implements Route<api_response.AuthRequest, api_response.Au
 	}
 }
 
+class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResponse> {
+	constructor() {
+
+	}
+
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		if (request.url === undefined) {
+			throw new Error();
+		}
+		let url = request.url;
+		let cues = new Array<libdb.CueEntry>();
+		cues.push(media.video.cues[0]);
+		let payload: api_response.CuesResponse = {
+			cues
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]video[/]cues[/]/.test(request.url);
+	}
+}
+
 let router = new Router()
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
@@ -593,7 +617,8 @@ let router = new Router()
 	.registerRoute(new ShowRoute())
 	.registerRoute(new ShowsRoute())
 	.registerRoute(new AudiolistRoute())
-	.registerRoute(new AudiolistsRoute());
+	.registerRoute(new AudiolistsRoute())
+	.registerRoute(new CuesRoute());
 
 let handleRequest = (request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	try {

@@ -85,6 +85,14 @@ interface AudiolistsResponse extends ApiResponse {
 	audiolists: Array<libdb.AudiolistEntry>;
 }
 
+interface CuesRequest extends ApiResponse {
+	query: string;
+}
+
+interface CuesResponse extends ApiResponse {
+	cues: Array<libdb.CueEntry>;
+}
+
 export {
 	ApiRequest,
 	ApiResponse,
@@ -106,5 +114,7 @@ export {
 	MoviesResponse,
 	AudiolistItemResponse,
 	AudiolistResponse,
-	AudiolistsResponse
+	AudiolistsResponse,
+	CuesRequest,
+	CuesResponse
 };

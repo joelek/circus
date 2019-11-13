@@ -1,6 +1,6 @@
 var define = (function () {
     var moduleStates = new Map();
-    var require2 = function (name) {
+    var req = function (name) {
         // @ts-ignore
         return require(name);
     };
@@ -23,7 +23,7 @@ var define = (function () {
         for (var _i = 0, _a = moduleState.dependencies; _i < _a.length; _i++) {
             var dependency = _a[_i];
             if (dependency === "require") {
-                exports.push(require2);
+                exports.push(req);
                 continue;
             }
             if (dependency === "module") {
@@ -35,7 +35,7 @@ var define = (function () {
                 continue;
             }
             try {
-                exports.push(require2(dependency));
+                exports.push(req(dependency));
                 continue;
             }
             catch (error) { }
