@@ -10,6 +10,17 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 var define = (function () {
     var moduleStates = new Map();
     var req = function (name) {
@@ -516,6 +527,7 @@ define("api", ["require", "exports", "fs", "cc", "auth", "utils"], function (req
         return value;
     });
     function searchForCues(query) {
+        var e_1, _a;
         var terms = libutils.getSearchTerms(query);
         var cue_id_sets = terms.map(function (term) {
             var cues = cue_search_index.get(term);
@@ -528,14 +540,29 @@ define("api", ["require", "exports", "fs", "cc", "auth", "utils"], function (req
         }).filter(function (cues) { return cues.size > 0; });
         var cue_ids = new Array();
         if (cue_id_sets.length > 0) {
-            cue_id_sets[0].forEach(function (cue_id) {
-                for (var i = 1; i < cue_id_sets.length; i++) {
-                    if (!cue_id_sets[i].has(cue_id)) {
-                        return;
+            try {
+                outer: for (var _b = __values(cue_id_sets[0]), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var cue_id = _c.value;
+                    inner: for (var i = 1; i < cue_id_sets.length; i++) {
+                        if (!cue_id_sets[i].has(cue_id)) {
+                            continue outer;
+                        }
+                    }
+                    if (cue_ids.length < 10) {
+                        cue_ids.push(cue_id);
+                    }
+                    else {
+                        break outer;
                     }
                 }
-                cue_ids.push(cue_id);
-            });
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
         }
         return cue_ids;
     }
@@ -548,11 +575,21 @@ define("api", ["require", "exports", "fs", "cc", "auth", "utils"], function (req
             return this;
         };
         Router.prototype.route = function (request, response) {
-            for (var _i = 0, _a = this.routes; _i < _a.length; _i++) {
-                var route = _a[_i];
-                if (route.handlesRequest(request)) {
-                    return route.handleRequest(request, response);
+            var e_2, _a;
+            try {
+                for (var _b = __values(this.routes), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var route = _c.value;
+                    if (route.handlesRequest(request)) {
+                        return route.handleRequest(request, response);
+                    }
                 }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+                }
+                finally { if (e_2) throw e_2.error; }
             }
             response.writeHead(400);
             response.end('{}');
@@ -989,6 +1026,10 @@ define("api", ["require", "exports", "fs", "cc", "auth", "utils"], function (req
                     var cues = searchForCues(query)
                         .map(function (cue_id) {
                         return cues_index[cue_id];
+                    })
+                        .map(function (cue) {
+                        var subtitle = subtitles_index[cue.subtitle_id];
+                        return __assign(__assign({}, cue), { subtitle: subtitle });
                     });
                     var payload = {
                         cues: cues
@@ -1043,24 +1084,34 @@ define("server", ["require", "exports", "fs", "http", "https", "path", "url", "a
         files_index[file.file_id] = file;
     }
     var get_path_segments = function (path) {
+        var e_3, _a;
         var raw_path_segments = path.split('/');
         var path_segments = [];
-        for (var _i = 0, raw_path_segments_1 = raw_path_segments; _i < raw_path_segments_1.length; _i++) {
-            var raw_path_segment = raw_path_segments_1[_i];
-            if (raw_path_segment === '') {
-                continue;
+        try {
+            for (var raw_path_segments_1 = __values(raw_path_segments), raw_path_segments_1_1 = raw_path_segments_1.next(); !raw_path_segments_1_1.done; raw_path_segments_1_1 = raw_path_segments_1.next()) {
+                var raw_path_segment = raw_path_segments_1_1.value;
+                if (raw_path_segment === '') {
+                    continue;
+                }
+                if (raw_path_segment === '.') {
+                    continue;
+                }
+                if (raw_path_segment !== '..') {
+                    path_segments.push(decodeURIComponent(raw_path_segment));
+                    continue;
+                }
+                if (path_segments.length === 0) {
+                    throw new Error("bad req");
+                }
+                path_segments.pop();
             }
-            if (raw_path_segment === '.') {
-                continue;
+        }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        finally {
+            try {
+                if (raw_path_segments_1_1 && !raw_path_segments_1_1.done && (_a = raw_path_segments_1["return"])) _a.call(raw_path_segments_1);
             }
-            if (raw_path_segment !== '..') {
-                path_segments.push(decodeURIComponent(raw_path_segment));
-                continue;
-            }
-            if (path_segments.length === 0) {
-                throw new Error("bad req");
-            }
-            path_segments.pop();
+            finally { if (e_3) throw e_3.error; }
         }
         return path_segments;
     };

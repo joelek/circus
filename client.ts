@@ -401,7 +401,13 @@ let updateviewforuri = (uri: string): void => {
 						p.innerText = `${cue.lines.join("\n")}`;
 						d.appendChild(p);
 						d.addEventListener('click', () => {
-							// TODO
+							let episode_id = cue.subtitle.episode_id;
+							let movie_id = cue.subtitle.movie_id;
+							if (episode_id !== null) {
+								navigate(`video/episodes/${episode_id}/`);
+							} else if (movie_id !== null) {
+								navigate(`video/movies/${movie_id}/`);
+							}
 						});
 						results.appendChild(d);
 					}

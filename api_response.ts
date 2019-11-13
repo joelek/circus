@@ -90,7 +90,9 @@ interface CuesRequest extends ApiResponse {
 }
 
 interface CuesResponse extends ApiResponse {
-	cues: Array<libdb.CueEntry>;
+	cues: Array<libdb.CueEntry & {
+		subtitle: libdb.SubtitleEntry;
+	}>;
 }
 
 export {

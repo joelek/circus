@@ -20,26 +20,33 @@
         },
         {
           "pos": 415,
-          "end": 2675,
+          "end": 885,
+          "kind": "emitHelpers",
+          "data": "typescript:values"
+        },
+        {
+          "pos": 887,
+          "end": 3147,
           "kind": "prepend",
           "data": "./node_modules/@joelek/ts-define/build/define.js",
           "texts": [
             {
-              "pos": 415,
-              "end": 2675,
+              "pos": 887,
+              "end": 3147,
               "kind": "text"
             }
           ]
         },
         {
-          "pos": 2675,
-          "end": 48290,
+          "pos": 3147,
+          "end": 50518,
           "kind": "text"
         }
       ],
       "sources": {
         "helpers": [
-          "typescript:assign"
+          "typescript:assign",
+          "typescript:values"
         ]
       }
     },
@@ -66,7 +73,7 @@
         },
         {
           "pos": 433,
-          "end": 7624,
+          "end": 7683,
           "kind": "text"
         }
       ]

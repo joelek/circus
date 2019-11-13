@@ -483,16 +483,26 @@ define("client", ["require", "exports"], function (require, exports) {
                         while (results_1.lastChild !== null) {
                             results_1.removeChild(results_1.lastChild);
                         }
-                        for (var _i = 0, _a = response.cues; _i < _a.length; _i++) {
-                            var cue = _a[_i];
+                        var _loop_10 = function (cue) {
                             var d = document.createElement('div');
                             var p = document.createElement("pre");
                             p.innerText = "" + cue.lines.join("\n");
                             d.appendChild(p);
                             d.addEventListener('click', function () {
-                                // TODO
+                                var episode_id = cue.subtitle.episode_id;
+                                var movie_id = cue.subtitle.movie_id;
+                                if (episode_id !== null) {
+                                    navigate("video/episodes/" + episode_id + "/");
+                                }
+                                else if (movie_id !== null) {
+                                    navigate("video/movies/" + movie_id + "/");
+                                }
                             });
                             results_1.appendChild(d);
+                        };
+                        for (var _i = 0, _a = response.cues; _i < _a.length; _i++) {
+                            var cue = _a[_i];
+                            _loop_10(cue);
                         }
                     });
                 }

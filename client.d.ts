@@ -195,7 +195,9 @@ declare module "api_response" {
         query: string;
     }
     interface CuesResponse extends ApiResponse {
-        cues: Array<libdb.CueEntry>;
+        cues: Array<libdb.CueEntry & {
+            subtitle: libdb.SubtitleEntry;
+        }>;
     }
     export { ApiRequest, ApiResponse, AuthWithTokenReponse, AuthRequest, AuthResponse, ChromeCastResponse, ArtistResponse, ArtistsResponse, AlbumResponse, AlbumsResponse, DiscResponse, SubtitleResponse, EpisodeResponse, ShowResponse, SeasonResponse, ShowsResponse, MovieResponse, MoviesResponse, AudiolistItemResponse, AudiolistResponse, AudiolistsResponse, CuesRequest, CuesResponse };
 }

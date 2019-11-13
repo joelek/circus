@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
 		"composite": true,
+		"downlevelIteration": true,
 		"module": "amd",
 		"noImplicitAny": true,
 		"noImplicitReturns": true,

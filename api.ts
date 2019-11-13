@@ -108,14 +108,18 @@ function searchForCues(query: string): Array<string> {
 	}).filter((cues) => cues.size > 0);
 	let cue_ids = new Array<string>();
 	if (cue_id_sets.length > 0) {
-		cue_id_sets[0].forEach((cue_id) => {
-			for (let i = 1; i < cue_id_sets.length; i++) {
+		outer: for (let cue_id of cue_id_sets[0]) {
+			inner: for (let i = 1; i < cue_id_sets.length; i++) {
 				if (!cue_id_sets[i].has(cue_id)) {
-					return;
+					continue outer;
 				}
 			}
-			cue_ids.push(cue_id);
-		});
+			if (cue_ids.length < 10) {
+				cue_ids.push(cue_id);
+			} else {
+				break outer;
+			}
+		}
 	}
 	return cue_ids;
 }
@@ -640,8 +644,15 @@ class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResp
 				}
 				let cues = searchForCues(query)
 					.map((cue_id) => {
-						return cues_index[cue_id];
-					}) as Array<libdb.CueEntry>;
+						return cues_index[cue_id] as libdb.CueEntry;
+					})
+					.map((cue) => {
+						let subtitle = subtitles_index[cue.subtitle_id] as libdb.SubtitleEntry;
+						return {
+							...cue,
+							subtitle
+						};
+					});
 				let payload: api_response.CuesResponse = {
 					cues
 				};
