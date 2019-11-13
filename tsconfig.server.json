@@ -16,7 +16,8 @@
 		"./auth.ts",
 		"./cc.ts",
 		"./database.ts",
-		"./server.ts"
+		"./server.ts",
+		"./utils.ts"
 	],
 	"references": [
 		{

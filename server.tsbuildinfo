@@ -5,6 +5,7 @@
       "./database.ts",
       "./cc.ts",
       "./auth.ts",
+      "./utils.ts",
       "./api_response.ts",
       "./api.ts",
       "./server.ts"
@@ -32,7 +33,7 @@
         },
         {
           "pos": 2675,
-          "end": 44927,
+          "end": 48290,
           "kind": "text"
         }
       ],
@@ -65,7 +66,7 @@
         },
         {
           "pos": 433,
-          "end": 7380,
+          "end": 7624,
           "kind": "text"
         }
       ]

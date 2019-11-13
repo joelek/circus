@@ -406,13 +406,47 @@ define("auth", ["require", "exports", "crypto"], function (require, exports, lib
     }
     exports.getUsername = getUsername;
 });
+define("utils", ["require", "exports"], function (require, exports) {
+    "use strict";
+    exports.__esModule = true;
+    function join() {
+        var parameters = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            parameters[_i] = arguments[_i];
+        }
+        return parameters.map(function (parameter) {
+            return String(parameter);
+        }).join("");
+    }
+    exports.join = join;
+    function getSearchTerms(string) {
+        var clean = string.toLowerCase().replace(/[^a-z ]/g, "").replace(/[ ]+/g, " ");
+        var terms = clean.split(" ").filter(function (word) { return word.length >= 3; });
+        return terms;
+    }
+    exports.getSearchTerms = getSearchTerms;
+    function formatTimestamp(ms) {
+        var s = Math.floor(ms / 1000);
+        ms -= (s * 1000);
+        var m = Math.floor(s / 60);
+        s -= (m * 60);
+        var h = Math.floor(m / 60);
+        m -= (h * 60);
+        var fh = join("00", h).slice(-2);
+        var fm = join("00", m).slice(-2);
+        var fs = join("00", s).slice(-2);
+        var fms = join("000", ms).slice(-3);
+        return join(fh, ":", fm, ":", fs, ".", fms);
+    }
+    exports.formatTimestamp = formatTimestamp;
+});
 define("api_response", ["require", "exports"], function (require, exports) {
     "use strict";
     exports.__esModule = true;
     ;
     ;
 });
-define("api", ["require", "exports", "cc", "auth"], function (require, exports, libcc, libauth) {
+define("api", ["require", "exports", "fs", "cc", "auth", "utils"], function (require, exports, libfs, libcc, libauth, libutils) {
     "use strict";
     exports.__esModule = true;
     var media = require('./private/db/media.json');
@@ -471,6 +505,39 @@ define("api", ["require", "exports", "cc", "auth"], function (require, exports, 
     for (var i = 0; i < lists.audiolists.length; i++) {
         var audiolist = lists.audiolists[i];
         audiolists_index[audiolist.audiolist_id] = audiolist;
+    }
+    var cue_search_index = JSON.parse(libfs.readFileSync("./private/db/subtitles.json", "utf8"), function (key, value) {
+        if (value instanceof Array) {
+            return new Set(value);
+        }
+        if (value instanceof Object) {
+            return new Map(Object.keys(value).map(function (k) { return [k, value[k]]; }));
+        }
+        return value;
+    });
+    function searchForCues(query) {
+        var terms = libutils.getSearchTerms(query);
+        var cue_id_sets = terms.map(function (term) {
+            var cues = cue_search_index.get(term);
+            if (cues !== undefined) {
+                return cues;
+            }
+            else {
+                return new Set();
+            }
+        }).filter(function (cues) { return cues.size > 0; });
+        var cue_ids = new Array();
+        if (cue_id_sets.length > 0) {
+            cue_id_sets[0].forEach(function (cue_id) {
+                for (var i = 1; i < cue_id_sets.length; i++) {
+                    if (!cue_id_sets[i].has(cue_id)) {
+                        return;
+                    }
+                }
+                cue_ids.push(cue_id);
+            });
+        }
+        return cue_ids;
     }
     var Router = /** @class */ (function () {
         function Router() {
@@ -906,14 +973,34 @@ define("api", ["require", "exports", "cc", "auth"], function (require, exports, 
             if (request.url === undefined) {
                 throw new Error();
             }
-            var url = request.url;
-            var cues = new Array();
-            cues.push(media.video.cues[0]);
-            var payload = {
-                cues: cues
-            };
-            response.writeHead(200);
-            response.end(JSON.stringify(payload));
+            var data = '';
+            request.on('data', function (chunk) {
+                data += chunk;
+            }).on('end', function () {
+                try {
+                    var json = JSON.parse(data);
+                    if (json == null || json.constructor !== Object) {
+                        throw new Error();
+                    }
+                    var query = json.query;
+                    if (query == null || query.constructor !== String) {
+                        throw new Error();
+                    }
+                    var cues = searchForCues(query)
+                        .map(function (cue_id) {
+                        return cues_index[cue_id];
+                    });
+                    var payload = {
+                        cues: cues
+                    };
+                    response.writeHead(200);
+                    response.end(JSON.stringify(payload));
+                }
+                catch (error) {
+                    response.writeHead(400);
+                    response.end(JSON.stringify({ error: error.message }));
+                }
+            });
         };
         CuesRoute.prototype.handlesRequest = function (request) {
             return request.method === 'POST' && request.url !== undefined && /^[/]api[/]video[/]cues[/]/.test(request.url);

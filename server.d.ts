@@ -153,6 +153,12 @@ declare module "auth" {
     function getUsername(chunk: string): string;
     export { getToken, getUsername };
 }
+declare module "utils" {
+    function join(...parameters: any): string;
+    function getSearchTerms(string: string): Array<string>;
+    function formatTimestamp(ms: number): string;
+    export { join, getSearchTerms, formatTimestamp };
+}
 declare module "api_response" {
     import * as libdb from "database";
     interface ApiRequest {

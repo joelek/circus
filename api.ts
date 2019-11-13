@@ -1,7 +1,9 @@
 import * as libhttp from "http";
+import * as libfs from "fs";
 import * as libcc from "./cc";
 import * as libauth from "./auth";
 import * as libdb from "./database";
+import * as libutils from "./utils";
 import * as api_response from "./api_response";
 
 let media = require('./private/db/media.json') as libdb.MediaDatabase;
@@ -82,6 +84,40 @@ let audiolists_index: libdb.Index<libdb.AudiolistEntry> = {};
 for (let i = 0; i < lists.audiolists.length; i++) {
 	let audiolist = lists.audiolists[i];
 	audiolists_index[audiolist.audiolist_id] = audiolist;
+}
+
+let cue_search_index = JSON.parse(libfs.readFileSync("./private/db/subtitles.json", "utf8"), (key, value) => {
+	if (value instanceof Array) {
+		return new Set<string>(value);
+	}
+	if (value instanceof Object) {
+		return new Map<string, Set<string>>(Object.keys(value).map(k => [k, value[k]]));
+	}
+	return value;
+}) as libdb.SubtitlesDatabase;
+
+function searchForCues(query: string): Array<string> {
+	let terms = libutils.getSearchTerms(query);
+	let cue_id_sets = terms.map((term) => {
+		let cues = cue_search_index.get(term);
+		if (cues !== undefined) {
+			return cues;
+		} else {
+			return new Set<string>();
+		}
+	}).filter((cues) => cues.size > 0);
+	let cue_ids = new Array<string>();
+	if (cue_id_sets.length > 0) {
+		cue_id_sets[0].forEach((cue_id) => {
+			for (let i = 1; i < cue_id_sets.length; i++) {
+				if (!cue_id_sets[i].has(cue_id)) {
+					return;
+				}
+			}
+			cue_ids.push(cue_id);
+		});
+	}
+	return cue_ids;
 }
 
 interface Route<T extends api_response.ApiRequest, U extends api_response.ApiResponse> {
@@ -589,14 +625,33 @@ class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResp
 		if (request.url === undefined) {
 			throw new Error();
 		}
-		let url = request.url;
-		let cues = new Array<libdb.CueEntry>();
-		cues.push(media.video.cues[0]);
-		let payload: api_response.CuesResponse = {
-			cues
-		};
-		response.writeHead(200);
-		response.end(JSON.stringify(payload));
+		let data = '';
+		request.on('data', (chunk) => {
+			data += chunk;
+		}).on('end', () => {
+			try {
+				let json = JSON.parse(data);
+				if (json == null || json.constructor !== Object) {
+					throw new Error();
+				}
+				let query = json.query;
+				if (query == null || query.constructor !== String) {
+					throw new Error();
+				}
+				let cues = searchForCues(query)
+					.map((cue_id) => {
+						return cues_index[cue_id];
+					}) as Array<libdb.CueEntry>;
+				let payload: api_response.CuesResponse = {
+					cues
+				};
+				response.writeHead(200);
+				response.end(JSON.stringify(payload));
+			} catch (error) {
+				response.writeHead(400);
+				response.end(JSON.stringify({ error: error.message }));
+			}
+		});
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
