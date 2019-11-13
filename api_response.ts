@@ -17,7 +17,7 @@ interface AuthRequest extends ApiRequest {
 	password: string;
 }
 
-interface AuthReponse extends ApiResponse {
+interface AuthResponse extends ApiResponse {
 	token: string
 }
 
@@ -90,7 +90,7 @@ export {
 	ApiResponse,
 	AuthWithTokenReponse,
 	AuthRequest,
-	AuthReponse,
+	AuthResponse,
 	ChromeCastResponse,
 	ArtistResponse,
 	ArtistsResponse,

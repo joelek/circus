@@ -1,0 +1,24 @@
+{
+	"compilerOptions": {
+		"lib": [
+			"es5",
+			"es6",
+			"dom"
+		],
+		"outFile": "./client.js",
+		"types": [
+		]
+	},
+	"extends": "./tsconfig.common.json",
+	"files": [
+		"./api_response.ts",
+		"./client.ts",
+		"./database.ts"
+	],
+	"references": [
+		{
+			"path": "./node_modules/@joelek/ts-define/projects/define/",
+			"prepend": true
+		}
+	]
+}

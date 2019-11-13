@@ -397,7 +397,7 @@ class AuthWithTokenRoute implements Route<api_response.ApiRequest, api_response.
 	}
 }
 
-class AuthRoute implements Route<api_response.AuthRequest, api_response.AuthReponse> {
+class AuthRoute implements Route<api_response.AuthRequest, api_response.AuthResponse> {
 	constructor() {
 
 	}
@@ -425,7 +425,7 @@ class AuthRoute implements Route<api_response.AuthRequest, api_response.AuthRepo
 				let username = body.username;
 				let password = body.password;
 				let token = libauth.getToken(username, password);
-				let payload: api_response.AuthReponse = {
+				let payload: api_response.AuthResponse = {
 					token
 				};
 				response.writeHead(200);
