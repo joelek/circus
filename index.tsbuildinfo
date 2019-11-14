@@ -3,29 +3,50 @@
     "commonSourceDirectory": "./",
     "sourceFiles": [
       "./database.ts",
+      "./utils.ts",
+      "./reader.ts",
+      "./vtt.ts",
       "./index.ts"
     ],
     "js": {
       "sections": [
         {
           "pos": 0,
-          "end": 2260,
+          "end": 504,
+          "kind": "emitHelpers",
+          "data": "typescript:read"
+        },
+        {
+          "pos": 506,
+          "end": 676,
+          "kind": "emitHelpers",
+          "data": "typescript:spread"
+        },
+        {
+          "pos": 678,
+          "end": 2938,
           "kind": "prepend",
           "data": "./node_modules/@joelek/ts-define/build/define.js",
           "texts": [
             {
-              "pos": 0,
-              "end": 2260,
+              "pos": 678,
+              "end": 2938,
               "kind": "text"
             }
           ]
         },
         {
-          "pos": 2260,
-          "end": 26390,
+          "pos": 2938,
+          "end": 37411,
           "kind": "text"
         }
-      ]
+      ],
+      "sources": {
+        "helpers": [
+          "typescript:read",
+          "typescript:spread"
+        ]
+      }
     },
     "dts": {
       "sections": [
@@ -44,7 +65,7 @@
         },
         {
           "pos": 380,
-          "end": 3746,
+          "end": 4783,
           "kind": "text"
         }
       ]

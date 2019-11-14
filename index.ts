@@ -2,6 +2,9 @@ import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as libpath from "path";
 import * as libdb from "./database";
+import * as libutils from "./utils";
+import * as libvtt from "./vtt";
+import * as libreader from "./reader";
 
 let media_root = './private/media/';
 
@@ -143,120 +146,125 @@ type ID3Tag = {
 
 let read_id3v24_tag = (file: string): ID3Tag => {
 	let fd = libfs.openSync(file, 'r');
-	let headerid3 = Buffer.alloc(10);
-	libfs.readSync(fd, headerid3, 0, headerid3.length, null);
-	if (headerid3.slice(0, 5).toString() !== 'ID3\x04\x00') {
-		throw new Error();
-	}
-	let length = decode_id3v24_syncsafe_integer(headerid3.slice(6, 6 + 4));
-	let body = Buffer.alloc(length);
-	libfs.readSync(fd, body, 0, body.length, null);
-	let tag = {
-		track_title: null,
-		album_name: null,
-		year: null,
-		track: null,
-		tracks: null,
-		disc: null,
-		discs: null,
-		track_artist_name: null,
-		album_artist_name: null,
-		duration: 0
-	} as ID3Tag;
-	let offset = 0;
-	while (offset < body.length) {
-		let frame_id = body.slice(offset, offset + 4).toString();
-		let length = decode_id3v24_syncsafe_integer(body.slice(offset + 4, offset + 4 + 4));
-		let flags = body.slice(offset + 8, offset + 8 + 2);
-		let data = body.slice(offset + 10, offset + 10 + length);
-		offset += 10 + length;
-		if (frame_id === '\0\0\0\0') {
-			break;
-		} else if (frame_id === 'TIT2') {
-			tag.track_title = data.slice(1, -1).toString();
-		} else if (frame_id === 'TALB') {
-			tag.album_name = data.slice(1, -1).toString();
-		} else if (frame_id === 'TDRC') {
-			let string = data.slice(1, -1).toString();
-			let parts = /^([0-9]{4})$/.exec(string);
-			if (parts !== null) {
-				tag.year = parseInt(parts[1]);
-			}
-		} else if (frame_id === 'TRCK') {
-			let string = data.slice(1, -1).toString();
-			let parts = /^([0-9]{2})\/([0-9]{2})$/.exec(string);
-			if (parts !== null) {
-				tag.track = parseInt(parts[1]);
-				tag.tracks = parseInt(parts[2]);
-			}
-		} else if (frame_id === 'TPOS') {
-			let string = data.slice(1, -1).toString();
-			let parts = /^([0-9]{2})\/([0-9]{2})$/.exec(string);
-			if (parts !== null) {
-				tag.disc = parseInt(parts[1]);
-				tag.discs = parseInt(parts[2]);
-			}
-		} else if (frame_id === 'TPE1') {
-			tag.track_artist_name = data.slice(1, -1).toString();
-		} else if (frame_id === 'TPE2') {
-			tag.album_artist_name = data.slice(1, -1).toString();
-		} else if (frame_id === 'TXXX') {
-			let string = data.slice(1, -1).toString();
-			let parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
-			if (parts !== null) {
-				tag.album_artist_name = parts[1];
-			}
+	try {
+		let headerid3 = Buffer.alloc(10);
+		libfs.readSync(fd, headerid3, 0, headerid3.length, null);
+		if (headerid3.slice(0, 5).toString() !== 'ID3\x04\x00') {
+			throw new Error();
 		}
-	}
-	let header = Buffer.alloc(4);
-	libfs.readSync(fd, header, 0, header.length, null);
-	let sync = ((header[0] & 0xFF) << 3) | ((header[1] & 0xE0) >> 5);
-	let version = ((header[1] & 0x18) >> 3);
-	let layer = ((header[1] & 0x06) >> 1);
-	let skip_crc = ((header[1] & 0x01) >> 0);
-	let bitrate = ((header[2] & 0xF0) >> 4);
-	let sample_rate = ((header[2] & 0x0C) >> 2);
-	let padded = ((header[2] & 0x02) >> 1);
-	let priv = ((header[2] & 0x01) >> 0);
-	let channels = ((header[3] & 0xC0) >> 6);
-	let modext = ((header[3] & 0x30) >> 4);
-	let copyrighted = ((header[3] & 0x08) >> 3);
-	let original = ((header[3] & 0x04) >> 2);
-	let emphasis = ((header[3] & 0x03) >> 0);
-	if (sync === 0x07FF && version === 3 && layer === 1) {
-		let samples_per_frame = 1152;
-		if (bitrate === 9 && sample_rate === 0) {
-			let slots = (samples_per_frame * 128000 / 8 / 44100) | 0;
-			if (padded) slots++;
-			let bytes = slots * 1;
-			let body = Buffer.alloc(bytes - 4);
-			libfs.readSync(fd, body, 0, body.length, null);
-			let zeroes = body.slice(0, 0 + 32);
-			let xing = body.slice(32, 32 + 4);
-			if (xing.toString('binary') === 'Xing') {
-				let flags = body.slice(36, 36 + 4);
-				let has_quality = ((flags[3] & 0x08) >> 3);
-				let has_toc = ((flags[3] & 0x04) >> 2);
-				let has_bytes = ((flags[3] & 0x02) >> 1);
-				let has_frames = ((flags[3] & 0x01) >> 0);
-				offset = 40;
-				if (has_frames) {
-					let num_frames = body.readUInt32BE(offset); offset += 4;
-					tag.duration = ((num_frames * 1152 / 44100) * 1000) | 0;
+		let length = decode_id3v24_syncsafe_integer(headerid3.slice(6, 6 + 4));
+		let body = Buffer.alloc(length);
+		libfs.readSync(fd, body, 0, body.length, null);
+		let tag = {
+			track_title: null,
+			album_name: null,
+			year: null,
+			track: null,
+			tracks: null,
+			disc: null,
+			discs: null,
+			track_artist_name: null,
+			album_artist_name: null,
+			duration: 0
+		} as ID3Tag;
+		let offset = 0;
+		while (offset < body.length) {
+			let frame_id = body.slice(offset, offset + 4).toString();
+			let length = decode_id3v24_syncsafe_integer(body.slice(offset + 4, offset + 4 + 4));
+			let flags = body.slice(offset + 8, offset + 8 + 2);
+			let data = body.slice(offset + 10, offset + 10 + length);
+			offset += 10 + length;
+			if (frame_id === '\0\0\0\0') {
+				break;
+			} else if (frame_id === 'TIT2') {
+				tag.track_title = data.slice(1, -1).toString();
+			} else if (frame_id === 'TALB') {
+				tag.album_name = data.slice(1, -1).toString();
+			} else if (frame_id === 'TDRC') {
+				let string = data.slice(1, -1).toString();
+				let parts = /^([0-9]{4})$/.exec(string);
+				if (parts !== null) {
+					tag.year = parseInt(parts[1]);
 				}
-				if (has_bytes) {
-					let num_bytes = body.readUInt32BE(offset); offset += 4;
+			} else if (frame_id === 'TRCK') {
+				let string = data.slice(1, -1).toString();
+				let parts = /^([0-9]{2})\/([0-9]{2})$/.exec(string);
+				if (parts !== null) {
+					tag.track = parseInt(parts[1]);
+					tag.tracks = parseInt(parts[2]);
 				}
-				if (has_toc) {
-					offset += 100;
+			} else if (frame_id === 'TPOS') {
+				let string = data.slice(1, -1).toString();
+				let parts = /^([0-9]{2})\/([0-9]{2})$/.exec(string);
+				if (parts !== null) {
+					tag.disc = parseInt(parts[1]);
+					tag.discs = parseInt(parts[2]);
 				}
-				if (has_quality) {
-					let quality = body.readUInt32BE(offset); offset += 4;
+			} else if (frame_id === 'TPE1') {
+				tag.track_artist_name = data.slice(1, -1).toString();
+			} else if (frame_id === 'TPE2') {
+				tag.album_artist_name = data.slice(1, -1).toString();
+			} else if (frame_id === 'TXXX') {
+				let string = data.slice(1, -1).toString();
+				let parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
+				if (parts !== null) {
+					tag.album_artist_name = parts[1];
 				}
 			}
 		}
+		let header = Buffer.alloc(4);
+		libfs.readSync(fd, header, 0, header.length, null);
+		let sync = ((header[0] & 0xFF) << 3) | ((header[1] & 0xE0) >> 5);
+		let version = ((header[1] & 0x18) >> 3);
+		let layer = ((header[1] & 0x06) >> 1);
+		let skip_crc = ((header[1] & 0x01) >> 0);
+		let bitrate = ((header[2] & 0xF0) >> 4);
+		let sample_rate = ((header[2] & 0x0C) >> 2);
+		let padded = ((header[2] & 0x02) >> 1);
+		let priv = ((header[2] & 0x01) >> 0);
+		let channels = ((header[3] & 0xC0) >> 6);
+		let modext = ((header[3] & 0x30) >> 4);
+		let copyrighted = ((header[3] & 0x08) >> 3);
+		let original = ((header[3] & 0x04) >> 2);
+		let emphasis = ((header[3] & 0x03) >> 0);
+		if (sync === 0x07FF && version === 3 && layer === 1) {
+			let samples_per_frame = 1152;
+			if (bitrate === 9 && sample_rate === 0) {
+				let slots = (samples_per_frame * 128000 / 8 / 44100) | 0;
+				if (padded) slots++;
+				let bytes = slots * 1;
+				let body = Buffer.alloc(bytes - 4);
+				libfs.readSync(fd, body, 0, body.length, null);
+				let zeroes = body.slice(0, 0 + 32);
+				let xing = body.slice(32, 32 + 4);
+				if (xing.toString('binary') === 'Xing') {
+					let flags = body.slice(36, 36 + 4);
+					let has_quality = ((flags[3] & 0x08) >> 3);
+					let has_toc = ((flags[3] & 0x04) >> 2);
+					let has_bytes = ((flags[3] & 0x02) >> 1);
+					let has_frames = ((flags[3] & 0x01) >> 0);
+					offset = 40;
+					if (has_frames) {
+						let num_frames = body.readUInt32BE(offset); offset += 4;
+						tag.duration = ((num_frames * 1152 / 44100) * 1000) | 0;
+					}
+					if (has_bytes) {
+						let num_bytes = body.readUInt32BE(offset); offset += 4;
+					}
+					if (has_toc) {
+						offset += 100;
+					}
+					if (has_quality) {
+						let quality = body.readUInt32BE(offset); offset += 4;
+					}
+				}
+			}
+		}
+		return tag;
+	} catch (error) {
+		libfs.closeSync(fd);
+		throw error;
 	}
-	return tag;
 };
 
 let get_id_for = (string: string): string => {
@@ -413,21 +421,26 @@ let read_mp4_tag = (file: string): MP4Tag => {
 		fd: libfs.openSync(file, 'r'),
 		offset: 0
 	};
-	let header = read_mp4_atom(fds);
-	if (header.kind !== 'ftyp' || header.length !== 32) {
-		throw new Error();
+	try {
+		let header = read_mp4_atom(fds);
+		if (header.kind !== 'ftyp' || header.length !== 32) {
+			throw new Error();
+		}
+		read_mp4_atom_body(fds, header);
+		let tag = {
+			show: null,
+			season: null,
+			episode: null,
+			title: null,
+			year: null,
+			duration: 0
+		};
+		visit_atom(tag, fds, '', header.length);
+		return tag;
+	} catch (error) {
+		libfs.closeSync(fds.fd);
+		throw error;
 	}
-	read_mp4_atom_body(fds, header);
-	let tag = {
-		show: null,
-		season: null,
-		episode: null,
-		title: null,
-		year: null,
-		duration: 0
-	};
-	visit_atom(tag, fds, '', header.length);
-	return tag;
 };
 
 let visit_video = (node: string): void => {
@@ -480,18 +493,23 @@ let parse_png = (node: string): void => {
 		fd: libfs.openSync(node, 'r'),
 		offset: 0
 	};
-	let buffer = Buffer.alloc(8);
-	fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
-	if (buffer.toString('binary') !== '\u0089PNG\u000D\u000A\u001A\u000A') {
-		throw new Error();
+	try {
+		let buffer = Buffer.alloc(8);
+		fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
+		if (buffer.toString('binary') !== '\u0089PNG\u000D\u000A\u001A\u000A') {
+			throw new Error();
+		}
+		let nodes = node.split(libpath.sep);
+		let file_id = get_id_for(`${nodes.join(':')}`);
+		add_file({
+			file_id: file_id,
+			path: nodes,
+			mime: 'image/png'
+		});
+	} catch (error) {
+		libfs.closeSync(fds.fd);
+		throw error;
 	}
-	let nodes = node.split(libpath.sep);
-	let file_id = get_id_for(`${nodes.join(':')}`);
-	add_file({
-		file_id: file_id,
-		path: nodes,
-		mime: 'image/png'
-	});
 };
 
 let parse_jpeg = (node: string): void => {
@@ -499,18 +517,23 @@ let parse_jpeg = (node: string): void => {
 		fd: libfs.openSync(node, 'r'),
 		offset: 0
 	};
-	let buffer = Buffer.alloc(10);
-	fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
-	if (buffer.toString('binary') !== '\u00FF\u00D8\u00FF\u00E0\u0000\u0010JFIF') {
-		throw new Error();
+	try {
+		let buffer = Buffer.alloc(10);
+		fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
+		if (buffer.toString('binary') !== '\u00FF\u00D8\u00FF\u00E0\u0000\u0010JFIF') {
+			throw new Error();
+		}
+		let nodes = node.split(libpath.sep);
+		let file_id = get_id_for(`${nodes.join(':')}`);
+		add_file({
+			file_id: file_id,
+			path: nodes,
+			mime: 'image/jpeg'
+		});
+	} catch (error) {
+		libfs.closeSync(fds.fd);
+		throw error;
 	}
-	let nodes = node.split(libpath.sep);
-	let file_id = get_id_for(`${nodes.join(':')}`);
-	add_file({
-		file_id: file_id,
-		path: nodes,
-		mime: 'image/jpeg'
-	});
 };
 
 let parse_vtt = (node: string): void => {
@@ -518,24 +541,29 @@ let parse_vtt = (node: string): void => {
 		fd: libfs.openSync(node, 'r'),
 		offset: 0
 	};
-	let buffer = Buffer.alloc(1024);
-	fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
-	let str = buffer.toString('utf8');
-	let lines = str.split('\r\n').reduce((lines, line) => {
-		lines.push(...line.split('\n'));
-		return lines;
-	}, new Array<string>());
-	if (lines[0].substr(0, 6) !== 'WEBVTT') {
-		throw new Error();
+	try {
+		let buffer = Buffer.alloc(1024);
+		fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
+		let str = buffer.toString('utf8');
+		let lines = str.split('\r\n').reduce((lines, line) => {
+			lines.push(...line.split('\n'));
+			return lines;
+		}, new Array<string>());
+		if (lines[0].substr(0, 6) !== 'WEBVTT') {
+			throw new Error();
+		}
+		let metadata = lines[0].substr(7);
+		let nodes = node.split(libpath.sep);
+		let file_id = get_id_for(`${nodes.join(':')}`);
+		add_file({
+			file_id: file_id,
+			path: nodes,
+			mime: 'text/vtt'
+		});
+	} catch (error) {
+		libfs.closeSync(fds.fd);
+		throw error;
 	}
-	let metadata = lines[0].substr(7);
-	let nodes = node.split(libpath.sep);
-	let file_id = get_id_for(`${nodes.join(':')}`);
-	add_file({
-		file_id: file_id,
-		path: nodes,
-		mime: 'text/vtt'
-	});
 };
 
 let visit_image = (node: string): void => {
@@ -650,4 +678,70 @@ db.video.movies.forEach((movie) => {
 	}
 });
 
-console.log(JSON.stringify(db, null, "\t"));
+db.video.subtitles.forEach((subtitle_entry) => {
+	let file_entry = files_index[subtitle_entry.file_id];
+	if (file_entry === undefined) {
+		return;
+	}
+	let path = [ ".", ...file_entry.path ].join("/");
+	console.log(path);
+	let string = libfs.readFileSync(path, { encoding: "utf8" });
+	let reader = new libreader.Reader(string);
+	let track = libvtt.readTrack(reader);
+	let metadata = JSON.parse(track.head.metadata);
+	if (typeof metadata === "object" && typeof metadata.langauge === "string") {
+		subtitle_entry.language = metadata.language;
+	}
+	track.body.cues.forEach((cue) => {
+		let hash = libcrypto.createHash("md5");
+		hash.update(subtitle_entry.file_id);
+		hash.update("" + cue.start_ms);
+		let cue_id = hash.digest("hex");
+		let subtitle_id = subtitle_entry.subtitle_id;
+		let start_ms = cue.start_ms;
+		let duration_ms = cue.duration_ms;
+		let lines = cue.lines.slice();
+		db.video.cues.push({
+			cue_id,
+			subtitle_id,
+			start_ms,
+			duration_ms,
+			lines
+		});
+	});
+});
+
+let cue_search_index = new Map<string, Set<string>>();
+db.video.cues.forEach((cue_entry) => {
+	cue_entry.lines.forEach((line) => {
+		let terms = libutils.getSearchTerms(line);
+		terms.forEach((term) => {
+			let cues = cue_search_index.get(term);
+			if (cues === undefined) {
+				cues = new Set<string>();
+				cue_search_index.set(term, cues);
+			}
+			cues.add(cue_entry.cue_id);
+		});
+	});
+});
+
+libfs.writeFileSync("./private/db/media.json", JSON.stringify(db, null, "\t"));
+libfs.writeFileSync("./private/db/subtitles.json", JSON.stringify(cue_search_index, (key, value) => {
+	if (false) {
+	} else if (value instanceof Map) {
+		return Array.from(value).reduce((object, [key, value]) => {
+			// @ts-ignore
+			object[key] = value;
+			return object;
+		}, {});
+	} else if (value instanceof Set) {
+		return Array.from(value).reduce((object, value) => {
+			// @ts-ignore
+			object.push(value);
+			return object;
+		}, []);
+	} else {
+		return value;
+	}
+}, "\t"));

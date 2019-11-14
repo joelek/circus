@@ -35,6 +35,16 @@ if (cue_id_sets.length > 0) {
 	});
 }
 if (cue_ids.length > 0) {
+
+
+
+
+
+
+
+
+
+
 	let cue_id = cue_ids[0];
 	let cue = media.video.cues.find((cue) => cue.cue_id === cue_id) as libdatabase.CueEntry;
 	let subtitle = media.video.subtitles.find((subtitle) => subtitle.subtitle_id === cue.subtitle_id) as libdatabase.SubtitleEntry;
@@ -90,4 +100,11 @@ if (cue_ids.length > 0) {
 			});
 		});
 	});
+
+
+
+
+
+
+
 };

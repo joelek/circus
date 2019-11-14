@@ -12,7 +12,10 @@
 	"extends": "./tsconfig.common.json",
 	"files": [
 		"./database.ts",
-		"./index.ts"
+		"./index.ts",
+		"./utils.ts",
+		"./vtt.ts",
+		"./reader.ts"
 	],
 	"references": [
 		{

@@ -1,3 +1,23 @@
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __spread = (this && this.__spread) || function () {
+    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
+    return ar;
+};
 var define = (function () {
     var moduleStates = new Map();
     var req = function (name) {
@@ -71,10 +91,184 @@ define("database", ["require", "exports"], function (require, exports) {
     "use strict";
     exports.__esModule = true;
 });
-define("index", ["require", "exports", "crypto", "fs", "path"], function (require, exports, libcrypto, libfs, libpath) {
+define("utils", ["require", "exports"], function (require, exports) {
     "use strict";
     exports.__esModule = true;
-    var media_root = './private/media/';
+    function join() {
+        var parameters = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            parameters[_i] = arguments[_i];
+        }
+        return parameters.map(function (parameter) {
+            return String(parameter);
+        }).join("");
+    }
+    exports.join = join;
+    function getSearchTerms(string) {
+        var clean = string.toLowerCase().replace(/[^a-z ]/g, "").replace(/[ ]+/g, " ");
+        var terms = clean.split(" ").filter(function (word) { return word.length >= 3; });
+        return terms;
+    }
+    exports.getSearchTerms = getSearchTerms;
+    function formatTimestamp(ms) {
+        var s = Math.floor(ms / 1000);
+        ms -= (s * 1000);
+        var m = Math.floor(s / 60);
+        s -= (m * 60);
+        var h = Math.floor(m / 60);
+        m -= (h * 60);
+        var fh = join("00", h).slice(-2);
+        var fm = join("00", m).slice(-2);
+        var fs = join("00", s).slice(-2);
+        var fms = join("000", ms).slice(-3);
+        return join(fh, ":", fm, ":", fs, ".", fms);
+    }
+    exports.formatTimestamp = formatTimestamp;
+});
+define("reader", ["require", "exports", "utils"], function (require, exports, libutils) {
+    "use strict";
+    exports.__esModule = true;
+    var Reader = /** @class */ (function () {
+        function Reader(string) {
+            this.string = string;
+            this.offset = 0;
+            this.length = string.length;
+        }
+        Reader.prototype.done = function () {
+            return (this.offset === this.length);
+        };
+        Reader.prototype.line = function () {
+            var string = "";
+            while (!this.done()) {
+                var one = this.string[this.offset];
+                this.offset += 1;
+                if (false) {
+                }
+                else if (one === "\r") {
+                    if (!this.done()) {
+                        var two = this.string[this.offset];
+                        if (two === "\n") {
+                            this.offset += 1;
+                        }
+                    }
+                    break;
+                }
+                else if (one === "\n") {
+                    if (!this.done()) {
+                        var two = this.string[this.offset];
+                        if (two === "\r") {
+                            this.offset += 1;
+                        }
+                    }
+                    break;
+                }
+                else {
+                    string += one;
+                }
+            }
+            return string;
+        };
+        Reader.prototype.peek = function (length) {
+            var min = Math.min(this.offset, this.offset + length);
+            var max = Math.max(this.offset, this.offset + length);
+            if ((min < 0) || (min >= this.length) || (max < 0) || (max >= this.length)) {
+                throw new Error(libutils.join("Unable to read between offsets ", min, " and ", max, "!", "Length is", this.length, "."));
+            }
+            return this.string.substring(min, max);
+        };
+        Reader.prototype.read = function (length) {
+            var string = this.peek(length);
+            this.offset += length;
+            return string;
+        };
+        return Reader;
+    }());
+    exports.Reader = Reader;
+});
+define("vtt", ["require", "exports", "utils"], function (require, exports, libutils) {
+    "use strict";
+    exports.__esModule = true;
+    var DQ = "\"";
+    function readString(reader, expected) {
+        var string = reader.read(expected.length);
+        if (string !== expected) {
+            throw new Error(libutils.join("Expected ", DQ, expected, DQ, " but read ", DQ, string, DQ, "!"));
+        }
+    }
+    function readBlank(reader) {
+        var line = reader.line();
+        if (line !== "") {
+            throw new Error(libutils.join("Expected a blank line but read ", DQ, line, DQ, "!"));
+        }
+    }
+    function readTimecode(reader) {
+        var string = reader.read(12);
+        var parts = /^([0-9][0-9])[:]([0-5][0-9])[:]([0-5][0-9])[.]([0-9][0-9][0-9])$/.exec(string);
+        if (parts === null) {
+            console.log(libutils.join("Expected a valid timecode but read ", DQ, string, DQ, "!"));
+            return 0;
+        }
+        var hours = parseInt(parts[1], 10);
+        var minutes = parseInt(parts[2], 10);
+        var seconds = parseInt(parts[3], 10);
+        var milliseconds = parseInt(parts[4], 10);
+        return ((hours * 60 + minutes) * 60 + seconds) * 1000 + milliseconds;
+    }
+    function readCue(reader) {
+        var start_ms = readTimecode(reader);
+        readString(reader, " --> ");
+        var end_ms = readTimecode(reader);
+        readBlank(reader);
+        var duration_ms = end_ms - start_ms;
+        if (duration_ms < 0) {
+            console.log(libutils.join("Expected a positive duration but read ", start_ms, " and ", end_ms, "!"));
+        }
+        var lines = new Array();
+        while (true) {
+            var line = reader.line();
+            if (line === "") {
+                break;
+            }
+            lines.push(line);
+        }
+        return {
+            start_ms: start_ms,
+            duration_ms: duration_ms,
+            lines: lines
+        };
+    }
+    function readBody(reader) {
+        var cues = new Array();
+        while (!reader.done()) {
+            var cue = readCue(reader);
+            cues.push(cue);
+        }
+        return {
+            cues: cues
+        };
+    }
+    function readHead(reader) {
+        readString(reader, "WEBVTT ");
+        var metadata = reader.line();
+        readBlank(reader);
+        return {
+            metadata: metadata
+        };
+    }
+    function readTrack(reader) {
+        var head = readHead(reader);
+        var body = readBody(reader);
+        return {
+            head: head,
+            body: body
+        };
+    }
+    exports.readTrack = readTrack;
+});
+define("index", ["require", "exports", "crypto", "fs", "path", "utils", "vtt", "reader"], function (require, exports, libcrypto, libfs, libpath, libutils, libvtt, libreader) {
+    "use strict";
+    exports.__esModule = true;
+    var media_root = './private/media/video/shows/arrested_development-jsh/';
     var db = {
         audio: {
             artists: new Array(),
@@ -183,132 +377,138 @@ define("index", ["require", "exports", "crypto", "fs", "path"], function (requir
     };
     var read_id3v24_tag = function (file) {
         var fd = libfs.openSync(file, 'r');
-        var headerid3 = Buffer.alloc(10);
-        libfs.readSync(fd, headerid3, 0, headerid3.length, null);
-        if (headerid3.slice(0, 5).toString() !== 'ID3\x04\x00') {
-            throw new Error();
+        try {
+            var headerid3 = Buffer.alloc(10);
+            libfs.readSync(fd, headerid3, 0, headerid3.length, null);
+            if (headerid3.slice(0, 5).toString() !== 'ID3\x04\x00') {
+                throw new Error();
+            }
+            var length = decode_id3v24_syncsafe_integer(headerid3.slice(6, 6 + 4));
+            var body = Buffer.alloc(length);
+            libfs.readSync(fd, body, 0, body.length, null);
+            var tag = {
+                track_title: null,
+                album_name: null,
+                year: null,
+                track: null,
+                tracks: null,
+                disc: null,
+                discs: null,
+                track_artist_name: null,
+                album_artist_name: null,
+                duration: 0
+            };
+            var offset = 0;
+            while (offset < body.length) {
+                var frame_id = body.slice(offset, offset + 4).toString();
+                var length_1 = decode_id3v24_syncsafe_integer(body.slice(offset + 4, offset + 4 + 4));
+                var flags = body.slice(offset + 8, offset + 8 + 2);
+                var data = body.slice(offset + 10, offset + 10 + length_1);
+                offset += 10 + length_1;
+                if (frame_id === '\0\0\0\0') {
+                    break;
+                }
+                else if (frame_id === 'TIT2') {
+                    tag.track_title = data.slice(1, -1).toString();
+                }
+                else if (frame_id === 'TALB') {
+                    tag.album_name = data.slice(1, -1).toString();
+                }
+                else if (frame_id === 'TDRC') {
+                    var string = data.slice(1, -1).toString();
+                    var parts = /^([0-9]{4})$/.exec(string);
+                    if (parts !== null) {
+                        tag.year = parseInt(parts[1]);
+                    }
+                }
+                else if (frame_id === 'TRCK') {
+                    var string = data.slice(1, -1).toString();
+                    var parts = /^([0-9]{2})\/([0-9]{2})$/.exec(string);
+                    if (parts !== null) {
+                        tag.track = parseInt(parts[1]);
+                        tag.tracks = parseInt(parts[2]);
+                    }
+                }
+                else if (frame_id === 'TPOS') {
+                    var string = data.slice(1, -1).toString();
+                    var parts = /^([0-9]{2})\/([0-9]{2})$/.exec(string);
+                    if (parts !== null) {
+                        tag.disc = parseInt(parts[1]);
+                        tag.discs = parseInt(parts[2]);
+                    }
+                }
+                else if (frame_id === 'TPE1') {
+                    tag.track_artist_name = data.slice(1, -1).toString();
+                }
+                else if (frame_id === 'TPE2') {
+                    tag.album_artist_name = data.slice(1, -1).toString();
+                }
+                else if (frame_id === 'TXXX') {
+                    var string = data.slice(1, -1).toString();
+                    var parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
+                    if (parts !== null) {
+                        tag.album_artist_name = parts[1];
+                    }
+                }
+            }
+            var header = Buffer.alloc(4);
+            libfs.readSync(fd, header, 0, header.length, null);
+            var sync = ((header[0] & 0xFF) << 3) | ((header[1] & 0xE0) >> 5);
+            var version = ((header[1] & 0x18) >> 3);
+            var layer = ((header[1] & 0x06) >> 1);
+            var skip_crc = ((header[1] & 0x01) >> 0);
+            var bitrate = ((header[2] & 0xF0) >> 4);
+            var sample_rate = ((header[2] & 0x0C) >> 2);
+            var padded = ((header[2] & 0x02) >> 1);
+            var priv = ((header[2] & 0x01) >> 0);
+            var channels = ((header[3] & 0xC0) >> 6);
+            var modext = ((header[3] & 0x30) >> 4);
+            var copyrighted = ((header[3] & 0x08) >> 3);
+            var original = ((header[3] & 0x04) >> 2);
+            var emphasis = ((header[3] & 0x03) >> 0);
+            if (sync === 0x07FF && version === 3 && layer === 1) {
+                var samples_per_frame = 1152;
+                if (bitrate === 9 && sample_rate === 0) {
+                    var slots = (samples_per_frame * 128000 / 8 / 44100) | 0;
+                    if (padded)
+                        slots++;
+                    var bytes = slots * 1;
+                    var body_1 = Buffer.alloc(bytes - 4);
+                    libfs.readSync(fd, body_1, 0, body_1.length, null);
+                    var zeroes = body_1.slice(0, 0 + 32);
+                    var xing = body_1.slice(32, 32 + 4);
+                    if (xing.toString('binary') === 'Xing') {
+                        var flags = body_1.slice(36, 36 + 4);
+                        var has_quality = ((flags[3] & 0x08) >> 3);
+                        var has_toc = ((flags[3] & 0x04) >> 2);
+                        var has_bytes = ((flags[3] & 0x02) >> 1);
+                        var has_frames = ((flags[3] & 0x01) >> 0);
+                        offset = 40;
+                        if (has_frames) {
+                            var num_frames = body_1.readUInt32BE(offset);
+                            offset += 4;
+                            tag.duration = ((num_frames * 1152 / 44100) * 1000) | 0;
+                        }
+                        if (has_bytes) {
+                            var num_bytes = body_1.readUInt32BE(offset);
+                            offset += 4;
+                        }
+                        if (has_toc) {
+                            offset += 100;
+                        }
+                        if (has_quality) {
+                            var quality = body_1.readUInt32BE(offset);
+                            offset += 4;
+                        }
+                    }
+                }
+            }
+            return tag;
         }
-        var length = decode_id3v24_syncsafe_integer(headerid3.slice(6, 6 + 4));
-        var body = Buffer.alloc(length);
-        libfs.readSync(fd, body, 0, body.length, null);
-        var tag = {
-            track_title: null,
-            album_name: null,
-            year: null,
-            track: null,
-            tracks: null,
-            disc: null,
-            discs: null,
-            track_artist_name: null,
-            album_artist_name: null,
-            duration: 0
-        };
-        var offset = 0;
-        while (offset < body.length) {
-            var frame_id = body.slice(offset, offset + 4).toString();
-            var length_1 = decode_id3v24_syncsafe_integer(body.slice(offset + 4, offset + 4 + 4));
-            var flags = body.slice(offset + 8, offset + 8 + 2);
-            var data = body.slice(offset + 10, offset + 10 + length_1);
-            offset += 10 + length_1;
-            if (frame_id === '\0\0\0\0') {
-                break;
-            }
-            else if (frame_id === 'TIT2') {
-                tag.track_title = data.slice(1, -1).toString();
-            }
-            else if (frame_id === 'TALB') {
-                tag.album_name = data.slice(1, -1).toString();
-            }
-            else if (frame_id === 'TDRC') {
-                var string = data.slice(1, -1).toString();
-                var parts = /^([0-9]{4})$/.exec(string);
-                if (parts !== null) {
-                    tag.year = parseInt(parts[1]);
-                }
-            }
-            else if (frame_id === 'TRCK') {
-                var string = data.slice(1, -1).toString();
-                var parts = /^([0-9]{2})\/([0-9]{2})$/.exec(string);
-                if (parts !== null) {
-                    tag.track = parseInt(parts[1]);
-                    tag.tracks = parseInt(parts[2]);
-                }
-            }
-            else if (frame_id === 'TPOS') {
-                var string = data.slice(1, -1).toString();
-                var parts = /^([0-9]{2})\/([0-9]{2})$/.exec(string);
-                if (parts !== null) {
-                    tag.disc = parseInt(parts[1]);
-                    tag.discs = parseInt(parts[2]);
-                }
-            }
-            else if (frame_id === 'TPE1') {
-                tag.track_artist_name = data.slice(1, -1).toString();
-            }
-            else if (frame_id === 'TPE2') {
-                tag.album_artist_name = data.slice(1, -1).toString();
-            }
-            else if (frame_id === 'TXXX') {
-                var string = data.slice(1, -1).toString();
-                var parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
-                if (parts !== null) {
-                    tag.album_artist_name = parts[1];
-                }
-            }
+        catch (error) {
+            libfs.closeSync(fd);
+            throw error;
         }
-        var header = Buffer.alloc(4);
-        libfs.readSync(fd, header, 0, header.length, null);
-        var sync = ((header[0] & 0xFF) << 3) | ((header[1] & 0xE0) >> 5);
-        var version = ((header[1] & 0x18) >> 3);
-        var layer = ((header[1] & 0x06) >> 1);
-        var skip_crc = ((header[1] & 0x01) >> 0);
-        var bitrate = ((header[2] & 0xF0) >> 4);
-        var sample_rate = ((header[2] & 0x0C) >> 2);
-        var padded = ((header[2] & 0x02) >> 1);
-        var priv = ((header[2] & 0x01) >> 0);
-        var channels = ((header[3] & 0xC0) >> 6);
-        var modext = ((header[3] & 0x30) >> 4);
-        var copyrighted = ((header[3] & 0x08) >> 3);
-        var original = ((header[3] & 0x04) >> 2);
-        var emphasis = ((header[3] & 0x03) >> 0);
-        if (sync === 0x07FF && version === 3 && layer === 1) {
-            var samples_per_frame = 1152;
-            if (bitrate === 9 && sample_rate === 0) {
-                var slots = (samples_per_frame * 128000 / 8 / 44100) | 0;
-                if (padded)
-                    slots++;
-                var bytes = slots * 1;
-                var body_1 = Buffer.alloc(bytes - 4);
-                libfs.readSync(fd, body_1, 0, body_1.length, null);
-                var zeroes = body_1.slice(0, 0 + 32);
-                var xing = body_1.slice(32, 32 + 4);
-                if (xing.toString('binary') === 'Xing') {
-                    var flags = body_1.slice(36, 36 + 4);
-                    var has_quality = ((flags[3] & 0x08) >> 3);
-                    var has_toc = ((flags[3] & 0x04) >> 2);
-                    var has_bytes = ((flags[3] & 0x02) >> 1);
-                    var has_frames = ((flags[3] & 0x01) >> 0);
-                    offset = 40;
-                    if (has_frames) {
-                        var num_frames = body_1.readUInt32BE(offset);
-                        offset += 4;
-                        tag.duration = ((num_frames * 1152 / 44100) * 1000) | 0;
-                    }
-                    if (has_bytes) {
-                        var num_bytes = body_1.readUInt32BE(offset);
-                        offset += 4;
-                    }
-                    if (has_toc) {
-                        offset += 100;
-                    }
-                    if (has_quality) {
-                        var quality = body_1.readUInt32BE(offset);
-                        offset += 4;
-                    }
-                }
-            }
-        }
-        return tag;
     };
     var get_id_for = function (string) {
         var hash = libcrypto.createHash('md5');
@@ -453,21 +653,27 @@ define("index", ["require", "exports", "crypto", "fs", "path"], function (requir
             fd: libfs.openSync(file, 'r'),
             offset: 0
         };
-        var header = read_mp4_atom(fds);
-        if (header.kind !== 'ftyp' || header.length !== 32) {
-            throw new Error();
+        try {
+            var header = read_mp4_atom(fds);
+            if (header.kind !== 'ftyp' || header.length !== 32) {
+                throw new Error();
+            }
+            read_mp4_atom_body(fds, header);
+            var tag = {
+                show: null,
+                season: null,
+                episode: null,
+                title: null,
+                year: null,
+                duration: 0
+            };
+            visit_atom(tag, fds, '', header.length);
+            return tag;
         }
-        read_mp4_atom_body(fds, header);
-        var tag = {
-            show: null,
-            season: null,
-            episode: null,
-            title: null,
-            year: null,
-            duration: 0
-        };
-        visit_atom(tag, fds, '', header.length);
-        return tag;
+        catch (error) {
+            libfs.closeSync(fds.fd);
+            throw error;
+        }
     };
     var visit_video = function (node) {
         var tag = read_mp4_tag(node);
@@ -518,60 +724,78 @@ define("index", ["require", "exports", "crypto", "fs", "path"], function (requir
             fd: libfs.openSync(node, 'r'),
             offset: 0
         };
-        var buffer = Buffer.alloc(8);
-        fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
-        if (buffer.toString('binary') !== '\u0089PNG\u000D\u000A\u001A\u000A') {
-            throw new Error();
+        try {
+            var buffer = Buffer.alloc(8);
+            fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
+            if (buffer.toString('binary') !== '\u0089PNG\u000D\u000A\u001A\u000A') {
+                throw new Error();
+            }
+            var nodes = node.split(libpath.sep);
+            var file_id = get_id_for("" + nodes.join(':'));
+            add_file({
+                file_id: file_id,
+                path: nodes,
+                mime: 'image/png'
+            });
         }
-        var nodes = node.split(libpath.sep);
-        var file_id = get_id_for("" + nodes.join(':'));
-        add_file({
-            file_id: file_id,
-            path: nodes,
-            mime: 'image/png'
-        });
+        catch (error) {
+            libfs.closeSync(fds.fd);
+            throw error;
+        }
     };
     var parse_jpeg = function (node) {
         var fds = {
             fd: libfs.openSync(node, 'r'),
             offset: 0
         };
-        var buffer = Buffer.alloc(10);
-        fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
-        if (buffer.toString('binary') !== '\u00FF\u00D8\u00FF\u00E0\u0000\u0010JFIF') {
-            throw new Error();
+        try {
+            var buffer = Buffer.alloc(10);
+            fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
+            if (buffer.toString('binary') !== '\u00FF\u00D8\u00FF\u00E0\u0000\u0010JFIF') {
+                throw new Error();
+            }
+            var nodes = node.split(libpath.sep);
+            var file_id = get_id_for("" + nodes.join(':'));
+            add_file({
+                file_id: file_id,
+                path: nodes,
+                mime: 'image/jpeg'
+            });
         }
-        var nodes = node.split(libpath.sep);
-        var file_id = get_id_for("" + nodes.join(':'));
-        add_file({
-            file_id: file_id,
-            path: nodes,
-            mime: 'image/jpeg'
-        });
+        catch (error) {
+            libfs.closeSync(fds.fd);
+            throw error;
+        }
     };
     var parse_vtt = function (node) {
         var fds = {
             fd: libfs.openSync(node, 'r'),
             offset: 0
         };
-        var buffer = Buffer.alloc(1024);
-        fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
-        var str = buffer.toString('utf8');
-        var lines = str.split('\r\n').reduce(function (lines, line) {
-            lines.push.apply(lines, line.split('\n'));
-            return lines;
-        }, new Array());
-        if (lines[0].substr(0, 6) !== 'WEBVTT') {
-            throw new Error();
+        try {
+            var buffer = Buffer.alloc(1024);
+            fds.offset += libfs.readSync(fds.fd, buffer, 0, buffer.length, fds.offset);
+            var str = buffer.toString('utf8');
+            var lines = str.split('\r\n').reduce(function (lines, line) {
+                lines.push.apply(lines, __spread(line.split('\n')));
+                return lines;
+            }, new Array());
+            if (lines[0].substr(0, 6) !== 'WEBVTT') {
+                throw new Error();
+            }
+            var metadata = lines[0].substr(7);
+            var nodes = node.split(libpath.sep);
+            var file_id = get_id_for("" + nodes.join(':'));
+            add_file({
+                file_id: file_id,
+                path: nodes,
+                mime: 'text/vtt'
+            });
         }
-        var metadata = lines[0].substr(7);
-        var nodes = node.split(libpath.sep);
-        var file_id = get_id_for("" + nodes.join(':'));
-        add_file({
-            file_id: file_id,
-            path: nodes,
-            mime: 'text/vtt'
-        });
+        catch (error) {
+            libfs.closeSync(fds.fd);
+            throw error;
+        }
     };
     var visit_image = function (node) {
         try {
@@ -689,5 +913,73 @@ define("index", ["require", "exports", "crypto", "fs", "path"], function (requir
             }
         }
     });
-    console.log(JSON.stringify(db, null, "\t"));
+    db.video.subtitles.forEach(function (subtitle_entry) {
+        var file_entry = files_index[subtitle_entry.file_id];
+        if (file_entry === undefined) {
+            return;
+        }
+        var path = __spread(["."], file_entry.path).join("/");
+        console.log(path);
+        var string = libfs.readFileSync(path, { encoding: "utf8" });
+        var reader = new libreader.Reader(string);
+        var track = libvtt.readTrack(reader);
+        var metadata = JSON.parse(track.head.metadata);
+        if (typeof metadata === "object" && typeof metadata.langauge === "string") {
+            subtitle_entry.language = metadata.language;
+        }
+        track.body.cues.forEach(function (cue) {
+            var hash = libcrypto.createHash("md5");
+            hash.update(subtitle_entry.file_id);
+            hash.update("" + cue.start_ms);
+            var cue_id = hash.digest("hex");
+            var subtitle_id = subtitle_entry.subtitle_id;
+            var start_ms = cue.start_ms;
+            var duration_ms = cue.duration_ms;
+            var lines = cue.lines.slice();
+            db.video.cues.push({
+                cue_id: cue_id,
+                subtitle_id: subtitle_id,
+                start_ms: start_ms,
+                duration_ms: duration_ms,
+                lines: lines
+            });
+        });
+    });
+    var cue_search_index = new Map();
+    db.video.cues.forEach(function (cue_entry) {
+        cue_entry.lines.forEach(function (line) {
+            var terms = libutils.getSearchTerms(line);
+            terms.forEach(function (term) {
+                var cues = cue_search_index.get(term);
+                if (cues === undefined) {
+                    cues = new Set();
+                    cue_search_index.set(term, cues);
+                }
+                cues.add(cue_entry.cue_id);
+            });
+        });
+    });
+    libfs.writeFileSync("./private/db/media.json", JSON.stringify(db, null, "\t"));
+    libfs.writeFileSync("./private/db/subtitles.json", JSON.stringify(cue_search_index, function (key, value) {
+        if (false) {
+        }
+        else if (value instanceof Map) {
+            return Array.from(value).reduce(function (object, _a) {
+                var _b = __read(_a, 2), key = _b[0], value = _b[1];
+                // @ts-ignore
+                object[key] = value;
+                return object;
+            }, {});
+        }
+        else if (value instanceof Set) {
+            return Array.from(value).reduce(function (object, value) {
+                // @ts-ignore
+                object.push(value);
+                return object;
+            }, []);
+        }
+        else {
+            return value;
+        }
+    }, "\t"));
 });

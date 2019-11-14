@@ -130,4 +130,43 @@ declare module "database" {
     };
     export { Entry, Index, ArtistEntry, AlbumEntry, DiscEntry, TrackEntry, AlbumArtistEntry, TrackArtistEntry, MovieEntry, ShowEntry, SeasonEntry, EpisodeEntry, SubtitleEntry, CueEntry, FileEntry, MediaDatabase, SubtitlesDatabase, UserEntry, AudiolistItemEntry, AudiolistEntry, ListDatabase };
 }
+declare module "utils" {
+    function join(...parameters: any): string;
+    function getSearchTerms(string: string): Array<string>;
+    function formatTimestamp(ms: number): string;
+    export { join, getSearchTerms, formatTimestamp };
+}
+declare module "reader" {
+    class Reader {
+        private string;
+        private offset;
+        private length;
+        constructor(string: string);
+        done(): boolean;
+        line(): string;
+        peek(length: number): string;
+        read(length: number): string;
+    }
+    export { Reader };
+}
+declare module "vtt" {
+    import * as libreader from "reader";
+    type Cue = {
+        start_ms: number;
+        duration_ms: number;
+        lines: Array<string>;
+    };
+    type Body = {
+        cues: Array<Cue>;
+    };
+    type Head = {
+        metadata: string;
+    };
+    type Track = {
+        head: Head;
+        body: Body;
+    };
+    function readTrack(reader: libreader.Reader): Track;
+    export { Cue, Body, Head, Track, readTrack };
+}
 declare module "index" { }
