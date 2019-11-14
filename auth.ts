@@ -1,14 +1,28 @@
 import * as libcrypto from "crypto";
+import * as libfs from "fs";
 import * as libdb from "./database";
 
-type Token = {
-	username: string;
-	selector: string;
-	validator_hash: string;
-};
+let users = JSON.parse(libfs.readFileSync('./private/db/users.json', "utf8")) as libdb.UserDatabase;
 
-let tokens = new Array<Token>();
-let users = require('./private/db/users.json') as Array<libdb.UserEntry>;
+let users_index: libdb.Index<libdb.UserEntry> = {};
+
+for (let i = 0; i < users.users.length; i++) {
+	let user = users.users[i];
+	users_index[user.username] = user;
+}
+
+let tokens_index: libdb.Index<libdb.AuthToken> = {};
+
+for (let i = 0; i < users.tokens.length; i++) {
+	let token = users.tokens[i];
+	tokens_index[token.selector] = token;
+}
+
+function addToken(token: libdb.AuthToken): void {
+	users.tokens.push(token);
+	tokens_index[token.selector] = token;
+	libfs.writeFileSync('./private/db/users.json', JSON.stringify(users, null, "\t"));
+}
 
 function password_generate(password: string): string {
 	let cost = 14;
@@ -55,7 +69,7 @@ function generate_token(username: string): string {
 	let hash = libcrypto.createHash('sha256');
 	hash.update(validator);
 	let validator_hash = hash.digest('hex');
-	tokens.push({
+	addToken({
 		username: username,
 		selector: selector.toString('hex'),
 		validator_hash: validator_hash
@@ -64,7 +78,7 @@ function generate_token(username: string): string {
 }
 
 function getToken(username: string, password: string): string {
-	let user = users.find((user) => user.username === username);
+	let user = users_index[username];
 	if (!user) {
 		throw new Error();
 	}
@@ -81,7 +95,7 @@ function getUsername(chunk: string): string {
 	}
 	let selector = parts[1];
 	let validator = parts[2];
-	let token = tokens.find((token) => token.selector === selector);
+	let token = tokens_index[selector];
 	if (!token) {
 		throw new Error();
 	}

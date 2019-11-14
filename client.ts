@@ -105,6 +105,9 @@ let context: Context | null = null;
 let metadata: Metadata | null = null;
 let context_index: number | null = null;
 let play = (index: number): void => {
+	if (index === context_index) {
+		return;
+	}
 	if (context === null) {
 		return;
 	}

@@ -330,11 +330,25 @@ define("cc", ["require", "exports"], function (require, exports) {
     };
     exports.load = load;
 });
-define("auth", ["require", "exports", "crypto"], function (require, exports, libcrypto) {
+define("auth", ["require", "exports", "crypto", "fs"], function (require, exports, libcrypto, libfs) {
     "use strict";
     exports.__esModule = true;
-    var tokens = new Array();
-    var users = require('./private/db/users.json');
+    var users = JSON.parse(libfs.readFileSync('./private/db/users.json', "utf8"));
+    var users_index = {};
+    for (var i = 0; i < users.users.length; i++) {
+        var user = users.users[i];
+        users_index[user.username] = user;
+    }
+    var tokens_index = {};
+    for (var i = 0; i < users.tokens.length; i++) {
+        var token = users.tokens[i];
+        tokens_index[token.selector] = token;
+    }
+    function addToken(token) {
+        users.tokens.push(token);
+        tokens_index[token.selector] = token;
+        libfs.writeFileSync('./private/db/users.json', JSON.stringify(users, null, "\t"));
+    }
     function password_generate(password) {
         var cost = 14;
         var blockSize = 8;
@@ -378,7 +392,7 @@ define("auth", ["require", "exports", "crypto"], function (require, exports, lib
         var hash = libcrypto.createHash('sha256');
         hash.update(validator);
         var validator_hash = hash.digest('hex');
-        tokens.push({
+        addToken({
             username: username,
             selector: selector.toString('hex'),
             validator_hash: validator_hash
@@ -386,7 +400,7 @@ define("auth", ["require", "exports", "crypto"], function (require, exports, lib
         return "" + selector.toString('hex') + validator.toString('hex');
     }
     function getToken(username, password) {
-        var user = users.find(function (user) { return user.username === username; });
+        var user = users_index[username];
         if (!user) {
             throw new Error();
         }
@@ -403,7 +417,7 @@ define("auth", ["require", "exports", "crypto"], function (require, exports, lib
         }
         var selector = parts[1];
         var validator = parts[2];
-        var token = tokens.find(function (token) { return token.selector === selector; });
+        var token = tokens_index[selector];
         if (!token) {
             throw new Error();
         }

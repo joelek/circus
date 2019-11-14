@@ -130,7 +130,16 @@ declare module "database" {
         audiolists: Array<AudiolistEntry>;
         audiolist_items: Array<AudiolistItemEntry>;
     };
-    export { Entry, Index, ArtistEntry, AlbumEntry, DiscEntry, TrackEntry, AlbumArtistEntry, TrackArtistEntry, MovieEntry, ShowEntry, SeasonEntry, EpisodeEntry, SubtitleEntry, CueEntry, FileEntry, MediaDatabase, SubtitlesDatabase, UserEntry, AudiolistItemEntry, AudiolistEntry, ListDatabase };
+    type AuthToken = {
+        username: string;
+        selector: string;
+        validator_hash: string;
+    };
+    type UserDatabase = {
+        users: Array<UserEntry>;
+        tokens: Array<AuthToken>;
+    };
+    export { Entry, Index, ArtistEntry, AlbumEntry, DiscEntry, TrackEntry, AlbumArtistEntry, TrackArtistEntry, MovieEntry, ShowEntry, SeasonEntry, EpisodeEntry, SubtitleEntry, CueEntry, FileEntry, MediaDatabase, SubtitlesDatabase, UserEntry, AudiolistItemEntry, AudiolistEntry, ListDatabase, AuthToken, UserDatabase };
 }
 declare module "cc" {
     type Context = {

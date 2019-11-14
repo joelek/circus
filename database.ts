@@ -137,6 +137,17 @@ type ListDatabase = {
 	audiolist_items: Array<AudiolistItemEntry>;
 };
 
+type AuthToken = {
+	username: string;
+	selector: string;
+	validator_hash: string;
+};
+
+type UserDatabase = {
+	users: Array<UserEntry>;
+	tokens: Array<AuthToken>;
+};
+
 export {
 	Entry,
 	Index,
@@ -158,5 +169,7 @@ export {
 	UserEntry,
 	AudiolistItemEntry,
 	AudiolistEntry,
-	ListDatabase
+	ListDatabase,
+	AuthToken,
+	UserDatabase
 };

@@ -268,7 +268,7 @@ define("vtt", ["require", "exports", "utils"], function (require, exports, libut
 define("index", ["require", "exports", "crypto", "fs", "path", "utils", "vtt", "reader"], function (require, exports, libcrypto, libfs, libpath, libutils, libvtt, libreader) {
     "use strict";
     exports.__esModule = true;
-    var media_root = './private/media/video/shows/arrested_development-jsh/';
+    var media_root = './private/media/';
     var db = {
         audio: {
             artists: new Array(),

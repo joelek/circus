@@ -183,6 +183,9 @@ define("client", ["require", "exports"], function (require, exports) {
     var metadata = null;
     var context_index = null;
     var play = function (index) {
+        if (index === context_index) {
+            return;
+        }
         if (context === null) {
             return;
         }
