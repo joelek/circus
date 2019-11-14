@@ -1,3 +1,34 @@
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __spread = (this && this.__spread) || function () {
+    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
+    return ar;
+};
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 var define = (function () {
     var moduleStates = new Map();
     var req = function (name) {
@@ -174,6 +205,9 @@ define("client", ["require", "exports"], function (require, exports) {
         video.play();
         context_index = index;
     };
+    var seek = function (offset_ms) {
+        video.currentTime = (offset_ms / 1000);
+    };
     var next = function () {
         if (context !== null && context_index !== null && context_index >= 0 && context_index < context.files.length - 1) {
             play(context_index + 1);
@@ -220,6 +254,7 @@ define("client", ["require", "exports"], function (require, exports) {
         var parts;
         if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
             req("/api/audio/albums/" + parts[1] + "/", {}, function (status, response) {
+                var e_1, _a, e_2, _b;
                 var a = document.createElement('div');
                 a.style.setProperty('font-size', '24px');
                 a.innerText = "" + response.title;
@@ -232,33 +267,52 @@ define("client", ["require", "exports"], function (require, exports) {
                 mount.appendChild(wrap);
                 var context = {
                     files: response.discs.reduce(function (tracks, disc) {
-                        tracks.push.apply(tracks, disc.tracks.map(function (track) { return track.file_id; }));
+                        tracks.push.apply(tracks, __spread(disc.tracks.map(function (track) { return track.file_id; })));
                         return tracks;
                     }, new Array())
                 };
-                for (var _i = 0, _a = response.discs; _i < _a.length; _i++) {
-                    var disc = _a[_i];
-                    var d = document.createElement('div');
-                    d.innerText = "" + disc.number;
-                    mount.appendChild(d);
-                    var _loop_1 = function (track) {
-                        var x = document.createElement('div');
-                        x.innerText = track.title + " " + format_duration(track.duration);
-                        x.addEventListener('click', function () {
-                            set_context(context);
-                            play(context.files.indexOf(track.file_id));
-                        });
-                        mount.appendChild(x);
-                    };
-                    for (var _b = 0, _c = disc.tracks; _b < _c.length; _b++) {
-                        var track = _c[_b];
-                        _loop_1(track);
+                try {
+                    for (var _c = __values(response.discs), _d = _c.next(); !_d.done; _d = _c.next()) {
+                        var disc = _d.value;
+                        var d = document.createElement('div');
+                        d.innerText = "" + disc.number;
+                        mount.appendChild(d);
+                        var _loop_1 = function (track) {
+                            var x = document.createElement('div');
+                            x.innerText = track.title + " " + format_duration(track.duration);
+                            x.addEventListener('click', function () {
+                                set_context(context);
+                                play(context.files.indexOf(track.file_id));
+                            });
+                            mount.appendChild(x);
+                        };
+                        try {
+                            for (var _e = (e_2 = void 0, __values(disc.tracks)), _f = _e.next(); !_f.done; _f = _e.next()) {
+                                var track = _f.value;
+                                _loop_1(track);
+                            }
+                        }
+                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                        finally {
+                            try {
+                                if (_f && !_f.done && (_b = _e["return"])) _b.call(_e);
+                            }
+                            finally { if (e_2) throw e_2.error; }
+                        }
                     }
+                }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                finally {
+                    try {
+                        if (_d && !_d.done && (_a = _c["return"])) _a.call(_c);
+                    }
+                    finally { if (e_1) throw e_1.error; }
                 }
             });
         }
         else if ((parts = /^audio[/]albums[/]/.exec(uri)) !== null) {
             req("/api/audio/albums/", {}, function (status, response) {
+                var e_3, _a;
                 var _loop_2 = function (album) {
                     var d = document.createElement('div');
                     d.innerText = "" + album.title;
@@ -267,14 +321,24 @@ define("client", ["require", "exports"], function (require, exports) {
                     });
                     mount.appendChild(d);
                 };
-                for (var _i = 0, _a = response.albums; _i < _a.length; _i++) {
-                    var album = _a[_i];
-                    _loop_2(album);
+                try {
+                    for (var _b = __values(response.albums), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var album = _c.value;
+                        _loop_2(album);
+                    }
+                }
+                catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+                    }
+                    finally { if (e_3) throw e_3.error; }
                 }
             });
         }
         else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
             req("/api/audio/artists/" + parts[1] + "/", {}, function (status, response) {
+                var e_4, _a;
                 var a = document.createElement('div');
                 a.style.setProperty('font-size', '24px');
                 a.innerText = "" + response.title;
@@ -287,14 +351,24 @@ define("client", ["require", "exports"], function (require, exports) {
                     });
                     mount.appendChild(d);
                 };
-                for (var _i = 0, _a = response.albums; _i < _a.length; _i++) {
-                    var album = _a[_i];
-                    _loop_3(album);
+                try {
+                    for (var _b = __values(response.albums), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var album = _c.value;
+                        _loop_3(album);
+                    }
+                }
+                catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+                    }
+                    finally { if (e_4) throw e_4.error; }
                 }
             });
         }
         else if ((parts = /^audio[/]artists[/]/.exec(uri)) !== null) {
             req("/api/audio/artists/", {}, function (status, response) {
+                var e_5, _a;
                 var _loop_4 = function (artist) {
                     var d = document.createElement('div');
                     d.innerText = "" + artist.title;
@@ -303,14 +377,24 @@ define("client", ["require", "exports"], function (require, exports) {
                     });
                     mount.appendChild(d);
                 };
-                for (var _i = 0, _a = response.artists; _i < _a.length; _i++) {
-                    var artist = _a[_i];
-                    _loop_4(artist);
+                try {
+                    for (var _b = __values(response.artists), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var artist = _c.value;
+                        _loop_4(artist);
+                    }
+                }
+                catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+                    }
+                    finally { if (e_5) throw e_5.error; }
                 }
             });
         }
         else if ((parts = /^audio[/]lists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
             req("/api/audio/lists/" + parts[1] + "/", {}, function (status, response) {
+                var e_6, _a;
                 var a = document.createElement('div');
                 a.style.setProperty('font-size', '24px');
                 a.innerText = "" + response.title;
@@ -329,14 +413,24 @@ define("client", ["require", "exports"], function (require, exports) {
                     });
                     mount.appendChild(d);
                 };
-                for (var _i = 0, _a = response.items; _i < _a.length; _i++) {
-                    var item = _a[_i];
-                    _loop_5(item);
+                try {
+                    for (var _b = __values(response.items), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var item = _c.value;
+                        _loop_5(item);
+                    }
+                }
+                catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+                    }
+                    finally { if (e_6) throw e_6.error; }
                 }
             });
         }
         else if ((parts = /^audio[/]lists[/]/.exec(uri)) !== null) {
             req("/api/audio/lists/", {}, function (status, response) {
+                var e_7, _a;
                 var _loop_6 = function (list) {
                     var d = document.createElement('div');
                     d.innerText = "" + list.title;
@@ -345,9 +439,18 @@ define("client", ["require", "exports"], function (require, exports) {
                     });
                     mount.appendChild(d);
                 };
-                for (var _i = 0, _a = response.audiolists; _i < _a.length; _i++) {
-                    var list = _a[_i];
-                    _loop_6(list);
+                try {
+                    for (var _b = __values(response.audiolists), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var list = _c.value;
+                        _loop_6(list);
+                    }
+                }
+                catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+                    }
+                    finally { if (e_7) throw e_7.error; }
                 }
             });
         }
@@ -373,44 +476,64 @@ define("client", ["require", "exports"], function (require, exports) {
         }
         else if ((parts = /^video[/]shows[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
             req("/api/video/shows/" + parts[1] + "/", {}, function (status, response) {
+                var e_8, _a, e_9, _b;
                 var d = document.createElement('div');
                 d.innerText = "" + response.title;
                 d.style.setProperty('font-size', '24px');
                 mount.appendChild(d);
                 var context = {
                     files: response.seasons.reduce(function (files, season) {
-                        files.push.apply(files, season.episodes.map(function (episode) { return episode.file_id; }));
+                        files.push.apply(files, __spread(season.episodes.map(function (episode) { return episode.file_id; })));
                         return files;
                     }, new Array())
                 };
                 var context_metadata = {};
-                for (var _i = 0, _a = response.seasons; _i < _a.length; _i++) {
-                    var season = _a[_i];
-                    var d_1 = document.createElement('div');
-                    d_1.innerText = "" + season.number;
-                    mount.appendChild(d_1);
-                    var _loop_7 = function (episode) {
-                        context_metadata[episode.file_id] = {
-                            subtitles: episode.subtitles
+                try {
+                    for (var _c = __values(response.seasons), _d = _c.next(); !_d.done; _d = _c.next()) {
+                        var season = _d.value;
+                        var d_1 = document.createElement('div');
+                        d_1.innerText = "" + season.number;
+                        mount.appendChild(d_1);
+                        var _loop_7 = function (episode) {
+                            context_metadata[episode.file_id] = {
+                                subtitles: episode.subtitles
+                            };
+                            var d2 = document.createElement('div');
+                            d2.innerText = episode.title + " " + format_duration(episode.duration);
+                            d2.addEventListener('click', function () {
+                                set_context(context);
+                                set_context_metadata(context_metadata);
+                                play(context.files.indexOf(episode.file_id));
+                            });
+                            mount.appendChild(d2);
                         };
-                        var d2 = document.createElement('div');
-                        d2.innerText = episode.title + " " + format_duration(episode.duration);
-                        d2.addEventListener('click', function () {
-                            set_context(context);
-                            set_context_metadata(context_metadata);
-                            play(context.files.indexOf(episode.file_id));
-                        });
-                        mount.appendChild(d2);
-                    };
-                    for (var _b = 0, _c = season.episodes; _b < _c.length; _b++) {
-                        var episode = _c[_b];
-                        _loop_7(episode);
+                        try {
+                            for (var _e = (e_9 = void 0, __values(season.episodes)), _f = _e.next(); !_f.done; _f = _e.next()) {
+                                var episode = _f.value;
+                                _loop_7(episode);
+                            }
+                        }
+                        catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                        finally {
+                            try {
+                                if (_f && !_f.done && (_b = _e["return"])) _b.call(_e);
+                            }
+                            finally { if (e_9) throw e_9.error; }
+                        }
                     }
+                }
+                catch (e_8_1) { e_8 = { error: e_8_1 }; }
+                finally {
+                    try {
+                        if (_d && !_d.done && (_a = _c["return"])) _a.call(_c);
+                    }
+                    finally { if (e_8) throw e_8.error; }
                 }
             });
         }
         else if ((parts = /^video[/]shows[/]/.exec(uri)) !== null) {
             req("/api/video/shows/", {}, function (status, response) {
+                var e_10, _a;
                 var _loop_8 = function (show) {
                     var d = document.createElement('div');
                     d.innerText = "" + show.title;
@@ -419,13 +542,22 @@ define("client", ["require", "exports"], function (require, exports) {
                     });
                     mount.appendChild(d);
                 };
-                for (var _i = 0, _a = response.shows; _i < _a.length; _i++) {
-                    var show = _a[_i];
-                    _loop_8(show);
+                try {
+                    for (var _b = __values(response.shows), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var show = _c.value;
+                        _loop_8(show);
+                    }
+                }
+                catch (e_10_1) { e_10 = { error: e_10_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+                    }
+                    finally { if (e_10) throw e_10.error; }
                 }
             });
         }
-        else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+        else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
             req("/api/video/movies/" + parts[1] + "/", {}, function (status, response) {
                 var d = document.createElement('div');
                 d.innerText = response.title + " (" + response.year + ")";
@@ -447,12 +579,17 @@ define("client", ["require", "exports"], function (require, exports) {
                     set_context(context);
                     set_context_metadata(context_metadata);
                     play(context.files.indexOf(response.file_id));
+                    if (parts !== null && parts.length >= 3) {
+                        var start_ms = Number.parseInt(parts[2], 10);
+                        seek(start_ms);
+                    }
                 });
                 mount.appendChild(d3);
             });
         }
         else if ((parts = /^video[/]movies[/]/.exec(uri)) !== null) {
             req("/api/video/movies/", {}, function (status, response) {
+                var e_11, _a;
                 var _loop_9 = function (movie) {
                     var d = document.createElement('div');
                     d.innerText = "" + movie.title;
@@ -461,9 +598,18 @@ define("client", ["require", "exports"], function (require, exports) {
                     });
                     mount.appendChild(d);
                 };
-                for (var _i = 0, _a = response.movies; _i < _a.length; _i++) {
-                    var movie = _a[_i];
-                    _loop_9(movie);
+                try {
+                    for (var _b = __values(response.movies), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var movie = _c.value;
+                        _loop_9(movie);
+                    }
+                }
+                catch (e_11_1) { e_11 = { error: e_11_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+                    }
+                    finally { if (e_11) throw e_11.error; }
                 }
             });
         }
@@ -480,6 +626,7 @@ define("client", ["require", "exports"], function (require, exports) {
                 var query = searchbox_1.value;
                 if (query !== "") {
                     req("/api/video/cues/", { query: query }, function (status, response) {
+                        var e_12, _a;
                         while (results_1.lastChild !== null) {
                             results_1.removeChild(results_1.lastChild);
                         }
@@ -495,14 +642,23 @@ define("client", ["require", "exports"], function (require, exports) {
                                     navigate("video/episodes/" + episode_id + "/");
                                 }
                                 else if (movie_id !== null) {
-                                    navigate("video/movies/" + movie_id + "/");
+                                    navigate("video/movies/" + movie_id + "/" + cue.start_ms + "/");
                                 }
                             });
                             results_1.appendChild(d);
                         };
-                        for (var _i = 0, _a = response.cues; _i < _a.length; _i++) {
-                            var cue = _a[_i];
-                            _loop_10(cue);
+                        try {
+                            for (var _b = __values(response.cues), _c = _b.next(); !_c.done; _c = _b.next()) {
+                                var cue = _c.value;
+                                _loop_10(cue);
+                            }
+                        }
+                        catch (e_12_1) { e_12 = { error: e_12_1 }; }
+                        finally {
+                            try {
+                                if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+                            }
+                            finally { if (e_12) throw e_12.error; }
                         }
                     });
                 }

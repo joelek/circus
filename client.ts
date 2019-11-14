@@ -127,6 +127,9 @@ let play = (index: number): void => {
 	video.play();
 	context_index = index;
 };
+let seek = (offset_ms: number): void => {
+	video.currentTime = (offset_ms / 1000);
+};
 let next = (): void => {
 	if (context !== null && context_index !== null && context_index >= 0 && context_index < context.files.length - 1) {
 		play(context_index + 1);
@@ -178,7 +181,7 @@ let updateviewforuri = (uri: string): void => {
 	while (mount.lastChild !== null) {
 		mount.removeChild(mount.lastChild);
 	}
-	let parts;
+	let parts: RegExpExecArray | null;
 	if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/`, {}, (status, response) => {
 			let a = document.createElement('div');
@@ -343,7 +346,7 @@ let updateviewforuri = (uri: string): void => {
 				mount.appendChild(d);
 			}
 		});
-	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.MovieResponse>(`/api/video/movies/${parts[1]}/`, {}, (status, response) => {
 			let d = document.createElement('div');
 			d.innerText = `${response.title} (${response.year})`;
@@ -365,6 +368,10 @@ let updateviewforuri = (uri: string): void => {
 				set_context(context);
 				set_context_metadata(context_metadata);
 				play(context.files.indexOf(response.file_id));
+				if (parts !== null && parts.length >= 3) {
+					let start_ms = Number.parseInt(parts[2], 10);
+					seek(start_ms);
+				}
 			});
 			mount.appendChild(d3);
 		});
@@ -406,7 +413,7 @@ let updateviewforuri = (uri: string): void => {
 							if (episode_id !== null) {
 								navigate(`video/episodes/${episode_id}/`);
 							} else if (movie_id !== null) {
-								navigate(`video/movies/${movie_id}/`);
+								navigate(`video/movies/${movie_id}/${cue.start_ms}/`);
 							}
 						});
 						results.appendChild(d);
