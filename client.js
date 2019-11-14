@@ -557,6 +557,36 @@ define("client", ["require", "exports"], function (require, exports) {
                 }
             });
         }
+        else if ((parts = /^video[/]episodes[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
+            req("/api/video/episodes/" + parts[1] + "/", {}, function (status, response) {
+                var d = document.createElement('div');
+                d.innerText = "" + response.title;
+                d.style.setProperty('font-size', '24px');
+                mount.appendChild(d);
+                var d2 = document.createElement('div');
+                d2.innerText = format_duration(response.duration);
+                mount.appendChild(d2);
+                var context = {
+                    files: [response.file_id]
+                };
+                var context_metadata = {};
+                context_metadata[response.file_id] = {
+                    subtitles: response.subtitles
+                };
+                var d3 = document.createElement('div');
+                d3.innerText = "load";
+                d3.addEventListener('click', function () {
+                    set_context(context);
+                    set_context_metadata(context_metadata);
+                    play(context.files.indexOf(response.file_id));
+                    if (parts !== null && parts.length >= 3) {
+                        var start_ms = Number.parseInt(parts[2], 10);
+                        seek(start_ms);
+                    }
+                });
+                mount.appendChild(d3);
+            });
+        }
         else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
             req("/api/video/movies/" + parts[1] + "/", {}, function (status, response) {
                 var d = document.createElement('div');
@@ -639,7 +669,7 @@ define("client", ["require", "exports"], function (require, exports) {
                                 var episode_id = cue.subtitle.episode_id;
                                 var movie_id = cue.subtitle.movie_id;
                                 if (episode_id !== null) {
-                                    navigate("video/episodes/" + episode_id + "/");
+                                    navigate("video/episodes/" + episode_id + "/" + cue.start_ms + "/");
                                 }
                                 else if (movie_id !== null) {
                                     navigate("video/movies/" + movie_id + "/" + cue.start_ms + "/");

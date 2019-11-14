@@ -330,6 +330,41 @@ class CCRoute implements Route<api_response.ApiRequest, api_response.ChromeCastR
 	}
 }
 
+class EpisodeRoute implements Route<api_response.ApiRequest, api_response.EpisodeResponse> {
+	constructor() {
+
+	}
+
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		if (request.url === undefined) {
+			throw new Error();
+		}
+		let parts = /^[/]api[/]video[/]episodes[/]([0-9a-f]{32})[/]/.exec(request.url);
+		if (parts === null) {
+			throw new Error();
+		}
+		let episode_id = parts[1];
+		let episode = episodes_index[episode_id];
+		if (episode === undefined) {
+			throw new Error();
+		}
+		let subtitles = media.video.subtitles
+			.filter((subtitle) => {
+				return subtitle.episode_id === (episode as libdb.EpisodeEntry).episode_id
+			});
+		let payload: api_response.EpisodeResponse = {
+			...episode,
+			subtitles
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]video[/]episodes[/]([0-9a-f]{32})[/]/.test(request.url);
+	}
+}
+
 class ShowRoute implements Route<api_response.ApiRequest, api_response.ShowResponse> {
 	constructor() {
 
@@ -680,6 +715,7 @@ let router = new Router()
 	.registerRoute(new ArtistsRoute())
 	.registerRoute(new AlbumRoute())
 	.registerRoute(new AlbumsRoute())
+	.registerRoute(new EpisodeRoute())
 	.registerRoute(new ShowRoute())
 	.registerRoute(new ShowsRoute())
 	.registerRoute(new AudiolistRoute())

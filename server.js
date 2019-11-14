@@ -753,6 +753,35 @@ define("api", ["require", "exports", "fs", "cc", "auth", "utils"], function (req
         };
         return CCRoute;
     }());
+    var EpisodeRoute = /** @class */ (function () {
+        function EpisodeRoute() {
+        }
+        EpisodeRoute.prototype.handleRequest = function (request, response) {
+            if (request.url === undefined) {
+                throw new Error();
+            }
+            var parts = /^[/]api[/]video[/]episodes[/]([0-9a-f]{32})[/]/.exec(request.url);
+            if (parts === null) {
+                throw new Error();
+            }
+            var episode_id = parts[1];
+            var episode = episodes_index[episode_id];
+            if (episode === undefined) {
+                throw new Error();
+            }
+            var subtitles = media.video.subtitles
+                .filter(function (subtitle) {
+                return subtitle.episode_id === episode.episode_id;
+            });
+            var payload = __assign(__assign({}, episode), { subtitles: subtitles });
+            response.writeHead(200);
+            response.end(JSON.stringify(payload));
+        };
+        EpisodeRoute.prototype.handlesRequest = function (request) {
+            return request.method === 'POST' && request.url !== undefined && /^[/]api[/]video[/]episodes[/]([0-9a-f]{32})[/]/.test(request.url);
+        };
+        return EpisodeRoute;
+    }());
     var ShowRoute = /** @class */ (function () {
         function ShowRoute() {
         }
@@ -1058,6 +1087,7 @@ define("api", ["require", "exports", "fs", "cc", "auth", "utils"], function (req
         .registerRoute(new ArtistsRoute())
         .registerRoute(new AlbumRoute())
         .registerRoute(new AlbumsRoute())
+        .registerRoute(new EpisodeRoute())
         .registerRoute(new ShowRoute())
         .registerRoute(new ShowsRoute())
         .registerRoute(new AudiolistRoute())

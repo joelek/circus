@@ -346,6 +346,35 @@ let updateviewforuri = (uri: string): void => {
 				mount.appendChild(d);
 			}
 		});
+	} else if ((parts = /^video[/]episodes[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
+		req<api_response.ApiRequest, api_response.EpisodeResponse>(`/api/video/episodes/${parts[1]}/`, {}, (status, response) => {
+			let d = document.createElement('div');
+			d.innerText = `${response.title}`;
+			d.style.setProperty('font-size', '24px');
+			mount.appendChild(d);
+			let d2 = document.createElement('div');
+			d2.innerText = format_duration(response.duration);
+			mount.appendChild(d2);
+			let context: Context = {
+				files: [ response.file_id ]
+			};
+			let context_metadata: Metadata = {};
+			context_metadata[response.file_id] = {
+				subtitles: response.subtitles
+			};
+			let d3 = document.createElement('div');
+			d3.innerText = `load`;
+			d3.addEventListener('click', () => {
+				set_context(context);
+				set_context_metadata(context_metadata);
+				play(context.files.indexOf(response.file_id));
+				if (parts !== null && parts.length >= 3) {
+					let start_ms = Number.parseInt(parts[2], 10);
+					seek(start_ms);
+				}
+			});
+			mount.appendChild(d3);
+		});
 	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.MovieResponse>(`/api/video/movies/${parts[1]}/`, {}, (status, response) => {
 			let d = document.createElement('div');
@@ -411,7 +440,7 @@ let updateviewforuri = (uri: string): void => {
 							let episode_id = cue.subtitle.episode_id;
 							let movie_id = cue.subtitle.movie_id;
 							if (episode_id !== null) {
-								navigate(`video/episodes/${episode_id}/`);
+								navigate(`video/episodes/${episode_id}/${cue.start_ms}/`);
 							} else if (movie_id !== null) {
 								navigate(`video/movies/${movie_id}/${cue.start_ms}/`);
 							}
