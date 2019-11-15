@@ -4,7 +4,7 @@
 			"es5",
 			"es6"
 		],
-		"outFile": "./server.js",
+		"outFile": "./build/server.js",
 		"types": [
 			"node"
 		]
