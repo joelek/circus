@@ -140,12 +140,16 @@ let next = (): void => {
 };
 video.addEventListener('ended', next);
 let set_context = (ctx: Context): void => {
-	context = ctx;
-	context_index = null;
+	if (ctx !== context) {
+		context = ctx;
+		context_index = null;
+	}
 };
 let set_context_metadata = (md: Metadata): void => {
-	metadata = md;
-	context_index = null;
+	if (md !== metadata) {
+		metadata = md;
+		context_index = null;
+	}
 };
 
 let ccload = document.createElement('button');
