@@ -219,9 +219,11 @@ define("client", ["require", "exports"], function (require, exports) {
     video.addEventListener('ended', next);
     var set_context = function (ctx) {
         context = ctx;
+        context_index = null;
     };
     var set_context_metadata = function (md) {
         metadata = md;
+        context_index = null;
     };
     var ccload = document.createElement('button');
     ccload.textContent = 'cast';
