@@ -15,6 +15,7 @@
 		"./api_response.ts",
 		"./auth.ts",
 		"./cc.ts",
+		"./data.ts",
 		"./database.ts",
 		"./server.ts",
 		"./utils.ts"

@@ -5,9 +5,10 @@ import * as libauth from "./auth";
 import * as libdb from "./database";
 import * as libutils from "./utils";
 import * as api_response from "./api_response";
+import * as data from "./data";
 
-let media = JSON.parse(libfs.readFileSync(('./private/db/media.json'), "utf8")) as libdb.MediaDatabase;
-let lists = JSON.parse(libfs.readFileSync(('./private/db/lists.json'), "utf8")) as libdb.ListDatabase;
+let media = data.media;
+let lists = data.lists;
 
 let tracks_index: libdb.Index<libdb.TrackEntry> = {};
 
