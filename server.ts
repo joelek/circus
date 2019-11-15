@@ -9,7 +9,7 @@ import * as api from "./api";
 import * as auth from "./auth";
 import * as libdb from "./database";
 
-let media = require('./private/db/media.json') as libdb.MediaDatabase;
+let media = JSON.parse(libfs.readFileSync('./private/db/media.json', "utf8")) as libdb.MediaDatabase;
 
 let files_index: libdb.Index<libdb.FileEntry> = {};
 

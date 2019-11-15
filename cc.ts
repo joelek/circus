@@ -1,4 +1,5 @@
 import * as libdb from "./database";
+import * as libfs from "fs";
 
 var Client  = require('castv2-client').Client;
 var DefaultMediaReceiver = require('castv2-client').DefaultMediaReceiver;
@@ -67,8 +68,8 @@ let gmedia: Media | null = null;
 let gtoken: string | null = null;
 let gplayer: Player | null = null;
 
-let media = require('./private/db/media.json') as libdb.MediaDatabase;
-let lists = require('./private/db/lists.json') as libdb.ListDatabase;
+let media = JSON.parse(libfs.readFileSync(('./private/db/media.json'), "utf8")) as libdb.MediaDatabase;
+let lists = JSON.parse(libfs.readFileSync(('./private/db/lists.json'), "utf8")) as libdb.ListDatabase;
 
 let tracks_index: libdb.Index<libdb.TrackEntry> = {};
 

@@ -6,8 +6,8 @@ import * as libdb from "./database";
 import * as libutils from "./utils";
 import * as api_response from "./api_response";
 
-let media = require('./private/db/media.json') as libdb.MediaDatabase;
-let lists = require('./private/db/lists.json') as libdb.ListDatabase;
+let media = JSON.parse(libfs.readFileSync(('./private/db/media.json'), "utf8")) as libdb.MediaDatabase;
+let lists = JSON.parse(libfs.readFileSync(('./private/db/lists.json'), "utf8")) as libdb.ListDatabase;
 
 let tracks_index: libdb.Index<libdb.TrackEntry> = {};
 
