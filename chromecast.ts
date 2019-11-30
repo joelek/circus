@@ -211,7 +211,7 @@ namespace libmdns {
 				let index = obs.lastIndexOf(observer);
 				obs.slice(index, 1);
 			}
-		}
+		};
 	};
 };
 

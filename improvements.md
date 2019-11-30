@@ -1,1 +1,0 @@
-* Split certificate manager into a separate process that handles automatic renewal using gateway library. The process should verify the HTTP host of incoming requests against the domain names verified by the certificate.
