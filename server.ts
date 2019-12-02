@@ -128,9 +128,9 @@ let httpServer = libhttp.createServer()
 	.listen(80);
 
 let httpsServer = libhttps.createServer({
-		cert: libfs.readFileSync("./private/certs/live/ap.joelek.se/fullchain.pem"),
+		cert: libfs.readFileSync("./private/certs/full_chain.pem"),
 		dhparam: libfs.readFileSync("./private/certs/dhparam.pem"),
-		key: libfs.readFileSync("./private/certs/live/ap.joelek.se/privkey.pem")
+		key: libfs.readFileSync("./private/certs/certificate_key.pem")
 	}).on('request', (request, response) => {
 		console.log(`${new Date().toUTCString()}:${request.method}:${request.url}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, "\t"));
 		if (!/ap[.]joelek[.]se(:[0-9]+)?$/.test(request.headers.host)) {
