@@ -72,7 +72,7 @@ let send_data = (file: libdb.FileEntry, request: libhttp.IncomingMessage, respon
 		let offset = parseInt(parts2[1]);
 		let offset2 = parts2[2] ? parseInt(parts2[2]) : null;
 		if (offset2 === null) {
-			offset2 = Math.min(offset + 1048576, size) - 1;
+			offset2 = size - 1;
 		}
 		if (offset >= size || offset2 >= size || offset2 < offset) {
 			response.writeHead(416);

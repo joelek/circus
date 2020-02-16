@@ -47,7 +47,7 @@ class Reader {
 	peek(length: number): string {
 		let min = Math.min(this.offset, this.offset + length);
 		let max = Math.max(this.offset, this.offset + length);
-		if ((min < 0) || (min >= this.length) || (max < 0) || (max >= this.length)) {
+		if ((min < 0) || (min >= this.length) || (max < 0) || (max > this.length)) {
 			throw new Error(libutils.join("Unable to read between offsets ", min, " and ", max, "!", "Length is", this.length, "."));
 		}
 		return this.string.substring(min, max);
