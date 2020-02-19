@@ -12,7 +12,7 @@ let cue_search_index = JSON.parse(libfs.readFileSync("./private/db/subtitles.jso
 		return new Map<string, Set<string>>(Object.keys(value).map(k => [k, value[k]]));
 	}
 	return value;
-}) as libdatabase.SubtitlesDatabase;
+}) as Map<string, Set<string>>;
 let query = process.argv[2];
 let terms = libutils.getSearchTerms(query);
 let cue_id_sets = terms.map((term) => {

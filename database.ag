@@ -1,0 +1,123 @@
+{
+	ArtistEntry: {
+		artist_id: string,
+		title: string
+	},
+	AlbumEntry: {
+		album_id: string,
+		title: string,
+		year: number,
+		cover_file_id: (string | null)
+	},
+	DiscEntry: {
+		disc_id: string,
+		album_id: string,
+		number: number
+	},
+	TrackEntry: {
+		track_id: string,
+		disc_id: string,
+		file_id: string,
+		title: string,
+		number: number,
+		duration: number
+	},
+	AlbumArtistEntry: {
+		album_id: string,
+		artist_id: string
+	},
+	TrackArtistEntry: {
+		track_id: string,
+		artist_id: string
+	},
+	MovieEntry: {
+		movie_id: string,
+		file_id: string,
+		title: string,
+		year: number,
+		duration: number
+	},
+	ShowEntry: {
+		show_id: string,
+		title: string
+	},
+	SeasonEntry: {
+		season_id: string,
+		show_id: string,
+		number: number
+	},
+	EpisodeEntry: {
+		episode_id: string,
+		season_id: string,
+		file_id: string,
+		title: string,
+		number: number,
+		duration: number
+	},
+	SubtitleEntry: {
+		subtitle_id: string,
+		episode_id: (string | null),
+		movie_id: (string | null),
+		file_id: string,
+		language: (string | null)
+	},
+	CueEntry: {
+		cue_id: string,
+		subtitle_id: string,
+		start_ms: number,
+		duration_ms: number,
+		lines: string[]
+	},
+	FileEntry: {
+		file_id: string,
+		path: string[],
+		mime: string
+	},
+	MediaDatabase: {
+		audio: {
+			artists: @ArtistEntry[],
+			albums: @AlbumEntry[],
+			discs: @DiscEntry[],
+			tracks: @TrackEntry[],
+			album_artists: @AlbumArtistEntry[],
+			track_artists: @TrackArtistEntry[]
+		},
+		video: {
+			movies: @MovieEntry[],
+			shows: @ShowEntry[],
+			seasons: @SeasonEntry[],
+			episodes: @EpisodeEntry[],
+			subtitles: @SubtitleEntry[],
+			cues: @CueEntry[]
+		},
+		files: @FileEntry[]
+	},
+	SubtitlesDatabase: { string[] },
+	AudiolistEntry: {
+		audiolist_id: string,
+		title: string
+	},
+	AudiolistItemEntry: {
+		audiolist_id: string,
+		track_id: string,
+		number: number
+	},
+	ListDatabase: {
+		audiolists: @AudiolistEntry[],
+		audiolist_items: @AudiolistItemEntry[]
+	},
+	UserEntry: {
+		user_id: string,
+		username: string,
+		password: string
+	},
+	AuthToken: {
+		username: string,
+		selector: string,
+		validator_hash: string
+	},
+	UserDatabase: {
+		users: @UserEntry[],
+		tokens: @AuthToken[]
+	}
+}

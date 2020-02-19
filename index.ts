@@ -5,6 +5,7 @@ import * as libdb from "./database";
 import * as libutils from "./utils";
 import * as libvtt from "./vtt";
 import * as libreader from "./reader";
+import * as utils from "./utils";
 
 let media_root = './private/media/';
 
@@ -28,21 +29,21 @@ let db = {
 	files: new Array<libdb.FileEntry>()
 };
 
-let movies_index: libdb.Index<libdb.MovieEntry> = {};
-let shows_index: libdb.Index<libdb.ShowEntry> = {};
-let seasons_index: libdb.Index<libdb.SeasonEntry> = {};
-let episodes_index: libdb.Index<libdb.EpisodeEntry> = {};
-let subtitles_index: libdb.Index<libdb.SubtitleEntry> = {};
-let cues_index: libdb.Index<libdb.CueEntry> = {};
+let movies_index: utils.Index<libdb.MovieEntry> = {};
+let shows_index: utils.Index<libdb.ShowEntry> = {};
+let seasons_index: utils.Index<libdb.SeasonEntry> = {};
+let episodes_index: utils.Index<libdb.EpisodeEntry> = {};
+let subtitles_index: utils.Index<libdb.SubtitleEntry> = {};
+let cues_index: utils.Index<libdb.CueEntry> = {};
 
-let artists_index: libdb.Index<libdb.ArtistEntry> = {};
-let albums_index: libdb.Index<libdb.AlbumEntry> = {};
-let discs_index: libdb.Index<libdb.DiscEntry> = {};
-let tracks_index: libdb.Index<libdb.TrackEntry> = {};
-let album_artists_index: libdb.Index<libdb.AlbumArtistEntry> = {};
-let track_artists_index: libdb.Index<libdb.TrackArtistEntry> = {};
+let artists_index: utils.Index<libdb.ArtistEntry> = {};
+let albums_index: utils.Index<libdb.AlbumEntry> = {};
+let discs_index: utils.Index<libdb.DiscEntry> = {};
+let tracks_index: utils.Index<libdb.TrackEntry> = {};
+let album_artists_index: utils.Index<libdb.AlbumArtistEntry> = {};
+let track_artists_index: utils.Index<libdb.TrackArtistEntry> = {};
 
-let files_index: libdb.Index<libdb.FileEntry> = {};
+let files_index: utils.Index<libdb.FileEntry> = {};
 
 let add_movie = (movie: libdb.MovieEntry): void => {
 	if (!(movie.movie_id in movies_index)) {

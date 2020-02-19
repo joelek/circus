@@ -1,6 +1,7 @@
 import * as libdb from "./database";
 import * as libfs from "fs";
 import * as data from "./data";
+import * as utils from "./utils";
 
 let media = data.media;
 let lists = data.lists;
@@ -72,84 +73,84 @@ let gmedia: Media | null = null;
 let gtoken: string | null = null;
 let gplayer: Player | null = null;
 
-let tracks_index: libdb.Index<libdb.TrackEntry> = {};
+let tracks_index: utils.Index<libdb.TrackEntry> = {};
 
 for (let i = 0; i < media.audio.tracks.length; i++) {
 	let track = media.audio.tracks[i];
 	tracks_index[track.track_id] = track;
 }
 
-let discs_index: libdb.Index<libdb.DiscEntry> = {};
+let discs_index: utils.Index<libdb.DiscEntry> = {};
 
 for (let i = 0; i < media.audio.discs.length; i++) {
 	let disc = media.audio.discs[i];
 	discs_index[disc.disc_id] = disc;
 }
 
-let albums_index: libdb.Index<libdb.AlbumEntry> = {};
+let albums_index: utils.Index<libdb.AlbumEntry> = {};
 
 for (let i = 0; i < media.audio.albums.length; i++) {
 	let album = media.audio.albums[i];
 	albums_index[album.album_id] = album;
 }
 
-let artists_index: libdb.Index<libdb.ArtistEntry> = {};
+let artists_index: utils.Index<libdb.ArtistEntry> = {};
 
 for (let i = 0; i < media.audio.artists.length; i++) {
 	let artist = media.audio.artists[i];
 	artists_index[artist.artist_id] = artist;
 }
 
-let shows_index: libdb.Index<libdb.ShowEntry> = {};
+let shows_index: utils.Index<libdb.ShowEntry> = {};
 
 for (let i = 0; i < media.video.shows.length; i++) {
 	let show = media.video.shows[i];
 	shows_index[show.show_id] = show;
 }
 
-let episodes_index: libdb.Index<libdb.EpisodeEntry> = {};
+let episodes_index: utils.Index<libdb.EpisodeEntry> = {};
 
 for (let i = 0; i < media.video.episodes.length; i++) {
 	let episode = media.video.episodes[i];
 	episodes_index[episode.episode_id] = episode;
 }
 
-let seasons_index: libdb.Index<libdb.SeasonEntry> = {};
+let seasons_index: utils.Index<libdb.SeasonEntry> = {};
 
 for (let i = 0; i < media.video.seasons.length; i++) {
 	let season = media.video.seasons[i];
 	seasons_index[season.season_id] = season;
 }
 
-let movies_index: libdb.Index<libdb.MovieEntry> = {};
+let movies_index: utils.Index<libdb.MovieEntry> = {};
 
 for (let i = 0; i < media.video.movies.length; i++) {
 	let movie = media.video.movies[i];
 	movies_index[movie.movie_id] = movie;
 }
 
-let subtitles_index: libdb.Index<libdb.SubtitleEntry> = {};
+let subtitles_index: utils.Index<libdb.SubtitleEntry> = {};
 
 for (let i = 0; i < media.video.subtitles.length; i++) {
 	let subtitle = media.video.subtitles[i];
 	subtitles_index[subtitle.subtitle_id] = subtitle;
 }
 
-let cues_index: libdb.Index<libdb.CueEntry> = {};
+let cues_index: utils.Index<libdb.CueEntry> = {};
 
 for (let i = 0; i < media.video.cues.length; i++) {
 	let cue = media.video.cues[i];
 	cues_index[cue.cue_id] = cue;
 }
 
-let audiolists_index: libdb.Index<libdb.AudiolistEntry> = {};
+let audiolists_index: utils.Index<libdb.AudiolistEntry> = {};
 
 for (let i = 0; i < lists.audiolists.length; i++) {
 	let audiolist = lists.audiolists[i];
 	audiolists_index[audiolist.audiolist_id] = audiolist;
 }
 
-let files_index: libdb.Index<libdb.FileEntry> = {};
+let files_index: utils.Index<libdb.FileEntry> = {};
 
 for (let i = 0; i < media.files.length; i++) {
 	let file = media.files[i];

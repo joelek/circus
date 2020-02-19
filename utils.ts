@@ -24,8 +24,11 @@ function formatTimestamp(ms: number): string {
 	return join(fh, ":", fm, ":", fs, ".", fms);
 }
 
+type Index<A> = { [key: string]: A | undefined };
+
 export {
 	join,
 	getSearchTerms,
-	formatTimestamp
+	formatTimestamp,
+	Index
 };

@@ -9,10 +9,11 @@ import * as api from "./api";
 import * as auth from "./auth";
 import * as libdb from "./database";
 import * as data from "./data";
+import * as utils from "./utils";
 
 let media = data.media;
 
-let files_index: libdb.Index<libdb.FileEntry> = {};
+let files_index: utils.Index<libdb.FileEntry> = {};
 
 for (let i = 0; i < media.files.length; i++) {
 	let file = media.files[i];
@@ -133,7 +134,7 @@ let httpsServer = libhttps.createServer({
 		key: libfs.readFileSync("./private/certs/certificate_key.pem")
 	}).on('request', (request, response) => {
 		console.log(`${new Date().toUTCString()}:${request.method}:${request.url}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, "\t"));
-		if (!/ap[.]joelek[.]se(:[0-9]+)?$/.test(request.headers.host)) {
+		if (false && !/ap[.]joelek[.]se(:[0-9]+)?$/.test(request.headers.host)) {
 			console.log('dropped', JSON.stringify(request.headers, null, "\t"));
 			response.writeHead(400);
 			response.end();

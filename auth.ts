@@ -1,17 +1,18 @@
 import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as libdb from "./database";
+import * as utils from "./utils";
 
 let users = JSON.parse(libfs.readFileSync('./private/db/users.json', "utf8")) as libdb.UserDatabase;
 
-let users_index: libdb.Index<libdb.UserEntry> = {};
+let users_index: utils.Index<libdb.UserEntry> = {};
 
 for (let i = 0; i < users.users.length; i++) {
 	let user = users.users[i];
 	users_index[user.username] = user;
 }
 
-let tokens_index: libdb.Index<libdb.AuthToken> = {};
+let tokens_index: utils.Index<libdb.AuthToken> = {};
 
 for (let i = 0; i < users.tokens.length; i++) {
 	let token = users.tokens[i];
