@@ -1,8 +1,9 @@
 {
 	"dependencies": {
 		"@joelek/ts-define": "github:joelek/ts-define",
-		"@types/node": "^12",
+		"@types/node": "^13",
 		"castv2-client": "^1.2.0",
-		"node-dns-sd": "^0.3.0"
+		"node-dns-sd": "^0.3.0",
+		"typescript": "^3"
 	}
 }

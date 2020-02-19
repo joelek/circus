@@ -1,12 +1,15 @@
 {
 	"compilerOptions": {
 		"composite": true,
-		"downlevelIteration": true,
 		"module": "amd",
+		"moduleResolution": "node",
 		"noImplicitAny": true,
 		"noImplicitReturns": true,
 		"noImplicitThis": true,
+		"outDir": "./build/",
 		"rootDir": "./",
-		"strictNullChecks":  true
+		"strictNullChecks":  true,
+		"target": "es6",
+		"types": []
 	}
 }
