@@ -60,9 +60,6 @@ function generateMeme(target: string[], cue: database.CueEntry, cb: { (): void }
 				subtitle.join("/"),
 				"-y"
 			]);
-			process.stdin.pipe(cp.stdin);
-			cp.stdout.pipe(process.stdout);
-			cp.stderr.pipe(process.stderr);
 			cp.on("exit", () => {
 				let cp = libcp.spawn("ffmpeg", [
 					"-ss", utils.formatTimestamp(cue.start_ms),
@@ -72,9 +69,6 @@ function generateMeme(target: string[], cue: database.CueEntry, cb: { (): void }
 					palette.join("/"),
 					"-y"
 				]);
-				process.stdin.pipe(cp.stdin);
-				cp.stdout.pipe(process.stdout);
-				cp.stderr.pipe(process.stderr);
 				cp.on("exit", () => {
 					let cp = libcp.spawn("ffmpeg", [
 						"-ss", utils.formatTimestamp(cue.start_ms),
@@ -86,9 +80,6 @@ function generateMeme(target: string[], cue: database.CueEntry, cb: { (): void }
 						meme.join("/"),
 						"-y"
 					]);
-					process.stdin.pipe(cp.stdin);
-					cp.stdout.pipe(process.stdout);
-					cp.stderr.pipe(process.stderr);
 					cp.on("exit", () => {
 						renameFile(meme, target);
 						deleteTree(wd.join("/"));
