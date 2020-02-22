@@ -9,16 +9,6 @@ import * as api from "./api";
 import * as auth from "./auth";
 import * as libdb from "./database";
 import * as data from "./data";
-import * as utils from "./utils";
-
-let media = data.media;
-
-let files_index: utils.Index<libdb.FileEntry> = {};
-
-for (let i = 0; i < media.files.length; i++) {
-	let file = media.files[i];
-	files_index[file.file_id] = file;
-}
 
 let get_path_segments = (path: string): Array<string> => {
 	let raw_path_segments = path.split('/');
@@ -153,7 +143,7 @@ let httpsServer = libhttps.createServer({
 		}
 		if (method === 'GET' && (parts = /^[/]files[/]([0-9a-f]{32})[/]/.exec(path)) !== null) {
 			let file_id = parts[1];
-			let file = files_index[file_id];
+			let file = data.files_index[file_id];
 			if (file !== undefined) {
 				return send_data(file, request, response);
 			}
