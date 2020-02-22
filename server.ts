@@ -134,7 +134,7 @@ let httpsServer = libhttps.createServer({
 		key: libfs.readFileSync("./private/certs/certificate_key.pem")
 	}).on('request', (request, response) => {
 		console.log(`${new Date().toUTCString()}:${request.method}:${request.url}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, "\t"));
-		if (false && !/ap[.]joelek[.]se(:[0-9]+)?$/.test(request.headers.host)) {
+		if (!/ap[.]joelek[.]se(:[0-9]+)?$/.test(request.headers.host)) {
 			console.log('dropped', JSON.stringify(request.headers, null, "\t"));
 			response.writeHead(400);
 			response.end();
