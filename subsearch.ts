@@ -55,7 +55,7 @@ function generateMeme(target: string[], cue: database.CueEntry, cb: { (): void }
 			let meme = [...wd, "meme.gif"];
 			let cp = libcp.spawn("ffmpeg", [
 				"-ss", utils.formatTimestamp(cue.start_ms),
-				"-t", utils.formatTimestamp(Math.min(cue.duration_ms, 5000)),
+				"-t", utils.formatTimestamp(Math.min(cue.duration_ms, 2000)),
 				"-i", [".", ...file_subtitle.path].join("/"),
 				subtitle.join("/"),
 				"-y"
@@ -63,19 +63,19 @@ function generateMeme(target: string[], cue: database.CueEntry, cb: { (): void }
 			cp.on("exit", () => {
 				let cp = libcp.spawn("ffmpeg", [
 					"-ss", utils.formatTimestamp(cue.start_ms),
-					"-t", utils.formatTimestamp(Math.min(cue.duration_ms, 5000)),
+					"-t", utils.formatTimestamp(Math.min(cue.duration_ms, 2000)),
 					"-i", [".", ...file_media.path].join("/"),
-					"-vf", "fps=5,scale=w=512:h=288:force_original_aspect_ratio=decrease,pad=512:288:-1:-1,subtitles=" + subtitle.join("/") + ":force_style='Bold=1,Fontsize=20,Outline=2',palettegen",
+					"-vf", "fps=15,scale=w=384:h=216:force_original_aspect_ratio=decrease,pad=384:216:-1:-1,subtitles=" + subtitle.join("/") + ":force_style='Bold=1,Fontsize=24,Outline=2',palettegen",
 					palette.join("/"),
 					"-y"
 				]);
 				cp.on("exit", () => {
 					let cp = libcp.spawn("ffmpeg", [
 						"-ss", utils.formatTimestamp(cue.start_ms),
-						"-t", utils.formatTimestamp(Math.min(cue.duration_ms, 5000)),
+						"-t", utils.formatTimestamp(Math.min(cue.duration_ms, 2000)),
 						"-i", [".", ...file_media.path].join("/"),
 						"-i", palette.join("/"),
-						"-filter_complex", "fps=5,scale=w=512:h=288:force_original_aspect_ratio=decrease,pad=512:288:-1:-1,subtitles=" + subtitle.join("/") + ":force_style='Bold=1,Fontsize=20,Outline=2'[x];[x][1:v]paletteuse",
+						"-filter_complex", "fps=15,scale=w=384:h=216:force_original_aspect_ratio=decrease,pad=384:216:-1:-1,subtitles=" + subtitle.join("/") + ":force_style='Bold=1,Fontsize=24,Outline=2'[x];[x][1:v]paletteuse",
 						"-map_metadata", "-1",
 						meme.join("/"),
 						"-y"
