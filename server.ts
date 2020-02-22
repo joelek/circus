@@ -119,10 +119,12 @@ let send_data = (file: libdb.FileEntry, request: libhttp.IncomingMessage, respon
 	}
 };
 
-let httpServer = libhttp.createServer()
-	.on('request', (request, response) => {
+let httpServer = libhttp.createServer((request, response) => {
+		let host = request.headers.host || "";
+		let path = request.url || "";
+		let hostname = host.split(":").shift() as string;
 		response.writeHead(307, {
-			'Location': `https://${request.headers['host']}${request.url}`
+			"Location": "https://" + hostname + ":" + 443 + path
 		});
 		response.end();
 	})
