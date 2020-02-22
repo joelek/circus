@@ -55,6 +55,7 @@ let req = <T extends api_response.ApiRequest, U extends api_response.ApiResponse
 let token = localStorage.getItem('token');
 let logincontainer = document.createElement('div');
 document.body.appendChild(logincontainer);
+let mount = document.createElement('div');
 req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?token=${token}`, {}, (status, response) => {
 	if (!(status >= 200 && status < 300)) {
 		localStorage.removeItem('token');
@@ -71,6 +72,7 @@ req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?toke
 					token = response.token;
 					localStorage.setItem('token', token);
 					logincontainer.removeChild(container);
+					document.body.appendChild(mount);
 				}
 			});
 		};
@@ -184,8 +186,6 @@ document.body.appendChild(ccseek);
 
 
 
-let mount = document.createElement('div');
-document.body.appendChild(mount);
 let updateviewforuri = (uri: string): void => {
 	while (mount.lastChild !== null) {
 		mount.removeChild(mount.lastChild);
