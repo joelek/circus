@@ -153,7 +153,7 @@ let httpsServer = libhttps.createServer({
 		}
 		if (method === 'GET' && (parts = /^[/]files[/]([0-9a-f]{32})[/]/.exec(path)) !== null) {
 			let file_id = parts[1];
-			let file = media.files.find(file => file.file_id === file_id);
+			let file = files_index[file_id];
 			if (file !== undefined) {
 				return send_data(file, request, response);
 			}
