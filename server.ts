@@ -9,6 +9,7 @@ import * as api from "./api";
 import * as auth from "./auth";
 import * as libdb from "./database";
 import * as data from "./data";
+import * as subsearch from "./subsearch";
 
 let get_path_segments = (path: string): Array<string> => {
 	let raw_path_segments = path.split('/');
@@ -42,18 +43,20 @@ let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>)
 	return out;
 };
 
-let send_data = (file: libdb.FileEntry, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
+let send_data = (path: string[], mime: string, authorize: boolean, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	if (request.url === undefined) {
 		throw new Error();
 	}
-	try {
-		var url = liburl.parse(request.url, true);
-		auth.getUsername(url.query.token as string);
-	} catch (error) {
-		response.writeHead(401, {});
-		return response.end();
+	if (authorize) {
+		try {
+			var url = liburl.parse(request.url, true);
+			auth.getUsername(url.query.token as string);
+		} catch (error) {
+			response.writeHead(401, {});
+			return response.end();
+		}
 	}
-	let filename = file.path.join(libpath.sep);
+	let filename = path.join(libpath.sep);
 	let fd = libfs.openSync(filename, 'r');
 	let size = libfs.fstatSync(fd).size;
 	libfs.closeSync(fd);
@@ -75,7 +78,7 @@ let send_data = (file: libdb.FileEntry, request: libhttp.IncomingMessage, respon
 			'Access-Control-Allow-Origin': '*',
 			'Accept-Ranges': `bytes`,
 			'Content-Range': `bytes ${offset}-${offset2}/${size}`,
-			'Content-Type': file.mime,
+			'Content-Type': mime,
 			'Content-Length': `${length}`
 		});
 		var s = libfs.createReadStream(filename, {
@@ -94,7 +97,7 @@ let send_data = (file: libdb.FileEntry, request: libhttp.IncomingMessage, respon
 			response.writeHead(200, {
 				'Access-Control-Allow-Origin': '*',
 				'Accept-Ranges': `bytes`,
-				'Content-Type': file.mime,
+				'Content-Type': mime,
 				'Content-Length': `${size}`
 			});
 			s.pipe(response);
@@ -145,8 +148,23 @@ let httpsServer = libhttps.createServer({
 			let file_id = parts[1];
 			let file = data.files_index[file_id];
 			if (file !== undefined) {
-				return send_data(file, request, response);
+				return send_data(file.path, file.mime, true, request, response);
 			}
+			let cue = data.cues_index[file_id];
+			if (cue !== undefined) {
+				let filename = [".", "private", "memes", cue.cue_id];
+				if (libfs.existsSync(filename.join("/"))) {
+					return send_data(filename, "image/gif", false, request, response);
+				} else {
+					subsearch.generateMeme(filename, cue, () => {
+						return send_data(filename, "image/gif", false, request, response);
+					});
+					return;
+				}
+			}
+			response.writeHead(404);
+			response.end();
+			return;
 		}
 		if (/^[/]api[/]/.test(path)) {
 			return api.handleRequest(request, response);

@@ -18,6 +18,7 @@
 		"./data.ts",
 		"./database.ts",
 		"./server.ts",
+		"./subsearch.ts",
 		"./utils.ts"
 	],
 	"references": [

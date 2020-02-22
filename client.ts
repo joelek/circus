@@ -480,10 +480,13 @@ let updateviewforuri = (uri: string): void => {
 					}
 					for (let cue of response.cues) {
 						let d = document.createElement('div');
+						d.classList.add("group");
 						let p = document.createElement("pre");
 						p.innerText = `${cue.lines.join("\n")}`;
 						d.appendChild(p);
-						d.addEventListener('click', () => {
+						let b1 = document.createElement("button");
+						b1.textContent = "Go to video";
+						b1.addEventListener("click", () => {
 							let episode_id = cue.subtitle.episode_id;
 							let movie_id = cue.subtitle.movie_id;
 							if (episode_id !== null) {
@@ -492,6 +495,13 @@ let updateviewforuri = (uri: string): void => {
 								navigate(`video/movies/${movie_id}/${cue.start_ms}/`);
 							}
 						});
+						d.appendChild(b1);
+						let b2 = document.createElement("button");
+						b2.textContent = "Generate meme";
+						b2.addEventListener("click", () => {
+							window.open("/files/" + cue.cue_id + "/");
+						});
+						d.appendChild(b2);
 						results.appendChild(d);
 					}
 				});
