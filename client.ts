@@ -18,7 +18,43 @@ style.innerText = `
 	}
 
 	body {
+		background-color: rgb(31, 31, 31);
+		color: rgb(255, 255, 255);
 		overflow-y: scroll;
+		user-select: none;
+	}
+
+	body ::selection {
+		background-color: rgb(255, 207, 0);
+		color: rgb(31, 31, 31);
+	}
+
+	button {
+		background-color: rgb(255, 207, 0);
+		border-radius: 4px;
+		color: rgb(31, 31, 31);
+		cursor: pointer;
+		font-family: sans-serif;
+		font-size: 12px;
+		padding: 8px 16px;
+	}
+
+	input {
+		background-color: rgb(63, 63, 63);
+		border-radius: 4px;
+		color: rgb(255, 255, 255);
+		padding: 8px;
+	}
+
+	.group {
+		background-color: rgb(63, 63, 63);
+		border-radius: 2px;
+		margin: 8px;
+		padding: 8px;
+	}
+
+	.group > * {
+		margin: 8px;
 	}
 `;
 document.head.appendChild(style);
