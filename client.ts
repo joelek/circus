@@ -20,6 +20,7 @@ style.innerText = `
 	body {
 		background-color: rgb(31, 31, 31);
 		color: rgb(255, 255, 255);
+		font-family: sans-serif;
 		overflow-y: scroll;
 		user-select: none;
 	}
@@ -34,9 +35,8 @@ style.innerText = `
 		border-radius: 4px;
 		color: rgb(31, 31, 31);
 		cursor: pointer;
-		font-family: sans-serif;
 		font-size: 12px;
-		padding: 8px 16px;
+		padding: 8px 32px;
 	}
 
 	input {
@@ -50,11 +50,38 @@ style.innerText = `
 		background-color: rgb(63, 63, 63);
 		border-radius: 2px;
 		margin: 8px;
-		padding: 8px;
+		padding: 4px;
 	}
 
 	.group > * {
-		margin: 8px;
+		margin: 4px;
+	}
+
+	.slider-widget {
+
+	}
+
+	.slider-widget__indicator {
+		padding: 4px;
+		border-radius: 4px;
+		background-color: rgb(31,31,31);
+	}
+
+	.slider-widget__knob-wrapper {
+		position: relative;
+	}
+
+	.slider-widget__knob {
+		box-shadow: 0px 0px 8px 0px rgb(0, 0, 0, 0.5);
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		background-color: rgb(255,255,255);
+		position: absolute;
+		top: 0%;
+		left: 0%;
+		margin-top: -8px;
+		margin-left: -8px;
 	}
 `;
 document.head.appendChild(style);
@@ -98,9 +125,11 @@ req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?toke
 		let container = document.createElement("div");
 		let username = document.createElement('input');
 		username.setAttribute('type', 'text');
+		username.setAttribute("placeholder", "Username...");
 		container.appendChild(username);
 		let password = document.createElement('input');
 		password.setAttribute('type', 'password');
+		password.setAttribute("placeholder", "Passphrase...");
 		container.appendChild(password);
 		let cb = () => {
 			req<api_response.AuthRequest, api_response.AuthResponse>(`/api/auth/`, { username: username.value, password: password.value }, (status, response) => {
@@ -192,34 +221,51 @@ let set_context_metadata = (md: Metadata): void => {
 	}
 };
 
+let chromecast = document.createElement("div");
+chromecast.classList.add("group");
+let ccp = document.createElement("p");
+ccp.textContent = "Chromecast";
+chromecast.appendChild(ccp);
 let ccload = document.createElement('button');
-ccload.textContent = 'cast';
+ccload.textContent = 'Cast';
 ccload.addEventListener('click', () => {
 	video.pause();
 	req(`/api/cc/load/`, { context, index: context_index, token: token }, (status, response) => {});
 });
-document.body.appendChild(ccload);
-
+chromecast.appendChild(ccload);
 let ccpause = document.createElement('button');
-ccpause.textContent = 'pause';
+ccpause.textContent = 'Pause';
 ccpause.addEventListener('click', () => {
 	req(`/api/cc/pause/`, { token: token }, (status, response) => {});
 });
-document.body.appendChild(ccpause);
-
+chromecast.appendChild(ccpause);
 let ccresume = document.createElement('button');
-ccresume.textContent = 'resume';
+ccresume.textContent = 'Resume';
 ccresume.addEventListener('click', () => {
 	req(`/api/cc/resume/`, { token: token }, (status, response) => {});
 });
-document.body.appendChild(ccresume);
-
+chromecast.appendChild(ccresume);
 let ccseek = document.createElement('input');
 ccseek.setAttribute('type', 'range');
 ccseek.addEventListener('change', () => {
 	req(`/api/cc/seek/`, { percentage: ccseek.value, token: token }, (status, response) => {});
 });
-document.body.appendChild(ccseek);
+chromecast.appendChild(ccseek);
+
+let slider_wrapper = document.createElement("div");
+slider_wrapper.classList.add("slider-widget");
+let slider_indicator = document.createElement("div");
+slider_indicator.classList.add("slider-widget__indicator");
+let slider_knob_wrapper = document.createElement("div");
+slider_knob_wrapper.classList.add("slider-widget__knob-wrapper");
+let slider_knob = document.createElement("div");
+slider_knob.classList.add("slider-widget__knob");
+
+slider_knob_wrapper.appendChild(slider_knob);
+slider_indicator.appendChild(slider_knob_wrapper);
+slider_wrapper.appendChild(slider_indicator);
+chromecast.appendChild(slider_wrapper);
+document.body.appendChild(chromecast);
 
 
 
@@ -465,6 +511,8 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^video[/]cues[/]/.exec(uri)) !== null) {
 		let wrapper = document.createElement("div");
 		let searchbox = document.createElement("input");
+		searchbox.setAttribute("type", "text");
+		searchbox.setAttribute("placeholder", "Search query...");
 		wrapper.appendChild(searchbox);
 		let searchbutton = document.createElement("button");
 		searchbutton.textContent = "Search";
