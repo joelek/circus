@@ -87,6 +87,8 @@ req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?toke
 		});
 		container.appendChild(login);
 		logincontainer.appendChild(container);
+	} else {
+		document.body.appendChild(mount);
 	}
 });
 
