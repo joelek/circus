@@ -120,7 +120,7 @@ let send_data = (file: libdb.FileEntry, request: libhttp.IncomingMessage, respon
 };
 
 let httpServer = libhttp.createServer((request, response) => {
-		let host = request.headers.host || "";
+		let host = request.headers["host"] || "";
 		let path = request.url || "";
 		let hostname = host.split(":").shift() as string;
 		response.writeHead(307, {
@@ -134,31 +134,34 @@ let httpsServer = libhttps.createServer({
 		cert: libfs.readFileSync("./private/certs/full_chain.pem"),
 		dhparam: libfs.readFileSync("./private/certs/dhparam.pem"),
 		key: libfs.readFileSync("./private/certs/certificate_key.pem")
-	}).on('request', (request, response) => {
-		console.log(`${new Date().toUTCString()}:${request.method}:${request.url}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, "\t"));
-		if (!/ap[.]joelek[.]se(:[0-9]+)?$/.test(request.headers.host)) {
+	}, (request, response) => {
+		let host = request.headers["host"] || "";
+		let method = request.method || "";
+		let path = request.url || "";
+		console.log(`${new Date().toUTCString()}:${method}:${path}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, "\t"));
+		if (!/ap[.]joelek[.]se(:[0-9]+)?$/.test(host)) {
 			console.log('dropped', JSON.stringify(request.headers, null, "\t"));
 			response.writeHead(400);
 			response.end();
 			return;
 		}
 		let parts: RegExpExecArray | null;
-		if (request.method === 'GET' && request.url === '/favicon.ico') {
+		if (method === 'GET' && path === '/favicon.ico') {
 			response.writeHead(404);
 			response.end();
 			return;
 		}
-		if (request.method === 'GET' && (parts = /^[/]files[/]([0-9a-f]{32})[/]/.exec(request.url)) !== null) {
+		if (method === 'GET' && (parts = /^[/]files[/]([0-9a-f]{32})[/]/.exec(path)) !== null) {
 			let file_id = parts[1];
 			let file = media.files.find(file => file.file_id === file_id);
 			if (file !== undefined) {
 				return send_data(file, request, response);
 			}
 		}
-		if (/^[/]api[/]/.test(request.url)) {
+		if (/^[/]api[/]/.test(path)) {
 			return api.handleRequest(request, response);
 		}
-		if (request.method === 'GET') {
+		if (method === 'GET') {
 			response.writeHead(200);
 			response.end(`<!doctype html><html><head><base href="/"/><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0" name="viewport"/></head><body><script>${libfs.readFileSync('./build/client.js')}</script></body></html>`);
 			return;
