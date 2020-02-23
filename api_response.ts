@@ -91,7 +91,14 @@ interface CuesRequest extends ApiResponse {
 
 interface CuesResponse extends ApiResponse {
 	cues: Array<libdb.CueEntry & {
-		subtitle: libdb.SubtitleEntry;
+		subtitle: libdb.SubtitleEntry & {
+			episode: undefined | (libdb.EpisodeEntry & {
+				season: libdb.SeasonEntry & {
+					show: libdb.ShowEntry
+				}
+			}),
+			movie: undefined | (libdb.MovieEntry)
+		}
 	}>;
 }
 

@@ -13,7 +13,8 @@
 	"files": [
 		"./api_response.ts",
 		"./client.ts",
-		"./database.ts"
+		"./database.ts",
+		"./utils.ts"
 	],
 	"references": [
 		{

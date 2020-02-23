@@ -592,10 +592,37 @@ class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResp
 					})
 					.map((cue) => {
 						let subtitle = data.subtitles_index[cue.subtitle_id] as libdb.SubtitleEntry;
-						return {
-							...cue,
-							subtitle
-						};
+						if (subtitle.movie_id) {
+							let movie = data.movies_index[subtitle.movie_id] as libdb.MovieEntry;
+							return {
+								...cue,
+								subtitle: {
+									...subtitle,
+									episode: undefined,
+									movie: movie
+								}
+							};
+						}
+						if (subtitle.episode_id) {
+							let episode = data.episodes_index[subtitle.episode_id] as libdb.EpisodeEntry;
+							let season = data.seasons_index[episode.season_id] as libdb.SeasonEntry;
+							let show = data.shows_index[season.show_id] as libdb.ShowEntry;
+							return {
+								...cue,
+								subtitle: {
+									...subtitle,
+									episode: {
+										...episode,
+										season: {
+											...season,
+											show
+										}
+									},
+									movie: undefined
+								}
+							};
+						}
+						throw "";
 					});
 				let payload: api_response.CuesResponse = {
 					cues

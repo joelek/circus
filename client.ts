@@ -1,4 +1,5 @@
 import * as api_response from "./api_response";
+import * as utils from "./utils";
 
 let style = document.createElement('style');
 style.innerText = `
@@ -72,7 +73,7 @@ style.innerText = `
 	}
 
 	.slider-widget__knob {
-		box-shadow: 0px 0px 8px 0px rgb(0, 0, 0, 0.5);
+		box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.5);
 		width: 16px;
 		height: 16px;
 		border-radius: 50%;
@@ -529,18 +530,40 @@ let updateviewforuri = (uri: string): void => {
 					for (let cue of response.cues) {
 						let d = document.createElement('div');
 						d.classList.add("group");
-						let p = document.createElement("pre");
-						p.innerText = `${cue.lines.join("\n")}`;
+						if (cue.subtitle.movie) {
+							let h2 = document.createElement("h2");
+							h2.innerText = cue.subtitle.movie.title;
+							d.appendChild(h2);
+							let h3 = document.createElement("h3");
+							h3.innerText = "" + cue.subtitle.movie.year;
+							d.appendChild(h3);
+						} else if (cue.subtitle.episode) {
+							let episode = cue.subtitle.episode;
+							let h2 = document.createElement("h2");
+							h2.innerText = episode.title;
+							d.appendChild(h2);
+							let h3 = document.createElement("h3");
+							h3.innerText = [
+								episode.season.show.title,
+								utils.formatSeasonEpisode(episode.season.number, episode.number)
+							].join(" \u2022 ");
+							d.appendChild(h3);
+						}
+						let pre = document.createElement("pre");
+						pre.innerText = `${cue.lines.join("\n")}`;
+						d.appendChild(pre);
+						let p = document.createElement("p");
+						p.innerText = format_duration(cue.start_ms);
 						d.appendChild(p);
 						let b1 = document.createElement("button");
 						b1.textContent = "Go to video";
 						b1.addEventListener("click", () => {
-							let episode_id = cue.subtitle.episode_id;
-							let movie_id = cue.subtitle.movie_id;
-							if (episode_id !== null) {
-								navigate(`video/episodes/${episode_id}/${cue.start_ms}/`);
-							} else if (movie_id !== null) {
-								navigate(`video/movies/${movie_id}/${cue.start_ms}/`);
+							let episode = cue.subtitle.episode;
+							let movie = cue.subtitle.movie;
+							if (episode != null) {
+								navigate(`video/episodes/${episode.episode_id}/${cue.start_ms}/`);
+							} else if (movie != null) {
+								navigate(`video/movies/${movie.movie_id}/${cue.start_ms}/`);
 							}
 						});
 						d.appendChild(b1);
