@@ -509,11 +509,13 @@ let updateviewforuri = (uri: string): void => {
 				mount.appendChild(d);
 			}
 		});
-	} else if ((parts = /^video[/]cues[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]cues[/](.*)/.exec(uri)) !== null) {
+		let query = decodeURIComponent(parts[1]);
 		let wrapper = document.createElement("div");
 		let searchbox = document.createElement("input");
 		searchbox.setAttribute("type", "text");
 		searchbox.setAttribute("placeholder", "Search query...");
+		searchbox.setAttribute("value", query);
 		wrapper.appendChild(searchbox);
 		let searchbutton = document.createElement("button");
 		searchbutton.textContent = "Search";
@@ -521,61 +523,9 @@ let updateviewforuri = (uri: string): void => {
 		let results = document.createElement("div");
 		wrapper.appendChild(results);
 		let cb = () => {
-			let query = searchbox.value;
-			if (query !== "") {
-				req<api_response.CuesRequest, api_response.CuesResponse>(`/api/video/cues/`, { query }, (status, response) => {
-					while (results.lastChild !== null) {
-						results.removeChild(results.lastChild);
-					}
-					for (let cue of response.cues) {
-						let d = document.createElement('div');
-						d.classList.add("group");
-						if (cue.subtitle.movie) {
-							let h2 = document.createElement("h2");
-							h2.innerText = cue.subtitle.movie.title;
-							d.appendChild(h2);
-							let h3 = document.createElement("h3");
-							h3.innerText = "" + cue.subtitle.movie.year;
-							d.appendChild(h3);
-						} else if (cue.subtitle.episode) {
-							let episode = cue.subtitle.episode;
-							let h2 = document.createElement("h2");
-							h2.innerText = episode.title;
-							d.appendChild(h2);
-							let h3 = document.createElement("h3");
-							h3.innerText = [
-								episode.season.show.title,
-								utils.formatSeasonEpisode(episode.season.number, episode.number)
-							].join(" \u2022 ");
-							d.appendChild(h3);
-						}
-						let pre = document.createElement("pre");
-						pre.innerText = `${cue.lines.join("\n")}`;
-						d.appendChild(pre);
-						let p = document.createElement("p");
-						p.innerText = format_duration(cue.start_ms);
-						d.appendChild(p);
-						let b1 = document.createElement("button");
-						b1.textContent = "Go to video";
-						b1.addEventListener("click", () => {
-							let episode = cue.subtitle.episode;
-							let movie = cue.subtitle.movie;
-							if (episode != null) {
-								navigate(`video/episodes/${episode.episode_id}/${cue.start_ms}/`);
-							} else if (movie != null) {
-								navigate(`video/movies/${movie.movie_id}/${cue.start_ms}/`);
-							}
-						});
-						d.appendChild(b1);
-						let b2 = document.createElement("button");
-						b2.textContent = "Generate meme";
-						b2.addEventListener("click", () => {
-							window.open("/files/" + cue.cue_id + "/");
-						});
-						d.appendChild(b2);
-						results.appendChild(d);
-					}
-				});
+			let new_query = searchbox.value;
+			if (new_query !== "" && new_query !== query) {
+				navigate("video/cues/" + encodeURIComponent(new_query));
 			}
 		};
 		searchbox.addEventListener("keyup", (event) => {
@@ -587,6 +537,59 @@ let updateviewforuri = (uri: string): void => {
 			cb();
 		});
 		mount.appendChild(wrapper);
+		req<api_response.CuesRequest, api_response.CuesResponse>(`/api/video/cues/`, { query }, (status, response) => {
+			while (results.lastChild !== null) {
+				results.removeChild(results.lastChild);
+			}
+			for (let cue of response.cues) {
+				let d = document.createElement('div');
+				d.classList.add("group");
+				if (cue.subtitle.movie) {
+					let h2 = document.createElement("h2");
+					h2.innerText = cue.subtitle.movie.title;
+					d.appendChild(h2);
+					let h3 = document.createElement("h3");
+					h3.innerText = "" + cue.subtitle.movie.year;
+					d.appendChild(h3);
+				} else if (cue.subtitle.episode) {
+					let episode = cue.subtitle.episode;
+					let h2 = document.createElement("h2");
+					h2.innerText = episode.title;
+					d.appendChild(h2);
+					let h3 = document.createElement("h3");
+					h3.innerText = [
+						episode.season.show.title,
+						utils.formatSeasonEpisode(episode.season.number, episode.number)
+					].join(" \u2022 ");
+					d.appendChild(h3);
+				}
+				let pre = document.createElement("pre");
+				pre.innerText = `${cue.lines.join("\n")}`;
+				d.appendChild(pre);
+				let p = document.createElement("p");
+				p.innerText = format_duration(cue.start_ms);
+				d.appendChild(p);
+				let b1 = document.createElement("button");
+				b1.textContent = "Go to video";
+				b1.addEventListener("click", () => {
+					let episode = cue.subtitle.episode;
+					let movie = cue.subtitle.movie;
+					if (episode != null) {
+						navigate(`video/episodes/${episode.episode_id}/${cue.start_ms}/`);
+					} else if (movie != null) {
+						navigate(`video/movies/${movie.movie_id}/${cue.start_ms}/`);
+					}
+				});
+				d.appendChild(b1);
+				let b2 = document.createElement("button");
+				b2.textContent = "Generate meme";
+				b2.addEventListener("click", () => {
+					window.open("/files/" + cue.cue_id + "/");
+				});
+				d.appendChild(b2);
+				results.appendChild(d);
+			}
+		});
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
 		let d = document.createElement('div');
 		d.innerText = 'Shows';
@@ -642,6 +645,7 @@ let get_route = (pathname: string = window.location.pathname, basehref: string =
 	//return uri === '' ? './' : uri;
 	return uri;
 };
+
 let navigate = (uri: string): void => {
 	if (window.history.state === null) {
 		window.history.replaceState({ 'uri': uri }, '', uri);
