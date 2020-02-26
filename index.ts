@@ -261,6 +261,7 @@ let read_id3v24_tag = (file: string): ID3Tag => {
 				}
 			}
 		}
+		libfs.closeSync(fd);
 		return tag;
 	} catch (error) {
 		libfs.closeSync(fd);
@@ -437,6 +438,7 @@ let read_mp4_tag = (file: string): MP4Tag => {
 			duration: 0
 		};
 		visit_atom(tag, fds, '', header.length);
+		libfs.closeSync(fds.fd);
 		return tag;
 	} catch (error) {
 		libfs.closeSync(fds.fd);
@@ -507,6 +509,7 @@ let parse_png = (node: string): void => {
 			path: nodes,
 			mime: 'image/png'
 		});
+		libfs.closeSync(fds.fd);
 	} catch (error) {
 		libfs.closeSync(fds.fd);
 		throw error;
@@ -531,6 +534,7 @@ let parse_jpeg = (node: string): void => {
 			path: nodes,
 			mime: 'image/jpeg'
 		});
+		libfs.closeSync(fds.fd);
 	} catch (error) {
 		libfs.closeSync(fds.fd);
 		throw error;
@@ -561,6 +565,7 @@ let parse_vtt = (node: string): void => {
 			path: nodes,
 			mime: 'text/vtt'
 		});
+		libfs.closeSync(fds.fd);
 	} catch (error) {
 		libfs.closeSync(fds.fd);
 		throw error;
