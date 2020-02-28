@@ -1,15 +1,14 @@
 {
 	"compilerOptions": {
-		"downlevelIteration": true,
-		"lib": [
-			"es5",
-			"es6",
-			"dom"
-		],
+		"composite": true,
+		"module": "none",
+		"moduleResolution": "node",
 		"noImplicitAny": true,
-		"strictNullChecks":  true,
-		"types": [
-			"node"
-		]
+		"noImplicitReturns": true,
+		"noImplicitThis": true,
+		"outDir": "./build/",
+		"rootDir": "./",
+		"strictNullChecks": true,
+		"target": "es6"
 	}
 }
