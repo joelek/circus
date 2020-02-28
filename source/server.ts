@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import * as libfs from "fs";
 import * as libhttp from "http";
 import * as libhttps from "https";
