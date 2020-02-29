@@ -10,7 +10,7 @@ export type ArtistEntry = {
 export const ArtistEntry = {
 	as(subject: any, path: string = ""): ArtistEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.artist_id, path + "." + "artist_id");
 				(autoguard.guards.String.as)(subject.title, path + "." + "title");
 				return subject;
@@ -38,7 +38,7 @@ export type AlbumEntry = {
 export const AlbumEntry = {
 	as(subject: any, path: string = ""): AlbumEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.album_id, path + "." + "album_id");
 				(autoguard.guards.String.as)(subject.title, path + "." + "title");
 				(autoguard.guards.Number.as)(subject.year, path + "." + "year");
@@ -75,7 +75,7 @@ export type DiscEntry = {
 export const DiscEntry = {
 	as(subject: any, path: string = ""): DiscEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.disc_id, path + "." + "disc_id");
 				(autoguard.guards.String.as)(subject.album_id, path + "." + "album_id");
 				(autoguard.guards.Number.as)(subject.number, path + "." + "number");
@@ -106,7 +106,7 @@ export type TrackEntry = {
 export const TrackEntry = {
 	as(subject: any, path: string = ""): TrackEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.track_id, path + "." + "track_id");
 				(autoguard.guards.String.as)(subject.disc_id, path + "." + "disc_id");
 				(autoguard.guards.String.as)(subject.file_id, path + "." + "file_id");
@@ -136,7 +136,7 @@ export type AlbumArtistEntry = {
 export const AlbumArtistEntry = {
 	as(subject: any, path: string = ""): AlbumArtistEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.album_id, path + "." + "album_id");
 				(autoguard.guards.String.as)(subject.artist_id, path + "." + "artist_id");
 				return subject;
@@ -162,7 +162,7 @@ export type TrackArtistEntry = {
 export const TrackArtistEntry = {
 	as(subject: any, path: string = ""): TrackArtistEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.track_id, path + "." + "track_id");
 				(autoguard.guards.String.as)(subject.artist_id, path + "." + "artist_id");
 				return subject;
@@ -191,7 +191,7 @@ export type MovieEntry = {
 export const MovieEntry = {
 	as(subject: any, path: string = ""): MovieEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.movie_id, path + "." + "movie_id");
 				(autoguard.guards.String.as)(subject.file_id, path + "." + "file_id");
 				(autoguard.guards.String.as)(subject.title, path + "." + "title");
@@ -220,7 +220,7 @@ export type ShowEntry = {
 export const ShowEntry = {
 	as(subject: any, path: string = ""): ShowEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.show_id, path + "." + "show_id");
 				(autoguard.guards.String.as)(subject.title, path + "." + "title");
 				return subject;
@@ -247,7 +247,7 @@ export type SeasonEntry = {
 export const SeasonEntry = {
 	as(subject: any, path: string = ""): SeasonEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.season_id, path + "." + "season_id");
 				(autoguard.guards.String.as)(subject.show_id, path + "." + "show_id");
 				(autoguard.guards.Number.as)(subject.number, path + "." + "number");
@@ -278,7 +278,7 @@ export type EpisodeEntry = {
 export const EpisodeEntry = {
 	as(subject: any, path: string = ""): EpisodeEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.episode_id, path + "." + "episode_id");
 				(autoguard.guards.String.as)(subject.season_id, path + "." + "season_id");
 				(autoguard.guards.String.as)(subject.file_id, path + "." + "file_id");
@@ -311,7 +311,7 @@ export type SubtitleEntry = {
 export const SubtitleEntry = {
 	as(subject: any, path: string = ""): SubtitleEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.subtitle_id, path + "." + "subtitle_id");
 				((subject, path) => {
 					try {
@@ -367,13 +367,13 @@ export type CueEntry = {
 export const CueEntry = {
 	as(subject: any, path: string = ""): CueEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.cue_id, path + "." + "cue_id");
 				(autoguard.guards.String.as)(subject.subtitle_id, path + "." + "subtitle_id");
 				(autoguard.guards.Number.as)(subject.start_ms, path + "." + "start_ms");
 				(autoguard.guards.Number.as)(subject.duration_ms, path + "." + "duration_ms");
 				((subject, path) => {
-					if ((subject != null) && (subject.constructor === Array)) {
+					if ((subject != null) && (subject.constructor === globalThis.Array)) {
 						for (let i = 0; i < subject.length; i++) {
 							(autoguard.guards.String.as)(subject[i], path + "[" + i + "]");
 						}
@@ -405,10 +405,10 @@ export type FileEntry = {
 export const FileEntry = {
 	as(subject: any, path: string = ""): FileEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.file_id, path + "." + "file_id");
 				((subject, path) => {
-					if ((subject != null) && (subject.constructor === Array)) {
+					if ((subject != null) && (subject.constructor === globalThis.Array)) {
 						for (let i = 0; i < subject.length; i++) {
 							(autoguard.guards.String.as)(subject[i], path + "[" + i + "]");
 						}
@@ -455,11 +455,11 @@ export type MediaDatabase = {
 export const MediaDatabase = {
 	as(subject: any, path: string = ""): MediaDatabase {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				((subject, path) => {
-					if ((subject != null) && (subject.constructor === Object)) {
+					if ((subject != null) && (subject.constructor === globalThis.Object)) {
 						((subject, path) => {
-							if ((subject != null) && (subject.constructor === Array)) {
+							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
 									(ArtistEntry.as)(subject[i], path + "[" + i + "]");
 								}
@@ -468,7 +468,7 @@ export const MediaDatabase = {
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
 						})(subject.artists, path + "." + "artists");
 						((subject, path) => {
-							if ((subject != null) && (subject.constructor === Array)) {
+							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
 									(AlbumEntry.as)(subject[i], path + "[" + i + "]");
 								}
@@ -477,7 +477,7 @@ export const MediaDatabase = {
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
 						})(subject.albums, path + "." + "albums");
 						((subject, path) => {
-							if ((subject != null) && (subject.constructor === Array)) {
+							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
 									(DiscEntry.as)(subject[i], path + "[" + i + "]");
 								}
@@ -486,7 +486,7 @@ export const MediaDatabase = {
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
 						})(subject.discs, path + "." + "discs");
 						((subject, path) => {
-							if ((subject != null) && (subject.constructor === Array)) {
+							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
 									(TrackEntry.as)(subject[i], path + "[" + i + "]");
 								}
@@ -495,7 +495,7 @@ export const MediaDatabase = {
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
 						})(subject.tracks, path + "." + "tracks");
 						((subject, path) => {
-							if ((subject != null) && (subject.constructor === Array)) {
+							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
 									(AlbumArtistEntry.as)(subject[i], path + "[" + i + "]");
 								}
@@ -504,7 +504,7 @@ export const MediaDatabase = {
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
 						})(subject.album_artists, path + "." + "album_artists");
 						((subject, path) => {
-							if ((subject != null) && (subject.constructor === Array)) {
+							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
 									(TrackArtistEntry.as)(subject[i], path + "[" + i + "]");
 								}
@@ -517,9 +517,9 @@ export const MediaDatabase = {
 					throw "Type guard \"Object\" failed at \"" + path + "\"!";
 				})(subject.audio, path + "." + "audio");
 				((subject, path) => {
-					if ((subject != null) && (subject.constructor === Object)) {
+					if ((subject != null) && (subject.constructor === globalThis.Object)) {
 						((subject, path) => {
-							if ((subject != null) && (subject.constructor === Array)) {
+							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
 									(MovieEntry.as)(subject[i], path + "[" + i + "]");
 								}
@@ -528,7 +528,7 @@ export const MediaDatabase = {
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
 						})(subject.movies, path + "." + "movies");
 						((subject, path) => {
-							if ((subject != null) && (subject.constructor === Array)) {
+							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
 									(ShowEntry.as)(subject[i], path + "[" + i + "]");
 								}
@@ -537,7 +537,7 @@ export const MediaDatabase = {
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
 						})(subject.shows, path + "." + "shows");
 						((subject, path) => {
-							if ((subject != null) && (subject.constructor === Array)) {
+							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
 									(SeasonEntry.as)(subject[i], path + "[" + i + "]");
 								}
@@ -546,7 +546,7 @@ export const MediaDatabase = {
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
 						})(subject.seasons, path + "." + "seasons");
 						((subject, path) => {
-							if ((subject != null) && (subject.constructor === Array)) {
+							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
 									(EpisodeEntry.as)(subject[i], path + "[" + i + "]");
 								}
@@ -555,7 +555,7 @@ export const MediaDatabase = {
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
 						})(subject.episodes, path + "." + "episodes");
 						((subject, path) => {
-							if ((subject != null) && (subject.constructor === Array)) {
+							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
 									(SubtitleEntry.as)(subject[i], path + "[" + i + "]");
 								}
@@ -564,7 +564,7 @@ export const MediaDatabase = {
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
 						})(subject.subtitles, path + "." + "subtitles");
 						((subject, path) => {
-							if ((subject != null) && (subject.constructor === Array)) {
+							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
 									(CueEntry.as)(subject[i], path + "[" + i + "]");
 								}
@@ -577,7 +577,7 @@ export const MediaDatabase = {
 					throw "Type guard \"Object\" failed at \"" + path + "\"!";
 				})(subject.video, path + "." + "video");
 				((subject, path) => {
-					if ((subject != null) && (subject.constructor === Array)) {
+					if ((subject != null) && (subject.constructor === globalThis.Array)) {
 						for (let i = 0; i < subject.length; i++) {
 							(FileEntry.as)(subject[i], path + "[" + i + "]");
 						}
@@ -605,10 +605,10 @@ export type SubtitlesDatabase = { [key: string]: string[] };
 export const SubtitlesDatabase = {
 	as(subject: any, path: string = ""): SubtitlesDatabase {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
-				for (let key of Object.keys(subject)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
+				for (let key of globalThis.Object.keys(subject)) {
 					((subject, path) => {
-						if ((subject != null) && (subject.constructor === Array)) {
+						if ((subject != null) && (subject.constructor === globalThis.Array)) {
 							for (let i = 0; i < subject.length; i++) {
 								(autoguard.guards.String.as)(subject[i], path + "[" + i + "]");
 							}
@@ -640,7 +640,7 @@ export type AudiolistEntry = {
 export const AudiolistEntry = {
 	as(subject: any, path: string = ""): AudiolistEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.audiolist_id, path + "." + "audiolist_id");
 				(autoguard.guards.String.as)(subject.title, path + "." + "title");
 				return subject;
@@ -667,7 +667,7 @@ export type AudiolistItemEntry = {
 export const AudiolistItemEntry = {
 	as(subject: any, path: string = ""): AudiolistItemEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.audiolist_id, path + "." + "audiolist_id");
 				(autoguard.guards.String.as)(subject.track_id, path + "." + "track_id");
 				(autoguard.guards.Number.as)(subject.number, path + "." + "number");
@@ -694,9 +694,9 @@ export type ListDatabase = {
 export const ListDatabase = {
 	as(subject: any, path: string = ""): ListDatabase {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				((subject, path) => {
-					if ((subject != null) && (subject.constructor === Array)) {
+					if ((subject != null) && (subject.constructor === globalThis.Array)) {
 						for (let i = 0; i < subject.length; i++) {
 							(AudiolistEntry.as)(subject[i], path + "[" + i + "]");
 						}
@@ -705,7 +705,7 @@ export const ListDatabase = {
 					throw "Type guard \"Array\" failed at \"" + path + "\"!";
 				})(subject.audiolists, path + "." + "audiolists");
 				((subject, path) => {
-					if ((subject != null) && (subject.constructor === Array)) {
+					if ((subject != null) && (subject.constructor === globalThis.Array)) {
 						for (let i = 0; i < subject.length; i++) {
 							(AudiolistItemEntry.as)(subject[i], path + "[" + i + "]");
 						}
@@ -737,7 +737,7 @@ export type UserEntry = {
 export const UserEntry = {
 	as(subject: any, path: string = ""): UserEntry {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.user_id, path + "." + "user_id");
 				(autoguard.guards.String.as)(subject.username, path + "." + "username");
 				(autoguard.guards.String.as)(subject.password, path + "." + "password");
@@ -765,7 +765,7 @@ export type AuthToken = {
 export const AuthToken = {
 	as(subject: any, path: string = ""): AuthToken {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.username, path + "." + "username");
 				(autoguard.guards.String.as)(subject.selector, path + "." + "selector");
 				(autoguard.guards.String.as)(subject.validator_hash, path + "." + "validator_hash");
@@ -792,9 +792,9 @@ export type UserDatabase = {
 export const UserDatabase = {
 	as(subject: any, path: string = ""): UserDatabase {
 		return ((subject, path) => {
-			if ((subject != null) && (subject.constructor === Object)) {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				((subject, path) => {
-					if ((subject != null) && (subject.constructor === Array)) {
+					if ((subject != null) && (subject.constructor === globalThis.Array)) {
 						for (let i = 0; i < subject.length; i++) {
 							(UserEntry.as)(subject[i], path + "[" + i + "]");
 						}
@@ -803,7 +803,7 @@ export const UserDatabase = {
 					throw "Type guard \"Array\" failed at \"" + path + "\"!";
 				})(subject.users, path + "." + "users");
 				((subject, path) => {
-					if ((subject != null) && (subject.constructor === Array)) {
+					if ((subject != null) && (subject.constructor === globalThis.Array)) {
 						for (let i = 0; i < subject.length; i++) {
 							(AuthToken.as)(subject[i], path + "[" + i + "]");
 						}

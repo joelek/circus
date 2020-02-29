@@ -5,10 +5,10 @@
 	"dependencies": {
 		"@joelek/ts-autoguard": "github:joelek/ts-autoguard",
 		"@types/node": "^13",
-		"typescript": "^3",
 		"browserify": "^16.5.0",
 		"castv2-client": "^1.2.0",
-		"node-dns-sd": "^0.4.0"
+		"node-dns-sd": "^0.4.0",
+		"typescript": "^3"
 	},
 	"license": "MIT",
 	"name": "@joelek/castaway",
