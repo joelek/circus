@@ -18,10 +18,7 @@
 	},
 	"scripts": {
 		"build": "rm -rf ./build/ && npm run codegen && npx tsc --build && npm run bundle",
-		"bundle": "npm run bundle:client && npm run bundle:index && npm run bundle:server",
-		"bundle:client": "npx browserify ./build/source/client.js --outfile ./build/client.js",
-		"bundle:index": "npx browserify ./build/source/index.js --outfile ./build/index.js",
-		"bundle:server": "npx browserify ./build/source/server.js --outfile ./build/server.js",
+		"bundle": "npx browserify ./build/source/client.js --outfile ./build/client.js",
 		"clean": "rm -rf ./build/ ./node_modules/",
 		"codegen": "npx autoguard --standalone=false",
 		"install": "npm run build"
