@@ -59,7 +59,7 @@ style.innerText = `
 	}
 
 	.slider-widget {
-
+		padding: 4px;
 	}
 
 	.slider-widget__indicator {
@@ -246,12 +246,8 @@ ccresume.addEventListener('click', () => {
 	req(`/api/cc/resume/`, { token: token }, (status, response) => {});
 });
 chromecast.appendChild(ccresume);
-let ccseek = document.createElement('input');
-ccseek.setAttribute('type', 'range');
-ccseek.addEventListener('change', () => {
-	req(`/api/cc/seek/`, { percentage: ccseek.value, token: token }, (status, response) => {});
-});
-chromecast.appendChild(ccseek);
+
+
 
 let slider_wrapper = document.createElement("div");
 slider_wrapper.classList.add("slider-widget");
@@ -267,7 +263,27 @@ slider_indicator.appendChild(slider_knob_wrapper);
 slider_wrapper.appendChild(slider_indicator);
 chromecast.appendChild(slider_wrapper);
 document.body.appendChild(chromecast);
-
+{
+	let percentage = 0.0;
+	function update(event: MouseEvent): void {
+		let rect = slider_knob_wrapper.getBoundingClientRect();
+		let x = event.pageX;
+		let factor = Math.max(0.0, Math.min((x - rect.x) / rect.width, 1.0));
+		percentage = factor * 100.0;
+		slider_knob.style.setProperty("left", `${percentage}%`);
+	}
+	function detach(event: MouseEvent) {
+		window.removeEventListener("mousemove", update);
+		window.removeEventListener("mouseup", detach);
+		req(`/api/cc/seek/`, { percentage: percentage, token: token }, () => {});
+	}
+	function attach(event: MouseEvent) {
+		window.addEventListener("mousemove", update);
+		window.addEventListener("mouseup", detach);
+		update(event);
+	}
+	slider_wrapper.addEventListener("mousedown", attach);
+}
 
 
 
