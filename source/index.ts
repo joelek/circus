@@ -4,7 +4,6 @@ import * as libpath from "path";
 import * as libdb from "./database";
 import * as libutils from "./utils";
 import * as libvtt from "./vtt";
-import * as libreader from "./reader";
 import * as utils from "./utils";
 
 let media_root = './private/media/';
@@ -692,8 +691,7 @@ db.video.subtitles.forEach((subtitle_entry) => {
 	let path = [ ".", ...file_entry.path ].join("/");
 	console.log(path);
 	let string = libfs.readFileSync(path, { encoding: "utf8" });
-	let reader = new libreader.Reader(string);
-	let track = libvtt.readTrack(reader);
+	let track = libvtt.decode(string);
 	let metadata = JSON.parse(track.head.metadata);
 	if (typeof metadata === "object" && typeof metadata.langauge === "string") {
 		subtitle_entry.language = metadata.language;

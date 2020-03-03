@@ -137,7 +137,7 @@ function readHead(reader: libreader.Reader): Head {
 
 function serializeHead(head: Head, options: Options): string {
 	let lines = new Array<string>();
-	lines.push("WEBVTT" + head.metadata);
+	lines.push("WEBVTT " + head.metadata);
 	lines.push("");
 	return lines.join(options.eol);
 }
@@ -158,11 +158,20 @@ function serializeTrack(track: Track, options: Options): string {
 	return lines.join(options.eol);
 }
 
+function decode(string: string): Track {
+	let reader = new libreader.Reader(string);
+	return readTrack(reader);
+}
+
+function encode(track: Track): string {
+	return serializeTrack(track, {
+		eol: "\r\n"
+	});
+}
+
 export {
-	Cue,
-	Body,
-	Head,
 	Track,
-	readTrack,
-	serializeTrack
+	Options,
+	decode,
+	encode
 };
