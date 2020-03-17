@@ -139,8 +139,8 @@ type ID3Tag = {
 	tracks: number | null;
 	disc: number | null;
 	discs: number | null;
-	track_artist_name: string | null;
-	album_artist_name: string | null;
+	track_artists: string[] | null;
+	album_artists: string[] | null;
 	duration: number;
 };
 
@@ -163,8 +163,8 @@ let read_id3v24_tag = (file: string): ID3Tag => {
 			tracks: null,
 			disc: null,
 			discs: null,
-			track_artist_name: null,
-			album_artist_name: null,
+			track_artists: null,
+			album_artists: null,
 			duration: 0
 		} as ID3Tag;
 		let offset = 0;
@@ -201,14 +201,14 @@ let read_id3v24_tag = (file: string): ID3Tag => {
 					tag.discs = parseInt(parts[2]);
 				}
 			} else if (frame_id === 'TPE1') {
-				tag.track_artist_name = data.slice(1, -1).toString();
+				tag.track_artists = data.slice(1, -1).toString().split(";").map(a => a.trim());
 			} else if (frame_id === 'TPE2') {
-				tag.album_artist_name = data.slice(1, -1).toString();
+				tag.album_artists = data.slice(1, -1).toString().split(";").map(a => a.trim());
 			} else if (frame_id === 'TXXX') {
 				let string = data.slice(1, -1).toString();
 				let parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
 				if (parts !== null) {
-					tag.album_artist_name = parts[1];
+					tag.album_artists = parts[1].split(";").map(a => a.trim());
 				}
 			}
 		}
@@ -283,30 +283,32 @@ let visit_audio = (node: string): void => {
 		path: nodes,
 		mime: 'audio/mp3'
 	});
-	if (tag.album_artist_name !== null && tag.album_name !== null && tag.year !== null && tag.disc !== null && tag.track !== null && tag.track_title !== null) {
-		let album_id = get_id_for(`${tag.album_artist_name}:${tag.album_name}:${tag.year}`);
+	if (tag.album_artists !== null && tag.album_name !== null && tag.year !== null && tag.disc !== null && tag.track !== null && tag.track_artists != null && tag.track_title !== null) {
+		let album_id = get_id_for(`${tag.album_artists.join(":")}:${tag.album_name}:${tag.year}`);
 		add_album({
 			album_id: album_id,
 			title: tag.album_name,
 			year: tag.year,
 			cover_file_id: null
 		});
-		let album_artist_id = get_id_for(`${tag.album_artist_name}`);
-		add_artist({
-			artist_id: album_artist_id,
-			title: tag.album_artist_name
-		});
-		add_album_artist({
-			album_id: album_id,
-			artist_id: album_artist_id
-		});
-		let disc_id = get_id_for(`${tag.album_artist_name}:${tag.album_name}:${tag.year}:${tag.disc}`);
+		for (let album_artist of tag.album_artists) {
+			let album_artist_id = get_id_for(`${album_artist}`);
+			add_artist({
+				artist_id: album_artist_id,
+				title: album_artist
+			});
+			add_album_artist({
+				album_id: album_id,
+				artist_id: album_artist_id
+			});
+		}
+		let disc_id = get_id_for(`${tag.album_artists.join(":")}:${tag.album_name}:${tag.year}:${tag.disc}`);
 		add_disc({
 			disc_id: disc_id,
 			album_id: album_id,
 			number: tag.disc
 		});
-		let track_id = get_id_for(`${tag.album_artist_name}:${tag.album_name}:${tag.year}:${tag.disc}:${tag.track}`);
+		let track_id = get_id_for(`${tag.album_artists.join(":")}:${tag.album_name}:${tag.year}:${tag.disc}:${tag.track}`);
 		add_track({
 			track_id: track_id,
 			disc_id: disc_id,
@@ -315,11 +317,11 @@ let visit_audio = (node: string): void => {
 			number: tag.track,
 			duration: tag.duration
 		});
-		if (tag.track_artist_name !== null) {
-			let track_artist_id = get_id_for(`${tag.track_artist_name}`);
+		for (let track_artist of tag.track_artists) {
+			let track_artist_id = get_id_for(`${track_artist}`);
 			add_artist({
 				artist_id: track_artist_id,
-				title: tag.track_artist_name
+				title: track_artist
 			});
 			add_track_artist({
 				track_id: track_id,
@@ -364,6 +366,12 @@ type MP4Tag = {
 	title: string | null;
 	year: number | null;
 	duration: number;
+	comment: string | null;
+	artists: string[] | null;
+	album_artists: string[] | null;
+	album: string | null;
+	track_number: number | null;
+	disc_number: number | null;
 };
 
 let visit_atom = (tag: MP4Tag, fds: FileDescriptor, path: string, maxlength: number): void => {
@@ -408,6 +416,24 @@ let visit_atom = (tag: MP4Tag, fds: FileDescriptor, path: string, maxlength: num
 			} else if (atom.kind === '\u00A9day') {
 				let buffer = read_mp4_atom_body(fds, atom);
 				tag.year = parseInt(buffer.slice(16).toString());
+			} else if (atom.kind === '\u00A9ART') {
+				let buffer = read_mp4_atom_body(fds, atom);
+				tag.artists = buffer.slice(16).toString().split(";").map((a) => a.trim());
+			} else if (atom.kind === 'aART') {
+				let buffer = read_mp4_atom_body(fds, atom);
+				tag.album_artists = buffer.slice(16).toString().split(";").map((a) => a.trim());
+			} else if (atom.kind === '\u00A9alb') {
+				let buffer = read_mp4_atom_body(fds, atom);
+				tag.album = buffer.slice(16).toString();
+			} else if (atom.kind === 'trkn') {
+				let buffer = read_mp4_atom_body(fds, atom);
+				tag.track_number = decode_mp4_length(buffer.slice(16));
+			} else if (atom.kind === 'disk') {
+				let buffer = read_mp4_atom_body(fds, atom);
+				tag.disc_number = decode_mp4_length(buffer.slice(16));
+			} else if (atom.kind === '\u00A9cmt') {
+				let buffer = read_mp4_atom_body(fds, atom);
+				tag.comment = buffer.slice(16).toString();
 			} else {
 				fds.offset += atom.length - 8;
 			}
@@ -424,7 +450,7 @@ let read_mp4_tag = (file: string): MP4Tag => {
 	};
 	try {
 		let header = read_mp4_atom(fds);
-		if (header.kind !== 'ftyp' || header.length !== 32) {
+		if (header.kind !== 'ftyp') {
 			throw new Error();
 		}
 		read_mp4_atom_body(fds, header);
@@ -434,7 +460,13 @@ let read_mp4_tag = (file: string): MP4Tag => {
 			episode: null,
 			title: null,
 			year: null,
-			duration: 0
+			duration: 0,
+			comment: null,
+			artists:  null,
+			album_artists: null,
+			album: null,
+			track_number: null,
+			disc_number: null
 		};
 		visit_atom(tag, fds, '', header.length);
 		libfs.closeSync(fds.fd);
@@ -449,12 +481,12 @@ let visit_video = (node: string): void => {
 	let tag = read_mp4_tag(node);
 	let nodes = node.split(libpath.sep);
 	let file_id = get_id_for(`${nodes.join(':')}`);
-	add_file({
-		file_id: file_id,
-		path: nodes,
-		mime: 'video/mp4'
-	});
 	if (tag.show !== null && tag.season !== null && tag.episode !== null && tag.title !== null) {
+		add_file({
+			file_id: file_id,
+			path: nodes,
+			mime: 'video/mp4'
+		});
 		let show_id = get_id_for(`${tag.show}`);
 		let season_id = get_id_for(`${tag.show}:${tag.season}`);
 		let episode_id = get_id_for(`${tag.show}:${tag.season}:${tag.episode}`);
@@ -477,7 +509,64 @@ let visit_video = (node: string): void => {
 		});
 		return;
 	}
+	if (tag.album_artists != null && tag.album != null && tag.year != null && tag.disc_number != null && tag.track_number != null && tag.artists != null && tag.title != null) {
+		add_file({
+			file_id: file_id,
+			path: nodes,
+			mime: 'audio/mp4'
+		});
+		let album_id = get_id_for(`${tag.album_artists.join(":")}:${tag.album}:${tag.year}`);
+		add_album({
+			album_id: album_id,
+			title: tag.album,
+			year: tag.year,
+			cover_file_id: null
+		});
+		for (let album_artist of tag.album_artists) {
+			let album_artist_id = get_id_for(`${album_artist}`);
+			add_artist({
+				artist_id: album_artist_id,
+				title: album_artist
+			});
+			add_album_artist({
+				album_id: album_id,
+				artist_id: album_artist_id
+			});
+		}
+		let disc_id = get_id_for(`${tag.album_artists.join(":")}:${tag.album}:${tag.year}:${tag.disc_number}`);
+		add_disc({
+			disc_id: disc_id,
+			album_id: album_id,
+			number: tag.disc_number
+		});
+		let track_id = get_id_for(`${tag.album_artists.join(":")}:${tag.album}:${tag.year}:${tag.disc_number}:${tag.track_number}`);
+		add_track({
+			track_id: track_id,
+			disc_id: disc_id,
+			file_id: file_id,
+			title: tag.title,
+			number: tag.track_number,
+			duration: tag.duration
+		});
+		for (let track_artist of tag.artists) {
+			let track_artist_id = get_id_for(`${track_artist}`);
+			add_artist({
+				artist_id: track_artist_id,
+				title: track_artist
+			});
+			add_track_artist({
+				track_id: track_id,
+				artist_id: track_artist_id
+			});
+		}
+		return;
+	}
 	if (tag.title !== null && tag.year !== null) {
+		add_file({
+			file_id: file_id,
+			path: nodes,
+			mime: 'video/mp4'
+		});
 		let movie_id = get_id_for(`${tag.title}:${tag.year}`);
 		add_movie({
 			movie_id: movie_id,
@@ -689,7 +778,6 @@ db.video.subtitles.forEach((subtitle_entry) => {
 		return;
 	}
 	let path = [ ".", ...file_entry.path ].join("/");
-	console.log(path);
 	let string = libfs.readFileSync(path, { encoding: "utf8" });
 	let track = libvtt.decode(string);
 	let metadata = JSON.parse(track.head.metadata);
