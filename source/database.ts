@@ -182,10 +182,8 @@ export const TrackArtistEntry = {
 
 export type MovieEntry = {
 	movie_id: string,
-	file_id: string,
 	title: string,
-	year: number,
-	duration: number
+	year: number
 };
 
 export const MovieEntry = {
@@ -193,10 +191,8 @@ export const MovieEntry = {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject.movie_id, path + "." + "movie_id");
-				(autoguard.guards.String.as)(subject.file_id, path + "." + "file_id");
 				(autoguard.guards.String.as)(subject.title, path + "." + "title");
 				(autoguard.guards.Number.as)(subject.year, path + "." + "year");
-				(autoguard.guards.Number.as)(subject.duration, path + "." + "duration");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -205,6 +201,38 @@ export const MovieEntry = {
 	is(subject: any): subject is MovieEntry {
 		try {
 			MovieEntry.as(subject);
+		} catch (error) {
+			return false;
+		}
+		return true;
+	}
+};
+
+export type MoviePartEntry = {
+	movie_part_id: string,
+	movie_id: string,
+	file_id: string,
+	duration: number,
+	number: number
+};
+
+export const MoviePartEntry = {
+	as(subject: any, path: string = ""): MoviePartEntry {
+		return ((subject, path) => {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
+				(autoguard.guards.String.as)(subject.movie_part_id, path + "." + "movie_part_id");
+				(autoguard.guards.String.as)(subject.movie_id, path + "." + "movie_id");
+				(autoguard.guards.String.as)(subject.file_id, path + "." + "file_id");
+				(autoguard.guards.Number.as)(subject.duration, path + "." + "duration");
+				(autoguard.guards.Number.as)(subject.number, path + "." + "number");
+				return subject;
+			}
+			throw "Type guard \"Object\" failed at \"" + path + "\"!";
+		})(subject, path);
+	},
+	is(subject: any): subject is MoviePartEntry {
+		try {
+			MoviePartEntry.as(subject);
 		} catch (error) {
 			return false;
 		}
@@ -303,7 +331,7 @@ export const EpisodeEntry = {
 export type SubtitleEntry = {
 	subtitle_id: string,
 	episode_id: (string | null),
-	movie_id: (string | null),
+	movie_part_id: (string | null),
 	file_id: string,
 	language: (string | null)
 };
@@ -330,7 +358,7 @@ export const SubtitleEntry = {
 						return (autoguard.guards.Null.as)(subject, path);
 					} catch (error) {}
 					throw "Type guard \"Union\" failed at \"" + path + "\"!";
-				})(subject.movie_id, path + "." + "movie_id");
+				})(subject.movie_part_id, path + "." + "movie_part_id");
 				(autoguard.guards.String.as)(subject.file_id, path + "." + "file_id");
 				((subject, path) => {
 					try {
@@ -442,6 +470,7 @@ export type MediaDatabase = {
 		track_artists: TrackArtistEntry[]
 	},
 	video: {
+		movie_parts: MoviePartEntry[],
 		movies: MovieEntry[],
 		shows: ShowEntry[],
 		seasons: SeasonEntry[],
@@ -518,6 +547,15 @@ export const MediaDatabase = {
 				})(subject.audio, path + "." + "audio");
 				((subject, path) => {
 					if ((subject != null) && (subject.constructor === globalThis.Object)) {
+						((subject, path) => {
+							if ((subject != null) && (subject.constructor === globalThis.Array)) {
+								for (let i = 0; i < subject.length; i++) {
+									(MoviePartEntry.as)(subject[i], path + "[" + i + "]");
+								}
+								return subject;
+							}
+							throw "Type guard \"Array\" failed at \"" + path + "\"!";
+						})(subject.movie_parts, path + "." + "movie_parts");
 						((subject, path) => {
 							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
@@ -834,6 +872,7 @@ export type Autoguard = {
 	AlbumArtistEntry: AlbumArtistEntry,
 	TrackArtistEntry: TrackArtistEntry,
 	MovieEntry: MovieEntry,
+	MoviePartEntry: MoviePartEntry,
 	ShowEntry: ShowEntry,
 	SeasonEntry: SeasonEntry,
 	EpisodeEntry: EpisodeEntry,
@@ -858,6 +897,7 @@ export const Autoguard = {
 	AlbumArtistEntry: AlbumArtistEntry,
 	TrackArtistEntry: TrackArtistEntry,
 	MovieEntry: MovieEntry,
+	MoviePartEntry: MoviePartEntry,
 	ShowEntry: ShowEntry,
 	SeasonEntry: SeasonEntry,
 	EpisodeEntry: EpisodeEntry,

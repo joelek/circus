@@ -10,9 +10,9 @@ function getMediaFile(subtitle: database.SubtitleEntry): database.FileEntry | nu
 		let episode = data.media.video.episodes.find((episode) => episode.episode_id === subtitle.episode_id) as database.EpisodeEntry;
 		return data.media.files.find((file) => file.file_id === (episode as database.EpisodeEntry).file_id) as database.FileEntry;
 	}
-	if (subtitle.movie_id !== null) {
-		let movie = data.media.video.movies.find((movie) => movie.movie_id === subtitle.movie_id) as database.MovieEntry;
-		return data.media.files.find((file) => file.file_id === (movie as database.MovieEntry).file_id) as database.FileEntry;
+	if (subtitle.movie_part_id !== null) {
+		let movie_part = data.media.video.movie_parts.find((movie_part) => movie_part.movie_part_id === subtitle.movie_part_id) as database.MoviePartEntry;
+		return data.media.files.find((file) => file.file_id === (movie_part as database.MoviePartEntry).file_id) as database.FileEntry;
 	}
 	return null
 }

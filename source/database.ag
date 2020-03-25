@@ -32,10 +32,15 @@
 	},
 	MovieEntry: {
 		movie_id: string,
-		file_id: string,
 		title: string,
-		year: number,
-		duration: number
+		year: number
+	},
+	MoviePartEntry: {
+		movie_part_id: string,
+		movie_id: string,
+		file_id: string,
+		duration: number,
+		number: number
 	},
 	ShowEntry: {
 		show_id: string,
@@ -57,7 +62,7 @@
 	SubtitleEntry: {
 		subtitle_id: string,
 		episode_id: (string | null),
-		movie_id: (string | null),
+		movie_part_id: (string | null),
 		file_id: string,
 		language: (string | null)
 	},
@@ -83,6 +88,7 @@
 			track_artists: @TrackArtistEntry[]
 		},
 		video: {
+			movie_parts: @MoviePartEntry[],
 			movies: @MovieEntry[],
 			shows: @ShowEntry[],
 			seasons: @SeasonEntry[],

@@ -491,28 +491,27 @@ let updateviewforuri = (uri: string): void => {
 			d.innerText = `${response.title} (${response.year})`;
 			d.style.setProperty('font-size', '24px');
 			mount.appendChild(d);
-			let d2 = document.createElement('div');
-			d2.innerText = format_duration(response.duration);
-			mount.appendChild(d2);
 			let context: Context = {
-				files: [ response.file_id ]
+				files: response.movie_parts.map((part) => part.file_id)
 			};
 			let context_metadata: Metadata = {};
-			context_metadata[response.file_id] = {
-				subtitles: response.subtitles
-			};
-			let d3 = document.createElement('div');
-			d3.innerText = `load`;
-			d3.addEventListener('click', () => {
-				set_context(context);
-				set_context_metadata(context_metadata);
-				play(context.files.indexOf(response.file_id));
-				if (parts !== null && parts.length >= 3) {
-					let start_ms = Number.parseInt(parts[2], 10);
-					seek(start_ms);
-				}
-			});
-			mount.appendChild(d3);
+			for (let movie_part of response.movie_parts) {
+				context_metadata[movie_part.file_id] = {
+					subtitles: movie_part.subtitles
+				};
+				let d3 = document.createElement('div');
+				d3.innerText = `part ${movie_part.number}`;
+				d3.addEventListener('click', () => {
+					set_context(context);
+					set_context_metadata(context_metadata);
+					play(context.files.indexOf(movie_part.file_id));
+					if (parts !== null && parts.length >= 3) {
+						let start_ms = Number.parseInt(parts[2], 10);
+						seek(start_ms);
+					}
+				});
+				mount.appendChild(d3);
+			}
 		});
 	} else if ((parts = /^video[/]movies[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/`, {}, (status, response) => {
@@ -560,12 +559,12 @@ let updateviewforuri = (uri: string): void => {
 			for (let cue of response.cues) {
 				let d = document.createElement('div');
 				d.classList.add("group");
-				if (cue.subtitle.movie) {
+				if (cue.subtitle.movie_part) {
 					let h2 = document.createElement("h2");
-					h2.innerText = cue.subtitle.movie.title;
+					h2.innerText = cue.subtitle.movie_part.movie.title;
 					d.appendChild(h2);
 					let h3 = document.createElement("h3");
-					h3.innerText = "" + cue.subtitle.movie.year;
+					h3.innerText = "" + cue.subtitle.movie_part.movie.year;
 					d.appendChild(h3);
 				} else if (cue.subtitle.episode) {
 					let episode = cue.subtitle.episode;
@@ -589,7 +588,7 @@ let updateviewforuri = (uri: string): void => {
 				b1.textContent = "Go to video";
 				b1.addEventListener("click", () => {
 					let episode = cue.subtitle.episode;
-					let movie = cue.subtitle.movie;
+					let movie = cue.subtitle.movie_part;
 					if (episode != null) {
 						navigate(`video/episodes/${episode.episode_id}/${cue.start_ms}/`);
 					} else if (movie != null) {

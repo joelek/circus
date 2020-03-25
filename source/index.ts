@@ -18,6 +18,7 @@ let db = {
 		track_artists: new Array<libdb.TrackArtistEntry>()
 	},
 	video: {
+		movie_parts: new Array<libdb.MoviePartEntry>(),
 		movies: new Array<libdb.MovieEntry>(),
 		shows: new Array<libdb.ShowEntry>(),
 		seasons: new Array<libdb.SeasonEntry>(),
@@ -28,6 +29,7 @@ let db = {
 	files: new Array<libdb.FileEntry>()
 };
 
+let movie_parts_index: utils.Index<libdb.MoviePartEntry> = {};
 let movies_index: utils.Index<libdb.MovieEntry> = {};
 let shows_index: utils.Index<libdb.ShowEntry> = {};
 let seasons_index: utils.Index<libdb.SeasonEntry> = {};
@@ -43,6 +45,13 @@ let album_artists_index: utils.Index<libdb.AlbumArtistEntry> = {};
 let track_artists_index: utils.Index<libdb.TrackArtistEntry> = {};
 
 let files_index: utils.Index<libdb.FileEntry> = {};
+
+let add_movie_part = (movie_part: libdb.MoviePartEntry): void => {
+	if (!(movie_part.movie_part_id in movie_parts_index)) {
+		movie_parts_index[movie_part.movie_part_id] = movie_part;
+		db.video.movie_parts.push(movie_part);
+	}
+};
 
 let add_movie = (movie: libdb.MovieEntry): void => {
 	if (!(movie.movie_id in movies_index)) {
@@ -568,12 +577,19 @@ let visit_video = (node: string): void => {
 			mime: 'video/mp4'
 		});
 		let movie_id = get_id_for(`${tag.title}:${tag.year}`);
+		let number = tag.track_number || 1;
+		let movie_part_id = get_id_for(`${tag.title}:${tag.year}:${number}`);
+		add_movie_part({
+			movie_part_id,
+			movie_id,
+			file_id,
+			duration: tag.duration,
+			number
+		});
 		add_movie({
 			movie_id: movie_id,
-			file_id: file_id,
 			title: tag.title,
-			year: tag.year,
-			duration: tag.duration
+			year: tag.year
 		});
 		return;
 	}
@@ -742,7 +758,7 @@ db.video.episodes.forEach((episode) => {
 			add_subtitle({
 				subtitle_id: subtitle_id,
 				episode_id: episode.episode_id,
-				movie_id: null,
+				movie_part_id: null,
 				file_id: vtt_files[i].file_id,
 				language: null
 			});
@@ -750,12 +766,12 @@ db.video.episodes.forEach((episode) => {
 	}
 });
 
-db.video.movies.forEach((movie) => {
-	let movie_file = files_index[movie.file_id];
-	if (movie_file === undefined) {
+db.video.movie_parts.forEach((movie_part) => {
+	let movie_part_file = files_index[movie_part.file_id];
+	if (movie_part_file === undefined) {
 		return;
 	}
-	let filename = movie_file.path[movie_file.path.length-1];
+	let filename = movie_part_file.path[movie_part_file.path.length-1];
 	let basename = filename.split('.').slice(0, -1).join('.');
 	for (let i = 0; i < vtt_files.length; i++) {
 		let vttbasename = vtt_files[i].path[vtt_files[i].path.length-1].split('.')[0];
@@ -764,7 +780,7 @@ db.video.movies.forEach((movie) => {
 			add_subtitle({
 				subtitle_id: subtitle_id,
 				episode_id: null,
-				movie_id: movie.movie_id,
+				movie_part_id: movie_part.movie_part_id,
 				file_id: vtt_files[i].file_id,
 				language: null
 			});

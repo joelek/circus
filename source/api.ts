@@ -444,13 +444,21 @@ class MovieRoute implements Route<api_response.AuthRequest, api_response.MovieRe
 		if (movie === undefined) {
 			throw new Error();
 		}
-		let subtitles = data.media.video.subtitles
-			.filter((subtitle) => {
-				return subtitle.movie_id === movie_id
-			});
+		let movie_parts = data.media.video.movie_parts.filter((movie_part) => {
+			return movie_part.movie_id === movie_id;
+		}).map((movie_part) => {
+			let subtitles = data.media.video.subtitles
+				.filter((subtitle) => {
+					return subtitle.movie_part_id === movie_part.movie_part_id
+				});
+			return {
+				...movie_part,
+				subtitles
+			};
+		});
 		let payload: api_response.MovieResponse = {
 			...movie,
-			subtitles
+			movie_parts
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
@@ -592,14 +600,18 @@ class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResp
 					})
 					.map((cue) => {
 						let subtitle = data.subtitles_index[cue.subtitle_id] as libdb.SubtitleEntry;
-						if (subtitle.movie_id) {
-							let movie = data.movies_index[subtitle.movie_id] as libdb.MovieEntry;
+						if (subtitle.movie_part_id) {
+							let movie_part = data.movie_parts_index[subtitle.movie_part_id] as libdb.MoviePartEntry;
+							let movie = data.movies_index[movie_part.movie_id] as libdb.MovieEntry;
 							return {
 								...cue,
 								subtitle: {
 									...subtitle,
 									episode: undefined,
-									movie: movie
+									movie_part: {
+										...movie_part,
+										movie
+									}
 								}
 							};
 						}
@@ -618,7 +630,7 @@ class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResp
 											show
 										}
 									},
-									movie: undefined
+									movie_part: undefined
 								}
 							};
 						}

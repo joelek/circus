@@ -66,7 +66,9 @@ interface ShowsResponse extends ApiResponse {
 }
 
 interface MovieResponse extends ApiResponse, libdb.MovieEntry {
-	subtitles: Array<libdb.SubtitleEntry>;
+	movie_parts: Array<libdb.MoviePartEntry & {
+		subtitles: Array<libdb.SubtitleEntry>
+	}>;
 }
 
 interface MoviesResponse extends ApiResponse {
@@ -97,7 +99,9 @@ interface CuesResponse extends ApiResponse {
 					show: libdb.ShowEntry
 				}
 			}),
-			movie: undefined | (libdb.MovieEntry)
+			movie_part: undefined | (libdb.MoviePartEntry & {
+				movie: libdb.MovieEntry
+			})
 		}
 	}>;
 }

@@ -123,11 +123,14 @@ let make_media_object = (): MediaObject | null => {
 				}
 			}
 		} else {
-			let movie =  data.media.video.movies.find(movie => movie.file_id === file2.file_id);
-			if (movie !== undefined) {
-				sttracks =  data.media.video.subtitles.filter(st => st.movie_id === (movie as libdb.MovieEntry).movie_id).map(makesttrack);
-				title = movie.title;
-				subtitle = [].join(' \u2022 ');
+			let movie_part =  data.media.video.movie_parts.find(movie_part => movie_part.file_id === file2.file_id);
+			if (movie_part !== undefined) {
+				let movie = data.media.video.movies.find((movie) => movie.movie_id === movie_part?.movie_id);
+				if (movie != null) {
+					sttracks =  data.media.video.subtitles.filter(st => st.movie_part_id === (movie_part as libdb.MoviePartEntry).movie_part_id).map(makesttrack);
+					title = movie.title;
+					subtitle = [].join(' \u2022 ');
+				}
 			}
 		}
 	}

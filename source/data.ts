@@ -69,6 +69,13 @@ for (let i = 0; i < media.video.seasons.length; i++) {
 	seasons_index[season.season_id] = season;
 }
 
+export let movie_parts_index: utils.Index<libdb.MoviePartEntry> = {};
+
+for (let i = 0; i < media.video.movie_parts.length; i++) {
+	let movie_part = media.video.movie_parts[i];
+	movie_parts_index[movie_part.movie_part_id] = movie_part;
+}
+
 export let movies_index: utils.Index<libdb.MovieEntry> = {};
 
 for (let i = 0; i < media.video.movies.length; i++) {
