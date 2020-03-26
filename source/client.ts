@@ -196,8 +196,8 @@ let play = (index: number): void => {
 				if (st.language != null) {
 					let language = languages.db[st.language];
 					if (language != null) {
-						e.label = language;
-						e.srclang = st.language;
+						e.label = language.title;
+						e.srclang = language.iso639_1;
 						e.kind = "subtitles";
 					}
 				}

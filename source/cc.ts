@@ -93,7 +93,7 @@ let make_media_object = (): MediaObject | null => {
 			trackContentId: `https://ap.joelek.se/files/${s.file_id}/?token=${gtoken}`,
 			trackContentType: 'text/vtt',
 			subtype: 'SUBTITLES',
-			language: language,
+			language: languages.db[language]?.iso639_1 || "en",
 			name: null,
 			customData: null
 		};
