@@ -129,7 +129,10 @@ let make_media_object = (): MediaObject | null => {
 				if (movie != null) {
 					sttracks =  data.media.video.subtitles.filter(st => st.movie_part_id === (movie_part as libdb.MoviePartEntry).movie_part_id).map(makesttrack);
 					title = movie.title;
-					subtitle = [].join(' \u2022 ');
+					subtitle = [("0000" + movie.year).slice(-4)].join(' \u2022 ');
+					if (movie.poster_file_id != null) {
+						image = `https://ap.joelek.se/files/${movie.poster_file_id}/?token=${gtoken}`;
+					}
 				}
 			}
 		}
