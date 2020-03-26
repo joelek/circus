@@ -3,16 +3,16 @@
 import * as autoguard from "@joelek/ts-autoguard";
 
 export type ArtistEntry = {
-	artist_id: string,
-	title: string
+	"artist_id": string,
+	"title": string
 };
 
 export const ArtistEntry = {
 	as(subject: any, path: string = ""): ArtistEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.artist_id, path + "." + "artist_id");
-				(autoguard.guards.String.as)(subject.title, path + "." + "title");
+				(autoguard.guards.String.as)(subject["artist_id"], path + "[\"artist_id\"]");
+				(autoguard.guards.String.as)(subject["title"], path + "[\"title\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -29,19 +29,19 @@ export const ArtistEntry = {
 };
 
 export type AlbumEntry = {
-	album_id: string,
-	title: string,
-	year: number,
-	cover_file_id: (string | null)
+	"album_id": string,
+	"title": string,
+	"year": number,
+	"cover_file_id": (string | null)
 };
 
 export const AlbumEntry = {
 	as(subject: any, path: string = ""): AlbumEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.album_id, path + "." + "album_id");
-				(autoguard.guards.String.as)(subject.title, path + "." + "title");
-				(autoguard.guards.Number.as)(subject.year, path + "." + "year");
+				(autoguard.guards.String.as)(subject["album_id"], path + "[\"album_id\"]");
+				(autoguard.guards.String.as)(subject["title"], path + "[\"title\"]");
+				(autoguard.guards.Number.as)(subject["year"], path + "[\"year\"]");
 				((subject, path) => {
 					try {
 						return (autoguard.guards.String.as)(subject, path);
@@ -50,7 +50,7 @@ export const AlbumEntry = {
 						return (autoguard.guards.Null.as)(subject, path);
 					} catch (error) {}
 					throw "Type guard \"Union\" failed at \"" + path + "\"!";
-				})(subject.cover_file_id, path + "." + "cover_file_id");
+				})(subject["cover_file_id"], path + "[\"cover_file_id\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -67,18 +67,18 @@ export const AlbumEntry = {
 };
 
 export type DiscEntry = {
-	disc_id: string,
-	album_id: string,
-	number: number
+	"disc_id": string,
+	"album_id": string,
+	"number": number
 };
 
 export const DiscEntry = {
 	as(subject: any, path: string = ""): DiscEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.disc_id, path + "." + "disc_id");
-				(autoguard.guards.String.as)(subject.album_id, path + "." + "album_id");
-				(autoguard.guards.Number.as)(subject.number, path + "." + "number");
+				(autoguard.guards.String.as)(subject["disc_id"], path + "[\"disc_id\"]");
+				(autoguard.guards.String.as)(subject["album_id"], path + "[\"album_id\"]");
+				(autoguard.guards.Number.as)(subject["number"], path + "[\"number\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -95,24 +95,24 @@ export const DiscEntry = {
 };
 
 export type TrackEntry = {
-	track_id: string,
-	disc_id: string,
-	file_id: string,
-	title: string,
-	number: number,
-	duration: number
+	"track_id": string,
+	"disc_id": string,
+	"file_id": string,
+	"title": string,
+	"number": number,
+	"duration": number
 };
 
 export const TrackEntry = {
 	as(subject: any, path: string = ""): TrackEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.track_id, path + "." + "track_id");
-				(autoguard.guards.String.as)(subject.disc_id, path + "." + "disc_id");
-				(autoguard.guards.String.as)(subject.file_id, path + "." + "file_id");
-				(autoguard.guards.String.as)(subject.title, path + "." + "title");
-				(autoguard.guards.Number.as)(subject.number, path + "." + "number");
-				(autoguard.guards.Number.as)(subject.duration, path + "." + "duration");
+				(autoguard.guards.String.as)(subject["track_id"], path + "[\"track_id\"]");
+				(autoguard.guards.String.as)(subject["disc_id"], path + "[\"disc_id\"]");
+				(autoguard.guards.String.as)(subject["file_id"], path + "[\"file_id\"]");
+				(autoguard.guards.String.as)(subject["title"], path + "[\"title\"]");
+				(autoguard.guards.Number.as)(subject["number"], path + "[\"number\"]");
+				(autoguard.guards.Number.as)(subject["duration"], path + "[\"duration\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -129,16 +129,16 @@ export const TrackEntry = {
 };
 
 export type AlbumArtistEntry = {
-	album_id: string,
-	artist_id: string
+	"album_id": string,
+	"artist_id": string
 };
 
 export const AlbumArtistEntry = {
 	as(subject: any, path: string = ""): AlbumArtistEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.album_id, path + "." + "album_id");
-				(autoguard.guards.String.as)(subject.artist_id, path + "." + "artist_id");
+				(autoguard.guards.String.as)(subject["album_id"], path + "[\"album_id\"]");
+				(autoguard.guards.String.as)(subject["artist_id"], path + "[\"artist_id\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -155,16 +155,16 @@ export const AlbumArtistEntry = {
 };
 
 export type TrackArtistEntry = {
-	track_id: string,
-	artist_id: string
+	"track_id": string,
+	"artist_id": string
 };
 
 export const TrackArtistEntry = {
 	as(subject: any, path: string = ""): TrackArtistEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.track_id, path + "." + "track_id");
-				(autoguard.guards.String.as)(subject.artist_id, path + "." + "artist_id");
+				(autoguard.guards.String.as)(subject["track_id"], path + "[\"track_id\"]");
+				(autoguard.guards.String.as)(subject["artist_id"], path + "[\"artist_id\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -181,18 +181,28 @@ export const TrackArtistEntry = {
 };
 
 export type MovieEntry = {
-	movie_id: string,
-	title: string,
-	year: number
+	"movie_id": string,
+	"title": string,
+	"year": number,
+	"poster_file_id"?: string
 };
 
 export const MovieEntry = {
 	as(subject: any, path: string = ""): MovieEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.movie_id, path + "." + "movie_id");
-				(autoguard.guards.String.as)(subject.title, path + "." + "title");
-				(autoguard.guards.Number.as)(subject.year, path + "." + "year");
+				(autoguard.guards.String.as)(subject["movie_id"], path + "[\"movie_id\"]");
+				(autoguard.guards.String.as)(subject["title"], path + "[\"title\"]");
+				(autoguard.guards.Number.as)(subject["year"], path + "[\"year\"]");
+				((subject, path) => {
+					try {
+						return (autoguard.guards.Undefined.as)(subject, path);
+					} catch (error) {}
+					try {
+						return (autoguard.guards.String.as)(subject, path);
+					} catch (error) {}
+					throw "Type guard \"Union\" failed at \"" + path + "\"!";
+				})(subject["poster_file_id"], path + "[\"poster_file_id\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -209,22 +219,22 @@ export const MovieEntry = {
 };
 
 export type MoviePartEntry = {
-	movie_part_id: string,
-	movie_id: string,
-	file_id: string,
-	duration: number,
-	number: number
+	"movie_part_id": string,
+	"movie_id": string,
+	"file_id": string,
+	"duration": number,
+	"number": number
 };
 
 export const MoviePartEntry = {
 	as(subject: any, path: string = ""): MoviePartEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.movie_part_id, path + "." + "movie_part_id");
-				(autoguard.guards.String.as)(subject.movie_id, path + "." + "movie_id");
-				(autoguard.guards.String.as)(subject.file_id, path + "." + "file_id");
-				(autoguard.guards.Number.as)(subject.duration, path + "." + "duration");
-				(autoguard.guards.Number.as)(subject.number, path + "." + "number");
+				(autoguard.guards.String.as)(subject["movie_part_id"], path + "[\"movie_part_id\"]");
+				(autoguard.guards.String.as)(subject["movie_id"], path + "[\"movie_id\"]");
+				(autoguard.guards.String.as)(subject["file_id"], path + "[\"file_id\"]");
+				(autoguard.guards.Number.as)(subject["duration"], path + "[\"duration\"]");
+				(autoguard.guards.Number.as)(subject["number"], path + "[\"number\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -241,16 +251,16 @@ export const MoviePartEntry = {
 };
 
 export type ShowEntry = {
-	show_id: string,
-	title: string
+	"show_id": string,
+	"title": string
 };
 
 export const ShowEntry = {
 	as(subject: any, path: string = ""): ShowEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.show_id, path + "." + "show_id");
-				(autoguard.guards.String.as)(subject.title, path + "." + "title");
+				(autoguard.guards.String.as)(subject["show_id"], path + "[\"show_id\"]");
+				(autoguard.guards.String.as)(subject["title"], path + "[\"title\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -267,18 +277,18 @@ export const ShowEntry = {
 };
 
 export type SeasonEntry = {
-	season_id: string,
-	show_id: string,
-	number: number
+	"season_id": string,
+	"show_id": string,
+	"number": number
 };
 
 export const SeasonEntry = {
 	as(subject: any, path: string = ""): SeasonEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.season_id, path + "." + "season_id");
-				(autoguard.guards.String.as)(subject.show_id, path + "." + "show_id");
-				(autoguard.guards.Number.as)(subject.number, path + "." + "number");
+				(autoguard.guards.String.as)(subject["season_id"], path + "[\"season_id\"]");
+				(autoguard.guards.String.as)(subject["show_id"], path + "[\"show_id\"]");
+				(autoguard.guards.Number.as)(subject["number"], path + "[\"number\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -295,24 +305,24 @@ export const SeasonEntry = {
 };
 
 export type EpisodeEntry = {
-	episode_id: string,
-	season_id: string,
-	file_id: string,
-	title: string,
-	number: number,
-	duration: number
+	"episode_id": string,
+	"season_id": string,
+	"file_id": string,
+	"title": string,
+	"number": number,
+	"duration": number
 };
 
 export const EpisodeEntry = {
 	as(subject: any, path: string = ""): EpisodeEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.episode_id, path + "." + "episode_id");
-				(autoguard.guards.String.as)(subject.season_id, path + "." + "season_id");
-				(autoguard.guards.String.as)(subject.file_id, path + "." + "file_id");
-				(autoguard.guards.String.as)(subject.title, path + "." + "title");
-				(autoguard.guards.Number.as)(subject.number, path + "." + "number");
-				(autoguard.guards.Number.as)(subject.duration, path + "." + "duration");
+				(autoguard.guards.String.as)(subject["episode_id"], path + "[\"episode_id\"]");
+				(autoguard.guards.String.as)(subject["season_id"], path + "[\"season_id\"]");
+				(autoguard.guards.String.as)(subject["file_id"], path + "[\"file_id\"]");
+				(autoguard.guards.String.as)(subject["title"], path + "[\"title\"]");
+				(autoguard.guards.Number.as)(subject["number"], path + "[\"number\"]");
+				(autoguard.guards.Number.as)(subject["duration"], path + "[\"duration\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -329,18 +339,18 @@ export const EpisodeEntry = {
 };
 
 export type SubtitleEntry = {
-	subtitle_id: string,
-	episode_id: (string | null),
-	movie_part_id: (string | null),
-	file_id: string,
-	language: (string | null)
+	"subtitle_id": string,
+	"episode_id": (string | null),
+	"movie_part_id": (string | null),
+	"file_id": string,
+	"language": (string | null)
 };
 
 export const SubtitleEntry = {
 	as(subject: any, path: string = ""): SubtitleEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.subtitle_id, path + "." + "subtitle_id");
+				(autoguard.guards.String.as)(subject["subtitle_id"], path + "[\"subtitle_id\"]");
 				((subject, path) => {
 					try {
 						return (autoguard.guards.String.as)(subject, path);
@@ -349,7 +359,7 @@ export const SubtitleEntry = {
 						return (autoguard.guards.Null.as)(subject, path);
 					} catch (error) {}
 					throw "Type guard \"Union\" failed at \"" + path + "\"!";
-				})(subject.episode_id, path + "." + "episode_id");
+				})(subject["episode_id"], path + "[\"episode_id\"]");
 				((subject, path) => {
 					try {
 						return (autoguard.guards.String.as)(subject, path);
@@ -358,8 +368,8 @@ export const SubtitleEntry = {
 						return (autoguard.guards.Null.as)(subject, path);
 					} catch (error) {}
 					throw "Type guard \"Union\" failed at \"" + path + "\"!";
-				})(subject.movie_part_id, path + "." + "movie_part_id");
-				(autoguard.guards.String.as)(subject.file_id, path + "." + "file_id");
+				})(subject["movie_part_id"], path + "[\"movie_part_id\"]");
+				(autoguard.guards.String.as)(subject["file_id"], path + "[\"file_id\"]");
 				((subject, path) => {
 					try {
 						return (autoguard.guards.String.as)(subject, path);
@@ -368,7 +378,7 @@ export const SubtitleEntry = {
 						return (autoguard.guards.Null.as)(subject, path);
 					} catch (error) {}
 					throw "Type guard \"Union\" failed at \"" + path + "\"!";
-				})(subject.language, path + "." + "language");
+				})(subject["language"], path + "[\"language\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -385,21 +395,21 @@ export const SubtitleEntry = {
 };
 
 export type CueEntry = {
-	cue_id: string,
-	subtitle_id: string,
-	start_ms: number,
-	duration_ms: number,
-	lines: string[]
+	"cue_id": string,
+	"subtitle_id": string,
+	"start_ms": number,
+	"duration_ms": number,
+	"lines": string[]
 };
 
 export const CueEntry = {
 	as(subject: any, path: string = ""): CueEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.cue_id, path + "." + "cue_id");
-				(autoguard.guards.String.as)(subject.subtitle_id, path + "." + "subtitle_id");
-				(autoguard.guards.Number.as)(subject.start_ms, path + "." + "start_ms");
-				(autoguard.guards.Number.as)(subject.duration_ms, path + "." + "duration_ms");
+				(autoguard.guards.String.as)(subject["cue_id"], path + "[\"cue_id\"]");
+				(autoguard.guards.String.as)(subject["subtitle_id"], path + "[\"subtitle_id\"]");
+				(autoguard.guards.Number.as)(subject["start_ms"], path + "[\"start_ms\"]");
+				(autoguard.guards.Number.as)(subject["duration_ms"], path + "[\"duration_ms\"]");
 				((subject, path) => {
 					if ((subject != null) && (subject.constructor === globalThis.Array)) {
 						for (let i = 0; i < subject.length; i++) {
@@ -408,7 +418,7 @@ export const CueEntry = {
 						return subject;
 					}
 					throw "Type guard \"Array\" failed at \"" + path + "\"!";
-				})(subject.lines, path + "." + "lines");
+				})(subject["lines"], path + "[\"lines\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -425,16 +435,16 @@ export const CueEntry = {
 };
 
 export type FileEntry = {
-	file_id: string,
-	path: string[],
-	mime: string
+	"file_id": string,
+	"path": string[],
+	"mime": string
 };
 
 export const FileEntry = {
 	as(subject: any, path: string = ""): FileEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.file_id, path + "." + "file_id");
+				(autoguard.guards.String.as)(subject["file_id"], path + "[\"file_id\"]");
 				((subject, path) => {
 					if ((subject != null) && (subject.constructor === globalThis.Array)) {
 						for (let i = 0; i < subject.length; i++) {
@@ -443,8 +453,8 @@ export const FileEntry = {
 						return subject;
 					}
 					throw "Type guard \"Array\" failed at \"" + path + "\"!";
-				})(subject.path, path + "." + "path");
-				(autoguard.guards.String.as)(subject.mime, path + "." + "mime");
+				})(subject["path"], path + "[\"path\"]");
+				(autoguard.guards.String.as)(subject["mime"], path + "[\"mime\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -461,24 +471,24 @@ export const FileEntry = {
 };
 
 export type MediaDatabase = {
-	audio: {
-		artists: ArtistEntry[],
-		albums: AlbumEntry[],
-		discs: DiscEntry[],
-		tracks: TrackEntry[],
-		album_artists: AlbumArtistEntry[],
-		track_artists: TrackArtistEntry[]
+	"audio": {
+		"artists": ArtistEntry[],
+		"albums": AlbumEntry[],
+		"discs": DiscEntry[],
+		"tracks": TrackEntry[],
+		"album_artists": AlbumArtistEntry[],
+		"track_artists": TrackArtistEntry[]
 	},
-	video: {
-		movie_parts: MoviePartEntry[],
-		movies: MovieEntry[],
-		shows: ShowEntry[],
-		seasons: SeasonEntry[],
-		episodes: EpisodeEntry[],
-		subtitles: SubtitleEntry[],
-		cues: CueEntry[]
+	"video": {
+		"movie_parts": MoviePartEntry[],
+		"movies": MovieEntry[],
+		"shows": ShowEntry[],
+		"seasons": SeasonEntry[],
+		"episodes": EpisodeEntry[],
+		"subtitles": SubtitleEntry[],
+		"cues": CueEntry[]
 	},
-	files: FileEntry[]
+	"files": FileEntry[]
 };
 
 export const MediaDatabase = {
@@ -495,7 +505,7 @@ export const MediaDatabase = {
 								return subject;
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject.artists, path + "." + "artists");
+						})(subject["artists"], path + "[\"artists\"]");
 						((subject, path) => {
 							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
@@ -504,7 +514,7 @@ export const MediaDatabase = {
 								return subject;
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject.albums, path + "." + "albums");
+						})(subject["albums"], path + "[\"albums\"]");
 						((subject, path) => {
 							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
@@ -513,7 +523,7 @@ export const MediaDatabase = {
 								return subject;
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject.discs, path + "." + "discs");
+						})(subject["discs"], path + "[\"discs\"]");
 						((subject, path) => {
 							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
@@ -522,7 +532,7 @@ export const MediaDatabase = {
 								return subject;
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject.tracks, path + "." + "tracks");
+						})(subject["tracks"], path + "[\"tracks\"]");
 						((subject, path) => {
 							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
@@ -531,7 +541,7 @@ export const MediaDatabase = {
 								return subject;
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject.album_artists, path + "." + "album_artists");
+						})(subject["album_artists"], path + "[\"album_artists\"]");
 						((subject, path) => {
 							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
@@ -540,11 +550,11 @@ export const MediaDatabase = {
 								return subject;
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject.track_artists, path + "." + "track_artists");
+						})(subject["track_artists"], path + "[\"track_artists\"]");
 						return subject;
 					}
 					throw "Type guard \"Object\" failed at \"" + path + "\"!";
-				})(subject.audio, path + "." + "audio");
+				})(subject["audio"], path + "[\"audio\"]");
 				((subject, path) => {
 					if ((subject != null) && (subject.constructor === globalThis.Object)) {
 						((subject, path) => {
@@ -555,7 +565,7 @@ export const MediaDatabase = {
 								return subject;
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject.movie_parts, path + "." + "movie_parts");
+						})(subject["movie_parts"], path + "[\"movie_parts\"]");
 						((subject, path) => {
 							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
@@ -564,7 +574,7 @@ export const MediaDatabase = {
 								return subject;
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject.movies, path + "." + "movies");
+						})(subject["movies"], path + "[\"movies\"]");
 						((subject, path) => {
 							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
@@ -573,7 +583,7 @@ export const MediaDatabase = {
 								return subject;
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject.shows, path + "." + "shows");
+						})(subject["shows"], path + "[\"shows\"]");
 						((subject, path) => {
 							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
@@ -582,7 +592,7 @@ export const MediaDatabase = {
 								return subject;
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject.seasons, path + "." + "seasons");
+						})(subject["seasons"], path + "[\"seasons\"]");
 						((subject, path) => {
 							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
@@ -591,7 +601,7 @@ export const MediaDatabase = {
 								return subject;
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject.episodes, path + "." + "episodes");
+						})(subject["episodes"], path + "[\"episodes\"]");
 						((subject, path) => {
 							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
@@ -600,7 +610,7 @@ export const MediaDatabase = {
 								return subject;
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject.subtitles, path + "." + "subtitles");
+						})(subject["subtitles"], path + "[\"subtitles\"]");
 						((subject, path) => {
 							if ((subject != null) && (subject.constructor === globalThis.Array)) {
 								for (let i = 0; i < subject.length; i++) {
@@ -609,11 +619,11 @@ export const MediaDatabase = {
 								return subject;
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject.cues, path + "." + "cues");
+						})(subject["cues"], path + "[\"cues\"]");
 						return subject;
 					}
 					throw "Type guard \"Object\" failed at \"" + path + "\"!";
-				})(subject.video, path + "." + "video");
+				})(subject["video"], path + "[\"video\"]");
 				((subject, path) => {
 					if ((subject != null) && (subject.constructor === globalThis.Array)) {
 						for (let i = 0; i < subject.length; i++) {
@@ -622,7 +632,7 @@ export const MediaDatabase = {
 						return subject;
 					}
 					throw "Type guard \"Array\" failed at \"" + path + "\"!";
-				})(subject.files, path + "." + "files");
+				})(subject["files"], path + "[\"files\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -638,7 +648,7 @@ export const MediaDatabase = {
 	}
 };
 
-export type SubtitlesDatabase = { [key: string]: string[] };
+export type SubtitlesDatabase = { [key: string]: undefined | string[] };
 
 export const SubtitlesDatabase = {
 	as(subject: any, path: string = ""): SubtitlesDatabase {
@@ -671,16 +681,16 @@ export const SubtitlesDatabase = {
 };
 
 export type AudiolistEntry = {
-	audiolist_id: string,
-	title: string
+	"audiolist_id": string,
+	"title": string
 };
 
 export const AudiolistEntry = {
 	as(subject: any, path: string = ""): AudiolistEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.audiolist_id, path + "." + "audiolist_id");
-				(autoguard.guards.String.as)(subject.title, path + "." + "title");
+				(autoguard.guards.String.as)(subject["audiolist_id"], path + "[\"audiolist_id\"]");
+				(autoguard.guards.String.as)(subject["title"], path + "[\"title\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -697,18 +707,18 @@ export const AudiolistEntry = {
 };
 
 export type AudiolistItemEntry = {
-	audiolist_id: string,
-	track_id: string,
-	number: number
+	"audiolist_id": string,
+	"track_id": string,
+	"number": number
 };
 
 export const AudiolistItemEntry = {
 	as(subject: any, path: string = ""): AudiolistItemEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.audiolist_id, path + "." + "audiolist_id");
-				(autoguard.guards.String.as)(subject.track_id, path + "." + "track_id");
-				(autoguard.guards.Number.as)(subject.number, path + "." + "number");
+				(autoguard.guards.String.as)(subject["audiolist_id"], path + "[\"audiolist_id\"]");
+				(autoguard.guards.String.as)(subject["track_id"], path + "[\"track_id\"]");
+				(autoguard.guards.Number.as)(subject["number"], path + "[\"number\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -725,8 +735,8 @@ export const AudiolistItemEntry = {
 };
 
 export type ListDatabase = {
-	audiolists: AudiolistEntry[],
-	audiolist_items: AudiolistItemEntry[]
+	"audiolists": AudiolistEntry[],
+	"audiolist_items": AudiolistItemEntry[]
 };
 
 export const ListDatabase = {
@@ -741,7 +751,7 @@ export const ListDatabase = {
 						return subject;
 					}
 					throw "Type guard \"Array\" failed at \"" + path + "\"!";
-				})(subject.audiolists, path + "." + "audiolists");
+				})(subject["audiolists"], path + "[\"audiolists\"]");
 				((subject, path) => {
 					if ((subject != null) && (subject.constructor === globalThis.Array)) {
 						for (let i = 0; i < subject.length; i++) {
@@ -750,7 +760,7 @@ export const ListDatabase = {
 						return subject;
 					}
 					throw "Type guard \"Array\" failed at \"" + path + "\"!";
-				})(subject.audiolist_items, path + "." + "audiolist_items");
+				})(subject["audiolist_items"], path + "[\"audiolist_items\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -767,18 +777,18 @@ export const ListDatabase = {
 };
 
 export type UserEntry = {
-	user_id: string,
-	username: string,
-	password: string
+	"user_id": string,
+	"username": string,
+	"password": string
 };
 
 export const UserEntry = {
 	as(subject: any, path: string = ""): UserEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.user_id, path + "." + "user_id");
-				(autoguard.guards.String.as)(subject.username, path + "." + "username");
-				(autoguard.guards.String.as)(subject.password, path + "." + "password");
+				(autoguard.guards.String.as)(subject["user_id"], path + "[\"user_id\"]");
+				(autoguard.guards.String.as)(subject["username"], path + "[\"username\"]");
+				(autoguard.guards.String.as)(subject["password"], path + "[\"password\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -795,18 +805,18 @@ export const UserEntry = {
 };
 
 export type AuthToken = {
-	username: string,
-	selector: string,
-	validator_hash: string
+	"username": string,
+	"selector": string,
+	"validator_hash": string
 };
 
 export const AuthToken = {
 	as(subject: any, path: string = ""): AuthToken {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject.username, path + "." + "username");
-				(autoguard.guards.String.as)(subject.selector, path + "." + "selector");
-				(autoguard.guards.String.as)(subject.validator_hash, path + "." + "validator_hash");
+				(autoguard.guards.String.as)(subject["username"], path + "[\"username\"]");
+				(autoguard.guards.String.as)(subject["selector"], path + "[\"selector\"]");
+				(autoguard.guards.String.as)(subject["validator_hash"], path + "[\"validator_hash\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -823,8 +833,8 @@ export const AuthToken = {
 };
 
 export type UserDatabase = {
-	users: UserEntry[],
-	tokens: AuthToken[]
+	"users": UserEntry[],
+	"tokens": AuthToken[]
 };
 
 export const UserDatabase = {
@@ -839,7 +849,7 @@ export const UserDatabase = {
 						return subject;
 					}
 					throw "Type guard \"Array\" failed at \"" + path + "\"!";
-				})(subject.users, path + "." + "users");
+				})(subject["users"], path + "[\"users\"]");
 				((subject, path) => {
 					if ((subject != null) && (subject.constructor === globalThis.Array)) {
 						for (let i = 0; i < subject.length; i++) {
@@ -848,7 +858,7 @@ export const UserDatabase = {
 						return subject;
 					}
 					throw "Type guard \"Array\" failed at \"" + path + "\"!";
-				})(subject.tokens, path + "." + "tokens");
+				})(subject["tokens"], path + "[\"tokens\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -865,51 +875,51 @@ export const UserDatabase = {
 };
 
 export type Autoguard = {
-	ArtistEntry: ArtistEntry,
-	AlbumEntry: AlbumEntry,
-	DiscEntry: DiscEntry,
-	TrackEntry: TrackEntry,
-	AlbumArtistEntry: AlbumArtistEntry,
-	TrackArtistEntry: TrackArtistEntry,
-	MovieEntry: MovieEntry,
-	MoviePartEntry: MoviePartEntry,
-	ShowEntry: ShowEntry,
-	SeasonEntry: SeasonEntry,
-	EpisodeEntry: EpisodeEntry,
-	SubtitleEntry: SubtitleEntry,
-	CueEntry: CueEntry,
-	FileEntry: FileEntry,
-	MediaDatabase: MediaDatabase,
-	SubtitlesDatabase: SubtitlesDatabase,
-	AudiolistEntry: AudiolistEntry,
-	AudiolistItemEntry: AudiolistItemEntry,
-	ListDatabase: ListDatabase,
-	UserEntry: UserEntry,
-	AuthToken: AuthToken,
-	UserDatabase: UserDatabase
+	"ArtistEntry": ArtistEntry,
+	"AlbumEntry": AlbumEntry,
+	"DiscEntry": DiscEntry,
+	"TrackEntry": TrackEntry,
+	"AlbumArtistEntry": AlbumArtistEntry,
+	"TrackArtistEntry": TrackArtistEntry,
+	"MovieEntry": MovieEntry,
+	"MoviePartEntry": MoviePartEntry,
+	"ShowEntry": ShowEntry,
+	"SeasonEntry": SeasonEntry,
+	"EpisodeEntry": EpisodeEntry,
+	"SubtitleEntry": SubtitleEntry,
+	"CueEntry": CueEntry,
+	"FileEntry": FileEntry,
+	"MediaDatabase": MediaDatabase,
+	"SubtitlesDatabase": SubtitlesDatabase,
+	"AudiolistEntry": AudiolistEntry,
+	"AudiolistItemEntry": AudiolistItemEntry,
+	"ListDatabase": ListDatabase,
+	"UserEntry": UserEntry,
+	"AuthToken": AuthToken,
+	"UserDatabase": UserDatabase
 };
 
 export const Autoguard = {
-	ArtistEntry: ArtistEntry,
-	AlbumEntry: AlbumEntry,
-	DiscEntry: DiscEntry,
-	TrackEntry: TrackEntry,
-	AlbumArtistEntry: AlbumArtistEntry,
-	TrackArtistEntry: TrackArtistEntry,
-	MovieEntry: MovieEntry,
-	MoviePartEntry: MoviePartEntry,
-	ShowEntry: ShowEntry,
-	SeasonEntry: SeasonEntry,
-	EpisodeEntry: EpisodeEntry,
-	SubtitleEntry: SubtitleEntry,
-	CueEntry: CueEntry,
-	FileEntry: FileEntry,
-	MediaDatabase: MediaDatabase,
-	SubtitlesDatabase: SubtitlesDatabase,
-	AudiolistEntry: AudiolistEntry,
-	AudiolistItemEntry: AudiolistItemEntry,
-	ListDatabase: ListDatabase,
-	UserEntry: UserEntry,
-	AuthToken: AuthToken,
-	UserDatabase: UserDatabase
+	"ArtistEntry": ArtistEntry,
+	"AlbumEntry": AlbumEntry,
+	"DiscEntry": DiscEntry,
+	"TrackEntry": TrackEntry,
+	"AlbumArtistEntry": AlbumArtistEntry,
+	"TrackArtistEntry": TrackArtistEntry,
+	"MovieEntry": MovieEntry,
+	"MoviePartEntry": MoviePartEntry,
+	"ShowEntry": ShowEntry,
+	"SeasonEntry": SeasonEntry,
+	"EpisodeEntry": EpisodeEntry,
+	"SubtitleEntry": SubtitleEntry,
+	"CueEntry": CueEntry,
+	"FileEntry": FileEntry,
+	"MediaDatabase": MediaDatabase,
+	"SubtitlesDatabase": SubtitlesDatabase,
+	"AudiolistEntry": AudiolistEntry,
+	"AudiolistItemEntry": AudiolistItemEntry,
+	"ListDatabase": ListDatabase,
+	"UserEntry": UserEntry,
+	"AuthToken": AuthToken,
+	"UserDatabase": UserDatabase
 };

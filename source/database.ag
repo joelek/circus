@@ -33,7 +33,8 @@
 	MovieEntry: {
 		movie_id: string,
 		title: string,
-		year: number
+		year: number,
+		poster_file_id?: string
 	},
 	MoviePartEntry: {
 		movie_part_id: string,

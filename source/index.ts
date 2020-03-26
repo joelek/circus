@@ -742,6 +742,25 @@ db.audio.tracks.forEach((track) => {
 	}
 });
 
+for (const movie_part of db.video.movie_parts) {
+	const movie_part_file = files_index[movie_part.file_id];
+	if (movie_part_file == null) {
+		continue;
+	}
+	const movie = movies_index[movie_part.movie_id];
+	if (movie == null) {
+		continue;
+	}
+	const movie_part_file_directory = movie_part_file.path.slice(0, -1).join("/");
+	for (const image_file of image_files) {
+		const image_file_directory = image_file.path.slice(0, -1).join("/");
+		if (image_file_directory === movie_part_file_directory) {
+			movie.poster_file_id = image_file.file_id;
+			break;
+		}
+	}
+}
+
 let vtt_files = db.files.filter(file => /^text[/]vtt$/.test(file.mime));
 
 db.video.episodes.forEach((episode) => {
