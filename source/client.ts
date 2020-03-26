@@ -1,5 +1,6 @@
 import * as api_response from "./api_response";
 import * as utils from "./utils";
+import * as languages from "./languages";
 
 let style = document.createElement('style');
 style.innerText = `
@@ -192,6 +193,14 @@ let play = (index: number): void => {
 			for (let i = 0; i < md.subtitles.length; i++) {
 				let st = md.subtitles[i];
 				let e = document.createElement('track');
+				if (st.language != null) {
+					let language = languages.db[st.language];
+					if (language != null) {
+						e.label = language;
+						e.srclang = st.language;
+						e.kind = "subtitles";
+					}
+				}
 				e.src = `/files/${st.file_id}/?token=${token}`;
 				video.appendChild(e);
 			}

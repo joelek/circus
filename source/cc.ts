@@ -2,6 +2,7 @@ import * as libdb from "./database";
 import * as libfs from "fs";
 import * as data from "./data";
 import * as utils from "./utils";
+import * as languages from "./languages";
 
 var Client  = require('castv2-client').Client;
 var DefaultMediaReceiver = require('castv2-client').DefaultMediaReceiver;
@@ -60,7 +61,7 @@ type STTrack = {
 	trackContentType: string;
 	subtype: 'SUBTITLES',
 	language: string;
-	name: null,
+	name: string | null,
 	customData: null
 };
 
@@ -83,11 +84,8 @@ let make_media_object = (): MediaObject | null => {
 	let subtitle = 'Subtitle';
 	let image = '';
 	let sttracks = new Array<STTrack>();
-	let langmap: { [id: string]: string } = {
-		eng: 'en-US',
-		swe: 'sv-SE'
-	};
 	let makesttrack = (s: libdb.SubtitleEntry, i: number): STTrack => {
+		let language = s.language || "eng";
 		return {
 			trackId: i,
 			type: 'TEXT',
@@ -95,8 +93,8 @@ let make_media_object = (): MediaObject | null => {
 			trackContentId: `https://ap.joelek.se/files/${s.file_id}/?token=${gtoken}`,
 			trackContentType: 'text/vtt',
 			subtype: 'SUBTITLES',
-			language: s.language !== null ? langmap[s.language] || langmap.eng : langmap.eng,
-			name: null,
+			language: language,
+			name: languages.db[language] || "English",
 			customData: null
 		};
 	};
