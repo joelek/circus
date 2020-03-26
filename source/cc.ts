@@ -71,6 +71,14 @@ let gmedia: Media | null = null;
 let gtoken: string | null = null;
 let gplayer: Player | null = null;
 
+function getLanguage(language: string | null): string {
+	let entry = languages.db[language || "eng"] || languages.db["eng"];
+	return [
+		entry.iso639_1,
+		entry.iso3166_1
+	].join("-");
+}
+
 let make_media_object = (): MediaObject | null => {
 	if (gcontext === null || gindex === null) {
 		return null;
@@ -85,7 +93,6 @@ let make_media_object = (): MediaObject | null => {
 	let image = '';
 	let sttracks = new Array<STTrack>();
 	let makesttrack = (s: libdb.SubtitleEntry, i: number): STTrack => {
-		let language = s.language || "eng";
 		return {
 			trackId: i,
 			type: 'TEXT',
@@ -93,7 +100,7 @@ let make_media_object = (): MediaObject | null => {
 			trackContentId: `https://ap.joelek.se/files/${s.file_id}/?token=${gtoken}`,
 			trackContentType: 'text/vtt',
 			subtype: 'SUBTITLES',
-			language: languages.db[language]?.iso639_1 || "en",
+			language: getLanguage(s.language),
 			name: null,
 			customData: null
 		};
