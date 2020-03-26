@@ -118,7 +118,7 @@ let make_media_object = (): MediaObject | null => {
 				let show =  data.media.video.shows.find(show => show.show_id === (season as libdb.SeasonEntry).show_id);
 				if (show !== undefined){
 					title = episode.title;
-					subtitle = [ show.title, `s${season.number}e${episode.number}`].join(' \u2022 ');
+					subtitle = [ show.title, `s${("00" + season.number).slice(-2)}e${("00" + episode.number).slice(-2)}`].join(' \u2022 ');
 					sttracks =  data.media.video.subtitles.filter(st => st.episode_id === (episode as libdb.EpisodeEntry).episode_id).map(makesttrack);
 				}
 			}
