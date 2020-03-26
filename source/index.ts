@@ -589,7 +589,9 @@ let visit_video = (node: string): void => {
 		add_movie({
 			movie_id: movie_id,
 			title: tag.title,
-			year: tag.year
+			year: tag.year,
+			poster_file_id: null,
+			summary: tag.comment
 		});
 		return;
 	}

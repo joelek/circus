@@ -184,7 +184,8 @@ export type MovieEntry = {
 	"movie_id": string,
 	"title": string,
 	"year": number,
-	"poster_file_id"?: string
+	"summary": (string | null),
+	"poster_file_id": (string | null)
 };
 
 export const MovieEntry = {
@@ -196,10 +197,19 @@ export const MovieEntry = {
 				(autoguard.guards.Number.as)(subject["year"], path + "[\"year\"]");
 				((subject, path) => {
 					try {
-						return (autoguard.guards.Undefined.as)(subject, path);
+						return (autoguard.guards.String.as)(subject, path);
 					} catch (error) {}
 					try {
+						return (autoguard.guards.Null.as)(subject, path);
+					} catch (error) {}
+					throw "Type guard \"Union\" failed at \"" + path + "\"!";
+				})(subject["summary"], path + "[\"summary\"]");
+				((subject, path) => {
+					try {
 						return (autoguard.guards.String.as)(subject, path);
+					} catch (error) {}
+					try {
+						return (autoguard.guards.Null.as)(subject, path);
 					} catch (error) {}
 					throw "Type guard \"Union\" failed at \"" + path + "\"!";
 				})(subject["poster_file_id"], path + "[\"poster_file_id\"]");

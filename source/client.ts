@@ -491,6 +491,9 @@ let updateviewforuri = (uri: string): void => {
 			d.innerText = `${response.title} (${response.year})`;
 			d.style.setProperty('font-size', '24px');
 			mount.appendChild(d);
+			let d2 = document.createElement('div');
+			d2.innerText = response.summary || "";
+			mount.appendChild(d2);
 			let wrap = document.createElement('div');
 			let img = document.createElement('img');
 			img.src = `/files/${response.poster_file_id}/?token=${token}`;
