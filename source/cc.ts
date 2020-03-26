@@ -61,7 +61,7 @@ type STTrack = {
 	trackContentType: string;
 	subtype: 'SUBTITLES',
 	language: string;
-	name: string | null,
+	name: null,
 	customData: null
 };
 
@@ -94,7 +94,7 @@ let make_media_object = (): MediaObject | null => {
 			trackContentType: 'text/vtt',
 			subtype: 'SUBTITLES',
 			language: language,
-			name: languages.db[language] || "English",
+			name: null,
 			customData: null
 		};
 	};
