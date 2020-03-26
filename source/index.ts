@@ -815,29 +815,33 @@ db.video.subtitles.forEach((subtitle_entry) => {
 		return;
 	}
 	let path = [ ".", ...file_entry.path ].join("/");
-	let string = libfs.readFileSync(path, { encoding: "utf8" });
-	let track = libvtt.decode(string);
-	let metadata = JSON.parse(track.head.metadata);
-	if (typeof metadata === "object" && typeof metadata.langauge === "string") {
-		subtitle_entry.language = metadata.language;
-	}
-	track.body.cues.forEach((cue) => {
-		let hash = libcrypto.createHash("md5");
-		hash.update(subtitle_entry.file_id);
-		hash.update("" + cue.start_ms);
-		let cue_id = hash.digest("hex");
-		let subtitle_id = subtitle_entry.subtitle_id;
-		let start_ms = cue.start_ms;
-		let duration_ms = cue.duration_ms;
-		let lines = cue.lines.slice();
-		db.video.cues.push({
-			cue_id,
-			subtitle_id,
-			start_ms,
-			duration_ms,
-			lines
+	try {
+		let string = libfs.readFileSync(path, { encoding: "utf8" });
+		let track = libvtt.decode(string);
+		let metadata = JSON.parse(track.head.metadata);
+		if (typeof metadata === "object" && typeof metadata.langauge === "string") {
+			subtitle_entry.language = metadata.language;
+		}
+		track.body.cues.forEach((cue) => {
+			let hash = libcrypto.createHash("md5");
+			hash.update(subtitle_entry.file_id);
+			hash.update("" + cue.start_ms);
+			let cue_id = hash.digest("hex");
+			let subtitle_id = subtitle_entry.subtitle_id;
+			let start_ms = cue.start_ms;
+			let duration_ms = cue.duration_ms;
+			let lines = cue.lines.slice();
+			db.video.cues.push({
+				cue_id,
+				subtitle_id,
+				start_ms,
+				duration_ms,
+				lines
+			});
 		});
-	});
+	} catch (error) {
+		console.log(path);
+	}
 });
 
 let cue_search_index = new Map<string, Set<string>>();
