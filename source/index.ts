@@ -819,7 +819,7 @@ db.video.subtitles.forEach((subtitle_entry) => {
 		let string = libfs.readFileSync(path, { encoding: "utf8" });
 		let track = libvtt.decode(string);
 		let metadata = JSON.parse(track.head.metadata);
-		if (typeof metadata === "object" && typeof metadata.langauge === "string") {
+		if (typeof metadata === "object" && typeof metadata.language === "string") {
 			subtitle_entry.language = metadata.language;
 		}
 		track.body.cues.forEach((cue) => {
