@@ -59,7 +59,8 @@
 		file_id: string,
 		title: string,
 		number: number,
-		duration: number
+		duration: number,
+		summary: (string | null)
 	},
 	SubtitleEntry: {
 		subtitle_id: string,

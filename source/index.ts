@@ -514,7 +514,8 @@ let visit_video = (node: string): void => {
 			file_id: file_id,
 			title: tag.title,
 			number: tag.episode,
-			duration: tag.duration
+			duration: tag.duration,
+			summary: tag.comment
 		});
 		return;
 	}

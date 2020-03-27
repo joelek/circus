@@ -320,7 +320,8 @@ export type EpisodeEntry = {
 	"file_id": string,
 	"title": string,
 	"number": number,
-	"duration": number
+	"duration": number,
+	"summary": (string | null)
 };
 
 export const EpisodeEntry = {
@@ -333,6 +334,15 @@ export const EpisodeEntry = {
 				(autoguard.guards.String.as)(subject["title"], path + "[\"title\"]");
 				(autoguard.guards.Number.as)(subject["number"], path + "[\"number\"]");
 				(autoguard.guards.Number.as)(subject["duration"], path + "[\"duration\"]");
+				((subject, path) => {
+					try {
+						return (autoguard.guards.String.as)(subject, path);
+					} catch (error) {}
+					try {
+						return (autoguard.guards.Null.as)(subject, path);
+					} catch (error) {}
+					throw "Type guard \"Union\" failed at \"" + path + "\"!";
+				})(subject["summary"], path + "[\"summary\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";

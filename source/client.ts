@@ -474,6 +474,9 @@ let updateviewforuri = (uri: string): void => {
 			let d2 = document.createElement('div');
 			d2.innerText = format_duration(response.duration);
 			mount.appendChild(d2);
+			let d4 = document.createElement('div');
+			d4.innerText = response.summary || "";
+			mount.appendChild(d4);
 			let context: Context = {
 				files: [ response.file_id ]
 			};
