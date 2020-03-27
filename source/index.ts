@@ -727,10 +727,10 @@ db.audio.tracks.forEach((track) => {
 	if (track_file === undefined) {
 		return;
 	}
-	for (let i = track_file.path.length - 2; i >= 0; i--) {
-		let path = track_file.path[i];
-		let image_file = image_files.find((im) => im.path.slice(-1)[0].split('.')[0] === path);
-		if (image_file !== undefined) {
+	const track_file_directory = track_file.path.slice(0, -1).join("/");
+	for (const image_file of image_files) {
+		const image_file_directory = image_file.path.slice(0, -1).join("/");
+		if (image_file_directory === track_file_directory) {
 			let disc = discs_index[track.disc_id];
 			if (disc === undefined) {
 				continue;
