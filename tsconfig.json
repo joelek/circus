@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"composite": true,
+		"composite": false,
 		"module": "none",
 		"moduleResolution": "node",
 		"noImplicitAny": true,
