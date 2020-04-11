@@ -40,18 +40,17 @@ let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>)
 	return out;
 };
 
-let send_data = (path: string[], mime: string, authorize: boolean, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
+let send_data = (file_id: string, path: string[], mime: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	if (request.url === undefined) {
 		throw new Error();
 	}
-	if (authorize) {
-		try {
-			var url = liburl.parse(request.url, true);
-			auth.getUsername(url.query.token as string);
-		} catch (error) {
-			response.writeHead(401, {});
-			return response.end();
-		}
+	let username = "";
+	try {
+		var url = liburl.parse(request.url, true);
+		username = auth.getUsername(url.query.token as string);
+	} catch (error) {
+		response.writeHead(401, {});
+		return response.end();
 	}
 	let filename = path.join(libpath.sep);
 	let fd = libfs.openSync(filename, 'r');
@@ -81,6 +80,11 @@ let send_data = (path: string[], mime: string, authorize: boolean, request: libh
 		var s = libfs.createReadStream(filename, {
 			start: offset,
 			end: offset2
+		});
+		s.addListener("close", () => {
+			if (offset + s.bytesRead === size) {
+				data.addStream(username, file_id);
+			}
 		});
 		s.on('open', function () {
 			s.pipe(response);
@@ -145,16 +149,16 @@ let httpsServer = libhttps.createServer({
 			let file_id = parts[1];
 			let file = data.files_index[file_id];
 			if (file !== undefined) {
-				return send_data(file.path, file.mime, true, request, response);
+				return send_data(file_id, file.path, file.mime, request, response);
 			}
 			let cue = data.cues_index[file_id];
 			if (cue !== undefined) {
 				let filename = [".", "private", "memes", cue.cue_id];
 				if (libfs.existsSync(filename.join("/"))) {
-					return send_data(filename, "image/gif", false, request, response);
+					return send_data(file_id, filename, "image/gif", request, response);
 				} else {
 					subsearch.generateMeme(filename, cue, () => {
-						return send_data(filename, "image/gif", false, request, response);
+						return send_data(file_id, filename, "image/gif", request, response);
 					});
 					return;
 				}

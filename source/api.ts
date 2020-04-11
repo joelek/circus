@@ -1,10 +1,17 @@
+import * as liburl from "url";
 import * as libhttp from "http";
 import * as libcc from "./cc";
 import * as libauth from "./auth";
 import * as libdb from "./database";
 import * as libutils from "./utils";
+import * as auth from "./auth";
 import * as api_response from "./api_response";
 import * as data from "./data";
+
+function getUsername(request: libhttp.IncomingMessage): string {
+	var url = liburl.parse(request.url || "/", true);
+	return auth.getUsername(url.query.token as string);
+}
 
 function searchForCues(query: string): Array<string> {
 	let terms = libutils.getSearchTerms(query);
@@ -245,6 +252,7 @@ class EpisodeRoute implements Route<api_response.ApiRequest, api_response.Episod
 	}
 
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
 		if (request.url === undefined) {
 			throw new Error();
 		}
@@ -261,8 +269,10 @@ class EpisodeRoute implements Route<api_response.ApiRequest, api_response.Episod
 			.filter((subtitle) => {
 				return subtitle.episode_id === (episode as libdb.EpisodeEntry).episode_id
 			});
+		let streamed = data.hasStreamed(username, episode.file_id);
 		let payload: api_response.EpisodeResponse = {
 			...episode,
+			streamed,
 			subtitles
 		};
 		response.writeHead(200);
@@ -280,6 +290,7 @@ class ShowRoute implements Route<api_response.ApiRequest, api_response.ShowRespo
 	}
 
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
 		if (request.url === undefined) {
 			throw new Error();
 		}
@@ -306,8 +317,10 @@ class ShowRoute implements Route<api_response.ApiRequest, api_response.ShowRespo
 							.filter((subtitle) => {
 								return subtitle.episode_id === episode.episode_id
 							});
+						let streamed = data.hasStreamed(username, episode.file_id);
 						let payload: api_response.EpisodeResponse = {
 							...episode,
+							streamed,
 							subtitles
 						};
 						return payload;
@@ -432,6 +445,7 @@ class MovieRoute implements Route<api_response.AuthRequest, api_response.MovieRe
 	}
 
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
 		if (request.url === undefined) {
 			throw new Error();
 		}
@@ -451,8 +465,10 @@ class MovieRoute implements Route<api_response.AuthRequest, api_response.MovieRe
 				.filter((subtitle) => {
 					return subtitle.movie_part_id === movie_part.movie_part_id
 				});
+			let streamed = data.hasStreamed(username, movie_part.file_id);
 			return {
 				...movie_part,
+				streamed,
 				subtitles
 			};
 		});

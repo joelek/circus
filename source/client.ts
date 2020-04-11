@@ -85,6 +85,11 @@ style.innerText = `
 		margin-top: -8px;
 		margin-left: -8px;
 	}
+
+	.watched::before {
+		content: "\u2022";
+		color: rgb(255, 207, 0);
+	}
 `;
 document.head.appendChild(style);
 
@@ -423,7 +428,7 @@ let updateviewforuri = (uri: string): void => {
 		});
 		mount.appendChild(d3);
 	} else if ((parts = /^video[/]shows[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.ShowResponse>(`/api/video/shows/${parts[1]}/`, {}, (status, response) => {
+		req<api_response.ApiRequest, api_response.ShowResponse>(`/api/video/shows/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let d = document.createElement('div');
 			d.innerText = `${response.title}`;
 			d.style.setProperty('font-size', '24px');
@@ -444,6 +449,9 @@ let updateviewforuri = (uri: string): void => {
 						subtitles: episode.subtitles
 					};
 					let d2 = document.createElement('div');
+					if (episode.streamed) {
+						d2.classList.add("watched");
+					}
 					d2.innerText = `${episode.title} ${format_duration(episode.duration)}`;
 					d2.addEventListener('click', () => {
 						set_context(context);
@@ -498,7 +506,7 @@ let updateviewforuri = (uri: string): void => {
 			mount.appendChild(d3);
 		});
 	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.MovieResponse>(`/api/video/movies/${parts[1]}/`, {}, (status, response) => {
+		req<api_response.ApiRequest, api_response.MovieResponse>(`/api/video/movies/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let d = document.createElement('div');
 			d.innerText = `${response.title} (${response.year})`;
 			d.style.setProperty('font-size', '24px');
@@ -521,6 +529,9 @@ let updateviewforuri = (uri: string): void => {
 					subtitles: movie_part.subtitles
 				};
 				let d3 = document.createElement('div');
+				if (movie_part.streamed) {
+					d3.classList.add("watched");
+				}
 				d3.innerText = `part ${movie_part.number}`;
 				d3.addEventListener('click', () => {
 					set_context(context);

@@ -894,6 +894,66 @@ export const UserDatabase = {
 	}
 };
 
+export type Stream = {
+	"username": string,
+	"file_id": string,
+	"timestamp_ms": number
+};
+
+export const Stream = {
+	as(subject: any, path: string = ""): Stream {
+		return ((subject, path) => {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
+				(autoguard.guards.String.as)(subject["username"], path + "[\"username\"]");
+				(autoguard.guards.String.as)(subject["file_id"], path + "[\"file_id\"]");
+				(autoguard.guards.Number.as)(subject["timestamp_ms"], path + "[\"timestamp_ms\"]");
+				return subject;
+			}
+			throw "Type guard \"Object\" failed at \"" + path + "\"!";
+		})(subject, path);
+	},
+	is(subject: any): subject is Stream {
+		try {
+			Stream.as(subject);
+		} catch (error) {
+			return false;
+		}
+		return true;
+	}
+};
+
+export type StreamDatabase = {
+	"streams": Stream[]
+};
+
+export const StreamDatabase = {
+	as(subject: any, path: string = ""): StreamDatabase {
+		return ((subject, path) => {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
+				((subject, path) => {
+					if ((subject != null) && (subject.constructor === globalThis.Array)) {
+						for (let i = 0; i < subject.length; i++) {
+							(Stream.as)(subject[i], path + "[" + i + "]");
+						}
+						return subject;
+					}
+					throw "Type guard \"Array\" failed at \"" + path + "\"!";
+				})(subject["streams"], path + "[\"streams\"]");
+				return subject;
+			}
+			throw "Type guard \"Object\" failed at \"" + path + "\"!";
+		})(subject, path);
+	},
+	is(subject: any): subject is StreamDatabase {
+		try {
+			StreamDatabase.as(subject);
+		} catch (error) {
+			return false;
+		}
+		return true;
+	}
+};
+
 export type Autoguard = {
 	"ArtistEntry": ArtistEntry,
 	"AlbumEntry": AlbumEntry,
@@ -916,7 +976,9 @@ export type Autoguard = {
 	"ListDatabase": ListDatabase,
 	"UserEntry": UserEntry,
 	"AuthToken": AuthToken,
-	"UserDatabase": UserDatabase
+	"UserDatabase": UserDatabase,
+	"Stream": Stream,
+	"StreamDatabase": StreamDatabase
 };
 
 export const Autoguard = {
@@ -941,5 +1003,7 @@ export const Autoguard = {
 	"ListDatabase": ListDatabase,
 	"UserEntry": UserEntry,
 	"AuthToken": AuthToken,
-	"UserDatabase": UserDatabase
+	"UserDatabase": UserDatabase,
+	"Stream": Stream,
+	"StreamDatabase": StreamDatabase
 };

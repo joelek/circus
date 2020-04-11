@@ -2,6 +2,7 @@ import * as libfs from "fs";
 import * as libdb from "./database";
 import * as utils from "./utils";
 
+export let streams = JSON.parse(libfs.readFileSync('./private/db/streams.json', "utf8")) as libdb.StreamDatabase;
 export let media = JSON.parse(libfs.readFileSync('./private/db/media.json', "utf8")) as libdb.MediaDatabase;
 export let lists = JSON.parse(libfs.readFileSync('./private/db/lists.json', "utf8")) as libdb.ListDatabase;
 export let users = JSON.parse(libfs.readFileSync('./private/db/users.json', "utf8")) as libdb.UserDatabase;
@@ -125,4 +126,41 @@ export function addToken(token: libdb.AuthToken): void {
 	users.tokens.push(token);
 	tokens_index[token.selector] = token;
 	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
+}
+
+export let streams_index: utils.Index<Set<string>> = {};
+
+for (let stream of streams.streams) {
+	let set = streams_index[stream.username];
+	if (set == null) {
+		set = new Set<string>();
+		streams_index[stream.username] = set;
+	}
+	set.add(stream.file_id);
+}
+
+export function addStream(username: string, file_id: string): void {
+	let set = streams_index[username];
+	if (set == null) {
+		set = new Set<string>();
+		streams_index[username] = set;
+	}
+	if (!set.has(file_id)) {
+		set.add(file_id);
+		let timestamp_ms = Date.now();
+		streams.streams.push({
+			username,
+			file_id,
+			timestamp_ms
+		});
+	}
+	libfs.writeFileSync("./private/db/streams.json", JSON.stringify(streams, null, "\t"));
+}
+
+export function hasStreamed(username: string, file_id: string): boolean {
+	let set = streams_index[username];
+	if (set == null) {
+		return false;
+	}
+	return set.has(file_id);
 }

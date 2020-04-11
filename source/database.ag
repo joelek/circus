@@ -128,5 +128,13 @@
 	UserDatabase: {
 		users: @UserEntry[],
 		tokens: @AuthToken[]
+	},
+	Stream: {
+		username: string,
+		file_id: string,
+		timestamp_ms: number
+	},
+	StreamDatabase: {
+		streams: @Stream[]
 	}
 }
