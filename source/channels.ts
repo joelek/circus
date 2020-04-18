@@ -2,6 +2,7 @@ import * as libcp from "child_process";
 import * as libhttp from "http";
 import * as data from "./data";
 import * as api_response from "./api_response";
+import * as database from "./database";
 
 type Supplier<A> = {
 	(): A
@@ -77,14 +78,16 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]([0-9]+).ts/.exec(url)) != null) {
 		const channel_id = Number.parseInt(parts[1]);
 		const timestamp_ms = Number.parseInt(parts[2]);
-		const stream_duration_ms = 1270 * 1000;
+		let media = data.media.video.episodes[channel_id];
+		let file = data.files_index[media.file_id] as database.FileEntry;
+		const stream_duration_ms = media.duration;
 		const stream_segments = Math.ceil(stream_duration_ms / (segment_length_s * 1000));
 		const duration_ms = stream_segments * (segment_length_s * 1000);
 		const repeats = Math.floor(timestamp_ms / duration_ms);
 		const offset_ms = timestamp_ms - (repeats * duration_ms);
 		const ffmpeg = libcp.spawn("ffmpeg", [
 			"-ss", `${offset_ms / 1000}`,
-			"-i", "./test.mp4",
+			"-i", file.path.join("/"),
 			"-vframes", `${25 * segment_length_s}`,
 			"-c:v", "copy",
 			"-c:a", "copy",
