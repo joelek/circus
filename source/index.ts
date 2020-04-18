@@ -277,23 +277,40 @@ let read_id3v24_tag = (file: string): ID3Tag => {
 	}
 };
 
-let get_id_for = (string: string): string => {
-	const hash = libcrypto.createHash('md5');
+function wordify(string: string): string[] {
+	return string
+		.toLowerCase()
+		.normalize("NFKD")
+		.replace(/[\|\/\\\_\-]/g, " ")
+		.replace(/[^a-z0-9 ]/g, "")
+		.trim()
+		.split(/[ ]+/g);
+}
+
+function makeFileId(...parts: string[]): string {
+	const string = parts.map(wordify).map((words) => {
+		return words.join(" ");
+	}).join(":");
+	const hash = libcrypto.createHash("md5");
 	hash.update(string);
-	return hash.digest('hex');
-};
+	return hash.digest("hex");
+}
+
+function zeropad(number: number, length: number): string {
+	return number.toString().padStart(length, "0");
+}
 
 let visit_audio = (node: string): void => {
 	let tag = read_id3v24_tag(node);
 	let nodes = node.split(libpath.sep);
-	let file_id = get_id_for(`${nodes.join(':')}`);
+	let file_id = makeFileId(...nodes);
 	add_file({
 		file_id: file_id,
 		path: nodes,
 		mime: 'audio/mp3'
 	});
 	if (tag.album_artists !== null && tag.album_name !== null && tag.year !== null && tag.disc !== null && tag.track !== null && tag.track_artists != null && tag.track_title !== null) {
-		let album_id = get_id_for(`${tag.album_artists.join(":")}:${tag.album_name}:${tag.year}`);
+		let album_id = makeFileId(...tag.album_artists, tag.album_name, zeropad(tag.year, 4));
 		add_album({
 			album_id: album_id,
 			title: tag.album_name,
@@ -301,7 +318,7 @@ let visit_audio = (node: string): void => {
 			cover_file_id: null
 		});
 		for (let album_artist of tag.album_artists) {
-			let album_artist_id = get_id_for(`${album_artist}`);
+			let album_artist_id = makeFileId(album_artist);
 			add_artist({
 				artist_id: album_artist_id,
 				title: album_artist
@@ -311,13 +328,13 @@ let visit_audio = (node: string): void => {
 				artist_id: album_artist_id
 			});
 		}
-		let disc_id = get_id_for(`${tag.album_artists.join(":")}:${tag.album_name}:${tag.year}:${tag.disc}`);
+		let disc_id = makeFileId(...tag.album_artists, tag.album_name, zeropad(tag.year, 4), zeropad(tag.disc, 2));
 		add_disc({
 			disc_id: disc_id,
 			album_id: album_id,
 			number: tag.disc
 		});
-		let track_id = get_id_for(`${tag.album_artists.join(":")}:${tag.album_name}:${tag.year}:${tag.disc}:${tag.track}`);
+		let track_id = makeFileId(...tag.album_artists, tag.album_name, zeropad(tag.year, 4), zeropad(tag.disc, 2), zeropad(tag.track, 2));
 		add_track({
 			track_id: track_id,
 			disc_id: disc_id,
@@ -327,7 +344,7 @@ let visit_audio = (node: string): void => {
 			duration: tag.duration
 		});
 		for (let track_artist of tag.track_artists) {
-			let track_artist_id = get_id_for(`${track_artist}`);
+			let track_artist_id = makeFileId(track_artist);
 			add_artist({
 				artist_id: track_artist_id,
 				title: track_artist
@@ -489,16 +506,16 @@ let read_mp4_tag = (file: string): MP4Tag => {
 let visit_video = (node: string): void => {
 	let tag = read_mp4_tag(node);
 	let nodes = node.split(libpath.sep);
-	let file_id = get_id_for(`${nodes.join(':')}`);
+	let file_id = makeFileId(...nodes);
 	if (tag.show !== null && tag.season !== null && tag.episode !== null && tag.title !== null) {
 		add_file({
 			file_id: file_id,
 			path: nodes,
 			mime: 'video/mp4'
 		});
-		let show_id = get_id_for(`${tag.show}`);
-		let season_id = get_id_for(`${tag.show}:${tag.season}`);
-		let episode_id = get_id_for(`${tag.show}:${tag.season}:${tag.episode}`);
+		let show_id = makeFileId(tag.show);
+		let season_id = makeFileId(tag.show, zeropad(tag.season, 2));
+		let episode_id = makeFileId(tag.show, zeropad(tag.season, 2), zeropad(tag.episode, 2));
 		add_show({
 			show_id: show_id,
 			title: tag.show
@@ -525,7 +542,7 @@ let visit_video = (node: string): void => {
 			path: nodes,
 			mime: 'audio/mp4'
 		});
-		let album_id = get_id_for(`${tag.album_artists.join(":")}:${tag.album}:${tag.year}`);
+		let album_id = makeFileId(...tag.album_artists, tag.album, zeropad(tag.year, 4));
 		add_album({
 			album_id: album_id,
 			title: tag.album,
@@ -533,7 +550,7 @@ let visit_video = (node: string): void => {
 			cover_file_id: null
 		});
 		for (let album_artist of tag.album_artists) {
-			let album_artist_id = get_id_for(`${album_artist}`);
+			let album_artist_id = makeFileId(album_artist);
 			add_artist({
 				artist_id: album_artist_id,
 				title: album_artist
@@ -543,13 +560,13 @@ let visit_video = (node: string): void => {
 				artist_id: album_artist_id
 			});
 		}
-		let disc_id = get_id_for(`${tag.album_artists.join(":")}:${tag.album}:${tag.year}:${tag.disc_number}`);
+		let disc_id = makeFileId(...tag.album_artists, tag.album, zeropad(tag.year, 4), zeropad(tag.disc_number, 2));
 		add_disc({
 			disc_id: disc_id,
 			album_id: album_id,
 			number: tag.disc_number
 		});
-		let track_id = get_id_for(`${tag.album_artists.join(":")}:${tag.album}:${tag.year}:${tag.disc_number}:${tag.track_number}`);
+		let track_id = makeFileId(...tag.album_artists, tag.album, zeropad(tag.year, 4), zeropad(tag.disc_number, 2), zeropad(tag.track_number, 2));
 		add_track({
 			track_id: track_id,
 			disc_id: disc_id,
@@ -559,7 +576,7 @@ let visit_video = (node: string): void => {
 			duration: tag.duration
 		});
 		for (let track_artist of tag.artists) {
-			let track_artist_id = get_id_for(`${track_artist}`);
+			let track_artist_id = makeFileId(track_artist);
 			add_artist({
 				artist_id: track_artist_id,
 				title: track_artist
@@ -577,9 +594,9 @@ let visit_video = (node: string): void => {
 			path: nodes,
 			mime: 'video/mp4'
 		});
-		let movie_id = get_id_for(`${tag.title}:${tag.year}`);
+		let movie_id = makeFileId(tag.title, zeropad(tag.year, 4));
 		let number = tag.track_number || 1;
-		let movie_part_id = get_id_for(`${tag.title}:${tag.year}:${number}`);
+		let movie_part_id = makeFileId(tag.title, zeropad(tag.year, 4), zeropad(number, 2));
 		add_movie_part({
 			movie_part_id,
 			movie_id,
@@ -610,7 +627,7 @@ let parse_png = (node: string): void => {
 			throw new Error();
 		}
 		let nodes = node.split(libpath.sep);
-		let file_id = get_id_for(`${nodes.join(':')}`);
+		let file_id = makeFileId(...nodes);
 		add_file({
 			file_id: file_id,
 			path: nodes,
@@ -635,7 +652,7 @@ let parse_jpeg = (node: string): void => {
 			throw new Error();
 		}
 		let nodes = node.split(libpath.sep);
-		let file_id = get_id_for(`${nodes.join(':')}`);
+		let file_id = makeFileId(...nodes);
 		add_file({
 			file_id: file_id,
 			path: nodes,
@@ -666,7 +683,7 @@ let parse_vtt = (node: string): void => {
 		}
 		let metadata = lines[0].substr(7);
 		let nodes = node.split(libpath.sep);
-		let file_id = get_id_for(`${nodes.join(':')}`);
+		let file_id = makeFileId(...nodes);
 		add_file({
 			file_id: file_id,
 			path: nodes,
@@ -776,7 +793,7 @@ db.video.episodes.forEach((episode) => {
 	for (let i = 0; i < vtt_files.length; i++) {
 		let vttbasename = vtt_files[i].path[vtt_files[i].path.length-1].split('.')[0];
 		if (basename === vttbasename) {
-			let subtitle_id = get_id_for(vtt_files[i].file_id);
+			let subtitle_id = makeFileId(vtt_files[i].file_id);
 			add_subtitle({
 				subtitle_id: subtitle_id,
 				episode_id: episode.episode_id,
@@ -798,7 +815,7 @@ db.video.movie_parts.forEach((movie_part) => {
 	for (let i = 0; i < vtt_files.length; i++) {
 		let vttbasename = vtt_files[i].path[vtt_files[i].path.length-1].split('.')[0];
 		if (basename === vttbasename) {
-			let subtitle_id = get_id_for(vtt_files[i].file_id);
+			let subtitle_id = makeFileId(vtt_files[i].file_id);
 			add_subtitle({
 				subtitle_id: subtitle_id,
 				episode_id: null,
