@@ -8,28 +8,6 @@ import * as auth from "./auth";
 import * as data from "./data";
 import * as subsearch from "./subsearch";
 
-let get_path_segments = (path: string): Array<string> => {
-	let raw_path_segments = path.split('/');
-	let path_segments = [];
-	for (let raw_path_segment of raw_path_segments) {
-		if (raw_path_segment === '') {
-			continue;
-		}
-		if (raw_path_segment === '.') {
-			continue;
-		}
-		if (raw_path_segment !== '..') {
-			path_segments.push(decodeURIComponent(raw_path_segment));
-			continue;
-		}
-		if (path_segments.length === 0) {
-			throw new Error(`bad req`);
-		}
-		path_segments.pop();
-	}
-	return path_segments;
-};
-
 let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>): Partial<libhttp.IncomingHttpHeaders> => {
 	let out: Partial<libhttp.IncomingHttpHeaders> = {};
 	for (let key in headers) {
