@@ -108,6 +108,41 @@ interface CuesResponse extends ApiResponse {
 	}>;
 }
 
+interface Affinities {
+	types: {
+		show: number,
+		movie: number
+	},
+	genres: {
+		comedy: number,
+		action: number,
+		cartoon: number,
+		romance: number,
+		fantasy: number
+	}
+}
+
+interface ChannelMetadata {
+	channel_id: number,
+	affinities: Affinities
+}
+
+interface ChannelsRequest extends ApiResponse {
+
+}
+
+interface ChannelsResponse extends ApiResponse {
+	channels: Array<ChannelMetadata>;
+}
+
+interface ChannelRequest extends ApiResponse {
+
+}
+
+interface ChannelResponse extends ApiResponse, ChannelMetadata {
+
+}
+
 export {
 	ApiRequest,
 	ApiResponse,
@@ -131,5 +166,11 @@ export {
 	AudiolistResponse,
 	AudiolistsResponse,
 	CuesRequest,
-	CuesResponse
+	CuesResponse,
+	Affinities,
+	ChannelMetadata,
+	ChannelsRequest,
+	ChannelsResponse,
+	ChannelRequest,
+	ChannelResponse
 };

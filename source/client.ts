@@ -214,6 +214,16 @@ let play = (index: number): void => {
 	video.play();
 	context_index = index;
 };
+let playfile = (path: string): void => {
+	context = null;
+	context_index = null;
+	metadata = null;
+	video.src = `${path}?token=${token}`;
+	while (video.lastChild !== null) {
+		video.removeChild(video.lastChild);
+	}
+	video.play();
+};
 let seek = (offset_ms: number): void => {
 	video.currentTime = (offset_ms / 1000);
 };
@@ -637,6 +647,34 @@ let updateviewforuri = (uri: string): void => {
 				results.appendChild(d);
 			}
 		});
+	} else if ((parts = /^video[/]channels[/]/.exec(uri)) !== null) {
+		req<api_response.ChannelsRequest, api_response.ChannelsResponse>(`/api/video/channels/`, {}, (status, response) => {
+			for (let channel of response.channels) {
+				let d = document.createElement('div');
+				d.classList.add("group");
+				let h2 = document.createElement("h2");
+				h2.innerText = `Channel ${channel.channel_id}`;
+				d.appendChild(h2);
+				let pre = document.createElement("pre");
+				pre.innerText = [
+					"Movies: " + channel.affinities.types.movie.toFixed(2),
+					"Shows: " + channel.affinities.types.show.toFixed(2),
+					"Action: " + channel.affinities.genres.action.toFixed(2),
+					"Cartoons: " + channel.affinities.genres.cartoon.toFixed(2),
+					"Comedies: " + channel.affinities.genres.comedy.toFixed(2),
+					"Fantasy: " + channel.affinities.genres.fantasy.toFixed(2),
+					"Romance: " + channel.affinities.genres.romance.toFixed(2)
+				].join("\n");
+				d.appendChild(pre);
+				let b = document.createElement("button");
+				b.textContent = "Watch";
+				b.addEventListener('click', () => {
+					playfile(`/media/channels/${channel.channel_id}/`);
+				});
+				d.appendChild(b);
+				mount.appendChild(d);
+			}
+		});
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
 		let d = document.createElement('div');
 		d.innerText = 'Shows';
@@ -654,6 +692,12 @@ let updateviewforuri = (uri: string): void => {
 		d.innerText = 'Cues';
 		d.addEventListener('click', () => {
 			navigate('video/cues/');
+		});
+		mount.appendChild(d);
+		d = document.createElement('div');
+		d.innerText = 'Channels';
+		d.addEventListener('click', () => {
+			navigate('video/channels/');
 		});
 		mount.appendChild(d);
 	} else {

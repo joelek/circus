@@ -5,6 +5,7 @@ import * as libpath from "path";
 import * as liburl from "url";
 import * as api from "./api";
 import * as auth from "./auth";
+import * as channels from "./channels";
 import * as data from "./data";
 import * as subsearch from "./subsearch";
 
@@ -144,6 +145,10 @@ let httpsServer = libhttps.createServer({
 			response.writeHead(404);
 			response.end();
 			return;
+		}
+		if (/^[/]media[/]channels[/]/.test(path)) {
+			let token = liburl.parse(request.url || "/", true).query.token as string;
+			return channels.handleRequest(token, request, response);
 		}
 		if (/^[/]api[/]/.test(path)) {
 			return api.handleRequest(request, response);

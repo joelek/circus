@@ -6,6 +6,7 @@ import * as libdb from "./database";
 import * as libutils from "./utils";
 import * as auth from "./auth";
 import * as api_response from "./api_response";
+import * as lchannels from "./channels";
 import * as data from "./data";
 
 function getUsername(request: libhttp.IncomingMessage): string {
@@ -669,6 +670,47 @@ class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResp
 	}
 }
 
+class ChannelsRoute implements Route<api_response.ChannelsRequest, api_response.ChannelsResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let channels = new Array<api_response.ChannelMetadata>();
+		for (let i = 0; i < 10; i++) {
+			channels.push({
+				channel_id: i,
+				affinities: lchannels.getAffinitiesForChannel(i)
+			});
+		}
+		let payload: api_response.ChannelsResponse = {
+			channels: channels
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return request.method === "POST" && /^[/]api[/]video[/]channels[/]/.test(request.url || "/");
+	}
+}
+
+class ChannelRoute implements Route<api_response.ChannelRequest, api_response.ChannelResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let parts = /^[/]api[/]video[/]channels[/]([0-9]+)[/]/.exec(request.url || "/");
+		if (parts == null) {
+			throw "";
+		}
+		let channel_id = Number.parseInt(parts[1]);
+		let payload: api_response.ChannelResponse = {
+			channel_id: channel_id,
+			affinities: lchannels.getAffinitiesForChannel(channel_id)
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return request.method === "POST" && /^[/]api[/]video[/]channels[/]([0-9]+)[/]/.test(request.url || "/");
+	}
+}
+
 let router = new Router()
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
@@ -684,7 +726,9 @@ let router = new Router()
 	.registerRoute(new ShowsRoute())
 	.registerRoute(new AudiolistRoute())
 	.registerRoute(new AudiolistsRoute())
-	.registerRoute(new CuesRoute());
+	.registerRoute(new CuesRoute())
+	.registerRoute(new ChannelsRoute())
+	.registerRoute(new ChannelRoute());
 
 let handleRequest = (request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	try {
