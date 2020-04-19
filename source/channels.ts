@@ -25,19 +25,25 @@ const segment_length_s = 10;
 const stream_start_ms = Date.parse("2020-01-01");
 
 function getAffinitiesForChannel(channel_id: number): api_response.Affinities {
+	const genres = [
+		"Comedy",
+		"Action",
+		"Animation",
+		"Romance",
+		"Fantasy"
+	];
 	const seeder = makeSeeder(channel_id);
 	return {
 		types: {
 			show: seeder(),
 			movie: seeder()
 		},
-		genres: {
-			comedy: seeder(),
-			action: seeder(),
-			cartoon: seeder(),
-			romance: seeder(),
-			fantasy: seeder()
-		}
+		genres: genres.map((genre) => {
+			return {
+				name: genre,
+				weight: seeder()
+			};
+		})
 	};
 }
 

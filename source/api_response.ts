@@ -113,13 +113,10 @@ interface Affinities {
 		show: number,
 		movie: number
 	},
-	genres: {
-		comedy: number,
-		action: number,
-		cartoon: number,
-		romance: number,
-		fantasy: number
-	}
+	genres: Array<{
+		name: string,
+		weight: number
+	}>
 }
 
 interface ChannelMetadata {

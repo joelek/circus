@@ -659,11 +659,9 @@ let updateviewforuri = (uri: string): void => {
 				pre.innerText = [
 					"Movies: " + channel.affinities.types.movie.toFixed(2),
 					"Shows: " + channel.affinities.types.show.toFixed(2),
-					"Action: " + channel.affinities.genres.action.toFixed(2),
-					"Cartoons: " + channel.affinities.genres.cartoon.toFixed(2),
-					"Comedies: " + channel.affinities.genres.comedy.toFixed(2),
-					"Fantasy: " + channel.affinities.genres.fantasy.toFixed(2),
-					"Romance: " + channel.affinities.genres.romance.toFixed(2)
+					...channel.affinities.genres.map((genre) => {
+						return genre.name + ": " + genre.weight.toFixed(2)
+					})
 				].join("\n");
 				d.appendChild(pre);
 				let b = document.createElement("button");
