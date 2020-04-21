@@ -647,6 +647,11 @@ let updateviewforuri = (uri: string): void => {
 				results.appendChild(d);
 			}
 		});
+	} else if ((parts = /^video[/]channels[/]([0-9]+)[/]/.exec(uri)) !== null) {
+		let channel_id = parts[1];
+		req<api_response.ChannelRequest, api_response.ChannelResponse>(`/api/video/channels/${channel_id}/`, {}, (status, response) => {
+
+		});
 	} else if ((parts = /^video[/]channels[/]/.exec(uri)) !== null) {
 		req<api_response.ChannelsRequest, api_response.ChannelsResponse>(`/api/video/channels/`, {}, (status, response) => {
 			for (let channel of response.channels) {
@@ -665,9 +670,9 @@ let updateviewforuri = (uri: string): void => {
 				].join("\n");
 				d.appendChild(pre);
 				let b = document.createElement("button");
-				b.textContent = "Watch";
+				b.textContent = "View";
 				b.addEventListener('click', () => {
-					playfile(`/media/channels/${channel.channel_id}/`);
+					navigate(`channels/${channel.channel_id}/`);
 				});
 				d.appendChild(b);
 				mount.appendChild(d);

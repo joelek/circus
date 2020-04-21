@@ -136,8 +136,20 @@ interface ChannelRequest extends ApiResponse {
 
 }
 
-interface ChannelResponse extends ApiResponse, ChannelMetadata {
-
+interface ChannelResponse extends ApiResponse {
+	segments: Array<{
+		episode?: libdb.EpisodeEntry & {
+			subtitles: Array<libdb.SubtitleEntry>,
+			season: libdb.SeasonEntry & {
+				show: libdb.ShowEntry
+			}
+		},
+		movie?: libdb.MovieEntry & {
+			movie_parts: Array<libdb.MoviePartEntry & {
+				subtitles: Array<libdb.SubtitleEntry>
+			}>
+		}
+	}>
 }
 
 export {

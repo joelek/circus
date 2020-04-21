@@ -67,13 +67,13 @@ function generateProgramming(channel_id: number): void {
 				return genre_affinity.weight;
 			})
 			.filter(autoguard.guards.Number.is);
-		const weight = genre_weights.length === 0 ? 0.0 : genre_weights.reduce((sum, genre_weight) => {
+		const weight = 1.0 + (genre_weights.length === 0 ? 0.0 : genre_weights.reduce((sum, genre_weight) => {
 			return sum + genre_weight;
-		}, 0.0) / genre_weights.length;
+		}, 0.0) / genre_weights.length);
 		return {
 			program: show,
-			genres: video_genres.map((g) => g.title),
-			weight
+			weight,
+			new_weight: weight
 		};
 	});
 	const movies = data.media.video.movies.map((movie) => {
@@ -97,13 +97,13 @@ function generateProgramming(channel_id: number): void {
 				return genre_affinity.weight;
 			})
 			.filter(autoguard.guards.Number.is);
-		const weight = genre_weights.length === 0 ? 0.0 : genre_weights.reduce((sum, genre_weight) => {
+		const weight = 1.0 + (genre_weights.length === 0 ? 0.0 : genre_weights.reduce((sum, genre_weight) => {
 			return sum + genre_weight;
-		}, 0.0) / genre_weights.length;
+		}, 0.0) / genre_weights.length);
 		return {
 			program: movie,
-			genres: video_genres.map((g) => g.title),
-			weight
+			weight,
+			new_weight: weight
 		};
 	});
 	const available = [
@@ -111,33 +111,28 @@ function generateProgramming(channel_id: number): void {
 		...movies
 	];
 	const programmed = available.slice(0, 0);
-	if (available.length > 0) {
-		while (programmed.length < 10) {
-			const sorted = available
-				.map((program) => {
-					const factor = database.MovieEntry.is(program.program) ? affinities.types.movie : affinities.types.show;
-					return {
-						...program,
-						weight: program.weight * factor
-					};
-				})
-				.sort((one, two) => {
-					return two.weight - one.weight;
-				});
-			const program = sorted[0];
-			const decay = 0.75;
-			if (database.MovieEntry.is(program.program)) {
-				affinities.types.movie *= decay;
-			} else {
-				affinities.types.show *= decay;
-			}
-			programmed.push(program);
+	while (available.length > 0 && programmed.length < 10) {
+		const sorted = available
+			.map((program) => {
+				const factor = database.MovieEntry.is(program.program) ? affinities.types.movie : affinities.types.show;
+				program.new_weight = program.weight * factor;
+				return program;
+			})
+			.sort((one, two) => {
+				return two.new_weight - one.new_weight;
+			});
+		const program = sorted[0];
+		if (database.MovieEntry.is(program.program)) {
+			affinities.types.movie *= 0.5;
+			program.weight = 0.0;
+		} else if (database.ShowEntry.is(program.program)) {
+			affinities.types.show *= 0.75;
 		}
 	}
 	console.log(affinities, programmed);
 }
 
-console.log(generateProgramming(0));
+console.log(generateProgramming(5));
 
 function handleRequest(token: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 	const method = request.method || "GET";

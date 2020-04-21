@@ -171,3 +171,100 @@ export function hasStreamed(username: string, file_id: string): boolean {
 	}
 	return set.has(file_id);
 }
+
+export function getMostRecentlyStreamedEpisode(show_id: string, username: string): libdb.EpisodeEntry {
+	const show = shows_index[show_id];
+	if (show == null) {
+		throw "";
+	}
+	const seasons = media.video.seasons
+		.filter((season) => {
+			return season.show_id === show.show_id;
+		})
+		.sort((one, two) => {
+			return two.number - one.number;
+		});
+	const episodes = media.video.episodes
+		.filter((episode) => {
+			return null != seasons
+				.find((season) => {
+					return season.season_id === episode.episode_id;
+				});
+		});
+	const files = media.files
+		.filter((file) => {
+			return null != episodes
+				.find((episode) => {
+					return episode.file_id === file.file_id;
+				});
+		});
+	const show_streams = streams.streams
+		.filter((stream) => {
+			return stream.username === username;
+		})
+		.filter((stream) => {
+			return null != files
+				.find((file) => {
+					return file.file_id === stream.file_id;
+				});
+		})
+		.sort((one, two) => {
+			return one.timestamp_ms - two.timestamp_ms;
+		});
+	const stream = show_streams.pop();
+	if (stream == null) {
+		throw "";
+	}
+	console.log(stream);
+	const file = files.find((file) => {
+		return file.file_id === stream.file_id;
+	});
+	if (file == null) {
+		throw "";
+	}
+	const episode = episodes.find((episode) => {
+		return episode.file_id === file.file_id;
+	});
+	if (episode == null) {
+		throw "";
+	}
+	return episode;
+}
+
+export function getNextEpisode(episode_id: string): libdb.EpisodeEntry {
+	const episode = episodes_index[episode_id];
+	if (episode == null) {
+		throw "";
+	}
+	const season = seasons_index[episode.season_id];
+	if (season == null) {
+		throw "";
+	}
+	const show = shows_index[season.show_id];
+	if (show == null) {
+		throw "";
+	}
+	const episodes = media.video.seasons
+		.filter((season) => {
+			return season.show_id === show.show_id;
+		})
+		.sort((one, two) => {
+			return two.number - one.number;
+		})
+		.map((season) => {
+			return media.video.episodes
+				.filter((episode) => {
+					return episode.season_id === season.season_id;
+				}).sort((one, two) => {
+					return two.number - one.number;
+				});
+		})
+		.reduce((array, episodes) => {
+			return array.concat(episodes);
+		}, new Array<libdb.EpisodeEntry>());
+	const index = episodes.indexOf(episode);
+	if (index < 0) {
+		throw "";
+	}
+	return episodes[(index + 1) % episodes.length];
+}

@@ -698,9 +698,9 @@ class ChannelRoute implements Route<api_response.ChannelRequest, api_response.Ch
 			throw "";
 		}
 		let channel_id = Number.parseInt(parts[1]);
+		let segments = new Array<any>(); // TODO: fill with programming
 		let payload: api_response.ChannelResponse = {
-			channel_id: channel_id,
-			affinities: lchannels.getAffinitiesForChannel(channel_id)
+			segments
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
