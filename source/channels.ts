@@ -3,6 +3,7 @@ import * as libhttp from "http";
 import * as data from "./data";
 import * as api_response from "./api_response";
 import * as database from "./database";
+import * as autoguard from "@joelek/ts-autoguard";
 
 type Supplier<A> = {
 	(): A
@@ -25,13 +26,9 @@ const segment_length_s = 10;
 const stream_start_ms = Date.parse("2020-01-01");
 
 function getAffinitiesForChannel(channel_id: number): api_response.Affinities {
-	const genres = [
-		"Comedy",
-		"Action",
-		"Animation",
-		"Romance",
-		"Fantasy"
-	];
+	const genres = data.media.video.genres.map((genre) => {
+		return genre.title;
+	});
 	const seeder = makeSeeder(channel_id);
 	return {
 		types: {
@@ -47,34 +44,100 @@ function getAffinitiesForChannel(channel_id: number): api_response.Affinities {
 	};
 }
 
-/*
-loves long action movies:
+function generateProgramming(channel_id: number): void {
+	const affinities = getAffinitiesForChannel(channel_id);
+	const shows = data.media.video.shows.map((show) => {
+		const show_genres = data.media.video.show_genres
+			.filter((show_genre) => {
+				return show_genre.show_id === show.show_id;
+			});
+		const video_genres = show_genres
+			.map((show_genre) => {
+				return data.video_genres_index[show_genre.video_genre_id];
+			})
+			.filter(database.VideoGenreEntry.is);
+		const genre_weights = video_genres
+			.map((video_genre) => {
+				const genre_affinity = affinities.genres.find((genre_affinity) => {
+					return genre_affinity.name === video_genre.title;
+				});
+				if (genre_affinity == null) {
+					return null;
+				}
+				return genre_affinity.weight;
+			})
+			.filter(autoguard.guards.Number.is);
+		const weight = genre_weights.length === 0 ? 0.0 : genre_weights.reduce((sum, genre_weight) => {
+			return sum + genre_weight;
+		}, 0.0) / genre_weights.length;
+		return {
+			program: show,
+			genres: video_genres.map((g) => g.title),
+			weight
+		};
+	});
+	const movies = data.media.video.movies.map((movie) => {
+		const movie_genres = data.media.video.movie_genres
+			.filter((movie_genre) => {
+				return movie_genre.movie_id === movie.movie_id;
+			});
+		const video_genres = movie_genres
+			.map((movie_genre) => {
+				return data.video_genres_index[movie_genre.video_genre_id];
+			})
+			.filter(database.VideoGenreEntry.is);
+		const genre_weights = video_genres
+			.map((video_genre) => {
+				const genre_affinity = affinities.genres.find((genre_affinity) => {
+					return genre_affinity.name === video_genre.title;
+				});
+				if (genre_affinity == null) {
+					return null;
+				}
+				return genre_affinity.weight;
+			})
+			.filter(autoguard.guards.Number.is);
+		const weight = genre_weights.length === 0 ? 0.0 : genre_weights.reduce((sum, genre_weight) => {
+			return sum + genre_weight;
+		}, 0.0) / genre_weights.length;
+		return {
+			program: movie,
+			genres: video_genres.map((g) => g.title),
+			weight
+		};
+	});
+	const available = [
+		...shows,
+		...movies
+	];
+	const programmed = available.slice(0, 0);
+	if (available.length > 0) {
+		while (programmed.length < 10) {
+			const sorted = available
+				.map((program) => {
+					const factor = database.MovieEntry.is(program.program) ? affinities.types.movie : affinities.types.show;
+					return {
+						...program,
+						weight: program.weight * factor
+					};
+				})
+				.sort((one, two) => {
+					return two.weight - one.weight;
+				});
+			const program = sorted[0];
+			const decay = 0.75;
+			if (database.MovieEntry.is(program.program)) {
+				affinities.types.movie *= decay;
+			} else {
+				affinities.types.show *= decay;
+			}
+			programmed.push(program);
+		}
+	}
+	console.log(affinities, programmed);
+}
 
-duration: 1.0
-action: 1.0
-movie: 1.0
-
-compute recency for each movie:
-
-recency(die_hard) = 1.0 (just watched)
-recency(robocop) = 0.0 (never watched)
-
-compute recency for each show:
-
-recency(how i met your mother) = 1.0 (just watched an episode)
-receny(heroes) = 0.2 (watched an episode a long time ago)
-
-compute randomization factor for each peice of content:
-
-rand(die_hard) = 0.12
-rand(robocop) = 0.82
-rand(how i met your moter) = 0.44
-rand(heroes) = 0.34
-
-
-
- */
-
+console.log(generateProgramming(0));
 
 function handleRequest(token: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 	const method = request.method || "GET";
