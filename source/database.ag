@@ -30,12 +30,20 @@
 		track_id: string,
 		artist_id: string
 	},
+	VideoGenreEntry: {
+		video_genre_id: string,
+		title: string
+	},
 	MovieEntry: {
 		movie_id: string,
 		title: string,
 		year: number,
 		summary: (string | null),
 		poster_file_id: (string | null)
+	},
+	MovieGenreEntry: {
+		movie_id: string,
+		video_genre_id: string
 	},
 	MoviePartEntry: {
 		movie_part_id: string,
@@ -47,6 +55,10 @@
 	ShowEntry: {
 		show_id: string,
 		title: string
+	},
+	ShowGenreEntry: {
+		show_id: string,
+		video_genre_id: string
 	},
 	SeasonEntry: {
 		season_id: string,
@@ -91,9 +103,12 @@
 			track_artists: @TrackArtistEntry[]
 		},
 		video: {
+			genres: @VideoGenreEntry[],
 			movie_parts: @MoviePartEntry[],
 			movies: @MovieEntry[],
+			movie_genres: @MovieGenreEntry[],
 			shows: @ShowEntry[],
+			show_genres: @ShowGenreEntry[],
 			seasons: @SeasonEntry[],
 			episodes: @EpisodeEntry[],
 			subtitles: @SubtitleEntry[],

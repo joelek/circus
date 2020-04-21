@@ -1,0 +1,24 @@
+{
+	EpisodeMetadata: {
+		type: "episode",
+		imdb: string,
+		title: string,
+		year: number,
+		summary: string,
+		show: {
+			imdb: string,
+			title: string,
+			genres: string[]
+		},
+		season: number,
+		episode: number
+	},
+	MovieMetadata: {
+		type: "movie",
+		imdb: string,
+		title: string,
+		year: number,
+		summary: string,
+		genres: string[]
+	}
+}

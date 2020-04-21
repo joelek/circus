@@ -84,6 +84,13 @@ for (let i = 0; i < media.video.movies.length; i++) {
 	movies_index[movie.movie_id] = movie;
 }
 
+export let video_genres_index: utils.Index<libdb.VideoGenreEntry> = {};
+
+for (let i = 0; i < media.video.genres.length; i++) {
+	let video_genre = media.video.genres[i];
+	video_genres_index[video_genre.video_genre_id] = video_genre;
+}
+
 export let subtitles_index: utils.Index<libdb.SubtitleEntry> = {};
 
 for (let i = 0; i < media.video.subtitles.length; i++) {

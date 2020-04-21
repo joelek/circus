@@ -4,6 +4,7 @@ import * as libpath from "path";
 import * as libdb from "./database";
 import * as libutils from "./utils";
 import * as libvtt from "./vtt";
+import * as metadata from "./metadata";
 import * as utils from "./utils";
 
 let media_root = './private/media/';
@@ -18,9 +19,12 @@ let db = {
 		track_artists: new Array<libdb.TrackArtistEntry>()
 	},
 	video: {
+		genres: new Array<libdb.VideoGenreEntry>(),
 		movie_parts: new Array<libdb.MoviePartEntry>(),
 		movies: new Array<libdb.MovieEntry>(),
+		movie_genres: new Array<libdb.MovieGenreEntry>(),
 		shows: new Array<libdb.ShowEntry>(),
+		show_genres: new Array<libdb.ShowGenreEntry>(),
 		seasons: new Array<libdb.SeasonEntry>(),
 		episodes: new Array<libdb.EpisodeEntry>(),
 		subtitles: new Array<libdb.SubtitleEntry>(),
@@ -29,6 +33,9 @@ let db = {
 	files: new Array<libdb.FileEntry>()
 };
 
+let video_genres_index: utils.Index<libdb.VideoGenreEntry> = {};
+let show_genres_index: utils.Index<libdb.ShowGenreEntry> = {};
+let movie_genres_index: utils.Index<libdb.MovieGenreEntry> = {};
 let movie_parts_index: utils.Index<libdb.MoviePartEntry> = {};
 let movies_index: utils.Index<libdb.MovieEntry> = {};
 let shows_index: utils.Index<libdb.ShowEntry> = {};
@@ -45,6 +52,29 @@ let album_artists_index: utils.Index<libdb.AlbumArtistEntry> = {};
 let track_artists_index: utils.Index<libdb.TrackArtistEntry> = {};
 
 let files_index: utils.Index<libdb.FileEntry> = {};
+
+let add_video_genre = (video_genre: libdb.VideoGenreEntry): void => {
+	if (!(video_genre.video_genre_id in video_genres_index)) {
+		video_genres_index[video_genre.video_genre_id] = video_genre;
+		db.video.genres.push(video_genre);
+	}
+};
+
+let add_show_genre = (show_genre: libdb.ShowGenreEntry): void => {
+	let key = Array.of(show_genre.show_id, show_genre.video_genre_id).join(":");
+	if (!(key in show_genres_index)) {
+		show_genres_index[key] = show_genre;
+		db.video.show_genres.push(show_genre);
+	}
+};
+
+let add_movie_genre = (movie_genre: libdb.MovieGenreEntry): void => {
+	let key = Array.of(movie_genre.movie_id, movie_genre.video_genre_id).join(":");
+	if (!(key in movie_genres_index)) {
+		movie_genres_index[key] = movie_genre;
+		db.video.movie_genres.push(movie_genre);
+	}
+};
 
 let add_movie_part = (movie_part: libdb.MoviePartEntry): void => {
 	if (!(movie_part.movie_part_id in movie_parts_index)) {
@@ -713,6 +743,25 @@ let visit_subtitle = (node: string): void => {
 	throw new Error();
 };
 
+let parse_json = (node: string): void => {
+	let contents = libfs.readFileSync(node, "utf8");
+	JSON.parse(contents);
+	let nodes = node.split(libpath.sep);
+	let file_id = makeFileId(...nodes);
+	add_file({
+		file_id: file_id,
+		path: nodes,
+		mime: 'application/json'
+	});
+};
+
+let visit_metadata = (node: string): void => {
+	try {
+		return parse_json(node);
+	} catch (error) {}
+	throw new Error();
+};
+
 let visit = (node: string): void => {
 	let stat = libfs.statSync(node);
 	if (stat.isDirectory()) {
@@ -731,6 +780,9 @@ let visit = (node: string): void => {
 		} catch (error) {}
 		try {
 			return visit_image(node);
+		} catch (error) {}
+		try {
+			return visit_metadata(node);
 		} catch (error) {}
 	}
 };
@@ -777,6 +829,94 @@ for (const movie_part of db.video.movie_parts) {
 		if (image_file_directory === movie_part_file_directory) {
 			movie.poster_file_id = image_file.file_id;
 			break;
+		}
+	}
+}
+
+const all_video_files = db.files.filter(file => /^video[/]/.test(file.mime))
+	.sort((one, two) => {
+		let basename_one = one.path.join("/");
+		let basename_two = two.path.join("/");
+		if (basename_one < basename_two) {
+			return -1;
+		}
+		if (basename_one > basename_two) {
+			return 1;
+		}
+		return 0;
+	});
+const metadata_files = db.files.filter(im => /^application[/]json$/.test(im.mime));
+
+for (const metadata_file of metadata_files) {
+	const metadata_file_directory = metadata_file.path.slice(0, -1).join("/");
+	let json: any = null;
+	try {
+		json = JSON.parse(libfs.readFileSync(metadata_file.path.join("/"), "utf8"));
+	} catch (error) {}
+	if (json == null) {
+		continue;
+	}
+	const video_files = all_video_files.filter((video_file) => {
+		const video_file_directory = video_file.path.slice(0, -1).join("/");
+		return video_file_directory === metadata_file_directory;
+	});
+	if (metadata.MovieMetadata.is(json)) {
+		for (let video_file of video_files) {
+			const movie_part = db.video.movie_parts.find((movie_part) => {
+				return movie_part.file_id === video_file.file_id;
+			});
+			if (movie_part == null) {
+				continue;
+			}
+			const movie = db.video.movies.find((movie) => {
+				return movie.movie_id === movie_part.movie_id;
+			});
+			if (movie == null) {
+				continue;
+			}
+			for (const genre of json.genres) {
+				const video_genre_id = makeFileId("video", genre);
+				add_video_genre({
+					video_genre_id: video_genre_id,
+					title: genre
+				});
+				add_movie_genre({
+					movie_id: movie.movie_id,
+					video_genre_id: video_genre_id
+				});
+			}
+		}
+	} else if (metadata.EpisodeMetadata.is(json)) {
+		for (let video_file of video_files) {
+			const episode = db.video.episodes.find((episode) => {
+				return episode.file_id === video_file.file_id;
+			});
+			if (episode == null) {
+				continue;
+			}
+			const season = db.video.seasons.find((season) => {
+				return season.season_id === episode.season_id;
+			});
+			if (season == null) {
+				continue;
+			}
+			const show = db.video.shows.find((show) => {
+				return show.show_id === season.show_id;
+			});
+			if (show == null) {
+				continue;
+			}
+			for (const genre of json.show.genres) {
+				const video_genre_id = makeFileId("video", genre);
+				add_video_genre({
+					video_genre_id: video_genre_id,
+					title: genre
+				});
+				add_show_genre({
+					show_id: show.show_id,
+					video_genre_id: video_genre_id
+				});
+			}
 		}
 	}
 }
