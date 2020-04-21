@@ -672,7 +672,7 @@ let updateviewforuri = (uri: string): void => {
 				let b = document.createElement("button");
 				b.textContent = "View";
 				b.addEventListener('click', () => {
-					navigate(`channels/${channel.channel_id}/`);
+					navigate(`video/channels/${channel.channel_id}/`);
 				});
 				d.appendChild(b);
 				mount.appendChild(d);

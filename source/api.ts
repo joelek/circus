@@ -727,8 +727,8 @@ let router = new Router()
 	.registerRoute(new AudiolistRoute())
 	.registerRoute(new AudiolistsRoute())
 	.registerRoute(new CuesRoute())
-	.registerRoute(new ChannelsRoute())
-	.registerRoute(new ChannelRoute());
+	.registerRoute(new ChannelRoute())
+	.registerRoute(new ChannelsRoute());
 
 let handleRequest = (request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	try {

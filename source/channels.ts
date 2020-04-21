@@ -128,6 +128,7 @@ function generateProgramming(channel_id: number): void {
 		} else if (database.ShowEntry.is(program.program)) {
 			affinities.types.show *= 0.75;
 		}
+		programmed.push(program);
 	}
 	console.log(affinities, programmed);
 }
