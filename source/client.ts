@@ -675,13 +675,31 @@ let updateviewforuri = (uri: string): void => {
 						context_metadata[movie_part.file_id] = {
 							subtitles: movie_part.subtitles
 						};
-						let d2 = document.createElement('div');
-						d2.innerText = `${movie.title} ${format_duration(movie_part.duration)}`;
-						d2.addEventListener('click', () => {
+						let d2 = document.createElement("div");
+						d2.classList.add("group");
+						let h3 = document.createElement("h3");
+						h3.textContent = movie.title;
+						let h4 = document.createElement("h4");
+						h4.textContent = "";
+						let p1 = document.createElement("p");
+						p1.textContent = movie.summary;
+						let p2 = document.createElement("p");
+						p2.textContent = [
+							movie.year.toString().padStart(4, "0"),
+							format_duration(movie_part.duration)
+						].join(" \u2022 ");
+						let button = document.createElement("button");
+						button.textContent = "Play";
+						button.addEventListener("click", () => {
 							set_context(context);
 							set_context_metadata(context_metadata);
 							play(context.files.indexOf(movie_part.file_id));
 						});
+						d2.appendChild(h3);
+						d2.appendChild(h4);
+						d2.appendChild(p1);
+						d2.appendChild(p2);
+						d2.appendChild(button);
 						mount.appendChild(d2);
 					}
 					continue;
@@ -691,13 +709,30 @@ let updateviewforuri = (uri: string): void => {
 					context_metadata[episode.file_id] = {
 						subtitles: episode.subtitles
 					};
-					let d2 = document.createElement('div');
-					d2.innerText = `${episode.title} ${format_duration(episode.duration)}`;
-					d2.addEventListener('click', () => {
+					let d2 = document.createElement("div");
+					d2.classList.add("group");
+					let h3 = document.createElement("h3");
+					h3.textContent = episode.season.show.title;
+					let h4 = document.createElement("h4");
+					h4.textContent = "s" + episode.season.number.toString().padStart(2, "0") + "e" + episode.number.toString().padStart(2, "0") + ": " + episode.title;
+					let p1 = document.createElement("p");
+					p1.textContent = episode.summary;
+					let p2 = document.createElement("p");
+					p2.textContent = [
+						format_duration(episode.duration)
+					].join(" \u2022 ");
+					let button = document.createElement("button");
+					button.textContent = "Play";
+					button.addEventListener("click", () => {
 						set_context(context);
 						set_context_metadata(context_metadata);
 						play(context.files.indexOf(episode.file_id));
 					});
+					d2.appendChild(h3);
+					d2.appendChild(h4);
+					d2.appendChild(p1);
+					d2.appendChild(p2);
+					d2.appendChild(button);
 					mount.appendChild(d2);
 					continue;
 				}
@@ -715,7 +750,9 @@ let updateviewforuri = (uri: string): void => {
 				pre.innerText = [
 					"Movies: " + channel.affinities.types.movie.toFixed(2),
 					"Shows: " + channel.affinities.types.show.toFixed(2),
-					...channel.affinities.genres.map((genre) => {
+					...channel.affinities.genres.sort((one, two) => {
+						return two.weight - one.weight;
+					}).slice(0, 2).map((genre) => {
 						return genre.name + ": " + genre.weight.toFixed(2)
 					})
 				].join("\n");

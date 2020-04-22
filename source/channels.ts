@@ -132,7 +132,7 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 		...movies
 	];
 	const programmed = new Array<api_response.Segment>();
-	while (available.length > 0 && programmed.length < 10) {
+	while (available.length > 0 && programmed.length < 20) {
 		const sorted = available
 			.map((program) => {
 				const factor = database.MovieEntry.is(program.program) ? affinities.types.movie : affinities.types.show;
