@@ -145,6 +145,7 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 		const program = sorted[0];
 		if (database.MovieEntry.is(program.program)) {
 			affinities.types.movie *= 0.5;
+			program.weight = 0.0;
 			programmed.push({
 				movie: program.program
 			});

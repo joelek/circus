@@ -188,7 +188,7 @@ export function getMostRecentlyStreamedEpisode(show_id: string, username: string
 		.filter((episode) => {
 			return null != seasons
 				.find((season) => {
-					return season.season_id === episode.episode_id;
+					return season.season_id === episode.season_id;
 				});
 		});
 	const files = media.files
@@ -237,14 +237,14 @@ export function getEpisodesInShow(show_id: string): libdb.EpisodeEntry[] {
 			return season.show_id === show_id;
 		})
 		.sort((one, two) => {
-			return two.number - one.number;
+			return one.number - two.number;
 		})
 		.map((season) => {
 			return media.video.episodes
 				.filter((episode) => {
 					return episode.season_id === season.season_id;
 				}).sort((one, two) => {
-					return two.number - one.number;
+					return one.number - two.number;
 				});
 		})
 		.reduce((array, episodes) => {
