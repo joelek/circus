@@ -231,22 +231,10 @@ export function getMostRecentlyStreamedEpisode(show_id: string, username: string
 	return episode;
 }
 
-export function getNextEpisode(episode_id: string): libdb.EpisodeEntry {
-	const episode = episodes_index[episode_id];
-	if (episode == null) {
-		throw "";
-	}
-	const season = seasons_index[episode.season_id];
-	if (season == null) {
-		throw "";
-	}
-	const show = shows_index[season.show_id];
-	if (show == null) {
-		throw "";
-	}
-	const episodes = media.video.seasons
+export function getEpisodesInShow(show_id: string): libdb.EpisodeEntry[] {
+	return media.video.seasons
 		.filter((season) => {
-			return season.show_id === show.show_id;
+			return season.show_id === show_id;
 		})
 		.sort((one, two) => {
 			return two.number - one.number;
@@ -262,6 +250,22 @@ export function getNextEpisode(episode_id: string): libdb.EpisodeEntry {
 		.reduce((array, episodes) => {
 			return array.concat(episodes);
 		}, new Array<libdb.EpisodeEntry>());
+}
+
+export function getNextEpisode(episode_id: string): libdb.EpisodeEntry {
+	const episode = episodes_index[episode_id];
+	if (episode == null) {
+		throw "";
+	}
+	const season = seasons_index[episode.season_id];
+	if (season == null) {
+		throw "";
+	}
+	const show = shows_index[season.show_id];
+	if (show == null) {
+		throw "";
+	}
+	const episodes = getEpisodesInShow(show.show_id);
 	const index = episodes.indexOf(episode);
 	if (index < 0) {
 		throw "";

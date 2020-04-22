@@ -67,8 +67,16 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 		const weight = 1.0 + (genre_weights.length === 0 ? 0.0 : genre_weights.reduce((sum, genre_weight) => {
 			return sum + genre_weight;
 		}, 0.0) / genre_weights.length);
+		let next_episode = data.getEpisodesInShow(show.show_id)[0];
+		try {
+			const most_recently = data.getMostRecentlyStreamedEpisode(show.show_id, username);
+			next_episode = data.getNextEpisode(most_recently.episode_id);
+		} catch (error) {}
 		return {
-			program: show,
+			program: {
+				show,
+				next_episode
+			},
 			weight,
 			new_weight: weight
 		};
@@ -141,13 +149,34 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 				movie: program.program
 			});
 		} else {
+			const episode = program.program.next_episode;
 			affinities.types.show *= 0.75;
+			const subtitles = data.media.video.subtitles.filter((subtitle) => {
+				return subtitle.episode_id === episode.episode_id;
+			});
+			const season = data.seasons_index[episode.season_id];
+			if (season == null) {
+				throw "";
+			}
+			const show = data.shows_index[season.show_id];
+			if (show == null) {
+				throw "";
+			}
+			programmed.push({
+				episode: {
+					...episode,
+					season: {
+						...season,
+						show
+					},
+					subtitles
+				}
+			});
+			program.program.next_episode = data.getNextEpisode(episode.episode_id);
 		}
 	}
 	return programmed;
 }
-
-console.log(generateProgramming(5, "test"));
 
 const segment_length_s = 10;
 const stream_start_ms = Date.parse("2020-01-01");
