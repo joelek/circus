@@ -676,7 +676,18 @@ let updateviewforuri = (uri: string): void => {
 							subtitles: movie_part.subtitles
 						};
 						let d2 = document.createElement("div");
+						d2.style.setProperty("display", "flex");
 						d2.classList.add("group");
+						let left = document.createElement("div");
+						left.style.setProperty("width", "25%");
+						let image = document.createElement("img");
+						image.setAttribute("src", `/files/${movie.poster_file_id || ""}/?token=${token}`);
+						image.style.setProperty("width", "100%");
+						left.appendChild(image);
+						let right = document.createElement("div");
+						right.style.setProperty("width", "100%");
+						d2.appendChild(left);
+						d2.appendChild(right);
 						let h3 = document.createElement("h3");
 						h3.textContent = movie.title;
 						let h4 = document.createElement("h4");
@@ -695,11 +706,11 @@ let updateviewforuri = (uri: string): void => {
 							set_context_metadata(context_metadata);
 							play(context.files.indexOf(movie_part.file_id));
 						});
-						d2.appendChild(h3);
-						d2.appendChild(h4);
-						d2.appendChild(p1);
-						d2.appendChild(p2);
-						d2.appendChild(button);
+						right.appendChild(h3);
+						right.appendChild(h4);
+						right.appendChild(p1);
+						right.appendChild(p2);
+						right.appendChild(button);
 						mount.appendChild(d2);
 					}
 					continue;
