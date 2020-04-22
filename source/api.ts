@@ -697,8 +697,9 @@ class ChannelRoute implements Route<api_response.ChannelRequest, api_response.Ch
 		if (parts == null) {
 			throw "";
 		}
+		let username = getUsername(request);
 		let channel_id = Number.parseInt(parts[1]);
-		let segments = new Array<any>(); // TODO: fill with programming
+		let segments = lchannels.generateProgramming(channel_id, username);
 		let payload: api_response.ChannelResponse = {
 			segments
 		};

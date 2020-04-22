@@ -22,9 +22,6 @@ function makeSeeder(seed: number): Supplier<number> {
 	return seeder;
 }
 
-const segment_length_s = 10;
-const stream_start_ms = Date.parse("2020-01-01");
-
 function getAffinitiesForChannel(channel_id: number): api_response.Affinities {
 	const genres = data.media.video.genres.map((genre) => {
 		return genre.title;
@@ -44,7 +41,7 @@ function getAffinitiesForChannel(channel_id: number): api_response.Affinities {
 	};
 }
 
-function generateProgramming(channel_id: number): void {
+function generateProgramming(channel_id: number, username: string): Array<api_response.Segment> {
 	const affinities = getAffinitiesForChannel(channel_id);
 	const shows = data.media.video.shows.map((show) => {
 		const show_genres = data.media.video.show_genres
@@ -77,6 +74,19 @@ function generateProgramming(channel_id: number): void {
 		};
 	});
 	const movies = data.media.video.movies.map((movie) => {
+		const movie_parts = data.media.video.movie_parts
+			.filter((movie_part) => {
+				return movie_part.movie_id === movie.movie_id;
+			})
+			.map((movie_part) => {
+				const subtitles = data.media.video.subtitles.filter((subtitle) => {
+					return subtitle.movie_part_id === movie_part.movie_part_id;
+				});
+				return {
+					...movie_part,
+					subtitles
+				};
+			});
 		const movie_genres = data.media.video.movie_genres
 			.filter((movie_genre) => {
 				return movie_genre.movie_id === movie.movie_id;
@@ -101,7 +111,10 @@ function generateProgramming(channel_id: number): void {
 			return sum + genre_weight;
 		}, 0.0) / genre_weights.length);
 		return {
-			program: movie,
+			program: {
+				...movie,
+				movie_parts
+			},
 			weight,
 			new_weight: weight
 		};
@@ -110,7 +123,7 @@ function generateProgramming(channel_id: number): void {
 		...shows,
 		...movies
 	];
-	const programmed = available.slice(0, 0);
+	const programmed = new Array<api_response.Segment>();
 	while (available.length > 0 && programmed.length < 10) {
 		const sorted = available
 			.map((program) => {
@@ -124,16 +137,20 @@ function generateProgramming(channel_id: number): void {
 		const program = sorted[0];
 		if (database.MovieEntry.is(program.program)) {
 			affinities.types.movie *= 0.5;
-			program.weight = 0.0;
-		} else if (database.ShowEntry.is(program.program)) {
+			programmed.push({
+				movie: program.program
+			});
+		} else {
 			affinities.types.show *= 0.75;
 		}
-		programmed.push(program);
 	}
-	console.log(affinities, programmed);
+	return programmed;
 }
 
-console.log(generateProgramming(5));
+console.log(generateProgramming(5, "test"));
+
+const segment_length_s = 10;
+const stream_start_ms = Date.parse("2020-01-01");
 
 function handleRequest(token: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 	const method = request.method || "GET";
@@ -188,5 +205,6 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 
 export {
 	getAffinitiesForChannel,
+	generateProgramming,
 	handleRequest
 };

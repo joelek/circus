@@ -649,8 +649,59 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^video[/]channels[/]([0-9]+)[/]/.exec(uri)) !== null) {
 		let channel_id = parts[1];
-		req<api_response.ChannelRequest, api_response.ChannelResponse>(`/api/video/channels/${channel_id}/`, {}, (status, response) => {
-
+		req<api_response.ChannelRequest, api_response.ChannelResponse>(`/api/video/channels/${channel_id}/?token=${token}`, {}, (status, response) => {
+			let d = document.createElement('div');
+			d.innerText = `Channel`;
+			d.style.setProperty('font-size', '24px');
+			mount.appendChild(d);
+			let context: Context = {
+				files: response.segments.reduce((files, segment) => {
+					if (segment.movie != null) {
+						return files.concat(segment.movie.movie_parts.map((movie_part) => {
+							return movie_part.file_id;
+						}));
+					}
+					if (segment.episode != null) {
+						return files.concat([segment.episode.file_id]);
+					}
+					return files;
+				}, new Array<string>())
+			};
+			let context_metadata: Metadata = {};
+			for (let segment of response.segments) {
+				const movie = segment.movie;
+				if (movie != null) {
+					for (let movie_part of movie.movie_parts) {
+						context_metadata[movie_part.file_id] = {
+							subtitles: movie_part.subtitles
+						};
+						let d2 = document.createElement('div');
+						d2.innerText = `${movie.title} ${format_duration(movie_part.duration)}`;
+						d2.addEventListener('click', () => {
+							set_context(context);
+							set_context_metadata(context_metadata);
+							play(context.files.indexOf(movie_part.file_id));
+						});
+						mount.appendChild(d2);
+					}
+					continue;
+				}
+				const episode = segment.episode;
+				if (episode != null) {
+					context_metadata[episode.file_id] = {
+						subtitles: episode.subtitles
+					};
+					let d2 = document.createElement('div');
+					d2.innerText = `${episode.title} ${format_duration(episode.duration)}`;
+					d2.addEventListener('click', () => {
+						set_context(context);
+						set_context_metadata(context_metadata);
+						play(context.files.indexOf(episode.file_id));
+					});
+					mount.appendChild(d2);
+					continue;
+				}
+			}
 		});
 	} else if ((parts = /^video[/]channels[/]/.exec(uri)) !== null) {
 		req<api_response.ChannelsRequest, api_response.ChannelsResponse>(`/api/video/channels/`, {}, (status, response) => {

@@ -119,6 +119,20 @@ interface Affinities {
 	}>
 }
 
+interface Segment {
+	episode?: libdb.EpisodeEntry & {
+		subtitles: Array<libdb.SubtitleEntry>,
+		season: libdb.SeasonEntry & {
+			show: libdb.ShowEntry
+		}
+	},
+	movie?: libdb.MovieEntry & {
+		movie_parts: Array<libdb.MoviePartEntry & {
+			subtitles: Array<libdb.SubtitleEntry>
+		}>
+	}
+}
+
 interface ChannelMetadata {
 	channel_id: number,
 	affinities: Affinities
@@ -137,19 +151,7 @@ interface ChannelRequest extends ApiResponse {
 }
 
 interface ChannelResponse extends ApiResponse {
-	segments: Array<{
-		episode?: libdb.EpisodeEntry & {
-			subtitles: Array<libdb.SubtitleEntry>,
-			season: libdb.SeasonEntry & {
-				show: libdb.ShowEntry
-			}
-		},
-		movie?: libdb.MovieEntry & {
-			movie_parts: Array<libdb.MoviePartEntry & {
-				subtitles: Array<libdb.SubtitleEntry>
-			}>
-		}
-	}>
+	segments: Array<Segment>
 }
 
 export {
@@ -177,6 +179,7 @@ export {
 	CuesRequest,
 	CuesResponse,
 	Affinities,
+	Segment,
 	ChannelMetadata,
 	ChannelsRequest,
 	ChannelsResponse,
