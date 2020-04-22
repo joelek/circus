@@ -672,12 +672,9 @@ class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResp
 
 class ChannelsRoute implements Route<api_response.ChannelsRequest, api_response.ChannelsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		let channels = new Array<api_response.ChannelMetadata>();
-		for (let i = 0; i < 10; i++) {
-			channels.push({
-				channel_id: i,
-				affinities: lchannels.getAffinitiesForChannel(i)
-			});
+		let channels = new Array<api_response.ChannelEntry>();
+		for (let i = 0; i < 100; i++) {
+			channels.push(lchannels.getChannel(i));
 		}
 		let payload: api_response.ChannelsResponse = {
 			channels: channels

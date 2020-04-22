@@ -22,136 +22,76 @@ function makeSeeder(seed: number): Supplier<number> {
 	return seeder;
 }
 
-function getAffinitiesForChannel(channel_id: number): api_response.Affinities {
-	const genres = data.media.video.genres.map((genre) => {
-		return genre.title;
-	});
+function getAffinitiesForChannel(channel_id: number): Array<{ genre: database.VideoGenreEntry, weight: number }> {
 	const seeder = makeSeeder(channel_id);
+	return data.media.video.genres.map((genre) => {
+		return {
+			genre,
+			weight: seeder()
+		};
+	});
+}
+
+function getChannel(channel_id: number): api_response.ChannelEntry {
+	const type = makeSeeder(channel_id)() < 0.5 ? "Movies" : "Shows";
+	const affinities = getAffinitiesForChannel(channel_id).sort((one, two) => {
+		return two.weight - one.weight;
+	});
 	return {
-		types: {
-			show: seeder(),
-			movie: seeder()
-		},
-		genres: genres.map((genre) => {
-			return {
-				name: genre,
-				weight: seeder()
-			};
-		})
+		channel_id: channel_id,
+		title: affinities[0].genre.title + " & " + affinities[1].genre.title + " " + type
 	};
 }
 
 function generateProgramming(channel_id: number, username: string): Array<api_response.Segment> {
 	const affinities = getAffinitiesForChannel(channel_id);
-	const shows = data.media.video.shows.map((show) => {
-		const show_genres = data.media.video.show_genres
-			.filter((show_genre) => {
-				return show_genre.show_id === show.show_id;
-			});
-		const video_genres = show_genres
-			.map((show_genre) => {
-				return data.video_genres_index[show_genre.video_genre_id];
-			})
-			.filter(database.VideoGenreEntry.is);
-		const genre_weights = video_genres
-			.map((video_genre) => {
-				const genre_affinity = affinities.genres.find((genre_affinity) => {
-					return genre_affinity.name === video_genre.title;
+	const type = makeSeeder(channel_id)() < 0.5 ? "movies" : "shows";
+	if (type === "shows") {
+		const shows = data.media.video.shows.map((show) => {
+			const show_genres = data.media.video.show_genres
+				.filter((show_genre) => {
+					return show_genre.show_id === show.show_id;
 				});
-				if (genre_affinity == null) {
-					return null;
-				}
-				return genre_affinity.weight;
-			})
-			.filter(autoguard.guards.Number.is);
-		const weight = 1.0 + (genre_weights.length === 0 ? 0.0 : genre_weights.reduce((sum, genre_weight) => {
-			return sum + genre_weight;
-		}, 0.0) / genre_weights.length);
-		let next_episode = data.getEpisodesInShow(show.show_id)[0];
-		try {
-			const most_recently = data.getMostRecentlyStreamedEpisode(show.show_id, username);
-			next_episode = data.getNextEpisode(most_recently.episode_id);
-		} catch (error) {}
-		return {
-			program: {
-				show,
-				next_episode
-			},
-			weight,
-			new_weight: weight
-		};
-	});
-	const movies = data.media.video.movies.map((movie) => {
-		const movie_parts = data.media.video.movie_parts
-			.filter((movie_part) => {
-				return movie_part.movie_id === movie.movie_id;
-			})
-			.map((movie_part) => {
-				const subtitles = data.media.video.subtitles.filter((subtitle) => {
-					return subtitle.movie_part_id === movie_part.movie_part_id;
+			const video_genres = show_genres
+				.map((show_genre) => {
+					return data.video_genres_index[show_genre.video_genre_id];
+				})
+				.filter(database.VideoGenreEntry.is);
+			const genre_weights = video_genres
+				.map((video_genre) => {
+					const genre_affinity = affinities.find((genre_affinity) => {
+						return genre_affinity.genre.title === video_genre.title;
+					});
+					if (genre_affinity == null) {
+						return null;
+					}
+					return genre_affinity.weight;
+				})
+				.filter(autoguard.guards.Number.is);
+			const weight = 1.0 + (genre_weights.length === 0 ? 0.0 : genre_weights.reduce((sum, genre_weight) => {
+				return sum + genre_weight;
+			}, 0.0) / genre_weights.length);
+			let next_episode = data.getEpisodesInShow(show.show_id)[0];
+			try {
+				const most_recently = data.getMostRecentlyStreamedEpisode(show.show_id, username);
+				next_episode = data.getNextEpisode(most_recently.episode_id);
+			} catch (error) {}
+			return {
+				program: {
+					show,
+					next_episode
+				},
+				weight
+			};
+		});
+		const programmed = new Array<api_response.Segment>();
+		while (shows.length > 0 && programmed.length < 20) {
+			const sorted = shows
+				.sort((one, two) => {
+					return two.weight - one.weight;
 				});
-				return {
-					...movie_part,
-					subtitles
-				};
-			});
-		const movie_genres = data.media.video.movie_genres
-			.filter((movie_genre) => {
-				return movie_genre.movie_id === movie.movie_id;
-			});
-		const video_genres = movie_genres
-			.map((movie_genre) => {
-				return data.video_genres_index[movie_genre.video_genre_id];
-			})
-			.filter(database.VideoGenreEntry.is);
-		const genre_weights = video_genres
-			.map((video_genre) => {
-				const genre_affinity = affinities.genres.find((genre_affinity) => {
-					return genre_affinity.name === video_genre.title;
-				});
-				if (genre_affinity == null) {
-					return null;
-				}
-				return genre_affinity.weight;
-			})
-			.filter(autoguard.guards.Number.is);
-		const weight = 1.0 + (genre_weights.length === 0 ? 0.0 : genre_weights.reduce((sum, genre_weight) => {
-			return sum + genre_weight;
-		}, 0.0) / genre_weights.length);
-		return {
-			program: {
-				...movie,
-				movie_parts
-			},
-			weight,
-			new_weight: weight
-		};
-	});
-	const available = [
-		...shows,
-		...movies
-	];
-	const programmed = new Array<api_response.Segment>();
-	while (available.length > 0 && programmed.length < 20) {
-		const sorted = available
-			.map((program) => {
-				const factor = database.MovieEntry.is(program.program) ? affinities.types.movie : affinities.types.show;
-				program.new_weight = program.weight * factor;
-				return program;
-			})
-			.sort((one, two) => {
-				return two.new_weight - one.new_weight;
-			});
-		const program = sorted[0];
-		if (database.MovieEntry.is(program.program)) {
-			affinities.types.movie *= 0.5;
-			program.weight = 0.0;
-			programmed.push({
-				movie: program.program
-			});
-		} else {
+			const program = sorted[0];
 			const episode = program.program.next_episode;
-			affinities.types.show *= 0.75;
 			const subtitles = data.media.video.subtitles.filter((subtitle) => {
 				return subtitle.episode_id === episode.episode_id;
 			});
@@ -174,9 +114,69 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 				}
 			});
 			program.program.next_episode = data.getNextEpisode(episode.episode_id);
+			program.weight *= 0.75;
 		}
+		return programmed;
+	} else {
+		const movies = data.media.video.movies.map((movie) => {
+			const movie_parts = data.media.video.movie_parts
+				.filter((movie_part) => {
+					return movie_part.movie_id === movie.movie_id;
+				})
+				.map((movie_part) => {
+					const subtitles = data.media.video.subtitles.filter((subtitle) => {
+						return subtitle.movie_part_id === movie_part.movie_part_id;
+					});
+					return {
+						...movie_part,
+						subtitles
+					};
+				});
+			const movie_genres = data.media.video.movie_genres
+				.filter((movie_genre) => {
+					return movie_genre.movie_id === movie.movie_id;
+				});
+			const video_genres = movie_genres
+				.map((movie_genre) => {
+					return data.video_genres_index[movie_genre.video_genre_id];
+				})
+				.filter(database.VideoGenreEntry.is);
+			const genre_weights = video_genres
+				.map((video_genre) => {
+					const genre_affinity = affinities.find((genre_affinity) => {
+						return genre_affinity.genre.title === video_genre.title;
+					});
+					if (genre_affinity == null) {
+						return null;
+					}
+					return genre_affinity.weight;
+				})
+				.filter(autoguard.guards.Number.is);
+			const weight = 1.0 + (genre_weights.length === 0 ? 0.0 : genre_weights.reduce((sum, genre_weight) => {
+				return sum + genre_weight;
+			}, 0.0) / genre_weights.length);
+			return {
+				program: {
+					...movie,
+					movie_parts
+				},
+				weight
+			};
+		});
+		const programmed = new Array<api_response.Segment>();
+		while (movies.length > 0 && programmed.length < 20) {
+			const sorted = movies
+				.sort((one, two) => {
+					return two.weight - one.weight;
+				});
+			const program = sorted[0];
+			programmed.push({
+				movie: program.program
+			});
+			program.weight = 0.0;
+		}
+		return programmed;
 	}
-	return programmed;
 }
 
 const segment_length_s = 10;
@@ -236,5 +236,6 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 export {
 	getAffinitiesForChannel,
 	generateProgramming,
+	getChannel,
 	handleRequest
 };

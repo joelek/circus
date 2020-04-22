@@ -744,19 +744,11 @@ let updateviewforuri = (uri: string): void => {
 				let d = document.createElement('div');
 				d.classList.add("group");
 				let h2 = document.createElement("h2");
-				h2.innerText = `Channel ${channel.channel_id}`;
+				h2.textContent = `Channel ${channel.channel_id}`;
 				d.appendChild(h2);
-				let pre = document.createElement("pre");
-				pre.innerText = [
-					"Movies: " + channel.affinities.types.movie.toFixed(2),
-					"Shows: " + channel.affinities.types.show.toFixed(2),
-					...channel.affinities.genres.sort((one, two) => {
-						return two.weight - one.weight;
-					}).slice(0, 2).map((genre) => {
-						return genre.name + ": " + genre.weight.toFixed(2)
-					})
-				].join("\n");
-				d.appendChild(pre);
+				let p = document.createElement("p");
+				p.textContent = channel.title;
+				d.appendChild(p);
 				let b = document.createElement("button");
 				b.textContent = "View";
 				b.addEventListener('click', () => {

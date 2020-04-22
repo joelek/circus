@@ -108,17 +108,6 @@ interface CuesResponse extends ApiResponse {
 	}>;
 }
 
-interface Affinities {
-	types: {
-		show: number,
-		movie: number
-	},
-	genres: Array<{
-		name: string,
-		weight: number
-	}>
-}
-
 interface Segment {
 	episode?: libdb.EpisodeEntry & {
 		subtitles: Array<libdb.SubtitleEntry>,
@@ -133,9 +122,9 @@ interface Segment {
 	}
 }
 
-interface ChannelMetadata {
+interface ChannelEntry {
 	channel_id: number,
-	affinities: Affinities
+	title: string
 }
 
 interface ChannelsRequest extends ApiResponse {
@@ -143,7 +132,7 @@ interface ChannelsRequest extends ApiResponse {
 }
 
 interface ChannelsResponse extends ApiResponse {
-	channels: Array<ChannelMetadata>;
+	channels: Array<ChannelEntry>;
 }
 
 interface ChannelRequest extends ApiResponse {
@@ -178,9 +167,8 @@ export {
 	AudiolistsResponse,
 	CuesRequest,
 	CuesResponse,
-	Affinities,
 	Segment,
-	ChannelMetadata,
+	ChannelEntry,
 	ChannelsRequest,
 	ChannelsResponse,
 	ChannelRequest,
