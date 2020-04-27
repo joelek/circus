@@ -7,7 +7,7 @@ import * as libvtt from "./vtt";
 import * as metadata from "./metadata";
 import * as utils from "./utils";
 
-let media_root = '../disco/private/media/';
+let media_root = './private/media/';
 
 let db = {
 	audio: {
