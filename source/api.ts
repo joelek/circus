@@ -709,6 +709,51 @@ class ChannelRoute implements Route<api_response.ChannelRequest, api_response.Ch
 	}
 }
 
+class GenresRoute implements Route<api_response.GenresRequest, api_response.GenresResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let genres = data.media.video.genres;
+		let payload: api_response.GenresResponse = {
+			genres
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return request.method === "POST" && /^[/]api[/]video[/]genres[/]/.test(request.url || "/");
+	}
+}
+
+class GenreRoute implements Route<api_response.GenreRequest, api_response.GenreResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]/.exec(request.url || "/");
+		if (parts == null) {
+			throw "";
+		}
+		let video_genre_id = parts[1];
+		let movies = data.media.video.movie_genres.filter((movie_genre) => {
+			return movie_genre.video_genre_id === video_genre_id;
+		}).map((movie_genre) => {
+			return data.movies_index[movie_genre.movie_id] as libdb.MovieEntry;
+		});
+		let shows = data.media.video.show_genres.filter((show_genre) => {
+			return show_genre.video_genre_id === video_genre_id;
+		}).map((show_genre) => {
+			return data.shows_index[show_genre.show_id] as libdb.ShowEntry;
+		});
+		let payload: api_response.GenreResponse = {
+			movies,
+			shows
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return request.method === "POST" && /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]/.test(request.url || "/");
+	}
+}
+
 let router = new Router()
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
@@ -726,7 +771,9 @@ let router = new Router()
 	.registerRoute(new AudiolistsRoute())
 	.registerRoute(new CuesRoute())
 	.registerRoute(new ChannelRoute())
-	.registerRoute(new ChannelsRoute());
+	.registerRoute(new ChannelsRoute())
+	.registerRoute(new GenreRoute())
+	.registerRoute(new GenresRoute());
 
 let handleRequest = (request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	try {

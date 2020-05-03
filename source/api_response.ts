@@ -143,6 +143,23 @@ interface ChannelResponse extends ApiResponse {
 	segments: Array<Segment>
 }
 
+interface GenresRequest extends ApiRequest {
+
+}
+
+interface GenresResponse extends ApiResponse {
+	genres: Array<libdb.VideoGenreEntry>
+}
+
+interface GenreRequest extends ApiRequest {
+
+}
+
+interface GenreResponse extends ApiResponse {
+	movies: Array<libdb.MovieEntry>;
+	shows: Array<libdb.ShowEntry>;
+}
+
 export {
 	ApiRequest,
 	ApiResponse,
@@ -172,5 +189,9 @@ export {
 	ChannelsRequest,
 	ChannelsResponse,
 	ChannelRequest,
-	ChannelResponse
+	ChannelResponse,
+	GenresRequest,
+	GenresResponse,
+	GenreRequest,
+	GenreResponse
 };

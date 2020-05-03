@@ -769,6 +769,80 @@ let updateviewforuri = (uri: string): void => {
 				mount.appendChild(d);
 			}
 		});
+	} else if ((parts = /^video[/]genres[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+		let genre_id = parts[1];
+		req<api_response.GenreRequest, api_response.GenreResponse>(`/api/video/genres/${genre_id}/`, {}, (status, response) => {
+			let movies = document.createElement("div");
+			for (let movie of response.movies) {
+				let d2 = document.createElement("div");
+				d2.style.setProperty("display", "flex");
+				d2.classList.add("group");
+				let left = document.createElement("div");
+				left.style.setProperty("width", "25%");
+				let image = document.createElement("img");
+				image.setAttribute("src", `/files/${movie.poster_file_id || ""}/?token=${token}`);
+				image.style.setProperty("width", "100%");
+				left.appendChild(image);
+				let right = document.createElement("div");
+				right.style.setProperty("width", "100%");
+				d2.appendChild(left);
+				d2.appendChild(right);
+				let h3 = document.createElement("h3");
+				h3.textContent = movie.title;
+				let h4 = document.createElement("h4");
+				h4.textContent = "";
+				let p1 = document.createElement("p");
+				p1.textContent = movie.summary;
+				let p2 = document.createElement("p");
+				p2.textContent = [
+					movie.year.toString().padStart(4, "0")
+				].join(" | ");
+				let button = document.createElement("button");
+				button.textContent = "View";
+				button.addEventListener("click", () => {
+					navigate(`video/movies/${movie.movie_id}/`);
+				});
+				right.appendChild(h3);
+				right.appendChild(h4);
+				right.appendChild(p1);
+				right.appendChild(p2);
+				right.appendChild(button);
+				movies.appendChild(d2);
+			}
+			let shows = document.createElement("div");
+			for (let show of response.shows) {
+				let d2 = document.createElement("div");
+				d2.classList.add("group");
+				let h3 = document.createElement("h3");
+				h3.textContent = show.title;
+				d2.appendChild(h3);
+				let button = document.createElement("button");
+				button.textContent = "View";
+				button.addEventListener("click", () => {
+					navigate(`video/shows/${show.show_id}/`);
+				});
+				shows.appendChild(d2);
+			}
+			mount.appendChild(movies);
+			mount.appendChild(shows);
+		});
+	} else if ((parts = /^video[/]genres[/]/.exec(uri)) !== null) {
+		req<api_response.GenresRequest, api_response.GenresResponse>(`/api/video/genres/`, {}, (status, response) => {
+			for (let genre of response.genres) {
+				let d = document.createElement('div');
+				d.classList.add("group");
+				let h2 = document.createElement("h2");
+				h2.textContent = `${genre.title}`;
+				d.appendChild(h2);
+				let b = document.createElement("button");
+				b.textContent = "Browse";
+				b.addEventListener('click', () => {
+					navigate(`video/genres/${genre.video_genre_id}/`);
+				});
+				d.appendChild(b);
+				mount.appendChild(d);
+			}
+		});
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
 		let d = document.createElement('div');
 		d.innerText = 'Shows';
@@ -792,6 +866,12 @@ let updateviewforuri = (uri: string): void => {
 		d.innerText = 'Channels';
 		d.addEventListener('click', () => {
 			navigate('video/channels/');
+		});
+		mount.appendChild(d);
+		d = document.createElement('div');
+		d.innerText = 'Genres';
+		d.addEventListener('click', () => {
+			navigate('video/genres/');
 		});
 		mount.appendChild(d);
 	} else {
