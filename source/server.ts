@@ -8,6 +8,7 @@ import * as auth from "./auth";
 import * as channels from "./channels";
 import * as data from "./data";
 import * as subsearch from "./subsearch";
+import { FileEntry, CueEntry } from "./database";
 
 let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>): Partial<libhttp.IncomingHttpHeaders> => {
 	let out: Partial<libhttp.IncomingHttpHeaders> = {};
@@ -19,7 +20,7 @@ let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>)
 	return out;
 };
 
-let send_data = (file_id: string, path: string[], mime: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
+let send_data = (file_id: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	if (request.url === undefined) {
 		throw new Error();
 	}
@@ -31,6 +32,9 @@ let send_data = (file_id: string, path: string[], mime: string, request: libhttp
 		response.writeHead(401, {});
 		return response.end();
 	}
+	let file = data.files_index[file_id] as FileEntry;
+	let path = file.path;
+	let mime = file.mime;
 	let filename = path.join(libpath.sep);
 	let fd = libfs.openSync(filename, 'r');
 	let size = libfs.fstatSync(fd).size;
@@ -126,29 +130,41 @@ let httpsServer = libhttps.createServer({
 		}
 		if (method === 'GET' && (parts = /^[/]files[/]([0-9a-f]{32})[/]/.exec(path)) !== null) {
 			let file_id = parts[1];
-			let file = data.files_index[file_id];
-			if (file !== undefined) {
-				return send_data(file_id, file.path, file.mime, request, response);
-			}
-			let cue = data.cues_index[file_id];
-			if (cue !== undefined) {
+			return send_data(file_id, request, response);
+		}
+		if (/^[/]media[/]/.test(path)) {
+			if ((parts = /^[/]media[/]gifs[/]([0-9a-f]{32})[/]/.exec(path)) != null) {
+				let cue_id = parts[1];
+				let cue = data.cues_index[cue_id] as CueEntry;
 				let filename = [".", "private", "memes", cue.cue_id];
 				if (libfs.existsSync(filename.join("/"))) {
-					return send_data(file_id, filename, "image/gif", request, response);
+					let stream = libfs.createReadStream(filename.join("/"));
+					stream.on("open", () => {
+						response.writeHead(200, {
+							"Access-Control-Allow-Origin": "*",
+							"Content-Type": "image/gif"
+						});
+						stream.pipe(response);
+					});
 				} else {
 					subsearch.generateMeme(filename, cue, () => {
-						return send_data(file_id, filename, "image/gif", request, response);
+						let stream = libfs.createReadStream(filename.join("/"));
+						stream.on("open", () => {
+							response.writeHead(200, {
+								"Access-Control-Allow-Origin": "*",
+								"Content-Type": "image/gif"
+							});
+							stream.pipe(response);
+						});
 					});
-					return;
 				}
+				return;
 			}
-			response.writeHead(404);
-			response.end();
-			return;
-		}
-		if (/^[/]media[/]channels[/]/.test(path)) {
-			let token = liburl.parse(request.url || "/", true).query.token as string;
-			return channels.handleRequest(token, request, response);
+			if (/^[/]media[/]channels[/]/.test(path)) {
+				let token = liburl.parse(request.url || "/", true).query.token as string;
+				channels.handleRequest(token, request, response);
+				return;
+			}
 		}
 		if (/^[/]api[/]/.test(path)) {
 			return api.handleRequest(request, response);

@@ -484,7 +484,7 @@ let updateviewforuri = (uri: string): void => {
 			}
 		});
 	} else if ((parts = /^video[/]episodes[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.EpisodeResponse>(`/api/video/episodes/${parts[1]}/`, {}, (status, response) => {
+		req<api_response.ApiRequest, api_response.EpisodeResponse>(`/api/video/episodes/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let d = document.createElement('div');
 			d.innerText = `${response.title}`;
 			d.style.setProperty('font-size', '24px');
@@ -641,7 +641,7 @@ let updateviewforuri = (uri: string): void => {
 				let b2 = document.createElement("button");
 				b2.textContent = "Generate meme";
 				b2.addEventListener("click", () => {
-					window.open("/files/" + cue.cue_id + "/");
+					window.open("/media/gifs/" + cue.cue_id + "/");
 				});
 				d.appendChild(b2);
 				results.appendChild(d);
