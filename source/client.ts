@@ -195,6 +195,7 @@ let play = (index: number): void => {
 	if (metadata !== null) {
 		let md = metadata[fid];
 		if (md !== undefined) {
+			let defaultSubtitle = md.subtitles.find((subtitle) => subtitle.language === "swe") || md.subtitles.find((subtitle) => subtitle.language === "eng");
 			for (let i = 0; i < md.subtitles.length; i++) {
 				let st = md.subtitles[i];
 				let e = document.createElement('track');
@@ -204,6 +205,9 @@ let play = (index: number): void => {
 						e.label = language.title;
 						e.srclang = language.iso639_1;
 						e.kind = "subtitles";
+					}
+					if (st === defaultSubtitle) {
+						e.setAttribute("default", "");
 					}
 				}
 				e.src = `/files/${st.file_id}/?token=${token}`;
