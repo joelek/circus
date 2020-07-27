@@ -980,6 +980,7 @@ db.video.subtitles.forEach((subtitle_entry) => {
 		if (typeof metadata === "object" && typeof metadata.language === "string") {
 			subtitle_entry.language = metadata.language;
 		}
+		return; // Requires too much memory.
 		track.body.cues.forEach((cue) => {
 			let hash = libcrypto.createHash("md5");
 			hash.update(subtitle_entry.file_id);
