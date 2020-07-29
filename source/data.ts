@@ -1,11 +1,48 @@
 import * as libfs from "fs";
 import * as libdb from "./database";
 import * as utils from "./utils";
+import * as auth from "./auth";
+
+libfs.mkdirSync("./private/db/", { recursive: true });
+
+if (!libfs.existsSync("./private/db/streams.json")) {
+	let db: libdb.StreamDatabase = {
+		streams: []
+	};
+	libfs.writeFileSync("./private/db/streams.json", JSON.stringify(db, null, "\t"));
+}
+
+if (!libfs.existsSync("./private/db/lists.json")) {
+	let db: libdb.ListDatabase = {
+		audiolists: [],
+		audiolist_items: []
+	};
+	libfs.writeFileSync("./private/db/lists.json", JSON.stringify(db, null, "\t"));
+}
+
+if (!libfs.existsSync("./private/db/users.json")) {
+	let db: libdb.UserDatabase = {
+		users: [
+			{
+				user_id: "",
+				username: "test",
+				password: auth.password_generate("test")
+			}
+		],
+		tokens: []
+	};
+	libfs.writeFileSync("./private/db/users.json", JSON.stringify(db, null, "\t"));
+}
+
+if (!libfs.existsSync("./private/db/media.json")) {
+	process.stderr.write("Media database not found! Please run the indexer.\n");
+	process.exit(1);
+}
 
 export let streams = JSON.parse(libfs.readFileSync('./private/db/streams.json', "utf8")) as libdb.StreamDatabase;
-export let media = JSON.parse(libfs.readFileSync('./private/db/media.json', "utf8")) as libdb.MediaDatabase;
 export let lists = JSON.parse(libfs.readFileSync('./private/db/lists.json', "utf8")) as libdb.ListDatabase;
 export let users = JSON.parse(libfs.readFileSync('./private/db/users.json', "utf8")) as libdb.UserDatabase;
+export let media = JSON.parse(libfs.readFileSync('./private/db/media.json', "utf8")) as libdb.MediaDatabase;
 
 export let users_index: utils.Index<libdb.UserEntry> = {};
 

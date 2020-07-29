@@ -86,6 +86,7 @@ function getUsername(chunk: string): string {
 }
 
 export {
+	password_generate,
 	getToken,
 	getUsername
 };
