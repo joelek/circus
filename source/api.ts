@@ -611,7 +611,7 @@ class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResp
 				if (query == null || query.constructor !== String) {
 					throw new Error();
 				}
-				let cues = searchForCues(query)
+				let cues = searchForCues(query as string)
 					.map((cue_id) => {
 						return data.cues_index[cue_id] as libdb.CueEntry;
 					})
