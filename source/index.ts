@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as libpath from "path";

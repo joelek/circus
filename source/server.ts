@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as libfs from "fs";
 import * as libhttp from "http";
 import * as libhttps from "https";
@@ -171,7 +173,7 @@ let httpsServer = libhttps.createServer({
 		}
 		if (method === 'GET') {
 			response.writeHead(200);
-			response.end(`<!doctype html><html><head><base href="/"/><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0" name="viewport"/></head><body><script>${libfs.readFileSync('./build/client.js')}</script></body></html>`);
+			response.end(`<!doctype html><html><head><base href="/"/><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0" name="viewport"/></head><body><script>${libfs.readFileSync('./build/client.bundle.js')}</script></body></html>`);
 			return;
 		}
 		console.log('unhandled', JSON.stringify(request.headers, null, "\t"));

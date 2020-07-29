@@ -1,27 +1,27 @@
 {
-	"bin": {
-		"castaway": "./bin.js"
+	"bin": {},
+	"devDependencies": {
+		"@types/node": "^13",
+		"browserify": "^16.5.0",
+		"typescript": "^3"
 	},
 	"dependencies": {
 		"@joelek/ts-autoguard": "github:joelek/ts-autoguard",
-		"@types/node": "^13",
-		"browserify": "^16.5.0",
 		"castv2-client": "^1.2.0",
-		"node-dns-sd": "^0.4.0",
-		"typescript": "^3"
+		"node-dns-sd": "^0.4.0"
 	},
 	"license": "MIT",
+	"main": "./build/server.js",
 	"name": "@joelek/castaway",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/joelek/castaway.git"
 	},
 	"scripts": {
-		"build": "rm -rf ./build/ && npm run codegen && npx tsc --build && npm run bundle",
-		"bundle": "npx browserify ./build/source/client.js --outfile ./build/client.js",
+		"build": "rm -rf ./build/ && npx tsc --build && npm run bundle",
+		"bundle": "npx browserify ./build/client.js --outfile ./build/client.bundle.js",
 		"clean": "rm -rf ./build/ ./node_modules/",
-		"codegen": "npx autoguard --standalone=false",
-		"install": "npm run build"
+		"codegen": "npx autoguard --standalone=false"
 	},
 	"version": "1.0.0"
 }
