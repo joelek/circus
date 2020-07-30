@@ -13,35 +13,42 @@ function getCueId(subtitle: $database.SubtitleEntry, cue: [number, number, strin
 	return cue_id;
 }
 
-function run(): void {
+function getIndex(): Map<string, Set<string>> {
 	let media = JSON.parse($fs.readFileSync("./private/db/media.json", "utf8")) as $database.MediaDatabase;
-	let index: { [key: string]: string[] | undefined } = {};
+	let index = new Map<string, Set<string>>();
 	for (let subtitle of media.video.subtitles) {
 		for (let cue of subtitle.cues) {
 			let cue_id = getCueId(subtitle, cue);
 			for (let line of cue[2].split("\n")) {
 				let terms = $utils.getSearchTerms(line);
 				for (let term of terms) {
-					let cues = index[term];
+					let cues = index.get(term);
 					if (cues === undefined) {
-						cues = [];
-						index[term] = cues;
+						cues = new Set<string>();
+						index.set(term, cues);
 					}
-					cues.push(cue_id);
+					cues.add(cue_id);
 				}
 			}
 		}
 	}
-	for (let key in index) {
-		let set = new Set<string>(index[key]);
-		let array = new Array(...set);
+	return index;
+}
+
+function convertToJSON(index: Map<string, Set<string>>): { [key: string]: string[] | undefined } {
+	let json: { [key: string]: string[] | undefined } = {};
+	for (let [key, value] of index) {
+		let array = new Array(...value);
 		if (array.length > 1) {
-			index[key] = array;
-		} else {
-			delete index[key];
+			json[key] = array;
 		}
 	}
-	$fs.writeFileSync("./private/db/subtitles.json", JSON.stringify(index, null, "\t"));
+	return json;
+}
+
+function run(): void {
+	let json = convertToJSON(getIndex());
+	$fs.writeFileSync("./private/db/subtitles.json", JSON.stringify(json, null, "\t"));
 }
 
 run();
