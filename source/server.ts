@@ -98,52 +98,43 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 	}
 };
 
-let httpServer = libhttp.createServer((request, response) => {
-		let host = request.headers["host"] || "";
-		let path = request.url || "";
-		let hostname = host.split(":").shift() as string;
-		response.writeHead(307, {
-			"Location": "https://" + hostname + ":" + 443 + path
-		});
+function requestHandler(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+	let host = request.headers["host"] || "";
+	let method = request.method || "";
+	let path = request.url || "";
+	console.log(`${new Date().toUTCString()}:${method}:${path}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, "\t"));
+	if (!/ap[.]joelek[.]se(:[0-9]+)?$/.test(host)) {
+		console.log('dropped', JSON.stringify(request.headers, null, "\t"));
+		response.writeHead(400);
 		response.end();
-	})
-	.listen(80);
-
-if (!libfs.existsSync("./private/certs/")) {
-	libfs.mkdirSync("./private/certs/", { recursive: true });
-}
-
-let httpsServer = libhttps.createServer({
-		cert: libfs.readFileSync("./private/certs/full_chain.pem"),
-		dhparam: libfs.readFileSync("./private/certs/dhparam.pem"),
-		key: libfs.readFileSync("./private/certs/certificate_key.pem")
-	}, (request, response) => {
-		let host = request.headers["host"] || "";
-		let method = request.method || "";
-		let path = request.url || "";
-		console.log(`${new Date().toUTCString()}:${method}:${path}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, "\t"));
-		if (!/ap[.]joelek[.]se(:[0-9]+)?$/.test(host)) {
-			console.log('dropped', JSON.stringify(request.headers, null, "\t"));
-			response.writeHead(400);
-			response.end();
-			return;
-		}
-		let parts: RegExpExecArray | null;
-		if (method === 'GET' && path === '/favicon.ico') {
-			response.writeHead(404);
-			response.end();
-			return;
-		}
-		if (method === 'GET' && (parts = /^[/]files[/]([0-9a-f]{32})[/]/.exec(path)) !== null) {
-			let file_id = parts[1];
-			return send_data(file_id, request, response);
-		}
-		if (/^[/]media[/]/.test(path)) {
-			if ((parts = /^[/]media[/]gifs[/]([0-9a-f]{32})[/]/.exec(path)) != null) {
-				let cue_id = parts[1];
-				let cue = data.cues_index[cue_id] as CueEntry;
-				let filename = [".", "private", "memes", cue.cue_id];
-				if (libfs.existsSync(filename.join("/"))) {
+		return;
+	}
+	let parts: RegExpExecArray | null;
+	if (method === 'GET' && path === '/favicon.ico') {
+		response.writeHead(404);
+		response.end();
+		return;
+	}
+	if (method === 'GET' && (parts = /^[/]files[/]([0-9a-f]{32})[/]/.exec(path)) !== null) {
+		let file_id = parts[1];
+		return send_data(file_id, request, response);
+	}
+	if (/^[/]media[/]/.test(path)) {
+		if ((parts = /^[/]media[/]gifs[/]([0-9a-f]{32})[/]/.exec(path)) != null) {
+			let cue_id = parts[1];
+			let cue = data.cues_index[cue_id] as CueEntry;
+			let filename = [".", "private", "memes", cue.cue_id];
+			if (libfs.existsSync(filename.join("/"))) {
+				let stream = libfs.createReadStream(filename.join("/"));
+				stream.on("open", () => {
+					response.writeHead(200, {
+						"Access-Control-Allow-Origin": "*",
+						"Content-Type": "image/gif"
+					});
+					stream.pipe(response);
+				});
+			} else {
+				subsearch.generateMeme(filename, cue, () => {
 					let stream = libfs.createReadStream(filename.join("/"));
 					stream.on("open", () => {
 						response.writeHead(200, {
@@ -152,37 +143,57 @@ let httpsServer = libhttps.createServer({
 						});
 						stream.pipe(response);
 					});
-				} else {
-					subsearch.generateMeme(filename, cue, () => {
-						let stream = libfs.createReadStream(filename.join("/"));
-						stream.on("open", () => {
-							response.writeHead(200, {
-								"Access-Control-Allow-Origin": "*",
-								"Content-Type": "image/gif"
-							});
-							stream.pipe(response);
-						});
-					});
-				}
-				return;
+				});
 			}
-			if (/^[/]media[/]channels[/]/.test(path)) {
-				let token = liburl.parse(request.url || "/", true).query.token as string;
-				channels.handleRequest(token, request, response);
-				return;
-			}
-		}
-		if (/^[/]api[/]/.test(path)) {
-			return api.handleRequest(request, response);
-		}
-		if (method === 'GET') {
-			response.writeHead(200);
-			response.end(`<!doctype html><html><head><base href="/"/><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0" name="viewport"/></head><body><script>${libfs.readFileSync('./build/client.bundle.js')}</script></body></html>`);
 			return;
 		}
-		console.log('unhandled', JSON.stringify(request.headers, null, "\t"));
-		response.writeHead(400);
-		response.end();
+		if (/^[/]media[/]channels[/]/.test(path)) {
+			let token = liburl.parse(request.url || "/", true).query.token as string;
+			channels.handleRequest(token, request, response);
+			return;
+		}
+	}
+	if (/^[/]api[/]/.test(path)) {
+		return api.handleRequest(request, response);
+	}
+	if (method === 'GET') {
+		response.writeHead(200);
+		response.end(`<!doctype html><html><head><base href="/"/><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0" name="viewport"/></head><body><script>${libfs.readFileSync('./build/client.bundle.js')}</script></body></html>`);
 		return;
-	})
-	.listen(443);
+	}
+	console.log('unhandled', JSON.stringify(request.headers, null, "\t"));
+	response.writeHead(400);
+	response.end();
+	return;
+}
+
+if (!libfs.existsSync("./private/certs/")) {
+	libfs.mkdirSync("./private/certs/", { recursive: true });
+}
+
+function read(path: string): Buffer | undefined {
+	if (libfs.existsSync(path)) {
+		return libfs.readFileSync(path);
+	}
+	return undefined;
+}
+
+let full_chain = read("./private/certs/full_chain.pem");
+let dhparam = read("./private/certs/dhparam.pem");
+let certificate_key = read("./private/certs/certificate_key.pem");
+
+if (full_chain && certificate_key) {
+	let server = libhttps.createServer({
+		cert: full_chain,
+		dhparam: dhparam,
+		key: certificate_key
+	}, requestHandler);
+	server.listen(443, () => {
+		console.log("https://localhost:443");
+	});
+} else {
+	let server = libhttp.createServer({}, requestHandler);
+	server.listen(80, () => {
+		console.log("http://localhost:80");
+	});
+}
