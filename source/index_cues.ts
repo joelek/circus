@@ -27,6 +27,15 @@ function run(): void {
 			}
 		}
 	}
+	for (let key in index) {
+		let set = new Set<string>(index[key]);
+		let array = new Array(...set);
+		if (array.length > 1) {
+			index[key] = array;
+		} else {
+			delete index[key];
+		}
+	}
 	$fs.writeFileSync("./private/db/subtitles.json", JSON.stringify(index, null, "\t"));
 }
 
