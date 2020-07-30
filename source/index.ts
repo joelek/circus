@@ -992,11 +992,11 @@ db.video.subtitles.forEach((subtitle_entry) => {
 			let start_ms = cue.start_ms;
 			let duration_ms = cue.duration_ms;
 			let lines = cue.lines.slice();
-			subtitle_entry.cues.push({
+			subtitle_entry.cues.push([
 				start_ms,
 				duration_ms,
-				lines
-			});
+				lines.join("\n")
+			]);
 		});
 	} catch (error) {
 		console.log(path);

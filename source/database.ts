@@ -442,7 +442,11 @@ export type SubtitleEntry = {
 	"movie_part_id": (string | null),
 	"file_id": string,
 	"language": (string | null),
-	"cues": CompactCueEntry[]
+	"cues": [
+		number,
+		number,
+		string
+	][]
 };
 
 export const SubtitleEntry = {
@@ -481,7 +485,15 @@ export const SubtitleEntry = {
 				((subject, path) => {
 					if ((subject != null) && (subject.constructor === globalThis.Array)) {
 						for (let i = 0; i < subject.length; i++) {
-							(CompactCueEntry.as)(subject[i], path + "[" + i + "]");
+							((subject, path) => {
+								if ((subject != null) && (subject.constructor === globalThis.Array)) {
+									(autoguard.guards.Number.as)(subject[0], path + "[0]");
+									(autoguard.guards.Number.as)(subject[1], path + "[1]");
+									(autoguard.guards.String.as)(subject[2], path + "[2]");
+									return subject;
+								}
+								throw "Type guard \"Tuple\" failed at \"" + path + "\"!";
+							})(subject[i], path + "[" + i + "]");
 						}
 						return subject;
 					}
@@ -502,16 +514,20 @@ export const SubtitleEntry = {
 	}
 };
 
-export type CompactCueEntry = {
+export type CueEntry = {
+	"cue_id": string,
+	"subtitle_id": string,
 	"start_ms": number,
 	"duration_ms": number,
 	"lines": string[]
 };
 
-export const CompactCueEntry = {
-	as(subject: any, path: string = ""): CompactCueEntry {
+export const CueEntry = {
+	as(subject: any, path: string = ""): CueEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
+				(autoguard.guards.String.as)(subject["cue_id"], path + "[\"cue_id\"]");
+				(autoguard.guards.String.as)(subject["subtitle_id"], path + "[\"subtitle_id\"]");
 				(autoguard.guards.Number.as)(subject["start_ms"], path + "[\"start_ms\"]");
 				(autoguard.guards.Number.as)(subject["duration_ms"], path + "[\"duration_ms\"]");
 				((subject, path) => {
@@ -526,36 +542,6 @@ export const CompactCueEntry = {
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
-		})(subject, path);
-	},
-	is(subject: any): subject is CompactCueEntry {
-		try {
-			CompactCueEntry.as(subject);
-		} catch (error) {
-			return false;
-		}
-		return true;
-	}
-};
-
-export type CueEntry = (CompactCueEntry & {
-	"cue_id": string,
-	"subtitle_id": string
-});
-
-export const CueEntry = {
-	as(subject: any, path: string = ""): CueEntry {
-		return ((subject, path) => {
-			(CompactCueEntry.as)(subject, path);
-			((subject, path) => {
-				if ((subject != null) && (subject.constructor === globalThis.Object)) {
-					(autoguard.guards.String.as)(subject["cue_id"], path + "[\"cue_id\"]");
-					(autoguard.guards.String.as)(subject["subtitle_id"], path + "[\"subtitle_id\"]");
-					return subject;
-				}
-				throw "Type guard \"Object\" failed at \"" + path + "\"!";
-			})(subject, path);
-			return subject;
 		})(subject, path);
 	},
 	is(subject: any): subject is CueEntry {
@@ -1104,7 +1090,6 @@ export type Autoguard = {
 	"SeasonEntry": SeasonEntry,
 	"EpisodeEntry": EpisodeEntry,
 	"SubtitleEntry": SubtitleEntry,
-	"CompactCueEntry": CompactCueEntry,
 	"CueEntry": CueEntry,
 	"FileEntry": FileEntry,
 	"MediaDatabase": MediaDatabase,
@@ -1135,7 +1120,6 @@ export const Autoguard = {
 	"SeasonEntry": SeasonEntry,
 	"EpisodeEntry": EpisodeEntry,
 	"SubtitleEntry": SubtitleEntry,
-	"CompactCueEntry": CompactCueEntry,
 	"CueEntry": CueEntry,
 	"FileEntry": FileEntry,
 	"MediaDatabase": MediaDatabase,

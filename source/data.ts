@@ -142,12 +142,12 @@ for (let subtitle of media.video.subtitles) {
 	for (let cue of subtitle.cues) {
 		let hash = libcrypto.createHash("md5");
 		hash.update(subtitle.file_id);
-		hash.update("" + cue.start_ms);
+		hash.update("" + cue[0]);
 		let cue_id = hash.digest("hex");
 		let subtitle_id = subtitle.subtitle_id;
-		let start_ms = cue.start_ms;
-		let duration_ms = cue.duration_ms;
-		let lines = cue.lines.slice();
+		let start_ms = cue[0];
+		let duration_ms = cue[1];
+		let lines = cue[2].split("\n");
 		cues_index[cue_id] = {
 			cue_id,
 			subtitle_id,

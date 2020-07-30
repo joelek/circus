@@ -80,17 +80,15 @@
 		movie_part_id: (string | null),
 		file_id: string,
 		language: (string | null),
-		cues: @CompactCueEntry[]
+		cues: [ number, number, string ][]
 	},
-	CompactCueEntry: {
+	CueEntry: {
+		cue_id: string,
+		subtitle_id: string,
 		start_ms: number,
 		duration_ms: number,
 		lines: string[]
 	},
-	CueEntry: (@CompactCueEntry & {
-		cue_id: string,
-		subtitle_id: string
-	}),
 	FileEntry: {
 		file_id: string,
 		path: string[],

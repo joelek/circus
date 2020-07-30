@@ -12,9 +12,9 @@ function run(): void {
 		for (let cue of subtitle.cues) {
 			let hash = $crypto.createHash("md5");
 			hash.update(subtitle.file_id);
-			hash.update("" + cue.start_ms);
+			hash.update("" + cue[0]);
 			let cue_id = hash.digest("hex");
-			for (let line of cue.lines) {
+			for (let line of cue[2].split("\n")) {
 				let terms = $utils.getSearchTerms(line);
 				for (let term of terms) {
 					let cues = index[term];
