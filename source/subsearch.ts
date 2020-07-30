@@ -60,6 +60,11 @@ function generateMeme(target: string[], cue: database.CueEntry, cb: { (): void }
 				subtitle.join("/"),
 				"-y"
 			]);
+			cp.on("error", () => {
+				console.log("ffmpeg command failed!");
+				deleteTree(wd.join("/"));
+				return cb();
+			});
 			cp.on("exit", () => {
 				let cp = libcp.spawn("ffmpeg", [
 					"-ss", utils.formatTimestamp(cue.start_ms),

@@ -135,6 +135,10 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 				});
 			} else {
 				subsearch.generateMeme(filename, cue, () => {
+					if (!libfs.existsSync(filename.join("/"))) {
+						response.writeHead(500);
+						return response.end();
+					}
 					let stream = libfs.createReadStream(filename.join("/"));
 					stream.on("open", () => {
 						response.writeHead(200, {
