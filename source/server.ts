@@ -103,7 +103,7 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 	let method = request.method || "";
 	let path = request.url || "";
 	console.log(`${new Date().toUTCString()}:${method}:${path}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, "\t"));
-	if (!/ap[.]joelek[.]se(:[0-9]+)?$/.test(host)) {
+	if (/^[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+(:[0-9]+)?$/.test(host)) {
 		console.log('dropped', JSON.stringify(request.headers, null, "\t"));
 		response.writeHead(400);
 		response.end();
