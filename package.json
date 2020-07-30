@@ -18,7 +18,7 @@
 		"url": "https://github.com/joelek/castaway.git"
 	},
 	"scripts": {
-		"build": "rm -rf ./build/ && npx tsc --build && npm run bundle",
+		"build": "rm -rf ./build/ && npm run codegen && npx tsc --build && npm run bundle",
 		"bundle": "npx browserify ./build/client.js --outfile ./build/client.bundle.js",
 		"clean": "rm -rf ./build/ ./node_modules/",
 		"codegen": "npx autoguard --standalone=false"

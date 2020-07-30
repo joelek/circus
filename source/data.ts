@@ -1,3 +1,4 @@
+import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as libdb from "./database";
 import * as utils from "./utils";
@@ -137,9 +138,24 @@ for (let i = 0; i < media.video.subtitles.length; i++) {
 
 export let cues_index: utils.Index<libdb.CueEntry> = {};
 
-for (let i = 0; i < media.video.cues.length; i++) {
-	let cue = media.video.cues[i];
-	cues_index[cue.cue_id] = cue;
+for (let subtitle of media.video.subtitles) {
+	for (let cue of subtitle.cues) {
+		let hash = libcrypto.createHash("md5");
+		hash.update(subtitle.file_id);
+		hash.update("" + cue.start_ms);
+		let cue_id = hash.digest("hex");
+		let subtitle_id = subtitle.subtitle_id;
+		let start_ms = cue.start_ms;
+		let duration_ms = cue.duration_ms;
+		let lines = cue.lines.slice();
+		cues_index[cue_id] = {
+			cue_id,
+			subtitle_id,
+			start_ms,
+			duration_ms,
+			lines
+		};
+	}
 }
 
 export let files_index: utils.Index<libdb.FileEntry> = {};
@@ -154,6 +170,11 @@ export let audiolists_index: utils.Index<libdb.AudiolistEntry> = {};
 for (let i = 0; i < lists.audiolists.length; i++) {
 	let audiolist = lists.audiolists[i];
 	audiolists_index[audiolist.audiolist_id] = audiolist;
+}
+
+if (!libfs.existsSync("./private/db/subtitles.json")) {
+	let db: libdb.SubtitlesDatabase = {};
+	libfs.writeFileSync("./private/db/subtitles.json", JSON.stringify(db, null, "\t"));
 }
 
 export let cue_search_index = JSON.parse(libfs.readFileSync("./private/db/subtitles.json", "utf8"), (key, value) => {

@@ -109,6 +109,10 @@ let httpServer = libhttp.createServer((request, response) => {
 	})
 	.listen(80);
 
+if (!libfs.existsSync("./private/certs/")) {
+	libfs.mkdirSync("./private/certs/", { recursive: true });
+}
+
 let httpsServer = libhttps.createServer({
 		cert: libfs.readFileSync("./private/certs/full_chain.pem"),
 		dhparam: libfs.readFileSync("./private/certs/dhparam.pem"),

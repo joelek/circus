@@ -4,12 +4,15 @@ import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as libpath from "path";
 import * as libdb from "./database";
-import * as libutils from "./utils";
 import * as libvtt from "./vtt";
 import * as metadata from "./metadata";
 import * as utils from "./utils";
 
 let media_root = './private/media/';
+
+if (!libfs.existsSync(media_root)) {
+	libfs.mkdirSync(media_root, { recursive: true });
+}
 
 let db = {
 	audio: {
@@ -29,8 +32,7 @@ let db = {
 		show_genres: new Array<libdb.ShowGenreEntry>(),
 		seasons: new Array<libdb.SeasonEntry>(),
 		episodes: new Array<libdb.EpisodeEntry>(),
-		subtitles: new Array<libdb.SubtitleEntry>(),
-		cues: new Array<libdb.CueEntry>()
+		subtitles: new Array<libdb.SubtitleEntry>()
 	},
 	files: new Array<libdb.FileEntry>()
 };
@@ -44,7 +46,6 @@ let shows_index: utils.Index<libdb.ShowEntry> = {};
 let seasons_index: utils.Index<libdb.SeasonEntry> = {};
 let episodes_index: utils.Index<libdb.EpisodeEntry> = {};
 let subtitles_index: utils.Index<libdb.SubtitleEntry> = {};
-let cues_index: utils.Index<libdb.CueEntry> = {};
 
 let artists_index: utils.Index<libdb.ArtistEntry> = {};
 let albums_index: utils.Index<libdb.AlbumEntry> = {};
@@ -158,7 +159,10 @@ let add_track_artist = (track_artist: libdb.TrackArtistEntry): void => {
 };
 
 let add_subtitle = (subtitle: libdb.SubtitleEntry): void => {
-	db.video.subtitles.push(subtitle);
+	if (!(subtitle.subtitle_id in subtitles_index)) {
+		subtitles_index[subtitle.subtitle_id] = subtitle;
+		db.video.subtitles.push(subtitle);
+	}
 };
 
 let add_file = (file: libdb.FileEntry): void => {
@@ -941,7 +945,8 @@ db.video.episodes.forEach((episode) => {
 				episode_id: episode.episode_id,
 				movie_part_id: null,
 				file_id: vtt_files[i].file_id,
-				language: null
+				language: null,
+				cues: []
 			});
 		}
 	}
@@ -963,7 +968,8 @@ db.video.movie_parts.forEach((movie_part) => {
 				episode_id: null,
 				movie_part_id: movie_part.movie_part_id,
 				file_id: vtt_files[i].file_id,
-				language: null
+				language: null,
+				cues: []
 			});
 		}
 	}
@@ -982,19 +988,11 @@ db.video.subtitles.forEach((subtitle_entry) => {
 		if (typeof metadata === "object" && typeof metadata.language === "string") {
 			subtitle_entry.language = metadata.language;
 		}
-		return; // Requires too much memory.
 		track.body.cues.forEach((cue) => {
-			let hash = libcrypto.createHash("md5");
-			hash.update(subtitle_entry.file_id);
-			hash.update("" + cue.start_ms);
-			let cue_id = hash.digest("hex");
-			let subtitle_id = subtitle_entry.subtitle_id;
 			let start_ms = cue.start_ms;
 			let duration_ms = cue.duration_ms;
 			let lines = cue.lines.slice();
-			db.video.cues.push({
-				cue_id,
-				subtitle_id,
+			subtitle_entry.cues.push({
 				start_ms,
 				duration_ms,
 				lines
@@ -1005,37 +1003,4 @@ db.video.subtitles.forEach((subtitle_entry) => {
 	}
 });
 
-let cue_search_index = new Map<string, Set<string>>();
-db.video.cues.forEach((cue_entry) => {
-	cue_entry.lines.forEach((line) => {
-		let terms = libutils.getSearchTerms(line);
-		terms.forEach((term) => {
-			let cues = cue_search_index.get(term);
-			if (cues === undefined) {
-				cues = new Set<string>();
-				cue_search_index.set(term, cues);
-			}
-			cues.add(cue_entry.cue_id);
-		});
-	});
-});
-
 libfs.writeFileSync("./private/db/media.json", JSON.stringify(db, null, "\t"));
-libfs.writeFileSync("./private/db/subtitles.json", JSON.stringify(cue_search_index, (key, value) => {
-	if (false) {
-	} else if (value instanceof Map) {
-		return Array.from(value).reduce((object, [key, value]) => {
-			// @ts-ignore
-			object[key] = value;
-			return object;
-		}, {});
-	} else if (value instanceof Set) {
-		return Array.from(value).reduce((object, value) => {
-			// @ts-ignore
-			object.push(value);
-			return object;
-		}, []);
-	} else {
-		return value;
-	}
-}, "\t"));

@@ -441,7 +441,8 @@ export type SubtitleEntry = {
 	"episode_id": (string | null),
 	"movie_part_id": (string | null),
 	"file_id": string,
-	"language": (string | null)
+	"language": (string | null),
+	"cues": CompactCueEntry[]
 };
 
 export const SubtitleEntry = {
@@ -477,6 +478,15 @@ export const SubtitleEntry = {
 					} catch (error) {}
 					throw "Type guard \"Union\" failed at \"" + path + "\"!";
 				})(subject["language"], path + "[\"language\"]");
+				((subject, path) => {
+					if ((subject != null) && (subject.constructor === globalThis.Array)) {
+						for (let i = 0; i < subject.length; i++) {
+							(CompactCueEntry.as)(subject[i], path + "[" + i + "]");
+						}
+						return subject;
+					}
+					throw "Type guard \"Array\" failed at \"" + path + "\"!";
+				})(subject["cues"], path + "[\"cues\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -492,20 +502,16 @@ export const SubtitleEntry = {
 	}
 };
 
-export type CueEntry = {
-	"cue_id": string,
-	"subtitle_id": string,
+export type CompactCueEntry = {
 	"start_ms": number,
 	"duration_ms": number,
 	"lines": string[]
 };
 
-export const CueEntry = {
-	as(subject: any, path: string = ""): CueEntry {
+export const CompactCueEntry = {
+	as(subject: any, path: string = ""): CompactCueEntry {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
-				(autoguard.guards.String.as)(subject["cue_id"], path + "[\"cue_id\"]");
-				(autoguard.guards.String.as)(subject["subtitle_id"], path + "[\"subtitle_id\"]");
 				(autoguard.guards.Number.as)(subject["start_ms"], path + "[\"start_ms\"]");
 				(autoguard.guards.Number.as)(subject["duration_ms"], path + "[\"duration_ms\"]");
 				((subject, path) => {
@@ -520,6 +526,36 @@ export const CueEntry = {
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";
+		})(subject, path);
+	},
+	is(subject: any): subject is CompactCueEntry {
+		try {
+			CompactCueEntry.as(subject);
+		} catch (error) {
+			return false;
+		}
+		return true;
+	}
+};
+
+export type CueEntry = (CompactCueEntry & {
+	"cue_id": string,
+	"subtitle_id": string
+});
+
+export const CueEntry = {
+	as(subject: any, path: string = ""): CueEntry {
+		return ((subject, path) => {
+			(CompactCueEntry.as)(subject, path);
+			((subject, path) => {
+				if ((subject != null) && (subject.constructor === globalThis.Object)) {
+					(autoguard.guards.String.as)(subject["cue_id"], path + "[\"cue_id\"]");
+					(autoguard.guards.String.as)(subject["subtitle_id"], path + "[\"subtitle_id\"]");
+					return subject;
+				}
+				throw "Type guard \"Object\" failed at \"" + path + "\"!";
+			})(subject, path);
+			return subject;
 		})(subject, path);
 	},
 	is(subject: any): subject is CueEntry {
@@ -586,8 +622,7 @@ export type MediaDatabase = {
 		"show_genres": ShowGenreEntry[],
 		"seasons": SeasonEntry[],
 		"episodes": EpisodeEntry[],
-		"subtitles": SubtitleEntry[],
-		"cues": CueEntry[]
+		"subtitles": SubtitleEntry[]
 	},
 	"files": FileEntry[]
 };
@@ -739,15 +774,6 @@ export const MediaDatabase = {
 							}
 							throw "Type guard \"Array\" failed at \"" + path + "\"!";
 						})(subject["subtitles"], path + "[\"subtitles\"]");
-						((subject, path) => {
-							if ((subject != null) && (subject.constructor === globalThis.Array)) {
-								for (let i = 0; i < subject.length; i++) {
-									(CueEntry.as)(subject[i], path + "[" + i + "]");
-								}
-								return subject;
-							}
-							throw "Type guard \"Array\" failed at \"" + path + "\"!";
-						})(subject["cues"], path + "[\"cues\"]");
 						return subject;
 					}
 					throw "Type guard \"Object\" failed at \"" + path + "\"!";
@@ -1078,6 +1104,7 @@ export type Autoguard = {
 	"SeasonEntry": SeasonEntry,
 	"EpisodeEntry": EpisodeEntry,
 	"SubtitleEntry": SubtitleEntry,
+	"CompactCueEntry": CompactCueEntry,
 	"CueEntry": CueEntry,
 	"FileEntry": FileEntry,
 	"MediaDatabase": MediaDatabase,
@@ -1108,6 +1135,7 @@ export const Autoguard = {
 	"SeasonEntry": SeasonEntry,
 	"EpisodeEntry": EpisodeEntry,
 	"SubtitleEntry": SubtitleEntry,
+	"CompactCueEntry": CompactCueEntry,
 	"CueEntry": CueEntry,
 	"FileEntry": FileEntry,
 	"MediaDatabase": MediaDatabase,
