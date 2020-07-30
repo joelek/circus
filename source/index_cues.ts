@@ -38,7 +38,7 @@ function getIndex(): Map<string, Set<string>> {
 function convertToJSON(index: Map<string, Set<string>>): { [key: string]: string[] | undefined } {
 	let json: { [key: string]: string[] | undefined } = {};
 	for (let [key, value] of index) {
-		let array = new Array(...value);
+		let array = Array.from(value);
 		if (array.length > 1) {
 			json[key] = array;
 		}
