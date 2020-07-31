@@ -908,6 +908,7 @@ let updateviewforuri = (uri: string): void => {
 					let p = document.createElement("p");
 					p.textContent = movie.title;
 					let button = document.createElement("button");
+					button.textContent = "View";
 					button.addEventListener("click", () => {
 						navigate(`video/movies/${movie.movie_id}/`);
 					});

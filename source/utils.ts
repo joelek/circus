@@ -7,9 +7,7 @@ function join(...parameters: any): string {
 function getSearchTerms(string: string, minlength?: number): Array<string> {
 	let clean = string.toLowerCase().replace(/[^a-z ]/g, "").replace(/[ ]+/g, " ");
 	let terms = clean.split(" ");
-	if (minlength != null) {
-		terms = terms.filter((word) => word.length >= minlength);
-	}
+	terms = terms.filter((word) => word.length >= Math.max(1, minlength || 0));
 	return terms;
 }
 
