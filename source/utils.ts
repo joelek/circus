@@ -4,9 +4,12 @@ function join(...parameters: any): string {
 	}).join("");
 }
 
-function getSearchTerms(string: string): Array<string> {
+function getSearchTerms(string: string, minlength?: number): Array<string> {
 	let clean = string.toLowerCase().replace(/[^a-z ]/g, "").replace(/[ ]+/g, " ");
-	let terms = clean.split(" ").filter((word) => word.length >= 4);
+	let terms = clean.split(" ");
+	if (minlength != null) {
+		terms = terms.filter((word) => word.length >= minlength);
+	}
 	return terms;
 }
 

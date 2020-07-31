@@ -330,3 +330,106 @@ export function getNextEpisode(episode_id: string): libdb.EpisodeEntry {
 	}
 	return episodes[(index + 1) % episodes.length];
 }
+
+
+
+
+
+
+
+
+
+
+
+class SearchIndex {
+	private map: Map<string, Set<string>>;
+
+	constructor() {
+		this.map = new Map<string, Set<string>>();
+	}
+
+	insert(key: string, value: string): void {
+		let set = this.map.get(key);
+		if (!set) {
+			set = new Set<string>();
+			this.map.set(key, set);
+		}
+		set.add(value);
+	}
+
+	lookup(key: string): Set<string> {
+		let set = this.map.get(key);
+		if (set) {
+			return new Set<string>(set);
+		}
+		return new Set<string>();
+	}
+
+	remove(key: string, value: string): void {
+		let set = this.map.get(key);
+		if (set) {
+			set.delete(value);
+			if (set.size === 0) {
+				this.map.delete(key);
+			}
+		}
+	}
+
+	search(query: string, limit?: number): Set<string> {
+		let terms = utils.getSearchTerms(query);
+		let sets = terms.map((term) => {
+			let set = this.map.get(term);
+			if (set) {
+				return set;
+			}
+			return new Set<string>();
+		});
+		sets = sets.filter((set) => {
+			return set.size > 0;
+		})
+		sets = sets.sort((one, two) => {
+			return one.size - two.size;
+		});
+		let values = new Set<string>();
+		if (sets.length > 0) {
+			outer: for (let value of sets[0]) {
+				inner: for (let i = 1; i < sets.length; i++) {
+					if (!sets[i].has(value)) {
+						continue outer;
+					}
+				}
+				values.add(value);
+				if (limit != null && values.size >= limit) {
+					break outer;
+				}
+			}
+		}
+		return values;
+	}
+
+	static from<A extends { [key: string]: any }>(idField: keyof A, valueField: keyof A, collection: Iterable<A>, minlength?: number): SearchIndex {
+		let searchIndex = new SearchIndex();
+		for (let record of collection) {
+			let terms = utils.getSearchTerms(record[valueField], minlength);
+			for (let term of terms) {
+				searchIndex.insert(term, record[idField]);
+			}
+		}
+		return searchIndex;
+	}
+}
+
+let movieTitleSearchIndex = SearchIndex.from("movie_id", "title", media.video.movies);
+let episodeTitleSearchIndex = SearchIndex.from("episode_id", "title", media.video.episodes);
+
+export type SearchResults = {
+	movieIds: Set<string>,
+	episodeIds: Set<string>
+};
+
+export function search(query: string, limit?: number): SearchResults {
+	return {
+		movieIds: movieTitleSearchIndex.search(query, limit),
+		episodeIds: episodeTitleSearchIndex.search(query, limit)
+	};
+}
