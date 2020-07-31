@@ -878,7 +878,66 @@ let updateviewforuri = (uri: string): void => {
 			navigate('video/genres/');
 		});
 		mount.appendChild(d);
+	} else if ((parts = /^search[/](.*)/.exec(uri)) !== null) {
+		let query = decodeURIComponent(parts[1]);
+		{
+			let input = document.createElement("input");
+			input.setAttribute("placeholder", "Search for content...");
+			input.setAttribute("type", "text");
+			input.setAttribute("value", query);
+			input.addEventListener("keyup", (event) => {
+				if (event.key === "Enter") {
+					let new_query = input.value;
+					if (new_query !== "" && new_query !== query) {
+						navigate("search/" + encodeURIComponent(new_query));
+					}
+				}
+			});
+			mount.appendChild(input);
+		}
+		{
+			let results = document.createElement("div");
+			mount.appendChild(results);
+			req<api_response.SearchRequest, api_response.SearchResponse>(`/api/search/${parts[1]}`, {}, (status, response) => {
+				while (results.lastChild !== null) {
+					results.removeChild(results.lastChild);
+				}
+				for (let movie of response.movies) {
+					let wrapper = document.createElement("div");
+					wrapper.setAttribute("class", "group");
+					let p = document.createElement("p");
+					p.textContent = movie.title;
+					let button = document.createElement("button");
+					button.addEventListener("click", () => {
+						navigate(`video/movies/${movie.movie_id}/`);
+					});
+					wrapper.appendChild(p);
+					wrapper.appendChild(button);
+					results.appendChild(wrapper);
+				}
+				for (let episode of response.episodes) {
+					let wrapper = document.createElement("div");
+					wrapper.setAttribute("class", "group");
+					let p = document.createElement("p");
+					p.textContent = episode.title;
+					let button = document.createElement("button");
+					button.textContent = "View";
+					button.addEventListener("click", () => {
+						navigate(`video/episodes/${episode.episode_id}/`);
+					});
+					wrapper.appendChild(p);
+					wrapper.appendChild(button);
+					results.appendChild(wrapper);
+				}
+			});
+		}
 	} else {
+		let s = document.createElement('div');
+		s.innerText = 'Search';
+		s.addEventListener('click', () => {
+			navigate('search/');
+		});
+		mount.appendChild(s)
 		let d = document.createElement('div');
 		d.innerText = 'Audio';
 		d.addEventListener('click', () => {
