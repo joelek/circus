@@ -754,6 +754,27 @@ class GenreRoute implements Route<api_response.GenreRequest, api_response.GenreR
 	}
 }
 
+class SearchRoute implements Route<api_response.SearchRequest, api_response.SearchResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let parts = /^[/]api[/]search[/](.*)/.exec(request.url || "/");
+		if (parts == null) {
+			throw "";
+		}
+		let query = decodeURIComponent(parts[1]);
+		let results = data.search(query);
+		let payload: api_response.SearchResponse = {
+			movies: results.movieIds.map(data.lookupMovie),
+			episodes: results.episodeIds.map(data.lookupEpisode)
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return request.method === "POST" && /^[/]api[/]search[/]/.test(request.url || "/");
+	}
+}
+
 let router = new Router()
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
@@ -773,7 +794,8 @@ let router = new Router()
 	.registerRoute(new ChannelRoute())
 	.registerRoute(new ChannelsRoute())
 	.registerRoute(new GenreRoute())
-	.registerRoute(new GenresRoute());
+	.registerRoute(new GenresRoute())
+	.registerRoute(new SearchRoute());
 
 let handleRequest = (request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	try {

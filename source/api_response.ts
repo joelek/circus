@@ -160,6 +160,19 @@ interface GenreResponse extends ApiResponse {
 	shows: Array<libdb.ShowEntry>;
 }
 
+interface SearchRequest extends ApiRequest {
+
+}
+
+interface SearchResponse extends ApiResponse {
+	movies: Array<libdb.MovieEntry>,
+	episodes: Array<libdb.EpisodeEntry & {
+		season: libdb.SeasonEntry & {
+			show: libdb.ShowEntry
+		}
+	}>
+}
+
 export {
 	ApiRequest,
 	ApiResponse,
@@ -193,5 +206,7 @@ export {
 	GenresRequest,
 	GenresResponse,
 	GenreRequest,
-	GenreResponse
+	GenreResponse,
+	SearchRequest,
+	SearchResponse
 };

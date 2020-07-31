@@ -338,6 +338,36 @@ export function getNextEpisode(episode_id: string): libdb.EpisodeEntry {
 
 
 
+function lookup<A>(index: utils.Index<A>, id: string): A {
+	let record = index[id];
+	if (record == null) {
+		throw `Expected "${id}" to match a record!`;
+	}
+	return record;
+}
+
+export function lookupMovie(id: string): libdb.MovieEntry & {} {
+	let movie = lookup(movies_index, id);
+	return movie;
+}
+
+export function lookupEpisode(id: string): libdb.EpisodeEntry & { season: libdb.SeasonEntry & { show: libdb.ShowEntry } } {
+	let episode = lookup(episodes_index, id);
+	let season = lookup(seasons_index, episode.season_id);
+	let show = lookup(shows_index, season.show_id);
+	return {
+		...episode,
+		season: {
+			...season,
+			show: {
+				...show
+			}
+		}
+	};
+}
+
+
+
 
 
 
@@ -375,7 +405,7 @@ class SearchIndex {
 		}
 	}
 
-	search(query: string, limit?: number): Set<string> {
+	search(query: string, limit?: number): Array<string> {
 		let terms = utils.getSearchTerms(query);
 		let sets = terms.map((term) => {
 			let set = this.map.get(term);
@@ -390,7 +420,7 @@ class SearchIndex {
 		sets = sets.sort((one, two) => {
 			return one.size - two.size;
 		});
-		let values = new Set<string>();
+		let values = new Array<string>();
 		if (sets.length > 0) {
 			outer: for (let value of sets[0]) {
 				inner: for (let i = 1; i < sets.length; i++) {
@@ -398,8 +428,8 @@ class SearchIndex {
 						continue outer;
 					}
 				}
-				values.add(value);
-				if (limit != null && values.size >= limit) {
+				values.push(value);
+				if (limit != null && values.length >= limit) {
 					break outer;
 				}
 			}
@@ -423,8 +453,8 @@ let movieTitleSearchIndex = SearchIndex.from("movie_id", "title", media.video.mo
 let episodeTitleSearchIndex = SearchIndex.from("episode_id", "title", media.video.episodes);
 
 export type SearchResults = {
-	movieIds: Set<string>,
-	episodeIds: Set<string>
+	movieIds: Array<string>,
+	episodeIds: Array<string>
 };
 
 export function search(query: string, limit?: number): SearchResults {
