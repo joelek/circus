@@ -426,12 +426,6 @@ class CollectionIndex<A> {
 
 
 
-let albumArtistsIndex = CollectionIndex.from("album_id", media.audio.album_artists);
-let artistAlbumsIndex = CollectionIndex.from("artist_id", media.audio.album_artists);
-let trackArtistsIndex = CollectionIndex.from("track_id", media.audio.track_artists);
-let artistTracksIndex = CollectionIndex.from("artist_id", media.audio.track_artists);
-let fileSubtitlesIndex = CollectionIndex.from("file_id", media.video.subtitles);
-
 function lookup<A>(index: utils.Index<A>, id: string): A {
 	let record = index[id];
 	if (record == null) {
@@ -439,6 +433,28 @@ function lookup<A>(index: utils.Index<A>, id: string): A {
 	}
 	return record;
 }
+
+let albumArtistsIndex = CollectionIndex.from("album_id", media.audio.album_artists);
+let artistAlbumsIndex = CollectionIndex.from("artist_id", media.audio.album_artists);
+let trackArtistsIndex = CollectionIndex.from("track_id", media.audio.track_artists);
+let artistTracksIndex = CollectionIndex.from("artist_id", media.audio.track_artists);
+let fileSubtitlesIndex = CollectionIndex.from("video_file_id", media.video.subtitles.map((subtitle) => {
+	if (subtitle.movie_part_id) {
+		let movie_part = lookup(movie_parts_index, subtitle.movie_part_id);
+		return {
+			...subtitle,
+			video_file_id: movie_part.file_id
+		};
+	}
+	if (subtitle.episode_id) {
+		let episode = lookup(episodes_index, subtitle.episode_id);
+		return {
+			...subtitle,
+			video_file_id: episode.file_id
+		};
+	}
+	throw "Expected code to be unreachable!";
+}));
 
 export function lookupSubtitles(id: string): Array<libdb.SubtitleEntry & {}> {
 	return fileSubtitlesIndex.lookup(id).map((entry) => {
