@@ -1000,7 +1000,7 @@ let updateviewforuri = (uri: string): void => {
 						let button = document.createElement("button");
 						button.textContent = "View";
 						button.addEventListener("click", () => {
-							navigate(`audio/album,s/${album.album_id}/`);
+							navigate(`audio/albums/${album.album_id}/`);
 						});
 						wrapper.appendChild(p);
 						wrapper.appendChild(button);
