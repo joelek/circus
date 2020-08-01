@@ -102,9 +102,14 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 	let host = request.headers["host"] || "";
 	let method = request.method || "";
 	let path = request.url || "";
-	console.log(`${new Date().toUTCString()}:${method}:${path}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, "\t"));
+	let startMs = Date.now();
+	response.on("finish", () => {
+		let endMs = Date.now();
+		let ms = endMs - startMs;
+		process.stderr.write(`${("    " + ms).slice(-4)}ms ${method}:${path}\n`);
+	});
+	//console.log(`${new Date().toUTCString()}:${method}:${path}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, "\t"));
 	if (/^[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+(:[0-9]+)?$/.test(host)) {
-		console.log('dropped', JSON.stringify(request.headers, null, "\t"));
 		response.writeHead(400);
 		response.end();
 		return;
