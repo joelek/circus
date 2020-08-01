@@ -20,7 +20,7 @@ function getIndex(): Map<string, Set<string>> {
 		for (let cue of subtitle.cues) {
 			let cue_id = getCueId(subtitle, cue);
 			for (let line of cue[2].split("\n")) {
-				let terms = $utils.getSearchTerms(line, 4);
+				let terms = $utils.getSearchTerms(line).filter((term) => term.length >= 4);
 				for (let term of terms) {
 					let cues = index.get(term);
 					if (cues === undefined) {

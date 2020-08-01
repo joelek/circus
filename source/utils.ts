@@ -4,11 +4,11 @@ function join(...parameters: any): string {
 	}).join("");
 }
 
-function getSearchTerms(string: string, minlength?: number): Array<string> {
-	let clean = string.toLowerCase().replace(/[^a-z ]/g, "").replace(/[ ]+/g, " ");
-	let terms = clean.split(" ");
-	terms = terms.filter((word) => word.length >= Math.max(1, minlength || 0));
-	return terms;
+function getSearchTerms(string: string): Array<string> {
+	let normalized = string;
+	normalized = normalized.toLowerCase();
+	normalized = normalized.normalize("NFC");
+	return Array.from(normalized.match(/(\p{L}+|\p{N}+)/gu) || []);
 }
 
 function formatSeasonEpisode(season: number, episode: number): string {

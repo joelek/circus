@@ -437,10 +437,10 @@ class SearchIndex {
 		return values;
 	}
 
-	static from<A extends { [key: string]: any }>(idField: keyof A, valueField: keyof A, collection: Iterable<A>, minlength?: number): SearchIndex {
+	static from<A extends { [key: string]: any }>(idField: keyof A, valueField: keyof A, collection: Iterable<A>): SearchIndex {
 		let searchIndex = new SearchIndex();
 		for (let record of collection) {
-			let terms = utils.getSearchTerms(record[valueField], minlength);
+			let terms = utils.getSearchTerms(record[valueField]);
 			for (let term of terms) {
 				searchIndex.insert(term, record[idField]);
 			}
