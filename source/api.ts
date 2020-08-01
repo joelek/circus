@@ -761,8 +761,12 @@ class SearchRoute implements Route<api_response.SearchRequest, api_response.Sear
 			throw "";
 		}
 		let query = decodeURIComponent(parts[1]);
-		let results = data.search(query);
+		let results = data.search(query, 10);
 		let payload: api_response.SearchResponse = {
+			artists: results.artistIds.map(data.lookupArtist),
+			albums: results.albumIds.map(data.lookupAlbum),
+			tracks: results.trackIds.map(data.lookupTrack),
+			shows: results.showIds.map(data.lookupShow),
 			movies: results.movieIds.map(data.lookupMovie),
 			episodes: results.episodeIds.map(data.lookupEpisode)
 		};

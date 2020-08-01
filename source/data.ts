@@ -346,23 +346,85 @@ function lookup<A>(index: utils.Index<A>, id: string): A {
 	return record;
 }
 
+export function lookupArtist(id: string): libdb.ArtistEntry & {} {
+	let artist = lookup(artists_index, id);
+	return {
+		...artist
+	};
+}
+
+export function lookupAlbumArtists(id: string): Array<libdb.ArtistEntry> {
+	// TODO: Create and use index.
+	return media.audio.album_artists.filter((entry) => entry.album_id === id).map((entry) => {
+		return lookupArtist(entry.artist_id);
+	});
+}
+
+export function lookupAlbum(id: string): libdb.AlbumEntry & { artists: Array<libdb.ArtistEntry> } {
+	let album = lookup(albums_index, id);
+	let artists = lookupAlbumArtists(album.album_id);
+	return {
+		...album,
+		artists
+	};
+}
+
+export function lookupDisc(id: string): libdb.DiscEntry & { album: libdb.AlbumEntry & { artists: Array<libdb.ArtistEntry> } } {
+	let disc = lookup(discs_index, id);
+	let album = lookupAlbum(disc.album_id);
+	return {
+		...disc,
+		album
+	};
+}
+
+export function lookupTrackArtists(id: string): Array<libdb.ArtistEntry> {
+	// TODO: Create and use index.
+	return media.audio.track_artists.filter((entry) => entry.track_id === id).map((entry) => {
+		return lookupArtist(entry.artist_id);
+	});
+}
+
+export function lookupTrack(id: string): libdb.TrackEntry & { disc: libdb.DiscEntry & { album: libdb.AlbumEntry & { artists: Array<libdb.ArtistEntry> } }, artists: Array<libdb.ArtistEntry> } {
+	let track = lookup(tracks_index, id);
+	let disc = lookupDisc(track.disc_id);
+	let artists = lookupTrackArtists(track.track_id);
+	return {
+		...track,
+		disc,
+		artists
+	};
+}
+
 export function lookupMovie(id: string): libdb.MovieEntry & {} {
 	let movie = lookup(movies_index, id);
-	return movie;
+	return {
+		...movie
+	};
+}
+
+export function lookupShow(id: string): libdb.ShowEntry & {} {
+	let show = lookup(shows_index, id);
+	return {
+		...show
+	};
+}
+
+export function lookupSeason(id: string): libdb.SeasonEntry & { show: libdb.ShowEntry } {
+	let season = lookup(seasons_index, id);
+	let show = lookupShow(season.show_id);
+	return {
+		...season,
+		show
+	};
 }
 
 export function lookupEpisode(id: string): libdb.EpisodeEntry & { season: libdb.SeasonEntry & { show: libdb.ShowEntry } } {
 	let episode = lookup(episodes_index, id);
-	let season = lookup(seasons_index, episode.season_id);
-	let show = lookup(shows_index, season.show_id);
+	let season = lookupSeason(episode.season_id);
 	return {
 		...episode,
-		season: {
-			...season,
-			show: {
-				...show
-			}
-		}
+		season
 	};
 }
 
@@ -449,16 +511,28 @@ class SearchIndex {
 	}
 }
 
+let artistTitleSearchIndex = SearchIndex.from("artist_id", "title", media.audio.artists);
+let albumTitleSearchIndex = SearchIndex.from("album_id", "title", media.audio.albums);
+let trackTitleSearchIndex = SearchIndex.from("track_id", "title", media.audio.tracks);
+let showTitleSearchIndex = SearchIndex.from("show_id", "title", media.video.shows);
 let movieTitleSearchIndex = SearchIndex.from("movie_id", "title", media.video.movies);
 let episodeTitleSearchIndex = SearchIndex.from("episode_id", "title", media.video.episodes);
 
 export type SearchResults = {
+	artistIds: Array<string>,
+	albumIds: Array<string>,
+	trackIds: Array<string>,
+	showIds: Array<string>,
 	movieIds: Array<string>,
 	episodeIds: Array<string>
 };
 
 export function search(query: string, limit?: number): SearchResults {
 	return {
+		artistIds: artistTitleSearchIndex.search(query, limit),
+		albumIds: albumTitleSearchIndex.search(query, limit),
+		trackIds: trackTitleSearchIndex.search(query, limit),
+		showIds: showTitleSearchIndex.search(query, limit),
 		movieIds: movieTitleSearchIndex.search(query, limit),
 		episodeIds: episodeTitleSearchIndex.search(query, limit)
 	};

@@ -165,6 +165,19 @@ interface SearchRequest extends ApiRequest {
 }
 
 interface SearchResponse extends ApiResponse {
+	artists: Array<libdb.ArtistEntry>,
+	albums: Array<libdb.AlbumEntry & {
+		artists: Array<libdb.ArtistEntry>
+	}>,
+	tracks: Array<libdb.TrackEntry & {
+		disc: libdb.DiscEntry & {
+			album: libdb.AlbumEntry & {
+				artists: Array<libdb.ArtistEntry>
+			}
+		},
+		artists: Array<libdb.ArtistEntry>
+	}>,
+	shows: Array<libdb.ShowEntry>,
 	movies: Array<libdb.MovieEntry>,
 	episodes: Array<libdb.EpisodeEntry & {
 		season: libdb.SeasonEntry & {
