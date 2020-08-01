@@ -5,9 +5,9 @@ import * as $fs from "fs";
 import * as $database from "./database";
 import * as $utils from "./utils";
 
-function getCueId(subtitle: $database.SubtitleEntry, cue: [number, number, string]): string {
+function getCueId(subtitle_id: string, cue: [ number, number, string ]): string {
 	let hash = $crypto.createHash("md5");
-	hash.update(subtitle.file_id);
+	hash.update(subtitle_id);
 	hash.update("" + cue[0]);
 	let cue_id = hash.digest("hex");
 	return cue_id;
@@ -16,9 +16,9 @@ function getCueId(subtitle: $database.SubtitleEntry, cue: [number, number, strin
 function getIndex(): Map<string, Set<string>> {
 	let media = JSON.parse($fs.readFileSync("./private/db/media.json", "utf8")) as $database.MediaDatabase;
 	let index = new Map<string, Set<string>>();
-	for (let subtitle of media.video.subtitles) {
+	for (let subtitle of media.video.subtitle_contents) {
 		for (let cue of subtitle.cues) {
-			let cue_id = getCueId(subtitle, cue);
+			let cue_id = getCueId(subtitle.subtitle_id, cue);
 			for (let line of cue[2].split("\n")) {
 				let terms = $utils.getSearchTerms(line).filter((term) => term.length >= 4);
 				for (let term of terms) {

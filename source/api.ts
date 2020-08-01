@@ -314,10 +314,7 @@ class ShowRoute implements Route<api_response.ApiRequest, api_response.ShowRespo
 						return episode.season_id === season.season_id
 					})
 					.map((episode) => {
-						let subtitles = data.media.video.subtitles
-							.filter((subtitle) => {
-								return subtitle.episode_id === episode.episode_id
-							});
+						let subtitles = data.lookupSubtitles(episode.file_id);
 						let streamed = data.hasStreamed(username, episode.file_id);
 						let payload: api_response.EpisodeResponse = {
 							...episode,

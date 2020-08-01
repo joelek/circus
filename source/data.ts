@@ -138,10 +138,10 @@ for (let i = 0; i < media.video.subtitles.length; i++) {
 
 export let cues_index: utils.Index<libdb.CueEntry> = {};
 
-for (let subtitle of media.video.subtitles) {
+for (let subtitle of media.video.subtitle_contents) {
 	for (let cue of subtitle.cues) {
 		let hash = libcrypto.createHash("md5");
-		hash.update(subtitle.file_id);
+		hash.update(subtitle.subtitle_id);
 		hash.update("" + cue[0]);
 		let cue_id = hash.digest("hex");
 		let subtitle_id = subtitle.subtitle_id;
@@ -430,6 +430,7 @@ let albumArtistsIndex = CollectionIndex.from("album_id", media.audio.album_artis
 let artistAlbumsIndex = CollectionIndex.from("artist_id", media.audio.album_artists);
 let trackArtistsIndex = CollectionIndex.from("track_id", media.audio.track_artists);
 let artistTracksIndex = CollectionIndex.from("artist_id", media.audio.track_artists);
+let fileSubtitlesIndex = CollectionIndex.from("file_id", media.video.subtitles);
 
 function lookup<A>(index: utils.Index<A>, id: string): A {
 	let record = index[id];
@@ -437,6 +438,14 @@ function lookup<A>(index: utils.Index<A>, id: string): A {
 		throw `Expected "${id}" to match a record!`;
 	}
 	return record;
+}
+
+export function lookupSubtitles(id: string): Array<libdb.SubtitleEntry & {}> {
+	return fileSubtitlesIndex.lookup(id).map((entry) => {
+		return {
+			...entry
+		};
+	});
 }
 
 export function lookupArtist(id: string): libdb.ArtistEntry & {} {

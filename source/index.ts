@@ -32,7 +32,8 @@ let db = {
 		show_genres: new Array<libdb.ShowGenreEntry>(),
 		seasons: new Array<libdb.SeasonEntry>(),
 		episodes: new Array<libdb.EpisodeEntry>(),
-		subtitles: new Array<libdb.SubtitleEntry>()
+		subtitles: new Array<libdb.SubtitleEntry>(),
+		subtitle_contents: new Array<libdb.SubtitleContentEntry>()
 	},
 	files: new Array<libdb.FileEntry>()
 };
@@ -945,8 +946,7 @@ db.video.episodes.forEach((episode) => {
 				episode_id: episode.episode_id,
 				movie_part_id: null,
 				file_id: vtt_files[i].file_id,
-				language: null,
-				cues: []
+				language: null
 			});
 		}
 	}
@@ -968,8 +968,7 @@ db.video.movie_parts.forEach((movie_part) => {
 				episode_id: null,
 				movie_part_id: movie_part.movie_part_id,
 				file_id: vtt_files[i].file_id,
-				language: null,
-				cues: []
+				language: null
 			});
 		}
 	}
@@ -988,16 +987,20 @@ db.video.subtitles.forEach((subtitle_entry) => {
 		if (typeof metadata === "object" && typeof metadata.language === "string") {
 			subtitle_entry.language = metadata.language;
 		}
-		track.body.cues.forEach((cue) => {
+		let cues = track.body.cues.map<[number, number, string]>((cue) => {
 			let start_ms = cue.start_ms;
 			let duration_ms = cue.duration_ms;
-			let lines = cue.lines.slice();
-			subtitle_entry.cues.push([
+			let lines = cue.lines.join("\n");
+			return [
 				start_ms,
 				duration_ms,
-				lines.join("\n")
-			]);
+				lines
+			];
 		});
+		db.video.subtitle_contents.push({
+			subtitle_id: subtitle_entry.subtitle_id,
+			cues
+		})
 	} catch (error) {
 		console.log(path);
 	}
