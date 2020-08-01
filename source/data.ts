@@ -338,6 +338,99 @@ export function getNextEpisode(episode_id: string): libdb.EpisodeEntry {
 
 
 
+
+
+class RecordIndex<A> {
+	private map: Map<string, A>;
+
+	constructor() {
+		this.map = new Map<string, A>();
+	}
+
+	insert(id: string, record: A): void {
+		this.map.set(id, record);
+	}
+
+	lookup(id: string): A {
+		let record = this.map.get(id);
+		if (record == null) {
+			throw `Expected "${id}" to match a record!`;
+		}
+		return record;
+	}
+
+	remove(id: string): void {
+		this.map.delete(id);
+	}
+
+	static from<A extends { [key: string]: any }>(idField: keyof A, collection: Iterable<A>): RecordIndex<A> {
+		let index = new RecordIndex<A>();
+		for (let record of collection) {
+			index.insert(record[idField], record);
+		}
+		return index;
+	}
+}
+
+class CollectionIndex<A> {
+	private map: Map<string, Set<A>>;
+
+	constructor() {
+		this.map = new Map<string, Set<A>>();
+	}
+
+	insert(id: string, record: A): void {
+		let set = this.map.get(id);
+		if (!set) {
+			set = new Set<A>();
+			this.map.set(id, set);
+		}
+		set.add(record);
+	}
+
+	lookup(id: string): Array<A> {
+		let set = this.map.get(id);
+		if (set) {
+			return Array.from(set);
+		}
+		return new Array<A>();
+	}
+
+	remove(id: string, record: A): void {
+		let set = this.map.get(id);
+		if (set) {
+			set.delete(record);
+			if (set.size === 0) {
+				this.map.delete(id);
+			}
+		}
+	}
+
+	static from<A extends { [key: string]: any }>(idField: keyof A, collection: Iterable<A>): CollectionIndex<A> {
+		let index = new CollectionIndex<A>();
+		for (let record of collection) {
+			index.insert(record[idField], record);
+		}
+		return index;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+let albumArtistsIndex = CollectionIndex.from("album_id", media.audio.album_artists);
+let artistAlbumsIndex = CollectionIndex.from("artist_id", media.audio.album_artists);
+let trackArtistsIndex = CollectionIndex.from("track_id", media.audio.track_artists);
+let artistTracksIndex = CollectionIndex.from("artist_id", media.audio.track_artists);
+
 function lookup<A>(index: utils.Index<A>, id: string): A {
 	let record = index[id];
 	if (record == null) {
@@ -354,8 +447,7 @@ export function lookupArtist(id: string): libdb.ArtistEntry & {} {
 }
 
 export function lookupAlbumArtists(id: string): Array<libdb.ArtistEntry> {
-	// TODO: Create and use index.
-	return media.audio.album_artists.filter((entry) => entry.album_id === id).map((entry) => {
+	return albumArtistsIndex.lookup(id).map((entry) => {
 		return lookupArtist(entry.artist_id);
 	});
 }
@@ -379,8 +471,7 @@ export function lookupDisc(id: string): libdb.DiscEntry & { album: libdb.AlbumEn
 }
 
 export function lookupTrackArtists(id: string): Array<libdb.ArtistEntry> {
-	// TODO: Create and use index.
-	return media.audio.track_artists.filter((entry) => entry.track_id === id).map((entry) => {
+	return trackArtistsIndex.lookup(id).map((entry) => {
 		return lookupArtist(entry.artist_id);
 	});
 }
