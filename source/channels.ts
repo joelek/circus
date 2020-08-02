@@ -63,15 +63,39 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 			const weight = 1.0 + (genre_weights.length === 0 ? 0.0 : genre_weights.reduce((sum, genre_weight) => {
 				return sum + genre_weight;
 			}, 0.0) / genre_weights.length);
-			let next_episode = data.getEpisodesInShow(show.show_id)[0];
-			try {
-				const most_recently = data.getMostRecentlyStreamedEpisode(show.show_id, username);
-				next_episode = data.getNextEpisode(most_recently.episode_id);
-			} catch (error) {}
+			let episodes = data.getEpisodesFromShowId(show.show_id).map((episode) => {
+				let streams = data.getStreamsFromFileId(episode.file_id)
+					.filter((stream) => {
+						return stream.username === username;
+					});
+				let stream = streams.pop() || null;
+				return {
+					...episode,
+					stream
+				};
+			});
+			let lastIndex = episodes.reduce((index, currentEpisode, currentIndex) => {
+				if (currentEpisode.stream) {
+					let episode = episodes[index];
+					if (episode.stream) {
+						if (currentEpisode.stream.timestamp_ms > episode.stream.timestamp_ms) {
+							return currentIndex;
+						} else {
+							return index;
+						}
+					} else {
+						return currentIndex;
+					}
+				} else {
+					return index;
+				}
+			}, episodes.length - 1);
+			let startIndex = (lastIndex + 1) % episodes.length;
+			episodes = episodes.slice(startIndex).concat(episodes.slice(0, startIndex));
 			return {
 				program: {
 					show,
-					next_episode
+					episodes
 				},
 				weight
 			};
@@ -83,7 +107,9 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 					return two.weight - one.weight;
 				});
 			const program = sorted[0];
-			const episode = program.program.next_episode;
+			const episode = program.program.episodes[0];
+			program.program.episodes = program.program.episodes.slice(1);
+			program.program.episodes.push(episode);
 			const subtitles = data.lookupSubtitles(episode.file_id);
 			const season = data.seasons_index[episode.season_id];
 			if (season == null) {
@@ -103,7 +129,6 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 					subtitles
 				}
 			});
-			program.program.next_episode = data.getNextEpisode(episode.episode_id);
 			program.weight *= 0.75;
 		}
 		return programmed;

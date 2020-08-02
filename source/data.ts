@@ -204,24 +204,6 @@ for (let stream of streams.streams) {
 	set.add(stream.file_id);
 }
 
-export function addStream(username: string, file_id: string): void {
-	let set = streams_index[username];
-	if (set == null) {
-		set = new Set<string>();
-		streams_index[username] = set;
-	}
-	if (!set.has(file_id)) {
-		set.add(file_id);
-		let timestamp_ms = Date.now();
-		streams.streams.push({
-			username,
-			file_id,
-			timestamp_ms
-		});
-	}
-	libfs.writeFileSync("./private/db/streams.json", JSON.stringify(streams, null, "\t"));
-}
-
 export function hasStreamed(username: string, file_id: string): boolean {
 	let set = streams_index[username];
 	if (set == null) {
@@ -230,106 +212,6 @@ export function hasStreamed(username: string, file_id: string): boolean {
 	return set.has(file_id);
 }
 
-export function getMostRecentlyStreamedEpisode(show_id: string, username: string): libdb.EpisodeEntry {
-	const show = shows_index[show_id];
-	if (show == null) {
-		throw "";
-	}
-	const seasons = media.video.seasons
-		.filter((season) => {
-			return season.show_id === show.show_id;
-		})
-		.sort((one, two) => {
-			return two.number - one.number;
-		});
-	const episodes = media.video.episodes
-		.filter((episode) => {
-			return null != seasons
-				.find((season) => {
-					return season.season_id === episode.season_id;
-				});
-		});
-	const files = media.files
-		.filter((file) => {
-			return null != episodes
-				.find((episode) => {
-					return episode.file_id === file.file_id;
-				});
-		});
-	const show_streams = streams.streams
-		.filter((stream) => {
-			return stream.username === username;
-		})
-		.filter((stream) => {
-			return null != files
-				.find((file) => {
-					return file.file_id === stream.file_id;
-				});
-		})
-		.sort((one, two) => {
-			return one.timestamp_ms - two.timestamp_ms;
-		});
-	const stream = show_streams.pop();
-	if (stream == null) {
-		throw "";
-	}
-	console.log(stream);
-	const file = files.find((file) => {
-		return file.file_id === stream.file_id;
-	});
-	if (file == null) {
-		throw "";
-	}
-	const episode = episodes.find((episode) => {
-		return episode.file_id === file.file_id;
-	});
-	if (episode == null) {
-		throw "";
-	}
-	return episode;
-}
-
-export function getEpisodesInShow(show_id: string): libdb.EpisodeEntry[] {
-	return media.video.seasons
-		.filter((season) => {
-			return season.show_id === show_id;
-		})
-		.sort((one, two) => {
-			return one.number - two.number;
-		})
-		.map((season) => {
-			return media.video.episodes
-				.filter((episode) => {
-					return episode.season_id === season.season_id;
-				}).sort((one, two) => {
-					return one.number - two.number;
-				});
-		})
-		.reduce((array, episodes) => {
-			return array.concat(episodes);
-		}, new Array<libdb.EpisodeEntry>());
-}
-
-export function getNextEpisode(episode_id: string): libdb.EpisodeEntry {
-	const episode = episodes_index[episode_id];
-	if (episode == null) {
-		throw "";
-	}
-	const season = seasons_index[episode.season_id];
-	if (season == null) {
-		throw "";
-	}
-	const show = shows_index[season.show_id];
-	if (show == null) {
-		throw "";
-	}
-	const episodes = getEpisodesInShow(show.show_id);
-	const index = episodes.indexOf(episode);
-	if (index < 0) {
-		throw "";
-	}
-	return episodes[(index + 1) % episodes.length];
-}
 
 
 
@@ -440,6 +322,32 @@ let getMoviePartsFromMovieIdIndex = CollectionIndex.from("movie_id", media.video
 let getShowGenresFromShowId = CollectionIndex.from("show_id", media.video.show_genres);
 let getMovieGenresFromMovieId = CollectionIndex.from("movie_id", media.video.movie_genres);
 let getVideoGenreFromVideoGenreId = RecordIndex.from("video_genre_id", media.video.genres);
+let getSeasonsFromShowIdIndex = CollectionIndex.from("show_id", media.video.seasons);
+let getEpisodesFromSeasonIdIndex = CollectionIndex.from("season_id", media.video.episodes);
+let getStreamsFromFileIdIndex = CollectionIndex.from("file_id", streams.streams);
+
+export function getStreamsFromFileId(fileId: string): Array<libdb.Stream> {
+	return getStreamsFromFileIdIndex.lookup(fileId)
+		.sort((one, two) => {
+			return one.timestamp_ms - two.timestamp_ms;
+		});
+}
+
+export function getEpisodesFromShowId(showId: string): Array<libdb.EpisodeEntry> {
+	return getSeasonsFromShowIdIndex.lookup(showId)
+		.sort((one, two) => {
+			return one.number - two.number;
+		})
+		.map((season) => {
+			return getEpisodesFromSeasonIdIndex.lookup(season.season_id)
+				.sort((one, two) => {
+					return one.number - two.number;
+				});
+		})
+		.reduce((array, episodes) => {
+			return array.concat(episodes);
+		}, new Array<libdb.EpisodeEntry>());
+}
 
 export function getMoviePartsFromMovieId(movieId: string): Array<libdb.MoviePartEntry & { subtitles: Array<libdb.SubtitleEntry> }> {
 	return getMoviePartsFromMovieIdIndex.lookup(movieId).map((moviePart) => {
@@ -684,4 +592,26 @@ export function search(query: string, limit?: number): SearchResults {
 		movieIds: movieTitleSearchIndex.search(query, limit),
 		episodeIds: episodeTitleSearchIndex.search(query, limit)
 	};
+}
+
+
+export function addStream(username: string, file_id: string): void {
+	let set = streams_index[username];
+	if (set == null) {
+		set = new Set<string>();
+		streams_index[username] = set;
+	}
+	set.add(file_id);
+	let timestamp_ms = Date.now();
+	streams.streams.push({
+		username,
+		file_id,
+		timestamp_ms
+	});
+	getStreamsFromFileIdIndex.insert(file_id, {
+		file_id,
+		username,
+		timestamp_ms
+	});
+	libfs.writeFileSync("./private/db/streams.json", JSON.stringify(streams, null, "\t"));
 }
