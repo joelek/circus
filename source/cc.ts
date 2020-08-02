@@ -124,7 +124,7 @@ let make_media_object = (): MediaObject | null => {
 				if (show !== undefined){
 					title = episode.title;
 					subtitle = [ show.title, `s${("00" + season.number).slice(-2)}e${("00" + episode.number).slice(-2)}`].join(' \u2022 ');
-					sttracks =  data.media.video.subtitles.filter(st => st.episode_id === (episode as libdb.EpisodeEntry).episode_id).map(makesttrack);
+					sttracks =  data.lookupSubtitles(episode.file_id).map(makesttrack);
 				}
 			}
 		} else {
@@ -132,7 +132,7 @@ let make_media_object = (): MediaObject | null => {
 			if (movie_part !== undefined) {
 				let movie = data.media.video.movies.find((movie) => movie.movie_id === movie_part?.movie_id);
 				if (movie != null) {
-					sttracks =  data.media.video.subtitles.filter(st => st.movie_part_id === (movie_part as libdb.MoviePartEntry).movie_part_id).map(makesttrack);
+					sttracks = data.lookupSubtitles(movie_part.file_id).map(makesttrack);
 					title = movie.title;
 					subtitle = [("0000" + movie.year).slice(-4)].join(' \u2022 ');
 					if (movie.poster_file_id != null) {

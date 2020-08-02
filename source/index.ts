@@ -7,6 +7,7 @@ import * as libdb from "./database";
 import * as libvtt from "./vtt";
 import * as metadata from "./metadata";
 import * as utils from "./utils";
+import * as languages from "./languages";
 
 let media_root = './private/media/';
 
@@ -928,51 +929,42 @@ for (const metadata_file of metadata_files) {
 	}
 }
 
+// TODO: Create indexable structure for directories and files.
+function getFilesInSameDirectory(file: libdb.FileEntry): Array<libdb.FileEntry> {
+	let directoryOne = file.path.slice(0, -1).join("/");
+	return db.files.filter((file) => {
+		let directoryTwo = file.path.slice(0, -1).join("/");
+		return directoryOne === directoryTwo;
+	});
+}
+
 let vtt_files = db.files.filter(file => /^text[/]vtt$/.test(file.mime));
 
-db.video.episodes.forEach((episode) => {
-	let episode_file = files_index[episode.file_id];
-	if (episode_file === undefined) {
-		return;
-	}
-	let filename = episode_file.path[episode_file.path.length-1];
-	let basename = filename.split('.').slice(0, -1).join('.');
-	for (let i = 0; i < vtt_files.length; i++) {
-		let vttbasename = vtt_files[i].path[vtt_files[i].path.length-1].split('.')[0];
-		if (basename === vttbasename) {
-			let subtitle_id = makeFileId(vtt_files[i].file_id);
-			add_subtitle({
-				subtitle_id: subtitle_id,
-				episode_id: episode.episode_id,
-				movie_part_id: null,
-				file_id: vtt_files[i].file_id,
-				language: null
-			});
+for (let vttFile of vtt_files) {
+	let videoFiles = getFilesInSameDirectory(vttFile).filter((file) => {
+		return /^video[/]/.test(file.mime);
+	});
+	if (videoFiles.length > 0) {
+		let vttFilenameParts = vttFile.path[vttFile.path.length - 1].split(".");
+		for (let videoFile of videoFiles) {
+			let videoFilenameParts = videoFile.path[videoFile.path.length - 1].split(".");
+			if (vttFilenameParts[0] === videoFilenameParts[0]) {
+				let fileId = vttFile.file_id;
+				let subtitleId = makeFileId(fileId);
+				let language = vttFilenameParts.reverse().find((part) => {
+					return part in languages.db;
+				}) || null;
+				add_subtitle({
+					subtitle_id: subtitleId,
+					file_id: fileId,
+					video_file_id: videoFile.file_id,
+					language: language
+				});
+				break;
+			}
 		}
 	}
-});
-
-db.video.movie_parts.forEach((movie_part) => {
-	let movie_part_file = files_index[movie_part.file_id];
-	if (movie_part_file === undefined) {
-		return;
-	}
-	let filename = movie_part_file.path[movie_part_file.path.length-1];
-	let basename = filename.split('.').slice(0, -1).join('.');
-	for (let i = 0; i < vtt_files.length; i++) {
-		let vttbasename = vtt_files[i].path[vtt_files[i].path.length-1].split('.')[0];
-		if (basename === vttbasename) {
-			let subtitle_id = makeFileId(vtt_files[i].file_id);
-			add_subtitle({
-				subtitle_id: subtitle_id,
-				episode_id: null,
-				movie_part_id: movie_part.movie_part_id,
-				file_id: vtt_files[i].file_id,
-				language: null
-			});
-		}
-	}
-});
+}
 
 db.video.subtitles.forEach((subtitle_entry) => {
 	let file_entry = files_index[subtitle_entry.file_id];

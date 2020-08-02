@@ -6,15 +6,7 @@ import * as database from "./database";
 import * as utils from "./utils";
 
 function getMediaFile(subtitle: database.SubtitleEntry): database.FileEntry | null {
-	if (subtitle.episode_id !== null) {
-		let episode = data.media.video.episodes.find((episode) => episode.episode_id === subtitle.episode_id) as database.EpisodeEntry;
-		return data.media.files.find((file) => file.file_id === (episode as database.EpisodeEntry).file_id) as database.FileEntry;
-	}
-	if (subtitle.movie_part_id !== null) {
-		let movie_part = data.media.video.movie_parts.find((movie_part) => movie_part.movie_part_id === subtitle.movie_part_id) as database.MoviePartEntry;
-		return data.media.files.find((file) => file.file_id === (movie_part as database.MoviePartEntry).file_id) as database.FileEntry;
-	}
-	return null
+	return data.files_index[subtitle.video_file_id] || null;
 }
 
 function createWorkingDirectory(cb: { (wd: string[], id: string): void }): void {

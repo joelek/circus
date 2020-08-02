@@ -92,9 +92,7 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 				});
 			const program = sorted[0];
 			const episode = program.program.next_episode;
-			const subtitles = data.media.video.subtitles.filter((subtitle) => {
-				return subtitle.episode_id === episode.episode_id;
-			});
+			const subtitles = data.lookupSubtitles(episode.file_id);
 			const season = data.seasons_index[episode.season_id];
 			if (season == null) {
 				throw "";
@@ -124,9 +122,7 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 					return movie_part.movie_id === movie.movie_id;
 				})
 				.map((movie_part) => {
-					const subtitles = data.media.video.subtitles.filter((subtitle) => {
-						return subtitle.movie_part_id === movie_part.movie_part_id;
-					});
+					const subtitles = data.lookupSubtitles(movie_part.file_id);
 					return {
 						...movie_part,
 						subtitles

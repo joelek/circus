@@ -266,10 +266,7 @@ class EpisodeRoute implements Route<api_response.ApiRequest, api_response.Episod
 		if (episode === undefined) {
 			throw new Error();
 		}
-		let subtitles = data.media.video.subtitles
-			.filter((subtitle) => {
-				return subtitle.episode_id === (episode as libdb.EpisodeEntry).episode_id
-			});
+		let subtitles = data.lookupSubtitles(episode.file_id);
 		let streamed = data.hasStreamed(username, episode.file_id);
 		let payload: api_response.EpisodeResponse = {
 			...episode,
@@ -459,10 +456,7 @@ class MovieRoute implements Route<api_response.AuthRequest, api_response.MovieRe
 		let movie_parts = data.media.video.movie_parts.filter((movie_part) => {
 			return movie_part.movie_id === movie_id;
 		}).map((movie_part) => {
-			let subtitles = data.media.video.subtitles
-				.filter((subtitle) => {
-					return subtitle.movie_part_id === movie_part.movie_part_id
-				});
+			let subtitles = data.lookupSubtitles(movie_part.file_id);
 			let streamed = data.hasStreamed(username, movie_part.file_id);
 			return {
 				...movie_part,
@@ -614,8 +608,9 @@ class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResp
 					})
 					.map((cue) => {
 						let subtitle = data.subtitles_index[cue.subtitle_id] as libdb.SubtitleEntry;
-						if (subtitle.movie_part_id) {
-							let movie_part = data.movie_parts_index[subtitle.movie_part_id] as libdb.MoviePartEntry;
+						let metadata = data.lookupMetadata(subtitle.video_file_id);
+						if (libdb.MoviePartEntry.is(metadata)) {
+							let movie_part = metadata;
 							let movie = data.movies_index[movie_part.movie_id] as libdb.MovieEntry;
 							return {
 								...cue,
@@ -629,8 +624,8 @@ class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResp
 								}
 							};
 						}
-						if (subtitle.episode_id) {
-							let episode = data.episodes_index[subtitle.episode_id] as libdb.EpisodeEntry;
+						if (libdb.EpisodeEntry.is(metadata)) {
+							let episode = metadata;
 							let season = data.seasons_index[episode.season_id] as libdb.SeasonEntry;
 							let show = data.shows_index[season.show_id] as libdb.ShowEntry;
 							return {

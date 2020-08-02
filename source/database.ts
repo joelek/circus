@@ -438,9 +438,8 @@ export const EpisodeEntry = {
 
 export type SubtitleEntry = {
 	"subtitle_id": string,
-	"episode_id": (string | null),
-	"movie_part_id": (string | null),
 	"file_id": string,
+	"video_file_id": string,
 	"language": (string | null)
 };
 
@@ -449,25 +448,8 @@ export const SubtitleEntry = {
 		return ((subject, path) => {
 			if ((subject != null) && (subject.constructor === globalThis.Object)) {
 				(autoguard.guards.String.as)(subject["subtitle_id"], path + "[\"subtitle_id\"]");
-				((subject, path) => {
-					try {
-						return (autoguard.guards.String.as)(subject, path);
-					} catch (error) {}
-					try {
-						return (autoguard.guards.Null.as)(subject, path);
-					} catch (error) {}
-					throw "Type guard \"Union\" failed at \"" + path + "\"!";
-				})(subject["episode_id"], path + "[\"episode_id\"]");
-				((subject, path) => {
-					try {
-						return (autoguard.guards.String.as)(subject, path);
-					} catch (error) {}
-					try {
-						return (autoguard.guards.Null.as)(subject, path);
-					} catch (error) {}
-					throw "Type guard \"Union\" failed at \"" + path + "\"!";
-				})(subject["movie_part_id"], path + "[\"movie_part_id\"]");
 				(autoguard.guards.String.as)(subject["file_id"], path + "[\"file_id\"]");
+				(autoguard.guards.String.as)(subject["video_file_id"], path + "[\"video_file_id\"]");
 				((subject, path) => {
 					try {
 						return (autoguard.guards.String.as)(subject, path);
