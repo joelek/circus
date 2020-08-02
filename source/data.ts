@@ -436,6 +436,41 @@ function lookup<A>(index: utils.Index<A>, id: string): A {
 
 let getEpisodeFromFileId = RecordIndex.from("file_id", media.video.episodes);
 let getMoviePartFromFileId = RecordIndex.from("file_id", media.video.movie_parts);
+let getMoviePartsFromMovieIdIndex = CollectionIndex.from("movie_id", media.video.movie_parts);
+let getShowGenresFromShowId = CollectionIndex.from("show_id", media.video.show_genres);
+let getMovieGenresFromMovieId = CollectionIndex.from("movie_id", media.video.movie_genres);
+let getVideoGenreFromVideoGenreId = RecordIndex.from("video_genre_id", media.video.genres);
+
+export function getMoviePartsFromMovieId(movieId: string): Array<libdb.MoviePartEntry & { subtitles: Array<libdb.SubtitleEntry> }> {
+	return getMoviePartsFromMovieIdIndex.lookup(movieId).map((moviePart) => {
+		let subtitles = fileSubtitlesIndex.lookup(moviePart.file_id);
+		return {
+			...moviePart,
+			subtitles
+		};
+	});
+}
+
+export function getMovieFromMovieId(movieId: string): libdb.MovieEntry & { parts: ReturnType<typeof getMoviePartsFromMovieId> } {
+	let movie = lookup(movies_index, movieId);
+	let parts = getMoviePartsFromMovieId(movieId);
+	return {
+		...movie,
+		parts
+	};
+}
+
+export function getVideoGenresFromShowId(showId: string): Array<libdb.VideoGenreEntry> {
+	return getShowGenresFromShowId.lookup(showId).map((showGenre) => {
+		return getVideoGenreFromVideoGenreId.lookup(showGenre.video_genre_id);
+	});
+}
+
+export function getVideoGenresFromMovieId(movieId: string): Array<libdb.VideoGenreEntry> {
+	return getMovieGenresFromMovieId.lookup(movieId).map((movieGenre) => {
+		return getVideoGenreFromVideoGenreId.lookup(movieGenre.video_genre_id);
+	});
+}
 
 export function lookupMetadata(fileId: string): libdb.EpisodeEntry | libdb.MoviePartEntry {
 	try {

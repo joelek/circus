@@ -48,15 +48,7 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 	const type = makeSeeder(channel_id)() < 0.5 ? "movies" : "shows";
 	if (type === "shows") {
 		const shows = data.media.video.shows.map((show) => {
-			const show_genres = data.media.video.show_genres
-				.filter((show_genre) => {
-					return show_genre.show_id === show.show_id;
-				});
-			const video_genres = show_genres
-				.map((show_genre) => {
-					return data.video_genres_index[show_genre.video_genre_id];
-				})
-				.filter(database.VideoGenreEntry.is);
+			let video_genres = data.getVideoGenresFromShowId(show.show_id);
 			const genre_weights = video_genres
 				.map((video_genre) => {
 					const genre_affinity = affinities.find((genre_affinity) => {
@@ -117,26 +109,8 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 		return programmed;
 	} else {
 		const movies = data.media.video.movies.map((movie) => {
-			const movie_parts = data.media.video.movie_parts
-				.filter((movie_part) => {
-					return movie_part.movie_id === movie.movie_id;
-				})
-				.map((movie_part) => {
-					const subtitles = data.lookupSubtitles(movie_part.file_id);
-					return {
-						...movie_part,
-						subtitles
-					};
-				});
-			const movie_genres = data.media.video.movie_genres
-				.filter((movie_genre) => {
-					return movie_genre.movie_id === movie.movie_id;
-				});
-			const video_genres = movie_genres
-				.map((movie_genre) => {
-					return data.video_genres_index[movie_genre.video_genre_id];
-				})
-				.filter(database.VideoGenreEntry.is);
+			let movie_parts = data.getMoviePartsFromMovieId(movie.movie_id);
+			let video_genres = data.getVideoGenresFromMovieId(movie.movie_id);
 			const genre_weights = video_genres
 				.map((video_genre) => {
 					const genre_affinity = affinities.find((genre_affinity) => {
