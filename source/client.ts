@@ -467,10 +467,27 @@ let updateviewforuri = (uri: string): void => {
 		});
 		mount.appendChild(d3);
 	} else if ((parts = /^video[/]shows[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+		function getNextEpisode(show: api_response.ShowResponse): api_response.EpisodeResponse & { season: number } {
+			let episodes = show.seasons.reduce((array, season) => {
+				return array.concat(season.episodes.map((episodes) => {
+					return {
+						...episodes,
+						season: season.number
+					};
+				}));
+			}, new Array<api_response.EpisodeResponse & { season: number }>());
+			let nextIndex = 0;
+			for (; nextIndex < episodes.length; nextIndex++) {
+				if (!episodes[nextIndex].streamed) {
+					break;
+				}
+			}
+			nextIndex = nextIndex % episodes.length;
+			return episodes[nextIndex];
+		}
 		req<api_response.ApiRequest, api_response.ShowResponse>(`/api/video/shows/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let d = document.createElement('div');
 			d.innerText = `${response.title}`;
-			d.style.setProperty('font-size', '24px');
 			mount.appendChild(d);
 			let context: Context = {
 				files: response.seasons.reduce((files, season) => {
@@ -479,6 +496,31 @@ let updateviewforuri = (uri: string): void => {
 				}, new Array<string>())
 			};
 			let context_metadata: Metadata = {};
+			let nextEpisode = getNextEpisode(response);
+			{
+				let d2 = document.createElement("div");
+				d2.classList.add("group");
+				let h4 = document.createElement("h4");
+				h4.textContent = "s" + nextEpisode.season.toString().padStart(2, "0") + "e" + nextEpisode.number.toString().padStart(2, "0") + ": " + nextEpisode.title;
+				let p1 = document.createElement("p");
+				p1.textContent = nextEpisode.summary;
+				let p2 = document.createElement("p");
+				p2.textContent = [
+					format_duration(nextEpisode.duration)
+				].join(" \u2022 ");
+				let button = document.createElement("button");
+				button.textContent = "Watch";
+				button.addEventListener("click", () => {
+					set_context(context);
+					set_context_metadata(context_metadata);
+					play(context.files.indexOf(nextEpisode.file_id));
+				});
+				d2.appendChild(h4);
+				d2.appendChild(p1);
+				d2.appendChild(p2);
+				d2.appendChild(button);
+				d.appendChild(d2);
+			}
 			for (let season of response.seasons) {
 				let d = document.createElement('div');
 				d.innerText = `${season.number}`;
