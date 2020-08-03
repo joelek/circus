@@ -504,12 +504,21 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^video[/]shows[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ShowsResponse>(`/api/video/shows/`, {}, (status, response) => {
 			for (let show of response.shows) {
-				let d = document.createElement('div');
-				d.innerText = `${show.title}`;
-				d.addEventListener('click', () => {
+				let wrapper = document.createElement("div");
+				wrapper.setAttribute("class", "group");
+				let h2 = document.createElement("h2");
+				h2.innerText = `${show.title}`;
+				wrapper.appendChild(h2);
+				let p = document.createElement("p");
+				p.innerText = show.genres.map((genre) => genre.title).join(" \u2022 ");
+				wrapper.appendChild(p);
+				let button = document.createElement("button");
+				button.textContent = "Browse";
+				button.addEventListener("click", () => {
 					navigate(`video/shows/${show.show_id}/`);
 				});
-				mount.appendChild(d);
+				wrapper.appendChild(button);
+				mount.appendChild(wrapper);
 			}
 		});
 	} else if ((parts = /^video[/]episodes[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {

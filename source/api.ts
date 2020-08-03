@@ -348,8 +348,15 @@ class ShowsRoute implements Route<api_response.ApiRequest, api_response.ShowsRes
 		if (request.url === undefined) {
 			throw new Error();
 		}
+		let shows = data.media.video.shows.map((show) => {
+			let genres = data.getVideoGenresFromShowId(show.show_id);
+			return {
+				...show,
+				genres
+			};
+		});
 		let payload: api_response.ShowsResponse = {
-			shows: data.media.video.shows
+			shows
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
