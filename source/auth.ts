@@ -49,7 +49,8 @@ function generate_token(username: string): string {
 	data.addToken({
 		username: username,
 		selector: selector.toString('hex'),
-		validator_hash: validator_hash
+		validator_hash: validator_hash,
+		expires_ms: Date.now() + (14 * 24 * 60 * 60 * 1000)
 	});
 	return `${selector.toString('hex')}${validator.toString('hex')}`;
 }
@@ -82,6 +83,11 @@ function getUsername(chunk: string): string {
 	if (!libcrypto.timingSafeEqual(Buffer.from(token.validator_hash, 'hex'), validator_hash)) {
 		throw new Error();
 	}
+	let expires_ms = Date.now() + (14 * 24 * 60 * 60 * 1000);
+	data.updateToken({
+		...token,
+		expires_ms
+	});
 	return token.username;
 }
 

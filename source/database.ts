@@ -963,7 +963,8 @@ export const UserEntry = {
 export type AuthToken = {
 	"username": string,
 	"selector": string,
-	"validator_hash": string
+	"validator_hash": string,
+	"expires_ms": number
 };
 
 export const AuthToken = {
@@ -973,6 +974,7 @@ export const AuthToken = {
 				(autoguard.guards.String.as)(subject["username"], path + "[\"username\"]");
 				(autoguard.guards.String.as)(subject["selector"], path + "[\"selector\"]");
 				(autoguard.guards.String.as)(subject["validator_hash"], path + "[\"validator_hash\"]");
+				(autoguard.guards.Number.as)(subject["expires_ms"], path + "[\"expires_ms\"]");
 				return subject;
 			}
 			throw "Type guard \"Object\" failed at \"" + path + "\"!";

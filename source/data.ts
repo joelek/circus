@@ -40,10 +40,10 @@ if (!libfs.existsSync("./private/db/media.json")) {
 	process.exit(1);
 }
 
-export let streams = JSON.parse(libfs.readFileSync('./private/db/streams.json', "utf8")) as libdb.StreamDatabase;
-export let lists = JSON.parse(libfs.readFileSync('./private/db/lists.json', "utf8")) as libdb.ListDatabase;
-export let users = JSON.parse(libfs.readFileSync('./private/db/users.json', "utf8")) as libdb.UserDatabase;
-export let media = JSON.parse(libfs.readFileSync('./private/db/media.json', "utf8")) as libdb.MediaDatabase;
+export let streams = libdb.StreamDatabase.as(JSON.parse(libfs.readFileSync('./private/db/streams.json', "utf8")));
+export let lists = libdb.ListDatabase.as(JSON.parse(libfs.readFileSync('./private/db/lists.json', "utf8")));
+export let users = libdb.UserDatabase.as(JSON.parse(libfs.readFileSync('./private/db/users.json', "utf8")));
+export let media = libdb.MediaDatabase.as(JSON.parse(libfs.readFileSync('./private/db/media.json', "utf8")));
 
 export let users_index: utils.Index<libdb.UserEntry> = {};
 
@@ -192,6 +192,25 @@ export function addToken(token: libdb.AuthToken): void {
 	tokens_index[token.selector] = token;
 	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
 }
+
+export function updateToken(token: libdb.AuthToken): void {
+	let that = tokens_index[token.selector];
+	if (that) {
+		that.expires_ms = token.expires_ms;
+	}
+	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
+}
+
+setInterval(() => {
+	users.tokens = users.tokens.filter((token) => {
+		return token.expires_ms > Date.now();
+	});
+	tokens_index = {};
+	for (let token of users.tokens) {
+		tokens_index[token.selector] = token;
+	}
+	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
+}, 60 * 60 * 1000);
 
 export let streams_index: utils.Index<Set<string>> = {};
 

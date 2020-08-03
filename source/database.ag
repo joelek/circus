@@ -141,7 +141,8 @@
 	AuthToken: {
 		username: string,
 		selector: string,
-		validator_hash: string
+		validator_hash: string,
+		expires_ms: number
 	},
 	UserDatabase: {
 		users: @UserEntry[],
