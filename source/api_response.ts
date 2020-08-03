@@ -186,6 +186,14 @@ interface SearchResponse extends ApiResponse {
 	}>
 }
 
+interface TokensRequest extends ApiRequest {
+
+}
+
+interface TokensResponse extends ApiResponse {
+	tokens: Array<libdb.AuthToken>
+}
+
 export {
 	ApiRequest,
 	ApiResponse,
@@ -221,5 +229,7 @@ export {
 	GenreRequest,
 	GenreResponse,
 	SearchRequest,
-	SearchResponse
+	SearchResponse,
+	TokensRequest,
+	TokensResponse
 };

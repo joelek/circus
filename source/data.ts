@@ -201,6 +201,18 @@ export function updateToken(token: libdb.AuthToken): void {
 	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
 }
 
+export function deleteToken(token: libdb.AuthToken): void {
+	delete tokens_index[token.selector];
+	// TODO: Fix linear complexity.
+	for (let i = 0; i < users.tokens.length; i++) {
+		if (users.tokens[i].selector === token.selector) {
+			users.tokens = users.tokens.splice(i, 1);
+			break;
+		}
+	}
+	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
+}
+
 setInterval(() => {
 	users.tokens = users.tokens.filter((token) => {
 		return token.expires_ms > Date.now();
@@ -344,6 +356,12 @@ let getVideoGenreFromVideoGenreId = RecordIndex.from("video_genre_id", media.vid
 let getSeasonsFromShowIdIndex = CollectionIndex.from("show_id", media.video.seasons);
 let getEpisodesFromSeasonIdIndex = CollectionIndex.from("season_id", media.video.episodes);
 let getStreamsFromFileIdIndex = CollectionIndex.from("file_id", streams.streams);
+
+export function getTokensFromUsername(username: string): Array<libdb.AuthToken> {
+	return users.tokens.filter((token) => {
+		return token.username === username;
+	});
+}
 
 export function getStreamsFromFileId(fileId: string): Array<libdb.Stream> {
 	return getStreamsFromFileIdIndex.lookup(fileId)

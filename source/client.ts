@@ -1,6 +1,7 @@
 import * as api_response from "./api_response";
 import * as utils from "./utils";
 import * as languages from "./languages";
+import { AuthToken } from "./database";
 
 let style = document.createElement('style');
 style.innerText = `
@@ -93,17 +94,41 @@ style.innerText = `
 `;
 document.head.appendChild(style);
 
+function computeDuration(ms: number): {
+	ms: number,
+	s: number,
+	m: number,
+	h: number,
+	d: number
+} {
+	let s = Math.floor(ms / 1000);
+	ms -= s * 1000;
+	let m = Math.floor(s / 60);
+	s -= m * 60;
+	let h = Math.floor(m / 60);
+	m -= h * 60;
+	let d = Math.floor(h / 24);
+	h -= d * 24;
+	return {
+		ms,
+		s,
+		m,
+		h,
+		d
+	};
+}
+
 let format_duration = (ms: number): string => {
-	let s = (ms / 1000) | 0;
-	let m = (s / 60) | 0;
-	let h = (m / 60) | 0;
-	if (h > 0) {
-		let tm = `00${m % 60}`.slice(-2);
-		let ts = `00${s % 60}`.slice(-2);
-		return `${h}:${tm}:${ts}`;
+	let duration = computeDuration(ms);
+	if (duration.h > 0) {
+		let h = "" + duration.h;
+		let m = `00${duration.m}`.slice(-2);
+		let s = `00${duration.s}`.slice(-2);
+		return `${h}:${m}:${s}`;
 	} else {
-		let ts = `00${s % 60}`.slice(-2);
-		return `${m}:${ts}`;
+		let m = "" + duration.m;
+		let s = `00${duration.s}`.slice(-2);
+		return `${m}:${s}`;
 	}
 };
 
@@ -878,6 +903,23 @@ let updateviewforuri = (uri: string): void => {
 			navigate('video/genres/');
 		});
 		mount.appendChild(d);
+	} else if ((parts = /^tokens[/]/.exec(uri)) !== null) {
+		let results = document.createElement("div");
+		mount.appendChild(results);
+		req<api_response.TokensRequest, api_response.TokensResponse>(`/api/tokens/?token=${token}`, {}, (status, response) => {
+			function renderToken(token: AuthToken): HTMLElement {
+				let wrapper = document.createElement("div");
+				wrapper.setAttribute("class", "group");
+				let p = document.createElement("p");
+				let duration = computeDuration(token.expires_ms - Date.now());
+				p.innerText = `Expires in ${duration.d} days, ${duration.h} hours and ${duration.m} minutes.`;
+				wrapper.appendChild(p);
+				return wrapper;
+			}
+			for (let token of response.tokens) {
+				results.appendChild(renderToken(token));
+			}
+		});
 	} else if ((parts = /^search[/](.*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
 		{
@@ -1049,6 +1091,12 @@ let updateviewforuri = (uri: string): void => {
 			navigate('video/');
 		});
 		mount.appendChild(v);
+		let t = document.createElement('div');
+		t.innerText = 'Tokens';
+		t.addEventListener('click', () => {
+			navigate('tokens/');
+		});
+		mount.appendChild(t);
 	}
 };
 let get_basehref = (): string => {

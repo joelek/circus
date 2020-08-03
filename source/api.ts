@@ -771,6 +771,22 @@ class SearchRoute implements Route<api_response.SearchRequest, api_response.Sear
 	}
 }
 
+class TokensRoute implements Route<api_response.TokensRequest, api_response.TokensResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let tokens = data.getTokensFromUsername(username);
+		let payload: api_response.TokensResponse = {
+			tokens
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return request.method === "POST" && /^[/]api[/]tokens[/]/.test(request.url || "/");
+	}
+}
+
 let router = new Router()
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
@@ -791,7 +807,8 @@ let router = new Router()
 	.registerRoute(new ChannelsRoute())
 	.registerRoute(new GenreRoute())
 	.registerRoute(new GenresRoute())
-	.registerRoute(new SearchRoute());
+	.registerRoute(new SearchRoute())
+	.registerRoute(new TokensRoute());
 
 let handleRequest = (request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	try {
