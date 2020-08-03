@@ -69,6 +69,7 @@ let gcontext: Context | null = null;
 let gindex: number | null = null;
 let gmedia: Media | null = null;
 let gtoken: string | null = null;
+let gorigin: string | null = null;
 let gplayer: Player | null = null;
 
 function getLanguage(language: string | null): string {
@@ -97,7 +98,7 @@ let make_media_object = (): MediaObject | null => {
 			trackId: i,
 			type: 'TEXT',
 			trackType: 'TEXT',
-			trackContentId: `https://ap.joelek.se/files/${s.file_id}/?token=${gtoken}`,
+			trackContentId: `${gorigin}/files/${s.file_id}/?token=${gtoken}`,
 			trackContentType: 'text/vtt',
 			subtype: 'SUBTITLES',
 			language: getLanguage(s.language),
@@ -114,7 +115,7 @@ let make_media_object = (): MediaObject | null => {
 		let artists =  data.media.audio.artists.filter(artist => track_artists.find(tr => tr.artist_id === artist.artist_id) !== undefined);
 		title = track.title;
 		subtitle = [ artists.map(ar => ar.title).join(', '), album.title ].join(' \u2022 ');
-		image = `https://ap.joelek.se/files/${album.cover_file_id}/?token=${gtoken}`;
+		image = `${gorigin}/files/${album.cover_file_id}/?token=${gtoken}`;
 	} else {
 		let episode =  data.media.video.episodes.find(episode => episode.file_id === file2.file_id);
 		if (episode !== undefined) {
@@ -136,7 +137,7 @@ let make_media_object = (): MediaObject | null => {
 					title = movie.title;
 					subtitle = [("0000" + movie.year).slice(-4)].join(' \u2022 ');
 					if (movie.poster_file_id != null) {
-						image = `https://ap.joelek.se/files/${movie.poster_file_id}/?token=${gtoken}`;
+						image = `${gorigin}/files/${movie.poster_file_id}/?token=${gtoken}`;
 					}
 				}
 			}
@@ -145,7 +146,7 @@ let make_media_object = (): MediaObject | null => {
 	let preftrack = sttracks.find(s => s.language === 'sv-SE') || sttracks.find(s => s.language === 'en-US');
 	let activeTrackIds = preftrack ? [ sttracks[sttracks.indexOf(preftrack)].trackId ] : [];
 	return {
-		contentId: `https://ap.joelek.se/files/${file.file_id}/?token=${gtoken}`,
+		contentId: `${gorigin}/files/${file.file_id}/?token=${gtoken}`,
 		contentType: file.mime,
 		streamType: 'BUFFERED',
 		metadata: {
@@ -202,7 +203,7 @@ let resume = ({}, cb: { (): void }): void => {
 	cb();
 };
 
-let load = ({ context, index, token }: { context: Context, index: number, token: string }, cb: { (): void }): void => {
+let load = ({ context, index, token, origin }: { context: Context, index: number, token: string, origin: string }, cb: { (): void }): void => {
 	mDnsSd.discover({
 		name: '_googlecast._tcp.local'
 	}).then((device_list: Array<Device>) =>{
@@ -219,6 +220,7 @@ let load = ({ context, index, token }: { context: Context, index: number, token:
 				gcontext = context;
 				gindex = index;
 				gtoken = token;
+				gorigin = origin;
 				gplayer = player;
 				cb();
 				console.log('app launched');

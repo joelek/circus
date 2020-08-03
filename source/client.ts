@@ -284,7 +284,7 @@ let ccload = document.createElement('button');
 ccload.textContent = 'Cast';
 ccload.addEventListener('click', () => {
 	video.pause();
-	req(`/api/cc/load/`, { context, index: context_index, token: token }, (status, response) => {});
+	req(`/api/cc/load/`, { context, index: context_index, token: token, origin: window.location.origin }, (status, response) => {});
 });
 chromecast.appendChild(ccload);
 let ccpause = document.createElement('button');
