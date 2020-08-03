@@ -553,36 +553,43 @@ let updateviewforuri = (uri: string): void => {
 			let d2 = document.createElement('div');
 			d2.innerText = response.summary || "";
 			mount.appendChild(d2);
+			let context: Context = {
+				files: response.movie_parts.map((part) => part.file_id)
+			};
+			let context_metadata: Metadata = {};
+			let streamed = true;
+			let duration = 0;
+			for (let movie_part of response.movie_parts) {
+				context_metadata[movie_part.file_id] = {
+					subtitles: movie_part.subtitles
+				};
+				streamed = streamed && movie_part.streamed;
+				duration += movie_part.duration;
+			}
+			let d3 = document.createElement('div');
+			if (streamed) {
+				d3.classList.add("watched");
+			}
+			d3.innerText = format_duration(duration);
+			mount.appendChild(d3);
+			let button = document.createElement("button");
+			button.innerText = `Play`;
+			button.addEventListener('click', () => {
+				set_context(context);
+				set_context_metadata(context_metadata);
+				play(0);
+				if (parts !== null && parts.length >= 3) {
+					let start_ms = Number.parseInt(parts[2], 10);
+					seek(start_ms);
+				}
+			});
+			mount.appendChild(button);
 			let wrap = document.createElement('div');
 			let img = document.createElement('img');
 			img.src = `/files/${response.poster_file_id}/?token=${token}`;
 			img.style.setProperty('width', '100%');
 			wrap.appendChild(img);
 			mount.appendChild(wrap);
-			let context: Context = {
-				files: response.movie_parts.map((part) => part.file_id)
-			};
-			let context_metadata: Metadata = {};
-			for (let movie_part of response.movie_parts) {
-				context_metadata[movie_part.file_id] = {
-					subtitles: movie_part.subtitles
-				};
-				let d3 = document.createElement('div');
-				if (movie_part.streamed) {
-					d3.classList.add("watched");
-				}
-				d3.innerText = `part ${movie_part.number}`;
-				d3.addEventListener('click', () => {
-					set_context(context);
-					set_context_metadata(context_metadata);
-					play(context.files.indexOf(movie_part.file_id));
-					if (parts !== null && parts.length >= 3) {
-						let start_ms = Number.parseInt(parts[2], 10);
-						seek(start_ms);
-					}
-				});
-				mount.appendChild(d3);
-			}
 		});
 	} else if ((parts = /^video[/]movies[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/`, {}, (status, response) => {
