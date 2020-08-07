@@ -140,10 +140,7 @@ export let cues_index: utils.Index<libdb.CueEntry> = {};
 
 for (let subtitle of media.video.subtitle_contents) {
 	for (let cue of subtitle.cues) {
-		let hash = libcrypto.createHash("md5");
-		hash.update(subtitle.subtitle_id);
-		hash.update("" + cue[0]);
-		let cue_id = hash.digest("hex");
+		let cue_id = getCueId(subtitle.subtitle_id, cue);
 		let subtitle_id = subtitle.subtitle_id;
 		let start_ms = cue[0];
 		let duration_ms = cue[1];
@@ -172,20 +169,31 @@ for (let i = 0; i < lists.audiolists.length; i++) {
 	audiolists_index[audiolist.audiolist_id] = audiolist;
 }
 
-if (!libfs.existsSync("./private/db/subtitles.json")) {
-	let db: libdb.SubtitlesDatabase = {};
-	libfs.writeFileSync("./private/db/subtitles.json", JSON.stringify(db, null, "\t"));
+function getCueId(subtitle_id: string, cue: [ number, number, string ]): string {
+	let hash = libcrypto.createHash("md5");
+	hash.update(subtitle_id);
+	hash.update("" + cue[0]);
+	let cue_id = hash.digest("hex");
+	return cue_id;
 }
 
-export let cue_search_index = JSON.parse(libfs.readFileSync("./private/db/subtitles.json", "utf8"), (key, value) => {
-	if (value instanceof Array) {
-		return new Set<string>(value);
+export const cue_search_index = new Map<string, Set<string>>();
+for (let subtitle of media.video.subtitle_contents) {
+	for (let cue of subtitle.cues) {
+		let cue_id = getCueId(subtitle.subtitle_id, cue);
+		for (let line of cue[2].split("\n")) {
+			let terms = utils.getSearchTerms(line).filter((term) => term.length >= 4);
+			for (let term of terms) {
+				let cues = cue_search_index.get(term);
+				if (cues === undefined) {
+					cues = new Set<string>();
+					cue_search_index.set(term, cues);
+				}
+				cues.add(cue_id);
+			}
+		}
 	}
-	if (value instanceof Object) {
-		return new Map<string, Set<string>>(Object.keys(value).map(k => [k, value[k]]));
-	}
-	return value;
-}) as Map<string, Set<string>>;
+}
 
 export function addToken(token: libdb.AuthToken): void {
 	users.tokens.push(token);
