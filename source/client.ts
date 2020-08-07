@@ -2,6 +2,7 @@ import * as api_response from "./api_response";
 import * as utils from "./utils";
 import * as languages from "./languages";
 import { AuthToken } from "./database";
+import * as session from "./session";
 
 let style = document.createElement('style');
 style.innerText = `
@@ -242,6 +243,9 @@ let play = (index: number): void => {
 	}
 	video.play();
 	context_index = index;
+	session.setMetadata({
+		title: "Castaway"
+	});
 };
 let playfile = (path: string): void => {
 	context = null;
@@ -256,11 +260,26 @@ let playfile = (path: string): void => {
 let seek = (offset_ms: number): void => {
 	video.currentTime = (offset_ms / 1000);
 };
+function playPreviousTrackInContext(): void {
+	if (context !== null && context_index !== null && context_index - 1 >= 0 && context_index - 1 < context.files.length) {
+		play(context_index - 1);
+	}
+}
 let next = (): void => {
 	if (context !== null && context_index !== null && context_index >= 0 && context_index < context.files.length - 1) {
 		play(context_index + 1);
 	}
 };
+session.setHandlers({
+	play: () => {
+		video.play();
+	},
+	pause: () => {
+		video.pause();
+	},
+	previoustrack: playPreviousTrackInContext,
+	nexttrack: next
+});
 video.addEventListener('ended', next);
 let set_context = (ctx: Context): void => {
 	if (ctx !== context) {
