@@ -741,6 +741,12 @@ let updateviewforuri = (uri: string): void => {
 			d.innerText = `Channel`;
 			d.style.setProperty('font-size', '24px');
 			mount.appendChild(d);
+			let button = document.createElement("button");
+			button.textContent = "Play";
+			button.addEventListener("click", () => {
+				video.src = `/media/channels/${channel_id}/?token=${token}`;
+			});
+			mount.appendChild(button);
 			let context: Context = {
 				files: response.segments.reduce((files, segment) => {
 					if (segment.movie != null) {
