@@ -40,10 +40,19 @@ if (!libfs.existsSync("./private/db/media.json")) {
 	process.exit(1);
 }
 
+if (!libfs.existsSync("./private/db/channels.json")) {
+	let db: libdb.ChannelDatabase = {
+		channels: [],
+		programs: []
+	};
+	libfs.writeFileSync("./private/db/channels.json", JSON.stringify(db, null, "\t"));
+}
+
 export let streams = libdb.StreamDatabase.as(JSON.parse(libfs.readFileSync('./private/db/streams.json', "utf8")));
 export let lists = libdb.ListDatabase.as(JSON.parse(libfs.readFileSync('./private/db/lists.json', "utf8")));
 export let users = libdb.UserDatabase.as(JSON.parse(libfs.readFileSync('./private/db/users.json', "utf8")));
 export let media = libdb.MediaDatabase.as(JSON.parse(libfs.readFileSync('./private/db/media.json', "utf8")));
+export let channels = libdb.ChannelDatabase.as(JSON.parse(libfs.readFileSync('./private/db/channels.json', "utf8")));
 
 export let users_index: utils.Index<libdb.UserEntry> = {};
 
@@ -355,6 +364,20 @@ function lookup<A>(index: utils.Index<A>, id: string): A {
 	return record;
 }
 
+const NumericSort = {
+	decreasing<A extends { [key in B]: number }, B extends keyof A>(key: B): { (one: A, two: A): number } {
+		return (one, two) => {
+			let t = two[key];
+			return two[key] - one[key];
+		};
+	},
+	increasing<A extends { [key in B]: number }, B extends keyof A>(key: B): { (one: A, two: A): number } {
+		return (one, two) => {
+			return one[key] - two[key];
+		};
+	}
+};
+
 let getEpisodeFromFileId = RecordIndex.from("file_id", media.video.episodes);
 let getMoviePartFromFileId = RecordIndex.from("file_id", media.video.movie_parts);
 let getMoviePartsFromMovieIdIndex = CollectionIndex.from("movie_id", media.video.movie_parts);
@@ -364,6 +387,31 @@ let getVideoGenreFromVideoGenreId = RecordIndex.from("video_genre_id", media.vid
 let getSeasonsFromShowIdIndex = CollectionIndex.from("show_id", media.video.seasons);
 let getEpisodesFromSeasonIdIndex = CollectionIndex.from("season_id", media.video.episodes);
 let getStreamsFromFileIdIndex = CollectionIndex.from("file_id", streams.streams);
+let getChannelFromChannelIdIndex = RecordIndex.from("channel_id", channels.channels);
+let getProgramsFromChannelIdIndex = CollectionIndex.from("channel_id", channels.programs);
+
+export function getChannelFromChannelId(channelId: string): libdb.ChannelEntry {
+	return getChannelFromChannelIdIndex.lookup(channelId);
+}
+
+export function createChannel(channel: libdb.ChannelEntry): libdb.ChannelEntry {
+	channels.channels.push(channel);
+	libfs.writeFileSync("./private/db/channels.json", JSON.stringify(channels, null, "\t"));
+	getChannelFromChannelIdIndex.insert(channel.channel_id, channel);
+	return channel;
+}
+
+export function getProgramsFromChannelId(channelId: string): Array<libdb.ProgramEntry> {
+	return getProgramsFromChannelIdIndex.lookup(channelId)
+		.sort(NumericSort.increasing("start_time_ms"));
+}
+
+export function createProgram(program: libdb.ProgramEntry): libdb.ProgramEntry {
+	channels.programs.push(program);
+	libfs.writeFileSync("./private/db/channels.json", JSON.stringify(channels, null, "\t"));
+	getProgramsFromChannelIdIndex.insert(program.channel_id, program);
+	return program;
+}
 
 export function getTokensFromUsername(username: string): Array<libdb.AuthToken> {
 	return users.tokens.filter((token) => {

@@ -1,9 +1,9 @@
 import * as libcp from "child_process";
+import * as libcrypto from "crypto";
 import * as libhttp from "http";
 import * as data from "./data";
 import * as api_response from "./api_response";
 import * as database from "./database";
-import * as autoguard from "@joelek/ts-autoguard";
 
 type Supplier<A> = {
 	(): A
@@ -43,7 +43,70 @@ function getChannel(channel_id: number): api_response.ChannelEntry {
 	};
 }
 
+function getProgramming(channel_id: number): Array<database.ProgramEntry> {
+	let channel: database.ChannelEntry | undefined;
+	try {
+		channel = data.getChannelFromChannelId("" + channel_id);
+	} catch (error) {}
+	if (!channel) {
+		channel = data.createChannel({
+			channel_id: "" + channel_id
+		});
+	}
+	let programs = data.getProgramsFromChannelId("" + channel_id);
+	let start = new Date();
+	start.setUTCHours(0);
+	start.setUTCMinutes(0);
+	start.setUTCSeconds(0);
+	start.setUTCMilliseconds(0);
+	let currentMs = start.valueOf();
+	let nowMs = Date.now();
+	if (programs.length > 0) {
+		let lastProgram = programs[programs.length - 1];
+		let lastMetadata = data.lookupMetadata(lastProgram.file_id);
+		let end_time_ms = lastProgram.start_time_ms + lastMetadata.duration;
+		currentMs = end_time_ms;
+	}
+	let endMs = nowMs + (6 * 60 * 60 * 1000);
+	if (currentMs >= endMs) {
+		return programs;
+	}
+	while (currentMs < endMs) {
+		let index = Math.floor(Math.random() * data.media.video.episodes.length);
+		let episode = data.media.video.episodes[index];
+		let program_id = libcrypto.createHash("md5")
+			.update("" + channel_id)
+			.update("\0")
+			.update("" + currentMs)
+			.digest("hex");
+		let program = data.createProgram({
+			program_id: program_id,
+			channel_id: "" + channel_id,
+			file_id: episode.file_id,
+			start_time_ms: currentMs
+		});
+		programs.push(program);
+		currentMs += episode.duration;
+	}
+	return programs;
+}
+
 function generateProgramming(channel_id: number, username: string): Array<api_response.Segment> {
+	return getProgramming(channel_id).map((program) => {
+		let metadata = data.lookupMetadata(program.file_id);
+		if (database.EpisodeEntry.is(metadata)) {
+			let episode = data.lookupEpisode(metadata.episode_id);
+			let subtitles = data.lookupSubtitles(episode.file_id);
+			return {
+				episode: {
+					...episode,
+					subtitles
+				}
+			};
+		}
+		throw "Unreachable!";
+	});
+/*
 	const affinities = getAffinitiesForChannel(channel_id);
 	const type = makeSeeder(channel_id)() < 0.5 ? "movies" : "shows";
 	if (type === "shows") {
@@ -172,10 +235,28 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 		}
 		return programmed;
 	}
+	*/
 }
 
 const segment_length_s = 10;
-const stream_start_ms = Date.parse("2020-01-01");
+
+function getCurrentlyPlaying(channel_id: number, timestamp_ms: number): database.ProgramEntry {
+	let programming = getProgramming(channel_id);
+	let programs = programming.map((program) => {
+		let metadata = data.lookupMetadata(program.file_id);
+		let end_time_ms = program.start_time_ms + metadata.duration;
+		return {
+			...program,
+			end_time_ms
+		};
+	});
+	for (let program of programs) {
+		if (program.start_time_ms <= timestamp_ms && timestamp_ms < program.end_time_ms) {
+			return program;
+		}
+	}
+	throw "Expected a currently playing program!";
+}
 
 function handleRequest(token: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 	const method = request.method || "GET";
@@ -185,13 +266,9 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]([0-9]+).ts/.exec(url)) != null) {
 		const channel_id = Number.parseInt(parts[1]);
 		const timestamp_ms = Number.parseInt(parts[2]);
-		let media = data.media.video.episodes[channel_id];
-		let file = data.files_index[media.file_id] as database.FileEntry;
-		const stream_duration_ms = media.duration;
-		const stream_segments = Math.ceil(stream_duration_ms / (segment_length_s * 1000));
-		const duration_ms = stream_segments * (segment_length_s * 1000);
-		const repeats = Math.floor(timestamp_ms / duration_ms);
-		const offset_ms = timestamp_ms - (repeats * duration_ms);
+		const program = getCurrentlyPlaying(channel_id, timestamp_ms);
+		let file = data.files_index[program.file_id] as database.FileEntry;
+		const offset_ms = timestamp_ms - program.start_time_ms;
 		const ffmpeg = libcp.spawn("ffmpeg", [
 			"-ss", `${offset_ms / 1000}`,
 			"-i", file.path.join("/"),
@@ -206,6 +283,8 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 		ffmpeg.stdout.pipe(response);
 	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]/.exec(url)) != null) {
 		const channel_id = Number.parseInt(parts[1]);
+		const programming = getProgramming(channel_id);
+		const stream_start_ms = programming[0].start_time_ms;
 		const stream_length_ms = Date.now() - stream_start_ms;
 		const segment_offset = Math.floor(stream_length_ms / (segment_length_s * 1000));
 		const segments = new Array<string>();
@@ -230,6 +309,7 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 
 export {
 	getAffinitiesForChannel,
+	getProgramming,
 	generateProgramming,
 	getChannel,
 	handleRequest

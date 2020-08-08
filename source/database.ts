@@ -1092,6 +1092,102 @@ export const StreamDatabase = {
 	}
 };
 
+export type ChannelEntry = {
+	"channel_id": string
+};
+
+export const ChannelEntry = {
+	as(subject: any, path: string = ""): ChannelEntry {
+		return ((subject, path) => {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
+				(autoguard.guards.String.as)(subject["channel_id"], path + "[\"channel_id\"]");
+				return subject;
+			}
+			throw "Type guard \"Object\" failed at \"" + path + "\"!";
+		})(subject, path);
+	},
+	is(subject: any): subject is ChannelEntry {
+		try {
+			ChannelEntry.as(subject);
+		} catch (error) {
+			return false;
+		}
+		return true;
+	}
+};
+
+export type ProgramEntry = {
+	"program_id": string,
+	"channel_id": string,
+	"file_id": string,
+	"start_time_ms": number
+};
+
+export const ProgramEntry = {
+	as(subject: any, path: string = ""): ProgramEntry {
+		return ((subject, path) => {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
+				(autoguard.guards.String.as)(subject["program_id"], path + "[\"program_id\"]");
+				(autoguard.guards.String.as)(subject["channel_id"], path + "[\"channel_id\"]");
+				(autoguard.guards.String.as)(subject["file_id"], path + "[\"file_id\"]");
+				(autoguard.guards.Number.as)(subject["start_time_ms"], path + "[\"start_time_ms\"]");
+				return subject;
+			}
+			throw "Type guard \"Object\" failed at \"" + path + "\"!";
+		})(subject, path);
+	},
+	is(subject: any): subject is ProgramEntry {
+		try {
+			ProgramEntry.as(subject);
+		} catch (error) {
+			return false;
+		}
+		return true;
+	}
+};
+
+export type ChannelDatabase = {
+	"channels": ChannelEntry[],
+	"programs": ProgramEntry[]
+};
+
+export const ChannelDatabase = {
+	as(subject: any, path: string = ""): ChannelDatabase {
+		return ((subject, path) => {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
+				((subject, path) => {
+					if ((subject != null) && (subject.constructor === globalThis.Array)) {
+						for (let i = 0; i < subject.length; i++) {
+							(ChannelEntry.as)(subject[i], path + "[" + i + "]");
+						}
+						return subject;
+					}
+					throw "Type guard \"Array\" failed at \"" + path + "\"!";
+				})(subject["channels"], path + "[\"channels\"]");
+				((subject, path) => {
+					if ((subject != null) && (subject.constructor === globalThis.Array)) {
+						for (let i = 0; i < subject.length; i++) {
+							(ProgramEntry.as)(subject[i], path + "[" + i + "]");
+						}
+						return subject;
+					}
+					throw "Type guard \"Array\" failed at \"" + path + "\"!";
+				})(subject["programs"], path + "[\"programs\"]");
+				return subject;
+			}
+			throw "Type guard \"Object\" failed at \"" + path + "\"!";
+		})(subject, path);
+	},
+	is(subject: any): subject is ChannelDatabase {
+		try {
+			ChannelDatabase.as(subject);
+		} catch (error) {
+			return false;
+		}
+		return true;
+	}
+};
+
 export type Autoguard = {
 	"ArtistEntry": ArtistEntry,
 	"AlbumEntry": AlbumEntry,
@@ -1120,7 +1216,10 @@ export type Autoguard = {
 	"AuthToken": AuthToken,
 	"UserDatabase": UserDatabase,
 	"Stream": Stream,
-	"StreamDatabase": StreamDatabase
+	"StreamDatabase": StreamDatabase,
+	"ChannelEntry": ChannelEntry,
+	"ProgramEntry": ProgramEntry,
+	"ChannelDatabase": ChannelDatabase
 };
 
 export const Autoguard = {
@@ -1151,5 +1250,8 @@ export const Autoguard = {
 	"AuthToken": AuthToken,
 	"UserDatabase": UserDatabase,
 	"Stream": Stream,
-	"StreamDatabase": StreamDatabase
+	"StreamDatabase": StreamDatabase,
+	"ChannelEntry": ChannelEntry,
+	"ProgramEntry": ProgramEntry,
+	"ChannelDatabase": ChannelDatabase
 };

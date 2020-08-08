@@ -155,5 +155,18 @@
 	},
 	StreamDatabase: {
 		streams: @Stream[]
+	},
+	ChannelEntry: {
+		channel_id: string
+	},
+	ProgramEntry: {
+		program_id: string,
+		channel_id: string,
+		file_id: string,
+		start_time_ms: number
+	},
+	ChannelDatabase: {
+		channels: @ChannelEntry[],
+		programs: @ProgramEntry[]
 	}
 }
