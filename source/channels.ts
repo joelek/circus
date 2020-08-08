@@ -291,7 +291,7 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 		for (let i = 0; i < 3; i++) {
 			const timestamp_ms = (segment_offset  + i) * (segment_length_s * 1000);
 			segments.push(`#EXTINF:${segment_length_s},`),
-			segments.push(`${timestamp_ms}.ts?token=${token}`);
+			segments.push(`${timestamp_ms + stream_start_ms}.ts?token=${token}`);
 		}
 		response.writeHead(200);
 		response.end([
