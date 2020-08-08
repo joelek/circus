@@ -21,3 +21,15 @@ Content-Length:0
 
 ws://localhost:8008/v2/ipc
 protobuf wrapped json on: 8009
+
+
+## Iteration ideas
+
+* Deltaindexer
+* Playlisting
+* Actors
+* Infinite streams (radio, channels)
+* Multi-device contexts
+* Typed & lean API
+* Music genres
+* Stream history
