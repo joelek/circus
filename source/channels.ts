@@ -268,7 +268,6 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 	const method = request.method || "GET";
 	const url = request.url || "/";
 	let parts: RegExpExecArray | null = null;
-	console.log(url);
 	if (false) {
 	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]([0-9]+)[/]([0-9a-f]+)[_]([0-9]+)[.]ts/.exec(url)) != null) {
 		(async () => {
@@ -293,7 +292,7 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 			const ffmpeg = libcp.spawn("ffmpeg", [
 				"-ss", `${keyframe_offset_ms / 1000}`,
 				"-i", file.path.join("/"),
-				"-vframes", `${Math.round(25 * duration_ms) - 1}`,
+				"-vframes", `${Math.round(25 * duration_ms / 1000)}`,
 				"-c:v", "copy",
 				"-c:a", "copy",
 				"-f", "mpegts",
