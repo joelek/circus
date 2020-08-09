@@ -108,8 +108,7 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 		let ms = endMs - startMs;
 		process.stderr.write(`${("    " + ms).slice(-4)}ms ${method}:${path}\n`);
 	});
-	//console.log(`${new Date().toUTCString()}:${method}:${path}`, JSON.stringify(filter_headers(request.headers, ['host', 'range']), null, "\t"));
-	if (/^[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+(:[0-9]+)?$/.test(host)) {
+	if (false && /^[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+(:[0-9]+)?$/.test(host)) {
 		response.writeHead(400);
 		response.end();
 		return;

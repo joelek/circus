@@ -4,6 +4,7 @@ import * as libhttp from "http";
 import * as data from "./data";
 import * as api_response from "./api_response";
 import * as database from "./database";
+import { getKeyframes } from "./keyframes";
 
 type Supplier<A> = {
 	(): A
@@ -238,15 +239,15 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 	*/
 }
 
-const segment_length_s = 10;
-
-function getCurrentlyPlaying(channel_id: number, timestamp_ms: number): database.ProgramEntry {
+function getCurrentlyPlaying(channel_id: number, timestamp_ms: number): database.ProgramEntry & { duration_ms: number, end_time_ms: number } {
 	let programming = getProgramming(channel_id);
 	let programs = programming.map((program) => {
 		let metadata = data.lookupMetadata(program.file_id);
+		let duration_ms = metadata.duration;
 		let end_time_ms = program.start_time_ms + metadata.duration;
 		return {
 			...program,
+			duration_ms,
 			end_time_ms
 		};
 	});
@@ -258,49 +259,91 @@ function getCurrentlyPlaying(channel_id: number, timestamp_ms: number): database
 	throw "Expected a currently playing program!";
 }
 
+let keyframe_db: { [key: string]: number[] | undefined } = {};
+let segment_db: { [key: string]: number | undefined } = {};
+
+const segment_length_s = 10;
+
 function handleRequest(token: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 	const method = request.method || "GET";
 	const url = request.url || "/";
 	let parts: RegExpExecArray | null = null;
+	console.log(url);
 	if (false) {
-	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]([0-9]+).ts/.exec(url)) != null) {
-		const channel_id = Number.parseInt(parts[1]);
-		const timestamp_ms = Number.parseInt(parts[2]);
-		const program = getCurrentlyPlaying(channel_id, timestamp_ms);
-		let file = data.files_index[program.file_id] as database.FileEntry;
-		const offset_ms = timestamp_ms - program.start_time_ms;
-		const ffmpeg = libcp.spawn("ffmpeg", [
-			"-ss", `${offset_ms / 1000}`,
-			"-i", file.path.join("/"),
-			"-vframes", `${25 * segment_length_s}`,
-			"-c:v", "copy",
-			"-c:a", "copy",
-			"-f", "mpegts",
-			//"-muxdelay", "0",
-			//"-avoid_negative_ts", "disabled",
-			"pipe:"
-		]);
-		ffmpeg.stdout.pipe(response);
-	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]/.exec(url)) != null) {
-		const channel_id = Number.parseInt(parts[1]);
-		const programming = getProgramming(channel_id);
-		const stream_start_ms = programming[0].start_time_ms;
-		const stream_length_ms = Date.now() - stream_start_ms;
-		const segment_offset = Math.floor(stream_length_ms / (segment_length_s * 1000));
-		const segments = new Array<string>();
-		for (let i = 0; i < 3; i++) {
-			const timestamp_ms = (segment_offset  + i) * (segment_length_s * 1000);
-			segments.push(`#EXTINF:${segment_length_s},`),
-			segments.push(`${timestamp_ms + stream_start_ms}.ts?token=${token}`);
-		}
-		response.writeHead(200);
-		response.end([
-			"#EXTM3U",
-			"#EXT-X-VERSION:3",
-			`#EXT-X-TARGETDURATION:${segment_length_s}`,
-			`#EXT-X-MEDIA-SEQUENCE:${segment_offset}`,
-			...segments
-		].join("\n"));
+	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]([0-9]+)[/]([0-9a-f]+)[_]([0-9]+)[.]ts/.exec(url)) != null) {
+		(async () => {
+			const channel_id = Number.parseInt(parts[1]);
+			const start_time_ms = Number.parseInt(parts[2]);
+			const file_id = parts[3];
+			const segment = Number.parseInt(parts[4]);
+			let file = data.files_index[file_id];
+			if (!file) {
+				throw "Expected a valid file id!";
+			}
+			let keyframes = keyframe_db[file_id];
+			if (!keyframes) {
+				keyframe_db[file_id] = keyframes = await getKeyframes(file.path);
+			}
+			if (segment >= keyframes.length) {
+				throw "Expected a valid segment!";
+			}
+			let metadata = data.lookupMetadata(file_id);
+			let keyframe_offset_ms = keyframes[segment];
+			let duration_ms = (segment + 1 < keyframes.length ? keyframes[segment + 1] : metadata.duration) - keyframe_offset_ms;
+			const ffmpeg = libcp.spawn("ffmpeg", [
+				"-ss", `${keyframe_offset_ms / 1000}`,
+				"-i", file.path.join("/"),
+				"-vframes", `${Math.round(25 * duration_ms) - 1}`,
+				"-c:v", "copy",
+				"-c:a", "copy",
+				"-f", "mpegts",
+				//"-muxdelay", "0",
+				//"-avoid_negative_ts", "disabled",
+				"pipe:"
+			]);
+			ffmpeg.stdout.pipe(response);
+		})();
+	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]([0-9]+)[/]/.exec(url)) != null) {
+		(async () => {
+			const channel_id = Number.parseInt(parts[1]);
+			const start_time_ms = Number.parseInt(parts[2]);
+			const now_ms = Date.now();
+			const program = getCurrentlyPlaying(channel_id, now_ms);
+			let keyframes = keyframe_db[program.file_id];
+			if (!keyframes) {
+				keyframe_db[program.file_id] = keyframes = await getKeyframes((data.files_index[program.file_id] as database.FileEntry).path);
+			}
+			let segment = segment_db[start_time_ms] || 0;
+			let index = 0;
+			for (let keyframe of keyframes) {
+				if (program.start_time_ms + keyframe > now_ms) {
+					break;
+				}
+				index += 1;
+			}
+			segment_db[start_time_ms] = segment = segment + index;
+			let total_duration = 0;
+			const segments = new Array<string>();
+			while (total_duration < 30 * 1000) {
+				if (index >= keyframes.length) {
+					break;
+				}
+				let keyframe_offset_ms = keyframes[index];
+				let duration_ms = (index + 1 < keyframes.length ? keyframes[index + 1] : program.duration_ms) - keyframe_offset_ms;
+				segments.push(`#EXTINF:${(duration_ms/1000).toFixed(3)},`),
+				segments.push(`${program.file_id}_${index}.ts?token=${token}`);
+				index += 1;
+				total_duration += duration_ms;
+			}
+			response.writeHead(200);
+			response.end([
+				"#EXTM3U",
+				"#EXT-X-VERSION:3",
+				`#EXT-X-TARGETDURATION:${segment_length_s}`,
+				`#EXT-X-MEDIA-SEQUENCE:${segment}`,
+				...segments
+			].join("\n"));
+		})();
 	} else {
 		response.writeHead(404);
 		response.end();

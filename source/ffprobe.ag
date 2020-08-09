@@ -1,0 +1,8 @@
+{
+	VideoFrame: {
+		"pkt_pts_time": string
+	},
+	ShowFrames: {
+		"frames": @VideoFrame[]
+	}
+}

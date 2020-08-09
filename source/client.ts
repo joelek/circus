@@ -763,7 +763,7 @@ let updateviewforuri = (uri: string): void => {
 			let button = document.createElement("button");
 			button.textContent = "Play";
 			button.addEventListener("click", () => {
-				playfile(`/media/channels/${channel_id}/`);
+				playfile(`/media/channels/${channel_id}/${Date.now()}/`);
 			});
 			mount.appendChild(button);
 			let context: Context = {
