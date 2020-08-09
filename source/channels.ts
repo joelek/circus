@@ -262,7 +262,7 @@ function getCurrentlyPlaying(channel_id: number, timestamp_ms: number): database
 let keyframe_db: { [key: string]: number[] | undefined } = {};
 let segment_db: { [key: string]: number | undefined } = {};
 
-const target_duration_s = 10;
+const target_duration_s = 20;
 
 function makeSegments(keyframe_offsets_ms: Array<number>, maximum_segment_length_ms: number): Array<number> {
 	let last_segment_offset_ms = 0 - Infinity;
