@@ -262,37 +262,40 @@ function getCurrentlyPlaying(channel_id: number, timestamp_ms: number): database
 let keyframe_db: { [key: string]: number[] | undefined } = {};
 let segment_db: { [key: string]: number | undefined } = {};
 
-const segment_length_s = 10;
+const target_duration_s = 10;
+
+function makeSegments(keyframe_offsets_ms: Array<number>, maximum_segment_length_ms: number): Array<number> {
+	let last_segment_offset_ms = 0 - Infinity;
+	let segment_offsets_ms = new Array<number>();
+	for (let i = 1; i < keyframe_offsets_ms.length; i++) {
+		if (keyframe_offsets_ms[i] - last_segment_offset_ms > maximum_segment_length_ms) {
+			last_segment_offset_ms = keyframe_offsets_ms[i - 1];
+			segment_offsets_ms.push(last_segment_offset_ms);
+		}
+	}
+	return segment_offsets_ms;
+}
 
 function handleRequest(token: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 	const method = request.method || "GET";
 	const url = request.url || "/";
 	let parts: RegExpExecArray | null = null;
 	if (false) {
-	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]([0-9]+)[/]([0-9a-f]+)[_]([0-9]+)[.]ts/.exec(url)) != null) {
+	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]([0-9]+)[/]([0-9a-f]+)[_]([0-9]+)(?:[_]([0-9]+)?)[.]ts/.exec(url)) != null) {
 		(async () => {
 			const channel_id = Number.parseInt(parts[1]);
 			const start_time_ms = Number.parseInt(parts[2]);
 			const file_id = parts[3];
-			const segment = Number.parseInt(parts[4]);
+			const offset_ms = Number.parseInt(parts[4]);
+			const duration_ms = parts[5] ? Number.parseInt(parts[5]) : null;
 			let file = data.files_index[file_id];
 			if (!file) {
 				throw "Expected a valid file id!";
 			}
-			let keyframes = keyframe_db[file_id];
-			if (!keyframes) {
-				keyframe_db[file_id] = keyframes = await getKeyframes(file.path);
-			}
-			if (segment >= keyframes.length) {
-				throw "Expected a valid segment!";
-			}
-			let metadata = data.lookupMetadata(file_id);
-			let keyframe_offset_ms = keyframes[segment];
-			let duration_ms = (segment + 1 < keyframes.length ? keyframes[segment + 1] : metadata.duration) - keyframe_offset_ms;
 			const ffmpeg = libcp.spawn("ffmpeg", [
-				"-ss", `${keyframe_offset_ms / 1000}`,
+				"-ss", `${offset_ms / 1000}`,
 				"-i", file.path.join("/"),
-				"-vframes", `${Math.round(25 * duration_ms / 1000)}`,
+				...(duration_ms != null ? ["-vframes", `${Math.round(25 * duration_ms / 1000)}`] : []),
 				"-c:v", "copy",
 				"-c:a", "copy",
 				"-f", "mpegts",
@@ -312,34 +315,35 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 			if (!keyframes) {
 				keyframe_db[program.file_id] = keyframes = await getKeyframes((data.files_index[program.file_id] as database.FileEntry).path);
 			}
+			let segment_keyframes = makeSegments(keyframes, target_duration_s * 1000);
 			let segment = segment_db[start_time_ms] || 0;
 			let index = 0;
-			for (let keyframe of keyframes) {
+			for (let keyframe of segment_keyframes) {
 				if (program.start_time_ms + keyframe > now_ms) {
 					break;
 				}
 				index += 1;
 			}
-			segment_db[start_time_ms] = segment = segment + index;
-			let total_duration = 0;
+			let sequence = segment + index;
 			const segments = new Array<string>();
-			while (total_duration < 30 * 1000) {
-				if (index >= keyframes.length) {
+			let total_duration_ms = 0;
+			while (total_duration_ms < 3 * target_duration_s * 1000) {
+				if (index >= segment_keyframes.length) {
 					break;
 				}
-				let keyframe_offset_ms = keyframes[index];
-				let duration_ms = (index + 1 < keyframes.length ? keyframes[index + 1] : program.duration_ms) - keyframe_offset_ms;
+				let keyframe_offset_ms = segment_keyframes[index];
+				let duration_ms = (index + 1 < segment_keyframes.length ? segment_keyframes[index + 1] : program.duration_ms) - keyframe_offset_ms;
 				segments.push(`#EXTINF:${(duration_ms/1000).toFixed(3)},`),
-				segments.push(`${program.file_id}_${index}.ts?token=${token}`);
+				segments.push(`${program.file_id}_${keyframe_offset_ms}_${duration_ms}.ts?token=${token}`);
 				index += 1;
-				total_duration += duration_ms;
+				total_duration_ms += duration_ms;
 			}
 			response.writeHead(200);
 			response.end([
 				"#EXTM3U",
 				"#EXT-X-VERSION:3",
-				`#EXT-X-TARGETDURATION:${segment_length_s}`,
-				`#EXT-X-MEDIA-SEQUENCE:${segment}`,
+				`#EXT-X-TARGETDURATION:${target_duration_s}`,
+				`#EXT-X-MEDIA-SEQUENCE:${sequence}`,
 				...segments
 			].join("\n"));
 		})();
