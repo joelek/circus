@@ -199,9 +199,11 @@ if (full_chain && certificate_key) {
 	server.listen(443, () => {
 		console.log("https://localhost:443");
 	});
+	server.keepAliveTimeout = 60 * 1000;
 } else {
 	let server = libhttp.createServer({}, requestHandler);
 	server.listen(80, () => {
 		console.log("http://localhost:80");
 	});
+	server.keepAliveTimeout = 60 * 1000;
 }

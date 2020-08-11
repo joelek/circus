@@ -4,5 +4,12 @@
 	},
 	ShowFrames: {
 		"frames": @VideoFrame[]
+	},
+	Stream: {
+		"start_time": string,
+		"duration": string
+	},
+	ShowStreams: {
+		"streams": @Stream[]
 	}
 }

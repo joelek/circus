@@ -58,12 +58,74 @@ export const ShowFrames = {
 	}
 };
 
+export type Stream = {
+	"start_time": string,
+	"duration": string
+};
+
+export const Stream = {
+	as(subject: any, path: string = ""): Stream {
+		return ((subject, path) => {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
+				(autoguard.guards.String.as)(subject["start_time"], path + "[\"start_time\"]");
+				(autoguard.guards.String.as)(subject["duration"], path + "[\"duration\"]");
+				return subject;
+			}
+			throw "Type guard \"Object\" failed at \"" + path + "\"!";
+		})(subject, path);
+	},
+	is(subject: any): subject is Stream {
+		try {
+			Stream.as(subject);
+		} catch (error) {
+			return false;
+		}
+		return true;
+	}
+};
+
+export type ShowStreams = {
+	"streams": Stream[]
+};
+
+export const ShowStreams = {
+	as(subject: any, path: string = ""): ShowStreams {
+		return ((subject, path) => {
+			if ((subject != null) && (subject.constructor === globalThis.Object)) {
+				((subject, path) => {
+					if ((subject != null) && (subject.constructor === globalThis.Array)) {
+						for (let i = 0; i < subject.length; i++) {
+							(Stream.as)(subject[i], path + "[" + i + "]");
+						}
+						return subject;
+					}
+					throw "Type guard \"Array\" failed at \"" + path + "\"!";
+				})(subject["streams"], path + "[\"streams\"]");
+				return subject;
+			}
+			throw "Type guard \"Object\" failed at \"" + path + "\"!";
+		})(subject, path);
+	},
+	is(subject: any): subject is ShowStreams {
+		try {
+			ShowStreams.as(subject);
+		} catch (error) {
+			return false;
+		}
+		return true;
+	}
+};
+
 export type Autoguard = {
 	"VideoFrame": VideoFrame,
-	"ShowFrames": ShowFrames
+	"ShowFrames": ShowFrames,
+	"Stream": Stream,
+	"ShowStreams": ShowStreams
 };
 
 export const Autoguard = {
 	"VideoFrame": VideoFrame,
-	"ShowFrames": ShowFrames
+	"ShowFrames": ShowFrames,
+	"Stream": Stream,
+	"ShowStreams": ShowStreams
 };

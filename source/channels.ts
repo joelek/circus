@@ -4,7 +4,7 @@ import * as libhttp from "http";
 import * as data from "./data";
 import * as api_response from "./api_response";
 import * as database from "./database";
-import { getKeyframes } from "./keyframes";
+import { Segment, getKeyframeSegments } from "./keyframes";
 
 type Supplier<A> = {
 	(): A
@@ -259,51 +259,55 @@ function getCurrentlyPlaying(channel_id: number, timestamp_ms: number): database
 	throw "Expected a currently playing program!";
 }
 
-let keyframe_db: { [key: string]: number[] | undefined } = {};
+let keyframe_db: { [key: string]: Segment[] | undefined } = {};
 let segment_db: { [key: string]: number | undefined } = {};
 
-const target_duration_s = 20;
-
-function makeSegments(keyframe_offsets_ms: Array<number>, maximum_segment_length_ms: number): Array<number> {
-	let last_segment_offset_ms = 0 - Infinity;
-	let segment_offsets_ms = new Array<number>();
-	for (let i = 1; i < keyframe_offsets_ms.length; i++) {
-		if (keyframe_offsets_ms[i] - last_segment_offset_ms > maximum_segment_length_ms) {
-			last_segment_offset_ms = keyframe_offsets_ms[i - 1];
-			segment_offsets_ms.push(last_segment_offset_ms);
-		}
-	}
-	return segment_offsets_ms;
-}
+const target_duration_s = 10;
 
 function handleRequest(token: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 	const method = request.method || "GET";
 	const url = request.url || "/";
 	let parts: RegExpExecArray | null = null;
 	if (false) {
-	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]([0-9]+)[/]([0-9a-f]+)[_]([0-9]+)(?:[_]([0-9]+)?)[.]ts/.exec(url)) != null) {
+	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]([0-9]+)[/]([0-9]+)_([0-9a-f]+)[_]([0-9]+)(?:[_]([0-9]+)?)[.]ts/.exec(url)) != null) {
 		(async () => {
 			const channel_id = Number.parseInt(parts[1]);
 			const start_time_ms = Number.parseInt(parts[2]);
-			const file_id = parts[3];
-			const offset_ms = Number.parseInt(parts[4]);
-			const duration_ms = parts[5] ? Number.parseInt(parts[5]) : null;
+			const index = Number.parseInt(parts[3]);
+			const file_id = parts[4];
+			const offset_ms = Number.parseInt(parts[5]);
+			const duration_ms = parts[6] ? Number.parseInt(parts[6]) : null;
 			let file = data.files_index[file_id];
 			if (!file) {
 				throw "Expected a valid file id!";
 			}
+			// We subtract two frames (80ms@25fps) from the duration since there is a bug in ffmpeg affecting the demuxing of videos using b-frames.
 			const ffmpeg = libcp.spawn("ffmpeg", [
+				"-hide_banner",
 				"-ss", `${offset_ms / 1000}`,
+				...(duration_ms != null ? ["-t", `${(duration_ms - 80) / 1000}`] : []),
 				"-i", file.path.join("/"),
-				...(duration_ms != null ? ["-vframes", `${Math.round(25 * duration_ms / 1000)}`] : []),
-				"-c:v", "copy",
-				"-c:a", "copy",
+				"-c", "copy",
 				"-f", "mpegts",
-				//"-muxdelay", "0",
+				"-muxdelay", "0",
 				//"-avoid_negative_ts", "disabled",
+				//"-output_ts_offset", "0",
+				"-copyts",
 				"pipe:"
 			]);
-			ffmpeg.stdout.pipe(response);
+			let chunks = new Array<Buffer>();
+			ffmpeg.stdout.on("data", (chunk) => {
+				chunks.push(chunk);
+			});
+			ffmpeg.stdout.on("end", () => {
+				let payload = Buffer.concat(chunks);
+				let connection = request.headers.connection || "close";
+				response.writeHead(200, {
+					"Connection": connection
+				});
+				response.end(payload);
+			});
+
 		})();
 	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]([0-9]+)[/]/.exec(url)) != null) {
 		(async () => {
@@ -313,39 +317,51 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 			const program = getCurrentlyPlaying(channel_id, now_ms);
 			let keyframes = keyframe_db[program.file_id];
 			if (!keyframes) {
-				keyframe_db[program.file_id] = keyframes = await getKeyframes((data.files_index[program.file_id] as database.FileEntry).path);
+				keyframe_db[program.file_id] = keyframes = (await getKeyframeSegments((data.files_index[program.file_id] as database.FileEntry).path, 0, target_duration_s * 1000));
 			}
-			let segment_keyframes = makeSegments(keyframes, target_duration_s * 1000);
 			let segment = segment_db[start_time_ms] || 0;
 			let index = 0;
-			for (let keyframe of segment_keyframes) {
-				if (program.start_time_ms + keyframe > now_ms) {
+			while (true) {
+				let segment = keyframes[index];
+				if (program.start_time_ms + segment.offset_ms + segment.duration_ms >= now_ms) {
 					break;
 				}
 				index += 1;
 			}
 			let sequence = segment + index;
 			const segments = new Array<string>();
+			let duration_max_ms = 0 - Infinity;
+			let segments_pushed = 0;
 			let total_duration_ms = 0;
-			while (total_duration_ms < 3 * target_duration_s * 1000) {
-				if (index >= segment_keyframes.length) {
+			while (segments_pushed < 6 && total_duration_ms < target_duration_s * 1000 * 3) {
+				if (index >= keyframes.length) {
+					segments.push("");
+					segments.push("#EXT-X-DISCONTINUITY");
 					break;
 				}
-				let keyframe_offset_ms = segment_keyframes[index];
-				let duration_ms = (index + 1 < segment_keyframes.length ? segment_keyframes[index + 1] : program.duration_ms) - keyframe_offset_ms;
-				segments.push(`#EXTINF:${(duration_ms/1000).toFixed(3)},`),
-				segments.push(`${program.file_id}_${keyframe_offset_ms}_${duration_ms}.ts?token=${token}`);
+				let keyframe = keyframes[index];
+				segments.push("");
+				// EXT-X-DISCONTINUITY-SEQUENCE
+				segments.push(`#EXT-X-PROGRAM-DATE-TIME:${new Date(program.start_time_ms + keyframe.offset_ms).toISOString()}`);
+				segments.push(`#EXTINF:${(keyframe.duration_ms/1000).toFixed(3)},`),
+				segments.push(`${index}_${program.file_id}_${keyframe.offset_ms}_${keyframe.duration_ms}.ts?token=${token}`);
 				index += 1;
-				total_duration_ms += duration_ms;
+				segments_pushed += 1;
+				total_duration_ms += keyframe.duration_ms;
+				duration_max_ms = Math.max(duration_max_ms, keyframe.duration_ms);
 			}
-			response.writeHead(200);
-			response.end([
+			let payload = [
 				"#EXTM3U",
-				"#EXT-X-VERSION:3",
+				"#EXT-X-VERSION:4",
 				`#EXT-X-TARGETDURATION:${target_duration_s}`,
 				`#EXT-X-MEDIA-SEQUENCE:${sequence}`,
 				...segments
-			].join("\n"));
+			].join("\n");
+			let connection = request.headers.connection || "close";
+			response.writeHead(200, {
+				"Connection": connection
+			});
+			response.end(payload);
 		})();
 	} else {
 		response.writeHead(404);
