@@ -206,6 +206,65 @@ document.body.appendChild(video);
 let context: Context | null = null;
 let metadata: Metadata | null = null;
 let context_index: number | null = null;
+
+// Broken in IOS13
+class Player {
+	private audio: AudioContext;
+	private context: Context | null;
+	private index: number;
+	private one: HTMLAudioElement;
+	private two: HTMLAudioElement;
+
+	constructor(document: Document) {
+		// @ts-ignore
+		this.audio = new (AudioContext || webkitAudioContext)();
+		this.context = null;
+		this.index = 0;
+		let one = document.createElement("audio");
+		one.setAttribute("preload", "auto");
+		let two = document.createElement("audio");
+		two.setAttribute("preload", "auto");
+		this.one = one;
+		this.two = two;
+		this.one.addEventListener("ended", () => {
+			this.index += 1;
+			this.two.play();
+			if (this.context) {
+				let id = this.context.files[this.index + 1];
+				this.one.src = `/files/${id}/?token=${token}`;
+			}
+		});
+		this.two.addEventListener("ended", () => {
+			this.index += 1;
+			this.one.play();
+			if (this.context) {
+				let id = this.context.files[this.index + 1];
+				this.two.src = `/files/${id}/?token=${token}`;
+			}
+		});
+		let sourceOne = this.audio.createMediaElementSource(this.one);
+		let sourceTwo = this.audio.createMediaElementSource(this.two);
+		sourceOne.connect(this.audio.destination);
+		sourceTwo.connect(this.audio.destination);
+	}
+
+	play(context: Context, index: number): void {
+		this.audio.resume();
+		this.context = context; // TODO: Copy.
+		this.index = index;
+		this.one.src = `/files/${this.context.files[this.index + 0]}/?token=${token}`;
+		this.two.src = `/files/${this.context.files[this.index + 1]}/?token=${token}`;
+		this.one.play();
+	}
+}
+
+type Deferred<A> = A | undefined;
+
+let player: Deferred<Player>;
+
+
+
+
 let play = (index: number): void => {
 	if (index === context_index) {
 		return;
