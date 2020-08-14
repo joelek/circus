@@ -201,13 +201,18 @@ type Metadata = {
 let video = document.createElement('video');
 video.setAttribute('controls', '');
 video.setAttribute('playsinline', '');
+video.setAttribute("preload", "auto");
 video.style.setProperty('width', '100%');
 document.body.appendChild(video);
+let buffer = document.createElement("video");
+buffer.setAttribute("preload", "auto");
+buffer.style.setProperty("display", "none");
+document.body.appendChild(buffer);
+
 let context: Context | null = null;
 let metadata: Metadata | null = null;
 let context_index: number | null = null;
 
-// Broken in IOS13
 class Player {
 	private audio: AudioContext;
 	private context: Context | null;
@@ -217,7 +222,7 @@ class Player {
 
 	constructor(document: Document) {
 		// @ts-ignore
-		this.audio = new (AudioContext || webkitAudioContext)();
+		this.audio = new (window.AudioContext || window.webkitAudioContext)();
 		this.context = null;
 		this.index = 0;
 		let one = document.createElement("audio");
@@ -272,8 +277,18 @@ let play = (index: number): void => {
 	if (context === null) {
 		return;
 	}
+/*
+	if (!player) {
+		player = new Player(document);
+	}
+	player.play(context, index);
+*/
 	let fid = context.files[index];
 	video.src = `/files/${fid}/?token=${token}`;
+	if (index + 1 < context.files.length) {
+		let fid = context.files[index + 1];
+		buffer.src = `/files/${fid}/?token=${token}`;
+	}
 	while (video.lastChild !== null) {
 		video.removeChild(video.lastChild);
 	}
@@ -352,7 +367,6 @@ let set_context_metadata = (md: Metadata): void => {
 		context_index = null;
 	}
 };
-
 let chromecast = document.createElement("div");
 chromecast.classList.add("group");
 let ccp = document.createElement("p");
