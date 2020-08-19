@@ -290,24 +290,16 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 				"-c", "copy",
 				"-f", "mpegts",
 				"-muxdelay", "0",
-				//"-avoid_negative_ts", "disabled",
-				//"-output_ts_offset", "0",
+				"-avoid_negative_ts", "disabled",
+				"-output_ts_offset", "0",
 				"-copyts",
 				"pipe:"
 			]);
-			let chunks = new Array<Buffer>();
-			ffmpeg.stdout.on("data", (chunk) => {
-				chunks.push(chunk);
+			let connection = request.headers.connection || "close";
+			response.writeHead(200, {
+				"Connection": connection
 			});
-			ffmpeg.stdout.on("end", () => {
-				let payload = Buffer.concat(chunks);
-				let connection = request.headers.connection || "close";
-				response.writeHead(200, {
-					"Connection": connection
-				});
-				response.end(payload);
-			});
-
+			ffmpeg.stdout.pipe(response);
 		})();
 	} else if (method === "GET" && (parts = /^[/]media[/]channels[/]([0-9]+)[/]([0-9]+)[/]/.exec(url)) != null) {
 		(async () => {

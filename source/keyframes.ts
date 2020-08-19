@@ -21,7 +21,7 @@ export function combineOffsets(offsets_ms: Array<number>, target_duration_ms: nu
 	let last_offset_ms = 0 - Infinity;
 	let combined_offsets_ms = new Array<number>();
 	for (let i = 1; i < offsets_ms.length; i++) {
-		if (offsets_ms[i - 1] - last_offset_ms > target_duration_ms) {
+		if (offsets_ms[i] - last_offset_ms > target_duration_ms) {
 			last_offset_ms = offsets_ms[i - 1];
 			combined_offsets_ms.push(last_offset_ms);
 		}
