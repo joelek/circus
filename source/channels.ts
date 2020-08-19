@@ -239,7 +239,7 @@ function generateProgramming(channel_id: number, username: string): Array<api_re
 	*/
 }
 
-function getCurrentlyPlaying(channel_id: number, timestamp_ms: number): database.ProgramEntry & { duration_ms: number, end_time_ms: number } {
+function getProgrammingWithTiming(channel_id: number): Array<database.ProgramEntry & { duration_ms: number, end_time_ms: number }> {
 	let programming = getProgramming(channel_id);
 	let programs = programming.map((program) => {
 		let metadata = data.lookupMetadata(program.file_id);
@@ -251,18 +251,21 @@ function getCurrentlyPlaying(channel_id: number, timestamp_ms: number): database
 			end_time_ms
 		};
 	});
-	for (let program of programs) {
-		if (program.start_time_ms <= timestamp_ms && timestamp_ms < program.end_time_ms) {
-			return program;
-		}
-	}
-	throw "Expected a currently playing program!";
+	return programs;
 }
 
 let keyframe_db: { [key: string]: Segment[] | undefined } = {};
-let segment_db: { [key: string]: number | undefined } = {};
-
 const target_duration_s = 10;
+
+async function getKeyframes(file_id: string): Promise<Segment[]> {
+	let keyframes = keyframe_db[file_id];
+	if (!keyframes) {
+		let file = data.files_index[file_id] as database.FileEntry;
+		keyframes = await getKeyframeSegments(file.path, 0, target_duration_s * 1000);
+		keyframe_db[file_id] = keyframes;
+	}
+	return keyframes;
+}
 
 function handleRequest(token: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 	const method = request.method || "GET";
@@ -306,12 +309,16 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 			const channel_id = Number.parseInt(parts[1]);
 			const start_time_ms = Number.parseInt(parts[2]);
 			const now_ms = Date.now();
-			const program = getCurrentlyPlaying(channel_id, now_ms);
-			let keyframes = keyframe_db[program.file_id];
-			if (!keyframes) {
-				keyframe_db[program.file_id] = keyframes = (await getKeyframeSegments((data.files_index[program.file_id] as database.FileEntry).path, 0, target_duration_s * 1000));
+			const programs = getProgrammingWithTiming(channel_id);
+			let programIndex = 0;
+			for (; programIndex < programs.length; programIndex++) {
+				let program = programs[programIndex];
+				if (program.start_time_ms <= now_ms && now_ms < program.end_time_ms) {
+					break;
+				}
 			}
-			let segment = segment_db[start_time_ms] || 0;
+			let program = programs[programIndex];
+			let keyframes = await getKeyframes(program.file_id);
 			let index = 0;
 			while (true) {
 				let segment = keyframes[index];
@@ -320,32 +327,33 @@ function handleRequest(token: string, request: libhttp.IncomingMessage, response
 				}
 				index += 1;
 			}
-			let sequence = segment + index;
+			let sequence = index;
 			const segments = new Array<string>();
-			let duration_max_ms = 0 - Infinity;
 			let segments_pushed = 0;
 			let total_duration_ms = 0;
 			while (segments_pushed < 6 && total_duration_ms < target_duration_s * 1000 * 3) {
 				if (index >= keyframes.length) {
 					segments.push("");
 					segments.push("#EXT-X-DISCONTINUITY");
-					break;
+					programIndex += 1;
+					index = 0;
+					program = programs[programIndex];
+					keyframes = await getKeyframes(program.file_id);
 				}
 				let keyframe = keyframes[index];
 				segments.push("");
-				// EXT-X-DISCONTINUITY-SEQUENCE
 				segments.push(`#EXT-X-PROGRAM-DATE-TIME:${new Date(program.start_time_ms + keyframe.offset_ms).toISOString()}`);
 				segments.push(`#EXTINF:${(keyframe.duration_ms/1000).toFixed(3)},`),
 				segments.push(`${index}_${program.file_id}_${keyframe.offset_ms}_${keyframe.duration_ms}.ts?token=${token}`);
 				index += 1;
 				segments_pushed += 1;
 				total_duration_ms += keyframe.duration_ms;
-				duration_max_ms = Math.max(duration_max_ms, keyframe.duration_ms);
 			}
 			let payload = [
 				"#EXTM3U",
-				"#EXT-X-VERSION:4",
+				"#EXT-X-VERSION:3",
 				`#EXT-X-TARGETDURATION:${target_duration_s}`,
+				`#EXT-X-DISCONTINUITY-SEQUENCE:${programIndex}`,
 				`#EXT-X-MEDIA-SEQUENCE:${sequence}`,
 				...segments
 			].join("\n");
