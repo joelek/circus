@@ -3,6 +3,7 @@ import * as libfs from "fs";
 import * as libdb from "./database";
 import * as utils from "./utils";
 import * as auth from "./auth";
+import { NumericSort } from "./shared";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -342,20 +343,6 @@ function lookup<A>(index: utils.Index<A>, id: string): A {
 	}
 	return record;
 }
-
-const NumericSort = {
-	decreasing<A extends { [key in B]: number }, B extends keyof A>(key: B): { (one: A, two: A): number } {
-		return (one, two) => {
-			let t = two[key];
-			return two[key] - one[key];
-		};
-	},
-	increasing<A extends { [key in B]: number }, B extends keyof A>(key: B): { (one: A, two: A): number } {
-		return (one, two) => {
-			return one[key] - two[key];
-		};
-	}
-};
 
 let getEpisodeFromFileId = RecordIndex.from("file_id", media.video.episodes);
 let getMoviePartFromFileId = RecordIndex.from("file_id", media.video.movie_parts);
