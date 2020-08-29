@@ -129,8 +129,21 @@ style.innerText = `
 	}
 
 	.media-widget__title {
+		color: rgb(255, 255, 255);
 		flex: 0 0 auto; min-height: 0px;
+		font-family: "Open Sans", sans-serif;
 		font-size: 16px;
+		margin: 4px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.media-widget__subtitle {
+		color: rgb(191, 191, 191);
+		flex: 0 0 auto; min-height: 0px;
+		font-family: "Open Sans", sans-serif;
+		font-size: 12px;
 		margin: 4px;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -150,9 +163,11 @@ style.innerText = `
 		border-radius: 2px;
 		color: rgb(127, 127, 127);
 		display: inline-block;
+		font-family: "Open Sans", sans-serif;
 		font-size: 12px;
+		font-weight: bold
 		overflow: hidden;
-		padding: 4px;
+		padding: 4px 8px;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
@@ -573,8 +588,15 @@ let updateviewforuri = (uri: string): void => {
 			title.setAttribute("class", "media-widget__title");
 			title.innerText = album.title;
 			meta.appendChild(title);
+			album.artists.forEach((artist) => {
+				let subtitle = document.createElement("div");
+				subtitle.setAttribute("class", "media-widget__subtitle");
+				subtitle.innerText = artist.title;
+				meta.appendChild(subtitle);
+			});
 			let tags = document.createElement("div");
 			tags.setAttribute("class", "media-widget__tags");
+			tags.appendChild(renderTag("Album"));
 			tags.appendChild(renderTag(`${album.year}`));
 			let duration = computeDuration(album.discs.reduce((sum, disc) => {
 				return sum + disc.tracks.reduce((sum, track) => {
