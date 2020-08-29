@@ -228,6 +228,7 @@ style.innerText = `
 		background-color: rgb(255, 255, 255);
 		border-radius: 50%;
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
+		cursor: pointer;
 		fill: rgb(31, 31, 31);
 		margin: 16px;
 		padding: 8px;
@@ -303,6 +304,7 @@ style.innerText = `
 		background-color: rgb(255, 255, 255);
 		border-radius: 50%;
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
+		cursor: pointer;
 		fill: rgb(31, 31, 31);
 		padding: 8px;
 		position: absolute;
@@ -800,7 +802,7 @@ let updateviewforuri = (uri: string): void => {
 				}
 			}
 			let widget = renderArtistHeader(response);
-			widget.querySelector("button")?.addEventListener("click", () => {
+			widget.querySelector(".entity-header__play-button")?.addEventListener("click", () => {
 				set_context(context);
 				play(0);
 			});
@@ -813,7 +815,7 @@ let updateviewforuri = (uri: string): void => {
 			container.appendChild(cell);
 			for (let album of response.albums) {
 				let widget = renderAlbum(album);
-				widget.querySelector("button")?.addEventListener("click", (event) => {
+				widget.querySelector(".media-widget__play-button")?.addEventListener("click", (event) => {
 					let index = context.files.indexOf(album.discs[0].tracks[0].file_id);
 					set_context(context);
 					play(index);
