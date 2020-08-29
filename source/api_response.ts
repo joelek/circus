@@ -26,7 +26,7 @@ interface ChromeCastResponse extends ApiResponse {
 }
 
 interface ArtistResponse extends ApiResponse, libdb.ArtistEntry {
-	albums: Array<libdb.AlbumEntry>;
+	albums: Array<AlbumResponse>;
 }
 
 interface ArtistsResponse extends ApiResponse {

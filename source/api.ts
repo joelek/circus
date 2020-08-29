@@ -92,8 +92,19 @@ class ArtistRoute implements Route<api_response.ApiRequest, api_response.ArtistR
 			return album_artist.artist_id === artist_id;
 		});
 		let albums = album_artists.map((album_artist) => {
-			return data.albums_index[album_artist.album_id];
-		}).filter((album) => album !== undefined) as Array<libdb.AlbumEntry>;
+			let album = data.albums_index[album_artist.album_id] as libdb.AlbumEntry;
+			let discs = data.media.audio.discs.filter((disc) => disc.album_id === album.album_id).map((disc) => {
+				let tracks = data.media.audio.tracks.filter((track) => track.disc_id === disc.disc_id);
+				return {
+					...disc,
+					tracks
+				}
+			});
+			return {
+				...album,
+				discs
+			};
+		});
 		let payload: api_response.ArtistResponse = {
 			...artist,
 			albums
