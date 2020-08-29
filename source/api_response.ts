@@ -50,7 +50,7 @@ interface SubtitleResponse extends ApiResponse, libdb.SubtitleEntry {
 }
 
 interface EpisodeResponse extends ApiResponse, libdb.EpisodeEntry {
-	streamed: boolean,
+	streamed: number | null,
 	subtitles: Array<SubtitleResponse>;
 }
 
@@ -70,7 +70,7 @@ interface ShowsResponse extends ApiResponse {
 
 interface MovieResponse extends ApiResponse, libdb.MovieEntry {
 	movie_parts: Array<libdb.MoviePartEntry & {
-		streamed: boolean,
+		streamed: number | null,
 		subtitles: Array<libdb.SubtitleEntry>
 	}>;
 }

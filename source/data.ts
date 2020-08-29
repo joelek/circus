@@ -241,27 +241,6 @@ setInterval(() => {
 	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
 }, 60 * 60 * 1000);
 
-export let streams_index: utils.Index<Set<string>> = {};
-
-for (let stream of streams.streams) {
-	let set = streams_index[stream.username];
-	if (set == null) {
-		set = new Set<string>();
-		streams_index[stream.username] = set;
-	}
-	set.add(stream.file_id);
-}
-
-export function hasStreamed(username: string, file_id: string): boolean {
-	let set = streams_index[username];
-	if (set == null) {
-		return false;
-	}
-	return set.has(file_id);
-}
-
-
-
 
 
 
@@ -687,14 +666,21 @@ export function search(query: string, limit?: number): SearchResults {
 	};
 }
 
+// TODO: Create and use index class that supports multiple keys.
+export function getStreams(username: string, file_id: string): Array<libdb.Stream> {
+	return getStreamsFromFileIdIndex.lookup(file_id)
+		.filter((stream) => {
+			return stream.username === username;
+		})
+		.sort(NumericSort.increasing("timestamp_ms"));
+}
+
+export function getLatestStream(username: string, file_id: string): number | null {
+	let streams = getStreams(username, file_id);
+	return streams.pop()?.timestamp_ms || null;
+}
 
 export function addStream(username: string, file_id: string): void {
-	let set = streams_index[username];
-	if (set == null) {
-		set = new Set<string>();
-		streams_index[username] = set;
-	}
-	set.add(file_id);
 	let timestamp_ms = Date.now();
 	streams.streams.push({
 		username,

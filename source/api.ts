@@ -267,7 +267,7 @@ class EpisodeRoute implements Route<api_response.ApiRequest, api_response.Episod
 			throw new Error();
 		}
 		let subtitles = data.lookupSubtitles(episode.file_id);
-		let streamed = data.hasStreamed(username, episode.file_id);
+		let streamed = data.getLatestStream(username, episode.file_id);
 		let payload: api_response.EpisodeResponse = {
 			...episode,
 			streamed,
@@ -312,7 +312,7 @@ class ShowRoute implements Route<api_response.ApiRequest, api_response.ShowRespo
 					})
 					.map((episode) => {
 						let subtitles = data.lookupSubtitles(episode.file_id);
-						let streamed = data.hasStreamed(username, episode.file_id);
+						let streamed = data.getLatestStream(username, episode.file_id);
 						let payload: api_response.EpisodeResponse = {
 							...episode,
 							streamed,
@@ -464,7 +464,7 @@ class MovieRoute implements Route<api_response.AuthRequest, api_response.MovieRe
 			return movie_part.movie_id === movie_id;
 		}).map((movie_part) => {
 			let subtitles = data.lookupSubtitles(movie_part.file_id);
-			let streamed = data.hasStreamed(username, movie_part.file_id);
+			let streamed = data.getLatestStream(username, movie_part.file_id);
 			return {
 				...movie_part,
 				streamed,

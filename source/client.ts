@@ -570,7 +570,7 @@ let updateviewforuri = (uri: string): void => {
 			}, new Array<api_response.EpisodeResponse & { season: number }>());
 			let nextIndex = 0;
 			for (; nextIndex < episodes.length; nextIndex++) {
-				if (!episodes[nextIndex].streamed) {
+				if (episodes[nextIndex].streamed == null) {
 					break;
 				}
 			}
@@ -622,7 +622,7 @@ let updateviewforuri = (uri: string): void => {
 						subtitles: episode.subtitles
 					};
 					let d2 = document.createElement('div');
-					if (episode.streamed) {
+					if (episode.streamed != null) {
 						d2.classList.add("watched");
 					}
 					d2.innerText = `${episode.title} ${format_duration(episode.duration)}`;
@@ -706,7 +706,7 @@ let updateviewforuri = (uri: string): void => {
 				context_metadata[movie_part.file_id] = {
 					subtitles: movie_part.subtitles
 				};
-				streamed = streamed && movie_part.streamed;
+				streamed = streamed && (movie_part.streamed != null);
 				duration += movie_part.duration;
 			}
 			let d3 = document.createElement('div');
