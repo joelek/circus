@@ -133,6 +133,7 @@ style.innerText = `
 		flex: 0 0 auto; min-height: 0px;
 		font-family: "Open Sans", sans-serif;
 		font-size: 16px;
+		line-height: 1;
 		margin: 4px;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -140,10 +141,11 @@ style.innerText = `
 	}
 
 	.media-widget__subtitle {
-		color: rgb(191, 191, 191);
+		color: rgb(159, 159, 159);
 		flex: 0 0 auto; min-height: 0px;
 		font-family: "Open Sans", sans-serif;
 		font-size: 12px;
+		line-height: 1;
 		margin: 4px;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -161,11 +163,12 @@ style.innerText = `
 	.tag {
 		background-color: rgb(63, 63, 63);
 		border-radius: 2px;
-		color: rgb(127, 127, 127);
+		color: rgb(159, 159, 159);
 		display: inline-block;
 		font-family: "Open Sans", sans-serif;
 		font-size: 12px;
 		font-weight: bold
+		line-height: 1;
 		overflow: hidden;
 		padding: 4px 8px;
 		text-overflow: ellipsis;
