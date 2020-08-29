@@ -200,6 +200,17 @@ if (full_chain && certificate_key) {
 		console.log("https://localhost:443");
 	});
 	server.keepAliveTimeout = 60 * 1000;
+	libhttp.createServer({}, (request, response) => {
+		let host = request.headers["host"] || "";
+		let path = request.url || "";
+		let hostname = host.split(":").shift() as string;
+		response.writeHead(307, {
+			"Location": "https://" + hostname + ":" + 443 + path
+		});
+		response.end();
+	}).listen(80, () => {
+		console.log("http://localhost:80");
+	});
 } else {
 	let server = libhttp.createServer({}, requestHandler);
 	server.listen(80, () => {
