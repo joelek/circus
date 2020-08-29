@@ -9,6 +9,7 @@ style.innerText = `
 	* {
 		border: none;
 		font-size: 0px;
+		line-height: 1;
 		margin: 0px;
 		outline: none;
 		padding: 0px;
@@ -219,6 +220,15 @@ style.innerText = `
 		background-color: rgb(0, 0, 0);
 		background-size: contain;
 		padding-bottom: 100%;
+		position: relative;
+	}
+
+	.media-widget__play-button {
+		box-shadow: 0px 0px 4px 0px rgb(0, 0, 0);
+		margin: 16px;
+		position: absolute;
+			bottom: 0%;
+			right: 0%;
 	}
 
 	.media-widget__metadata {
@@ -232,7 +242,6 @@ style.innerText = `
 	.media-widget__title {
 		color: rgb(255, 255, 255);
 		font-size: 16px;
-		line-height: 1;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -241,7 +250,6 @@ style.innerText = `
 	.media-widget__subtitle {
 		color: rgb(159, 159, 159);
 		font-size: 12px;
-		line-height: 1;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -253,7 +261,6 @@ style.innerText = `
 		color: rgb(159, 159, 159);
 		font-size: 12px;
 		font-weight: bold
-		line-height: 1;
 		overflow: hidden;
 		padding: 4px 8px;
 		text-overflow: ellipsis;
@@ -663,6 +670,10 @@ let updateviewforuri = (uri: string): void => {
 			artwork.setAttribute("class", "media-widget__artwork");
 			artwork.style.setProperty("background-image", `url('/files/${album.cover_file_id}/?token=${token}')`);
 			widget.appendChild(artwork);
+			let play_button = document.createElement("button");
+			play_button.setAttribute("class", "media-widget__play-button");
+			play_button.innerText = "Play";
+			artwork.appendChild(play_button);
 			let metadata = document.createElement("div");
 			metadata.setAttribute("data-flex", "");
 			metadata.setAttribute("class", "media-widget__metadata");
@@ -690,6 +701,16 @@ let updateviewforuri = (uri: string): void => {
 			return widget;
 		}
 		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/`, {}, (status, response) => {
+			let context = {
+				files: new Array<string>()
+			};
+			for (let album of response.albums) {
+				for (let disc of album.discs) {
+					for (let track of disc.tracks) {
+						context.files.push(track.file_id);
+					}
+				}
+			}
 			let container = document.createElement("div");
 			container.setAttribute("data-grid", "");
 			let header = document.createElement("div");
@@ -698,6 +719,11 @@ let updateviewforuri = (uri: string): void => {
 			container.appendChild(header);
 			for (let album of response.albums) {
 				let widget = renderAlbum(album);
+				widget.querySelector(".media-widget__play-button")?.addEventListener("click", () => {
+					let index = context.files.indexOf(album.discs[0].tracks[0].file_id);
+					set_context(context);
+					play(index);
+				});
 				widget.addEventListener('click', () => {
 					navigate(`audio/albums/${album.album_id}/`);
 				});
