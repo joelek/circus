@@ -568,13 +568,13 @@ let updateviewforuri = (uri: string): void => {
 					};
 				}));
 			}, new Array<api_response.EpisodeResponse & { season: number }>());
-			let nextIndex = 0;
-			for (; nextIndex < episodes.length; nextIndex++) {
-				if (episodes[nextIndex].streamed == null) {
-					break;
+			let lastIndex = episodes.length - 1;
+			for (let i = 0; i < episodes.length; i++) {
+				if ((episodes[i].streamed || 0) > (episodes[lastIndex].streamed || 0)) {
+					lastIndex = i;
 				}
 			}
-			nextIndex = nextIndex % episodes.length;
+			let nextIndex = (lastIndex + 1) % episodes.length;
 			return episodes[nextIndex];
 		}
 		req<api_response.ApiRequest, api_response.ShowResponse>(`/api/video/shows/${parts[1]}/?token=${token}`, {}, (status, response) => {
