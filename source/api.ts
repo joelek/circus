@@ -100,8 +100,10 @@ class ArtistRoute implements Route<api_response.ApiRequest, api_response.ArtistR
 					tracks
 				}
 			});
+			let artists = data.lookupAlbumArtists(album_artist.album_id);
 			return {
 				...album,
+				artists,
 				discs
 			};
 		});
@@ -169,8 +171,10 @@ class AlbumRoute implements Route<api_response.ApiRequest, api_response.AlbumRes
 			};
 			return payload;
 		});
+		let artists = data.lookupAlbumArtists(album_id);
 		let payload: api_response.AlbumResponse = {
 			...album,
+			artists,
 			discs
 		};
 		response.writeHead(200);
