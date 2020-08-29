@@ -266,6 +266,38 @@ style.innerText = `
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
+
+	.text-header {
+
+	}
+
+	.text-header__title {
+		font-size: 24px;
+	}
+
+	.entity-header {
+		position: relative;
+	}
+
+	.entity-header__metadata {
+		padding: 12px;
+	}
+
+	.entity-header__metadata > * {
+		margin: 4px;
+	}
+
+	.entity-header__title {
+		font-size: 32px;
+	}
+
+	.entity-header__play-button {
+		box-shadow: 0px 0px 4px 0px rgb(0, 0, 0);
+		margin: 16px;
+		position: absolute;
+			bottom: 0%;
+			right: 0%;
+	}
 `;
 document.head.appendChild(style);
 
@@ -700,6 +732,44 @@ let updateviewforuri = (uri: string): void => {
 			metadata.appendChild(renderTag(`${(duration.d * 24 + duration.h) * 60 + duration.m} min`));
 			return widget;
 		}
+		function renderTextHeader(string: string): HTMLElement {
+			let widget = document.createElement("div");
+			widget.setAttribute("class", "text-header");
+			let title = document.createElement("div");
+			title.setAttribute("class", "text-header__title");
+			title.innerText = string;
+			widget.appendChild(title);
+			return widget;
+		}
+		function renderArtistHeader(response: api_response.ArtistResponse): HTMLElement {
+			let background = document.createElement("div");
+			background.style.setProperty("background-color", "rgb(0, 0, 0)");
+			let grid = document.createElement("div");
+			grid.setAttribute("data-grid", "");
+			background.appendChild(grid);
+			let cell = document.createElement("div");
+			cell.setAttribute("data-cell", "6:6:6");
+			grid.appendChild(cell);
+			let widget = document.createElement("div");
+			cell.appendChild(widget);
+			widget.setAttribute("class", "entity-header");
+			let metadata = document.createElement("div");
+			metadata.setAttribute("data-flex", "");
+			metadata.setAttribute("class", "entity-header__metadata");
+			widget.appendChild(metadata);
+			let title = document.createElement("div");
+			title.setAttribute("data-full", "");
+			title.setAttribute("class", "entity-header__title");
+			title.innerText = `${response.title}`;
+			metadata.appendChild(title);
+			metadata.appendChild(renderTag("Artist"));
+			metadata.appendChild(renderTag(`${response.albums.length} albums`));
+			let play_button = document.createElement("button");
+			play_button.setAttribute("class", "entity-header__play-button");
+			play_button.innerText = "Play";
+			widget.appendChild(play_button);
+			return background
+		}
 		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/`, {}, (status, response) => {
 			let context = {
 				files: new Array<string>()
@@ -711,15 +781,21 @@ let updateviewforuri = (uri: string): void => {
 					}
 				}
 			}
+			let widget = renderArtistHeader(response);
+			widget.querySelector("button")?.addEventListener("click", () => {
+				set_context(context);
+				play(0);
+			});
+			mount.appendChild(widget);
 			let container = document.createElement("div");
 			container.setAttribute("data-grid", "");
-			let header = document.createElement("div");
-			header.style.setProperty("font-size", "24px");
-			header.innerText = `${response.title}`;
-			container.appendChild(header);
+			let cell = document.createElement("div");
+			cell.setAttribute("data-cell", "6:6:6");
+			cell.appendChild(renderTextHeader("Discography"));
+			container.appendChild(cell);
 			for (let album of response.albums) {
 				let widget = renderAlbum(album);
-				widget.querySelector(".media-widget__play-button")?.addEventListener("click", () => {
+				widget.querySelector("button")?.addEventListener("click", () => {
 					let index = context.files.indexOf(album.discs[0].tracks[0].file_id);
 					set_context(context);
 					play(index);
