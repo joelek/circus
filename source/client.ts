@@ -225,7 +225,7 @@ style.innerText = `
 	}
 
 	.media-widget__play-button {
-		box-shadow: 0px 0px 16px 0px rgb(0, 0, 0);
+		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
 		margin: 16px;
 		position: absolute;
 			bottom: 0%;
@@ -273,7 +273,7 @@ style.innerText = `
 	}
 
 	.text-header__title {
-		font-size: 24px;
+		font-size: 20px;
 	}
 
 	.entity-header {
@@ -281,7 +281,7 @@ style.innerText = `
 	}
 
 	.entity-header__metadata {
-		padding: 12px;
+		margin: -4px;
 	}
 
 	.entity-header__metadata > * {
@@ -289,15 +289,14 @@ style.innerText = `
 	}
 
 	.entity-header__title {
-		font-size: 32px;
+		font-size: 24px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
 	.entity-header__play-button {
-		box-shadow: 0px 0px 16px 0px rgb(0, 0, 0);
-		margin: 16px;
+		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
 		position: absolute;
 			bottom: 0%;
 			right: 0%;
@@ -730,6 +729,9 @@ let updateviewforuri = (uri: string): void => {
 				subtitle.innerText = artist.title;
 				metadata.appendChild(subtitle);
 			});
+			let subtitle = document.createElement("div");
+			subtitle.setAttribute("data-full", "");
+			metadata.appendChild(subtitle);
 			metadata.appendChild(renderTag("Album"));
 			metadata.appendChild(renderTag(`${album.year}`));
 			let duration = computeDuration(album.discs.reduce((sum, disc) => {
@@ -803,10 +805,11 @@ let updateviewforuri = (uri: string): void => {
 			container.appendChild(cell);
 			for (let album of response.albums) {
 				let widget = renderAlbum(album);
-				widget.querySelector("button")?.addEventListener("click", () => {
+				widget.querySelector("button")?.addEventListener("click", (event) => {
 					let index = context.files.indexOf(album.discs[0].tracks[0].file_id);
 					set_context(context);
 					play(index);
+					event.stopPropagation();
 				});
 				widget.addEventListener('click', () => {
 					navigate(`audio/albums/${album.album_id}/`);
@@ -1144,9 +1147,11 @@ let updateviewforuri = (uri: string): void => {
 					d.appendChild(h3);
 				}
 				let pre = document.createElement("pre");
+				pre.style.setProperty("font-size", "16px");
 				pre.innerText = `${cue.lines.join("\n")}`;
 				d.appendChild(pre);
 				let p = document.createElement("p");
+				p.style.setProperty("font-size", "12px");
 				p.innerText = format_duration(cue.start_ms);
 				d.appendChild(p);
 				let b1 = document.createElement("button");
