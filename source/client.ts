@@ -219,7 +219,7 @@ style.innerText = `
 
 	.media-widget__artwork {
 		background-color: rgb(0, 0, 0);
-		background-size: contain;
+		background-size: cover;
 		padding-bottom: 100%;
 		position: relative;
 	}
@@ -306,10 +306,11 @@ style.innerText = `
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
 		cursor: pointer;
 		fill: rgb(31, 31, 31);
+		margin: 16px;
 		padding: 8px;
 		position: absolute;
-			bottom: 0%;
 			right: 0%;
+			top: 0%;
 	}
 `;
 document.head.appendChild(style);
@@ -739,9 +740,9 @@ let updateviewforuri = (uri: string): void => {
 				subtitle.innerText = artist.title;
 				metadata.appendChild(subtitle);
 			});
-			let subtitle = document.createElement("div");
-			subtitle.setAttribute("data-full", "");
-			metadata.appendChild(subtitle);
+			let spacer = document.createElement("div");
+			spacer.setAttribute("data-full", "");
+			metadata.appendChild(spacer);
 			metadata.appendChild(renderTag("Album"));
 			metadata.appendChild(renderTag(`${album.year}`));
 			let duration = computeDuration(album.discs.reduce((sum, disc) => {
@@ -763,7 +764,7 @@ let updateviewforuri = (uri: string): void => {
 		}
 		function renderArtistHeader(response: api_response.ArtistResponse): HTMLElement {
 			let background = document.createElement("div");
-			background.style.setProperty("background-color", "rgb(0, 0, 0)");
+			background.style.setProperty("background-image", "linear-gradient(to top, rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 1.0))");
 			let grid = document.createElement("div");
 			grid.setAttribute("data-grid", "");
 			background.appendChild(grid);
@@ -782,6 +783,9 @@ let updateviewforuri = (uri: string): void => {
 			title.setAttribute("class", "entity-header__title");
 			title.innerText = `${response.title}`;
 			metadata.appendChild(title);
+			let spacer = document.createElement("div");
+			spacer.setAttribute("data-full", "");
+			metadata.appendChild(spacer);
 			metadata.appendChild(renderTag("Artist"));
 			metadata.appendChild(renderTag(`${response.albums.length} albums`));
 			let play_button = document.createElement("div");
