@@ -68,7 +68,7 @@ style.innerText = `
 	.slider-widget__indicator {
 		padding: 4px;
 		border-radius: 4px;
-		background-color: rgb(31,31,31);
+		background-color: rgb(31, 31, 31);
 	}
 
 	.slider-widget__knob-wrapper {
@@ -80,7 +80,7 @@ style.innerText = `
 		width: 16px;
 		height: 16px;
 		border-radius: 50%;
-		background-color: rgb(255,255,255);
+		background-color: rgb(255, 255, 255);
 		position: absolute;
 		top: 0%;
 		left: 0%;
@@ -91,6 +91,70 @@ style.innerText = `
 	.watched::before {
 		content: "\u2022";
 		color: rgb(255, 207, 0);
+	}
+
+	.media-widget {
+		background-color: rgb(47, 47, 47);
+		border-radius: 2px;
+		cursor: pointer;
+		display: inline-block;
+		margin: 1%;
+		overflow: hidden;
+		width: 48%;
+	}
+
+	.media-widget__content {
+		display: flex;
+		flex-direction: row;
+	}
+
+	.media-widget__left {
+		flex: 1 1 0%; min-width: 0px;
+	}
+
+	.media-widget__right {
+		flex: 3 3 0%; min-width: 0px;
+	}
+
+	.media-widget__square {
+		background-size: contain;
+		padding-bottom: 100%;
+	}
+
+	.media-widget__meta {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		padding: 12px;
+	}
+
+	.media-widget__title {
+		flex: 0 0 auto; min-height: 0px;
+		font-size: 16px;
+		margin: 4px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.media-widget__tags {
+		flex: 0 0 auto; min-height: 0px;
+	}
+
+	.media-widget__tags > * {
+		margin: 4px;
+	}
+
+	.tag {
+		background-color: rgb(63, 63, 63);
+		border-radius: 2px;
+		color: rgb(127, 127, 127);
+		display: inline-block;
+		font-size: 12px;
+		overflow: hidden;
+		padding: 4px;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 `;
 document.head.appendChild(style);
@@ -482,19 +546,63 @@ let updateviewforuri = (uri: string): void => {
 			}
 		});
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+		function renderTag(string: string): HTMLElement {
+			let container = document.createElement("div");
+			container.setAttribute("class", "tag");
+			container.textContent = string;
+			return container;
+		}
+		function renderAlbum(album: api_response.AlbumResponse): HTMLElement {
+			let container = document.createElement("div");
+			container.setAttribute("class", "media-widget");
+			let content = document.createElement("div");
+			content.setAttribute("class", "media-widget__content");
+			let left = document.createElement("div");
+			left.setAttribute("class", "media-widget__left");
+			let right = document.createElement("div");
+			right.setAttribute("class", "media-widget__right");
+			content.appendChild(left);
+			content.appendChild(right);
+			let square = document.createElement("div");
+			square.setAttribute("class", "media-widget__square");
+			square.style.setProperty("background-image", `url('/files/${album.cover_file_id}/?token=${token}')`);
+			left.appendChild(square);
+			let meta = document.createElement("div");
+			meta.setAttribute("class", "media-widget__meta");
+			let title = document.createElement("div");
+			title.setAttribute("class", "media-widget__title");
+			title.innerText = album.title;
+			meta.appendChild(title);
+			let tags = document.createElement("div");
+			tags.setAttribute("class", "media-widget__tags");
+			tags.appendChild(renderTag(`${album.year}`));
+			let duration = computeDuration(album.discs.reduce((sum, disc) => {
+				return sum + disc.tracks.reduce((sum, track) => {
+					return sum + track.duration;
+				}, 0);
+			}, 0));
+			tags.appendChild(renderTag(`${(duration.d * 24 + duration.h) * 60 + duration.m} m`));
+			meta.appendChild(tags);
+			right.appendChild(meta);
+			container.appendChild(content);
+			return container;
+		}
 		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/`, {}, (status, response) => {
-			let a = document.createElement('div');
-			a.style.setProperty('font-size', '24px');
-			a.innerText = `${response.title}`;
-			mount.appendChild(a);
+			let container = document.createElement("div");
+			container.style.setProperty("font-size", "0px");
+			container.style.setProperty("padding", "16px");
+			let header = document.createElement("div");
+			header.style.setProperty("font-size", "24px");
+			header.innerText = `${response.title}`;
+			container.appendChild(header);
 			for (let album of response.albums) {
-				let d = document.createElement('div');
-				d.innerText = `${album.title}`;
-				d.addEventListener('click', () => {
+				let wrapper = renderAlbum(album);
+				wrapper.addEventListener('click', () => {
 					navigate(`audio/albums/${album.album_id}/`);
 				});
-				mount.appendChild(d);
+				container.appendChild(wrapper);
 			}
+			mount.appendChild(container);
 		});
 	} else if ((parts = /^audio[/]artists[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ArtistsResponse>(`/api/audio/artists/`, {}, (status, response) => {
