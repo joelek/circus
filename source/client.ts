@@ -225,8 +225,12 @@ style.innerText = `
 	}
 
 	.media-widget__play-button {
+		background-color: rgb(255, 255, 255);
+		border-radius: 50%;
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
+		fill: rgb(31, 31, 31);
 		margin: 16px;
+		padding: 8px;
 		position: absolute;
 			bottom: 0%;
 			right: 0%;
@@ -296,7 +300,11 @@ style.innerText = `
 	}
 
 	.entity-header__play-button {
+		background-color: rgb(255, 255, 255);
+		border-radius: 50%;
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
+		fill: rgb(31, 31, 31);
+		padding: 8px;
 		position: absolute;
 			bottom: 0%;
 			right: 0%;
@@ -709,9 +717,9 @@ let updateviewforuri = (uri: string): void => {
 			artwork.setAttribute("class", "media-widget__artwork");
 			artwork.style.setProperty("background-image", `url('/files/${album.cover_file_id}/?token=${token}')`);
 			widget.appendChild(artwork);
-			let play_button = document.createElement("button");
+			let play_button = document.createElement("div");
 			play_button.setAttribute("class", "media-widget__play-button");
-			play_button.innerText = "Play";
+			play_button.innerHTML = `<svg width="16px" height="16px" viewBox="0 0 16 16"><path fill="inherit" d="M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z"/></svg>`;
 			artwork.appendChild(play_button);
 			let metadata = document.createElement("div");
 			metadata.setAttribute("data-flex", "");
@@ -774,9 +782,9 @@ let updateviewforuri = (uri: string): void => {
 			metadata.appendChild(title);
 			metadata.appendChild(renderTag("Artist"));
 			metadata.appendChild(renderTag(`${response.albums.length} albums`));
-			let play_button = document.createElement("button");
+			let play_button = document.createElement("div");
 			play_button.setAttribute("class", "entity-header__play-button");
-			play_button.innerText = "Play";
+			play_button.innerHTML = `<svg width="16px" height="16px" viewBox="0 0 16 16"><path fill="inherit" d="M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z"/></svg>`;
 			widget.appendChild(play_button);
 			return background
 		}
