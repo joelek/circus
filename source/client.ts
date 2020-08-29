@@ -163,6 +163,7 @@ style.innerText = `
 		background-color: rgb(63, 63, 63);
 		border-radius: 4px;
 		color: rgb(255, 255, 255);
+		font-size: 16px;
 		padding: 8px;
 	}
 
@@ -224,7 +225,7 @@ style.innerText = `
 	}
 
 	.media-widget__play-button {
-		box-shadow: 0px 0px 4px 0px rgb(0, 0, 0);
+		box-shadow: 0px 0px 16px 0px rgb(0, 0, 0);
 		margin: 16px;
 		position: absolute;
 			bottom: 0%;
@@ -289,10 +290,13 @@ style.innerText = `
 
 	.entity-header__title {
 		font-size: 32px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.entity-header__play-button {
-		box-shadow: 0px 0px 4px 0px rgb(0, 0, 0);
+		box-shadow: 0px 0px 16px 0px rgb(0, 0, 0);
 		margin: 16px;
 		position: absolute;
 			bottom: 0%;
@@ -577,6 +581,7 @@ let chromecast = document.createElement("div");
 chromecast.classList.add("group");
 let ccp = document.createElement("p");
 ccp.textContent = "Chromecast";
+ccp.style.setProperty("font-size", "16px");
 chromecast.appendChild(ccp);
 let ccload = document.createElement('button');
 ccload.textContent = 'Cast';
@@ -663,10 +668,12 @@ let updateviewforuri = (uri: string): void => {
 			};
 			for (let disc of response.discs) {
 				let d = document.createElement('div');
+				d.style.setProperty('font-size', '24px');
 				d.innerText = `${disc.number}`;
 				mount.appendChild(d);
 				for (let track of disc.tracks) {
 					let x = document.createElement('div');
+					x.style.setProperty('font-size', '16px');
 					x.innerText = `${track.title} ${format_duration(track.duration)}`;
 					x.addEventListener('click', () => {
 						set_context(context);
@@ -680,6 +687,7 @@ let updateviewforuri = (uri: string): void => {
 		req<api_response.ApiRequest, api_response.AlbumsResponse>(`/api/audio/albums/`, {}, (status, response) => {
 			for (let album of response.albums) {
 				let d = document.createElement('div');
+				d.style.setProperty('font-size', '24px');
 				d.innerText = `${album.title}`;
 				d.addEventListener('click', () => {
 					navigate(`audio/albums/${album.album_id}/`);
@@ -814,6 +822,7 @@ let updateviewforuri = (uri: string): void => {
 		req<api_response.ApiRequest, api_response.ArtistsResponse>(`/api/audio/artists/`, {}, (status, response) => {
 			for (let artist of response.artists) {
 				let d = document.createElement('div');
+				d.style.setProperty('font-size', '24px');
 				d.innerText = `${artist.title}`;
 				d.addEventListener('click', () => {
 					navigate(`audio/artists/${artist.artist_id}/`);
@@ -834,6 +843,7 @@ let updateviewforuri = (uri: string): void => {
 			};
 			for (let item of response.items) {
 				let d = document.createElement('div');
+				d.style.setProperty('font-size', '16px');
 				d.innerText = `${item.track.title}`;
 				d.addEventListener('click', () => {
 					set_context(context);
@@ -846,6 +856,7 @@ let updateviewforuri = (uri: string): void => {
 		req<api_response.ApiRequest, api_response.AudiolistsResponse>(`/api/audio/lists/`, {}, (status, response) => {
 			for (let list of response.audiolists) {
 				let d = document.createElement('div');
+				d.style.setProperty('font-size', '24px');
 				d.innerText = `${list.title}`;
 				d.addEventListener('click', () => {
 					navigate(`audio/lists/${list.audiolist_id}/`);
@@ -856,17 +867,20 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^audio[/]/.exec(uri)) !== null) {
 		let d = document.createElement('div');
 		d.innerText = 'Artists';
+		d.style.setProperty('font-size', '24px');
 		d.addEventListener('click', () => {
 			navigate('audio/artists/');
 		});
 		mount.appendChild(d);
 		let d2 = document.createElement('div');
+		d2.style.setProperty('font-size', '24px');
 		d2.innerText = 'Albums';
 		d2.addEventListener('click', () => {
 			navigate('audio/albums/');
 		});
 		mount.appendChild(d2);
 		let d3 = document.createElement('div');
+		d3.style.setProperty('font-size', '24px');
 		d3.innerText = 'Lists';
 		d3.addEventListener('click', () => {
 			navigate('audio/lists/');
@@ -907,10 +921,13 @@ let updateviewforuri = (uri: string): void => {
 				let d2 = document.createElement("div");
 				d2.classList.add("group");
 				let h4 = document.createElement("h4");
+				h4.style.setProperty("font-size", "12px");
 				h4.textContent = "s" + nextEpisode.season.toString().padStart(2, "0") + "e" + nextEpisode.number.toString().padStart(2, "0") + ": " + nextEpisode.title;
 				let p1 = document.createElement("p");
+				p1.style.setProperty("font-size", "16px");
 				p1.textContent = nextEpisode.summary;
 				let p2 = document.createElement("p");
+				p2.style.setProperty("font-size", "16px");
 				p2.textContent = [
 					format_duration(nextEpisode.duration)
 				].join(" \u2022 ");
@@ -929,6 +946,7 @@ let updateviewforuri = (uri: string): void => {
 			}
 			for (let season of response.seasons) {
 				let d = document.createElement('div');
+				d.style.setProperty('font-size', '24px');
 				d.innerText = `${season.number}`;
 				mount.appendChild(d);
 				for (let episode of season.episodes) {
@@ -939,6 +957,7 @@ let updateviewforuri = (uri: string): void => {
 					if (episode.streamed != null) {
 						d2.classList.add("watched");
 					}
+					d2.style.setProperty('font-size', '16px');
 					d2.innerText = `${episode.title} ${format_duration(episode.duration)}`;
 					d2.addEventListener('click', () => {
 						set_context(context);
@@ -955,9 +974,11 @@ let updateviewforuri = (uri: string): void => {
 				let wrapper = document.createElement("div");
 				wrapper.setAttribute("class", "group");
 				let h2 = document.createElement("h2");
+				h2.style.setProperty('font-size', '24px');
 				h2.innerText = `${show.title}`;
 				wrapper.appendChild(h2);
 				let p = document.createElement("p");
+				p.style.setProperty('font-size', '16px');
 				p.innerText = show.genres.map((genre) => genre.title).join(" \u2022 ");
 				wrapper.appendChild(p);
 				let button = document.createElement("button");
@@ -976,9 +997,11 @@ let updateviewforuri = (uri: string): void => {
 			d.style.setProperty('font-size', '24px');
 			mount.appendChild(d);
 			let d2 = document.createElement('div');
+			d2.style.setProperty('font-size', '12px');
 			d2.innerText = format_duration(response.duration);
 			mount.appendChild(d2);
 			let d4 = document.createElement('div');
+			d4.style.setProperty('font-size', '16px');
 			d4.innerText = response.summary || "";
 			mount.appendChild(d4);
 			let context: Context = {
@@ -988,7 +1011,7 @@ let updateviewforuri = (uri: string): void => {
 			context_metadata[response.file_id] = {
 				subtitles: response.subtitles
 			};
-			let d3 = document.createElement('div');
+			let d3 = document.createElement('button');
 			d3.innerText = `load`;
 			d3.addEventListener('click', () => {
 				set_context(context);
@@ -1008,6 +1031,7 @@ let updateviewforuri = (uri: string): void => {
 			d.style.setProperty('font-size', '24px');
 			mount.appendChild(d);
 			let d2 = document.createElement('div');
+			d2.style.setProperty('font-size', '24px');
 			d2.innerText = response.summary || "";
 			mount.appendChild(d2);
 			let context: Context = {
@@ -1027,6 +1051,7 @@ let updateviewforuri = (uri: string): void => {
 			if (streamed) {
 				d3.classList.add("watched");
 			}
+			d3.style.setProperty('font-size', '12px');
 			d3.innerText = format_duration(duration);
 			mount.appendChild(d3);
 			let button = document.createElement("button");
@@ -1052,6 +1077,7 @@ let updateviewforuri = (uri: string): void => {
 		req<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/`, {}, (status, response) => {
 			for (let movie of response.movies) {
 				let d = document.createElement('div');
+				d.style.setProperty('font-size', '24px');
 				d.innerText = `${movie.title}`;
 				d.addEventListener('click', () => {
 					navigate(`video/movies/${movie.movie_id}/`);
@@ -1096,17 +1122,21 @@ let updateviewforuri = (uri: string): void => {
 				d.classList.add("group");
 				if (cue.subtitle.movie_part) {
 					let h2 = document.createElement("h2");
+					h2.style.setProperty("font-size", "24px");
 					h2.innerText = cue.subtitle.movie_part.movie.title;
 					d.appendChild(h2);
 					let h3 = document.createElement("h3");
+					h3.style.setProperty("font-size", "12px");
 					h3.innerText = "" + cue.subtitle.movie_part.movie.year;
 					d.appendChild(h3);
 				} else if (cue.subtitle.episode) {
 					let episode = cue.subtitle.episode;
 					let h2 = document.createElement("h2");
+					h2.style.setProperty("font-size", "24px");
 					h2.innerText = episode.title;
 					d.appendChild(h2);
 					let h3 = document.createElement("h3");
+					h3.style.setProperty("font-size", "16px");
 					h3.innerText = [
 						episode.season.show.title,
 						utils.formatSeasonEpisode(episode.season.number, episode.number)
@@ -1188,12 +1218,16 @@ let updateviewforuri = (uri: string): void => {
 						d2.appendChild(left);
 						d2.appendChild(right);
 						let h3 = document.createElement("h3");
+						h3.style.setProperty("font-size", "16px");
 						h3.textContent = movie.title;
 						let h4 = document.createElement("h4");
+						h4.style.setProperty("font-size", "12px");
 						h4.textContent = "";
 						let p1 = document.createElement("p");
+						p1.style.setProperty("font-size", "16px");
 						p1.textContent = movie.summary;
 						let p2 = document.createElement("p");
+						p2.style.setProperty("font-size", "16px");
 						p2.textContent = [
 							movie.year.toString().padStart(4, "0"),
 							format_duration(movie_part.duration)
@@ -1222,12 +1256,16 @@ let updateviewforuri = (uri: string): void => {
 					let d2 = document.createElement("div");
 					d2.classList.add("group");
 					let h3 = document.createElement("h3");
+					h3.style.setProperty("font-size", "16px");
 					h3.textContent = episode.season.show.title;
 					let h4 = document.createElement("h4");
+					h3.style.setProperty("font-size", "12px");
 					h4.textContent = "s" + episode.season.number.toString().padStart(2, "0") + "e" + episode.number.toString().padStart(2, "0") + ": " + episode.title;
 					let p1 = document.createElement("p");
+					p1.style.setProperty("font-size", "16px");
 					p1.textContent = episode.summary;
 					let p2 = document.createElement("p");
+					p2.style.setProperty("font-size", "16px");
 					p2.textContent = [
 						format_duration(episode.duration)
 					].join(" \u2022 ");
@@ -1255,8 +1293,10 @@ let updateviewforuri = (uri: string): void => {
 				d.classList.add("group");
 				let h2 = document.createElement("h2");
 				h2.textContent = `Channel ${channel.channel_id}`;
+				h2.style.setProperty("font-size", "24px");
 				d.appendChild(h2);
 				let p = document.createElement("p");
+				p.style.setProperty("font-size", "16px");
 				p.textContent = channel.title;
 				d.appendChild(p);
 				let b = document.createElement("button");
@@ -1287,12 +1327,16 @@ let updateviewforuri = (uri: string): void => {
 				d2.appendChild(left);
 				d2.appendChild(right);
 				let h3 = document.createElement("h3");
+				h3.style.setProperty("font-size", "16px");
 				h3.textContent = movie.title;
 				let h4 = document.createElement("h4");
+				h4.style.setProperty("font-size", "12px");
 				h4.textContent = "";
 				let p1 = document.createElement("p");
+				p1.style.setProperty("font-size", "16px");
 				p1.textContent = movie.summary;
 				let p2 = document.createElement("p");
+				p2.style.setProperty("font-size", "16px");
 				p2.textContent = [
 					movie.year.toString().padStart(4, "0")
 				].join(" | ");
@@ -1313,6 +1357,7 @@ let updateviewforuri = (uri: string): void => {
 				let d2 = document.createElement("div");
 				d2.classList.add("group");
 				let h3 = document.createElement("h3");
+				h3.style.setProperty("font-size", "16px");
 				h3.textContent = show.title;
 				d2.appendChild(h3);
 				let button = document.createElement("button");
@@ -1331,6 +1376,7 @@ let updateviewforuri = (uri: string): void => {
 				let d = document.createElement('div');
 				d.classList.add("group");
 				let h2 = document.createElement("h2");
+				h2.style.setProperty("font-size", "24px");
 				h2.textContent = `${genre.title}`;
 				d.appendChild(h2);
 				let b = document.createElement("button");
@@ -1344,30 +1390,35 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
 		let d = document.createElement('div');
+		d.style.setProperty("font-size", "24px");
 		d.innerText = 'Shows';
 		d.addEventListener('click', () => {
 			navigate('video/shows/');
 		});
 		mount.appendChild(d);
 		d = document.createElement('div');
+		d.style.setProperty("font-size", "24px");
 		d.innerText = 'Movies';
 		d.addEventListener('click', () => {
 			navigate('video/movies/');
 		});
 		mount.appendChild(d);
 		d = document.createElement('div');
+		d.style.setProperty("font-size", "24px");
 		d.innerText = 'Cues';
 		d.addEventListener('click', () => {
 			navigate('video/cues/');
 		});
 		mount.appendChild(d);
 		d = document.createElement('div');
+		d.style.setProperty("font-size", "24px");
 		d.innerText = 'Channels';
 		d.addEventListener('click', () => {
 			navigate('video/channels/');
 		});
 		mount.appendChild(d);
 		d = document.createElement('div');
+		d.style.setProperty("font-size", "24px");
 		d.innerText = 'Genres';
 		d.addEventListener('click', () => {
 			navigate('video/genres/');
@@ -1381,6 +1432,7 @@ let updateviewforuri = (uri: string): void => {
 				let wrapper = document.createElement("div");
 				wrapper.setAttribute("class", "group");
 				let p = document.createElement("p");
+				p.style.setProperty("font-size", "16px");
 				let duration = computeDuration(token.expires_ms - Date.now());
 				p.innerText = `Expires in ${duration.d} days, ${duration.h} hours and ${duration.m} minutes.`;
 				wrapper.appendChild(p);
@@ -1417,6 +1469,7 @@ let updateviewforuri = (uri: string): void => {
 				if (response.movies.length > 0) {
 					{
 						let h2 = document.createElement("h2");
+						h2.style.setProperty("font-size", "24px");
 						h2.textContent = "Movies";
 						results.appendChild(h2);
 					}
@@ -1424,6 +1477,7 @@ let updateviewforuri = (uri: string): void => {
 						let wrapper = document.createElement("div");
 						wrapper.setAttribute("class", "group");
 						let p = document.createElement("p");
+						p.style.setProperty("font-size", "16px");
 						p.textContent = movie.title;
 						let button = document.createElement("button");
 						button.textContent = "View";
@@ -1438,6 +1492,7 @@ let updateviewforuri = (uri: string): void => {
 				if (response.episodes.length > 0) {
 					{
 						let h2 = document.createElement("h2");
+						h2.style.setProperty("font-size", "24px");
 						h2.textContent = "Episodes";
 						results.appendChild(h2);
 					}
@@ -1445,6 +1500,7 @@ let updateviewforuri = (uri: string): void => {
 						let wrapper = document.createElement("div");
 						wrapper.setAttribute("class", "group");
 						let p = document.createElement("p");
+						p.style.setProperty("font-size", "16px");
 						p.textContent = episode.title;
 						let button = document.createElement("button");
 						button.textContent = "View";
@@ -1459,6 +1515,7 @@ let updateviewforuri = (uri: string): void => {
 				if (response.shows.length > 0) {
 					{
 						let h2 = document.createElement("h2");
+						h2.style.setProperty("font-size", "24px");
 						h2.textContent = "Shows";
 						results.appendChild(h2);
 					}
@@ -1466,6 +1523,7 @@ let updateviewforuri = (uri: string): void => {
 						let wrapper = document.createElement("div");
 						wrapper.setAttribute("class", "group");
 						let p = document.createElement("p");
+						p.style.setProperty("font-size", "16px");
 						p.textContent = show.title;
 						let button = document.createElement("button");
 						button.textContent = "View";
@@ -1480,6 +1538,7 @@ let updateviewforuri = (uri: string): void => {
 				if (response.artists.length > 0) {
 					{
 						let h2 = document.createElement("h2");
+						h2.style.setProperty("font-size", "24px");
 						h2.textContent = "Artists";
 						results.appendChild(h2);
 					}
@@ -1487,6 +1546,7 @@ let updateviewforuri = (uri: string): void => {
 						let wrapper = document.createElement("div");
 						wrapper.setAttribute("class", "group");
 						let p = document.createElement("p");
+						p.style.setProperty("font-size", "16px");
 						p.textContent = artist.title;
 						let button = document.createElement("button");
 						button.textContent = "View";
@@ -1501,6 +1561,7 @@ let updateviewforuri = (uri: string): void => {
 				if (response.albums.length > 0) {
 					{
 						let h2 = document.createElement("h2");
+						h2.style.setProperty("font-size", "24px");
 						h2.textContent = "Albums";
 						results.appendChild(h2);
 					}
@@ -1508,6 +1569,7 @@ let updateviewforuri = (uri: string): void => {
 						let wrapper = document.createElement("div");
 						wrapper.setAttribute("class", "group");
 						let p = document.createElement("p");
+						p.style.setProperty("font-size", "16px");
 						p.textContent = album.title;
 						let button = document.createElement("button");
 						button.textContent = "View";
@@ -1522,6 +1584,7 @@ let updateviewforuri = (uri: string): void => {
 				if (response.tracks.length > 0) {
 					{
 						let h2 = document.createElement("h2");
+						h2.style.setProperty("font-size", "24px");
 						h2.textContent = "Tracks";
 						results.appendChild(h2);
 					}
@@ -1529,6 +1592,7 @@ let updateviewforuri = (uri: string): void => {
 						let wrapper = document.createElement("div");
 						wrapper.setAttribute("class", "group");
 						let p = document.createElement("p");
+						p.style.setProperty("font-size", "16px");
 						p.textContent = track.title;
 						let button = document.createElement("button");
 						button.textContent = "View";
@@ -1544,24 +1608,28 @@ let updateviewforuri = (uri: string): void => {
 		}
 	} else {
 		let s = document.createElement('div');
+		s.style.setProperty("font-size", "24px");
 		s.innerText = 'Search';
 		s.addEventListener('click', () => {
 			navigate('search/');
 		});
 		mount.appendChild(s)
 		let d = document.createElement('div');
+		d.style.setProperty("font-size", "24px");
 		d.innerText = 'Audio';
 		d.addEventListener('click', () => {
 			navigate('audio/');
 		});
 		mount.appendChild(d);
 		let v = document.createElement('div');
+		v.style.setProperty("font-size", "24px");
 		v.innerText = 'Video';
 		v.addEventListener('click', () => {
 			navigate('video/');
 		});
 		mount.appendChild(v);
 		let t = document.createElement('div');
+		t.style.setProperty("font-size", "24px");
 		t.innerText = 'Tokens';
 		t.addEventListener('click', () => {
 			navigate('tokens/');
