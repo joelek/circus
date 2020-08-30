@@ -6,41 +6,42 @@ import * as session from "./session";
 import { String } from "@joelek/ts-autoguard/build/autoguard-lib/guards";
 
 namespace xml {
-	interface Node {
-		render(): globalThis.Node;
+	interface Node<A extends globalThis.Node> {
+		render(): A;
 	}
 
-	class Text implements Node {
+	class Text implements Node<globalThis.Text> {
 		private content: String;
 
 		constructor(content: String) {
 			this.content = content;
 		}
 
-		render(): globalThis.Node {
+		render(): globalThis.Text {
 			return document.createTextNode(this.content);
 		}
 	}
 
-	class Element implements Node {
+	class Element implements Node<globalThis.Element> {
 		private tag: string;
 		private attributes: Map<string, string>;
-		private children: Array<Node>;
+		private children: Array<Node<any>>;
 
 		constructor(tag: string) {
 			this.tag = tag;
 			this.attributes = new Map<string, string>();
-			this.children = new Array<Node>();
+			this.children = new Array<Node<any>>();
 		}
 
-		add(node: Node): this {
+		add(node: Node<any>): this {
 			// TODO: Detach node from current parent.
 			this.children.push(node);
 			return this;
 		}
 
-		render(): globalThis.Node {
-			let element = document.createElement(this.tag);
+		render(): globalThis.Element {
+			let ns = ["svg", "path"].indexOf(this.tag) >= 0 ? "http://www.w3.org/2000/svg" : "http://www.w3.org/1999/xhtml";
+			let element = document.createElementNS(ns, this.tag);
 			for (let [key, value] of this.attributes) {
 				element.setAttribute(key, value);
 			}
@@ -57,6 +58,7 @@ namespace xml {
 	}
 
 	export function element(tag: string): Element {
+		// TODO: Support parsing of selector.
 		return new Element(tag);
 	}
 
@@ -768,21 +770,30 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		const renderTag = (content: string) => xml.element("div")
-			.set("data-wrap")
 			.set("class", "media-widget__tag")
+			.set("data-wrap")
 			.add(xml.text(content))
 			.render();
-		function renderAlbum(album: api_response.AlbumResponse): HTMLElement {
-			let widget = document.createElement("div");
-			widget.setAttribute("class", "media-widget");
-			let artwork = document.createElement("div");
-			artwork.setAttribute("class", "media-widget__artwork");
-			artwork.style.setProperty("background-image", `url('/files/${album.cover_file_id}/?token=${token}')`);
-			widget.appendChild(artwork);
-			let play_button = document.createElement("div");
-			play_button.setAttribute("class", "media-widget__play-button");
-			play_button.innerHTML = `<svg width="16px" height="16px" viewBox="0 0 16 16"><path fill="inherit" d="M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z"/></svg>`;
-			artwork.appendChild(play_button);
+		function renderAlbum(album: api_response.AlbumResponse): Element {
+			let widget = xml.element("div")
+				.set("class", "media-widget")
+				.add(xml.element("div")
+					.set("class", "media-widget__artwork")
+					.set("style", `background-image: url('/files/${album.cover_file_id}/?token=${token}');`)
+					.add(xml.element("div")
+						.set("class", "media-widget__play-button")
+						.add(xml.element("svg")
+							.set("width", "16px")
+							.set("height", "16px")
+							.set("viewBox", "0 0 16 16")
+							.add(xml.element("path")
+								.set("fill", "inherit")
+								.set("d", "M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z")
+							)
+						)
+					)
+				)
+				.render();
 			let metadata = document.createElement("div");
 			metadata.setAttribute("data-flex", "");
 			metadata.setAttribute("class", "media-widget__metadata");
