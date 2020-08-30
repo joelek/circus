@@ -266,7 +266,6 @@ style.innerText = `
 		border-radius: 2px;
 		color: rgb(159, 159, 159);
 		font-size: 12px;
-		font-weight: bold
 		overflow: hidden;
 		padding: 4px 8px;
 		text-overflow: ellipsis;
