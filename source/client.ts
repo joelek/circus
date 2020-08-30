@@ -857,7 +857,7 @@ let updateviewforuri = (uri: string): void => {
 			spacer.setAttribute("data-full", "");
 			metadata.appendChild(spacer);
 			metadata.appendChild(renderTag("Artist"));
-			metadata.appendChild(renderTag(`${response.albums.length} albums`));
+			metadata.appendChild(renderTag(`${response.albums.length} ${response.albums.length === 1 ? "album" : "albums"}`));
 			let play_button = document.createElement("div");
 			play_button.setAttribute("class", "entity-header__play-button");
 			play_button.innerHTML = `<svg width="16px" height="16px" viewBox="0 0 16 16"><path fill="inherit" d="M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z"/></svg>`;
