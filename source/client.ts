@@ -3,6 +3,68 @@ import * as utils from "./utils";
 import * as languages from "./languages";
 import { AuthToken } from "./database";
 import * as session from "./session";
+import { String } from "@joelek/ts-autoguard/build/autoguard-lib/guards";
+
+namespace xml {
+	interface Node {
+		render(): globalThis.Node;
+	}
+
+	class Text implements Node {
+		private content: String;
+
+		constructor(content: String) {
+			this.content = content;
+		}
+
+		render(): globalThis.Node {
+			return document.createTextNode(this.content);
+		}
+	}
+
+	class Element implements Node {
+		private tag: string;
+		private attributes: Map<string, string>;
+		private children: Array<Node>;
+
+		constructor(tag: string) {
+			this.tag = tag;
+			this.attributes = new Map<string, string>();
+			this.children = new Array<Node>();
+		}
+
+		add(node: Node): this {
+			// TODO: Detach node from current parent.
+			this.children.push(node);
+			return this;
+		}
+
+		render(): globalThis.Node {
+			let element = document.createElement(this.tag);
+			for (let [key, value] of this.attributes) {
+				element.setAttribute(key, value);
+			}
+			for (let child of this.children) {
+				element.appendChild(child.render());
+			}
+			return element;
+		}
+
+		set(key: string, value: string = ""): this {
+			this.attributes.set(key, value);
+			return this;
+		}
+	}
+
+	export function element(tag: string): Element {
+		return new Element(tag);
+	}
+
+	export function text(content: string): Text {
+		return new Text(content);
+	}
+}
+
 
 let style = document.createElement('style');
 style.innerText = `
@@ -705,13 +767,11 @@ let updateviewforuri = (uri: string): void => {
 			}
 		});
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		function renderTag(string: string): HTMLElement {
-			let container = document.createElement("div");
-			container.setAttribute("data-wrap", "");
-			container.setAttribute("class", "media-widget__tag");
-			container.textContent = string;
-			return container;
-		}
+		const renderTag = (content: string) => xml.element("div")
+			.set("data-wrap")
+			.set("class", "media-widget__tag")
+			.add(xml.text(content))
+			.render();
 		function renderAlbum(album: api_response.AlbumResponse): HTMLElement {
 			let widget = document.createElement("div");
 			widget.setAttribute("class", "media-widget");
