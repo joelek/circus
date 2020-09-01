@@ -1,3 +1,11 @@
+export const Mappers = {
+	pick<A extends {}, B extends keyof A>(array: Array<A>, key: B): Array<A[B]> {
+		return array.map((item) => {
+			return item[key];
+		});
+	}
+};
+
 export const NumericSort = {
 	decreasing<A extends { [key in B]: number | null | undefined }, B extends keyof A>(key: B): { (one: A, two: A): number } {
 		return (one, two) => {

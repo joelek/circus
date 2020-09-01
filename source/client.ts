@@ -4,6 +4,7 @@ import * as languages from "./languages";
 import { AuthToken } from "./database";
 import * as session from "./session";
 import { String } from "@joelek/ts-autoguard/build/autoguard-lib/guards";
+import { Mappers } from "./shared";
 
 namespace xml {
 	interface Node<A extends globalThis.Node> {
@@ -357,7 +358,16 @@ style.innerText = `
 	}
 
 	.entity-header__title {
+		color: rgb(255, 255, 255);
 		font-size: 24px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.entity-header__subtitle {
+		color: rgb(159, 159, 159);
+		font-size: 18px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -715,6 +725,120 @@ document.body.appendChild(chromecast);
 }
 
 
+const renderTag = (content: string) => xml.element("div")
+	.set("class", "media-widget__tag")
+	.set("data-wrap")
+	.add(xml.text(content))
+	.render();
+function renderAlbum(album: api_response.AlbumResponse): Element {
+	let duration = 0;
+	for (let disc of album.discs) {
+		for (let track of disc.tracks) {
+			duration += track.duration;
+		}
+	}
+	duration = Math.floor(duration / 1000 / 60);
+	let widget = xml.element("div")
+		.set("class", "media-widget")
+		.add(xml.element("div")
+			.set("class", "media-widget__artwork")
+			.set("style", `background-image: url('/files/${album.cover_file_id}/?token=${token}');`)
+			.add(xml.element("div")
+				.set("class", "media-widget__play-button")
+				.add(xml.element("svg")
+					.set("width", "16px")
+					.set("height", "16px")
+					.set("viewBox", "0 0 16 16")
+					.add(xml.element("path")
+						.set("fill", "inherit")
+						.set("d", "M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z")
+					)
+				)
+			)
+		)
+		.render();
+	let metadata = document.createElement("div");
+	metadata.setAttribute("data-flex", "");
+	metadata.setAttribute("class", "media-widget__metadata");
+	widget.appendChild(metadata);
+	let title = document.createElement("div");
+	title.setAttribute("data-full", "");
+	title.setAttribute("class", "media-widget__title");
+	title.innerText = album.title;
+	metadata.appendChild(title);
+	let subtitle = document.createElement("div");
+	subtitle.setAttribute("data-full", "");
+	subtitle.setAttribute("class", "media-widget__subtitle");
+	subtitle.innerText = album.artists.map((artist) => artist.title).join(" \u2022 ");
+	metadata.appendChild(subtitle);
+	let spacer = document.createElement("div");
+	spacer.setAttribute("data-full", "");
+	metadata.appendChild(spacer);
+	metadata.appendChild(renderTag("Album"));
+	metadata.appendChild(renderTag(album.year.toString().padStart(4, "0")));
+	metadata.appendChild(renderTag(pluralize(duration, "minutes", "minute", "minutes")));
+	return widget;
+}
+function renderTextHeader(string: string): HTMLElement {
+	let widget = document.createElement("div");
+	widget.setAttribute("class", "text-header");
+	let title = document.createElement("div");
+	title.setAttribute("class", "text-header__title");
+	title.innerText = string;
+	widget.appendChild(title);
+	return widget;
+}
+function renderEntityHeader(title: string, subtitle: string, tags: Array<string> = []): HTMLElement {
+	let background = document.createElement("div");
+	background.style.setProperty("background-image", "linear-gradient(to top, rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 1.0))");
+	let grid = document.createElement("div");
+	grid.setAttribute("data-grid", "");
+	background.appendChild(grid);
+	let cell = document.createElement("div");
+	cell.setAttribute("data-cell", "6:6:6");
+	grid.appendChild(cell);
+	let widget = document.createElement("div");
+	cell.appendChild(widget);
+	widget.setAttribute("class", "entity-header");
+	let metadata = document.createElement("div");
+	metadata.setAttribute("data-flex", "");
+	metadata.setAttribute("class", "entity-header__metadata");
+	widget.appendChild(metadata);
+	let titlee = document.createElement("div");
+	titlee.setAttribute("data-full", "");
+	titlee.setAttribute("class", "entity-header__title");
+	titlee.innerText = `${title}`;
+	metadata.appendChild(titlee);
+	let subtitlee = document.createElement("div");
+	subtitlee.setAttribute("data-full", "");
+	subtitlee.setAttribute("class", "entity-header__subtitle");
+	subtitlee.innerText = `${subtitle}`;
+	metadata.appendChild(subtitlee);
+	let spacer = document.createElement("div");
+	spacer.setAttribute("data-full", "");
+	metadata.appendChild(spacer);
+	for (let tag of tags) {
+		metadata.appendChild(renderTag(tag));
+	}
+	let play_button = document.createElement("div");
+	play_button.setAttribute("class", "entity-header__play-button");
+	play_button.innerHTML = `<svg width="16px" height="16px" viewBox="0 0 16 16"><path fill="inherit" d="M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z"/></svg>`;
+	widget.appendChild(play_button);
+	return background
+}
+
+function pluralize(amount: number, zero: string, one: string, many: string): string {
+	if (amount >= 2) {
+		return amount + " " + many;
+	}
+	if (amount >= 1) {
+		return amount + " " + one;
+	}
+	if (amount >= 0) {
+		return amount + " " + zero;
+	}
+	throw "Expected a non-negative amount!";
+}
 
 let updateviewforuri = (uri: string): void => {
 	while (mount.lastChild !== null) {
@@ -723,37 +847,62 @@ let updateviewforuri = (uri: string): void => {
 	let parts: RegExpExecArray | null;
 	if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/`, {}, (status, response) => {
-			let a = document.createElement('div');
-			a.style.setProperty('font-size', '24px');
-			a.innerText = `${response.title}`;
-			mount.appendChild(a);
-			let wrap = document.createElement('div');
-			let img = document.createElement('img');
-			img.src = `/files/${response.cover_file_id}/?token=${token}`;
-			img.style.setProperty('width', '100%');
-			wrap.appendChild(img);
-			mount.appendChild(wrap);
 			let context = {
-				files: response.discs.reduce((tracks, disc) => {
-					tracks.push(...disc.tracks.map(track => track.file_id));
-					return tracks;
-				}, new Array<string>())
+				files: new Array<string>()
 			};
+			let duration_ms = 0;
 			for (let disc of response.discs) {
-				let d = document.createElement('div');
-				d.style.setProperty('font-size', '24px');
-				d.innerText = `${disc.number}`;
-				mount.appendChild(d);
 				for (let track of disc.tracks) {
-					let x = document.createElement('div');
-					x.style.setProperty('font-size', '16px');
-					x.innerText = `${track.title} ${format_duration(track.duration)}`;
-					x.addEventListener('click', () => {
+					context.files.push(track.file_id);
+					duration_ms += track.duration;
+				}
+			}
+			let header = renderEntityHeader(response.title, Mappers.pick(response.artists, "title").join(" \u2022 "), [
+				"Album",
+				response.year.toString().padStart(4, "0"),
+				pluralize(Math.floor(duration_ms / 1000 / 60), "minutes", "minute", "minutes")
+			]);
+			header.querySelector(".entity-header__play-button")?.addEventListener("click", () => {
+				set_context(context);
+				play(0);
+			});
+			mount.appendChild(header);
+			let cell = xml.element("div")
+				.set("data-cell", "6:6:6")
+				.render();
+			let grid = xml.element("div")
+				.set("data-grid")
+				.render();
+			grid.appendChild(cell);
+			for (let disc of response.discs) {
+				mount.appendChild(renderTextHeader("Disc " + disc.number.toString().padStart(2, "0")));
+				for (let track of disc.tracks) {
+					let rendered_track = xml.element("div")
+						.set("data-flex")
+						.set("style", "")
+						.add(xml.element("div")
+							.set("data-full")
+							.set("style", "color: rgb(255, 255, 255); font-size: 16px;")
+							.add(xml.text(track.title))
+						)
+						.add(xml.element("div")
+							.set("data-fill")
+							.set("style", "color: rgb(159, 159, 159); font-size: 12px;")
+							.add(xml.text(track.artists.map((artist) => artist.title).join(" \u2022 ")))
+						)
+						.add(xml.element("div")
+							.set("data-wrap")
+							.set("style", "color: rgb(159, 159, 159); font-size: 12px;")
+							.add(xml.text(format_duration(track.duration)))
+						)
+						.render();
+					rendered_track.addEventListener("click", () => {
 						set_context(context);
 						play(context.files.indexOf(track.file_id));
 					});
-					mount.appendChild(x);
+					cell.appendChild(rendered_track);
 				}
+				mount.appendChild(grid);
 			}
 		});
 	} else if ((parts = /^audio[/]albums[/]/.exec(uri)) !== null) {
@@ -769,101 +918,6 @@ let updateviewforuri = (uri: string): void => {
 			}
 		});
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		const renderTag = (content: string) => xml.element("div")
-			.set("class", "media-widget__tag")
-			.set("data-wrap")
-			.add(xml.text(content))
-			.render();
-		function renderAlbum(album: api_response.AlbumResponse): Element {
-			let widget = xml.element("div")
-				.set("class", "media-widget")
-				.add(xml.element("div")
-					.set("class", "media-widget__artwork")
-					.set("style", `background-image: url('/files/${album.cover_file_id}/?token=${token}');`)
-					.add(xml.element("div")
-						.set("class", "media-widget__play-button")
-						.add(xml.element("svg")
-							.set("width", "16px")
-							.set("height", "16px")
-							.set("viewBox", "0 0 16 16")
-							.add(xml.element("path")
-								.set("fill", "inherit")
-								.set("d", "M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z")
-							)
-						)
-					)
-				)
-				.render();
-			let metadata = document.createElement("div");
-			metadata.setAttribute("data-flex", "");
-			metadata.setAttribute("class", "media-widget__metadata");
-			widget.appendChild(metadata);
-			let title = document.createElement("div");
-			title.setAttribute("data-full", "");
-			title.setAttribute("class", "media-widget__title");
-			title.innerText = album.title;
-			metadata.appendChild(title);
-			album.artists.forEach((artist) => {
-				let subtitle = document.createElement("div");
-				subtitle.setAttribute("data-full", "");
-				subtitle.setAttribute("class", "media-widget__subtitle");
-				subtitle.innerText = artist.title;
-				metadata.appendChild(subtitle);
-			});
-			let spacer = document.createElement("div");
-			spacer.setAttribute("data-full", "");
-			metadata.appendChild(spacer);
-			metadata.appendChild(renderTag("Album"));
-			metadata.appendChild(renderTag(`${album.year}`));
-			let duration = computeDuration(album.discs.reduce((sum, disc) => {
-				return sum + disc.tracks.reduce((sum, track) => {
-					return sum + track.duration;
-				}, 0);
-			}, 0));
-			metadata.appendChild(renderTag(`${(duration.d * 24 + duration.h) * 60 + duration.m} min`));
-			return widget;
-		}
-		function renderTextHeader(string: string): HTMLElement {
-			let widget = document.createElement("div");
-			widget.setAttribute("class", "text-header");
-			let title = document.createElement("div");
-			title.setAttribute("class", "text-header__title");
-			title.innerText = string;
-			widget.appendChild(title);
-			return widget;
-		}
-		function renderArtistHeader(response: api_response.ArtistResponse): HTMLElement {
-			let background = document.createElement("div");
-			background.style.setProperty("background-image", "linear-gradient(to top, rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 1.0))");
-			let grid = document.createElement("div");
-			grid.setAttribute("data-grid", "");
-			background.appendChild(grid);
-			let cell = document.createElement("div");
-			cell.setAttribute("data-cell", "6:6:6");
-			grid.appendChild(cell);
-			let widget = document.createElement("div");
-			cell.appendChild(widget);
-			widget.setAttribute("class", "entity-header");
-			let metadata = document.createElement("div");
-			metadata.setAttribute("data-flex", "");
-			metadata.setAttribute("class", "entity-header__metadata");
-			widget.appendChild(metadata);
-			let title = document.createElement("div");
-			title.setAttribute("data-full", "");
-			title.setAttribute("class", "entity-header__title");
-			title.innerText = `${response.title}`;
-			metadata.appendChild(title);
-			let spacer = document.createElement("div");
-			spacer.setAttribute("data-full", "");
-			metadata.appendChild(spacer);
-			metadata.appendChild(renderTag("Artist"));
-			metadata.appendChild(renderTag(`${response.albums.length} ${response.albums.length === 1 ? "album" : "albums"}`));
-			let play_button = document.createElement("div");
-			play_button.setAttribute("class", "entity-header__play-button");
-			play_button.innerHTML = `<svg width="16px" height="16px" viewBox="0 0 16 16"><path fill="inherit" d="M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z"/></svg>`;
-			widget.appendChild(play_button);
-			return background
-		}
 		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/`, {}, (status, response) => {
 			let context = {
 				files: new Array<string>()
@@ -875,7 +929,7 @@ let updateviewforuri = (uri: string): void => {
 					}
 				}
 			}
-			let widget = renderArtistHeader(response);
+			let widget = renderEntityHeader(response.title, "", [ "Artist" ]);
 			widget.querySelector(".entity-header__play-button")?.addEventListener("click", () => {
 				set_context(context);
 				play(0);
