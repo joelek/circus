@@ -3,8 +3,6 @@ import * as utils from "./utils";
 import * as languages from "./languages";
 import { AuthToken } from "./database";
 import * as session from "./session";
-import { String } from "@joelek/ts-autoguard/build/autoguard-lib/guards";
-import { Mappers } from "./shared";
 
 namespace xml {
 	interface Node<A extends globalThis.Node> {
@@ -12,9 +10,9 @@ namespace xml {
 	}
 
 	class Text implements Node<globalThis.Text> {
-		private content: String;
+		private content: string;
 
-		constructor(content: String) {
+		constructor(content: string) {
 			this.content = content;
 		}
 
@@ -23,7 +21,7 @@ namespace xml {
 		}
 	}
 
-	class Element implements Node<globalThis.Element> {
+	class XElement implements Node<globalThis.Element> {
 		private tag: string;
 		private attributes: Map<string, string>;
 		private children: Array<Node<any>>;
@@ -34,9 +32,9 @@ namespace xml {
 			this.children = new Array<Node<any>>();
 		}
 
-		add(node: Node<any>): this {
+		add(...nodes: Array<Node<any>>): this {
 			// TODO: Detach node from current parent.
-			this.children.push(node);
+			this.children.push(...nodes);
 			return this;
 		}
 
@@ -58,9 +56,9 @@ namespace xml {
 		}
 	}
 
-	export function element(tag: string): Element {
+	export function element(tag: string): XElement {
 		// TODO: Support parsing of selector.
-		return new Element(tag);
+		return new XElement(tag);
 	}
 
 	export function text(content: string): Text {
@@ -183,23 +181,31 @@ style.innerText = `
 	}
 
 	[data-flex] {
-		box-sizing: border-box;
 		display: flex;
-		flex-flow: row wrap;
 	}
 
-	[data-wrap] {
-		flex: 0 0 auto;
-	}
-
-	[data-fill] {
-		flex: 1 1 0%;
-		min-width: 0%;
-		max-width: 100%;
-	}
-
-	[data-full] {
+	[data-flex="x"] {
+		flex-direction: row;
 		width: 100%;
+	}
+
+	[data-flex="x"] > :not(:first-child) {
+		margin-left: var(--gap, 0px);
+	}
+
+	[data-flex="y"] {
+		flex-direction: column;
+		height: 100%;
+	}
+
+	[data-flex="y"] > :not(:first-child) {
+		margin-top: var(--gap, 0px);
+	}
+
+	[data-wrap="false"] {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	body {
@@ -275,6 +281,13 @@ style.innerText = `
 		color: rgb(255, 207, 0);
 	}
 
+
+
+
+
+
+
+
 	.media-widget {
 		background-color: rgb(47, 47, 47);
 		border-radius: 2px;
@@ -303,27 +316,17 @@ style.innerText = `
 	}
 
 	.media-widget__metadata {
-		padding: 12px;
-	}
-
-	.media-widget__metadata > * {
-		margin: 4px;
+		padding: 16px;
 	}
 
 	.media-widget__title {
 		color: rgb(255, 255, 255);
 		font-size: 16px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 
 	.media-widget__subtitle {
 		color: rgb(159, 159, 159);
 		font-size: 12px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 
 	.media-widget__tag {
@@ -331,11 +334,11 @@ style.innerText = `
 		border-radius: 2px;
 		color: rgb(159, 159, 159);
 		font-size: 12px;
-		overflow: hidden;
 		padding: 4px 8px;
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
+
+
+
 
 	.text-header {
 
@@ -345,16 +348,20 @@ style.innerText = `
 		font-size: 20px;
 	}
 
+
+
+
 	.entity-header {
+
+	}
+
+	.entity-header__artwork {
+		border-radius: 2px;
 		position: relative;
 	}
 
 	.entity-header__metadata {
-		margin: -4px;
-	}
 
-	.entity-header__metadata > * {
-		margin: 4px;
 	}
 
 	.entity-header__title {
@@ -385,6 +392,9 @@ style.innerText = `
 			right: 0%;
 			top: 0%;
 	}
+
+
+
 `;
 document.head.appendChild(style);
 
@@ -725,11 +735,10 @@ document.body.appendChild(chromecast);
 }
 
 
-const renderTag = (content: string) => xml.element("div")
+const makeTag = (content: string) => xml.element("div")
 	.set("class", "media-widget__tag")
-	.set("data-wrap")
-	.add(xml.text(content))
-	.render();
+	.set("data-wrap", "false")
+	.add(xml.text(content));
 function renderAlbum(album: api_response.AlbumResponse): Element {
 	let duration = 0;
 	for (let disc of album.discs) {
@@ -758,25 +767,46 @@ function renderAlbum(album: api_response.AlbumResponse): Element {
 		)
 		.render();
 	let metadata = document.createElement("div");
-	metadata.setAttribute("data-flex", "");
 	metadata.setAttribute("class", "media-widget__metadata");
+	metadata.setAttribute("data-flex", "y");
+	metadata.setAttribute("style", "--gap: 12px;");
 	widget.appendChild(metadata);
+
+	let top = document.createElement("div");
+	metadata.appendChild(top);
+	let bottom = document.createElement("div");
+	metadata.appendChild(bottom);
+
+	let titles = document.createElement("div");
+	titles.setAttribute("data-flex", "y");
+	titles.setAttribute("style", "--gap: 8px;");
+	top.appendChild(titles);
+
+
+
+
 	let title = document.createElement("div");
-	title.setAttribute("data-full", "");
 	title.setAttribute("class", "media-widget__title");
+	title.setAttribute("data-wrap", "false")
 	title.innerText = album.title;
-	metadata.appendChild(title);
+	titles.appendChild(title);
+
 	let subtitle = document.createElement("div");
-	subtitle.setAttribute("data-full", "");
 	subtitle.setAttribute("class", "media-widget__subtitle");
-	subtitle.innerText = album.artists.map((artist) => artist.title).join(" \u2022 ");
-	metadata.appendChild(subtitle);
-	let spacer = document.createElement("div");
-	spacer.setAttribute("data-full", "");
-	metadata.appendChild(spacer);
-	metadata.appendChild(renderTag("Album"));
-	metadata.appendChild(renderTag(album.year.toString().padStart(4, "0")));
-	metadata.appendChild(renderTag(pluralize(duration, "minutes", "minute", "minutes")));
+	subtitle.setAttribute("data-wrap", "false")
+	subtitle.innerText = album.artists.map(artist => artist.title).join(" \u2022 ");
+	titles.appendChild(subtitle);
+
+
+
+	let tags = document.createElement("div");
+	tags.setAttribute("data-flex", "x");
+	tags.setAttribute("style", "--gap: 8px;");
+	bottom.appendChild(tags);
+
+	tags.appendChild(makeTag("Album").render());
+	tags.appendChild(makeTag(album.year.toString().padStart(4, "0")).render());
+	tags.appendChild(makeTag(pluralize(duration, "minutes", "minute", "minutes")).render());
 	return widget;
 }
 function renderTextHeader(string: string): HTMLElement {
@@ -788,7 +818,7 @@ function renderTextHeader(string: string): HTMLElement {
 	widget.appendChild(title);
 	return widget;
 }
-function renderEntityHeader(title: string, subtitle: string, tags: Array<string> = []): HTMLElement {
+function renderEntityHeader(title: string, subtitle: string, artwork: string | null, tags: Array<string> = []): HTMLElement {
 	let background = document.createElement("div");
 	background.style.setProperty("background-image", "linear-gradient(to top, rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 1.0))");
 	let grid = document.createElement("div");
@@ -797,33 +827,55 @@ function renderEntityHeader(title: string, subtitle: string, tags: Array<string>
 	let cell = document.createElement("div");
 	cell.setAttribute("data-cell", "6:6:6");
 	grid.appendChild(cell);
-	let widget = document.createElement("div");
+
+	let widget = xml.element("div")
+		.set("class", "entity-header")
+		.set("data-flex", "x")
+		.set("style", "--gap: 12px")
+		.add(xml.element("div")
+			.set("class", "entity-header__artwork")
+			.add(xml.element("img")
+				.set("src", `/files/${artwork}/?token=${token}`)
+				.set("style", "height: 160px;")
+			)
+		)
+		.add(xml.element("div")
+			.add(xml.element("div")
+				.set("class", "entity-header__metadata")
+				.set("data-flex", "y")
+				.set("style", "--gap: 12px")
+				.add(xml.element("div")
+					.set("class", "entity-header__titles")
+					.set("data-flex", "y")
+					.set("style", "--gap: 8px")
+					.add(xml.element("div")
+						.set("class", "entity-header__title")
+						.set("data-wrap", "false")
+						.add(xml.text(title))
+					)
+					.add(xml.element("div")
+						.set("class", "entity-header__subtitle")
+						.set("data-wrap", "false")
+						.add(xml.text(subtitle))
+					)
+				)
+				.add(xml.element("div")
+					.add(xml.element("div")
+						.set("class", "entity-header__tags")
+						.set("data-flex", "x")
+						.set("style", "--gap: 8px;")
+						.add(...tags.map(makeTag))
+					)
+				)
+			)
+		)
+		.render();
+
 	cell.appendChild(widget);
-	widget.setAttribute("class", "entity-header");
-	let metadata = document.createElement("div");
-	metadata.setAttribute("data-flex", "");
-	metadata.setAttribute("class", "entity-header__metadata");
-	widget.appendChild(metadata);
-	let titlee = document.createElement("div");
-	titlee.setAttribute("data-full", "");
-	titlee.setAttribute("class", "entity-header__title");
-	titlee.innerText = `${title}`;
-	metadata.appendChild(titlee);
-	let subtitlee = document.createElement("div");
-	subtitlee.setAttribute("data-full", "");
-	subtitlee.setAttribute("class", "entity-header__subtitle");
-	subtitlee.innerText = `${subtitle}`;
-	metadata.appendChild(subtitlee);
-	let spacer = document.createElement("div");
-	spacer.setAttribute("data-full", "");
-	metadata.appendChild(spacer);
-	for (let tag of tags) {
-		metadata.appendChild(renderTag(tag));
-	}
 	let play_button = document.createElement("div");
 	play_button.setAttribute("class", "entity-header__play-button");
 	play_button.innerHTML = `<svg width="16px" height="16px" viewBox="0 0 16 16"><path fill="inherit" d="M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z"/></svg>`;
-	widget.appendChild(play_button);
+	widget.querySelector(".entity-header__artwork")?.appendChild(play_button);
 	return background
 }
 
@@ -857,7 +909,7 @@ let updateviewforuri = (uri: string): void => {
 					duration_ms += track.duration;
 				}
 			}
-			let header = renderEntityHeader(response.title, Mappers.pick(response.artists, "title").join(" \u2022 "), [
+			let header = renderEntityHeader(response.title, response.artists.map(artist => artist.title).join(" \u2022 "), response.cover_file_id, [
 				"Album",
 				response.year.toString().padStart(4, "0"),
 				pluralize(Math.floor(duration_ms / 1000 / 60), "minutes", "minute", "minutes")
@@ -929,7 +981,7 @@ let updateviewforuri = (uri: string): void => {
 					}
 				}
 			}
-			let widget = renderEntityHeader(response.title, "", [ "Artist" ]);
+			let widget = renderEntityHeader(response.title, "", null, [ "Artist" ]);
 			widget.querySelector(".entity-header__play-button")?.addEventListener("click", () => {
 				set_context(context);
 				play(0);
