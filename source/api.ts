@@ -94,7 +94,13 @@ class ArtistRoute implements Route<api_response.ApiRequest, api_response.ArtistR
 		let albums = album_artists.map((album_artist) => {
 			let album = data.albums_index[album_artist.album_id] as libdb.AlbumEntry;
 			let discs = data.media.audio.discs.filter((disc) => disc.album_id === album.album_id).map((disc) => {
-				let tracks = data.media.audio.tracks.filter((track) => track.disc_id === disc.disc_id);
+				let tracks = data.media.audio.tracks.filter((track) => track.disc_id === disc.disc_id).map((track) => {
+					let artists = data.lookupTrackArtists(track.track_id);
+					return {
+						...track,
+						artists
+					};
+				});
 				return {
 					...disc,
 					tracks
@@ -164,6 +170,12 @@ class AlbumRoute implements Route<api_response.ApiRequest, api_response.AlbumRes
 		}).map((disc) => {
 			let tracks = data.media.audio.tracks.filter((track) => {
 				return track.disc_id === disc.disc_id;
+			}).map((track) => {
+				let artists = data.lookupTrackArtists(track.track_id);
+				return {
+					...track,
+					artists
+				};
 			});
 			let payload: api_response.DiscResponse = {
 				...disc,

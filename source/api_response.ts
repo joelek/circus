@@ -43,7 +43,9 @@ interface AlbumsResponse extends ApiResponse {
 }
 
 interface DiscResponse extends ApiResponse, libdb.DiscEntry {
-	tracks: Array<libdb.TrackEntry>;
+	tracks: Array<libdb.TrackEntry & {
+		artists: Array<libdb.ArtistEntry>
+	}>;
 }
 
 interface SubtitleResponse extends ApiResponse, libdb.SubtitleEntry {
