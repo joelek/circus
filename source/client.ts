@@ -337,7 +337,7 @@ style.innerText = `
 	.content {
 		margin: 0px auto;
 		max-width: 640px;
-		padding: 16px;
+		padding: 32px;
 	}
 
 
@@ -357,7 +357,7 @@ style.innerText = `
 
 	.entity-header {
 		display: grid;
-		gap: 16px;
+		gap: 24px;
 		grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 	}
 
@@ -430,6 +430,17 @@ style.innerText = `
 	}
 
 	.playlist {
+		display: grid;
+		gap: 24px;
+		grid-auto-flow: row;
+		grid-auto-rows: max-content;
+	}
+
+	.playlist__header {
+
+	}
+
+	.playlist__content {
 		display: grid;
 		gap: 16px;
 		grid-auto-flow: row;
@@ -945,7 +956,11 @@ let updateviewforuri = (uri: string): void => {
 			for (let disc of response.discs) {
 				let content = xml.element("div.content").render();
 				let playlist = xml.element("div.playlist")
-					.add(renderTextHeader("Disc " + disc.number.toString().padStart(2, "0"))).render();
+					.add(xml.element("div.playlist__header")
+						.add(renderTextHeader("Disc " + disc.number.toString().padStart(2, "0"))))
+					.render();
+				let playlistct = xml.element("div.playlist__content").render();
+				playlist.appendChild(playlistct);
 				for (let track of disc.tracks) {
 					let rendered_track = xml.element("div.playlist-item")
 						.add(xml.element("div.playlist-item__title")
@@ -959,7 +974,7 @@ let updateviewforuri = (uri: string): void => {
 						set_context(context);
 						play(context.files.indexOf(track.file_id));
 					});
-					playlist.appendChild(rendered_track);
+					playlistct.appendChild(rendered_track);
 				}
 				content.appendChild(playlist);
 				mount.appendChild(content);
