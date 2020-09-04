@@ -355,7 +355,7 @@ style.innerText = `
 
 	.entity-header {
 		display: grid;
-		gap: 12px;
+		gap: 16px;
 		grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 	}
 
@@ -369,7 +369,7 @@ style.innerText = `
 
 	.entity-header__metadata {
 		display: grid;
-		gap: 12px;
+		gap: 16px;
 		grid-auto-flow: row;
 		grid-auto-rows: max-content;
 	}
@@ -400,7 +400,7 @@ style.innerText = `
 	.entity-header__tags {
 		display: grid;
 		gap: 8px;
-		grid-auto-columns: auto;
+		grid-auto-columns: minmax(auto, min-content);
 		grid-auto-flow: column;
 	}
 
