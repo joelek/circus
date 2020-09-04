@@ -37,9 +37,13 @@ namespace xml {
 			}
 		}
 
-		add(...nodes: Array<Node<any>>): this {
+		add(...nodes: Array<Node<any> | null>): this {
 			// TODO: Detach node from current parent.
-			this.children.push(...nodes);
+			for (let node of nodes) {
+				if (node != null) {
+					this.children.push(node);
+				}
+			}
 			return this;
 		}
 
@@ -420,8 +424,10 @@ style.innerText = `
 		transition: transform 0.1s;
 	}
 
-	.playback-button:hover {
-		transform: scale(1.1);
+	@media(hover: hover) and (pointer: fine) {
+		.playback-button:hover {
+			transform: scale(1.1);
+		};
 	}
 
 	.playback-button:active {
@@ -456,8 +462,10 @@ style.innerText = `
 		transition: padding 0.1s;
 	}
 
-	.playlist-item:hover {
-		padding-left: 16px;
+	@media(hover: hover) and (pointer: fine) {
+		.playlist-item:hover {
+			padding-left: 16px;
+		}
 	}
 
 	.playlist-item__title {
@@ -890,7 +898,7 @@ function renderTextHeader(title: string) {
 			.add(xml.text(title))
 		);
 }
-const makeEntityHeader = (title: string, subtitle: string, artwork: string | null, tags: Array<string> = []) => {
+const makeEntityHeader = (title: string, subtitle: string | null, artwork: string | null, tags: Array<string> = []) => {
 	return xml.element("div.content")
 		.add(xml.element("div.entity-header")
 			.add(xml.element("div.entity-header__artwork")
@@ -902,7 +910,7 @@ const makeEntityHeader = (title: string, subtitle: string, artwork: string | nul
 					.add(xml.element("div.entity-header__title")
 						.add(xml.text(title))
 					)
-					.add(xml.element("div.entity-header__subtitle")
+					.add(subtitle == null ? null : xml.element("div.entity-header__subtitle")
 						.add(xml.text(subtitle))
 					)
 				)
@@ -1004,7 +1012,7 @@ let updateviewforuri = (uri: string): void => {
 					}
 				}
 			}
-			let widget = makeEntityHeader(response.title, "", null, [ "Artist" ]).render();
+			let widget = makeEntityHeader(response.title, null, null, [ "Artist" ]).render();
 			widget.querySelector(".playback-button")?.addEventListener("click", () => {
 				set_context(context);
 				play(0);
