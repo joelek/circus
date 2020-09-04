@@ -5,11 +5,11 @@ import { AuthToken } from "./database";
 import * as session from "./session";
 
 namespace xml {
-	interface Node<A extends globalThis.Node> {
+	export interface Node<A extends globalThis.Node> {
 		render(): A;
 	}
 
-	class Text implements Node<globalThis.Text> {
+	export class Text implements Node<globalThis.Text> {
 		private content: string;
 
 		constructor(content: string) {
@@ -21,7 +21,7 @@ namespace xml {
 		}
 	}
 
-	class XElement implements Node<globalThis.Element> {
+	export class XElement implements Node<globalThis.Element> {
 		private tag: string;
 		private attributes: Map<string, string>;
 		private children: Array<Node<any>>;
@@ -31,8 +31,9 @@ namespace xml {
 			this.tag = parts[0];
 			this.attributes = new Map<string, string>();
 			this.children = new Array<Node<any>>();
-			if (parts.length === 2) {
-				this.attributes.set("class", parts[1]);
+			let classes = parts.slice(1).join(" ");
+			if (classes !== "") {
+				this.attributes.set("class", classes);
 			}
 		}
 
@@ -75,7 +76,6 @@ style.innerText = `
 	* {
 		border: none;
 		font-size: 0px;
-		line-height: 1;
 		margin: 0px;
 		outline: none;
 		padding: 0px;
@@ -304,19 +304,6 @@ style.innerText = `
 		position: relative;
 	}
 
-	.media-widget__play-button {
-		background-color: rgb(255, 255, 255);
-		border-radius: 50%;
-		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
-		cursor: pointer;
-		fill: rgb(31, 31, 31);
-		margin: 16px;
-		padding: 8px;
-		position: absolute;
-			bottom: 0%;
-			right: 0%;
-	}
-
 	.media-widget__metadata {
 		padding: 16px;
 	}
@@ -345,12 +332,26 @@ style.innerText = `
 
 
 
+
+	.content {
+		margin: 0px auto;
+		max-width: 640px;
+		padding: 16px;
+	}
+
+
+
+
 	.text-header {
 
 	}
 
 	.text-header__title {
+		color: rgb(159, 159, 159);
 		font-size: 20px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.entity-header {
@@ -404,7 +405,7 @@ style.innerText = `
 		grid-auto-flow: column;
 	}
 
-	.entity-header__play-button {
+	.playback-button {
 		background-color: rgb(255, 255, 255);
 		border-radius: 50%;
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
@@ -417,11 +418,45 @@ style.innerText = `
 			right: 0%;
 	}
 
-	.entity-header__play-button:hover {
+	.playback-button:hover {
 		transform: scale(1.1);
 		transition: transform 0.1s;
 	}
 
+	.playback-button:active {
+		box-shadow: 0px 0px 4px 2px rgba(0, 0, 0, 0.25);
+		transform: none;
+	}
+
+	.playlist {
+		display: grid;
+		gap: 16px;
+		grid-auto-flow: row;
+		grid-auto-rows: max-content;
+	}
+
+	.playlist-item {
+		display: grid;
+		gap: 8px;
+		grid-auto-flow: row;
+		grid-auto-rows: max-content;
+	}
+
+	.playlist-item__title {
+		color: rgb(255, 255, 255);
+		font-size: 16px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.playlist-item__subtitle {
+		color: rgb(159, 159, 159);
+		font-size: 12px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 `;
 document.head.appendChild(style);
 
@@ -762,39 +797,33 @@ document.body.appendChild(chromecast);
 }
 
 
-const makeTag = (content: string) => xml.element("div")
-	.set("class", "media-widget__tag")
-	.set("data-wrap", "false")
+const makeTag = (content: string) => xml.element("div.media-widget__tag")
 	.add(xml.text(content));
+const makePlaybackButton = () => xml.element("div.playback-button")
+	.add(xml.element("svg")
+		.set("width", "16px")
+		.set("height", "16px")
+		.set("viewBox", "0 0 16 16")
+		.add(xml.element("path")
+			.set("fill", "inherit")
+			.set("d", "M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z")
+		)
+	);
 function renderAlbum(album: api_response.AlbumResponse): Element {
-	let duration = 0;
+	let duration_ms = 0;
 	for (let disc of album.discs) {
 		for (let track of disc.tracks) {
-			duration += track.duration;
+			duration_ms += track.duration;
 		}
 	}
-	duration = Math.floor(duration / 1000 / 60);
-	let widget = xml.element("div")
-		.set("class", "media-widget")
-		.add(xml.element("div")
-			.set("class", "media-widget__artwork")
+	let minutes = Math.round(duration_ms / 1000 / 60);
+	let widget = xml.element("div.media-widget")
+		.add(xml.element("div.media-widget__artwork")
 			.set("style", `background-image: url('/files/${album.cover_file_id}/?token=${token}');`)
-			.add(xml.element("div")
-				.set("class", "media-widget__play-button")
-				.add(xml.element("svg")
-					.set("width", "16px")
-					.set("height", "16px")
-					.set("viewBox", "0 0 16 16")
-					.add(xml.element("path")
-						.set("fill", "inherit")
-						.set("d", "M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z")
-					)
-				)
-			)
+			.add(makePlaybackButton())
 		)
 		.render();
-	let metadata = document.createElement("div");
-	metadata.setAttribute("class", "media-widget__metadata");
+	let metadata = document.createElement("div.media-widget__metadata");
 	metadata.setAttribute("data-flex", "y");
 	metadata.setAttribute("style", "--gap: 12px;");
 	widget.appendChild(metadata);
@@ -833,53 +862,36 @@ function renderAlbum(album: api_response.AlbumResponse): Element {
 
 	tags.appendChild(makeTag("Album").render());
 	tags.appendChild(makeTag(album.year.toString().padStart(4, "0")).render());
-	tags.appendChild(makeTag(pluralize(duration, "minutes", "minute", "minutes")).render());
+	tags.appendChild(makeTag(pluralize(minutes, "minutes", "minute", "minutes")).render());
 	return widget;
 }
-function renderTextHeader(string: string): HTMLElement {
-	let widget = document.createElement("div");
-	widget.setAttribute("class", "text-header");
-	let title = document.createElement("div");
-	title.setAttribute("class", "text-header__title");
-	title.innerText = string;
-	widget.appendChild(title);
-	return widget;
+function renderTextHeader(title: string) {
+	return xml.element("div.text-header")
+		.add(xml.element("div.text-header__title")
+			.add(xml.text(title))
+		);
 }
-function renderEntityHeader(title: string, subtitle: string, artwork: string | null, tags: Array<string> = []): HTMLElement {
-	let background = document.createElement("div");
-	background.style.setProperty("background-image", "linear-gradient(to top, rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 1.0))");
-	let grid = document.createElement("div");
-	grid.setAttribute("data-grid", "");
-	background.appendChild(grid);
-	let cell = document.createElement("div");
-	cell.setAttribute("data-cell", "6:6:6");
-	grid.appendChild(cell);
-
-	let widget = xml.element("div.entity-header")
-		.add(xml.element("div.entity-header__artwork")
-			.set("style", `background-image: url('/files/${artwork}/?token=${token}')`)
-		)
-		.add(xml.element("div.entity-header__metadata")
-			.add(xml.element("div.entity-header__titles")
-				.add(xml.element("div.entity-header__title")
-					.add(xml.text(title))
+const makeEntityHeader = (title: string, subtitle: string, artwork: string | null, tags: Array<string> = []) => {
+	return xml.element("div.content")
+		.add(xml.element("div.entity-header")
+			.add(xml.element("div.entity-header__artwork")
+				.set("style", `background-image: url('/files/${artwork}/?token=${token}')`)
+				.add(makePlaybackButton())
+			)
+			.add(xml.element("div.entity-header__metadata")
+				.add(xml.element("div.entity-header__titles")
+					.add(xml.element("div.entity-header__title")
+						.add(xml.text(title))
+					)
+					.add(xml.element("div.entity-header__subtitle")
+						.add(xml.text(subtitle))
+					)
 				)
-				.add(xml.element("div.entity-header__subtitle")
-					.add(xml.text(subtitle))
+				.add(xml.element("div.entity-header__tags")
+					.add(...tags.map(makeTag))
 				)
 			)
-			.add(xml.element("div.entity-header__tags")
-				.add(...tags.map(makeTag))
-			)
-		)
-		.render();
-
-	cell.appendChild(widget);
-	let play_button = document.createElement("div");
-	play_button.setAttribute("class", "entity-header__play-button");
-	play_button.innerHTML = `<svg width="16px" height="16px" viewBox="0 0 16 16"><path fill="inherit" d="M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z"/></svg>`;
-	widget.querySelector(".entity-header__artwork")?.appendChild(play_button);
-	return background
+		);
 }
 
 function pluralize(amount: number, zero: string, one: string, many: string): string {
@@ -912,52 +924,37 @@ let updateviewforuri = (uri: string): void => {
 					duration_ms += track.duration;
 				}
 			}
-			let header = renderEntityHeader(response.title, response.artists.map(artist => artist.title).join(" \u2022 "), response.cover_file_id, [
+			let header = makeEntityHeader(response.title, response.artists.map(artist => artist.title).join(" \u2022 "), response.cover_file_id, [
 				"Album",
 				response.year.toString().padStart(4, "0"),
-				pluralize(Math.floor(duration_ms / 1000 / 60), "minutes", "minute", "minutes")
-			]);
-			header.querySelector(".entity-header__play-button")?.addEventListener("click", () => {
+				pluralize(Math.round(duration_ms / 1000 / 60), "minutes", "minute", "minutes")
+			]).render();
+			header.querySelector(".playback-button")?.addEventListener("click", () => {
 				set_context(context);
 				play(0);
 			});
 			mount.appendChild(header);
-			let cell = xml.element("div")
-				.set("data-cell", "6:6:6")
-				.render();
-			let grid = xml.element("div")
-				.set("data-grid")
-				.render();
-			grid.appendChild(cell);
 			for (let disc of response.discs) {
-				mount.appendChild(renderTextHeader("Disc " + disc.number.toString().padStart(2, "0")));
+				let content = xml.element("div.content").render();
+				let playlist = xml.element("div.playlist")
+					.add(renderTextHeader("Disc " + disc.number.toString().padStart(2, "0"))).render();
 				for (let track of disc.tracks) {
-					let rendered_track = xml.element("div")
-						.set("data-flex")
-						.set("style", "")
-						.add(xml.element("div")
-							.set("data-full")
-							.set("style", "color: rgb(255, 255, 255); font-size: 16px;")
+					let rendered_track = xml.element("div.playlist-item")
+						.add(xml.element("div.playlist-item__title")
 							.add(xml.text(track.title))
 						)
-						.add(xml.element("div")
-							.set("data-fill")
-							.set("style", "color: rgb(159, 159, 159); font-size: 12px;")
+						.add(xml.element("div.playlist-item__subtitle")
 							.add(xml.text(track.artists.map((artist) => artist.title).join(" \u2022 ")))
-						)
-						.add(xml.element("div")
-							.set("data-wrap")
-							.set("style", "color: rgb(159, 159, 159); font-size: 12px;")
-							.add(xml.text(format_duration(track.duration)))
 						)
 						.render();
 					rendered_track.addEventListener("click", () => {
 						set_context(context);
 						play(context.files.indexOf(track.file_id));
 					});
-					cell.appendChild(rendered_track);
+					playlist.appendChild(rendered_track);
 				}
-				mount.appendChild(grid);
+				content.appendChild(playlist);
+				mount.appendChild(content);
 			}
 		});
 	} else if ((parts = /^audio[/]albums[/]/.exec(uri)) !== null) {
@@ -984,8 +981,8 @@ let updateviewforuri = (uri: string): void => {
 					}
 				}
 			}
-			let widget = renderEntityHeader(response.title, "", null, [ "Artist" ]);
-			widget.querySelector(".entity-header__play-button")?.addEventListener("click", () => {
+			let widget = makeEntityHeader(response.title, "", null, [ "Artist" ]).render();
+			widget.querySelector(".playback-button")?.addEventListener("click", () => {
 				set_context(context);
 				play(0);
 			});
@@ -994,11 +991,11 @@ let updateviewforuri = (uri: string): void => {
 			container.setAttribute("data-grid", "");
 			let cell = document.createElement("div");
 			cell.setAttribute("data-cell", "6:6:6");
-			cell.appendChild(renderTextHeader("Discography"));
+			cell.appendChild(renderTextHeader("Discography").render());
 			container.appendChild(cell);
 			for (let album of response.albums) {
 				let widget = renderAlbum(album);
-				widget.querySelector(".media-widget__play-button")?.addEventListener("click", (event) => {
+				widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
 					let index = context.files.indexOf(album.discs[0].tracks[0].file_id);
 					set_context(context);
 					play(index);
