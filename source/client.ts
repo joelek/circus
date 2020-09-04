@@ -26,10 +26,14 @@ namespace xml {
 		private attributes: Map<string, string>;
 		private children: Array<Node<any>>;
 
-		constructor(tag: string) {
-			this.tag = tag;
+		constructor(selector: string) {
+			let parts = selector.split(".");
+			this.tag = parts[0];
 			this.attributes = new Map<string, string>();
 			this.children = new Array<Node<any>>();
+			if (parts.length === 2) {
+				this.attributes.set("class", parts[1]);
+			}
 		}
 
 		add(...nodes: Array<Node<any>>): this {
@@ -56,9 +60,8 @@ namespace xml {
 		}
 	}
 
-	export function element(tag: string): XElement {
-		// TODO: Support parsing of selector.
-		return new XElement(tag);
+	export function element(selector: string): XElement {
+		return new XElement(selector);
 	}
 
 	export function text(content: string): Text {
@@ -96,10 +99,6 @@ style.innerText = `
 	[data-cell] {
 		display: inline-block;
 		vertical-align: top;
-	}
-
-	[data-cell] > * {
-		margin: 8px;
 	}
 
 	@media all and (max-width: 319px) {
@@ -181,7 +180,10 @@ style.innerText = `
 	}
 
 	[data-flex] {
+		--gap: max(0px, calc(var(--gap, 0px) - 4px));
 		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
 	}
 
 	[data-flex="x"] {
@@ -335,6 +337,9 @@ style.innerText = `
 		color: rgb(159, 159, 159);
 		font-size: 12px;
 		padding: 4px 8px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 
@@ -348,25 +353,37 @@ style.innerText = `
 		font-size: 20px;
 	}
 
-
-
-
 	.entity-header {
-
+		display: grid;
+		gap: 12px;
+		grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 	}
 
 	.entity-header__artwork {
+		background-color: rgb(0, 0, 0);
+		background-size: contain;
 		border-radius: 2px;
+		padding-bottom: 100%;
 		position: relative;
 	}
 
 	.entity-header__metadata {
+		display: grid;
+		gap: 12px;
+		grid-auto-flow: row;
+		grid-auto-rows: max-content;
+	}
 
+	.entity-header__titles {
+		display: grid;
+		gap: 8px;
+		grid-auto-flow: row;
+		grid-auto-rows: max-content;
 	}
 
 	.entity-header__title {
 		color: rgb(255, 255, 255);
-		font-size: 24px;
+		font-size: 20px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -374,10 +391,17 @@ style.innerText = `
 
 	.entity-header__subtitle {
 		color: rgb(159, 159, 159);
-		font-size: 18px;
+		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	.entity-header__tags {
+		display: grid;
+		gap: 8px;
+		grid-auto-columns: auto;
+		grid-auto-flow: column;
 	}
 
 	.entity-header__play-button {
@@ -389,11 +413,14 @@ style.innerText = `
 		margin: 16px;
 		padding: 8px;
 		position: absolute;
+			bottom: 0%;
 			right: 0%;
-			top: 0%;
 	}
 
-
+	.entity-header__play-button:hover {
+		transform: scale(1.1);
+		transition: transform 0.1s;
+	}
 
 `;
 document.head.appendChild(style);
@@ -828,45 +855,21 @@ function renderEntityHeader(title: string, subtitle: string, artwork: string | n
 	cell.setAttribute("data-cell", "6:6:6");
 	grid.appendChild(cell);
 
-	let widget = xml.element("div")
-		.set("class", "entity-header")
-		.set("data-flex", "x")
-		.set("style", "--gap: 12px")
-		.add(xml.element("div")
-			.set("class", "entity-header__artwork")
-			.add(xml.element("img")
-				.set("src", `/files/${artwork}/?token=${token}`)
-				.set("style", "height: 160px;")
-			)
+	let widget = xml.element("div.entity-header")
+		.add(xml.element("div.entity-header__artwork")
+			.set("style", `background-image: url('/files/${artwork}/?token=${token}')`)
 		)
-		.add(xml.element("div")
-			.add(xml.element("div")
-				.set("class", "entity-header__metadata")
-				.set("data-flex", "y")
-				.set("style", "--gap: 12px")
-				.add(xml.element("div")
-					.set("class", "entity-header__titles")
-					.set("data-flex", "y")
-					.set("style", "--gap: 8px")
-					.add(xml.element("div")
-						.set("class", "entity-header__title")
-						.set("data-wrap", "false")
-						.add(xml.text(title))
-					)
-					.add(xml.element("div")
-						.set("class", "entity-header__subtitle")
-						.set("data-wrap", "false")
-						.add(xml.text(subtitle))
-					)
+		.add(xml.element("div.entity-header__metadata")
+			.add(xml.element("div.entity-header__titles")
+				.add(xml.element("div.entity-header__title")
+					.add(xml.text("x".repeat(200)))
 				)
-				.add(xml.element("div")
-					.add(xml.element("div")
-						.set("class", "entity-header__tags")
-						.set("data-flex", "x")
-						.set("style", "--gap: 8px;")
-						.add(...tags.map(makeTag))
-					)
+				.add(xml.element("div.entity-header__subtitle")
+					.add(xml.text("x".repeat(200)))
 				)
+			)
+			.add(xml.element("div.entity-header__tags")
+				.add(...tags.map(makeTag))
 			)
 		)
 		.render();
