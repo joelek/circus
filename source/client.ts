@@ -77,6 +77,7 @@ style.innerText = `
 		border: none;
 		font-size: 0px;
 		margin: 0px;
+		line-height: 1;
 		outline: none;
 		padding: 0px;
 	}
@@ -213,7 +214,7 @@ style.innerText = `
 	body {
 		background-color: rgb(31, 31, 31);
 		color: rgb(255, 255, 255);
-		font-family: "Open Sans", sans-serif;
+		font-family: "Nunito", sans-serif;
 		overflow-y: scroll;
 		user-select: none;
 	}
@@ -416,11 +417,11 @@ style.innerText = `
 		position: absolute;
 			bottom: 0%;
 			right: 0%;
+		transition: transform 0.1s;
 	}
 
 	.playback-button:hover {
 		transform: scale(1.1);
-		transition: transform 0.1s;
 	}
 
 	.playback-button:active {
@@ -436,10 +437,16 @@ style.innerText = `
 	}
 
 	.playlist-item {
+		cursor: pointer;
 		display: grid;
 		gap: 8px;
 		grid-auto-flow: row;
 		grid-auto-rows: max-content;
+		transition: padding 0.1s;
+	}
+
+	.playlist-item:hover {
+		padding-left: 16px;
 	}
 
 	.playlist-item__title {
@@ -450,7 +457,8 @@ style.innerText = `
 		white-space: nowrap;
 	}
 
-	.playlist-item__subtitle {
+	.playlist-item__subtitle,
+	.playlist-item__duration {
 		color: rgb(159, 159, 159);
 		font-size: 12px;
 		overflow: hidden;
