@@ -499,6 +499,7 @@ style.innerText = `
 			bottom: 0%;
 			right: 0%;
 		transition: transform 0.1s;
+		z-index: 1;
 	}
 
 	@media(hover: hover) and (pointer: fine) {
@@ -511,6 +512,30 @@ style.innerText = `
 		box-shadow: 0px 0px 4px 2px rgba(0, 0, 0, 0.25);
 		transform: none;
 	}
+
+
+
+
+
+	.media-grid {
+		display: grid;
+		gap: 24px;
+		grid-auto-flow: row;
+		grid-auto-rows: max-content;
+	}
+
+	.media-grid__header {
+
+	}
+
+	.media-grid__content {
+		display: grid;
+		gap: 24px;
+		grid-auto-flow: row;
+		grid-auto-rows: max-content;
+		grid-template-columns: repeat(max(auto-fit, 2), minmax(240px, 1fr));
+	}
+
 
 
 
@@ -1094,12 +1119,16 @@ let updateviewforuri = (uri: string): void => {
 				play(0);
 			});
 			mount.appendChild(widget);
-			let container = document.createElement("div");
-			container.setAttribute("data-grid", "");
-			let cell = document.createElement("div");
-			cell.setAttribute("data-cell", "6:6:6");
-			cell.appendChild(renderTextHeader("Discography").render());
-			container.appendChild(cell);
+			let content = xml.element("div.content").render();
+			mount.appendChild(content);
+			let mediaGrid = xml.element("div.media-grid")
+				.add(xml.element("div.media-grid__header")
+					.add(renderTextHeader("Discography"))
+				)
+				.render();
+			content.appendChild(mediaGrid);
+			let mediaGrid__content = xml.element("div.media-grid__content").render();
+			mediaGrid.appendChild(mediaGrid__content);
 			for (let album of response.albums) {
 				let widget = makeAlbum(album).render();
 				widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
@@ -1111,12 +1140,8 @@ let updateviewforuri = (uri: string): void => {
 				widget.addEventListener('click', () => {
 					navigate(`audio/albums/${album.album_id}/`);
 				});
-				let cell = document.createElement("div");
-				cell.setAttribute("data-cell", "6:6:3");
-				cell.appendChild(widget);
-				container.appendChild(cell);
+				mediaGrid__content.appendChild(widget);
 			}
-			mount.appendChild(container);
 		});
 	} else if ((parts = /^audio[/]artists[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ArtistsResponse>(`/api/audio/artists/`, {}, (status, response) => {
