@@ -295,10 +295,19 @@ style.innerText = `
 
 
 
+
+
+
+
+
 	.media-widget {
 		background-color: rgb(47, 47, 47);
 		border-radius: 2px;
 		cursor: pointer;
+		display: grid;
+		gap: 0px;
+		grid-auto-flow: row;
+		grid-auto-rows: max-content;
 		overflow: hidden;
 	}
 
@@ -310,20 +319,54 @@ style.innerText = `
 	}
 
 	.media-widget__metadata {
+		display: grid;
+		gap: 16px;
+		grid-auto-flow: row;
+		grid-auto-rows: max-content;
 		padding: 16px;
+	}
+
+	.media-widget__titles {
+		display: grid;
+		gap: 8px;
+		grid-auto-flow: row;
+		grid-auto-rows: max-content;
 	}
 
 	.media-widget__title {
 		color: rgb(255, 255, 255);
 		font-size: 16px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.media-widget__subtitle {
 		color: rgb(159, 159, 159);
 		font-size: 12px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
-	.media-widget__tag {
+	.media-widget__tags {
+		display: grid;
+		gap: 8px;
+		grid-auto-columns: minmax(auto, min-content);
+		grid-auto-flow: column;
+	}
+
+
+
+
+
+
+
+
+
+
+
+	.media-tag {
 		background-color: rgb(63, 63, 63);
 		border-radius: 2px;
 		color: rgb(159, 159, 159);
@@ -338,11 +381,26 @@ style.innerText = `
 
 
 
+
+
+
+
+
+
 	.content {
 		margin: 0px auto;
 		max-width: 640px;
 		padding: 32px;
 	}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -358,6 +416,19 @@ style.innerText = `
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	.entity-header {
 		display: grid;
@@ -410,6 +481,12 @@ style.innerText = `
 		grid-auto-flow: column;
 	}
 
+
+
+
+
+
+
 	.playback-button {
 		background-color: rgb(255, 255, 255);
 		border-radius: 50%;
@@ -435,6 +512,14 @@ style.innerText = `
 		transform: none;
 	}
 
+
+
+
+
+
+
+
+
 	.playlist {
 		display: grid;
 		gap: 24px;
@@ -452,6 +537,16 @@ style.innerText = `
 		grid-auto-flow: row;
 		grid-auto-rows: max-content;
 	}
+
+
+
+
+
+
+
+
+
+
 
 	.playlist-item {
 		cursor: pointer;
@@ -476,8 +571,7 @@ style.innerText = `
 		white-space: nowrap;
 	}
 
-	.playlist-item__subtitle,
-	.playlist-item__duration {
+	.playlist-item__subtitle {
 		color: rgb(159, 159, 159);
 		font-size: 12px;
 		overflow: hidden;
@@ -824,7 +918,7 @@ document.body.appendChild(chromecast);
 }
 
 
-const makeTag = (content: string) => xml.element("div.media-widget__tag")
+const makeTag = (content: string) => xml.element("div.media-tag")
 	.add(xml.text(content));
 const makePlaybackButton = () => xml.element("div.playback-button")
 	.add(xml.element("svg")
@@ -836,7 +930,7 @@ const makePlaybackButton = () => xml.element("div.playback-button")
 			.set("d", "M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z")
 		)
 	);
-function renderAlbum(album: api_response.AlbumResponse): Element {
+function makeAlbum(album: api_response.AlbumResponse): xml.XElement {
 	let duration_ms = 0;
 	for (let disc of album.discs) {
 		for (let track of disc.tracks) {
@@ -844,53 +938,31 @@ function renderAlbum(album: api_response.AlbumResponse): Element {
 		}
 	}
 	let minutes = Math.round(duration_ms / 1000 / 60);
-	let widget = xml.element("div.media-widget")
+	let title = album.title;
+	let subtitle = album.artists.map(artist => artist.title).join(" \u2022 ");
+	let tags = [
+		"Album",
+		album.year.toString().padStart(4, "0"),
+		pluralize(minutes, "minutes", "minute", "minutes")
+	];
+	return xml.element("div.media-widget")
 		.add(xml.element("div.media-widget__artwork")
 			.set("style", `background-image: url('/files/${album.cover_file_id}/?token=${token}');`)
 			.add(makePlaybackButton())
 		)
-		.render();
-	let metadata = document.createElement("div.media-widget__metadata");
-	metadata.setAttribute("data-flex", "y");
-	metadata.setAttribute("style", "--gap: 12px;");
-	widget.appendChild(metadata);
-
-	let top = document.createElement("div");
-	metadata.appendChild(top);
-	let bottom = document.createElement("div");
-	metadata.appendChild(bottom);
-
-	let titles = document.createElement("div");
-	titles.setAttribute("data-flex", "y");
-	titles.setAttribute("style", "--gap: 8px;");
-	top.appendChild(titles);
-
-
-
-
-	let title = document.createElement("div");
-	title.setAttribute("class", "media-widget__title");
-	title.setAttribute("data-wrap", "false")
-	title.innerText = album.title;
-	titles.appendChild(title);
-
-	let subtitle = document.createElement("div");
-	subtitle.setAttribute("class", "media-widget__subtitle");
-	subtitle.setAttribute("data-wrap", "false")
-	subtitle.innerText = album.artists.map(artist => artist.title).join(" \u2022 ");
-	titles.appendChild(subtitle);
-
-
-
-	let tags = document.createElement("div");
-	tags.setAttribute("data-flex", "x");
-	tags.setAttribute("style", "--gap: 8px;");
-	bottom.appendChild(tags);
-
-	tags.appendChild(makeTag("Album").render());
-	tags.appendChild(makeTag(album.year.toString().padStart(4, "0")).render());
-	tags.appendChild(makeTag(pluralize(minutes, "minutes", "minute", "minutes")).render());
-	return widget;
+		.add(xml.element("div.media-widget__metadata")
+			.add(xml.element("div.media-widget__titles")
+				.add(xml.element("div.media-widget__title")
+					.add(xml.text(title))
+				)
+				.add(xml.element("div.media-widget__subtitle")
+					.add(xml.text(subtitle))
+				)
+			)
+			.add(xml.element("div.media-widget__tags")
+				.add(...tags.map(makeTag))
+			)
+		);
 }
 function renderTextHeader(title: string) {
 	return xml.element("div.text-header")
@@ -898,11 +970,12 @@ function renderTextHeader(title: string) {
 			.add(xml.text(title))
 		);
 }
-const makeEntityHeader = (title: string, subtitle: string | null, artwork: string | null, tags: Array<string> = []) => {
+const makeEntityHeader = (title: string, subtitle: string | null, artwork: Array<string | null>, tags: Array<string> = []) => {
+	let artwork_candidates = artwork.filter(artwork => artwork !== null) as string[];
 	return xml.element("div.content")
 		.add(xml.element("div.entity-header")
 			.add(xml.element("div.entity-header__artwork")
-				.set("style", `background-image: url('/files/${artwork}/?token=${token}')`)
+				.set("style", `background-image: url('/files/${artwork_candidates[0]}/?token=${token}')`)
 				.add(makePlaybackButton())
 			)
 			.add(xml.element("div.entity-header__metadata")
@@ -951,7 +1024,7 @@ let updateviewforuri = (uri: string): void => {
 					duration_ms += track.duration;
 				}
 			}
-			let header = makeEntityHeader(response.title, response.artists.map(artist => artist.title).join(" \u2022 "), response.cover_file_id, [
+			let header = makeEntityHeader(response.title, response.artists.map(artist => artist.title).join(" \u2022 "), [ response.cover_file_id ], [
 				"Album",
 				response.year.toString().padStart(4, "0"),
 				pluralize(Math.round(duration_ms / 1000 / 60), "minutes", "minute", "minutes")
@@ -1005,14 +1078,17 @@ let updateviewforuri = (uri: string): void => {
 			let context = {
 				files: new Array<string>()
 			};
+			let duration_ms = 0;
 			for (let album of response.albums) {
 				for (let disc of album.discs) {
 					for (let track of disc.tracks) {
 						context.files.push(track.file_id);
+						duration_ms += track.duration;
 					}
 				}
 			}
-			let widget = makeEntityHeader(response.title, null, null, [ "Artist" ]).render();
+			let minutes = Math.round(duration_ms / 1000 / 60);
+			let widget = makeEntityHeader(response.title, null, response.albums.map((album) => album.cover_file_id), [ "Artist", pluralize(minutes, "minutes", "minute", "minutes") ]).render();
 			widget.querySelector(".playback-button")?.addEventListener("click", () => {
 				set_context(context);
 				play(0);
@@ -1025,7 +1101,7 @@ let updateviewforuri = (uri: string): void => {
 			cell.appendChild(renderTextHeader("Discography").render());
 			container.appendChild(cell);
 			for (let album of response.albums) {
-				let widget = renderAlbum(album);
+				let widget = makeAlbum(album).render();
 				widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
 					let index = context.files.indexOf(album.discs[0].tracks[0].file_id);
 					set_context(context);
