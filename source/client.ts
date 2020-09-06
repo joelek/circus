@@ -533,7 +533,7 @@ style.innerText = `
 		gap: 24px;
 		grid-auto-flow: row;
 		grid-auto-rows: max-content;
-		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 	}
 
 
