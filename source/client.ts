@@ -632,15 +632,24 @@ function computeDuration(ms: number): {
 
 let format_duration = (ms: number): string => {
 	let duration = computeDuration(ms);
-	if (duration.h > 0) {
-		let h = "" + duration.h;
-		let m = `00${duration.m}`.slice(-2);
-		let s = `00${duration.s}`.slice(-2);
-		return `${h}:${m}:${s}`;
+	if (duration.d >= 5) {
+		return `${duration.d}d`;
+	} else if (duration.d >= 1) {
+		return `${duration.d}d ${duration.h}h`;
+	} else if (duration.h >= 5) {
+		return `${duration.h}h`;
+	} else if (duration.h >= 1) {
+		return `${duration.h}h ${duration.m}m`;
+	} else if (duration.m >= 5) {
+		return `${duration.m}m`;
+	} else if (duration.m >= 1) {
+		return `${duration.m}m ${duration.s}s`;
+	} else if (duration.s >= 5) {
+		return `${duration.s}s`;
+	} else if (duration.s >= 1) {
+		return `${duration.s}s ${duration.ms}ms`;
 	} else {
-		let m = "" + duration.m;
-		let s = `00${duration.s}`.slice(-2);
-		return `${m}:${s}`;
+		return "-";
 	}
 };
 
@@ -962,13 +971,12 @@ function makeAlbum(album: api_response.AlbumResponse): xml.XElement {
 			duration_ms += track.duration;
 		}
 	}
-	let minutes = Math.round(duration_ms / 1000 / 60);
 	let title = album.title;
 	let subtitle = album.artists.map(artist => artist.title).join(" \u2022 ");
 	let tags = [
 		"Album",
-		album.year.toString().padStart(4, "0"),
-		pluralize(minutes, "minutes", "minute", "minutes")
+		`${album.year}`,
+		format_duration(duration_ms)
 	];
 	return xml.element("div.media-widget")
 		.add(xml.element("div.media-widget__artwork")
@@ -1051,8 +1059,8 @@ let updateviewforuri = (uri: string): void => {
 			}
 			let header = makeEntityHeader(response.title, response.artists.map(artist => artist.title).join(" \u2022 "), [ response.cover_file_id ], [
 				"Album",
-				response.year.toString().padStart(4, "0"),
-				pluralize(Math.round(duration_ms / 1000 / 60), "minutes", "minute", "minutes")
+				`${response.year}`,
+				format_duration(duration_ms)
 			]).render();
 			header.querySelector(".playback-button")?.addEventListener("click", () => {
 				set_context(context);
@@ -1112,8 +1120,10 @@ let updateviewforuri = (uri: string): void => {
 					}
 				}
 			}
-			let minutes = Math.round(duration_ms / 1000 / 60);
-			let widget = makeEntityHeader(response.title, null, response.albums.map((album) => album.cover_file_id), [ "Artist", pluralize(minutes, "minutes", "minute", "minutes") ]).render();
+			let widget = makeEntityHeader(response.title, null, response.albums.map((album) => album.cover_file_id), [
+				"Artist",
+				format_duration(duration_ms)
+			]).render();
 			widget.querySelector(".playback-button")?.addEventListener("click", () => {
 				set_context(context);
 				play(0);
