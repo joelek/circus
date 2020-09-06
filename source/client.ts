@@ -438,10 +438,21 @@ style.innerText = `
 
 	.entity-header__artwork {
 		background-color: rgb(0, 0, 0);
-		background-size: contain;
 		border-radius: 2px;
 		padding-bottom: 100%;
+		overflow: hidden;
 		position: relative;
+	}
+
+	.entity-header__images {
+		display: grid;
+		gap: 0px;
+		grid-template-columns: repeat(auto-fit, minmax(50%, 1fr));
+		position: absolute;
+	}
+
+	.entity-header__image {
+		width: 100%;
 	}
 
 	.entity-header__metadata {
@@ -504,7 +515,7 @@ style.innerText = `
 
 	@media(hover: hover) and (pointer: fine) {
 		.playback-button:hover {
-			transform: scale(1.1);
+			transform: scale(1.25);
 		};
 	}
 
@@ -1004,11 +1015,16 @@ function renderTextHeader(title: string) {
 		);
 }
 const makeEntityHeader = (title: string, subtitle: string | null, artwork: Array<string | null>, tags: Array<string> = []) => {
-	let artwork_candidates = artwork.filter(artwork => artwork !== null) as string[];
+	let artwork_candidates = artwork.filter(artwork => artwork != null) as string[];
 	return xml.element("div.content")
 		.add(xml.element("div.entity-header")
 			.add(xml.element("div.entity-header__artwork")
-				.set("style", `background-image: url('/files/${artwork_candidates[0]}/?token=${token}')`)
+				.add(xml.element("div.entity-header__images")
+					.add(...artwork_candidates.map((artwork_candidate) => {
+						return xml.element("img.entity-header__image")
+							.set("src", `/files/${artwork_candidate}/?token=${token}`);
+					}))
+				)
 				.add(makePlaybackButton())
 			)
 			.add(xml.element("div.entity-header__metadata")
