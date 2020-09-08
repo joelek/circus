@@ -470,6 +470,32 @@ export function lookupArtist(id: string): libdb.ArtistEntry & {} {
 	};
 }
 
+export function lookupAppearances(artist_id: string): Array<string> {
+	let track_artists = artistTracksIndex.lookup(artist_id);
+	let tracks = track_artists.map((track_artist) => {
+		return lookup(tracks_index, track_artist.track_id);
+	});
+	let disc_ids = tracks.map((track) => {
+		return track.disc_id;
+	});
+	disc_ids = Array.from(new Set<string>(disc_ids));
+	let discs = disc_ids.map((disc_id) => {
+		return lookup(discs_index, disc_id);
+	});
+	let album_ids = discs.map((disc) => {
+		return disc.album_id;
+	});
+	album_ids = Array.from(new Set<string>(album_ids));
+	let result = new Array<string>();
+	for (let album_id of album_ids) {
+		let album_artists = albumArtistsIndex.lookup(album_id);
+		if (album_artists.find((album_artist) => album_artist.artist_id === artist_id) == null) {
+			result.push(album_id);
+		}
+	}
+	return result;
+}
+
 export function lookupAlbumArtists(id: string): Array<libdb.ArtistEntry> {
 	return albumArtistsIndex.lookup(id).map((entry) => {
 		return lookupArtist(entry.artist_id);

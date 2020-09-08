@@ -1186,29 +1186,41 @@ let updateviewforuri = (uri: string): void => {
 				play(0);
 			});
 			mount.appendChild(widget);
-			let content = xml.element("div.content").render();
-			mount.appendChild(content);
-			if (response.albums.length > 0) {
-				let mediaGrid = xml.element("div.media-grid")
-					.add(xml.element("div.media-grid__header")
-						.add(renderTextHeader("Discography"))
-					)
-					.render();
-				content.appendChild(mediaGrid);
-				let mediaGrid__content = xml.element("div.media-grid__content").render();
-				mediaGrid.appendChild(mediaGrid__content);
-				for (let album of response.albums) {
-					let widget = makeAlbum(album).render();
-					widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
-						let index = context.files.indexOf(album.discs[0].tracks[0].file_id);
-						set_context(context);
-						play(index);
-						event.stopPropagation();
-					});
-					widget.addEventListener('click', () => {
-						navigate(`audio/albums/${album.album_id}/`);
-					});
-					mediaGrid__content.appendChild(widget);
+			let grids = [
+				{
+					title: "Discography",
+					albums: response.albums
+				},
+				{
+					title: "Apperances",
+					albums: response.appearances
+				}
+			];
+			for (let grid of grids) {
+				if (grid.albums.length > 0) {
+					let content = xml.element("div.content").render();
+					mount.appendChild(content);
+					let mediaGrid = xml.element("div.media-grid")
+						.add(xml.element("div.media-grid__header")
+							.add(renderTextHeader(grid.title))
+						)
+						.render();
+					content.appendChild(mediaGrid);
+					let mediaGrid__content = xml.element("div.media-grid__content").render();
+					mediaGrid.appendChild(mediaGrid__content);
+					for (let album of grid.albums) {
+						let widget = makeAlbum(album).render();
+						widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
+							let index = context.files.indexOf(album.discs[0].tracks[0].file_id);
+							set_context(context);
+							play(index);
+							event.stopPropagation();
+						});
+						widget.addEventListener('click', () => {
+							navigate(`audio/albums/${album.album_id}/`);
+						});
+						mediaGrid__content.appendChild(widget);
+					}
 				}
 			}
 		});

@@ -91,6 +91,7 @@ class ArtistRoute implements Route<api_response.ApiRequest, api_response.ArtistR
 		let album_artists = data.media.audio.album_artists.filter((album_artist) => {
 			return album_artist.artist_id === artist_id;
 		});
+		// TODO: Reuse functionality for looking up playable albums.
 		let albums = album_artists.map((album_artist) => {
 			let album = data.albums_index[album_artist.album_id] as libdb.AlbumEntry;
 			let discs = data.media.audio.discs.filter((disc) => disc.album_id === album.album_id).map((disc) => {
@@ -113,9 +114,33 @@ class ArtistRoute implements Route<api_response.ApiRequest, api_response.ArtistR
 				discs
 			};
 		});
+		let appearances = data.lookupAppearances(artist_id)
+			.map((album_id) => {
+				let album = data.lookupAlbum(album_id);
+				let discs = data.media.audio.discs.filter((disc) => disc.album_id === album.album_id).map((disc) => {
+					let tracks = data.media.audio.tracks.filter((track) => track.disc_id === disc.disc_id).map((track) => {
+						let artists = data.lookupTrackArtists(track.track_id);
+						return {
+							...track,
+							artists
+						};
+					});
+					return {
+						...disc,
+						tracks
+					}
+				});
+				let artists = data.lookupAlbumArtists(album_id);
+				return {
+					...album,
+					artists,
+					discs
+				};
+			});
 		let payload: api_response.ArtistResponse = {
 			...artist,
-			albums
+			albums,
+			appearances
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
