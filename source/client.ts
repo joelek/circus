@@ -754,21 +754,21 @@ type Metadata = {
 		subtitles: Array<api_response.SubtitleResponse>;
 	} | undefined;
 };
+let mp = xml.element("div.media-player")
+	.render();
+document.body.appendChild(mp);
+
 let video = document.createElement('video');
 video.setAttribute('controls', '');
 video.setAttribute('playsinline', '');
 video.setAttribute("preload", "auto");
 video.style.setProperty('width', '100%');
-//document.body.appendChild(video);
+mp.appendChild(video);
 let buffer = document.createElement("video");
 buffer.setAttribute("preload", "auto");
 buffer.style.setProperty("display", "none");
-//document.body.appendChild(buffer);
+mp.appendChild(buffer);
 
-
-let mp = xml.element("div.media-player")
-	.render();
-document.body.appendChild(mp);
 
 let context: Context | null = null;
 let metadata: Metadata | null = null;
