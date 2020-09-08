@@ -458,10 +458,6 @@ style.innerText = `
 		position: absolute;
 	}
 
-	.entity-header__images > :nth-child(n+5) {
-		display: none;
-	}
-
 	.entity-header__image {
 		width: 100%;
 	}
@@ -632,6 +628,7 @@ style.innerText = `
 		//bottom: 0px;
 		//width: 100%;
 		height: 64px;
+		z-index: 1;
 	}
 `;
 document.head.appendChild(style);
@@ -1050,14 +1047,21 @@ function renderTextHeader(title: string) {
 		);
 }
 const makeEntityHeader = (title: string, subtitle: string | null, artwork: Array<string | null>, tags: Array<string> = []) => {
-	let artwork_candidates = artwork.filter(artwork => artwork != null) as string[];
+	let images = artwork.filter(artwork => artwork != null) as string[];
+	if (images.length === 2) {
+		images = [ images[0], images[1], images[1], images[0] ];
+	} else if (images.length === 3) {
+		images = [ images[0], images[1], images[2], images[0] ];
+	} else if (images.length > 4) {
+		images = [ images[0], images[1], images[2], images[3] ];
+	}
 	return xml.element("div.content")
 		.add(xml.element("div.entity-header")
 			.add(xml.element("div.entity-header__artwork")
 				.add(xml.element("div.entity-header__images")
-					.add(...artwork_candidates.map((artwork_candidate) => {
+					.add(...images.map((image) => {
 						return xml.element("img.entity-header__image")
-							.set("src", `/files/${artwork_candidate}/?token=${token}`);
+							.set("src", `/files/${image}/?token=${token}`);
 					}))
 				)
 				.add(makePlaybackButton())
