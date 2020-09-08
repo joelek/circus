@@ -77,6 +77,16 @@ namespace xml {
 
 let style = document.createElement('style');
 style.innerText = `
+	::-webkit-scrollbar {
+		background-color: transparent;
+		width: 8px;
+	}
+
+	::-webkit-scrollbar-thumb {
+		background-color: rgb(63, 63, 63);
+		border-radius: 4px;
+	}
+
 	* {
 		border: none;
 		font-size: 0px;
@@ -621,9 +631,41 @@ style.innerText = `
 		white-space: nowrap;
 	}
 
+
+
+
+
+
+
+
+
+
+
+
+
+	.scroll-container {
+		overflow-y: scroll;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	.media-player {
 		background-color: rgb(47, 47, 47);
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
+		margin: 0px auto;
+		max-width: 640px;
 		z-index: 1;
 	}
 `;
@@ -691,7 +733,7 @@ let token = localStorage.getItem('token');
 let logincontainer = document.createElement('div');
 document.body.appendChild(logincontainer);
 let mount = document.createElement('div');
-mount.style.setProperty("overflow-y", "scroll");
+mount.setAttribute("class", "scroll-container");
 
 
 
