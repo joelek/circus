@@ -91,7 +91,9 @@ style.innerText = `
 	}
 
 	body {
+		display: grid;
 		height: 100%;
+		grid-template-rows: min-content min-content 1fr;
 	}
 
 	[data-grid] {
@@ -219,7 +221,7 @@ style.innerText = `
 		background-color: rgb(31, 31, 31);
 		color: rgb(255, 255, 255);
 		font-family: "Nunito", sans-serif;
-		overflow-y: scroll;
+		overflow: hidden;
 		user-select: none;
 	}
 
@@ -316,6 +318,11 @@ style.innerText = `
 		background-size: cover;
 		padding-bottom: 100%;
 		position: relative;
+	}
+
+	.media-widget__image {
+		position: absolute;
+		width: 100%;
 	}
 
 	.media-widget__metadata {
@@ -451,6 +458,10 @@ style.innerText = `
 		position: absolute;
 	}
 
+	.entity-header__images > :nth-child(n+5) {
+		display: none;
+	}
+
 	.entity-header__image {
 		width: 100%;
 	}
@@ -510,10 +521,9 @@ style.innerText = `
 			bottom: 0%;
 			right: 0%;
 		transition: transform 0.1s;
-		z-index: 1;
 	}
 
-	@media(hover: hover) and (pointer: fine) {
+	@media (hover: hover) and (pointer: fine) {
 		.playback-button:hover {
 			transform: scale(1.25);
 		};
@@ -593,7 +603,7 @@ style.innerText = `
 		transition: padding 0.1s;
 	}
 
-	@media(hover: hover) and (pointer: fine) {
+	@media (hover: hover) and (pointer: fine) {
 		.playlist-item:hover {
 			padding-left: 16px;
 		}
@@ -613,6 +623,15 @@ style.innerText = `
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	.media-player {
+		background-color: rgb(47, 47, 47);
+		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
+		///position: fixed;
+		//bottom: 0px;
+		//width: 100%;
+		height: 64px;
 	}
 `;
 document.head.appendChild(style);
@@ -679,6 +698,19 @@ let token = localStorage.getItem('token');
 let logincontainer = document.createElement('div');
 document.body.appendChild(logincontainer);
 let mount = document.createElement('div');
+mount.style.setProperty("overflow-y", "scroll");
+
+
+
+
+/*
+    if (document.webkitFullscreenElement) {
+      document.webkitCancelFullScreen();
+    } else {
+      const el = document.documentElement;
+      el.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+    }
+ */
 req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?token=${token}`, {}, (status, response) => {
 	if (!(status >= 200 && status < 300)) {
 		localStorage.removeItem('token');
@@ -730,11 +762,16 @@ video.setAttribute('controls', '');
 video.setAttribute('playsinline', '');
 video.setAttribute("preload", "auto");
 video.style.setProperty('width', '100%');
-document.body.appendChild(video);
+//document.body.appendChild(video);
 let buffer = document.createElement("video");
 buffer.setAttribute("preload", "auto");
 buffer.style.setProperty("display", "none");
-document.body.appendChild(buffer);
+//document.body.appendChild(buffer);
+
+
+let mp = xml.element("div.media-player")
+	.render();
+document.body.appendChild(mp);
 
 let context: Context | null = null;
 let metadata: Metadata | null = null;
@@ -935,7 +972,7 @@ slider_knob_wrapper.appendChild(slider_knob);
 slider_indicator.appendChild(slider_knob_wrapper);
 slider_wrapper.appendChild(slider_indicator);
 chromecast.appendChild(slider_wrapper);
-document.body.appendChild(chromecast);
+//document.body.appendChild(chromecast);
 {
 	let percentage = 0.0;
 	function update(event: MouseEvent): void {
@@ -987,7 +1024,9 @@ function makeAlbum(album: api_response.AlbumResponse): xml.XElement {
 	];
 	return xml.element("div.media-widget")
 		.add(xml.element("div.media-widget__artwork")
-			.set("style", `background-image: url('/files/${album.cover_file_id}/?token=${token}');`)
+			.add(xml.element("img.media-widget__image")
+				.set("src", `/files/${album.cover_file_id}/?token=${token}`)
+			)
 			.add(makePlaybackButton())
 		)
 		.add(xml.element("div.media-widget__metadata")
@@ -1080,30 +1119,32 @@ let updateviewforuri = (uri: string): void => {
 			});
 			mount.appendChild(header);
 			for (let disc of response.discs) {
-				let content = xml.element("div.content").render();
-				let playlist = xml.element("div.playlist")
-					.add(xml.element("div.playlist__header")
-						.add(renderTextHeader("Disc " + disc.number.toString().padStart(2, "0"))))
-					.render();
-				let playlistct = xml.element("div.playlist__content").render();
-				playlist.appendChild(playlistct);
-				for (let track of disc.tracks) {
-					let rendered_track = xml.element("div.playlist-item")
-						.add(xml.element("div.playlist-item__title")
-							.add(xml.text(track.title))
-						)
-						.add(xml.element("div.playlist-item__subtitle")
-							.add(xml.text(track.artists.map((artist) => artist.title).join(" \u2022 ")))
-						)
+				if (disc.tracks.length > 0) {
+					let content = xml.element("div.content").render();
+					let playlist = xml.element("div.playlist")
+						.add(xml.element("div.playlist__header")
+							.add(renderTextHeader("Tracks")))
 						.render();
-					rendered_track.addEventListener("click", () => {
-						set_context(context);
-						play(context.files.indexOf(track.file_id));
-					});
-					playlistct.appendChild(rendered_track);
+					let playlistct = xml.element("div.playlist__content").render();
+					playlist.appendChild(playlistct);
+					for (let track of disc.tracks) {
+						let rendered_track = xml.element("div.playlist-item")
+							.add(xml.element("div.playlist-item__title")
+								.add(xml.text(track.title))
+							)
+							.add(xml.element("div.playlist-item__subtitle")
+								.add(xml.text(track.artists.map((artist) => artist.title).join(" \u2022 ")))
+							)
+							.render();
+						rendered_track.addEventListener("click", () => {
+							set_context(context);
+							play(context.files.indexOf(track.file_id));
+						});
+						playlistct.appendChild(rendered_track);
+					}
+					content.appendChild(playlist);
+					mount.appendChild(content);
 				}
-				content.appendChild(playlist);
-				mount.appendChild(content);
 			}
 		});
 	} else if ((parts = /^audio[/]albums[/]/.exec(uri)) !== null) {
@@ -1143,26 +1184,28 @@ let updateviewforuri = (uri: string): void => {
 			mount.appendChild(widget);
 			let content = xml.element("div.content").render();
 			mount.appendChild(content);
-			let mediaGrid = xml.element("div.media-grid")
-				.add(xml.element("div.media-grid__header")
-					.add(renderTextHeader("Discography"))
-				)
-				.render();
-			content.appendChild(mediaGrid);
-			let mediaGrid__content = xml.element("div.media-grid__content").render();
-			mediaGrid.appendChild(mediaGrid__content);
-			for (let album of response.albums) {
-				let widget = makeAlbum(album).render();
-				widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
-					let index = context.files.indexOf(album.discs[0].tracks[0].file_id);
-					set_context(context);
-					play(index);
-					event.stopPropagation();
-				});
-				widget.addEventListener('click', () => {
-					navigate(`audio/albums/${album.album_id}/`);
-				});
-				mediaGrid__content.appendChild(widget);
+			if (response.albums.length > 0) {
+				let mediaGrid = xml.element("div.media-grid")
+					.add(xml.element("div.media-grid__header")
+						.add(renderTextHeader("Discography"))
+					)
+					.render();
+				content.appendChild(mediaGrid);
+				let mediaGrid__content = xml.element("div.media-grid__content").render();
+				mediaGrid.appendChild(mediaGrid__content);
+				for (let album of response.albums) {
+					let widget = makeAlbum(album).render();
+					widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
+						let index = context.files.indexOf(album.discs[0].tracks[0].file_id);
+						set_context(context);
+						play(index);
+						event.stopPropagation();
+					});
+					widget.addEventListener('click', () => {
+						navigate(`audio/albums/${album.album_id}/`);
+					});
+					mediaGrid__content.appendChild(widget);
+				}
 			}
 		});
 	} else if ((parts = /^audio[/]artists[/]/.exec(uri)) !== null) {

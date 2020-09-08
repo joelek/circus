@@ -33,3 +33,5 @@ protobuf wrapped json on: 8009
 * Typed & lean API
 * Music genres
 * Stream history
+* Cookies instead of tokens with one-time launch urls to auth chromecast
+* Grid default?
