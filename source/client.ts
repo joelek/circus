@@ -1169,7 +1169,7 @@ let updateviewforuri = (uri: string): void => {
 				files: new Array<string>()
 			};
 			let duration_ms = 0;
-			for (let album of response.albums) {
+			for (let album of [ ...response.albums, ...response.appearances ]) {
 				for (let disc of album.discs) {
 					for (let track of disc.tracks) {
 						context.files.push(track.file_id);
