@@ -643,24 +643,20 @@ function computeDuration(ms: number): {
 
 let format_duration = (ms: number): string => {
 	let duration = computeDuration(ms);
-	if (duration.d >= 5) {
+	if (duration.d >= 10) {
 		return `${duration.d}d`;
 	} else if (duration.d >= 1) {
 		return `${duration.d}d ${duration.h}h`;
-	} else if (duration.h >= 5) {
+	} else if (duration.h >= 10) {
 		return `${duration.h}h`;
 	} else if (duration.h >= 1) {
 		return `${duration.h}h ${duration.m}m`;
-	} else if (duration.m >= 5) {
+	} else if (duration.m >= 10) {
 		return `${duration.m}m`;
 	} else if (duration.m >= 1) {
 		return `${duration.m}m ${duration.s}s`;
-	} else if (duration.s >= 5) {
-		return `${duration.s}s`;
-	} else if (duration.s >= 1) {
-		return `${duration.s}s ${duration.ms}ms`;
 	} else {
-		return "-";
+		return `${duration.s}s`;
 	}
 };
 
