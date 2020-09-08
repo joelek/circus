@@ -624,10 +624,6 @@ style.innerText = `
 	.media-player {
 		background-color: rgb(47, 47, 47);
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
-		///position: fixed;
-		//bottom: 0px;
-		//width: 100%;
-		height: 64px;
 		z-index: 1;
 	}
 `;
@@ -969,7 +965,7 @@ slider_knob_wrapper.appendChild(slider_knob);
 slider_indicator.appendChild(slider_knob_wrapper);
 slider_wrapper.appendChild(slider_indicator);
 chromecast.appendChild(slider_wrapper);
-//document.body.appendChild(chromecast);
+mp.appendChild(chromecast);
 {
 	let percentage = 0.0;
 	function update(event: MouseEvent): void {
