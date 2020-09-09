@@ -103,7 +103,7 @@ style.innerText = `
 	body {
 		display: grid;
 		height: 100%;
-		grid-template-rows: min-content min-content 1fr;
+		grid-template-rows: min-content 1fr;
 	}
 
 	[data-grid] {
@@ -246,7 +246,7 @@ style.innerText = `
 		color: rgb(31, 31, 31);
 		cursor: pointer;
 		font-size: 12px;
-		padding: 8px 32px;
+		padding: 4px 16px;
 	}
 
 	input {
@@ -664,9 +664,12 @@ style.innerText = `
 	.media-player {
 		background-color: rgb(47, 47, 47);
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
+		z-index: 1;
+	}
+
+	.media-player__content {
 		margin: 0px auto;
 		max-width: 640px;
-		z-index: 1;
 	}
 `;
 document.head.appendChild(style);
@@ -731,7 +734,6 @@ let req = <T extends api_response.ApiRequest, U extends api_response.ApiResponse
 
 let token = localStorage.getItem('token');
 let logincontainer = document.createElement('div');
-document.body.appendChild(logincontainer);
 let mount = document.createElement('div');
 mount.setAttribute("class", "scroll-container");
 
@@ -792,9 +794,12 @@ type Metadata = {
 		subtitles: Array<api_response.SubtitleResponse>;
 	} | undefined;
 };
-let mp = xml.element("div.media-player")
+let mpw = xml.element("div.media-player")
 	.render();
-document.body.appendChild(mp);
+let mp = xml.element("div.media-player__content")
+	.render();
+document.body.appendChild(mpw);
+mpw.appendChild(mp);
 
 let video = document.createElement('video');
 video.setAttribute('controls', '');
@@ -806,6 +811,7 @@ let buffer = document.createElement("video");
 buffer.setAttribute("preload", "auto");
 buffer.style.setProperty("display", "none");
 mp.appendChild(buffer);
+mp.appendChild(logincontainer);
 
 
 let context: Context | null = null;
@@ -967,11 +973,6 @@ let set_context_metadata = (md: Metadata): void => {
 	}
 };
 let chromecast = document.createElement("div");
-chromecast.classList.add("group");
-let ccp = document.createElement("p");
-ccp.textContent = "Chromecast";
-ccp.style.setProperty("font-size", "16px");
-chromecast.appendChild(ccp);
 let ccload = document.createElement('button');
 ccload.textContent = 'Cast';
 ccload.addEventListener('click', () => {
@@ -991,9 +992,8 @@ ccresume.addEventListener('click', () => {
 	req(`/api/cc/resume/`, { token: token }, (status, response) => {});
 });
 chromecast.appendChild(ccresume);
-
-
-
+mp.appendChild(chromecast);
+/*
 let slider_wrapper = document.createElement("div");
 slider_wrapper.classList.add("slider-widget");
 let slider_indicator = document.createElement("div");
@@ -1007,7 +1007,6 @@ slider_knob_wrapper.appendChild(slider_knob);
 slider_indicator.appendChild(slider_knob_wrapper);
 slider_wrapper.appendChild(slider_indicator);
 chromecast.appendChild(slider_wrapper);
-mp.appendChild(chromecast);
 {
 	let percentage = 0.0;
 	function update(event: MouseEvent): void {
@@ -1029,6 +1028,7 @@ mp.appendChild(chromecast);
 	}
 	slider_wrapper.addEventListener("mousedown", attach);
 }
+*/
 
 
 const makeTag = (content: string) => xml.element("div.media-tag")
