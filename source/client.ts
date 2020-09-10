@@ -112,7 +112,7 @@ style.innerText = `
 
 	[data-grid] {
 		margin: 0px auto;
-		max-width: 640px;
+		max-width: 960px;
 		min-width: 160px;
 		padding: 16px;
 	}
@@ -410,7 +410,7 @@ style.innerText = `
 
 	.content {
 		margin: 0px auto;
-		max-width: 640px;
+		max-width: 960px;
 		padding: 32px;
 	}
 
@@ -452,31 +452,6 @@ style.innerText = `
 
 
 	.entity-header {
-		display: grid;
-		gap: 24px;
-		grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-	}
-
-	.entity-header__artwork {
-		background-color: rgb(0, 0, 0);
-		border-radius: 2px;
-		padding-bottom: 100%;
-		overflow: hidden;
-		position: relative;
-	}
-
-	.entity-header__images {
-		display: grid;
-		gap: 0px;
-		grid-template-columns: repeat(auto-fit, minmax(50%, 1fr));
-		position: absolute;
-	}
-
-	.entity-header__image {
-		width: 100%;
-	}
-
-	.entity-header__metadata {
 		display: grid;
 		gap: 16px;
 		grid-auto-flow: row;
@@ -539,7 +514,7 @@ style.innerText = `
 		}
 
 		.playback-button:active {
-			transform: scale(0.9);
+			transform: none;
 		}
 	}
 
@@ -707,7 +682,7 @@ style.innerText = `
 		}
 
 		.icon-button:active {
-			transform: scale(0.9);
+			transform: none;
 		}
 	}
 
@@ -734,6 +709,7 @@ style.innerText = `
 	.app__navigation {
 		background-color: rgb(47, 47, 47);
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
+		overflow-y: scroll;
 		z-index: 1;
 	}
 `;
@@ -1189,39 +1165,18 @@ function renderTextHeader(title: string) {
 			.add(xml.text(title))
 		);
 }
-const makeEntityHeader = (title: string, subtitle: string | null, artwork: Array<string | null>, tags: Array<string> = []) => {
-	let images = artwork.filter(artwork => artwork != null) as string[];
-	if (images.length === 2) {
-		images = [ images[0], images[1], images[1], images[0] ];
-	} else if (images.length === 3) {
-		images = [ images[0], images[1], images[2], images[0] ];
-	} else if (images.length > 4) {
-		images = [ images[0], images[1], images[2], images[3] ];
-	}
-	return xml.element("div.content")
-		.add(xml.element("div.entity-header")
-			.add(xml.element("div.entity-header__artwork")
-				.add(xml.element("div.entity-header__images")
-					.add(...images.map((image) => {
-						return xml.element("img.entity-header__image")
-							.set("src", `/files/${image}/?token=${token}`);
-					}))
-				)
-				.add(makePlaybackButton())
+const makeEntityHeader = (title: string, subtitle: string | null, tags: Array<string> = []) => {
+	return xml.element("div.entity-header")
+		.add(xml.element("div.entity-header__titles")
+			.add(xml.element("div.entity-header__title")
+				.add(xml.text(title))
 			)
-			.add(xml.element("div.entity-header__metadata")
-				.add(xml.element("div.entity-header__titles")
-					.add(xml.element("div.entity-header__title")
-						.add(xml.text(title))
-					)
-					.add(subtitle == null ? null : xml.element("div.entity-header__subtitle")
-						.add(xml.text(subtitle))
-					)
-				)
-				.add(xml.element("div.entity-header__tags")
-					.add(...tags.map(makeTag))
-				)
+			.add(subtitle == null ? null : xml.element("div.entity-header__subtitle")
+				.add(xml.text(subtitle))
 			)
+		)
+		.add(xml.element("div.entity-header__tags")
+			.add(...tags.map(makeTag))
 		);
 }
 
@@ -1255,15 +1210,13 @@ let updateviewforuri = (uri: string): void => {
 					duration_ms += track.duration;
 				}
 			}
-			let header = makeEntityHeader(response.title, response.artists.map(artist => artist.title).join(" \u2022 "), [ response.cover_file_id ], [
-				"Album",
-				`${response.year}`,
-				format_duration(duration_ms)
-			]).render();
-			header.querySelector(".playback-button")?.addEventListener("click", () => {
-				set_context(context);
-				play(0);
-			});
+			let header = xml.element("div.content")
+				.add(makeEntityHeader(response.title, response.artists.map(artist => artist.title).join(" \u2022 "), [
+					"Album",
+					`${response.year}`,
+					format_duration(duration_ms)
+				]))
+				.render();
 			mount.appendChild(header);
 			for (let disc of response.discs) {
 				if (disc.tracks.length > 0) {
@@ -1320,14 +1273,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				}
 			}
-			let widget = makeEntityHeader(response.title, null, response.albums.map((album) => album.cover_file_id), [
-				"Artist",
-				format_duration(duration_ms)
-			]).render();
-			widget.querySelector(".playback-button")?.addEventListener("click", () => {
-				set_context(context);
-				play(0);
-			});
+			let widget = xml.element("div.content")
+				.add(makeEntityHeader(response.title, null, [
+					"Artist",
+					format_duration(duration_ms)
+				]))
+				.render();
 			mount.appendChild(widget);
 			let grids = [
 				{
