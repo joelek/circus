@@ -3,6 +3,7 @@ import * as utils from "./utils";
 import * as languages from "./languages";
 import { AuthToken } from "./database";
 import * as session from "./session";
+import { title } from "process";
 
 namespace xml {
 	export interface Node<A extends globalThis.Node> {
@@ -846,9 +847,12 @@ req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?toke
 	}
 });
 
-type Context = {
-	files: Array<string>;
+type ContextEntry = {
+	file_id: string,
+	title: string,
+	subtitle: string
 };
+type Context = ContextEntry[];
 type Metadata = {
 	[id: string]: {
 		subtitles: Array<api_response.SubtitleResponse>;
@@ -906,6 +910,17 @@ mp.appendChild(buffer);
 mp.appendChild(logincontainer);
 
 
+
+video.addEventListener("playing", () => {
+	console.log("playing");
+});
+
+video.addEventListener("pause", () => {
+	console.log("paused");
+});
+
+
+
 let context: Context | null = null;
 let metadata: Metadata | null = null;
 let context_index: number | null = null;
@@ -932,16 +947,16 @@ class Player {
 			this.index += 1;
 			this.two.play();
 			if (this.context) {
-				let id = this.context.files[this.index + 1];
-				this.one.src = `/files/${id}/?token=${token}`;
+				let id = this.context[this.index + 1];
+				this.one.src = `/files/${id.file_id}/?token=${token}`;
 			}
 		});
 		this.two.addEventListener("ended", () => {
 			this.index += 1;
 			this.one.play();
 			if (this.context) {
-				let id = this.context.files[this.index + 1];
-				this.two.src = `/files/${id}/?token=${token}`;
+				let id = this.context[this.index + 1];
+				this.two.src = `/files/${id.file_id}/?token=${token}`;
 			}
 		});
 		let sourceOne = this.audio.createMediaElementSource(this.one);
@@ -954,8 +969,8 @@ class Player {
 		this.audio.resume();
 		this.context = context; // TODO: Copy.
 		this.index = index;
-		this.one.src = `/files/${this.context.files[this.index + 0]}/?token=${token}`;
-		this.two.src = `/files/${this.context.files[this.index + 1]}/?token=${token}`;
+		this.one.src = `/files/${this.context[this.index + 0].file_id}/?token=${token}`;
+		this.two.src = `/files/${this.context[this.index + 1].file_id}/?token=${token}`;
 		this.one.play();
 	}
 }
@@ -963,7 +978,6 @@ class Player {
 type Deferred<A> = A | undefined;
 
 let player: Deferred<Player>;
-
 
 
 
@@ -980,10 +994,10 @@ let play = (index: number): void => {
 	}
 	player.play(context, index);
 */
-	let fid = context.files[index];
+	let fid = context[index].file_id;
 	video.src = `/files/${fid}/?token=${token}`;
-	if (index + 1 < context.files.length) {
-		let fid = context.files[index + 1];
+	if (index + 1 < context.length) {
+		let fid = context[index + 1].file_id;
 		buffer.src = `/files/${fid}/?token=${token}`;
 	}
 	while (video.lastChild !== null) {
@@ -1014,8 +1028,16 @@ let play = (index: number): void => {
 	}
 	video.play();
 	context_index = index;
+	let element = document.querySelector("div.media-player__title");
+	if (element) {
+		element.textContent = context[index].title;
+	}
+	let element2 = document.querySelector("div.media-player__subtitle");
+	if (element2) {
+		element2.textContent = context[index].subtitle;
+	}
 	session.setMetadata({
-		title: "Castaway"
+		title: context[index].title,
 	});
 };
 let playfile = (path: string): void => {
@@ -1032,12 +1054,12 @@ let seek = (offset_ms: number): void => {
 	video.currentTime = (offset_ms / 1000);
 };
 function playPreviousTrackInContext(): void {
-	if (context !== null && context_index !== null && context_index - 1 >= 0 && context_index - 1 < context.files.length) {
+	if (context !== null && context_index !== null && context_index - 1 >= 0 && context_index - 1 < context.length) {
 		play(context_index - 1);
 	}
 }
 let next = (): void => {
-	if (context !== null && context_index !== null && context_index >= 0 && context_index < context.files.length - 1) {
+	if (context !== null && context_index !== null && context_index >= 0 && context_index < context.length - 1) {
 		play(context_index + 1);
 	}
 };
@@ -1218,13 +1240,15 @@ let updateviewforuri = (uri: string): void => {
 	let parts: RegExpExecArray | null;
 	if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/`, {}, (status, response) => {
-			let context = {
-				files: new Array<string>()
-			};
+			let context = new Array<ContextEntry>();
 			let duration_ms = 0;
 			for (let disc of response.discs) {
 				for (let track of disc.tracks) {
-					context.files.push(track.file_id);
+					context.push({
+						file_id: track.file_id,
+						title: track.title,
+						subtitle: track.artists.map((artist) => artist.title).join(" \u2022 ")
+					});
 					duration_ms += track.duration;
 				}
 			}
@@ -1268,7 +1292,7 @@ let updateviewforuri = (uri: string): void => {
 							.render();
 						rendered_track.addEventListener("click", () => {
 							set_context(context);
-							play(context.files.indexOf(track.file_id));
+							play(context.findIndex(entry => entry.file_id === track.file_id));
 						});
 						playlistct.appendChild(rendered_track);
 					}
@@ -1291,14 +1315,16 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/`, {}, (status, response) => {
-			let context = {
-				files: new Array<string>()
-			};
+			let context = new Array<ContextEntry>();
 			let duration_ms = 0;
 			for (let album of response.albums) {
 				for (let disc of album.discs) {
 					for (let track of disc.tracks) {
-						context.files.push(track.file_id);
+						context.push({
+							file_id: track.file_id,
+							title: track.title,
+							subtitle: track.artists.map((artist) => artist.title).join(" \u2022 ")
+						});
 						duration_ms += track.duration;
 					}
 				}
@@ -1324,7 +1350,7 @@ let updateviewforuri = (uri: string): void => {
 				for (let album of response.albums) {
 					let widget = makeAlbum(album).render();
 					widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
-						let index = context.files.indexOf(album.discs[0].tracks[0].file_id);
+						let index = context.findIndex(entry => entry.file_id === album.discs[0].tracks[0].file_id);
 						set_context(context);
 						play(index);
 						event.stopPropagation();
@@ -1347,12 +1373,14 @@ let updateviewforuri = (uri: string): void => {
 				let mediaGrid__content = xml.element("div.media-grid__content").render();
 				mediaGrid.appendChild(mediaGrid__content);
 				for (let album of response.appearances) {
-					let context = {
-						files: new Array<string>()
-					};
+					let context = new Array<ContextEntry>();
 					for (let disc of album.discs) {
 						for (let track of disc.tracks) {
-							context.files.push(track.file_id);
+							context.push({
+								file_id: track.file_id,
+								title: track.title,
+								subtitle: track.artists.map((artist) => artist.title).join(" \u2022 ")
+							});
 						}
 					}
 					let widget = makeAlbum(album).render();
@@ -1386,18 +1414,20 @@ let updateviewforuri = (uri: string): void => {
 			a.style.setProperty('font-size', '24px');
 			a.innerText = `${response.title}`;
 			mount.appendChild(a);
-			let context = {
-				files: response.items.map((item) => {
-					return item.track.file_id;
-				})
-			};
+			let context = response.items.map((item) => {
+				return {
+					file_id: item.track.file_id,
+					title: item.track.title,
+					subtitle: ""
+				};
+			});
 			for (let item of response.items) {
 				let d = document.createElement('div');
 				d.style.setProperty('font-size', '16px');
 				d.innerText = `${item.track.title}`;
 				d.addEventListener('click', () => {
 					set_context(context);
-					play(context.files.indexOf(item.track.file_id));
+					play(context.findIndex(entry => entry.file_id === item.track.file_id));
 				});
 				mount.appendChild(d);
 			}
@@ -1459,12 +1489,16 @@ let updateviewforuri = (uri: string): void => {
 			let d = document.createElement('div');
 			d.innerText = `${response.title}`;
 			mount.appendChild(d);
-			let context: Context = {
-				files: response.seasons.reduce((files, season) => {
-					files.push(...season.episodes.map(episode => episode.file_id));
+			let context: Context = response.seasons.reduce((files, season) => {
+					files.push(...season.episodes.map(episode => {
+						return {
+							file_id: episode.file_id,
+							title: episode.title,
+							subtitle: "TODO"
+						};
+					}));
 					return files;
-				}, new Array<string>())
-			};
+				}, new Array<ContextEntry>());
 			let context_metadata: Metadata = {};
 			let nextEpisode = getNextEpisode(response);
 			{
@@ -1486,7 +1520,7 @@ let updateviewforuri = (uri: string): void => {
 				button.addEventListener("click", () => {
 					set_context(context);
 					set_context_metadata(context_metadata);
-					play(context.files.indexOf(nextEpisode.file_id));
+					play(context.findIndex(entry => entry.file_id === nextEpisode.file_id));
 				});
 				d2.appendChild(h4);
 				d2.appendChild(p1);
@@ -1512,7 +1546,7 @@ let updateviewforuri = (uri: string): void => {
 					d2.addEventListener('click', () => {
 						set_context(context);
 						set_context_metadata(context_metadata);
-						play(context.files.indexOf(episode.file_id));
+						play(context.findIndex(entry => entry.file_id === episode.file_id));
 					});
 					mount.appendChild(d2);
 				}
@@ -1554,9 +1588,11 @@ let updateviewforuri = (uri: string): void => {
 			d4.style.setProperty('font-size', '16px');
 			d4.innerText = response.summary || "";
 			mount.appendChild(d4);
-			let context: Context = {
-				files: [ response.file_id ]
-			};
+			let context: Context = [{
+				file_id: response.file_id,
+				title: response.title,
+				subtitle: "TODO"
+			}];
 			let context_metadata: Metadata = {};
 			context_metadata[response.file_id] = {
 				subtitles: response.subtitles
@@ -1566,7 +1602,7 @@ let updateviewforuri = (uri: string): void => {
 			d3.addEventListener('click', () => {
 				set_context(context);
 				set_context_metadata(context_metadata);
-				play(context.files.indexOf(response.file_id));
+				play(context.findIndex(entry => entry.file_id === response.file_id));
 				if (parts !== null && parts.length >= 3) {
 					let start_ms = Number.parseInt(parts[2], 10);
 					seek(start_ms);
@@ -1584,9 +1620,13 @@ let updateviewforuri = (uri: string): void => {
 			d2.style.setProperty('font-size', '24px');
 			d2.innerText = response.summary || "";
 			mount.appendChild(d2);
-			let context: Context = {
-				files: response.movie_parts.map((part) => part.file_id)
-			};
+			let context: Context = response.movie_parts.map((part) => {
+				return {
+					file_id: part.file_id,
+					title: response.title,
+					subtitle: ""
+				};
+			});
 			let context_metadata: Metadata = {};
 			let streamed = true;
 			let duration = 0;
@@ -1735,19 +1775,25 @@ let updateviewforuri = (uri: string): void => {
 				playfile(`/media/channels/${channel_id}/${Date.now()}/`);
 			});
 			mount.appendChild(button);
-			let context: Context = {
-				files: response.segments.reduce((files, segment) => {
-					if (segment.movie != null) {
-						return files.concat(segment.movie.movie_parts.map((movie_part) => {
-							return movie_part.file_id;
-						}));
-					}
-					if (segment.episode != null) {
-						return files.concat([segment.episode.file_id]);
-					}
-					return files;
-				}, new Array<string>())
-			};
+			let context: Context = response.segments.reduce((files, segment) => {
+				if (segment.movie != null) {
+					return files.concat(segment.movie.movie_parts.map((movie_part) => {
+						return {
+							file_id: movie_part.file_id,
+							title: "",
+							subtitle: ""
+						};
+					}));
+				}
+				if (segment.episode != null) {
+					return files.concat([{
+						file_id: segment.episode.file_id,
+						title: "",
+						subtitle: ""
+					}]);
+				}
+				return files;
+			}, new Array<ContextEntry>());
 			let context_metadata: Metadata = {};
 			for (let segment of response.segments) {
 				const movie = segment.movie;
@@ -1789,7 +1835,7 @@ let updateviewforuri = (uri: string): void => {
 						button.addEventListener("click", () => {
 							set_context(context);
 							set_context_metadata(context_metadata);
-							play(context.files.indexOf(movie_part.file_id));
+							play(context.findIndex(entry => entry.file_id === movie_part.file_id));
 						});
 						right.appendChild(h3);
 						right.appendChild(h4);
@@ -1826,7 +1872,7 @@ let updateviewforuri = (uri: string): void => {
 					button.addEventListener("click", () => {
 						set_context(context);
 						set_context_metadata(context_metadata);
-						play(context.files.indexOf(episode.file_id));
+						play(context.findIndex(entry => entry.file_id === episode.file_id));
 					});
 					d2.appendChild(h3);
 					d2.appendChild(h4);
