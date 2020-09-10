@@ -402,6 +402,18 @@ style.innerText = `
 
 
 
+	.image-box {
+		border-radius: 2px;
+		overflow: hidden;
+		padding-bottom: 100%;
+		position: relative;
+	}
+
+	.image-box__image {
+		position: absolute;
+		width: 100%;
+	}
+
 
 
 
@@ -467,7 +479,7 @@ style.innerText = `
 
 	.entity-header__title {
 		color: rgb(255, 255, 255);
-		font-size: 20px;
+		font-size: 24px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -475,7 +487,7 @@ style.innerText = `
 
 	.entity-header__subtitle {
 		color: rgb(159, 159, 159);
-		font-size: 16px;
+		font-size: 20px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -1159,6 +1171,12 @@ function makeAlbum(album: api_response.AlbumResponse): xml.XElement {
 			)
 		);
 }
+function makeImage(file_id: string) {
+	return xml.element("div.image-box")
+		.add(xml.element("img.image-box__image")
+			.set("src", `/files/${file_id}/?token=${token}`)
+		);
+}
 function renderTextHeader(title: string) {
 	return xml.element("div.text-header")
 		.add(xml.element("div.text-header__title")
@@ -1218,6 +1236,18 @@ let updateviewforuri = (uri: string): void => {
 				]))
 				.render();
 			mount.appendChild(header);
+			if (response.cover_file_id) {
+				mount.appendChild(xml.element("div.content")
+					.add(xml.element("div.media-grid")
+						.add(xml.element("div.media-grid__header")
+							.add(renderTextHeader("Artwork"))
+						)
+						.add(xml.element("div.media-grid__content")
+							.add(makeImage(response.cover_file_id))
+						)
+					)
+					.render());
+			}
 			for (let disc of response.discs) {
 				if (disc.tracks.length > 0) {
 					let content = xml.element("div.content").render();
@@ -1265,7 +1295,7 @@ let updateviewforuri = (uri: string): void => {
 				files: new Array<string>()
 			};
 			let duration_ms = 0;
-			for (let album of [ ...response.albums, ...response.appearances ]) {
+			for (let album of response.albums) {
 				for (let disc of album.discs) {
 					for (let track of disc.tracks) {
 						context.files.push(track.file_id);
@@ -1280,41 +1310,61 @@ let updateviewforuri = (uri: string): void => {
 				]))
 				.render();
 			mount.appendChild(widget);
-			let grids = [
-				{
-					title: "Discography",
-					albums: response.albums
-				},
-				{
-					title: "Apperances",
-					albums: response.appearances
+			if (response.albums.length > 0) {
+				let content = xml.element("div.content").render();
+				mount.appendChild(content);
+				let mediaGrid = xml.element("div.media-grid")
+					.add(xml.element("div.media-grid__header")
+						.add(renderTextHeader("Discography"))
+					)
+					.render();
+				content.appendChild(mediaGrid);
+				let mediaGrid__content = xml.element("div.media-grid__content").render();
+				mediaGrid.appendChild(mediaGrid__content);
+				for (let album of response.albums) {
+					let widget = makeAlbum(album).render();
+					widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
+						let index = context.files.indexOf(album.discs[0].tracks[0].file_id);
+						set_context(context);
+						play(index);
+						event.stopPropagation();
+					});
+					widget.addEventListener('click', () => {
+						navigate(`audio/albums/${album.album_id}/`);
+					});
+					mediaGrid__content.appendChild(widget);
 				}
-			];
-			for (let grid of grids) {
-				if (grid.albums.length > 0) {
-					let content = xml.element("div.content").render();
-					mount.appendChild(content);
-					let mediaGrid = xml.element("div.media-grid")
-						.add(xml.element("div.media-grid__header")
-							.add(renderTextHeader(grid.title))
-						)
-						.render();
-					content.appendChild(mediaGrid);
-					let mediaGrid__content = xml.element("div.media-grid__content").render();
-					mediaGrid.appendChild(mediaGrid__content);
-					for (let album of grid.albums) {
-						let widget = makeAlbum(album).render();
-						widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
-							let index = context.files.indexOf(album.discs[0].tracks[0].file_id);
-							set_context(context);
-							play(index);
-							event.stopPropagation();
-						});
-						widget.addEventListener('click', () => {
-							navigate(`audio/albums/${album.album_id}/`);
-						});
-						mediaGrid__content.appendChild(widget);
+			}
+			if (response.appearances.length > 0) {
+				let content = xml.element("div.content").render();
+				mount.appendChild(content);
+				let mediaGrid = xml.element("div.media-grid")
+					.add(xml.element("div.media-grid__header")
+						.add(renderTextHeader("Appearances"))
+					)
+					.render();
+				content.appendChild(mediaGrid);
+				let mediaGrid__content = xml.element("div.media-grid__content").render();
+				mediaGrid.appendChild(mediaGrid__content);
+				for (let album of response.appearances) {
+					let context = {
+						files: new Array<string>()
+					};
+					for (let disc of album.discs) {
+						for (let track of disc.tracks) {
+							context.files.push(track.file_id);
+						}
 					}
+					let widget = makeAlbum(album).render();
+					widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
+						set_context(context);
+						play(0);
+						event.stopPropagation();
+					});
+					widget.addEventListener('click', () => {
+						navigate(`audio/albums/${album.album_id}/`);
+					});
+					mediaGrid__content.appendChild(widget);
 				}
 			}
 		});
