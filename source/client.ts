@@ -79,13 +79,19 @@ let style = document.createElement('style');
 style.innerText = `
 	::-webkit-scrollbar {
 		background-color: transparent;
+		height: 8px;
 		width: 8px;
+	}
+
+	::-webkit-scrollbar-corner {
+		background-color: transparent;
 	}
 
 	::-webkit-scrollbar-thumb {
 		background-color: rgb(63, 63, 63);
 		border-radius: 4px;
 	}
+
 
 	* {
 		border: none;
@@ -101,9 +107,7 @@ style.innerText = `
 	}
 
 	body {
-		display: grid;
 		height: 100%;
-		grid-template-rows: min-content 1fr;
 	}
 
 	[data-grid] {
@@ -532,13 +536,13 @@ style.innerText = `
 	@media (hover: hover) and (pointer: fine) {
 		.playback-button:hover {
 			transform: scale(1.25);
-		};
+		}
+
+		.playback-button:active {
+			transform: scale(0.9);
+		}
 	}
 
-	.playback-button:active {
-		box-shadow: 0px 0px 4px 2px rgba(0, 0, 0, 0.25);
-		transform: none;
-	}
 
 
 
@@ -611,7 +615,7 @@ style.innerText = `
 
 	@media (hover: hover) and (pointer: fine) {
 		.playlist-item:hover {
-			padding-left: 16px;
+			padding-left: 32px;
 		}
 	}
 
@@ -638,38 +642,99 @@ style.innerText = `
 
 
 
+	.media-player {
+		align-items: center;
+		display: grid;
+		gap: 16px;
+		grid-template-columns: min-content 1fr min-content;
+	}
+
+	.media-player__links {
+		display: grid;
+		gap: 8px;
+		grid-auto-columns: minmax(auto, min-content);
+		grid-auto-flow: column;
+	}
+
+	.media-player__metadata {
+		display: grid;
+		gap: 8px;
+	}
+
+	.media-player__title {
+		color: rgb(255, 255, 255);
+		font-size: 16px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.media-player__subtitle {
+		color: rgb(159, 159, 159);
+		font-size: 12px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.media-player__controls {
+		display: grid;
+		gap: 8px;
+		grid-auto-columns: minmax(auto, min-content);
+		grid-auto-flow: column;
+	}
 
 
 
 
 
-	.scroll-container {
+
+
+
+	.icon-button {
+		background-color: rgb(255, 255, 255);
+		border-radius: 50%;
+		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
+		cursor: pointer;
+		fill: rgb(31, 31, 31);
+		padding: 8px;
+		transition: transform 0.1s;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.icon-button:hover {
+			transform: scale(1.25);
+		}
+
+		.icon-button:active {
+			transform: scale(0.9);
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+	.app {
+		display: grid;
+		height: 100%;
+		grid-template-rows: 1fr min-content;
+	}
+
+	.app__content {
 		overflow-y: scroll;
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	.media-player {
+	.app__navigation {
 		background-color: rgb(47, 47, 47);
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
 		z-index: 1;
-	}
-
-	.media-player__content {
-		margin: 0px auto;
-		max-width: 640px;
 	}
 `;
 document.head.appendChild(style);
@@ -735,8 +800,15 @@ let req = <T extends api_response.ApiRequest, U extends api_response.ApiResponse
 let token = localStorage.getItem('token');
 let logincontainer = document.createElement('div');
 let mount = document.createElement('div');
-mount.setAttribute("class", "scroll-container");
+let mountwrapper = document.createElement('div');
 
+
+let appcontainer = xml.element("div.app")
+	.render();
+document.body.appendChild(appcontainer);
+
+mountwrapper.setAttribute("class", "app__content");
+appcontainer.appendChild(mountwrapper);
 
 
 
@@ -766,7 +838,7 @@ req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?toke
 					token = response.token;
 					localStorage.setItem('token', token);
 					logincontainer.removeChild(container);
-					document.body.appendChild(mount);
+					mountwrapper.appendChild(mount);
 				}
 			});
 		};
@@ -782,7 +854,7 @@ req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?toke
 		container.appendChild(login);
 		logincontainer.appendChild(container);
 	} else {
-		document.body.appendChild(mount);
+		mountwrapper.appendChild(mount);
 	}
 });
 
@@ -794,11 +866,42 @@ type Metadata = {
 		subtitles: Array<api_response.SubtitleResponse>;
 	} | undefined;
 };
-let mpw = xml.element("div.media-player")
+let mpw = xml.element("div.app__navigation")
 	.render();
-let mp = xml.element("div.media-player__content")
+
+const makeHomeButton = () => xml.element("div.icon-button")
+	.add(xml.element("svg")
+		.set("width", "16px")
+		.set("height", "16px")
+		.set("viewBox", "0 0 16 16")
+		.add(xml.element("path")
+			.set("fill", "inherit")
+			.set("d", "M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.857,6.268c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z")
+		)
+	);
+
+let mp = xml.element("div.content")
+	.set("style", "padding: 16px;")
+	.add(xml.element("div.media-player")
+		.add(xml.element("div.media-player__links")
+			.add(makeHomeButton())
+		)
+		.add(xml.element("div.media-player__metadata")
+			.add(xml.element("div.media-player__title")
+				.add(xml.text("X" + "x".repeat(100)))
+			)
+			.add(xml.element("div.media-player__subtitle")
+				.add(xml.text("Y" + "y".repeat(100)))
+			)
+		)
+		.add(xml.element("div.media-player__controls")
+			.add(makeHomeButton())
+			.add(makeHomeButton())
+			.add(makeHomeButton())
+		)
+	)
 	.render();
-document.body.appendChild(mpw);
+appcontainer.appendChild(mpw);
 mpw.appendChild(mp);
 
 let video = document.createElement('video');
@@ -806,6 +909,7 @@ video.setAttribute('controls', '');
 video.setAttribute('playsinline', '');
 video.setAttribute("preload", "auto");
 video.style.setProperty('width', '100%');
+video.style.setProperty("display", "none");
 mp.appendChild(video);
 let buffer = document.createElement("video");
 buffer.setAttribute("preload", "auto");
@@ -973,6 +1077,7 @@ let set_context_metadata = (md: Metadata): void => {
 	}
 };
 let chromecast = document.createElement("div");
+chromecast.style.setProperty("display", "none");
 let ccload = document.createElement('button');
 ccload.textContent = 'Cast';
 ccload.addEventListener('click', () => {
