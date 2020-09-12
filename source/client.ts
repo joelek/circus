@@ -40,6 +40,12 @@ const isPlayingClass = new ObservableClass(false);
 const isPlaying = isPlayingClass.addObserver((state) => state);
 const currentlyPlayingClass = new ObservableClass<string | null>(null);
 const currentlyPlaying = currentlyPlayingClass.addObserver(state => state);
+const canSkipPrevClass = new ObservableClass(false);
+const canSkipPrev = canSkipPrevClass.addObserver((state) => state);
+const canPlayPauseClass = new ObservableClass(false);
+const canPlayPause = canPlayPauseClass.addObserver((state) => state);
+const canSkipNextClass = new ObservableClass(false);
+const canSkipNext = canSkipNextClass.addObserver((state) => state);
 
 namespace xml {
 	export interface Node<A extends globalThis.Node> {
@@ -767,6 +773,11 @@ style.innerText = `
 		transition: transform 0.1s;
 	}
 
+	.icon-button[data-enabled="false"] {
+		background-color: rgb(79, 79, 79);
+		cursor: default;
+	}
+
 	@media (hover: hover) and (pointer: fine) {
 		.icon-button:hover {
 			transform: scale(1.25);
@@ -1010,12 +1021,14 @@ let mp = xml.element("div.content")
 		)
 		.add(xml.element("div.media-player__controls")
 			.add(makeButton()
+				.bind("data-enabled", canSkipPrev)
 				.add(makePrevIcon())
 				.on("click", () => {
 					playPreviousTrackInContext();
 				})
 			)
 			.add(makeButton()
+				.bind("data-enabled", canPlayPause)
 				.add(makePlayIcon()
 					.bind("data-hide", isPlaying((isPlaying) => {
 						return isPlaying ? "true" : "false";
@@ -1031,6 +1044,7 @@ let mp = xml.element("div.content")
 				})
 			)
 			.add(makeButton()
+				.bind("data-enabled", canSkipNext)
 				.add(makeNextIcon())
 				.on("click", () => {
 					next();
@@ -1190,6 +1204,9 @@ let play = (index: number | null = context_index): void => {
 		title: context[index].title,
 	});
 	currentlyPlayingClass.updateState(fid);
+	canSkipPrevClass.updateState(index - 1 >= 0);
+	canPlayPauseClass.updateState(true);
+	canSkipNextClass.updateState(index + 1 < context.length);
 };
 function playpause() {
 	if (video.paused) {
