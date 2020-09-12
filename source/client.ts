@@ -46,6 +46,8 @@ const canPlayPauseClass = new ObservableClass(false);
 const canPlayPause = canPlayPauseClass.addObserver((state) => state);
 const canSkipNextClass = new ObservableClass(false);
 const canSkipNext = canSkipNextClass.addObserver((state) => state);
+const isVideoClass = new ObservableClass(false);
+const isVideo = isVideoClass.addObserver((state) => state);
 
 namespace xml {
 	export interface Node<A extends globalThis.Node> {
@@ -187,7 +189,7 @@ style.innerText = `
 	}
 
 	[data-hide="true"] {
-		display: none;
+		display: none !important;
 	}
 
 	[data-grid] {
@@ -805,13 +807,12 @@ style.innerText = `
 	}
 
 	.app__content {
-		overflow-y: scroll;
+		overflow-y: auto;
 	}
 
 	.app__navigation {
 		background-color: rgb(47, 47, 47);
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
-		overflow-y: scroll;
 		z-index: 1;
 	}
 `;
@@ -887,6 +888,14 @@ document.body.appendChild(appcontainer);
 
 mountwrapper.setAttribute("class", "app__content");
 appcontainer.appendChild(mountwrapper);
+
+isVideo((isVideo) => {
+	if (isVideo) {
+		mount.style.setProperty("display", "none");
+	} else {
+		mount.style.removeProperty("display");
+	}
+})
 
 
 
@@ -1060,22 +1069,31 @@ let video = document.createElement('video');
 video.setAttribute('controls', '');
 video.setAttribute('playsinline', '');
 video.setAttribute("preload", "auto");
+video.style.setProperty('height', '100%');
 video.style.setProperty('width', '100%');
-video.style.setProperty("display", "none");
-mp.appendChild(video);
 let buffer = document.createElement("video");
 buffer.setAttribute("preload", "auto");
 buffer.style.setProperty("display", "none");
-mp.appendChild(buffer);
 mp.appendChild(logincontainer);
 
+let videowrapper = xml.element("div")
+	.bind("data-hide", isVideo((isVideo) => {
+		return !isVideo;
+	}))
+	.set("style", "background-color: rgb(0, 0, 0); height: 100%;")
+	.render();
 
+mountwrapper.appendChild(videowrapper);
+videowrapper.appendChild(video);
+videowrapper.appendChild(buffer);
 
 video.addEventListener("playing", () => {
+	isVideoClass.updateState(video.videoWidth > 0 && video.videoHeight > 0);
 	isPlayingClass.updateState(true);
 });
 
 video.addEventListener("pause", () => {
+	isVideoClass.updateState(false);
 	isPlayingClass.updateState(false);
 });
 
