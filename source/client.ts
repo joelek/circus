@@ -4,6 +4,39 @@ import * as languages from "./languages";
 import { AuthToken } from "./database";
 import * as session from "./session";
 
+type Observer<A, B> = (value: A) => B;
+type Observable<A> = <B>(observer: Observer<A, B>) => Observable<B>;
+class ObservableClass<A> {
+	private state: A;
+	private observers: Array<Observer<A, any>>;
+
+	constructor(state: A) {
+		this.state = state;
+		this.observers = new Array<Observer<A, any>>();
+	}
+
+	addObserver<B>(observer: Observer<A, B>): Observable<B> {
+		let observable = new ObservableClass<B>(observer(this.state));
+		this.observers.push((state) => {
+			observable.updateState(observer(state));
+		});
+		return observable.addObserver.bind(observable);
+	}
+
+	updateState(state: A): void {
+		if (state === this.state) {
+			return;
+		}
+		this.state = state;
+		for (let observer of this.observers) {
+			observer(this.state);
+		}
+	}
+}
+
+const isPlayingClass = new ObservableClass(false);
+const isPlaying = isPlayingClass.addObserver((state) => state);
+
 namespace xml {
 	export interface Node<A extends globalThis.Node> {
 		render(): A;
@@ -29,6 +62,7 @@ namespace xml {
 		private tag: string;
 		private attributes: Map<string, string>;
 		private children: Array<Node<any>>;
+		private bound: Map<string, Observable<any>>;
 		private listeners: Map<keyof HTMLElementEventMap, Array<Listener<keyof HTMLElementEventMap>>>;
 
 		constructor(selector: string) {
@@ -36,6 +70,7 @@ namespace xml {
 			this.tag = parts[0];
 			this.attributes = new Map<string, string>();
 			this.children = new Array<Node<any>>();
+			this.bound = new Map<string, Observable<any>>();
 			this.listeners = new Map<keyof HTMLElementEventMap, Array<Listener<keyof HTMLElementEventMap>>>();
 			let classes = parts.slice(1).join(" ");
 			if (classes !== "") {
@@ -50,6 +85,11 @@ namespace xml {
 					this.children.push(node);
 				}
 			}
+			return this;
+		}
+
+		bind(key: string, observable: Observable<any>): this {
+			this.bound.set(key, observable);
 			return this;
 		}
 
@@ -73,6 +113,11 @@ namespace xml {
 			}
 			for (let [key, value] of this.attributes) {
 				element.setAttribute(key, value);
+			}
+			for (let [key, observable] of this.bound) {
+				observable((value) => {
+					element.setAttribute(key, `${value}`);
+				});
 			}
 			for (let child of this.children) {
 				element.appendChild(child.render());
@@ -129,6 +174,10 @@ style.innerText = `
 
 	body {
 		height: 100%;
+	}
+
+	[data-hide="true"] {
+		display: none;
 	}
 
 	[data-grid] {
@@ -957,9 +1006,18 @@ let mp = xml.element("div.content")
 				})
 			)
 			.add(makeButton()
-				.add(makePlayIcon())
+				.add(makePlayIcon()
+					.bind("data-hide", isPlaying((isPlaying) => {
+						return isPlaying ? "true" : "false";
+					}))
+				)
+				.add(makePauseIcon()
+					.bind("data-hide", isPlaying((isPlaying) => {
+						return isPlaying ? "false" : "true";
+					}))
+				)
 				.on("click", () => {
-					play(0);
+					playpause();
 				})
 			)
 			.add(makeButton()
@@ -990,11 +1048,11 @@ mp.appendChild(logincontainer);
 
 
 video.addEventListener("playing", () => {
-	console.log("playing");
+	isPlayingClass.updateState(true);
 });
 
 video.addEventListener("pause", () => {
-	console.log("paused");
+	isPlayingClass.updateState(false);
 });
 
 
@@ -1059,11 +1117,15 @@ let player: Deferred<Player>;
 
 
 
-let play = (index: number): void => {
-	if (index === context_index) {
+let play = (index: number | null = context_index): void => {
+	if (context === null) {
 		return;
 	}
-	if (context === null) {
+	if (index == null) {
+		return;
+	}
+	if (index === context_index) {
+		video.play();
 		return;
 	}
 /*
@@ -1118,6 +1180,16 @@ let play = (index: number): void => {
 		title: context[index].title,
 	});
 };
+function playpause() {
+	if (video.paused) {
+		video.play();
+	} else {
+		video.pause();
+	}
+}
+function pause() {
+	video.pause();
+}
 let playfile = (path: string): void => {
 	context = null;
 	context_index = null;
