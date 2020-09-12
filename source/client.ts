@@ -38,6 +38,8 @@ class ObservableClass<A> {
 
 const isPlayingClass = new ObservableClass(false);
 const isPlaying = isPlayingClass.addObserver((state) => state);
+const currentlyPlayingClass = new ObservableClass<string | null>(null);
+const currentlyPlaying = currentlyPlayingClass.addObserver(state => state);
 
 namespace xml {
 	export interface Node<A extends globalThis.Node> {
@@ -672,6 +674,11 @@ style.innerText = `
 		transition: padding 0.1s;
 	}
 
+	.playlist-item[data-playing="true"] {
+		border-left: 2px solid ${ACCENT_COLOR};
+		padding-left: 32px;
+	}
+
 	@media (hover: hover) and (pointer: fine) {
 		.playlist-item:hover {
 			padding-left: 32px;
@@ -1182,6 +1189,7 @@ let play = (index: number | null = context_index): void => {
 	session.setMetadata({
 		title: context[index].title,
 	});
+	currentlyPlayingClass.updateState(fid);
 };
 function playpause() {
 	if (video.paused) {
@@ -1419,30 +1427,30 @@ let updateviewforuri = (uri: string): void => {
 			}
 			for (let disc of response.discs) {
 				if (disc.tracks.length > 0) {
-					let content = xml.element("div.content").render();
-					let playlist = xml.element("div.playlist")
-						.add(xml.element("div.playlist__header")
-							.add(renderTextHeader("Tracks")))
-						.render();
-					let playlistct = xml.element("div.playlist__content").render();
-					playlist.appendChild(playlistct);
-					for (let track of disc.tracks) {
-						let rendered_track = xml.element("div.playlist-item")
-							.add(xml.element("div.playlist-item__title")
-								.add(xml.text(track.title))
+					let content = xml.element("div.content")
+						.add(xml.element("div.playlist")
+							.add(xml.element("div.playlist__header")
+								.add(renderTextHeader("Tracks"))
 							)
-							.add(xml.element("div.playlist-item__subtitle")
-								.add(xml.text(track.artists.map((artist) => artist.title).join(" \u2022 ")))
+							.add(xml.element("div.playlist__content")
+								.add(...disc.tracks.map((track) => xml.element("div.playlist-item")
+									.bind("data-playing", currentlyPlaying((currentlyPlaying) => {
+										return currentlyPlaying === track.file_id;
+									}))
+									.add(xml.element("div.playlist-item__title")
+										.add(xml.text(track.title))
+									)
+									.add(xml.element("div.playlist-item__subtitle")
+										.add(xml.text(track.artists.map((artist) => artist.title).join(" \u2022 ")))
+									)
+									.on("click", () => {
+										set_context(context);
+										play(context.findIndex(entry => entry.file_id === track.file_id));
+									})
+								))
 							)
-							.render();
-						rendered_track.addEventListener("click", () => {
-							set_context(context);
-							play(context.findIndex(entry => entry.file_id === track.file_id));
-						});
-						playlistct.appendChild(rendered_track);
-					}
-					content.appendChild(playlist);
-					mount.appendChild(content);
+						);
+					mount.appendChild(content.render());
 				}
 			}
 		});
