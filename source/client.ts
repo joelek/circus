@@ -188,8 +188,12 @@ style.innerText = `
 		height: 100%;
 	}
 
-	.logo {
-		color: ${ACCENT_COLOR};
+	.page-header {
+		background-color: ${ACCENT_COLOR};
+	}
+
+	.page-header__title {
+		color: rgb(255, 255, 255);
 		font-family: "Pacifico", cursive;
 		font-size: 32px;
 		white-space: nowrap;
@@ -510,6 +514,7 @@ style.innerText = `
 
 
 	.content {
+		box-sizing: border-box;
 		margin: 0px auto;
 		max-width: 960px;
 		padding: 32px;
@@ -1020,7 +1025,6 @@ let mp = xml.element("div.content")
 	.add(xml.element("div.media-player")
 		.add(xml.element("div.media-player__links")
 			.add(makeButton()
-				.set("style", `background-color: ${ACCENT_COLOR}`)
 				.add(makeHomeIcon())
 				.on("click", () => {
 					navigate("/");
@@ -1432,9 +1436,11 @@ let updateviewforuri = (uri: string): void => {
 	while (mount.lastChild !== null) {
 		mount.removeChild(mount.lastChild);
 	}
-	mount.appendChild(xml.element("div.content")
-		.add(xml.element("div.logo")
-			.add(xml.text("Zenplayer"))
+	mount.appendChild(xml.element("div.page-header")
+		.add(xml.element("div.content")
+			.add(xml.element("div.page-header__title")
+				.add(xml.text("Zenplayer"))
+			)
 		)
 	.render());
 	let parts: RegExpExecArray | null;
