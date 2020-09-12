@@ -21,23 +21,29 @@ namespace xml {
 		}
 	}
 
+	export interface Listener<A extends keyof HTMLElementEventMap> {
+		(event: HTMLElementEventMap[A]): void;
+	}
+
 	export class XElement implements Node<globalThis.Element> {
 		private tag: string;
 		private attributes: Map<string, string>;
 		private children: Array<Node<any>>;
+		private listeners: Map<keyof HTMLElementEventMap, Array<Listener<keyof HTMLElementEventMap>>>;
 
 		constructor(selector: string) {
 			let parts = selector.split(".");
 			this.tag = parts[0];
 			this.attributes = new Map<string, string>();
 			this.children = new Array<Node<any>>();
+			this.listeners = new Map<keyof HTMLElementEventMap, Array<Listener<keyof HTMLElementEventMap>>>();
 			let classes = parts.slice(1).join(" ");
 			if (classes !== "") {
 				this.attributes.set("class", classes);
 			}
 		}
 
-		add(...nodes: Array<Node<any> | null>): this {
+		add(...nodes: Array<Node<any> | null | undefined>): this {
 			// TODO: Detach node from current parent.
 			for (let node of nodes) {
 				if (node != null) {
@@ -47,9 +53,24 @@ namespace xml {
 			return this;
 		}
 
+		on<A extends keyof HTMLElementEventMap>(kind: A, listener: Listener<A>): this {
+			let listeners = this.listeners.get(kind);
+			if (listeners == null) {
+				listeners = new Array<Listener<A>>();
+				this.listeners.set(kind, listeners);
+			}
+			listeners.push(listener);
+			return this;
+		}
+
 		render(): globalThis.Element {
 			let ns = ["svg", "path"].indexOf(this.tag) >= 0 ? "http://www.w3.org/2000/svg" : "http://www.w3.org/1999/xhtml";
 			let element = document.createElementNS(ns, this.tag);
+			for (let [kind, listeners] of this.listeners) {
+				for (let listener of listeners) {
+					element.addEventListener(kind, listener);
+				}
+			}
 			for (let [key, value] of this.attributes) {
 				element.setAttribute(key, value);
 			}
@@ -865,10 +886,8 @@ const makeNextIcon = () => xml.element("svg")
 	.set("height", "16px")
 	.set("viewBox", "0 0 16 16")
 	.add(xml.element("path")
-		.set("fill", "inherit")
 		.set("d", "M1,15.268c-0.173,0-0.345-0.045-0.5-0.134C0.19,14.955,0,14.625,0,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C0.655,0.776,0.827,0.732,1,0.732s0.345,0.044,0.5,0.134l10.855,6.269c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L1.5,15.134C1.345,15.223,1.173,15.268,1,15.268z")
 	).add(xml.element("path")
-		.set("fill", "inherit")
 		.set("d", "M13,16c-0.553,0-1-0.447-1-1V1c0-0.552,0.447-1,1-1h2c0.553,0,1,0.448,1,1v14c0,0.553-0.447,1-1,1H13z")
 	);
 
@@ -877,10 +896,8 @@ const makePrevIcon = () => xml.element("svg")
 	.set("height", "16px")
 	.set("viewBox", "0 0 16 16")
 	.add(xml.element("path")
-		.set("fill", "inherit")
 		.set("d", "M15,15.268c-0.173,0-0.346-0.045-0.5-0.134L3.645,8.867c-0.31-0.179-0.5-0.509-0.5-0.866s0.19-0.688,0.5-0.866L14.5,0.866c0.154-0.089,0.327-0.134,0.5-0.134s0.346,0.044,0.5,0.134C15.81,1.044,16,1.375,16,1.732v12.536c0,0.357-0.19,0.688-0.5,0.866C15.346,15.223,15.173,15.268,15,15.268z")
 	).add(xml.element("path")
-		.set("fill", "inherit")
 		.set("d", "M1,16c-0.552,0-1-0.447-1-1V1c0-0.552,0.448-1,1-1h2c0.552,0,1,0.448,1,1v14c0,0.553-0.448,1-1,1H1z")
 	);
 
@@ -889,7 +906,6 @@ const makeHomeIcon = () => xml.element("svg")
 	.set("height", "16px")
 	.set("viewBox", "0 0 16 16")
 	.add(xml.element("path")
-		.set("fill", "inherit")
 		.set("d", "M3,16c-0.552,0-1-0.447-1-1V9H1.334C0.929,9,0.563,8.755,0.409,8.38C0.255,8.005,0.342,7.574,0.631,7.289l6.662-6.59C7.488,0.506,7.742,0.41,7.996,0.41c0.256,0,0.512,0.098,0.707,0.293L11,3V2c0-0.552,0.447-1,1-1h1c0.553,0,1,0.448,1,1v4l1.293,1.293c0.286,0.286,0.372,0.716,0.217,1.09C15.355,8.756,14.99,9,14.586,9H14v6c0,0.553-0.447,1-1,1H3z")
 	);
 
@@ -898,7 +914,6 @@ const makePlayIcon = () => xml.element("svg")
 	.set("height", "16px")
 	.set("viewBox", "0 0 16 16")
 	.add(xml.element("path")
-		.set("fill", "inherit")
 		.set("d", "M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.855,6.269c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z")
 	);
 
@@ -907,35 +922,52 @@ const makePauseIcon = () => xml.element("svg")
 	.set("height", "16px")
 	.set("viewBox", "0 0 16 16")
 	.add(xml.element("path")
-		.set("fill", "inherit")
 		.set("d", "M3,16c-0.552,0-1-0.447-1-1V1c0-0.552,0.448-1,1-1h2c0.552,0,1,0.448,1,1v14c0,0.553-0.448,1-1,1H3z")
 	)
 	.add(xml.element("path")
-		.set("fill", "inherit")
 		.set("d", "M11,16c-0.553,0-1-0.447-1-1V1c0-0.552,0.447-1,1-1h2c0.553,0,1,0.448,1,1v14c0,0.553-0.447,1-1,1H11z")
 	);
 
-const makeHomeButton = () => xml.element("div.icon-button")
-	.add(makeHomeIcon());
+const makeButton = () => xml.element("div.icon-button");
 
 let mp = xml.element("div.content")
 	.set("style", "padding: 16px;")
 	.add(xml.element("div.media-player")
 		.add(xml.element("div.media-player__links")
-			.add(makeHomeButton())
+			.add(makeButton()
+				.add(makeHomeIcon())
+				.on("click", () => {
+					navigate("/");
+				})
+			)
 		)
 		.add(xml.element("div.media-player__metadata")
 			.add(xml.element("div.media-player__title")
-				.add(xml.text("X" + "x".repeat(100)))
+				.add(xml.text(""))
 			)
 			.add(xml.element("div.media-player__subtitle")
-				.add(xml.text("Y" + "y".repeat(100)))
+				.add(xml.text(""))
 			)
 		)
 		.add(xml.element("div.media-player__controls")
-			.add(makeHomeButton())
-			.add(makeHomeButton())
-			.add(makeHomeButton())
+			.add(makeButton()
+				.add(makePrevIcon())
+				.on("click", () => {
+					playPreviousTrackInContext();
+				})
+			)
+			.add(makeButton()
+				.add(makePlayIcon())
+				.on("click", () => {
+					play(0);
+				})
+			)
+			.add(makeButton()
+				.add(makeNextIcon())
+				.on("click", () => {
+					next();
+				})
+			)
 		)
 	)
 	.render();
