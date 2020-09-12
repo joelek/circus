@@ -188,6 +188,13 @@ style.innerText = `
 		height: 100%;
 	}
 
+	.logo {
+		color: ${ACCENT_COLOR};
+		font-family: "Pacifico", cursive;
+		font-size: 32px;
+		white-space: nowrap;
+	}
+
 	[data-hide="true"] {
 		display: none !important;
 	}
@@ -1425,6 +1432,11 @@ let updateviewforuri = (uri: string): void => {
 	while (mount.lastChild !== null) {
 		mount.removeChild(mount.lastChild);
 	}
+	mount.appendChild(xml.element("div.content")
+		.add(xml.element("div.logo")
+			.add(xml.text("Zenplayer"))
+		)
+	.render());
 	let parts: RegExpExecArray | null;
 	if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/`, {}, (status, response) => {
