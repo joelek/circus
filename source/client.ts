@@ -4,6 +4,8 @@ import * as languages from "./languages";
 import { AuthToken } from "./database";
 import * as session from "./session";
 
+const ACCENT_COLOR = "rgb(223, 79, 127)";
+
 type Observer<A, B> = (value: A) => B;
 type Observable<A> = <B>(observer: Observer<A, B>) => Observable<B>;
 class ObservableClass<A> {
@@ -984,6 +986,7 @@ let mp = xml.element("div.content")
 	.add(xml.element("div.media-player")
 		.add(xml.element("div.media-player__links")
 			.add(makeButton()
+				.set("style", `background-color: ${ACCENT_COLOR}`)
 				.add(makeHomeIcon())
 				.on("click", () => {
 					navigate("/");
