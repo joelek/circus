@@ -194,9 +194,23 @@ style.innerText = `
 
 	.page-header__title {
 		color: rgb(255, 255, 255);
+		cursor: pointer;
 		font-family: "Pacifico", cursive;
 		font-size: 32px;
+		transform-origin: left;
+		transition: transform 0.1s;
 		white-space: nowrap;
+	}
+
+
+	@media (hover: hover) and (pointer: fine) {
+		.page-header__title:hover {
+			transform: scale(1.25);
+		}
+
+		.page-header__title:active {
+			transform: none;
+		}
 	}
 
 	[data-hide="true"] {
@@ -732,14 +746,7 @@ style.innerText = `
 		align-items: center;
 		display: grid;
 		gap: 16px;
-		grid-template-columns: min-content 1fr min-content;
-	}
-
-	.media-player__links {
-		display: grid;
-		gap: 8px;
-		grid-auto-columns: minmax(auto, min-content);
-		grid-auto-flow: column;
+		grid-template-columns: 1fr min-content;
 	}
 
 	.media-player__metadata {
@@ -907,8 +914,12 @@ document.body.appendChild(appcontainer);
 
 let appheader = xml.element("div.app__header")
 	.add(xml.element("div.content")
+		.set("style", "padding: 24px")
 		.add(xml.element("div.page-header__title")
 			.add(xml.text("Zenplayer"))
+			.on("click", () => {
+				navigate("/");
+			})
 		)
 	)
 	.render();
@@ -1037,16 +1048,8 @@ const makePauseIcon = () => xml.element("svg")
 const makeButton = () => xml.element("div.icon-button");
 
 let mp = xml.element("div.content")
-	.set("style", "padding: 16px;")
+	.set("style", "padding: 24px;")
 	.add(xml.element("div.media-player")
-		.add(xml.element("div.media-player__links")
-			.add(makeButton()
-				.add(makeHomeIcon())
-				.on("click", () => {
-					navigate("/");
-				})
-			)
-		)
 		.add(xml.element("div.media-player__metadata")
 			.add(xml.element("div.media-player__title")
 				.add(xml.text(""))
@@ -1709,7 +1712,7 @@ let updateviewforuri = (uri: string): void => {
 						return {
 							file_id: episode.file_id,
 							title: episode.title,
-							subtitle: "TODO"
+							subtitle: [response.title, utils.formatSeasonEpisode(season.number, episode.number)].join(" \u2022 ")
 						};
 					}));
 					return files;
@@ -1806,7 +1809,7 @@ let updateviewforuri = (uri: string): void => {
 			let context: Context = [{
 				file_id: response.file_id,
 				title: response.title,
-				subtitle: "TODO"
+				subtitle: ["TOOD", utils.formatSeasonEpisode(0, response.number)].join(" \u2022 ")
 			}];
 			let context_metadata: Metadata = {};
 			context_metadata[response.file_id] = {
@@ -1839,7 +1842,7 @@ let updateviewforuri = (uri: string): void => {
 				return {
 					file_id: part.file_id,
 					title: response.title,
-					subtitle: ""
+					subtitle: `${response.year}`
 				};
 			});
 			let context_metadata: Metadata = {};
@@ -1992,10 +1995,11 @@ let updateviewforuri = (uri: string): void => {
 			mount.appendChild(button);
 			let context: Context = response.segments.reduce((files, segment) => {
 				if (segment.movie != null) {
+					let title = segment.movie.title;
 					return files.concat(segment.movie.movie_parts.map((movie_part) => {
 						return {
 							file_id: movie_part.file_id,
-							title: "",
+							title: title,
 							subtitle: ""
 						};
 					}));
@@ -2003,7 +2007,7 @@ let updateviewforuri = (uri: string): void => {
 				if (segment.episode != null) {
 					return files.concat([{
 						file_id: segment.episode.file_id,
-						title: "",
+						title: segment.episode.title,
 						subtitle: ""
 					}]);
 				}
