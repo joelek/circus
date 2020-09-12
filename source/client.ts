@@ -815,7 +815,13 @@ style.innerText = `
 	.app {
 		display: grid;
 		height: 100%;
-		grid-template-rows: 1fr min-content;
+		grid-template-rows: min-content 1fr min-content;
+	}
+
+	.app__header {
+		background-color: ${ACCENT_COLOR};
+		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
+		z-index: 1;
 	}
 
 	.app__content {
@@ -897,6 +903,16 @@ let mountwrapper = document.createElement('div');
 let appcontainer = xml.element("div.app")
 	.render();
 document.body.appendChild(appcontainer);
+
+
+let appheader = xml.element("div.app__header")
+	.add(xml.element("div.content")
+		.add(xml.element("div.page-header__title")
+			.add(xml.text("Zenplayer"))
+		)
+	)
+	.render();
+appcontainer.appendChild(appheader);
 
 mountwrapper.setAttribute("class", "app__content");
 appcontainer.appendChild(mountwrapper);
@@ -1436,13 +1452,6 @@ let updateviewforuri = (uri: string): void => {
 	while (mount.lastChild !== null) {
 		mount.removeChild(mount.lastChild);
 	}
-	mount.appendChild(xml.element("div.page-header")
-		.add(xml.element("div.content")
-			.add(xml.element("div.page-header__title")
-				.add(xml.text("Zenplayer"))
-			)
-		)
-	.render());
 	let parts: RegExpExecArray | null;
 	if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/`, {}, (status, response) => {
