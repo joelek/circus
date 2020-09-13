@@ -48,6 +48,8 @@ const canSkipNextClass = new ObservableClass(false);
 const canSkipNext = canSkipNextClass.addObserver((state) => state);
 const isVideoClass = new ObservableClass(false);
 const isVideo = isVideoClass.addObserver((state) => state);
+const isChromecastClass = new ObservableClass(false);
+const isChromecast = isChromecastClass.addObserver((state) => state);
 
 namespace xml {
 	export interface Node<A extends globalThis.Node> {
@@ -1048,7 +1050,7 @@ const makePauseIcon = () => xml.element("svg")
 const makeButton = () => xml.element("div.icon-button");
 
 let mp = xml.element("div.content")
-	.set("style", "padding: 24px;")
+	.set("style", "padding: 16px;")
 	.add(xml.element("div.media-player")
 		.add(xml.element("div.media-player__metadata")
 			.add(xml.element("div.media-player__title")
@@ -1087,6 +1089,12 @@ let mp = xml.element("div.content")
 				.add(makeNextIcon())
 				.on("click", () => {
 					next();
+				})
+			)
+			.add(makeButton()
+				.add(makeHomeIcon())
+				.on("click", () => {
+					transferPlaybackToChromecast();
 				})
 			)
 		)
@@ -1256,6 +1264,17 @@ let play = (index: number | null = context_index): void => {
 	canPlayPauseClass.updateState(true);
 	canSkipNextClass.updateState(index + 1 < context.length);
 };
+function transferPlaybackToChromecast() {
+	isChromecastClass.updateState(true);
+	video.pause();
+	req(`/api/cc/load/`, { context, index: context_index, token: token, origin: window.location.origin }, (status, response) => {});
+}
+function pauseChromecast() {
+	req(`/api/cc/pause/`, { token: token }, (status, response) => {});
+}
+function resumeChromecast() {
+	req(`/api/cc/resume/`, { token: token }, (status, response) => {});
+}
 function playpause() {
 	if (video.paused) {
 		video.play();
@@ -1312,28 +1331,7 @@ let set_context_metadata = (md: Metadata): void => {
 		context_index = null;
 	}
 };
-let chromecast = document.createElement("div");
-chromecast.style.setProperty("display", "none");
-let ccload = document.createElement('button');
-ccload.textContent = 'Cast';
-ccload.addEventListener('click', () => {
-	video.pause();
-	req(`/api/cc/load/`, { context, index: context_index, token: token, origin: window.location.origin }, (status, response) => {});
-});
-chromecast.appendChild(ccload);
-let ccpause = document.createElement('button');
-ccpause.textContent = 'Pause';
-ccpause.addEventListener('click', () => {
-	req(`/api/cc/pause/`, { token: token }, (status, response) => {});
-});
-chromecast.appendChild(ccpause);
-let ccresume = document.createElement('button');
-ccresume.textContent = 'Resume';
-ccresume.addEventListener('click', () => {
-	req(`/api/cc/resume/`, { token: token }, (status, response) => {});
-});
-chromecast.appendChild(ccresume);
-mp.appendChild(chromecast);
+
 /*
 let slider_wrapper = document.createElement("div");
 slider_wrapper.classList.add("slider-widget");
