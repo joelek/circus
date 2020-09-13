@@ -49,9 +49,9 @@ type Player = {
 	on(kind: "status", cb: { (status: Status): void }): void;
 };
 
-type Context = {
-	files: Array<string>;
-};
+type Context = [{
+	file_id: string;
+}];
 
 type STTrack = {
 	trackId: number;
@@ -84,7 +84,7 @@ let make_media_object = (): MediaObject | null => {
 	if (gcontext === null || gindex === null) {
 		return null;
 	}
-	let file = data.files_index[gcontext.files[gindex]];
+	let file = data.files_index[gcontext[gindex].file_id];
 	if (file === undefined) {
 		return null;
 	}
