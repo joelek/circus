@@ -7,6 +7,7 @@
 	},
 	"dependencies": {
 		"@joelek/ts-autoguard": "github:joelek/ts-autoguard",
+		"@joelek/ts-sockets": "github:joelek/ts-sockets",
 		"castv2-client": "^1.2.0",
 		"node-dns-sd": "^0.4.1"
 	},
