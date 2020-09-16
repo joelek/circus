@@ -22,7 +22,7 @@
 		"build": "rm -rf ./build/ && npm run codegen && npx tsc --build && npm run bundle",
 		"bundle": "npx browserify ./build/client.js --outfile ./build/client.bundle.js",
 		"clean": "rm -rf ./build/ ./node_modules/",
-		"codegen": "npx autoguard --standalone=false"
+		"codegen": "npx autoguard"
 	},
 	"version": "1.0.0"
 }
