@@ -5,12 +5,9 @@ import { AuthToken } from "./database";
 import * as session from "./session";
 import { Autoguard as messages } from "./messages";
 import { TypeSocketClient } from "./typesockets";
+import { Deferred } from "./shared";
 
 let tsc = TypeSocketClient.connect(messages);
-
-tsc.addEventListener("sys", "connect", () => {
-	console.log("You are connected!");
-});
 
 const ACCENT_COLOR = "rgb(223, 79, 127)";
 
@@ -56,8 +53,17 @@ const canSkipNextClass = new ObservableClass(false);
 const canSkipNext = canSkipNextClass.addObserver((state) => state);
 const isVideoClass = new ObservableClass(false);
 const isVideo = isVideoClass.addObserver((state) => state);
-const isChromecastClass = new ObservableClass(false);
-const isChromecast = isChromecastClass.addObserver((state) => state);
+const chromecastClass = new ObservableClass<Deferred<string>>(undefined);
+const chromecast = chromecastClass.addObserver((state) => state);
+
+tsc.addEventListener("app", "DeviceAvailable", (message) => {
+	console.log(message);
+	chromecastClass.updateState(message.ip);
+});
+
+tsc.addEventListener("sys", "connect", (message) => {
+	tsc.send("GetDeviceAvailable", {});
+});
 
 namespace xml {
 	export interface Node<A extends globalThis.Node> {
@@ -1100,6 +1106,9 @@ let mp = xml.element("div.content")
 				})
 			)
 			.add(makeButton()
+				.bind("data-hide", chromecast((chromecast) => {
+					return chromecast ? "false" : "true";
+				}))
 				.add(makeHomeIcon())
 				.on("click", () => {
 					transferPlaybackToChromecast();
@@ -1199,8 +1208,6 @@ class Player {
 	}
 }
 
-type Deferred<A> = A | undefined;
-
 let player: Deferred<Player>;
 
 
@@ -1273,7 +1280,6 @@ let play = (index: number | null = context_index): void => {
 	canSkipNextClass.updateState(index + 1 < context.length);
 };
 function transferPlaybackToChromecast() {
-	isChromecastClass.updateState(true);
 	video.pause();
 	req(`/api/cc/load/`, { context, index: context_index, token: token, origin: window.location.origin }, (status, response) => {});
 }

@@ -17,10 +17,7 @@ export type TypeSocketClientMessageMap<A extends stdlib.routing.MessageMap<A>> =
 		}
 	},
 	app: {
-		[B in keyof A]: {
-			connection_id: string,
-			data: A[B]
-		}
+		[B in keyof A]: A[B]
 	}
 };
 

@@ -13,11 +13,37 @@ import * as subsearch from "./subsearch";
 import { FileEntry, CueEntry } from "./database";
 import { TypeSocketServer } from "./typesockets";
 import { Autoguard as messages } from "./messages";
+import * as chromecast from "./chromecast";
+import { Deferred } from "./shared";
 
 let tss = new TypeSocketServer(messages);
+let connections = new Set<string>();
 
 tss.addEventListener("sys", "connect", (message) => {
-	console.log("Connection from " + message.connection_id);
+	connections.add(message.connection_id);
+});
+tss.addEventListener("sys", "disconnect", (message) => {
+	connections.delete(message.connection_id);
+});
+
+let ghost: Deferred<string>;
+
+tss.addEventListener("app", "GetDeviceAvailable", (message) => {
+	tss.send("DeviceAvailable", message.connection_id, {
+		ip: ghost
+	});
+});
+
+chromecast.observe('_googlecast._tcp.local', (host) => {
+	console.log(host);
+	if (ghost !== host) {
+		ghost = host;
+		for (let connection of connections) {
+			tss.send("DeviceAvailable", connection, {
+				ip: host
+			});
+		}
+	}
 });
 
 let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>): Partial<libhttp.IncomingHttpHeaders> => {

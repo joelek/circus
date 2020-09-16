@@ -2,16 +2,29 @@
 
 import { guards as autoguard } from "@joelek/ts-autoguard";
 
-export type DeviceAvailable = {};
+export type DeviceAvailable = {
+	"ip"?: string
+};
 
 export const DeviceAvailable = autoguard.Object.of({
+	"ip": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.String
+	)
+});
+
+export type GetDeviceAvailable = {};
+
+export const GetDeviceAvailable = autoguard.Object.of({
 
 });
 
 export type Autoguard = {
-	"DeviceAvailable": DeviceAvailable
+	"DeviceAvailable": DeviceAvailable,
+	"GetDeviceAvailable": GetDeviceAvailable
 };
 
 export const Autoguard = {
-	"DeviceAvailable": DeviceAvailable
+	"DeviceAvailable": DeviceAvailable,
+	"GetDeviceAvailable": GetDeviceAvailable
 };

@@ -164,7 +164,7 @@ socket.on('listening', () => {
 });
 
 socket.on('message', async (buffer, rinfo) => {
-	console.log(`Recieved ${buffer.length} bytes from ${rinfo.address}:${rinfo.port}.`);
+	//console.log(`Received ${buffer.length} bytes from ${rinfo.address}:${rinfo.port}.`);
 	try {
 		await parse_mdns(buffer);
 	} catch (error) {
