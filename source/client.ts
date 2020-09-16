@@ -3,6 +3,14 @@ import * as utils from "./utils";
 import * as languages from "./languages";
 import { AuthToken } from "./database";
 import * as session from "./session";
+import { Autoguard as messages } from "./messages";
+import { TypeSocketClient } from "./typesockets";
+
+let tsc = TypeSocketClient.connect(messages);
+
+tsc.addEventListener("sys", "connect", () => {
+	console.log("You are connected!");
+});
 
 const ACCENT_COLOR = "rgb(223, 79, 127)";
 

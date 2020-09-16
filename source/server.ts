@@ -11,6 +11,14 @@ import * as channels from "./channels";
 import * as data from "./data";
 import * as subsearch from "./subsearch";
 import { FileEntry, CueEntry } from "./database";
+import { TypeSocketServer } from "./typesockets";
+import { Autoguard as messages } from "./messages";
+
+let tss = new TypeSocketServer(messages);
+
+tss.addEventListener("sys", "connect", (message) => {
+	console.log("Connection from " + message.connection_id);
+});
 
 let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>): Partial<libhttp.IncomingHttpHeaders> => {
 	let out: Partial<libhttp.IncomingHttpHeaders> = {};
@@ -102,6 +110,9 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 	let host = request.headers["host"] || "";
 	let method = request.method || "";
 	let path = request.url || "";
+	if (/^[/]typesockets[/]/.test(path)) {
+		return tss.getRequestHandler()(request, response);
+	}
 	let startMs = Date.now();
 	response.on("finish", () => {
 		let endMs = Date.now();
