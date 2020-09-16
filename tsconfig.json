@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"declaration": true,
+		"declaration": false,
 		"module": "commonjs",
 		"moduleResolution": "node",
 		"noImplicitAny": true,
@@ -10,5 +10,8 @@
 		"rootDir": "./source/",
 		"strictNullChecks": true,
 		"target": "es6"
-	}
+	},
+	"include": [
+		"./source/"
+	]
 }
