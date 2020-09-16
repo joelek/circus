@@ -28,7 +28,7 @@ namespace libmdns {
 		}
 	};
 
-	let parse_name = (buffer: Buffer, offset: number): { value: string, offset: number } => {
+	let parse_name = async (buffer: Buffer, offset: number): Promise<{ value: string, offset: number }> => {
 		let labels = new Array<string>();
 		while (true) {
 			let length = buffer.readUInt8(offset);
@@ -46,7 +46,8 @@ namespace libmdns {
 			if (length < 192) {
 				throw new Error();
 			}
-			labels.push(parse_name(buffer, buffer.readUInt16BE(offset) & 0x3FFF).value);
+			let name = await parse_name(buffer, buffer.readUInt16BE(offset) & 0x3FFF);
+			labels.push(name.value);
 			offset += 2;
 			break;
 		}
@@ -56,8 +57,8 @@ namespace libmdns {
 		};
 	};
 
-	let parse_question = (buffer: Buffer, offset: number): { value: string, offset: number } => {
-		let name = parse_name(buffer, offset);
+	let parse_question = async (buffer: Buffer, offset: number): Promise<{ value: string, offset: number }> => {
+		let name = await parse_name(buffer, offset);
 		offset = name.offset;
 		let type = buffer.readUInt16BE(offset);
 		offset += 2;
@@ -69,8 +70,8 @@ namespace libmdns {
 		};
 	};
 
-	let parse_record = (buffer: Buffer, offset: number): { name: string, data: string, offset: number } => {
-		let name = parse_name(buffer, offset);
+	let parse_record = async (buffer: Buffer, offset: number): Promise<{ name: string, data: string, offset: number }> => {
+		let name = await parse_name(buffer, offset);
 		offset = name.offset;
 		let type = buffer.readUInt16BE(offset);
 		offset += 2;
@@ -87,7 +88,7 @@ namespace libmdns {
 			add_cache_entry(name.value, data, 'A');
 		}
 		if (type === 12) {
-			let dname = parse_name(buffer, offset);
+			let dname = await parse_name(buffer, offset);
 			offset = dname.offset;
 			data = dname.value;
 			add_cache_entry(name.value, data, 'PTR');
@@ -104,7 +105,7 @@ namespace libmdns {
 			offset += 2;
 			let port = buffer.readUInt16BE(offset);
 			offset += 2;
-			let dname = parse_name(buffer, offset);
+			let dname = await parse_name(buffer, offset);
 			offset = dname.offset;
 			data = dname.value;
 			add_cache_entry(name.value, data, 'SRV');
@@ -116,8 +117,7 @@ namespace libmdns {
 		};
 	};
 
-	let parse_mdns = (buffer: Buffer): void => {
-		console.log('recieved mdns packet');
+	let parse_mdns = async (buffer: Buffer): Promise<void> => {
 		let offset = 0;
 		let header = buffer.slice(offset, offset + 12);
 		offset += 12;
@@ -129,29 +129,29 @@ namespace libmdns {
 		let arcount = header.readUInt16BE(10);
 		let questions = new Array<{ value: string, offset: number }>();
 		for (let i = 0; i < qdcount; i++) {
-			let result = parse_question(buffer, offset);
+			let result = await parse_question(buffer, offset);
 			questions.push(result);
 			offset = result.offset;
 		}
 		let answers = new Array<{ name: string, data: string, offset: number } >();
 		for (let i = 0; i < ancount; i++) {
-			let result = parse_record(buffer, offset);
+			let result = await parse_record(buffer, offset);
 			answers.push(result);
 			offset = result.offset;
 		}
 		let authorities = new Array<{ name: string, data: string, offset: number } >();
 		for (let i = 0; i < nscount; i++) {
-			let result = parse_record(buffer, offset);
+			let result = await parse_record(buffer, offset);
 			authorities.push(result);
 			offset = result.offset;
 		}
 		let additionals = new Array<{ name: string, data: string, offset: number } >();
 		for (let i = 0; i < arcount; i++) {
-			let result = parse_record(buffer, offset);
+			let result = await parse_record(buffer, offset);
 			additionals.push(result);
 			offset = result.offset;
 		}
-		console.log(JSON.stringify(rcache, null, "\t"));
+		//console.log(JSON.stringify(rcache, null, "\t"));
 	};
 
 	const MDNS_ADDRESS = '224.0.0.251';
@@ -164,8 +164,13 @@ namespace libmdns {
 		socket.addMembership(MDNS_ADDRESS, '0.0.0.0');
 	});
 
-	socket.on('message', (buffer, remote_info) => {
-		parse_mdns(buffer);
+	socket.on('message', async (buffer, rinfo) => {
+		console.log(`Recieved ${buffer.length} bytes from ${rinfo.address}:${rinfo.port}.`);
+		try {
+			await parse_mdns(buffer);
+		} catch (error) {
+			console.log(error);
+		}
 	});
 
 	socket.bind(MDNS_PORT);
@@ -186,7 +191,6 @@ namespace libmdns {
 		body.writeUInt16BE(12, offset); offset += 2;
 		body.writeUInt16BE(1, offset); offset += 2;
 		body = body.slice(0, 0 + offset);
-		console.log('sending discovery packet');
 		socket.send(Buffer.concat([header, body]), MDNS_PORT, MDNS_ADDRESS);
 	};
 
@@ -202,19 +206,21 @@ namespace libmdns {
 		}
 		obs.push(observer);
 		discover(host);
+		/*
 		let token = setInterval(() => {
 			discover(host);
 		}, timeout);
+		*/
 		return {
 			cancel(): void {
-				clearInterval(token);
+				//clearInterval(token);
 				let index = obs.lastIndexOf(observer);
-				obs.slice(index, 1);
+				obs = obs.slice(index, 1);
 			}
 		};
 	};
 };
 
-libmdns.observe('_googlecast._tcp.local', 30*1000, (host) => {
+libmdns.observe('_googlecast._tcp.local', 60*1000, (host) => {
 	console.log('observer notified with: ' + host);
 });
