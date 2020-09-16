@@ -1,7 +1,7 @@
 {
 	"bin": {},
 	"devDependencies": {
-		"@types/node": "^14",
+		"@types/node": "^14.10.2",
 		"browserify": "^16.5.2",
 		"typescript": "^4"
 	},
@@ -22,7 +22,7 @@
 		"build": "rm -rf ./build/ && npm run codegen && npx tsc --build && npm run bundle",
 		"bundle": "npx browserify ./build/client.js --outfile ./build/client.bundle.js",
 		"clean": "rm -rf ./build/ ./node_modules/",
-		"codegen": "npx autoguard"
+		"codegen": "npx autoguard --standalone=false"
 	},
 	"version": "1.0.0"
 }
