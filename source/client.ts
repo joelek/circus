@@ -851,6 +851,26 @@ style.innerText = `
 		overflow-y: auto;
 	}
 
+	.app__devices {
+		background-color: ${ACCENT_COLOR};
+	}
+
+	.app__devices-container {
+		cursor: pointer;
+		display: grid;
+		gap: 8px;
+		grid-template-columns: min-content 1fr;
+	}
+
+	.app__devices-icon {
+		fill: rgb(255, 255, 255);
+	}
+
+	.app__devices-text {
+		color: rgb(255, 255, 255);
+		font-size: 16px;
+	}
+
 	.app__navigation {
 		background-color: rgb(47, 47, 47);
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
@@ -1138,18 +1158,28 @@ let mp = xml.element("div.content")
 					next();
 				})
 			)
-			.add(makeButton()
-				.bind("data-hide", chromecast((chromecast) => {
-					return chromecast ? "false" : "true";
-				}))
-				.add(makeBroadcastIcon())
-				.on("click", () => {
-					transferPlaybackToChromecast();
-				})
-			)
 		)
 	)
 	.render();
+appcontainer.appendChild(xml.element("div.app__devices")
+	.bind("data-hide", chromecast((chromecast) => {
+		return chromecast ? "false" : "true";
+	}))
+	.add(xml.element("div.content")
+		.set("style", "padding: 16px;")
+		.add(xml.element("div.app__devices-container")
+			.add(makeBroadcastIcon()
+				.set("class", "app__devices-icon")
+			)
+			.add(xml.element("div.app__devices-text")
+				.add(xml.text("Multiple devices available..."))
+			)
+			.on("click", () => {
+				transferPlaybackToChromecast();
+			})
+		)
+	)
+	.render());
 appcontainer.appendChild(mpw);
 mpw.appendChild(mp);
 
