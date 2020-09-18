@@ -1142,7 +1142,7 @@ let mp = xml.element("div.content")
 				.bind("data-hide", chromecast((chromecast) => {
 					return chromecast ? "false" : "true";
 				}))
-				.add(makeHomeIcon())
+				.add(makeBroadcastIcon())
 				.on("click", () => {
 					transferPlaybackToChromecast();
 				})
