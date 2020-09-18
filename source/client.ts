@@ -876,6 +876,41 @@ style.innerText = `
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
 		z-index: 1;
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	.access-token {
+		display: grid;
+		gap: 8px;
+	}
+
+	.access-token__title {
+		color: rgb(255, 255, 255);
+		font-size: 16px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.access-token__subtitle {
+		color: rgb(159, 159, 159);
+		font-size: 12px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 `;
 document.head.appendChild(style);
 
@@ -2317,22 +2352,29 @@ let updateviewforuri = (uri: string): void => {
 		});
 		mount.appendChild(d);
 	} else if ((parts = /^tokens[/]/.exec(uri)) !== null) {
-		let results = document.createElement("div");
-		mount.appendChild(results);
 		req<api_response.TokensRequest, api_response.TokensResponse>(`/api/tokens/?token=${token}`, {}, (status, response) => {
-			function renderToken(token: AuthToken): HTMLElement {
-				let wrapper = document.createElement("div");
-				wrapper.setAttribute("class", "group");
-				let p = document.createElement("p");
-				p.style.setProperty("font-size", "16px");
-				let duration = computeDuration(token.expires_ms - Date.now());
-				p.innerText = `Expires in ${duration.d} days, ${duration.h} hours and ${duration.m} minutes.`;
-				wrapper.appendChild(p);
-				return wrapper;
+			function renderAccessToken(token: AuthToken): xml.XElement {
+				let duration_ms = token.expires_ms - Date.now();
+				return xml.element("div.access-token")
+					.add(xml.element("div.access-token__title")
+						.add(xml.text((token.selector.match(/.{1,2}/g) || []).join(":")))
+					)
+					.add(xml.element("div.access-token__subtitle")
+						.add(xml.text(`Expires in ${format_duration(duration_ms)}.`))
+					);
 			}
-			for (let token of response.tokens) {
-				results.appendChild(renderToken(token));
-			}
+			mount.appendChild(xml.element("div.content")
+				.add(xml.element("div.playlist")
+					.add(xml.element("div.playlist__header")
+						.add(renderTextHeader("Tokens"))
+					)
+					.add(xml.element("div.playlist__content")
+						.add(...response.tokens.map((token) => {
+							return renderAccessToken(token);
+						}))
+					)
+				)
+				.render());
 		});
 	} else if ((parts = /^search[/](.*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
