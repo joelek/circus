@@ -898,6 +898,7 @@ style.innerText = `
 
 	.access-token__title {
 		color: rgb(255, 255, 255);
+		font-family: "Space Mono", monospace;
 		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
