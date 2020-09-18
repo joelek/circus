@@ -725,7 +725,7 @@ style.innerText = `
 	}
 
 	.playlist-item[data-playing="true"] {
-		border-left: 2px solid ${ACCENT_COLOR};
+		border-left: 4px solid ${ACCENT_COLOR};
 		padding-left: 32px;
 	}
 
