@@ -22,8 +22,7 @@ export enum WireType {
 	FIXED_32_BIT
 };
 
-// TODO: Return 64-bit buffer instead of bigint.
-export function parseVarint(state: State): bigint {
+export function parseVarint(state: State): Buffer {
 	let bytes = Buffer.alloc(10);
 	for (let i = 0; i < 10; i++) {
 		let byte = state.buffer.readUInt8(state.offset); state.offset += 1;
@@ -38,21 +37,27 @@ export function parseVarint(state: State): bigint {
 			for (let j = i; j >= 0; j--) {
 				value = (value << BigInt(7)) | BigInt(bytes[j] & 0x7F);
 			}
-			return value;
+			let buffer = Buffer.alloc(8);
+			buffer.writeBigUInt64LE(value, 0);
+			return buffer;
 		}
 	}
 	throw "Expected a varint of at most 10 bytes!";
 };
 
 export type Key = {
-	field_number: bigint,
+	field_number: number,
 	wire_type: WireType
 };
 
 export function parseKey(state: State): Key {
 	let varint = parseVarint(state);
-	let field_number = (varint >> BigInt(3));
-	let wire_type = Number(varint & BigInt(7));
+	let bigint = varint.readBigUInt64LE(0);
+	if (bigint > (BigInt(Number.MAX_SAFE_INTEGER) << BigInt(3))) {
+		throw "Expected a safe integer!";
+	}
+	let field_number = Number(bigint >> BigInt(3));
+	let wire_type = Number(bigint & BigInt(0x07));
 	return {
 		field_number,
 		wire_type
@@ -60,8 +65,8 @@ export function parseKey(state: State): Key {
 };
 
 export type Field = {
-	field_number: bigint,
-	data: bigint | Buffer
+	field_number: number,
+	data: Buffer
 };
 
 export function parseField(state: State): Field {
