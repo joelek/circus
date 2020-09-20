@@ -1,3 +1,10 @@
+function numberFromBigInt(bigint: bigint): number {
+	if (bigint > Number.MAX_SAFE_INTEGER || bigint < Number.MIN_SAFE_INTEGER) {
+		throw `Expected a safe integer but got ${bigint}!`;
+	}
+	return Number(bigint);
+}
+
 export type State = {
 	buffer: Buffer,
 	offset: number
@@ -51,13 +58,9 @@ export type Key = {
 };
 
 export function parseKey(state: State): Key {
-	let varint = parseVarint(state);
-	let bigint = varint.readBigUInt64LE(0);
-	if (bigint > (BigInt(Number.MAX_SAFE_INTEGER) << BigInt(3))) {
-		throw "Expected a safe integer!";
-	}
-	let field_number = Number(bigint >> BigInt(3));
-	let wire_type = Number(bigint & BigInt(0x07));
+	let bigint = parseVarint(state).readBigUInt64LE(0);
+	let field_number = numberFromBigInt(bigint >> BigInt(3));
+	let wire_type = numberFromBigInt(bigint & BigInt(0x07));
 	return {
 		field_number,
 		wire_type
@@ -87,7 +90,8 @@ export function parseField(state: State): Field {
 		};
 	}
 	if (key.wire_type === WireType.LENGTH_DELIMITED) {
-		let length = Number(parseVarint(state));
+		let bigint = parseVarint(state).readBigUInt64LE(0);
+		let length = numberFromBigInt(bigint);
 		let data = readBytes(state, length);
 		console.log(data.toString());
 		return {
