@@ -1,0 +1,46 @@
+{
+	Launch: {
+		type: "LAUNCH",
+		appId: string
+	},
+	Stop: {
+		type: "STOP",
+		sessionId: string
+	},
+	GetStatus: {
+		type: "GET_STATUS"
+	},
+	GetAppAvailability: {
+		type: "GET_APP_AVAILABILITY",
+		appId: string[]
+	},
+	SetVolume: {
+		type: "SET_VOLUME",
+		volume: ({
+			level: number
+		} | {
+			muted: boolean
+		})
+	},
+	ReceiverStatus: {
+		type: "RECEIVER_STATUS",
+		requestId: number,
+		status: {
+			applications: [
+				{
+					appId: string,
+					displayName: string,
+					namespaces: string[],
+					sessionId: string,
+					statusText: string,
+					transportId: string
+				}
+			],
+			isActiveInput: boolean,
+			volume: {
+				level: number,
+				muted: boolean
+			}
+		}
+	}
+}

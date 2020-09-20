@@ -215,7 +215,7 @@ export let observe = (host: string, observer: Observer): Cancellable => {
 	};
 };
 
-export function connectToChromecast(host: string, onpacket: (buffer: Buffer) => void): libtls.TLSSocket {
+export function connectToChromecast(host: string, onpacket: (socket: libtls.TLSSocket, buffer: Buffer) => void): libtls.TLSSocket {
 	let socket = libtls.connect({
 		host: host,
 		port: 8009,
@@ -238,7 +238,7 @@ export function connectToChromecast(host: string, onpacket: (buffer: Buffer) => 
 					let payload = buffer;
 					waiting_header = true;
 					bytes_required = 4;
-					onpacket(payload);
+					onpacket(socket, payload);
 				}
 			}
 		});

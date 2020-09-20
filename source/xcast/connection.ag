@@ -1,0 +1,8 @@
+{
+	Connect: {
+		"type": "CONNECT"
+	},
+	Close: {
+		"type": "CLOSE"
+	}
+}

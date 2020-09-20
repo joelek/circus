@@ -15,6 +15,9 @@ import { TypeSocketServer } from "./typesockets";
 import { Autoguard as messages } from "./messages";
 import * as chromecast from "./chromecast";
 import { Deferred } from "./shared";
+import * as cast_message from "./cast_message";
+import * as libtls from "tls";
+import * as xcast from "./xcast";
 
 let tss = new TypeSocketServer(messages);
 let connections = new Set<string>();
@@ -34,6 +37,38 @@ tss.addEventListener("app", "GetDeviceAvailable", (message) => {
 	});
 });
 
+function sendHeartbeat(socket: libtls.TLSSocket, destination_id: string, json: xcast.heartbeat.Autoguard[keyof xcast.heartbeat.Autoguard]) {
+	let castMessage: cast_message.CastMessage = {
+		protocol_version: 0,
+		source_id: "server-0",
+		destination_id,
+		namespace: "urn:x-cast:com.google.cast.tp.heartbeat",
+		payload_type: cast_message.PayloadType.STRING,
+		payload_utf8: JSON.stringify(json)
+	};
+	socket.write(cast_message.serializeCastMessage(castMessage));
+}
+
+function handleCastMessage(socket: libtls.TLSSocket, castMessage: cast_message.CastMessage): void {
+	let message = JSON.parse(castMessage.payload_utf8 || "{}");
+	console.log(message);
+	if (castMessage.namespace === "urn:x-cast:com.google.cast.tp.connection") {
+
+	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.tp.heartbeat") {
+		if (xcast.heartbeat.Ping.is(message)) {
+			sendHeartbeat(socket, castMessage.source_id, {
+				"type": "PONG"
+			});
+		} else if (xcast.heartbeat.Pong.is(message)) {
+			// RESET TIMER
+		}
+	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.receiver") {
+
+	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.tp.deviceauth") {
+
+	}
+}
+
 chromecast.observe('_googlecast._tcp.local', (host) => {
 	console.log(host);
 	if (ghost !== host) {
@@ -43,11 +78,16 @@ chromecast.observe('_googlecast._tcp.local', (host) => {
 				ip: host
 			});
 		}
-		chromecast.connectToChromecast(host, (packet) => {
-			console.log(packet, packet.toString());
+		chromecast.connectToChromecast(host, (socket, packet) => {
+			let message = cast_message.parseCastMessage(packet);
+			handleCastMessage(socket, message);
 		});
 	}
 });
+
+/*
+default media receiver: CC1AD845
+*/
 
 let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>): Partial<libhttp.IncomingHttpHeaders> => {
 	let out: Partial<libhttp.IncomingHttpHeaders> = {};
