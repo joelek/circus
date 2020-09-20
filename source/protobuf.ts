@@ -1,9 +1,9 @@
-function numberFromBigInt(bigint: bigint): number {
+export function numberFromBigInt(bigint: bigint): number {
 	if (bigint > Number.MAX_SAFE_INTEGER || bigint < Number.MIN_SAFE_INTEGER) {
 		throw `Expected a safe integer but got ${bigint}!`;
 	}
 	return Number(bigint);
-}
+};
 
 export type State = {
 	buffer: Buffer,
@@ -123,38 +123,57 @@ export function parseField(state: State): Field {
 	throw "Expected a recognized wire type!";
 }
 
-export type Message = {
-	fields: Array<Field>
-};
-
-export function parseMessage(state: State): Message {
+export function parseFields(state: State): Array<Field> {
 	let fields = new Array<Field>();
 	while (state.offset < state.buffer.length) {
 		let field = parseField(state);
 		fields.push(field);
 	}
-	return {
-		fields
-	};
+	return fields;
 };
 
-let message = parseMessage({
-	buffer: Buffer.of(0x08,0x00,0x12,0x0b,0x54,0x72,0x40,0x6e,0x24,0x70,0x30,0x72,0x74,0x2d,0x30),
-	offset: 0
-});
-console.log(message);
+export function parseRequiredEnum(field_number: number, fields: Array<Field>): number {
+	let candidates = fields.filter((field) => field.field_number === field_number);
+	if (candidates.length === 0) {
+		throw `Expected required field to be present!`;
+	}
+	let field = candidates[candidates.length - 1];
+	let value = numberFromBigInt(field.data.readBigUInt64LE(0));
+	return value;
+};
 
+export function parseRequiredString(field_number: number, fields: Array<Field>): string {
+	let candidates = fields.filter((field) => field.field_number === field_number);
+	if (candidates.length === 0) {
+		throw `Expected required field to be present!`;
+	}
+	let field = candidates[candidates.length - 1];
+	let value = field.data.toString();
+	return value;
+};
 
+export function parseOptionalString(field_number: number, fields: Array<Field>): string | undefined {
+	try {
+		return parseRequiredString(field_number, fields);
+	} catch (error) {
+		return undefined;
+	}
+};
 
+export function parseRequiredBuffer(field_number: number, fields: Array<Field>): Buffer {
+	let candidates = fields.filter((field) => field.field_number === field_number);
+	if (candidates.length === 0) {
+		throw `Expected required field to be present!`;
+	}
+	let field = candidates[candidates.length - 1];
+	let value = field.data;
+	return value;
+};
 
-
-
-
-
-
-// little endian
-// signed ints are zig-zagged, (n << 1) ^ (n >> 31),
-// use last value for non-repeated field
-// merge non-repeated object fields occuring more than once before computing final field value, parse concatenated buffers
-// packed repeated, wire type 2 lengthdelim bytes, no key, only primitive numeric
-// int32 and int64 always use 10 bytes,
+export function parseOptionalBuffer(field_number: number, fields: Array<Field>): Buffer | undefined {
+	try {
+		return parseRequiredBuffer(field_number, fields);
+	} catch (error) {
+		return undefined;
+	}
+};
