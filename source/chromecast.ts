@@ -1,4 +1,5 @@
 import * as libdgram from 'dgram';
+import * as libtls from "tls";
 
 interface Observer {
 	(host: string): void;
@@ -197,6 +198,7 @@ interface Cancellable {
 	cancel(): void;
 }
 
+// TODO: Only notify with responses to specific host.
 export let observe = (host: string, observer: Observer): Cancellable => {
 	let obs = observers[host];
 	if (obs === undefined) {
@@ -211,4 +213,35 @@ export let observe = (host: string, observer: Observer): Cancellable => {
 			obs = obs.slice(index, 1);
 		}
 	};
+};
+
+export function connectToChromecast(host: string, onpacket: (buffer: Buffer) => void): libtls.TLSSocket {
+	let socket = libtls.connect({
+		host: host,
+		port: 8009,
+		rejectUnauthorized: false
+	});
+	socket.on("secureConnect", () => {
+		let buffered = Buffer.alloc(0);
+		let waiting_header = true;
+		let bytes_required = 4;
+		socket.on("data", (chunk: Buffer) => {
+			buffered = Buffer.concat([buffered, chunk]);
+			while (buffered.length >= bytes_required) {
+				let buffer = buffered.slice(0, bytes_required);
+				buffered = buffered.slice(bytes_required);
+				if (waiting_header) {
+					let header = buffer;
+					waiting_header = false;
+					bytes_required = header.readUInt32BE(0);
+				} else {
+					let payload = buffer;
+					waiting_header = true;
+					bytes_required = 4;
+					onpacket(payload);
+				}
+			}
+		});
+	});
+	return socket;
 };

@@ -43,6 +43,9 @@ chromecast.observe('_googlecast._tcp.local', (host) => {
 				ip: host
 			});
 		}
+		chromecast.connectToChromecast(host, (packet) => {
+			console.log(packet, packet.toString());
+		});
 	}
 });
 
