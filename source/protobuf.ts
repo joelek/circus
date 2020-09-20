@@ -62,7 +62,7 @@ export function serializeVarint(buffer: Buffer): Buffer {
 			result.writeUInt8(numberFromBigInt(byte) | 0x80);
 		} else {
 			result.writeUInt8(numberFromBigInt(byte) | 0x00);
-			return result.slice(0, i);
+			return result.slice(0, i + 1);
 		}
 	}
 	throw "Expected to serialize at most 10 bytes!";

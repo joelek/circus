@@ -17,7 +17,9 @@ function sendConnection(socket: libtls.TLSSocket, json: xcast.connection.Autogua
 		payload_type: cast_message.PayloadType.STRING,
 		payload_utf8: JSON.stringify(json)
 	};
-	socket.write(cast_message.serializeCastMessage(castMessage));
+	let message = cast_message.serializeCastMessage(castMessage);
+	console.log(message.toJSON());
+	socket.write(message);
 }
 
 function sendHeartbeat(socket: libtls.TLSSocket, json: xcast.heartbeat.Autoguard[keyof xcast.heartbeat.Autoguard]) {
@@ -104,6 +106,7 @@ function packetize(host: string, socket: libtls.TLSSocket): void {
 }
 
 function onsecureconnect(host: string, socket: libtls.TLSSocket): void {
+	console.log(`Connected to ${host}.`);
 	// NOTIFY
 	packetize(host, socket);
 	sendConnection(socket, {
