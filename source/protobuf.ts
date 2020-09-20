@@ -52,6 +52,28 @@ export function parseVarint(state: State): Buffer {
 	throw "Expected a varint of at most 10 bytes!";
 };
 
+export function serializeVarint(buffer: Buffer): Buffer {
+	let bigint = buffer.readBigUInt64LE(0);
+	let result = Buffer.alloc(10);
+	for (let i = 0; i < 10; i++) {
+		let byte = (bigint & BigInt(0x7F));
+		bigint = (bigint >> BigInt(7));
+		if (bigint > 0) {
+			result.writeUInt8(numberFromBigInt(byte) | 0x80);
+		} else {
+			result.writeUInt8(numberFromBigInt(byte) | 0x00);
+			return result.slice(0, i);
+		}
+	}
+	throw "Expected to serialize at most 10 bytes!";
+};
+
+export function makeUInt64LE(number: number): Buffer {
+	let buffer = Buffer.alloc(8);
+	buffer.writeBigUInt64LE(BigInt(number));
+	return buffer;
+};
+
 export type Key = {
 	field_number: number,
 	wire_type: WireType
@@ -67,25 +89,31 @@ export function parseKey(state: State): Key {
 	};
 };
 
+export function serializeKey(key: Key): Buffer {
+	let bigint = (BigInt(key.field_number) << BigInt(3)) | (BigInt(key.wire_type) & BigInt(0x07));
+	let buffer = Buffer.alloc(8);
+	buffer.writeBigUInt64LE(bigint, 0);
+	return serializeVarint(buffer);
+};
+
 export type Field = {
-	field_number: number,
+	key: Key,
 	data: Buffer
 };
 
 export function parseField(state: State): Field {
 	let key = parseKey(state);
-	let field_number = key.field_number;
 	if (key.wire_type === WireType.VARINT) {
 		let data = parseVarint(state);
 		return {
-			field_number,
+			key,
 			data
 		};
 	}
 	if (key.wire_type === WireType.FIXED_64_BIT) {
 		let data = readBytes(state, 8);
 		return {
-			field_number,
+			key,
 			data
 		};
 	}
@@ -93,35 +121,89 @@ export function parseField(state: State): Field {
 		let bigint = parseVarint(state).readBigUInt64LE(0);
 		let length = numberFromBigInt(bigint);
 		let data = readBytes(state, length);
-		console.log(data.toString());
 		return {
-			field_number,
+			key,
 			data
 		};
 	}
 	if (key.wire_type === WireType.START_GROUP) {
 		let data = Buffer.alloc(0);
 		return {
-			field_number,
+			key,
 			data
 		};
 	}
 	if (key.wire_type === WireType.END_GROUP) {
 		let data = Buffer.alloc(0);
 		return {
-			field_number,
+			key,
 			data
 		};
 	}
 	if (key.wire_type === WireType.FIXED_32_BIT) {
 		let data = readBytes(state, 4);
 		return {
-			field_number,
+			key,
 			data
 		};
 	}
 	throw "Expected a recognized wire type!";
-}
+};
+
+export function serializeField(field: Field): Buffer {
+	if (field.key.wire_type === WireType.VARINT) {
+		return Buffer.concat([
+			serializeKey(field.key),
+			serializeVarint(field.data)
+		]);
+	}
+	if (field.key.wire_type === WireType.FIXED_64_BIT) {
+		if (field.data.length !== 8) {
+			throw `Expected to serialize exactly 8 bytes!`;
+		}
+		return Buffer.concat([
+			serializeKey(field.key),
+			field.data
+		]);
+	}
+	if (field.key.wire_type === WireType.LENGTH_DELIMITED) {
+		let length = Buffer.alloc(8)
+		length.writeBigUInt64LE(BigInt(field.data.length))
+		return Buffer.concat([
+			serializeKey(field.key),
+			serializeVarint(length),
+			field.data
+		]);
+	}
+	if (field.key.wire_type === WireType.START_GROUP) {
+		if (field.data.length !== 0) {
+			throw `Expected to serialize exactly 0 bytes!`;
+		}
+		return Buffer.concat([
+			serializeKey(field.key),
+			field.data
+		]);
+	}
+	if (field.key.wire_type === WireType.END_GROUP) {
+		if (field.data.length !== 0) {
+			throw `Expected to serialize exactly 0 bytes!`;
+		}
+		return Buffer.concat([
+			serializeKey(field.key),
+			field.data
+		]);
+	}
+	if (field.key.wire_type === WireType.FIXED_32_BIT) {
+		if (field.data.length !== 4) {
+			throw `Expected to serialize exactly 4 bytes!`;
+		}
+		return Buffer.concat([
+			serializeKey(field.key),
+			field.data
+		]);
+	}
+	throw "Expected a recognized wire type!";
+};
 
 export function parseFields(state: State): Array<Field> {
 	let fields = new Array<Field>();
@@ -133,7 +215,7 @@ export function parseFields(state: State): Array<Field> {
 };
 
 export function parseRequiredEnum(field_number: number, fields: Array<Field>): number {
-	let candidates = fields.filter((field) => field.field_number === field_number);
+	let candidates = fields.filter((field) => field.key.field_number === field_number);
 	if (candidates.length === 0) {
 		throw `Expected required field to be present!`;
 	}
@@ -142,14 +224,38 @@ export function parseRequiredEnum(field_number: number, fields: Array<Field>): n
 	return value;
 };
 
+export function serializeRequiredEnum(field_number: number, value: number): Buffer {
+	let key = {
+		field_number,
+		wire_type: WireType.VARINT
+	};
+	let data = makeUInt64LE(value);
+	return serializeField({
+		key,
+		data
+	});
+};
+
 export function parseRequiredString(field_number: number, fields: Array<Field>): string {
-	let candidates = fields.filter((field) => field.field_number === field_number);
+	let candidates = fields.filter((field) => field.key.field_number === field_number);
 	if (candidates.length === 0) {
 		throw `Expected required field to be present!`;
 	}
 	let field = candidates[candidates.length - 1];
 	let value = field.data.toString();
 	return value;
+};
+
+export function serializeRequiredString(field_number: number, value: string): Buffer {
+	let key = {
+		field_number,
+		wire_type: WireType.LENGTH_DELIMITED
+	};
+	let data = Buffer.from(value);
+	return serializeField({
+		key,
+		data
+	});
 };
 
 export function parseOptionalString(field_number: number, fields: Array<Field>): string | undefined {
@@ -160,8 +266,15 @@ export function parseOptionalString(field_number: number, fields: Array<Field>):
 	}
 };
 
+export function serializeOptionalString(field_number: number, value: string | undefined): Buffer {
+	if (value == null) {
+		return Buffer.alloc(0);
+	}
+	return serializeRequiredString(field_number, value);
+};
+
 export function parseRequiredBuffer(field_number: number, fields: Array<Field>): Buffer {
-	let candidates = fields.filter((field) => field.field_number === field_number);
+	let candidates = fields.filter((field) => field.key.field_number === field_number);
 	if (candidates.length === 0) {
 		throw `Expected required field to be present!`;
 	}
@@ -170,10 +283,29 @@ export function parseRequiredBuffer(field_number: number, fields: Array<Field>):
 	return value;
 };
 
+export function serializeRequiredBuffer(field_number: number, value: Buffer): Buffer {
+	let key = {
+		field_number,
+		wire_type: WireType.LENGTH_DELIMITED
+	};
+	let data = value;
+	return serializeField({
+		key,
+		data
+	});
+};
+
 export function parseOptionalBuffer(field_number: number, fields: Array<Field>): Buffer | undefined {
 	try {
 		return parseRequiredBuffer(field_number, fields);
 	} catch (error) {
 		return undefined;
 	}
+};
+
+export function serializeOptionalBuffer(field_number: number, value: Buffer | undefined): Buffer {
+	if (value == null) {
+		return Buffer.alloc(0);
+	}
+	return serializeRequiredBuffer(field_number, value);
 };

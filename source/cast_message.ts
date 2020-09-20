@@ -42,5 +42,14 @@ export function parseCastMessage(buffer: Buffer): CastMessage {
 	};
 };
 
-let message = parseCastMessage(Buffer.of(0x08,0x00,0x12,0x0b,0x54,0x72,0x40,0x6e,0x24,0x70,0x30,0x72,0x74,0x2d,0x30));
-console.log(message);
+export function serializeCastMessage(message: CastMessage): Buffer {
+	return Buffer.concat([
+		protobuf.serializeRequiredEnum(1, message.protocol_version),
+		protobuf.serializeRequiredString(2, message.source_id),
+		protobuf.serializeRequiredString(3, message.destination_id),
+		protobuf.serializeRequiredString(4, message.namespace),
+		protobuf.serializeRequiredEnum(5, message.payload_type),
+		protobuf.serializeOptionalString(6, message.payload_utf8),
+		protobuf.serializeOptionalBuffer(7, message.payload_binary),
+	]);
+};
