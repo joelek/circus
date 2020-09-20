@@ -34,6 +34,8 @@ tss.addEventListener("app", "GetDeviceAvailable", (message) => {
 	});
 });
 
+chromecasts.observe();
+
 let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>): Partial<libhttp.IncomingHttpHeaders> => {
 	let out: Partial<libhttp.IncomingHttpHeaders> = {};
 	for (let key in headers) {

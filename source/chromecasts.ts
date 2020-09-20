@@ -126,9 +126,11 @@ function connect(host: string): void {
 	});
 }
 
-mdns.observe("_googlecast._tcp.local", (host) => {
-	console.log(`Got chromecast service discovery response from ${host}.`);
-	if (!chromecasts.has(host)) {
-		connect(host);
-	}
-});
+export function observe() {
+	mdns.observe("_googlecast._tcp.local", (host) => {
+		console.log(`Got chromecast service discovery response from ${host}.`);
+		if (!chromecasts.has(host)) {
+			connect(host);
+		}
+	});
+};
