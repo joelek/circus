@@ -779,7 +779,17 @@ style.innerText = `
 
 
 	.device-selector {
-		overflow: auto;
+		background-color: rgba(0, 0, 0, 0.75);
+		position: absolute;
+			height: 100%;
+			width: 100%;
+		transform: translate(0, -100%);
+		transition: transform 0.25s;
+		z-index: 1;
+	}
+
+	.device-selector[data-hide="false"] {
+		transform: none;
 	}
 
 	.device-selector__devices {
@@ -903,7 +913,10 @@ style.innerText = `
 	}
 
 	.app__content {
-		overflow-y: auto;
+		height: auto;
+		overflow: hidden;
+		position: relative;
+		z-index: 0;
 	}
 
 	.app__devices {
@@ -929,6 +942,7 @@ style.innerText = `
 	.app__navigation {
 		background-color: rgb(47, 47, 47);
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
+		position: relative;
 		z-index: 1;
 	}
 
@@ -937,7 +951,11 @@ style.innerText = `
 
 
 
-
+	.scroll-container {
+		height: 100%;
+		overflow: auto;
+		width: 100%;
+	}
 
 
 
@@ -1055,6 +1073,26 @@ appcontainer.appendChild(appheader);
 mountwrapper.setAttribute("class", "app__content");
 appcontainer.appendChild(mountwrapper);
 
+// TODO: Dynamic rendering of multiple devices.
+let device_selector = xml.element("div.device-selector")
+	.bind("data-hide", showDevices((value) => !value))
+	.add(xml.element("div.device-selector__devices")
+		.add(xml.element("div.device")
+			.add(xml.text("Chromecast"))
+		)
+		.on("click", () => {
+			let host = Array.from(chromecastClass.getState());
+			if (host.length > 0) {
+				transferPlaybackToChromecast(host[0]);
+			}
+		})
+	)
+	.render();
+mountwrapper.appendChild(device_selector);
+let scroll_container = xml.element("div.scroll-container")
+	.render();
+mountwrapper.appendChild(scroll_container);
+
 isVideo((isVideo) => {
 	if (isVideo) {
 		mount.style.setProperty("display", "none");
@@ -1091,7 +1129,7 @@ req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?toke
 					token = response.token;
 					localStorage.setItem('token', token);
 					logincontainer.removeChild(container);
-					mountwrapper.appendChild(mount);
+					scroll_container.appendChild(mount);
 				}
 			});
 		};
@@ -1107,7 +1145,7 @@ req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?toke
 		container.appendChild(login);
 		logincontainer.appendChild(container);
 	} else {
-		mountwrapper.appendChild(mount);
+		scroll_container.appendChild(mount);
 	}
 });
 
@@ -1207,23 +1245,8 @@ const makePauseIcon = () => xml.element("svg")
 
 const makeButton = () => xml.element("div.icon-button");
 
-// TODO: Dynamic rendering of multiple devices.
 let mp = xml.element("div.content")
-	.set("style", "display: grid; gap: 16px; padding: 16px;")
-	.add(xml.element("div.device-selector")
-		.bind("data-hide", showDevices((value) => !value))
-		.add(xml.element("div.device-selector__devices")
-			.add(xml.element("div.device")
-				.add(xml.text("Launch..."))
-			)
-			.on("click", () => {
-				let host = Array.from(chromecastClass.getState());
-				if (host.length > 0) {
-					transferPlaybackToChromecast(host[0]);
-				}
-			})
-		)
-	)
+	.set("style", "padding: 16px;")
 	.add(xml.element("div.media-player")
 		.add(xml.element("div.media-player__metadata")
 			.add(xml.element("div.media-player__title")
@@ -1297,7 +1320,7 @@ let videowrapper = xml.element("div")
 	.set("style", "background-color: rgb(0, 0, 0); height: 100%;")
 	.render();
 
-mountwrapper.appendChild(videowrapper);
+scroll_container.appendChild(videowrapper);
 videowrapper.appendChild(video);
 videowrapper.appendChild(buffer);
 
