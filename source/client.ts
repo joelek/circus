@@ -797,7 +797,7 @@ style.innerText = `
 		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		white-space nowrap;
+		white-space: nowrap;
 	}
 
 
