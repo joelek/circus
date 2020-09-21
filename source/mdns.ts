@@ -190,7 +190,6 @@ export let discover = (host: string): void => {
 	body.writeUInt16BE(12, offset); offset += 2;
 	body.writeUInt16BE(1, offset); offset += 2;
 	body = body.slice(0, 0 + offset);
-	console.log("Sending discover packet!");
 	socket.send(Buffer.concat([header, body]), MDNS_PORT, MDNS_ADDRESS);
 };
 

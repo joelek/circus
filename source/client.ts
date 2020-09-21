@@ -201,7 +201,7 @@ style.innerText = `
 	}
 
 	::-webkit-scrollbar-thumb {
-		background-color: rgb(63, 63, 63);
+		background-color: rgba(255, 255, 255, 0.125);
 		border-radius: 4px;
 	}
 
@@ -777,6 +777,42 @@ style.innerText = `
 
 
 
+
+	.device-selector {
+		overflow: auto;
+	}
+
+	.device-selector__devices {
+
+	}
+
+
+
+
+
+
+
+
+	.device {
+		font-size: 16px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space nowrap;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	.media-player {
 		align-items: center;
 		display: grid;
@@ -1171,8 +1207,23 @@ const makePauseIcon = () => xml.element("svg")
 
 const makeButton = () => xml.element("div.icon-button");
 
+// TODO: Dynamic rendering of multiple devices.
 let mp = xml.element("div.content")
-	.set("style", "padding: 16px;")
+	.set("style", "display: grid; gap: 16px; padding: 16px;")
+	.add(xml.element("div.device-selector")
+		.bind("data-hide", showDevices((value) => !value))
+		.add(xml.element("div.device-selector__devices")
+			.add(xml.element("div.device")
+				.add(xml.text("Launch..."))
+			)
+			.on("click", () => {
+				let host = Array.from(chromecastClass.getState());
+				if (host.length > 0) {
+					transferPlaybackToChromecast(host[0]);
+				}
+			})
+		)
+	)
 	.add(xml.element("div.media-player")
 		.add(xml.element("div.media-player__metadata")
 			.add(xml.element("div.media-player__title")
@@ -1225,26 +1276,6 @@ let mp = xml.element("div.content")
 		)
 	)
 	.render();
-appcontainer.appendChild(xml.element("div.app__devices")
-	.bind("data-hide", showDevices((value) => !value))
-	.add(xml.element("div.content")
-		.set("style", "padding: 16px;")
-		.add(xml.element("div.app__devices-container")
-			.add(makeBroadcastIcon()
-				.set("class", "app__devices-icon")
-			)
-			.add(xml.element("div.app__devices-text")
-				.add(xml.text("Multiple devices available..."))
-			)
-			.on("click", () => {
-				let host = Array.from(chromecastClass.getState());
-				if (host.length > 0) {
-					transferPlaybackToChromecast(host[0]);
-				}
-			})
-		)
-	)
-	.render());
 appcontainer.appendChild(mpw);
 mpw.appendChild(mp);
 

@@ -167,9 +167,11 @@ function connect(host: string): void {
 	});
 	chromecasts.set(host, socket);
 	socket.on("secureConnect", () => {
+		console.log(`Connected to chromecast at ${host}.`);
 		onsecureconnect(host, socket);
 	});
 	socket.on("close", () => {
+		console.log(`Disconnected from chromecast at ${host}.`);
 		onclose(host, socket);
 	});
 	socket.on("error", () => {
