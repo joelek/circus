@@ -1,12 +1,9 @@
 import * as libdb from "./database";
-import * as libfs from "fs";
 import * as data from "./data";
-import * as utils from "./utils";
 import * as languages from "./languages";
 
 var Client  = require('castv2-client').Client;
 var DefaultMediaReceiver = require('castv2-client').DefaultMediaReceiver;
-var mDnsSd = require('node-dns-sd');
 
 type Status = {
 	playerState: "IDLE";
@@ -203,44 +200,34 @@ let resume = ({}, cb: { (): void }): void => {
 	cb();
 };
 
-let load = ({ context, index, token, origin }: { context: Context, index: number, token: string, origin: string }, cb: { (): void }): void => {
-	mDnsSd.discover({
-		name: '_googlecast._tcp.local'
-	}).then((device_list: Array<Device>) =>{
-		if (device_list.length > 0)
-		ondeviceup(device_list[0].address);
-	}).catch((error: Error) => {
-		console.error(error);
-	});
-	function ondeviceup(host: string) {
-		var client = new Client();
-		client.connect(host, () => {
-			console.log('connected, launching app ...');
-			client.launch(DefaultMediaReceiver, (error: Error, player: Player) => {
-				gcontext = context;
-				gindex = index;
-				gtoken = token;
-				gorigin = origin;
-				gplayer = player;
-				cb();
-				console.log('app launched');
-				attempt_playback(player);
-				player.on('status', (status) => {
-					console.log('status broadcast playerState=%s', status.playerState);
-					if (status.playerState === 'IDLE' && gmedia !== null) {
-						if (gindex !== null) {
-							gindex++;
-						}
-						attempt_playback(player);
+let load = ({ context, index, token, origin, host }: { context: Context, index: number, token: string, origin: string, host: string }, cb: { (): void }): void => {
+	var client = new Client();
+	client.connect(host, () => {
+		console.log('connected, launching app ...');
+		client.launch(DefaultMediaReceiver, (error: Error, player: Player) => {
+			gcontext = context;
+			gindex = index;
+			gtoken = token;
+			gorigin = origin;
+			gplayer = player;
+			cb();
+			console.log('app launched');
+			attempt_playback(player);
+			player.on('status', (status) => {
+				console.log('status broadcast playerState=%s', status.playerState);
+				if (status.playerState === 'IDLE' && gmedia !== null) {
+					if (gindex !== null) {
+						gindex++;
 					}
-				});
+					attempt_playback(player);
+				}
 			});
 		});
-		client.on('error', (error: Error) => {
-			console.log('Error: %s', error.message);
-			client.close();
-		});
-	}
+	});
+	client.on('error', (error: Error) => {
+		console.log('Error: %s', error.message);
+		client.close();
+	});
 };
 
 export {

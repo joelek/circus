@@ -1237,7 +1237,10 @@ appcontainer.appendChild(xml.element("div.app__devices")
 				.add(xml.text("Multiple devices available..."))
 			)
 			.on("click", () => {
-				transferPlaybackToChromecast();
+				let host = Array.from(chromecastClass.getState());
+				if (host.length > 0) {
+					transferPlaybackToChromecast(host[0]);
+				}
 			})
 		)
 	)
@@ -1404,9 +1407,9 @@ let play = (index: number | null = context_index): void => {
 	canPlayPauseClass.updateState(true);
 	canSkipNextClass.updateState(index + 1 < context.length);
 };
-function transferPlaybackToChromecast() {
+function transferPlaybackToChromecast(host: string) {
 	video.pause();
-	req(`/api/cc/load/`, { context, index: context_index, token: token, origin: window.location.origin }, (status, response) => {});
+	req(`/api/cc/load/`, { context, index: context_index, token: token, origin: window.location.origin, host  }, (status, response) => {});
 }
 function pauseChromecast() {
 	req(`/api/cc/pause/`, { token: token }, (status, response) => {});
