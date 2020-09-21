@@ -13,7 +13,7 @@ let requestId = 0;
 function sendCastMessage(socket: libtls.TLSSocket, message: cast_message.CastMessage, verbose: boolean = true): void {
 	if (verbose) {
 		console.log("outgoing");
-		console.log(message);
+		console.log(JSON.stringify(JSON.parse(message.payload_utf8 || "{}"), null, "\t"));
 	}
 	let buffer = cast_message.serializeCastMessage(message);
 	let header = Buffer.alloc(4);
@@ -43,7 +43,7 @@ function sendHeartbeat(socket: libtls.TLSSocket, json: xcast.heartbeat.Autoguard
 		payload_type: cast_message.PayloadType.STRING,
 		payload_utf8: JSON.stringify(json)
 	};
-	sendCastMessage(socket, castMessage, false);
+	sendCastMessage(socket, castMessage);
 }
 
 function sendReceiver(socket: libtls.TLSSocket, json: xcast.receiver.Autoguard[keyof xcast.receiver.Autoguard]) {
@@ -77,30 +77,45 @@ export function addObserver(observer: Observer): void {
 function onpacket(host: string, socket: libtls.TLSSocket, packet: Buffer): void {
 	let castMessage = cast_message.parseCastMessage(packet);
 	let message = JSON.parse(castMessage.payload_utf8 || "{}");
+	console.log("incoming");
+	console.log(JSON.stringify(message, null, "\t"));
 	if (castMessage.namespace === "urn:x-cast:com.google.cast.tp.connection") {
 	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.tp.heartbeat") {
 		if (xcast.heartbeat.Ping.is(message)) {
 			sendHeartbeat(socket, {
 				"type": "PONG"
 			});
+		} else if (xcast.heartbeat.Pong.is(message)) {
+			clearTimeout(timers.get(host));
+			setuptimers(host, socket);
 		}
 	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.receiver") {
-		console.log("incoming");
-		console.log(JSON.stringify(message, null, "\t"));
 		if (xcast.receiver.ReceiverStatus.is(message)) {
 			console.log(message.status.applications.pop()?.statusText || "");
 		}
 	}
 }
 
+function setuptimers(host: string, socket: libtls.TLSSocket): void {
+	timers.set(host, setTimeout(() => {
+		sendHeartbeat(socket, {
+			type: "PING"
+		});
+		timers.set(host, setTimeout(() => {
+			socket.end();
+		}, 5000));
+	}, 5000));
+}
+
 function onclose(host: string, socket: libtls.TLSSocket): void {
+	console.log("close " + host);
 	for (let observer of observers) {
 		try {
 			observer.ondisconnect(host);
 		} catch (error) {}
 	}
 	chromecasts.delete(host);
-	clearInterval(timers.get(host));
+	clearTimeout(timers.get(host));
 	timers.delete(host);
 }
 
@@ -137,17 +152,11 @@ function onsecureconnect(host: string, socket: libtls.TLSSocket): void {
 	sendConnection(socket, {
 		type: "CONNECT"
 	});
-	timers.set(host, setInterval(() => {
-		sendHeartbeat(socket, {
-			type: "PING"
-		});
-	}, 5000));
-	setTimeout(() => {
-		sendReceiver(socket, {
-			type: "GET_STATUS",
-			requestId: ++requestId
-		});
-	}, 5000);
+	sendReceiver(socket, {
+		type: "GET_STATUS",
+		requestId: ++requestId
+	});
+	setuptimers(host, socket);
 }
 
 function connect(host: string): void {
