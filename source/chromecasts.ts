@@ -8,6 +8,18 @@ import * as xcast from "./xcast";
 default media receiver: CC1AD845
 */
 
+function sendCastMessage(socket: libtls.TLSSocket, message: cast_message.CastMessage, verbose: boolean = true): void {
+	if (verbose) {
+		console.log("outgoing");
+		console.log(message);
+	}
+	let buffer = cast_message.serializeCastMessage(message);
+	let header = Buffer.alloc(4);
+	header.writeUInt32BE(buffer.length, 0);
+	socket.write(header);
+	socket.write(buffer);
+}
+
 function sendConnection(socket: libtls.TLSSocket, json: xcast.connection.Autoguard[keyof xcast.connection.Autoguard]) {
 	let castMessage: cast_message.CastMessage = {
 		protocol_version: cast_message.ProtocolVersion.CASTV2_1_0,
@@ -17,9 +29,7 @@ function sendConnection(socket: libtls.TLSSocket, json: xcast.connection.Autogua
 		payload_type: cast_message.PayloadType.STRING,
 		payload_utf8: JSON.stringify(json)
 	};
-	let message = cast_message.serializeCastMessage(castMessage);
-	console.log(message.toJSON());
-	socket.write(message);
+	sendCastMessage(socket, castMessage);
 }
 
 function sendHeartbeat(socket: libtls.TLSSocket, json: xcast.heartbeat.Autoguard[keyof xcast.heartbeat.Autoguard]) {
@@ -31,7 +41,7 @@ function sendHeartbeat(socket: libtls.TLSSocket, json: xcast.heartbeat.Autoguard
 		payload_type: cast_message.PayloadType.STRING,
 		payload_utf8: JSON.stringify(json)
 	};
-	socket.write(cast_message.serializeCastMessage(castMessage));
+	sendCastMessage(socket, castMessage, false);
 }
 
 function sendReceiver(socket: libtls.TLSSocket, json: xcast.receiver.Autoguard[keyof xcast.receiver.Autoguard]) {
@@ -43,7 +53,7 @@ function sendReceiver(socket: libtls.TLSSocket, json: xcast.receiver.Autoguard[k
 		payload_type: cast_message.PayloadType.STRING,
 		payload_utf8: JSON.stringify(json)
 	};
-	socket.write(cast_message.serializeCastMessage(castMessage));
+	sendCastMessage(socket, castMessage);
 }
 
 const chromecasts = new Map<string, libtls.TLSSocket>();
@@ -52,9 +62,9 @@ const timers = new Map<string, any>();
 function onpacket(host: string, socket: libtls.TLSSocket, packet: Buffer): void {
 	let castMessage = cast_message.parseCastMessage(packet);
 	let message = JSON.parse(castMessage.payload_utf8 || "{}");
-	console.log(message);
 	if (castMessage.namespace === "urn:x-cast:com.google.cast.tp.connection") {
-
+		console.log("incoming");
+		console.log(castMessage);
 	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.tp.heartbeat") {
 		if (xcast.heartbeat.Ping.is(message)) {
 			sendHeartbeat(socket, {
@@ -64,22 +74,20 @@ function onpacket(host: string, socket: libtls.TLSSocket, packet: Buffer): void 
 
 		}
 	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.receiver") {
+		console.log("incoming");
+		console.log(castMessage);
 		if (xcast.receiver.ReceiverStatus.is(message)) {
-			if (!timers.has(host)) {
-				timers.set(host, setInterval(() => {
-					sendHeartbeat(socket, {
-						type: "PING"
-					});
-				}, 5000));
-			}
+
 		}
 	}
 }
 
 function onclose(host: string, socket: libtls.TLSSocket): void {
+	console.log(`No longer connected to ${host}...`);
 	// NOTIFY
 	chromecasts.delete(host);
 	clearInterval(timers.get(host));
+	timers.delete(host);
 }
 
 function packetize(host: string, socket: libtls.TLSSocket): void {
@@ -87,6 +95,7 @@ function packetize(host: string, socket: libtls.TLSSocket): void {
 	let waiting_header = true;
 	let bytes_required = 4;
 	socket.on("data", (chunk: Buffer) => {
+		console.log(`Got ${chunk.length} bytes from ${host}`);
 		buffered = Buffer.concat([buffered, chunk]);
 		while (buffered.length >= bytes_required) {
 			let buffer = buffered.slice(0, bytes_required);
@@ -112,6 +121,11 @@ function onsecureconnect(host: string, socket: libtls.TLSSocket): void {
 	sendConnection(socket, {
 		type: "CONNECT"
 	});
+	timers.set(host, setInterval(() => {
+		sendHeartbeat(socket, {
+			type: "PING"
+		});
+	}, 5000));
 }
 
 function connect(host: string): void {
