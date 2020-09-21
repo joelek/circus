@@ -168,7 +168,7 @@ socket.on('message', async (buffer, rinfo) => {
 	try {
 		await parse_mdns(buffer);
 	} catch (error) {
-		console.log(error);
+		//console.log(error);
 	}
 });
 
