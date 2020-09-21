@@ -8,6 +8,8 @@ import * as xcast from "./xcast";
 default media receiver: CC1AD845
 */
 
+let requestId = 0;
+
 function sendCastMessage(socket: libtls.TLSSocket, message: cast_message.CastMessage, verbose: boolean = true): void {
 	if (verbose) {
 		console.log("outgoing");
@@ -63,21 +65,17 @@ function onpacket(host: string, socket: libtls.TLSSocket, packet: Buffer): void 
 	let castMessage = cast_message.parseCastMessage(packet);
 	let message = JSON.parse(castMessage.payload_utf8 || "{}");
 	if (castMessage.namespace === "urn:x-cast:com.google.cast.tp.connection") {
-		console.log("incoming");
-		console.log(castMessage);
 	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.tp.heartbeat") {
 		if (xcast.heartbeat.Ping.is(message)) {
 			sendHeartbeat(socket, {
 				"type": "PONG"
 			});
-		} else if (xcast.heartbeat.Pong.is(message)) {
-
 		}
 	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.receiver") {
 		console.log("incoming");
-		console.log(castMessage);
+		console.log(JSON.stringify(message, null, "\t"));
 		if (xcast.receiver.ReceiverStatus.is(message)) {
-
+			console.log(message.status.applications.pop()?.statusText || "");
 		}
 	}
 }
@@ -95,7 +93,6 @@ function packetize(host: string, socket: libtls.TLSSocket): void {
 	let waiting_header = true;
 	let bytes_required = 4;
 	socket.on("data", (chunk: Buffer) => {
-		console.log(`Got ${chunk.length} bytes from ${host}`);
 		buffered = Buffer.concat([buffered, chunk]);
 		while (buffered.length >= bytes_required) {
 			let buffer = buffered.slice(0, bytes_required);
@@ -126,6 +123,12 @@ function onsecureconnect(host: string, socket: libtls.TLSSocket): void {
 			type: "PING"
 		});
 	}, 5000));
+	setTimeout(() => {
+		sendReceiver(socket, {
+			type: "GET_STATUS",
+			requestId: ++requestId
+		});
+	}, 5000);
 }
 
 function connect(host: string): void {
@@ -139,6 +142,9 @@ function connect(host: string): void {
 		onsecureconnect(host, socket);
 	});
 	socket.on("close", () => {
+		onclose(host, socket);
+	});
+	socket.on("error", () => {
 		onclose(host, socket);
 	});
 }

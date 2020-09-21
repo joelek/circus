@@ -4,44 +4,53 @@ import { guards as autoguard } from "@joelek/ts-autoguard";
 
 export type Launch = {
 	"type": "LAUNCH",
+	"requestId": number,
 	"appId": string
 };
 
 export const Launch = autoguard.Object.of({
 	"type": autoguard.StringLiteral.of("LAUNCH"),
+	"requestId": autoguard.Number,
 	"appId": autoguard.String
 });
 
 export type Stop = {
 	"type": "STOP",
+	"requestId": number,
 	"sessionId": string
 };
 
 export const Stop = autoguard.Object.of({
 	"type": autoguard.StringLiteral.of("STOP"),
+	"requestId": autoguard.Number,
 	"sessionId": autoguard.String
 });
 
 export type GetStatus = {
-	"type": "GET_STATUS"
+	"type": "GET_STATUS",
+	"requestId": number
 };
 
 export const GetStatus = autoguard.Object.of({
-	"type": autoguard.StringLiteral.of("GET_STATUS")
+	"type": autoguard.StringLiteral.of("GET_STATUS"),
+	"requestId": autoguard.Number
 });
 
 export type GetAppAvailability = {
 	"type": "GET_APP_AVAILABILITY",
+	"requestId": number,
 	"appId": string[]
 };
 
 export const GetAppAvailability = autoguard.Object.of({
 	"type": autoguard.StringLiteral.of("GET_APP_AVAILABILITY"),
+	"requestId": autoguard.Number,
 	"appId": autoguard.Array.of(autoguard.String)
 });
 
 export type SetVolume = {
 	"type": "SET_VOLUME",
+	"requestId": number,
 	"volume": ({
 		"level": number
 	} | {
@@ -51,6 +60,7 @@ export type SetVolume = {
 
 export const SetVolume = autoguard.Object.of({
 	"type": autoguard.StringLiteral.of("SET_VOLUME"),
+	"requestId": autoguard.Number,
 	"volume": autoguard.Union.of(
 		autoguard.Object.of({
 			"level": autoguard.Number
@@ -65,20 +75,25 @@ export type ReceiverStatus = {
 	"type": "RECEIVER_STATUS",
 	"requestId": number,
 	"status": {
-		"applications": [
-			{
-				"appId": string,
-				"displayName": string,
-				"namespaces": string[],
-				"sessionId": string,
-				"statusText": string,
-				"transportId": string
-			}
-		],
-		"isActiveInput": boolean,
+		"applications": {
+			"appId": string,
+			"displayName": string,
+			"iconUrl": string,
+			"isIdleScreen": boolean,
+			"launchedFromCloud": boolean,
+			"namespaces": {
+				"name": string
+			}[],
+			"sessionId": string,
+			"statusText": string,
+			"transportId": string
+		}[],
+		"userEq": {},
 		"volume": {
+			"controlType": string,
 			"level": number,
-			"muted": boolean
+			"muted": boolean,
+			"stepInterval": number
 		}
 	}
 };
@@ -87,20 +102,27 @@ export const ReceiverStatus = autoguard.Object.of({
 	"type": autoguard.StringLiteral.of("RECEIVER_STATUS"),
 	"requestId": autoguard.Number,
 	"status": autoguard.Object.of({
-		"applications": autoguard.Tuple.of(
-			autoguard.Object.of({
-				"appId": autoguard.String,
-				"displayName": autoguard.String,
-				"namespaces": autoguard.Array.of(autoguard.String),
-				"sessionId": autoguard.String,
-				"statusText": autoguard.String,
-				"transportId": autoguard.String
-			})
-		),
-		"isActiveInput": autoguard.Boolean,
+		"applications": autoguard.Array.of(autoguard.Object.of({
+			"appId": autoguard.String,
+			"displayName": autoguard.String,
+			"iconUrl": autoguard.String,
+			"isIdleScreen": autoguard.Boolean,
+			"launchedFromCloud": autoguard.Boolean,
+			"namespaces": autoguard.Array.of(autoguard.Object.of({
+				"name": autoguard.String
+			})),
+			"sessionId": autoguard.String,
+			"statusText": autoguard.String,
+			"transportId": autoguard.String
+		})),
+		"userEq": autoguard.Object.of({
+		
+		}),
 		"volume": autoguard.Object.of({
+			"controlType": autoguard.String,
 			"level": autoguard.Number,
-			"muted": autoguard.Boolean
+			"muted": autoguard.Boolean,
+			"stepInterval": autoguard.Number
 		})
 	})
 });
