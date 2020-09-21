@@ -1,8 +1,11 @@
 {
-	"DeviceAvailable": {
-		ip?: string
+	"DeviceBecameAvailable": {
+		id: string
 	},
-	"GetDeviceAvailable": {
+	"DeviceBecameUnavailable": {
+		id: string
+	},
+	"GetDevicesAvailable": {
 
 	}
 }

@@ -14,7 +14,6 @@ import { FileEntry, CueEntry } from "./database";
 import { TypeSocketServer } from "./typesockets";
 import { Autoguard as messages } from "./messages";
 import * as chromecasts from "./chromecasts";
-import { Deferred } from "./shared";
 
 let tss = new TypeSocketServer(messages);
 let connections = new Set<string>();
@@ -26,14 +25,34 @@ tss.addEventListener("sys", "disconnect", (message) => {
 	connections.delete(message.connection_id);
 });
 
-let ghost: Deferred<string>;
+let devices = new Set<string>();
 
-tss.addEventListener("app", "GetDeviceAvailable", (message) => {
-	tss.send("DeviceAvailable", message.connection_id, {
-		ip: ghost
-	});
+tss.addEventListener("app", "GetDevicesAvailable", (message) => {
+	for (let device of devices) {
+		tss.send("DeviceBecameAvailable", message.connection_id, {
+			id: device
+		});
+	}
 });
 
+chromecasts.addObserver({
+	onconnect(id) {
+		devices.add(id);
+		for (let connection of connections) {
+			tss.send("DeviceBecameAvailable", connection, {
+				id
+			});
+		}
+	},
+	ondisconnect(id) {
+		devices.delete(id);
+		for (let connection of connections) {
+			tss.send("DeviceBecameUnavailable", connection, {
+				id
+			});
+		}
+	}
+});
 chromecasts.observe();
 
 let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>): Partial<libhttp.IncomingHttpHeaders> => {

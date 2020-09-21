@@ -30,6 +30,10 @@ class ObservableClass<A> {
 		return observable.addObserver.bind(observable);
 	}
 
+	getState(): A {
+		return this.state;
+	}
+
 	updateState(state: A): void {
 		if (state === this.state) {
 			return;
@@ -51,18 +55,33 @@ const canPlayPauseClass = new ObservableClass(false);
 const canPlayPause = canPlayPauseClass.addObserver((state) => state);
 const canSkipNextClass = new ObservableClass(false);
 const canSkipNext = canSkipNextClass.addObserver((state) => state);
+const showDevicesClass = new ObservableClass(false);
+const showDevices = showDevicesClass.addObserver((state) => state);
 const isVideoClass = new ObservableClass(false);
 const isVideo = isVideoClass.addObserver((state) => state);
-const chromecastClass = new ObservableClass<Deferred<string>>(undefined);
+const chromecastClass = new ObservableClass(new Set<string>());
 const chromecast = chromecastClass.addObserver((state) => state);
 
-tsc.addEventListener("app", "DeviceAvailable", (message) => {
-	console.log(message);
-	chromecastClass.updateState(message.ip);
+chromecast((state) => {
+	if (state.size === 0) {
+		showDevicesClass.updateState(false);
+	}
+});
+
+tsc.addEventListener("app", "DeviceBecameAvailable", (message) => {
+	let set = new Set(chromecastClass.getState());
+	set.add(message.id);
+	chromecastClass.updateState(set);
+});
+
+tsc.addEventListener("app", "DeviceBecameUnavailable", (message) => {
+	let set = new Set(chromecastClass.getState());
+	set.delete(message.id);
+	chromecastClass.updateState(set);
 });
 
 tsc.addEventListener("sys", "connect", (message) => {
-	tsc.send("GetDeviceAvailable", {});
+	tsc.send("GetDevicesAvailable", {});
 });
 
 namespace xml {
@@ -1165,6 +1184,15 @@ let mp = xml.element("div.content")
 		)
 		.add(xml.element("div.media-player__controls")
 			.add(makeButton()
+				.bind("data-hide", chromecast((state) => {
+					return state.size === 0;
+				}))
+				.add(makeBroadcastIcon())
+				.on("click", () => {
+					showDevicesClass.updateState(!showDevicesClass.getState());
+				})
+			)
+			.add(makeButton()
 				.bind("data-enabled", canSkipPrev)
 				.add(makePrevIcon())
 				.on("click", () => {
@@ -1198,9 +1226,7 @@ let mp = xml.element("div.content")
 	)
 	.render();
 appcontainer.appendChild(xml.element("div.app__devices")
-	.bind("data-hide", chromecast((chromecast) => {
-		return chromecast ? "false" : "true";
-	}))
+	.bind("data-hide", showDevices((value) => !value))
 	.add(xml.element("div.content")
 		.set("style", "padding: 16px;")
 		.add(xml.element("div.app__devices-container")

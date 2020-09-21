@@ -58,8 +58,21 @@ function sendReceiver(socket: libtls.TLSSocket, json: xcast.receiver.Autoguard[k
 	sendCastMessage(socket, castMessage);
 }
 
+interface Observer {
+	onconnect(id: string): void,
+	ondisconnect(id: string): void
+}
+
 const chromecasts = new Map<string, libtls.TLSSocket>();
 const timers = new Map<string, any>();
+const observers = new Set<Observer>();
+
+export function addObserver(observer: Observer): void {
+	observers.add(observer);
+	for (let key in chromecasts) {
+		observer.onconnect(key);
+	}
+}
 
 function onpacket(host: string, socket: libtls.TLSSocket, packet: Buffer): void {
 	let castMessage = cast_message.parseCastMessage(packet);
@@ -81,8 +94,11 @@ function onpacket(host: string, socket: libtls.TLSSocket, packet: Buffer): void 
 }
 
 function onclose(host: string, socket: libtls.TLSSocket): void {
-	console.log(`No longer connected to ${host}...`);
-	// NOTIFY
+	for (let observer of observers) {
+		try {
+			observer.ondisconnect(host);
+		} catch (error) {}
+	}
 	chromecasts.delete(host);
 	clearInterval(timers.get(host));
 	timers.delete(host);
@@ -112,8 +128,11 @@ function packetize(host: string, socket: libtls.TLSSocket): void {
 }
 
 function onsecureconnect(host: string, socket: libtls.TLSSocket): void {
-	console.log(`Connected to ${host}.`);
-	// NOTIFY
+	for (let observer of observers) {
+		try {
+			observer.onconnect(host);
+		} catch (error) {}
+	}
 	packetize(host, socket);
 	sendConnection(socket, {
 		type: "CONNECT"
@@ -145,7 +164,7 @@ function connect(host: string): void {
 		onclose(host, socket);
 	});
 	socket.on("error", () => {
-		onclose(host, socket);
+		socket.end();
 	});
 }
 
