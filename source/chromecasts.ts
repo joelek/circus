@@ -102,8 +102,8 @@ function setuptimers(host: string, socket: libtls.TLSSocket): void {
 			type: "PING"
 		});
 		timers.set(host, setTimeout(() => {
-			socket.end();
-		}, 5000));
+			socket.destroy();
+		}, 1000));
 	}, 5000));
 }
 
