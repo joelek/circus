@@ -1,4 +1,3 @@
-import { setInterval } from "timers";
 import * as libtls from "tls";
 import * as cast_message from "./cast_message";
 import * as mdns from "./mdns";
@@ -10,8 +9,8 @@ default media receiver: CC1AD845
 
 let requestId = 0;
 
-function sendCastMessage(socket: libtls.TLSSocket, message: cast_message.CastMessage, verbose: boolean = true): void {
-	if (verbose) {
+function sendCastMessage(socket: libtls.TLSSocket, message: cast_message.CastMessage): void {
+	if (false) {
 		console.log("outgoing");
 		console.log(JSON.stringify(JSON.parse(message.payload_utf8 || "{}"), null, "\t"));
 	}
@@ -77,8 +76,10 @@ export function addObserver(observer: Observer): void {
 function onpacket(host: string, socket: libtls.TLSSocket, packet: Buffer): void {
 	let castMessage = cast_message.parseCastMessage(packet);
 	let message = JSON.parse(castMessage.payload_utf8 || "{}");
-	console.log("incoming");
-	console.log(JSON.stringify(message, null, "\t"));
+	if (false) {
+		console.log("incoming");
+		console.log(JSON.stringify(message, null, "\t"));
+	}
 	if (castMessage.namespace === "urn:x-cast:com.google.cast.tp.connection") {
 	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.tp.heartbeat") {
 		if (xcast.heartbeat.Ping.is(message)) {
@@ -91,7 +92,6 @@ function onpacket(host: string, socket: libtls.TLSSocket, packet: Buffer): void 
 		}
 	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.receiver") {
 		if (xcast.receiver.ReceiverStatus.is(message)) {
-			console.log(message.status.applications.pop()?.statusText || "");
 		}
 	}
 }
@@ -179,7 +179,7 @@ function connect(host: string): void {
 
 export function observe() {
 	mdns.observe("_googlecast._tcp.local", (host) => {
-		console.log(`Got chromecast service discovery response from ${host}.`);
+		//console.log(`Got chromecast service discovery response from ${host}.`);
 		if (!chromecasts.has(host)) {
 			connect(host);
 		}
