@@ -45,6 +45,60 @@ class ObservableClass<A> {
 	}
 }
 
+interface ArrayObserver<A> {
+	onappend?(state: A): void,
+	onsplice?(index: number): void,
+	onupdate?(state: Array<A>): void
+}
+
+class ArrayObservable<A> {
+	private state: Array<A>;
+	private observers: Array<ArrayObserver<A>>;
+
+	constructor(state: Array<A>) {
+		this.state = state;
+		this.observers = new Array<ArrayObserver<A>>();
+	}
+
+	addObserver(observer: ArrayObserver<A>): void {
+		this.observers.push(observer);
+		observer.onupdate?.(this.state);
+	}
+
+	compute<B>(observer: Observer<Array<A>, B>): Observable<B> {
+		let observable = new ObservableClass<B>(observer(this.state));
+		this.observers.push({
+			onupdate(state) {
+				observable.updateState(observer(state));
+			}
+		});
+		return observable.addObserver.bind(observable);
+	}
+
+	getState(): Array<A> {
+		return this.state;
+	}
+
+	append(state: A): void {
+		this.state.push(state);
+		for (let observer of this.observers) {
+			observer.onappend?.(state);
+			observer.onupdate?.(this.state);
+		}
+	}
+
+	splice(index: number): void {
+		if (index < 0 || index >= this.state.length) {
+			throw `Expected an index of at most ${this.state.length}, got ${index}!`;
+		}
+		this.state.splice(index, 1);
+		for (let observer of this.observers) {
+			observer.onsplice?.(index);
+			observer.onupdate?.(this.state);
+		}
+	}
+}
+
 const isPlayingClass = new ObservableClass(false);
 const isPlaying = isPlayingClass.addObserver((state) => state);
 const currentlyPlayingClass = new ObservableClass<string | null>(null);
@@ -59,25 +113,22 @@ const showDevicesClass = new ObservableClass(false);
 const showDevices = showDevicesClass.addObserver((state) => state);
 const isVideoClass = new ObservableClass(false);
 const isVideo = isVideoClass.addObserver((state) => state);
-const chromecastClass = new ObservableClass(new Set<string>());
-const chromecast = chromecastClass.addObserver((state) => state);
+const chromecasts = new ArrayObservable(new Array<string>());
 
-chromecast((state) => {
-	if (state.size === 0) {
-		showDevicesClass.updateState(false);
+chromecasts.addObserver({
+	onupdate(state) {
+		if (state.length === 0) {
+			showDevicesClass.updateState(false);
+		}
 	}
 });
 
 tsc.addEventListener("app", "DeviceBecameAvailable", (message) => {
-	let set = new Set(chromecastClass.getState());
-	set.add(message.id);
-	chromecastClass.updateState(set);
+	chromecasts.append(message.id);
 });
 
 tsc.addEventListener("app", "DeviceBecameUnavailable", (message) => {
-	let set = new Set(chromecastClass.getState());
-	set.delete(message.id);
-	chromecastClass.updateState(set);
+	chromecasts.splice(chromecasts.getState().lastIndexOf(message.id));
 });
 
 tsc.addEventListener("sys", "connect", (message) => {
@@ -1081,7 +1132,7 @@ let device_selector = xml.element("div.device-selector")
 			.add(xml.text("Chromecast"))
 		)
 		.on("click", () => {
-			let host = Array.from(chromecastClass.getState());
+			let host = Array.from(chromecasts.getState());
 			if (host.length > 0) {
 				transferPlaybackToChromecast(host[0]);
 			}
@@ -1258,8 +1309,8 @@ let mp = xml.element("div.content")
 		)
 		.add(xml.element("div.media-player__controls")
 			.add(makeButton()
-				.bind("data-hide", chromecast((state) => {
-					return state.size === 0;
+				.bind("data-hide", chromecasts.compute((state) => {
+					return state.length === 0;
 				}))
 				.add(makeBroadcastIcon())
 				.on("click", () => {
