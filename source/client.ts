@@ -156,12 +156,18 @@ namespace xml {
 		(event: HTMLElementEventMap[A]): void;
 	}
 
+	export interface Renderer<A> {
+		(state: A): XElement;
+	}
+
 	export class XElement implements Node<globalThis.Element> {
 		private tag: string;
 		private attributes: Map<string, string>;
 		private children: Array<Node<any>>;
 		private bound: Map<string, Observable<any>>;
 		private listeners: Map<keyof HTMLElementEventMap, Array<Listener<keyof HTMLElementEventMap>>>;
+		private array?: ArrayObservable<any>;
+		private renderer?: Renderer<any>;
 
 		constructor(selector: string) {
 			let parts = selector.split(".");
@@ -220,7 +226,27 @@ namespace xml {
 			for (let child of this.children) {
 				element.appendChild(child.render());
 			}
+			if (this.array) {
+				this.array.addObserver({
+					onupdate: (state) => {
+						if (this.renderer) {
+							while (element.firstChild) {
+								element.firstChild.remove();
+							}
+							for (let value of state) {
+								element.appendChild(this.renderer(value).render());
+							}
+						}
+					}
+				})
+			}
 			return element;
+		}
+
+		repeat<A>(array: ArrayObservable<A>, renderer: Renderer<A>): this {
+			this.array = array;
+			this.renderer = renderer;
+			return this;
 		}
 
 		set(key: string, value: string = ""): this {
@@ -1124,19 +1150,15 @@ appcontainer.appendChild(appheader);
 mountwrapper.setAttribute("class", "app__content");
 appcontainer.appendChild(mountwrapper);
 
-// TODO: Dynamic rendering of multiple devices.
 let device_selector = xml.element("div.device-selector")
 	.bind("data-hide", showDevices((value) => !value))
 	.add(xml.element("div.device-selector__devices")
-		.add(xml.element("div.device")
+		.repeat(chromecasts, (state) => xml.element("div.device")
 			.add(xml.text("Chromecast"))
+			.on("click", () => {
+				transferPlaybackToChromecast(state);
+			})
 		)
-		.on("click", () => {
-			let host = Array.from(chromecasts.getState());
-			if (host.length > 0) {
-				transferPlaybackToChromecast(host[0]);
-			}
-		})
 	)
 	.render();
 mountwrapper.appendChild(device_selector);
