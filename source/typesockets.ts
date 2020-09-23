@@ -3,6 +3,8 @@ import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as sockets from "@joelek/ts-sockets";
 
+// TODO: Add sender to TypeSockets/SocketObservable, sender === this is not sent to this.
+
 export type TypeSocketClientMessageMap<A extends stdlib.routing.MessageMap<A>> = {
 	sys: {
 		connect: {
@@ -80,7 +82,11 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	}
 
 	send<B extends keyof A>(type: B, data: A[B]): void {
-		this.socket.send(this.serializer.serialize(type, data));
+		if (this.socket.readyState === WebSocket.OPEN) {
+			this.socket.send(this.serializer.serialize(type, data));
+		} else {
+			// TODO: Implement queue.
+		}
 	}
 
 	static connect<A>(guards: autoguard.serialization.MessageGuardMap<A>): TypeSocketClient<A> {
@@ -136,7 +142,9 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 		});
 		this.socket.addEventListener("message", (message) => {
 			let connection_id = message.connection_id;
-			this.serializer.deserialize(message.buffer.toString("utf8"), (type, data) => {
+			let payload = message.buffer.toString();
+			this.serializer.deserialize(payload, (type, data) => {
+				console.log(`${connection_id} -> ${type}`);
 				this.router.route("sys", "message", {
 					connection_id,
 					type,
@@ -163,6 +171,8 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 	}
 
 	send<B extends keyof A>(type: B, connection_id: string, data: A[B]): void {
-		this.socket.send(connection_id, this.serializer.serialize(type, data));
+		let payload = this.serializer.serialize(type, data);
+		console.log(`${connection_id} <- ${type}`);
+		this.socket.send(connection_id, payload);
 	}
 };

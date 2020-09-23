@@ -1,6 +1,5 @@
 import * as liburl from "url";
 import * as libhttp from "http";
-import * as libcc from "./cc";
 import * as libauth from "./auth";
 import * as libdb from "./database";
 import * as libutils from "./utils";
@@ -241,61 +240,6 @@ class AlbumsRoute implements Route<api_response.ApiRequest, api_response.AlbumsR
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
 		return request.method === 'POST' && request.url !== undefined && /^\/api\/audio\/albums\//.test(request.url);
-	}
-}
-
-class CCRoute implements Route<api_response.ApiRequest, api_response.ChromeCastResponse> {
-	constructor() {
-
-	}
-
-	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		if (request.url === undefined) {
-			throw new Error();
-		}
-		let rurl = request.url;
-		let rbody = '';
-		request.on('data', (chunk) => {
-			rbody += chunk;
-		}).on('end', () => {
-			try {
-				let body = JSON.parse(rbody);
-				if (/^[/]api[/]cc[/]seek[/]/.test(rurl)) {
-					return libcc.seek(body, () => {
-						let payload: api_response.ChromeCastResponse = {};
-						response.writeHead(200);
-						response.end(JSON.stringify(payload));
-					});
-				}
-				if (/^[/]api[/]cc[/]pause[/]/.test(rurl)) {
-					return libcc.pause(body, () => {
-						let payload: api_response.ChromeCastResponse = {};
-						response.writeHead(200);
-						response.end(JSON.stringify(payload));
-					});
-				}
-				if (/^[/]api[/]cc[/]resume[/]/.test(rurl)) {
-					return libcc.resume(body, () => {
-						let payload: api_response.ChromeCastResponse = {};
-						response.writeHead(200);
-						response.end(JSON.stringify(payload));
-					});
-				}
-				if (/^[/]api[/]cc[/]load[/]/.test(rurl)) {
-					return libcc.load(body, () => {
-						let payload: api_response.ChromeCastResponse = {};
-						response.writeHead(200);
-						response.end(JSON.stringify(payload));
-					});
-				}
-			} catch (error) { console.log(error); }
-			response.writeHead(400);
-			response.end(JSON.stringify({}));
-		});
-	}
-
-	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === 'POST' && request.url !== undefined && /^\/api\/cc\//.test(request.url);
 	}
 }
 
@@ -849,7 +793,6 @@ class TokensRoute implements Route<api_response.TokensRequest, api_response.Toke
 let router = new Router()
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
-	.registerRoute(new CCRoute())
 	.registerRoute(new MovieRoute())
 	.registerRoute(new MoviesRoute())
 	.registerRoute(new ArtistRoute())

@@ -22,14 +22,90 @@ export type GetDevicesAvailable = {};
 
 export const GetDevicesAvailable = autoguard.Object.of<GetDevicesAvailable>({});
 
+export type AvailableDevices = {
+	"devices": string[]
+};
+
+export const AvailableDevices = autoguard.Object.of<AvailableDevices>({
+	"devices": autoguard.Array.of(autoguard.String)
+});
+
+export type TransferPlayback = {
+	"device": string,
+	"token": string,
+	"origin": string
+};
+
+export const TransferPlayback = autoguard.Object.of<TransferPlayback>({
+	"device": autoguard.String,
+	"token": autoguard.String,
+	"origin": autoguard.String
+});
+
+export type SetContext = {
+	"context"?: {
+		"file_id": string
+	}[]
+};
+
+export const SetContext = autoguard.Object.of<SetContext>({
+	"context": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Array.of(autoguard.Object.of<{
+			"file_id": string
+		}>({
+			"file_id": autoguard.String
+		}))
+	)
+});
+
+export type SetContextIndex = {
+	"index"?: number
+};
+
+export const SetContextIndex = autoguard.Object.of<SetContextIndex>({
+	"index": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Number
+	)
+});
+
+export type SetProgress = {
+	"progress": number
+};
+
+export const SetProgress = autoguard.Object.of<SetProgress>({
+	"progress": autoguard.Number
+});
+
+export type SetPlaying = {
+	"playing": boolean
+};
+
+export const SetPlaying = autoguard.Object.of<SetPlaying>({
+	"playing": autoguard.Boolean
+});
+
 export type Autoguard = {
 	"DeviceBecameAvailable": DeviceBecameAvailable,
 	"DeviceBecameUnavailable": DeviceBecameUnavailable,
-	"GetDevicesAvailable": GetDevicesAvailable
+	"GetDevicesAvailable": GetDevicesAvailable,
+	"AvailableDevices": AvailableDevices,
+	"TransferPlayback": TransferPlayback,
+	"SetContext": SetContext,
+	"SetContextIndex": SetContextIndex,
+	"SetProgress": SetProgress,
+	"SetPlaying": SetPlaying
 };
 
 export const Autoguard = {
 	"DeviceBecameAvailable": DeviceBecameAvailable,
 	"DeviceBecameUnavailable": DeviceBecameUnavailable,
-	"GetDevicesAvailable": GetDevicesAvailable
+	"GetDevicesAvailable": GetDevicesAvailable,
+	"AvailableDevices": AvailableDevices,
+	"TransferPlayback": TransferPlayback,
+	"SetContext": SetContext,
+	"SetContextIndex": SetContextIndex,
+	"SetProgress": SetProgress,
+	"SetPlaying": SetPlaying
 };

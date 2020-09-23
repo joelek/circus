@@ -5,7 +5,27 @@
 	DeviceBecameUnavailable: {
 		id: string
 	},
-	GetDevicesAvailable: {
-
+	GetDevicesAvailable: {},
+	AvailableDevices: {
+		devices: string[]
+	},
+	TransferPlayback: {
+		device: string,
+		token: string,
+		origin: string
+	},
+	SetContext: {
+		context?: {
+			file_id: string
+		}[]
+	},
+	SetContextIndex: {
+		index?: number
+	},
+	SetProgress: {
+		progress: number
+	},
+	SetPlaying: {
+		playing: boolean
 	}
 }

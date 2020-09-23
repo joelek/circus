@@ -14,6 +14,7 @@ import { FileEntry, CueEntry } from "./database";
 import { TypeSocketServer } from "./typesockets";
 import { Autoguard as messages } from "./messages";
 import * as chromecasts from "./chromecasts";
+import * as cc from "./cc";
 
 let tss = new TypeSocketServer(messages);
 let connections = new Set<string>();
@@ -54,6 +55,28 @@ chromecasts.addObserver({
 	}
 });
 chromecasts.observe();
+
+tss.addEventListener("app", "TransferPlayback", async (message) => {
+	let host = message.data.device;
+	let token = message.data.token;
+	let origin = message.data.origin;
+	try {
+		await cc.load(host, token, origin);
+		tss.send("TransferPlayback", message.connection_id, message.data);
+	} catch (error) {}
+});
+
+tss.addEventListener("app", "SetContext", async (message) => {
+	cc.controller.context.updateState(message.data.context);
+});
+
+tss.addEventListener("app", "SetContextIndex", async (message) => {
+	cc.controller.contextIndex.updateState(message.data.index);
+});
+
+tss.addEventListener("app", "SetPlaying", async (message) => {
+	cc.controller.shouldPlay.updateState(message.data.playing);
+});
 
 let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>): Partial<libhttp.IncomingHttpHeaders> => {
 	let out: Partial<libhttp.IncomingHttpHeaders> = {};
