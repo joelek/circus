@@ -8,7 +8,11 @@ export type Launch = {
 	"appId": string
 };
 
-export const Launch = autoguard.Object.of({
+export const Launch = autoguard.Object.of<{
+	"type": "LAUNCH",
+	"requestId": number,
+	"appId": string
+}>({
 	"type": autoguard.StringLiteral.of("LAUNCH"),
 	"requestId": autoguard.Number,
 	"appId": autoguard.String
@@ -20,7 +24,11 @@ export type Stop = {
 	"sessionId": string
 };
 
-export const Stop = autoguard.Object.of({
+export const Stop = autoguard.Object.of<{
+	"type": "STOP",
+	"requestId": number,
+	"sessionId": string
+}>({
 	"type": autoguard.StringLiteral.of("STOP"),
 	"requestId": autoguard.Number,
 	"sessionId": autoguard.String
@@ -31,7 +39,10 @@ export type GetStatus = {
 	"requestId": number
 };
 
-export const GetStatus = autoguard.Object.of({
+export const GetStatus = autoguard.Object.of<{
+	"type": "GET_STATUS",
+	"requestId": number
+}>({
 	"type": autoguard.StringLiteral.of("GET_STATUS"),
 	"requestId": autoguard.Number
 });
@@ -42,7 +53,11 @@ export type GetAppAvailability = {
 	"appId": string[]
 };
 
-export const GetAppAvailability = autoguard.Object.of({
+export const GetAppAvailability = autoguard.Object.of<{
+	"type": "GET_APP_AVAILABILITY",
+	"requestId": number,
+	"appId": string[]
+}>({
 	"type": autoguard.StringLiteral.of("GET_APP_AVAILABILITY"),
 	"requestId": autoguard.Number,
 	"appId": autoguard.Array.of(autoguard.String)
@@ -58,14 +73,26 @@ export type SetVolume = {
 	})
 };
 
-export const SetVolume = autoguard.Object.of({
+export const SetVolume = autoguard.Object.of<{
+	"type": "SET_VOLUME",
+	"requestId": number,
+	"volume": ({
+		"level": number
+	} | {
+		"muted": boolean
+	})
+}>({
 	"type": autoguard.StringLiteral.of("SET_VOLUME"),
 	"requestId": autoguard.Number,
 	"volume": autoguard.Union.of(
-		autoguard.Object.of({
+		autoguard.Object.of<{
+			"level": number
+		}>({
 			"level": autoguard.Number
 		}),
-		autoguard.Object.of({
+		autoguard.Object.of<{
+			"muted": boolean
+		}>({
 			"muted": autoguard.Boolean
 		})
 	)
@@ -98,27 +125,92 @@ export type ReceiverStatus = {
 	}
 };
 
-export const ReceiverStatus = autoguard.Object.of({
+export const ReceiverStatus = autoguard.Object.of<{
+	"type": "RECEIVER_STATUS",
+	"requestId": number,
+	"status": {
+		"applications": {
+			"appId": string,
+			"displayName": string,
+			"iconUrl": string,
+			"isIdleScreen": boolean,
+			"launchedFromCloud": boolean,
+			"namespaces": {
+				"name": string
+			}[],
+			"sessionId": string,
+			"statusText": string,
+			"transportId": string
+		}[],
+		"userEq": {},
+		"volume": {
+			"controlType": string,
+			"level": number,
+			"muted": boolean,
+			"stepInterval": number
+		}
+	}
+}>({
 	"type": autoguard.StringLiteral.of("RECEIVER_STATUS"),
 	"requestId": autoguard.Number,
-	"status": autoguard.Object.of({
-		"applications": autoguard.Array.of(autoguard.Object.of({
+	"status": autoguard.Object.of<{
+		"applications": {
+			"appId": string,
+			"displayName": string,
+			"iconUrl": string,
+			"isIdleScreen": boolean,
+			"launchedFromCloud": boolean,
+			"namespaces": {
+				"name": string
+			}[],
+			"sessionId": string,
+			"statusText": string,
+			"transportId": string
+		}[],
+		"userEq": {},
+		"volume": {
+			"controlType": string,
+			"level": number,
+			"muted": boolean,
+			"stepInterval": number
+		}
+	}>({
+		"applications": autoguard.Array.of(autoguard.Object.of<{
+			"appId": string,
+			"displayName": string,
+			"iconUrl": string,
+			"isIdleScreen": boolean,
+			"launchedFromCloud": boolean,
+			"namespaces": {
+				"name": string
+			}[],
+			"sessionId": string,
+			"statusText": string,
+			"transportId": string
+		}>({
 			"appId": autoguard.String,
 			"displayName": autoguard.String,
 			"iconUrl": autoguard.String,
 			"isIdleScreen": autoguard.Boolean,
 			"launchedFromCloud": autoguard.Boolean,
-			"namespaces": autoguard.Array.of(autoguard.Object.of({
+			"namespaces": autoguard.Array.of(autoguard.Object.of<{
+				"name": string
+			}>({
 				"name": autoguard.String
 			})),
 			"sessionId": autoguard.String,
 			"statusText": autoguard.String,
 			"transportId": autoguard.String
 		})),
-		"userEq": autoguard.Object.of({
+		"userEq": autoguard.Object.of<{}>({
 		
 		}),
-		"volume": autoguard.Object.of({
+		"volume": autoguard.Object.of<{
+			"controlType": string,
+			"level": number,
+			"muted": boolean,
+			"stepInterval": number
+		}>({
 			"controlType": autoguard.String,
 			"level": autoguard.Number,
 			"muted": autoguard.Boolean,

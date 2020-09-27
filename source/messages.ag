@@ -1,11 +1,11 @@
 {
-	"DeviceBecameAvailable": {
+	DeviceBecameAvailable: {
 		id: string
 	},
-	"DeviceBecameUnavailable": {
+	DeviceBecameUnavailable: {
 		id: string
 	},
-	"GetDevicesAvailable": {
+	GetDevicesAvailable: {
 
 	}
 }

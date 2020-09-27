@@ -6,7 +6,9 @@ export type VideoFrame = {
 	"pkt_pts_time": string
 };
 
-export const VideoFrame = autoguard.Object.of({
+export const VideoFrame = autoguard.Object.of<{
+	"pkt_pts_time": string
+}>({
 	"pkt_pts_time": autoguard.String
 });
 
@@ -14,7 +16,9 @@ export type ShowFrames = {
 	"frames": VideoFrame[]
 };
 
-export const ShowFrames = autoguard.Object.of({
+export const ShowFrames = autoguard.Object.of<{
+	"frames": VideoFrame[]
+}>({
 	"frames": autoguard.Array.of(VideoFrame)
 });
 
@@ -23,7 +27,10 @@ export type Stream = {
 	"duration": string
 };
 
-export const Stream = autoguard.Object.of({
+export const Stream = autoguard.Object.of<{
+	"start_time": string,
+	"duration": string
+}>({
 	"start_time": autoguard.String,
 	"duration": autoguard.String
 });
@@ -32,7 +39,9 @@ export type ShowStreams = {
 	"streams": Stream[]
 };
 
-export const ShowStreams = autoguard.Object.of({
+export const ShowStreams = autoguard.Object.of<{
+	"streams": Stream[]
+}>({
 	"streams": autoguard.Array.of(Stream)
 });
 

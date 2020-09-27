@@ -7,7 +7,10 @@ export type ArtistEntry = {
 	"title": string
 };
 
-export const ArtistEntry = autoguard.Object.of({
+export const ArtistEntry = autoguard.Object.of<{
+	"artist_id": string,
+	"title": string
+}>({
 	"artist_id": autoguard.String,
 	"title": autoguard.String
 });
@@ -19,7 +22,12 @@ export type AlbumEntry = {
 	"cover_file_id": (string | null)
 };
 
-export const AlbumEntry = autoguard.Object.of({
+export const AlbumEntry = autoguard.Object.of<{
+	"album_id": string,
+	"title": string,
+	"year": number,
+	"cover_file_id": (string | null)
+}>({
 	"album_id": autoguard.String,
 	"title": autoguard.String,
 	"year": autoguard.Number,
@@ -35,7 +43,11 @@ export type DiscEntry = {
 	"number": number
 };
 
-export const DiscEntry = autoguard.Object.of({
+export const DiscEntry = autoguard.Object.of<{
+	"disc_id": string,
+	"album_id": string,
+	"number": number
+}>({
 	"disc_id": autoguard.String,
 	"album_id": autoguard.String,
 	"number": autoguard.Number
@@ -50,7 +62,14 @@ export type TrackEntry = {
 	"duration": number
 };
 
-export const TrackEntry = autoguard.Object.of({
+export const TrackEntry = autoguard.Object.of<{
+	"track_id": string,
+	"disc_id": string,
+	"file_id": string,
+	"title": string,
+	"number": number,
+	"duration": number
+}>({
 	"track_id": autoguard.String,
 	"disc_id": autoguard.String,
 	"file_id": autoguard.String,
@@ -64,7 +83,10 @@ export type AlbumArtistEntry = {
 	"artist_id": string
 };
 
-export const AlbumArtistEntry = autoguard.Object.of({
+export const AlbumArtistEntry = autoguard.Object.of<{
+	"album_id": string,
+	"artist_id": string
+}>({
 	"album_id": autoguard.String,
 	"artist_id": autoguard.String
 });
@@ -74,7 +96,10 @@ export type TrackArtistEntry = {
 	"artist_id": string
 };
 
-export const TrackArtistEntry = autoguard.Object.of({
+export const TrackArtistEntry = autoguard.Object.of<{
+	"track_id": string,
+	"artist_id": string
+}>({
 	"track_id": autoguard.String,
 	"artist_id": autoguard.String
 });
@@ -84,7 +109,10 @@ export type VideoGenreEntry = {
 	"title": string
 };
 
-export const VideoGenreEntry = autoguard.Object.of({
+export const VideoGenreEntry = autoguard.Object.of<{
+	"video_genre_id": string,
+	"title": string
+}>({
 	"video_genre_id": autoguard.String,
 	"title": autoguard.String
 });
@@ -97,7 +125,13 @@ export type MovieEntry = {
 	"poster_file_id": (string | null)
 };
 
-export const MovieEntry = autoguard.Object.of({
+export const MovieEntry = autoguard.Object.of<{
+	"movie_id": string,
+	"title": string,
+	"year": number,
+	"summary": (string | null),
+	"poster_file_id": (string | null)
+}>({
 	"movie_id": autoguard.String,
 	"title": autoguard.String,
 	"year": autoguard.Number,
@@ -116,7 +150,10 @@ export type MovieGenreEntry = {
 	"video_genre_id": string
 };
 
-export const MovieGenreEntry = autoguard.Object.of({
+export const MovieGenreEntry = autoguard.Object.of<{
+	"movie_id": string,
+	"video_genre_id": string
+}>({
 	"movie_id": autoguard.String,
 	"video_genre_id": autoguard.String
 });
@@ -129,7 +166,13 @@ export type MoviePartEntry = {
 	"number": number
 };
 
-export const MoviePartEntry = autoguard.Object.of({
+export const MoviePartEntry = autoguard.Object.of<{
+	"movie_part_id": string,
+	"movie_id": string,
+	"file_id": string,
+	"duration": number,
+	"number": number
+}>({
 	"movie_part_id": autoguard.String,
 	"movie_id": autoguard.String,
 	"file_id": autoguard.String,
@@ -142,7 +185,10 @@ export type ShowEntry = {
 	"title": string
 };
 
-export const ShowEntry = autoguard.Object.of({
+export const ShowEntry = autoguard.Object.of<{
+	"show_id": string,
+	"title": string
+}>({
 	"show_id": autoguard.String,
 	"title": autoguard.String
 });
@@ -152,7 +198,10 @@ export type ShowGenreEntry = {
 	"video_genre_id": string
 };
 
-export const ShowGenreEntry = autoguard.Object.of({
+export const ShowGenreEntry = autoguard.Object.of<{
+	"show_id": string,
+	"video_genre_id": string
+}>({
 	"show_id": autoguard.String,
 	"video_genre_id": autoguard.String
 });
@@ -163,7 +212,11 @@ export type SeasonEntry = {
 	"number": number
 };
 
-export const SeasonEntry = autoguard.Object.of({
+export const SeasonEntry = autoguard.Object.of<{
+	"season_id": string,
+	"show_id": string,
+	"number": number
+}>({
 	"season_id": autoguard.String,
 	"show_id": autoguard.String,
 	"number": autoguard.Number
@@ -179,7 +232,15 @@ export type EpisodeEntry = {
 	"summary": (string | null)
 };
 
-export const EpisodeEntry = autoguard.Object.of({
+export const EpisodeEntry = autoguard.Object.of<{
+	"episode_id": string,
+	"season_id": string,
+	"file_id": string,
+	"title": string,
+	"number": number,
+	"duration": number,
+	"summary": (string | null)
+}>({
 	"episode_id": autoguard.String,
 	"season_id": autoguard.String,
 	"file_id": autoguard.String,
@@ -199,7 +260,12 @@ export type SubtitleEntry = {
 	"language": (string | null)
 };
 
-export const SubtitleEntry = autoguard.Object.of({
+export const SubtitleEntry = autoguard.Object.of<{
+	"subtitle_id": string,
+	"file_id": string,
+	"video_file_id": string,
+	"language": (string | null)
+}>({
 	"subtitle_id": autoguard.String,
 	"file_id": autoguard.String,
 	"video_file_id": autoguard.String,
@@ -218,7 +284,14 @@ export type SubtitleContentEntry = {
 	][]
 };
 
-export const SubtitleContentEntry = autoguard.Object.of({
+export const SubtitleContentEntry = autoguard.Object.of<{
+	"subtitle_id": string,
+	"cues": [
+		number,
+		number,
+		string
+	][]
+}>({
 	"subtitle_id": autoguard.String,
 	"cues": autoguard.Array.of(autoguard.Tuple.of(
 		autoguard.Number,
@@ -235,7 +308,13 @@ export type CueEntry = {
 	"lines": string[]
 };
 
-export const CueEntry = autoguard.Object.of({
+export const CueEntry = autoguard.Object.of<{
+	"cue_id": string,
+	"subtitle_id": string,
+	"start_ms": number,
+	"duration_ms": number,
+	"lines": string[]
+}>({
 	"cue_id": autoguard.String,
 	"subtitle_id": autoguard.String,
 	"start_ms": autoguard.Number,
@@ -249,7 +328,11 @@ export type FileEntry = {
 	"mime": string
 };
 
-export const FileEntry = autoguard.Object.of({
+export const FileEntry = autoguard.Object.of<{
+	"file_id": string,
+	"path": string[],
+	"mime": string
+}>({
 	"file_id": autoguard.String,
 	"path": autoguard.Array.of(autoguard.String),
 	"mime": autoguard.String
@@ -279,8 +362,37 @@ export type MediaDatabase = {
 	"files": FileEntry[]
 };
 
-export const MediaDatabase = autoguard.Object.of({
-	"audio": autoguard.Object.of({
+export const MediaDatabase = autoguard.Object.of<{
+	"audio": {
+		"artists": ArtistEntry[],
+		"albums": AlbumEntry[],
+		"discs": DiscEntry[],
+		"tracks": TrackEntry[],
+		"album_artists": AlbumArtistEntry[],
+		"track_artists": TrackArtistEntry[]
+	},
+	"video": {
+		"genres": VideoGenreEntry[],
+		"movie_parts": MoviePartEntry[],
+		"movies": MovieEntry[],
+		"movie_genres": MovieGenreEntry[],
+		"shows": ShowEntry[],
+		"show_genres": ShowGenreEntry[],
+		"seasons": SeasonEntry[],
+		"episodes": EpisodeEntry[],
+		"subtitles": SubtitleEntry[],
+		"subtitle_contents": SubtitleContentEntry[]
+	},
+	"files": FileEntry[]
+}>({
+	"audio": autoguard.Object.of<{
+		"artists": ArtistEntry[],
+		"albums": AlbumEntry[],
+		"discs": DiscEntry[],
+		"tracks": TrackEntry[],
+		"album_artists": AlbumArtistEntry[],
+		"track_artists": TrackArtistEntry[]
+	}>({
 		"artists": autoguard.Array.of(ArtistEntry),
 		"albums": autoguard.Array.of(AlbumEntry),
 		"discs": autoguard.Array.of(DiscEntry),
@@ -288,7 +400,18 @@ export const MediaDatabase = autoguard.Object.of({
 		"album_artists": autoguard.Array.of(AlbumArtistEntry),
 		"track_artists": autoguard.Array.of(TrackArtistEntry)
 	}),
-	"video": autoguard.Object.of({
+	"video": autoguard.Object.of<{
+		"genres": VideoGenreEntry[],
+		"movie_parts": MoviePartEntry[],
+		"movies": MovieEntry[],
+		"movie_genres": MovieGenreEntry[],
+		"shows": ShowEntry[],
+		"show_genres": ShowGenreEntry[],
+		"seasons": SeasonEntry[],
+		"episodes": EpisodeEntry[],
+		"subtitles": SubtitleEntry[],
+		"subtitle_contents": SubtitleContentEntry[]
+	}>({
 		"genres": autoguard.Array.of(VideoGenreEntry),
 		"movie_parts": autoguard.Array.of(MoviePartEntry),
 		"movies": autoguard.Array.of(MovieEntry),
@@ -312,7 +435,10 @@ export type AudiolistEntry = {
 	"title": string
 };
 
-export const AudiolistEntry = autoguard.Object.of({
+export const AudiolistEntry = autoguard.Object.of<{
+	"audiolist_id": string,
+	"title": string
+}>({
 	"audiolist_id": autoguard.String,
 	"title": autoguard.String
 });
@@ -323,7 +449,11 @@ export type AudiolistItemEntry = {
 	"number": number
 };
 
-export const AudiolistItemEntry = autoguard.Object.of({
+export const AudiolistItemEntry = autoguard.Object.of<{
+	"audiolist_id": string,
+	"track_id": string,
+	"number": number
+}>({
 	"audiolist_id": autoguard.String,
 	"track_id": autoguard.String,
 	"number": autoguard.Number
@@ -334,7 +464,10 @@ export type ListDatabase = {
 	"audiolist_items": AudiolistItemEntry[]
 };
 
-export const ListDatabase = autoguard.Object.of({
+export const ListDatabase = autoguard.Object.of<{
+	"audiolists": AudiolistEntry[],
+	"audiolist_items": AudiolistItemEntry[]
+}>({
 	"audiolists": autoguard.Array.of(AudiolistEntry),
 	"audiolist_items": autoguard.Array.of(AudiolistItemEntry)
 });
@@ -345,7 +478,11 @@ export type UserEntry = {
 	"password": string
 };
 
-export const UserEntry = autoguard.Object.of({
+export const UserEntry = autoguard.Object.of<{
+	"user_id": string,
+	"username": string,
+	"password": string
+}>({
 	"user_id": autoguard.String,
 	"username": autoguard.String,
 	"password": autoguard.String
@@ -358,7 +495,12 @@ export type AuthToken = {
 	"expires_ms": number
 };
 
-export const AuthToken = autoguard.Object.of({
+export const AuthToken = autoguard.Object.of<{
+	"username": string,
+	"selector": string,
+	"validator_hash": string,
+	"expires_ms": number
+}>({
 	"username": autoguard.String,
 	"selector": autoguard.String,
 	"validator_hash": autoguard.String,
@@ -370,7 +512,10 @@ export type UserDatabase = {
 	"tokens": AuthToken[]
 };
 
-export const UserDatabase = autoguard.Object.of({
+export const UserDatabase = autoguard.Object.of<{
+	"users": UserEntry[],
+	"tokens": AuthToken[]
+}>({
 	"users": autoguard.Array.of(UserEntry),
 	"tokens": autoguard.Array.of(AuthToken)
 });
@@ -381,7 +526,11 @@ export type Stream = {
 	"timestamp_ms": number
 };
 
-export const Stream = autoguard.Object.of({
+export const Stream = autoguard.Object.of<{
+	"username": string,
+	"file_id": string,
+	"timestamp_ms": number
+}>({
 	"username": autoguard.String,
 	"file_id": autoguard.String,
 	"timestamp_ms": autoguard.Number
@@ -391,7 +540,9 @@ export type StreamDatabase = {
 	"streams": Stream[]
 };
 
-export const StreamDatabase = autoguard.Object.of({
+export const StreamDatabase = autoguard.Object.of<{
+	"streams": Stream[]
+}>({
 	"streams": autoguard.Array.of(Stream)
 });
 
@@ -399,7 +550,9 @@ export type ChannelEntry = {
 	"channel_id": string
 };
 
-export const ChannelEntry = autoguard.Object.of({
+export const ChannelEntry = autoguard.Object.of<{
+	"channel_id": string
+}>({
 	"channel_id": autoguard.String
 });
 
@@ -410,7 +563,12 @@ export type ProgramEntry = {
 	"start_time_ms": number
 };
 
-export const ProgramEntry = autoguard.Object.of({
+export const ProgramEntry = autoguard.Object.of<{
+	"program_id": string,
+	"channel_id": string,
+	"file_id": string,
+	"start_time_ms": number
+}>({
 	"program_id": autoguard.String,
 	"channel_id": autoguard.String,
 	"file_id": autoguard.String,
@@ -422,7 +580,10 @@ export type ChannelDatabase = {
 	"programs": ProgramEntry[]
 };
 
-export const ChannelDatabase = autoguard.Object.of({
+export const ChannelDatabase = autoguard.Object.of<{
+	"channels": ChannelEntry[],
+	"programs": ProgramEntry[]
+}>({
 	"channels": autoguard.Array.of(ChannelEntry),
 	"programs": autoguard.Array.of(ProgramEntry)
 });
