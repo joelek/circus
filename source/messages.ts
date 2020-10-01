@@ -6,27 +6,21 @@ export type DeviceBecameAvailable = {
 	"id": string
 };
 
-export const DeviceBecameAvailable = autoguard.Object.of<{
-	"id": string
-}>({
+export const DeviceBecameAvailable = autoguard.Object.of({
 	"id": autoguard.String
-});
+}, {});
 
 export type DeviceBecameUnavailable = {
 	"id": string
 };
 
-export const DeviceBecameUnavailable = autoguard.Object.of<{
-	"id": string
-}>({
+export const DeviceBecameUnavailable = autoguard.Object.of({
 	"id": autoguard.String
-});
+}, {});
 
 export type GetDevicesAvailable = {};
 
-export const GetDevicesAvailable = autoguard.Object.of<{}>({
-
-});
+export const GetDevicesAvailable = autoguard.Object.of({}, {});
 
 export type Autoguard = {
 	"DeviceBecameAvailable": DeviceBecameAvailable,
