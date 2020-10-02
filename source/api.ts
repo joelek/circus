@@ -489,8 +489,26 @@ class MoviesRoute implements Route<api_response.AuthRequest, api_response.Movies
 		if (request.url === undefined) {
 			throw new Error();
 		}
+		let username = getUsername(request);
+		let movies = data.media.video.movies.map((movie) => {
+			let movie_parts = data.media.video.movie_parts.filter((movie_part) => {
+				return movie_part.movie_id === movie.movie_id;
+			}).map((movie_part) => {
+				let subtitles = data.lookupSubtitles(movie_part.file_id);
+				let streamed = data.getLatestStream(username, movie_part.file_id);
+				return {
+					...movie_part,
+					streamed,
+					subtitles
+				};
+			});
+			return {
+				...movie,
+				movie_parts
+			}
+		});
 		let payload: api_response.MoviesResponse = {
-			movies: data.media.video.movies
+			movies
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));

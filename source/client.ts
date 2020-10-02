@@ -1885,6 +1885,71 @@ function makeAlbum(album: api_response.AlbumResponse): xml.XElement {
 			)
 		);
 }
+function makeMovie(movie: api_response.MovieResponse): xml.XElement {
+	let duration_ms = 0;
+	let context = new Array<ContextEntry>();
+	let metadata: Metadata = {};
+	for (let movie_part of movie.movie_parts) {
+		duration_ms += movie_part.duration;
+		context.push({
+			file_id: movie_part.file_id,
+			title: movie.title,
+			subtitle: ""
+		});
+		metadata[movie_part.file_id] = {
+			subtitles: movie_part.subtitles
+		};
+	}
+	let title = movie.title;
+	let subtitle = [].join(" \u2022 ");
+	let tags = [
+		"Movie",
+		`${movie.year}`,
+		format_duration(duration_ms)
+	];
+	return xml.element("div.media-widget")
+		.on("click", () => {
+			navigate(`video/movies/${movie.movie_id}/`)
+		})
+		.add(xml.element("div.media-widget__artwork")
+			.set("style", "padding-bottom: 150%;")
+			.add(xml.element("img.media-widget__image")
+				.set("src", `/files/${movie.poster_file_id}/?token=${token}`)
+			)
+			.add(makePlaybackButton()
+				.on("click", (event) => {
+					event.stopPropagation();
+					set_context(context);
+					set_context_metadata(metadata);
+					play(0);
+				})
+			)
+		)
+		.add(xml.element("div.media-widget__metadata")
+			.add(xml.element("div.media-widget__titles")
+				.add(xml.element("div.media-widget__title")
+					.add(xml.text(title))
+				)
+				.add(!subtitle ? undefined : xml.element("div.media-widget__subtitle")
+					.add(xml.text(subtitle))
+				)
+			)
+			.add(xml.element("div.media-widget__tags")
+				.add(...tags.map(makeTag))
+			)
+		);
+}
+
+function makeGrid(title: string | undefined, ...elements: xml.XElement[]) {
+	return xml.element("div.media-grid")
+		.add(!title ? undefined : xml.element("div.media-grid__header")
+			.add(renderTextHeader(title))
+		)
+		.add(xml.element("div.media-grid__content")
+			.add(...elements)
+		);
+}
+
 function makeImage(file_id: string) {
 	return xml.element("div.image-box")
 		.add(xml.element("img.image-box__image")
@@ -2356,16 +2421,10 @@ let updateviewforuri = (uri: string): void => {
 			mount.appendChild(wrap);
 		});
 	} else if ((parts = /^video[/]movies[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/`, {}, (status, response) => {
-			for (let movie of response.movies) {
-				let d = document.createElement('div');
-				d.style.setProperty('font-size', '24px');
-				d.innerText = `${movie.title}`;
-				d.addEventListener('click', () => {
-					navigate(`video/movies/${movie.movie_id}/`);
-				});
-				mount.appendChild(d);
-			}
+		req<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/?token=${token}`, {}, (status, response) => {
+			let element = xml.element("div.content")
+				.add(makeGrid(undefined, ...response.movies.map(makeMovie)));
+			mount.appendChild(element.render());
 		});
 	} else if ((parts = /^video[/]cues[/](.*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);

@@ -80,7 +80,7 @@ interface MovieResponse extends ApiResponse, libdb.MovieEntry {
 }
 
 interface MoviesResponse extends ApiResponse {
-	movies: Array<libdb.MovieEntry>;
+	movies: Array<MovieResponse>;
 }
 
 interface AudiolistItemResponse extends ApiResponse, libdb.AudiolistItemEntry {
