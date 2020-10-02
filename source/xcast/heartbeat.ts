@@ -6,17 +6,17 @@ export type Ping = {
 	"type": "PING"
 };
 
-export const Ping = autoguard.Object.of({
+export const Ping = autoguard.Object.of<Ping>({
 	"type": autoguard.StringLiteral.of("PING")
-}, {});
+});
 
 export type Pong = {
 	"type": "PONG"
 };
 
-export const Pong = autoguard.Object.of({
+export const Pong = autoguard.Object.of<Pong>({
 	"type": autoguard.StringLiteral.of("PONG")
-}, {});
+});
 
 export type Autoguard = {
 	"Ping": Ping,

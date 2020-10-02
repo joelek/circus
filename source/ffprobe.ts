@@ -6,35 +6,35 @@ export type VideoFrame = {
 	"pkt_pts_time": string
 };
 
-export const VideoFrame = autoguard.Object.of({
+export const VideoFrame = autoguard.Object.of<VideoFrame>({
 	"pkt_pts_time": autoguard.String
-}, {});
+});
 
 export type ShowFrames = {
 	"frames": VideoFrame[]
 };
 
-export const ShowFrames = autoguard.Object.of({
-	"frames": autoguard.Array.of(VideoFrame)
-}, {});
+export const ShowFrames = autoguard.Object.of<ShowFrames>({
+	"frames": autoguard.Array.of(autoguard.Reference.of<VideoFrame>(() => VideoFrame))
+});
 
 export type Stream = {
 	"start_time": string,
 	"duration": string
 };
 
-export const Stream = autoguard.Object.of({
+export const Stream = autoguard.Object.of<Stream>({
 	"start_time": autoguard.String,
 	"duration": autoguard.String
-}, {});
+});
 
 export type ShowStreams = {
 	"streams": Stream[]
 };
 
-export const ShowStreams = autoguard.Object.of({
-	"streams": autoguard.Array.of(Stream)
-}, {});
+export const ShowStreams = autoguard.Object.of<ShowStreams>({
+	"streams": autoguard.Array.of(autoguard.Reference.of<Stream>(() => Stream))
+});
 
 export type Autoguard = {
 	"VideoFrame": VideoFrame,

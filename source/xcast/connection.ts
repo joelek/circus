@@ -6,17 +6,17 @@ export type Connect = {
 	"type": "CONNECT"
 };
 
-export const Connect = autoguard.Object.of({
+export const Connect = autoguard.Object.of<Connect>({
 	"type": autoguard.StringLiteral.of("CONNECT")
-}, {});
+});
 
 export type Close = {
 	"type": "CLOSE"
 };
 
-export const Close = autoguard.Object.of({
+export const Close = autoguard.Object.of<Close>({
 	"type": autoguard.StringLiteral.of("CLOSE")
-}, {});
+});
 
 export type Autoguard = {
 	"Connect": Connect,
