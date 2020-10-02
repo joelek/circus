@@ -8,7 +8,7 @@ class Controller {
 	readonly contextIndex = new ObservableClass<number | undefined>(undefined);
 	readonly shouldPlay = new ObservableClass(false);
 	readonly isPlaying = new ObservableClass(false);
-	readonly isLoaded = new ObservableClass(false);
+	readonly isLaunched = new ObservableClass(false);
 }
 
 export const controller = new Controller();
@@ -172,7 +172,7 @@ let make_media_object = (): MediaObject | null => {
 	};
 };
 
-let attempt_playback = (): void => {
+let attempt_playback = (shouldPlay: boolean): void => {
 	gmedia = null;
 	let media = make_media_object();
 	if (media == null) {
@@ -182,7 +182,7 @@ let attempt_playback = (): void => {
 		return;
 	}
 	gplayer.load(media, {
-		autoplay: true,
+		autoplay: shouldPlay,
 		activeTrackIds: media.activeTrackIds
 	}, (error, status) => {
 		if (error) {
@@ -222,19 +222,19 @@ export const load = (host: string, token: string, origin: string): Promise<void>
 				gtoken = token;
 				gorigin = origin;
 				console.log('app launched');
-				controller.isLoaded.updateState(true);
+				controller.isLaunched.updateState(true);
 				player.on('status', (status) => {
 					console.log('status broadcast playerState=%s', status.playerState);
 					if (status.playerState === "PLAYING") {
-						controller.isPlaying.updateState(false);
-					} else {
 						controller.isPlaying.updateState(true);
+					} else {
+						controller.isPlaying.updateState(false);
 					}
 					if (status.playerState === 'IDLE' && gmedia != null) {
 						if (gindex != null) {
 							gindex++;
 						}
-						attempt_playback();
+						attempt_playback(true);
 					}
 				});
 				return resolve();
@@ -242,7 +242,7 @@ export const load = (host: string, token: string, origin: string): Promise<void>
 		});
 		client.on('error', (error: Error) => {
 			console.log('Error: %s', error.message);
-			controller.isLoaded.updateState(false);
+			controller.isLaunched.updateState(false);
 			client.close();
 		});
 	});
@@ -257,11 +257,25 @@ function decidePlaybackAction(): void {
 	if (contextIndex == null) {
 		return;
 	}
-	let isLoaded = controller.isLoaded.getState();
-	if (!isLoaded) {
+	let isLaunched = controller.isLaunched.getState();
+	if (!isLaunched) {
 		return;
 	}
 	let shouldPlay = controller.shouldPlay.getState();
+	attempt_playback(shouldPlay);
+};
+controller.context.addObserver((context) => {
+	gcontext = context;
+	decidePlaybackAction();
+});
+controller.contextIndex.addObserver((contextIndex) => {
+	gindex = contextIndex;
+	decidePlaybackAction();
+});
+controller.isLaunched.addObserver((isLaunched) => {
+	decidePlaybackAction();
+});
+controller.shouldPlay.addObserver((shouldPlay) => {
 	let isPlaying = controller.isPlaying.getState();
 	if (shouldPlay) {
 		if (!isPlaying) {
@@ -272,18 +286,4 @@ function decidePlaybackAction(): void {
 			pause();
 		}
 	}
-};
-controller.context.addObserver((context) => {
-	gcontext = context;
-	decidePlaybackAction();
-});
-controller.contextIndex.addObserver((contextIndex) => {
-	gindex = contextIndex;
-	decidePlaybackAction();
-});
-controller.shouldPlay.addObserver((shouldPlay) => {
-	decidePlaybackAction();
-});
-controller.isLoaded.addObserver((isLoaded) => {
-	decidePlaybackAction();
 });
