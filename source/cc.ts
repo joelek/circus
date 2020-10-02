@@ -6,12 +6,43 @@ import { ArrayObservable, Observable, ObservableClass } from "./simpleobs";
 class Controller {
 	readonly context = new ObservableClass<Context | undefined>(undefined);
 	readonly contextIndex = new ObservableClass<number | undefined>(undefined);
+	readonly currentItem = new ObservableClass<ContextItem | undefined>(undefined);
 	readonly shouldPlay = new ObservableClass(false);
 	readonly isPlaying = new ObservableClass(false);
 	readonly isLaunched = new ObservableClass(false);
+	readonly isLoaded = new ObservableClass(false);
 }
 
 export const controller = new Controller();
+
+function computeCurrentItem(context?: Context, contextIndex?: number) {
+	return context != null && contextIndex != null ? context[contextIndex] : undefined;
+}
+controller.context.addObserver((context) => {
+	controller.currentItem.updateState(computeCurrentItem(context, controller.contextIndex.getState()));
+});
+controller.contextIndex.addObserver((contextIndex) => {
+	controller.currentItem.updateState(computeCurrentItem(controller.context.getState(), contextIndex));
+});
+
+function computeSomething(currentItem?: ContextItem, isLaunched?: boolean) {
+	if (currentItem != null && isLaunched) {
+		attempt_playback();
+	}
+}
+controller.currentItem.addObserver((currentItem) => {
+	computeSomething(currentItem, controller.isLaunched.getState());
+});
+controller.isLaunched.addObserver((isLaunched) => {
+	computeSomething(controller.currentItem.getState(), isLaunched);
+});
+
+
+
+
+
+
+
 
 
 var Client  = require('castv2-client').Client;
@@ -20,10 +51,6 @@ var DefaultMediaReceiver = require('castv2-client').DefaultMediaReceiver;
 type Status = {
 	playerState: "IDLE" | "PLAYING" | "BUFFERING";
 	media: Media;
-};
-
-type Device = {
-	address: string;
 };
 
 type Media = {
@@ -58,9 +85,11 @@ type Player = {
 	on(kind: "status", cb: { (status: Status): void }): void;
 };
 
-type Context = {
-	file_id: string;
-}[];
+type ContextItem = {
+	file_id: string
+};
+
+type Context = ContextItem[];
 
 type STTrack = {
 	trackId: number;
@@ -90,10 +119,11 @@ function getLanguage(language: string | null): string {
 }
 
 let make_media_object = (): MediaObject | null => {
-	if (gcontext == null || gindex == null) {
+	let contextItem = controller.currentItem.getState();
+	if (contextItem == null) {
 		return null;
 	}
-	let file = data.files_index[gcontext[gindex].file_id];
+	let file = data.files_index[contextItem.file_id];
 	if (file == undefined) {
 		return null;
 	}
@@ -172,7 +202,7 @@ let make_media_object = (): MediaObject | null => {
 	};
 };
 
-let attempt_playback = (shouldPlay: boolean): void => {
+let attempt_playback = (): void => {
 	gmedia = null;
 	let media = make_media_object();
 	if (media == null) {
@@ -182,7 +212,7 @@ let attempt_playback = (shouldPlay: boolean): void => {
 		return;
 	}
 	gplayer.load(media, {
-		autoplay: shouldPlay,
+		autoplay: controller.shouldPlay.getState(),
 		activeTrackIds: media.activeTrackIds
 	}, (error, status) => {
 		if (error) {
@@ -190,6 +220,7 @@ let attempt_playback = (shouldPlay: boolean): void => {
 		}
 		if (status) {
 			gmedia = status.media;
+			controller.isLoaded.updateState(true);
 		}
 	});
 };
@@ -231,10 +262,11 @@ export const load = (host: string, token: string, origin: string): Promise<void>
 						controller.isPlaying.updateState(false);
 					}
 					if (status.playerState === 'IDLE' && gmedia != null) {
-						if (gindex != null) {
-							gindex++;
+						let context = controller.context.getState();
+						let contextIndex = controller.contextIndex.getState();
+						if (context != null && contextIndex != null && contextIndex + 1 < context.length) {
+							controller.contextIndex.updateState(contextIndex + 1);
 						}
-						attempt_playback(true);
 					}
 				});
 				return resolve();
@@ -248,33 +280,7 @@ export const load = (host: string, token: string, origin: string): Promise<void>
 	});
 };
 
-function decidePlaybackAction(): void {
-	let context = controller.context.getState();
-	if (context == null) {
-		return;
-	}
-	let contextIndex = controller.contextIndex.getState();
-	if (contextIndex == null) {
-		return;
-	}
-	let isLaunched = controller.isLaunched.getState();
-	if (!isLaunched) {
-		return;
-	}
-	let shouldPlay = controller.shouldPlay.getState();
-	attempt_playback(shouldPlay);
-};
-controller.context.addObserver((context) => {
-	gcontext = context;
-	decidePlaybackAction();
-});
-controller.contextIndex.addObserver((contextIndex) => {
-	gindex = contextIndex;
-	decidePlaybackAction();
-});
-controller.isLaunched.addObserver((isLaunched) => {
-	decidePlaybackAction();
-});
+
 controller.shouldPlay.addObserver((shouldPlay) => {
 	let isPlaying = controller.isPlaying.getState();
 	if (shouldPlay) {

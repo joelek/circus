@@ -63,6 +63,11 @@ tss.addEventListener("app", "TransferPlayback", async (message) => {
 	try {
 		await cc.load(host, token, origin);
 		tss.send("TransferPlayback", message.connection_id, message.data);
+		cc.controller.contextIndex.addObserver((contextIndex) => {
+			tss.send("SetContextIndex", message.connection_id, {
+				index: contextIndex
+			});
+		});
 	} catch (error) {}
 });
 
