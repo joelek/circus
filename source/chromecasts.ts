@@ -103,7 +103,7 @@ function setuptimers(host: string, socket: libtls.TLSSocket): void {
 		});
 		timers.set(host, setTimeout(() => {
 			socket.destroy();
-		}, 1000));
+		}, 5000));
 	}, 5000));
 }
 
