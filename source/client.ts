@@ -88,14 +88,11 @@ tsc.addEventListener("app", "TransferPlayback", (message) => {
 const chromecasts = new ArrayObservable(new Array<string>());
 tsc.addEventListener("sys", "connect", (message) => {
 	tsc.send("GetDevicesAvailable", {});
-	// TODO: Fix interleaving of messages.
-	setTimeout(() => {
-		if (token != null) {
-			tsc.send("GetPlayback", {
-				token
-			});
-		}
-	}, 5000);
+	if (token != null) {
+		tsc.send("GetPlayback", {
+			token
+		});
+	}
 });
 tsc.addEventListener("app", "DeviceBecameAvailable", (message) => {
 	chromecasts.append(message.id);

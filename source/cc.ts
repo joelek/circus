@@ -19,6 +19,7 @@ function computeCurrentItem(context?: Context, contextIndex?: number) {
 	return context != null && contextIndex != null ? context[contextIndex] : undefined;
 }
 controller.context.addObserver((context) => {
+	controller.contextIndex.updateState(undefined);
 	controller.currentItem.updateState(computeCurrentItem(context, controller.contextIndex.getState()));
 });
 controller.contextIndex.addObserver((contextIndex) => {
