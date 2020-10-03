@@ -1711,6 +1711,7 @@ let device_selector = xml.element("div.device-selector")
 			.add(xml.text("Chromecast"))
 			.on("click", () => {
 				transferPlaybackToDevice(state);
+				showDevicesClass.updateState(false);
 			})
 		)
 	)
