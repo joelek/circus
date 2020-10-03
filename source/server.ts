@@ -84,6 +84,9 @@ tss.addEventListener("app", "GetPlayback", (message) => {
 		tss.send("SetContextIndex", message.connection_id, {
 			index: cc.controller.contextIndex.getState()
 		});
+		tss.send("SetPlaying", message.connection_id, {
+			playing: cc.controller.shouldPlay.getState()
+		});
 	}
 });
 

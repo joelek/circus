@@ -135,8 +135,8 @@ tsc.addEventListener("app", "SetContext", (message) => {
 	let value = message.context?.map((entry) => {
 		return {
 			file_id: entry.file_id,
-			title: "",
-			subtitle: ""
+			title: (entry as any).title,
+			subtitle: (entry as any).subtitle
 		};
 	});
 	context.updateState(value);
@@ -200,21 +200,14 @@ function computeContexEntry(): void {
 }
 context.addObserver(computeContexEntry);
 context_index.addObserver(computeContexEntry);
+const mediaPlayerTitle = new ObservableClass("");
+const mediaPlayerSubtitle = new ObservableClass("");
 contextEntry.addObserver((entry) => {
-	// TODO: make observable for titles/currently playing object.
-	if (entry != null) {
-		let element = document.querySelector("div.media-player__title");
-		if (element) {
-			element.textContent = entry.title;
-		}
-		let element2 = document.querySelector("div.media-player__subtitle");
-		if (element2) {
-			element2.textContent = entry.subtitle;
-		}
-		session.setMetadata({
-			title: entry.title
-		});
-	}
+	mediaPlayerTitle.updateState(entry?.title ?? "");
+	mediaPlayerSubtitle.updateState(entry?.subtitle ?? "");
+	session.setMetadata({
+		title: entry?.title ?? ""
+	});
 });
 contextEntry.addObserver((entry) => {
 	if (entry != null) {
@@ -251,8 +244,6 @@ contextEntry.addObserver((entry) => {
 		}
 	}
 });
-
-
 
 
 
@@ -551,14 +542,22 @@ namespace xml {
 	}
 
 	export class Text implements Node<globalThis.Text> {
-		private content: string;
+		private content: string | ObservableClass<string>;
 
-		constructor(content: string) {
+		constructor(content: string | ObservableClass<string>) {
 			this.content = content;
 		}
 
 		render(): globalThis.Text {
-			return document.createTextNode(this.content);
+			let node = document.createTextNode("");
+			if (this.content instanceof ObservableClass) {
+				this.content.addObserver((content) => {
+					node.textContent = content;
+				});
+			} else {
+				node.textContent = this.content;
+			}
+			return node;
 		}
 	}
 
@@ -686,7 +685,7 @@ namespace xml {
 		return new XElement(selector);
 	}
 
-	export function text(content: string): Text {
+	export function text(content: string | ObservableClass<string>): Text {
 		return new Text(content);
 	}
 }
@@ -1824,10 +1823,10 @@ let mp = xml.element("div.content")
 	.add(xml.element("div.media-player")
 		.add(xml.element("div.media-player__metadata")
 			.add(xml.element("div.media-player__title")
-				.add(xml.text(""))
+				.add(xml.text(mediaPlayerTitle))
 			)
 			.add(xml.element("div.media-player__subtitle")
-				.add(xml.text(""))
+				.add(xml.text(mediaPlayerSubtitle))
 			)
 		)
 		.add(xml.element("div.media-player__controls")
