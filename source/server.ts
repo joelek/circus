@@ -71,6 +71,22 @@ tss.addEventListener("app", "TransferPlayback", async (message) => {
 	} catch (error) {}
 });
 
+tss.addEventListener("app", "GetPlayback", (message) => {
+	let ccsession = cc.getSession();
+	// TODO: Use timing safe equals.
+	console.log("requested getplayback", message, ccsession);
+	if (ccsession != null && message.data.token === ccsession.token) {
+		console.log("sending");
+		tss.send("TransferPlayback", message.connection_id, ccsession);
+		tss.send("SetContext", message.connection_id, {
+			context: cc.controller.context.getState()
+		});
+		tss.send("SetContextIndex", message.connection_id, {
+			index: cc.controller.contextIndex.getState()
+		});
+	}
+});
+
 tss.addEventListener("app", "SetContext", async (message) => {
 	cc.controller.context.updateState(message.data.context);
 });

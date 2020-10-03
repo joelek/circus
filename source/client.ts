@@ -88,6 +88,14 @@ tsc.addEventListener("app", "TransferPlayback", (message) => {
 const chromecasts = new ArrayObservable(new Array<string>());
 tsc.addEventListener("sys", "connect", (message) => {
 	tsc.send("GetDevicesAvailable", {});
+	// TODO: Fix interleaving of messages.
+	setTimeout(() => {
+		if (token != null) {
+			tsc.send("GetPlayback", {
+				token
+			});
+		}
+	}, 5000);
 });
 tsc.addEventListener("app", "DeviceBecameAvailable", (message) => {
 	chromecasts.append(message.id);
@@ -1293,7 +1301,7 @@ style.innerText = `
 
 
 	.device-selector {
-		background-color: rgba(0, 0, 0, 0.75);
+		background-color: rgb(31, 31, 31);
 		position: absolute;
 			height: 100%;
 			width: 100%;
@@ -1392,6 +1400,11 @@ style.innerText = `
 	.icon-button[data-enabled="false"] {
 		background-color: rgb(79, 79, 79);
 		cursor: default;
+	}
+
+	.icon-button[data-active="true"] {
+		background-color: ${ACCENT_COLOR};
+		fill: rgb(255, 255, 255);
 	}
 
 	@media (hover: hover) and (pointer: fine) {
@@ -1819,8 +1832,11 @@ let mp = xml.element("div.content")
 		)
 		.add(xml.element("div.media-player__controls")
 			.add(makeButton()
-				.bind("data-hide", chromecasts.compute((state) => {
-					return state.length === 0;
+				.bind("data-hide", chromecasts.compute((chromecasts) => {
+					return chromecasts.length === 0;
+				}))
+				.bind("data-active", currentDevice.addObserver((currentDevice) => {
+					return currentDevice != null;
 				}))
 				.add(makeBroadcastIcon())
 				.on("click", () => {

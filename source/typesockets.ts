@@ -173,6 +173,8 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 	send<B extends keyof A>(type: B, connection_id: string, data: A[B]): void {
 		let payload = this.serializer.serialize(type, data);
 		console.log(`${connection_id} <- ${type}`);
-		this.socket.send(connection_id, payload);
+		try {
+			this.socket.send(connection_id, payload);
+		} catch (error) {}
 	}
 };

@@ -103,12 +103,22 @@ type STTrack = {
 	customData: null
 };
 
-let gcontext: Context | undefined;
-let gindex: number | undefined;
 let gmedia: Media | null = null;
+let ghost: string | null = null;
 let gtoken: string | null = null;
 let gorigin: string | null = null;
 let gplayer: Player | null = null;
+
+export function getSession() {
+	if (ghost && gtoken && gorigin) {
+		return {
+			device: ghost,
+			token: gtoken,
+			origin: gorigin
+		};
+	}
+	return undefined;
+}
 
 function getLanguage(language: string | null): string {
 	let entry = languages.db[language || "eng"] || languages.db["eng"];
@@ -249,6 +259,7 @@ export const load = (host: string, token: string, origin: string): Promise<void>
 		client.connect(host, () => {
 			console.log('connected, launching app ...');
 			client.launch(DefaultMediaReceiver, (error: Error, player: Player) => {
+				ghost = host;
 				gplayer = player;
 				gtoken = token;
 				gorigin = origin;

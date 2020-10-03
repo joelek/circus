@@ -42,6 +42,14 @@ export const TransferPlayback = autoguard.Object.of<TransferPlayback>({
 	"origin": autoguard.String
 });
 
+export type GetPlayback = {
+	"token": string
+};
+
+export const GetPlayback = autoguard.Object.of<GetPlayback>({
+	"token": autoguard.String
+});
+
 export type SetContext = {
 	"context"?: {
 		"file_id": string
@@ -92,6 +100,7 @@ export type Autoguard = {
 	"GetDevicesAvailable": GetDevicesAvailable,
 	"AvailableDevices": AvailableDevices,
 	"TransferPlayback": TransferPlayback,
+	"GetPlayback": GetPlayback,
 	"SetContext": SetContext,
 	"SetContextIndex": SetContextIndex,
 	"SetProgress": SetProgress,
@@ -104,6 +113,7 @@ export const Autoguard = {
 	"GetDevicesAvailable": GetDevicesAvailable,
 	"AvailableDevices": AvailableDevices,
 	"TransferPlayback": TransferPlayback,
+	"GetPlayback": GetPlayback,
 	"SetContext": SetContext,
 	"SetContextIndex": SetContextIndex,
 	"SetProgress": SetProgress,
