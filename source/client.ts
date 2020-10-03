@@ -398,14 +398,6 @@ currentDevice.addObserver((currentDevice) => {
 
 
 
-const showVideo = new ObservableClass(false);
-currentDevice.addObserver((currentDevice) => {
-	showVideo.updateState(currentDevice == null && isVideoClass.getState());
-});
-isVideoClass.addObserver((isVideo) => {
-	showVideo.updateState(currentDevice.getState() == null && isVideo);
-});
-
 
 
 
@@ -517,6 +509,22 @@ session.setHandlers({
 
 
 
+const showVideo = new ObservableClass(false);
+currentDevice.addObserver((currentDevice) => {
+	showVideo.updateState(currentDevice == null && isVideoClass.getState());
+});
+isVideoClass.addObserver((isVideo) => {
+	showVideo.updateState(currentDevice.getState() == null && isVideo);
+});
+
+
+
+
+
+
+const showLogin = new ObservableClass(false);
+
+
 
 
 
@@ -559,6 +567,7 @@ namespace xml {
 		private attributes: Map<string, string>;
 		private children: Array<Node<any>>;
 		private bound: Map<string, Observable<any>>;
+		private bound2: Map<string, ObservableClass<string>>;
 		private listeners: Map<keyof HTMLElementEventMap, Array<Listener<keyof HTMLElementEventMap>>>;
 		private array?: ArrayObservable<any>;
 		private renderer?: Renderer<any>;
@@ -569,6 +578,7 @@ namespace xml {
 			this.attributes = new Map<string, string>();
 			this.children = new Array<Node<any>>();
 			this.bound = new Map<string, Observable<any>>();
+			this.bound2 = new Map<string, ObservableClass<string>>();
 			this.listeners = new Map<keyof HTMLElementEventMap, Array<Listener<keyof HTMLElementEventMap>>>();
 			let classes = parts.slice(1).join(" ");
 			if (classes !== "") {
@@ -588,6 +598,11 @@ namespace xml {
 
 		bind(key: string, observable: Observable<any>): this {
 			this.bound.set(key, observable);
+			return this;
+		}
+
+		bind2(key: string, observable: ObservableClass<string>): this {
+			this.bound2.set(key, observable);
 			return this;
 		}
 
@@ -616,6 +631,16 @@ namespace xml {
 				observable((value) => {
 					element.setAttribute(key, `${value}`);
 				});
+			}
+			for (let [key, observable] of this.bound2) {
+				observable.addObserver((value) => {
+					element.setAttribute(key, `${value}`);
+				});
+				if (this.tag === "input" && key === "value") {
+					element.addEventListener("change", () => {
+						observable.updateState((element as any).value);
+					});
+				}
 			}
 			for (let child of this.children) {
 				element.appendChild(child.render());
@@ -1234,7 +1259,7 @@ style.innerText = `
 
 	.playlist-item[data-playing="true"] {
 		border-left: 4px solid ${ACCENT_COLOR};
-		padding-left: 28px;
+		padding-left: 32px;
 	}
 
 	@media (hover: hover) and (pointer: fine) {
@@ -1535,7 +1560,40 @@ let req = <T extends api_response.ApiRequest, U extends api_response.ApiResponse
 	xhr.send(JSON.stringify(body));
 }
 
-let token = localStorage.getItem('token');
+let token = localStorage.getItem("token");
+let valid_token: boolean | undefined;
+async function getToken(): Promise<string | null> {
+	if (valid_token == null) {
+		return new Promise((resolve, reject) => {
+			req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?token=${token}`, {}, (status, response) => {
+				valid_token = (status >= 200 && status < 300);
+				if (!valid_token) {
+					localStorage.removeItem("token");
+					token = null;
+				}
+				resolve(token);
+			});
+		});
+	} else {
+		return token;
+	}
+}
+async function getNewToken(username: string, password: string): Promise<string | null> {
+	return new Promise((resolve, reject) => {
+		req<api_response.AuthRequest, api_response.AuthResponse>(`/api/auth/`, { username, password }, (status, response) => {
+			valid_token = (status >= 200 && status < 300);
+			if (!valid_token) {
+				localStorage.removeItem("token");
+				token = null;
+			} else {
+				token = response.token;
+				localStorage.setItem("token", token);
+			}
+			resolve(token);
+		});
+	});
+}
+
 let logincontainer = document.createElement('div');
 let mount = document.createElement('div');
 let mountwrapper = document.createElement('div');
@@ -1570,6 +1628,41 @@ appcontainer.appendChild(appheader);
 mountwrapper.setAttribute("class", "app__content");
 appcontainer.appendChild(mountwrapper);
 
+
+
+let username = new ObservableClass("");
+let password = new ObservableClass("");
+mountwrapper.appendChild(xml.element("div.login-modal")
+	.bind("data-hide", showLogin.addObserver(showLogin => !showLogin))
+	.add(xml.element("input.login-modal__username")
+		.bind2("value", username)
+		.set("type", "text")
+		.set("placeholder", "Username...")
+	)
+	.add(xml.element("input.login-modal__password")
+		.bind2("value", password)
+		.set("type", "password")
+		.set("placeholder", "Password...")
+		.on("keyup", async (event) => {
+			if (event.key === "Enter") {
+				let token = await getNewToken(username.getState(), password.getState());
+				if (token != null) {
+					showLogin.updateState(false);
+				}
+			}
+		})
+	)
+	.add(xml.element("button")
+		.add(xml.text("Login"))
+		.on("click", async () => {
+			let token = await getNewToken(username.getState(), password.getState());
+			if (token != null) {
+				showLogin.updateState(false);
+			}
+		})
+	)
+	.render());
+
 let device_selector = xml.element("div.device-selector")
 	.bind("data-hide", showDevices((value) => !value))
 	.add(xml.element("div.device-selector__devices")
@@ -1584,6 +1677,7 @@ let device_selector = xml.element("div.device-selector")
 mountwrapper.appendChild(device_selector);
 let scroll_container = xml.element("div.scroll-container")
 	.render();
+scroll_container.appendChild(mount);
 mountwrapper.appendChild(scroll_container);
 
 
@@ -1596,43 +1690,7 @@ mountwrapper.appendChild(scroll_container);
       el.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
     }
  */
-req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?token=${token}`, {}, (status, response) => {
-	if (!(status >= 200 && status < 300)) {
-		localStorage.removeItem('token');
-		let container = document.createElement("div");
-		let username = document.createElement('input');
-		username.setAttribute('type', 'text');
-		username.setAttribute("placeholder", "Username...");
-		container.appendChild(username);
-		let password = document.createElement('input');
-		password.setAttribute('type', 'password');
-		password.setAttribute("placeholder", "Passphrase...");
-		container.appendChild(password);
-		let cb = () => {
-			req<api_response.AuthRequest, api_response.AuthResponse>(`/api/auth/`, { username: username.value, password: password.value }, (status, response) => {
-				if (status === 200) {
-					token = response.token;
-					localStorage.setItem('token', token);
-					logincontainer.removeChild(container);
-					scroll_container.appendChild(mount);
-				}
-			});
-		};
-		password.addEventListener('keyup', (event) => {
-			if (event.keyCode === 13) {
-				cb();
-			}
-		});
-		let login = document.createElement('button'); login.textContent = 'Login';
-		login.addEventListener('click', (event) => {
-			cb();
-		});
-		container.appendChild(login);
-		logincontainer.appendChild(container);
-	} else {
-		scroll_container.appendChild(mount);
-	}
-});
+
 
 let mpw = xml.element("div.app__navigation")
 	.render();
@@ -3033,15 +3091,23 @@ let get_route = (pathname: string = window.location.pathname, basehref: string =
 	return uri;
 };
 
+
+
 let navigate = (uri: string): void => {
-	if (window.history.state === null) {
-		window.history.replaceState({ 'uri': uri }, '', uri);
-	} else {
-		if (uri !== window.history.state.uri) {
-			window.history.pushState({ 'uri': uri }, '', uri);
+	getToken().then((token) => {
+		if (token == null) {
+			showLogin.updateState(true);
+		} else {
+			if (window.history.state === null) {
+				window.history.replaceState({ 'uri': uri }, '', uri);
+			} else {
+				if (uri !== window.history.state.uri) {
+					window.history.pushState({ 'uri': uri }, '', uri);
+				}
+			}
+			updateviewforuri(uri);
 		}
-	}
-	updateviewforuri(uri);
+	});
 };
 navigate(get_route());
 window.addEventListener('popstate', (event) => {
