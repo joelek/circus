@@ -854,17 +854,34 @@ style.innerText = `
 	}
 
 	body ::selection {
-		background-color: rgb(255, 207, 0);
-		color: rgb(31, 31, 31);
+		background-color: ${ACCENT_COLOR};
+		color: rgb(255, 255, 255);
 	}
 
 	button {
-		background-color: rgb(255, 207, 0);
+		background-color: ${ACCENT_COLOR};
+		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
 		border-radius: 4px;
-		color: rgb(31, 31, 31);
+		color: rgb(255, 255, 255);
 		cursor: pointer;
-		font-size: 12px;
-		padding: 4px 16px;
+		font-size: 16px;
+		padding: 8px 16px;
+		transition: transform 0.1s;
+	}
+
+	button[data-enabled="false"] {
+		background-color: rgb(79, 79, 79);
+		cursor: default;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		button:not([data-enabled="false"]):hover {
+			transform: scale(1.25);
+		}
+
+		button:active {
+			transform: none;
+		}
 	}
 
 	input {
@@ -915,7 +932,7 @@ style.innerText = `
 
 	.watched::before {
 		content: "\u2022";
-		color: rgb(255, 207, 0);
+		color: ${ACCENT_COLOR};
 	}
 
 
@@ -1136,7 +1153,7 @@ style.innerText = `
 	}
 
 	@media (hover: hover) and (pointer: fine) {
-		.playback-button:hover {
+		.playback-button:not([data-enabled="false"]):hover {
 			transform: scale(1.25);
 		}
 
@@ -1217,7 +1234,7 @@ style.innerText = `
 
 	.playlist-item[data-playing="true"] {
 		border-left: 4px solid ${ACCENT_COLOR};
-		padding-left: 32px;
+		padding-left: 28px;
 	}
 
 	@media (hover: hover) and (pointer: fine) {
@@ -1353,7 +1370,7 @@ style.innerText = `
 	}
 
 	@media (hover: hover) and (pointer: fine) {
-		.icon-button:hover {
+		.icon-button:not([data-enabled="false"]):hover {
 			transform: scale(1.25);
 		}
 
