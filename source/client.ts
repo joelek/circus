@@ -1499,6 +1499,33 @@ style.innerText = `
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
+
+
+
+
+
+
+
+
+
+
+
+	.login-modal {
+		box-sizing: border-box;
+		display: grid;
+		gap: 16px;
+		grid-auto-rows: min-content;
+		height: 100%;
+		margin: 0px auto;
+		max-width: 320px;
+		padding: 32px;
+		width: 100%;
+	}
+
+	.login-modal__form {
+		display: grid;
+		gap: 8px;
+	}
 `;
 document.head.appendChild(style);
 
@@ -1634,23 +1661,25 @@ let username = new ObservableClass("");
 let password = new ObservableClass("");
 mountwrapper.appendChild(xml.element("div.login-modal")
 	.bind("data-hide", showLogin.addObserver(showLogin => !showLogin))
-	.add(xml.element("input.login-modal__username")
-		.bind2("value", username)
-		.set("type", "text")
-		.set("placeholder", "Username...")
-	)
-	.add(xml.element("input.login-modal__password")
-		.bind2("value", password)
-		.set("type", "password")
-		.set("placeholder", "Password...")
-		.on("keyup", async (event) => {
-			if (event.key === "Enter") {
-				let token = await getNewToken(username.getState(), password.getState());
-				if (token != null) {
-					showLogin.updateState(false);
+	.add(xml.element("div.login-modal__form")
+		.add(xml.element("input.login-modal__username")
+			.bind2("value", username)
+			.set("type", "text")
+			.set("placeholder", "Username...")
+		)
+		.add(xml.element("input.login-modal__password")
+			.bind2("value", password)
+			.set("type", "password")
+			.set("placeholder", "Password...")
+			.on("keyup", async (event) => {
+				if (event.key === "Enter") {
+					let token = await getNewToken(username.getState(), password.getState());
+					if (token != null) {
+						showLogin.updateState(false);
+					}
 				}
-			}
-		})
+			})
+		)
 	)
 	.add(xml.element("button")
 		.add(xml.text("Login"))
