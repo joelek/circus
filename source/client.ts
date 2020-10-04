@@ -79,7 +79,7 @@ currentDevice.addObserver((currentDevice) => {
 	console.log(`Current device is ${currentDevice}.`);
 });
 tsc.addEventListener("app", "TransferPlayback", (message) => {
-	currentDevice.updateState(message.device);
+	currentDevice.updateState(message.device || null);
 });
 
 
