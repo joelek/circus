@@ -29,10 +29,6 @@ export const DeviceBecameUnavailable = autoguard.Object.of<DeviceBecameUnavailab
 	"id": autoguard.String
 });
 
-export type GetDevicesAvailable = {};
-
-export const GetDevicesAvailable = autoguard.Object.of<GetDevicesAvailable>({});
-
 export type AvailableDevices = {
 	"devices": string[]
 };
@@ -50,10 +46,6 @@ export const TransferPlayback = autoguard.Object.of<TransferPlayback>({
 	"device": autoguard.String,
 	"origin": autoguard.String
 });
-
-export type GetPlayback = {};
-
-export const GetPlayback = autoguard.Object.of<GetPlayback>({});
 
 export type SetContext = {
 	"context"?: {
@@ -103,10 +95,8 @@ export type Autoguard = {
 	"Authenticate": Authenticate,
 	"DeviceBecameAvailable": DeviceBecameAvailable,
 	"DeviceBecameUnavailable": DeviceBecameUnavailable,
-	"GetDevicesAvailable": GetDevicesAvailable,
 	"AvailableDevices": AvailableDevices,
 	"TransferPlayback": TransferPlayback,
-	"GetPlayback": GetPlayback,
 	"SetContext": SetContext,
 	"SetContextIndex": SetContextIndex,
 	"SetProgress": SetProgress,
@@ -117,10 +107,8 @@ export const Autoguard = {
 	"Authenticate": Authenticate,
 	"DeviceBecameAvailable": DeviceBecameAvailable,
 	"DeviceBecameUnavailable": DeviceBecameUnavailable,
-	"GetDevicesAvailable": GetDevicesAvailable,
 	"AvailableDevices": AvailableDevices,
 	"TransferPlayback": TransferPlayback,
-	"GetPlayback": GetPlayback,
 	"SetContext": SetContext,
 	"SetContextIndex": SetContextIndex,
 	"SetProgress": SetProgress,

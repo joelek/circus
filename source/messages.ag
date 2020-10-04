@@ -8,15 +8,12 @@
 	DeviceBecameUnavailable: {
 		id: string
 	},
-	GetDevicesAvailable: {},
 	AvailableDevices: {
 		devices: string[]
 	},
 	TransferPlayback: {
 		device: string,
 		origin: string
-	},
-	GetPlayback: {
 	},
 	SetContext: {
 		context?: {

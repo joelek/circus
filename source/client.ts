@@ -2,7 +2,7 @@ import * as api_response from "./api_response";
 import * as utils from "./utils";
 import * as languages from "./languages";
 import { AuthToken } from "./database";
-import * as session from "./session";
+import * as session from "./browserMediaSession";
 import { Autoguard as messages } from "./messages";
 import { TypeSocketClient } from "./typesockets";
 import { ArrayObservable, Observable, ObservableClass } from "./simpleobs";
@@ -1609,6 +1609,7 @@ async function getToken(): Promise<string | undefined> {
 					localStorage.removeItem("token");
 					token = undefined;
 				}
+				tokenobs.updateState(token);
 				resolve(token);
 			});
 		});
@@ -1627,6 +1628,7 @@ async function getNewToken(username: string, password: string): Promise<string |
 				token = response.token;
 				localStorage.setItem("token", token);
 			}
+			tokenobs.updateState(token);
 			resolve(token);
 		});
 	});

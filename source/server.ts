@@ -28,16 +28,34 @@ tss.addEventListener("sys", "disconnect", (message) => {
 });
 // TODO: Make authentication part of sys.
 tss.addEventListener("app", "Authenticate", (message) => {
-	connections.set(message.connection_id, message.data.token);
+	let token = message.data.token;
+	connections.set(message.connection_id, token);
+	if (token != null) {
+		tss.send("AvailableDevices", {
+			devices: Array.from(devices)
+		}, message.connection_id);
+		if (cc.isPlayingUsingToken(token)) {
+			let ccsession = cc.getSession();
+			if (ccsession != null) {
+				tss.send("TransferPlayback", {
+					device: ccsession.device,
+					origin: ccsession.origin
+				}, message.connection_id);
+				tss.send("SetContext", {
+					context: cc.controller.context.getState()
+				}, message.connection_id);
+				tss.send("SetContextIndex", {
+					index: cc.controller.contextIndex.getState()
+				}, message.connection_id);
+				tss.send("SetPlaying", {
+					playing: cc.controller.shouldPlay.getState()
+				}, message.connection_id);
+			}
+		}
+	}
 });
 
 let devices = new Set<string>();
-
-tss.addEventListener("app", "GetDevicesAvailable", (message) => {
-	tss.send("AvailableDevices", {
-		devices: Array.from(devices)
-	}, message.connection_id);
-});
 
 chromecasts.addObserver({
 	onconnect(id) {
@@ -116,26 +134,6 @@ cc.controller.isPlaying.addObserver((isPlaying) => {
 				playing: isPlaying
 			}, connection_id);
 		}
-	}
-});
-
-tss.addEventListener("app", "GetPlayback", (message) => {
-	let ccsession = cc.getSession();
-	let token = connections.get(message.connection_id);
-	if (ccsession != null && token != null && ccsession.token === token) {
-		tss.send("TransferPlayback", {
-			device: ccsession.device,
-			origin: ccsession.origin
-		}, message.connection_id);
-		tss.send("SetContext", {
-			context: cc.controller.context.getState()
-		}, message.connection_id);
-		tss.send("SetContextIndex", {
-			index: cc.controller.contextIndex.getState()
-		}, message.connection_id);
-		tss.send("SetPlaying", {
-			playing: cc.controller.shouldPlay.getState()
-		}, message.connection_id);
 	}
 });
 
