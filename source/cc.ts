@@ -108,6 +108,7 @@ let ghost: string | null = null;
 let gtoken: string | null = null;
 let gorigin: string | null = null;
 let gplayer: Player | null = null;
+let gclient: any = null;
 
 export function getSession() {
 	if (ghost && gtoken && gorigin) {
@@ -265,6 +266,7 @@ export const launch = (host: string, token: string, origin: string): Promise<voi
 	gorigin = null;
 	return new Promise((resolve, reject) => {
 		var client = new Client();
+		gclient = client;
 		client.connect(host, () => {
 			client.launch(DefaultMediaReceiver, (error: Error, player: Player) => {
 				ghost = host;
@@ -302,6 +304,14 @@ export const launch = (host: string, token: string, origin: string): Promise<voi
 		});
 	});
 };
+
+export function disconnect() {
+	if (gclient != null) {
+		console.log("!");
+		gclient.close();
+		gclient = null;
+	}
+}
 
 controller.shouldPlay.addObserver((shouldPlay) => {
 	let isPlaying = controller.isPlaying.getState();

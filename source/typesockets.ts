@@ -23,6 +23,8 @@ export type TypeSocketClientMessageMap<A extends stdlib.routing.MessageMap<A>> =
 	}
 };
 
+// BUILD nodejs version of websocket client
+
 export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	private nextConnectionAttemptDelayFactor: number;
 	private nextConnectionAttemptDelay: number;
@@ -179,9 +181,9 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 		this.router.addObserver(namespace, type, listener);
 	}
 
-	send<B extends keyof A>(type: B, data: A[B], ...connection_ids: Array<string>): void {
+	send<B extends keyof A>(type: B, connection_ids: string | Array<string>, data: A[B]): void {
 		let payload = this.serializer.serialize(type, data);
-		for (let connection_id of connection_ids) {
+		for (let connection_id of Array.isArray(connection_ids) ? connection_ids : [connection_ids]) {
 			console.log(`${connection_id} <- ${type}`);
 			try {
 				this.socket.send(connection_id, payload);

@@ -6,6 +6,7 @@ import * as session from "./browserMediaSession";
 import { Autoguard as messages } from "./messages";
 import { TypeSocketClient } from "./typesockets";
 import { ArrayObservable, Observable, ObservableClass } from "./simpleobs";
+import { Device } from "./objects";
 
 function makeRateLimiter<A extends any[]>(callable: (...args: [...A]) => void, ms: number): (...args: [...A]) => void {
 	let last = 0;
@@ -18,19 +19,11 @@ function makeRateLimiter<A extends any[]>(callable: (...args: [...A]) => void, m
 	};
 }
 
-
-
-
-
-
 let video = document.createElement('video');
 let buffer = document.createElement("video");
 let bufferneg = document.createElement("video");
 
-
-
 let tsc = TypeSocketClient.connect(messages);
-
 
 // TODO: Get rid of metadata and bundle with context.
 type Metadata = {
@@ -59,42 +52,61 @@ type Context = ContextEntry[];
 
 
 
+const thisDeviceId = new ObservableClass<string | undefined>(undefined);
+tsc.addEventListener("app", "SetDeviceId", (message) => {
+	thisDeviceId.updateState(message.id);
+});
 
 
 
 
-const canSkipPrevClass = new ObservableClass(false);
-const canSkipPrev = canSkipPrevClass.addObserver((state) => state);
-const canPlayPauseClass = new ObservableClass(false);
-const canPlayPause = canPlayPauseClass.addObserver((state) => state);
-const canSkipNextClass = new ObservableClass(false);
-const canSkipNext = canSkipNextClass.addObserver((state) => state);
-const showDevicesClass = new ObservableClass(false);
-const showDevices = showDevicesClass.addObserver((state) => state);
-const isVideoClass = new ObservableClass(false);
-const isVideo = isVideoClass.addObserver((state) => state);
 
-const currentDevice = new ObservableClass<string | null>(null);
+
+
+
+
+
+const currentDevice = new ObservableClass<Device | null>(null);
 currentDevice.addObserver((currentDevice) => {
-	console.log(`Current device is ${currentDevice}.`);
+	console.log(`Current device is ${currentDevice?.id}.`);
 });
 tsc.addEventListener("app", "TransferPlayback", (message) => {
-	currentDevice.updateState(message.device || null);
+	currentDevice.updateState(message.device);
 });
 
 
 
 
-const chromecasts = new ArrayObservable(new Array<string>());
-// TODO: Connect should be an observable.
+
+
+const isCurrentDeviceLocal = new ObservableClass(true);
+currentDevice.addObserver((currentDevice) => {
+	isCurrentDeviceLocal.updateState(currentDevice?.id === thisDeviceId.getState());
+});
+thisDeviceId.addObserver((thisDeviceId) => {
+	isCurrentDeviceLocal.updateState(currentDevice.getState()?.id === thisDeviceId);
+});
+
+
+
+
+
+
+
+
+
+const devices = new ArrayObservable(new Array<Device>());
 tsc.addEventListener("app", "DeviceBecameAvailable", (message) => {
-	chromecasts.append(message.id);
+	devices.append(message.device);
 });
 tsc.addEventListener("app", "DeviceBecameUnavailable", (message) => {
-	chromecasts.splice(chromecasts.getState().lastIndexOf(message.id));
+	let index = devices.getState().findIndex((value) => {
+		return value.id === message.device.id;
+	});
+	devices.splice(index);
 });
 tsc.addEventListener("app", "AvailableDevices", (message) => {
-	chromecasts.update(message.devices);
+	devices.update(message.devices);
 });
 
 
@@ -102,15 +114,6 @@ tsc.addEventListener("app", "AvailableDevices", (message) => {
 
 
 
-
-
-chromecasts.addObserver({
-	onupdate(state) {
-		if (state.length === 0) {
-			showDevicesClass.updateState(false);
-		}
-	}
-});
 
 
 
@@ -121,7 +124,6 @@ chromecasts.addObserver({
 
 const context = new ObservableClass<Context | undefined>(undefined);
 tsc.addEventListener("app", "SetContext", (message) => {
-	// TODO: Support titles.
 	let value = message.context?.map((entry) => {
 		return {
 			file_id: entry.file_id,
@@ -141,11 +143,6 @@ let set_context = (value?: Context): void => {
 
 
 
-context.addObserver((context) => {
-	canPlayPauseClass.updateState(context != null && context.length >= 0);
-});
-
-
 
 
 
@@ -159,10 +156,10 @@ function setIndex(value?: number): void {
 	let current_context = context.getState();
 	if (value != null) {
 		if (current_context == null) {
-			throw `Expected a valid context!`;
+			return;
 		}
 		if (value < 0 || value >= current_context.length) {
-			throw `Expected an non-negative index of at most ${current_context.length - 1}, got ${value}!`;
+			return;
 		}
 	}
 	context_index.updateState(value);
@@ -190,6 +187,22 @@ function computeContexEntry(): void {
 }
 context.addObserver(computeContexEntry);
 context_index.addObserver(computeContexEntry);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const mediaPlayerTitle = new ObservableClass("");
 const mediaPlayerSubtitle = new ObservableClass("");
 contextEntry.addObserver((entry) => {
@@ -199,41 +212,81 @@ contextEntry.addObserver((entry) => {
 		title: entry?.title ?? ""
 	});
 });
-contextEntry.addObserver((entry) => {
-	if (entry != null) {
-		let fid = entry.file_id;
-		video.src = `/files/${fid}/?token=${token}`;
-		while (video.lastChild !== null) {
-			video.removeChild(video.lastChild);
-		}
-		if (metadata !== null) {
-			let md = metadata[fid];
-			if (md !== undefined) {
-				let defaultSubtitle = md.subtitles.find((subtitle) => subtitle.language === "swe") || md.subtitles.find((subtitle) => subtitle.language === "eng");
-				for (let i = 0; i < md.subtitles.length; i++) {
-					let st = md.subtitles[i];
-					let e = document.createElement('track');
-					if (st.language != null) {
-						let language = languages.db[st.language];
-						if (language != null) {
-							e.label = language.title;
-							e.srclang = language.iso639_1;
-							e.kind = "subtitles";
-						}
-						if (st === defaultSubtitle) {
-							e.setAttribute("default", "");
-						}
-					}
-					e.src = `/files/${st.file_id}/?token=${token}`;
-					video.appendChild(e);
-				}
-			}
-		}
-		if (currentDevice.getState() == null) {
-			video.play();
+{
+	function computer() {
+		let entry = contextEntry.getState();
+		if (entry != null && isCurrentDeviceLocal.getState()) {
+			video.src = `/files/${entry.file_id}/?token=${token}`;
 		}
 	}
-});
+	contextEntry.addObserver(computer);
+	isCurrentDeviceLocal.addObserver(computer);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{
+	function computer() {
+		let entry = contextEntry.getState();
+		if (entry != null && isCurrentDeviceLocal.getState()) {
+			let fid = entry.file_id;
+			while (video.lastChild !== null) {
+				video.removeChild(video.lastChild);
+			}
+			if (metadata !== null) {
+				let md = metadata[fid];
+				if (md !== undefined) {
+					let defaultSubtitle = md.subtitles.find((subtitle) => subtitle.language === "swe") || md.subtitles.find((subtitle) => subtitle.language === "eng");
+					for (let i = 0; i < md.subtitles.length; i++) {
+						let st = md.subtitles[i];
+						let e = document.createElement('track');
+						if (st.language != null) {
+							let language = languages.db[st.language];
+							if (language != null) {
+								e.label = language.title;
+								e.srclang = language.iso639_1;
+								e.kind = "subtitles";
+							}
+							if (st === defaultSubtitle) {
+								e.setAttribute("default", "");
+							}
+						}
+						e.src = `/files/${st.file_id}/?token=${token}`;
+						video.appendChild(e);
+					}
+				}
+			}
+			if (isPlaying.getState()) {
+				video.play();
+			}
+		}
+	}
+	contextEntry.addObserver(computer);
+	isCurrentDeviceLocal.addObserver(computer);
+}
+
+
+
+
+
 
 
 
@@ -257,12 +310,16 @@ const nextContextEntry = new ObservableClass<ContextEntry | undefined>(undefined
 	context.addObserver(computer);
 	context_index.addObserver(computer);
 })();
-nextContextEntry.addObserver((entry) => {
-	canSkipNextClass.updateState(entry != null);
-	if (entry != null) {
-		buffer.src = `/files/${entry.file_id}/?token=${token}`;
+{
+	function computer() {
+		let entry = contextEntry.getState();
+		if (entry != null && isCurrentDeviceLocal.getState()) {
+			buffer.src = `/files/${entry.file_id}/?token=${token}`;
+		}
 	}
-});
+	contextEntry.addObserver(computer);
+	isCurrentDeviceLocal.addObserver(computer);
+}
 
 
 
@@ -287,7 +344,6 @@ const prevContextEntry = new ObservableClass<ContextEntry | undefined>(undefined
 	context_index.addObserver(computer);
 })();
 prevContextEntry.addObserver((entry) => {
-	canSkipPrevClass.updateState(entry != null);
 	if (entry != null) {
 		bufferneg.src = `/files/${entry.file_id}/?token=${token}`;
 	}
@@ -300,23 +356,73 @@ prevContextEntry.addObserver((entry) => {
 
 
 
-const progress = new ObservableClass<number>(0);
-progress.addObserver((progress) => {
-	if (currentDevice.getState() != null) {
-		video.currentTime = progress;
-	}
+
+
+
+
+const canSkipPrevClass = new ObservableClass(false);
+const canSkipPrev = canSkipPrevClass.addObserver((state) => state);
+prevContextEntry.addObserver((prevContextEntry) => {
+	canSkipPrevClass.updateState(currentDevice.getState() != null && prevContextEntry != null);
 });
-tsc.addEventListener("app", "SetProgress", (message) => {
-	progress.updateState(message.progress);
+currentDevice.addObserver((currentDevice) => {
+	canSkipPrevClass.updateState(currentDevice != null && prevContextEntry.getState() != null);
 });
-let set_progress = (value: number): void => {
-	progress.updateState(value);
-	/*
-	tsc.send("SetProgress", {
-		progress: value
-	});
-	*/
-};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const canPlayPauseClass = new ObservableClass(false);
+const canPlayPause = canPlayPauseClass.addObserver((state) => state);
+contextEntry.addObserver((contextEntry) => {
+	canPlayPauseClass.updateState(currentDevice.getState() != null && contextEntry != null);
+});
+currentDevice.addObserver((currentDevice) => {
+	canPlayPauseClass.updateState(currentDevice != null && contextEntry.getState() != null);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+const canSkipNextClass = new ObservableClass(false);
+const canSkipNext = canSkipNextClass.addObserver((state) => state);
+nextContextEntry.addObserver((nextContextEntry) => {
+	canSkipNextClass.updateState(currentDevice.getState() != null && nextContextEntry != null);
+});
+currentDevice.addObserver((currentDevice) => {
+	canSkipNextClass.updateState(currentDevice != null && nextContextEntry.getState() != null);
+});
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -326,15 +432,19 @@ let set_progress = (value: number): void => {
 
 
 const isPlaying = new ObservableClass(false);
-isPlaying.addObserver((isPlaying) => {
-	if (currentDevice.getState() == null) {
-		if (isPlaying) {
-			video.play();
-		} else {
-			video.pause();
+{
+	function computer() {
+		if (isCurrentDeviceLocal.getState()) {
+			if (isPlaying.getState()) {
+				video.play();
+			} else {
+				video.pause();
+			}
 		}
 	}
-});
+	isPlaying.addObserver(computer);
+	isCurrentDeviceLocal.addObserver(computer);
+}
 tsc.addEventListener("app", "SetPlaying", (message) => {
 	isPlaying.updateState(message.playing);
 });
@@ -355,50 +465,12 @@ function setPlayback(value: boolean): void {
 
 
 
-const localPlayerProgress = new ObservableClass(0);
-localPlayerProgress.addObserver(makeRateLimiter((localPlayerProgress) => {
-	set_progress(localPlayerProgress);
-}, 1000));
-
-
-
-
-
-
-
-
-
-
-const isLocalPlayerPlaying = new ObservableClass(false);
-isLocalPlayerPlaying.addObserver((isLocalPlayerPlaying) => {
-	if (currentDevice.getState() == null) {
-		setPlayback(isLocalPlayerPlaying);
-	}
-});
-currentDevice.addObserver((currentDevice) => {
-	if (currentDevice != null) {
-		isLocalPlayerPlaying.updateState(false);
-	}
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 function play(index: number): void {
 	setIndex(index);
 	setPlayback(true);
 };
-function transferPlaybackToDevice(device: string) {
+function transferPlaybackToDevice(device: Device) {
 	tsc.send("TransferPlayback", {
 		device: device,
 		origin: window.location.origin
@@ -481,6 +553,12 @@ session.setHandlers({
 
 
 
+
+
+
+const showDevicesClass = new ObservableClass(false);
+const showDevices = showDevicesClass.addObserver((state) => state);
+const isVideoClass = new ObservableClass(false);
 
 
 
@@ -1593,11 +1671,6 @@ tokenobs.addObserver((token2) => {
 	tsc.send("Authenticate", {
 		token
 	});
-})
-tsc.addEventListener("sys", "connect", () => {
-	tsc.send("Authenticate", {
-		token
-	});
 });
 let valid_token: boolean | undefined;
 async function getToken(): Promise<string | undefined> {
@@ -1708,10 +1781,10 @@ mountwrapper.appendChild(xml.element("div.login-modal")
 let device_selector = xml.element("div.device-selector")
 	.bind("data-hide", showDevices((value) => !value))
 	.add(xml.element("div.device-selector__devices")
-		.repeat(chromecasts, (state) => xml.element("div.device")
-			.add(xml.text("Chromecast"))
+		.repeat(devices, (device) => xml.element("div.device")
+			.add(xml.text(device.title))
 			.on("click", () => {
-				transferPlaybackToDevice(state);
+				transferPlaybackToDevice(device);
 				showDevicesClass.updateState(false);
 			})
 		)
@@ -1833,8 +1906,8 @@ let mp = xml.element("div.content")
 		)
 		.add(xml.element("div.media-player__controls")
 			.add(makeButton()
-				.bind("data-hide", chromecasts.compute((chromecasts) => {
-					return chromecasts.length === 0;
+				.bind("data-hide", devices.compute((chromecasts) => {
+					return chromecasts.length < 2;
 				}))
 				.bind("data-active", currentDevice.addObserver((currentDevice) => {
 					return currentDevice != null;
@@ -1884,20 +1957,17 @@ video.addEventListener("ended", () => {
 	next();
 });
 video.addEventListener("pause", () => {
-	isLocalPlayerPlaying.updateState(false);
+	if (isCurrentDeviceLocal.getState()) {
+		setPlayback(false);
+	}
 });
 video.addEventListener("play", () => {
-	isLocalPlayerPlaying.updateState(true);
+	if (isCurrentDeviceLocal.getState()) {
+		setPlayback(true);
+	}
 });
 video.addEventListener("timeupdate", () => {
-	localPlayerProgress.updateState(video.currentTime);
-});
-isLocalPlayerPlaying.addObserver((isLocalPlayerPlaying) => {
-	if (isLocalPlayerPlaying) {
-		video.play();
-	} else {
-		video.pause();
-	}
+	//localPlayerProgress.updateState(video.currentTime);
 });
 video.setAttribute('controls', '');
 video.setAttribute('playsinline', '');
@@ -2483,7 +2553,7 @@ let updateviewforuri = (uri: string): void => {
 				play(context.findIndex(entry => entry.file_id === response.file_id));
 				if (parts !== null && parts.length >= 3) {
 					let start_ms = Number.parseInt(parts[2], 10);
-					set_progress(start_ms);
+					//set_progress(start_ms);
 				}
 			});
 			mount.appendChild(d3);
@@ -2530,7 +2600,7 @@ let updateviewforuri = (uri: string): void => {
 				play(0);
 				if (parts !== null && parts.length >= 3) {
 					let start_ms = Number.parseInt(parts[2], 10);
-					set_progress(start_ms);
+					//set_progress(start_ms);
 				}
 			});
 			mount.appendChild(button);

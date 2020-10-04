@@ -1,0 +1,17 @@
+{
+	DeviceBase: {
+		id: string
+	},
+
+	Device: DeviceBase & {
+		title: string
+	},
+
+	Context: ContextItem[],
+
+	ContextItem: {
+		file_id: string,
+		title: string,
+		subtitle: string
+	}
+}
