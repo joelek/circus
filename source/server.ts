@@ -74,9 +74,7 @@ tss.addEventListener("app", "TransferPlayback", async (message) => {
 tss.addEventListener("app", "GetPlayback", (message) => {
 	let ccsession = cc.getSession();
 	// TODO: Use timing safe equals.
-	console.log("requested getplayback", message, ccsession);
 	if (ccsession != null && message.data.token === ccsession.token) {
-		console.log("sending");
 		tss.send("TransferPlayback", message.connection_id, ccsession);
 		tss.send("SetContext", message.connection_id, {
 			context: cc.controller.context.getState()

@@ -7,7 +7,7 @@
 	},
 	"dependencies": {
 		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^4",
-		"@joelek/ts-sockets": "github:joelek/ts-sockets#semver:^1",
+		"@joelek/ts-sockets": "github:joelek/ts-sockets#semver:^2",
 		"castv2-client": "^1.2.0"
 	},
 	"license": "MIT",

@@ -255,16 +255,20 @@ let resume = (): void => {
 };
 
 export const load = (host: string, token: string, origin: string): Promise<void> => {
+	controller.isLaunched.updateState(false);
+	gmedia = null;
+	ghost = null;
+	gplayer = null;
+	gtoken = null;
+	gorigin = null;
 	return new Promise((resolve, reject) => {
 		var client = new Client();
 		client.connect(host, () => {
-			console.log('connected, launching app ...');
 			client.launch(DefaultMediaReceiver, (error: Error, player: Player) => {
 				ghost = host;
 				gplayer = player;
 				gtoken = token;
 				gorigin = origin;
-				console.log('app launched');
 				controller.isLaunched.updateState(true);
 				player.on('status', (status) => {
 					console.log('status broadcast playerState=%s', status.playerState);
@@ -287,6 +291,11 @@ export const load = (host: string, token: string, origin: string): Promise<void>
 		client.on('error', (error: Error) => {
 			console.log('Error: %s', error.message);
 			controller.isLaunched.updateState(false);
+			gmedia = null;
+			ghost = null;
+			gplayer = null;
+			gtoken = null;
+			gorigin = null;
 			client.close();
 		});
 	});
