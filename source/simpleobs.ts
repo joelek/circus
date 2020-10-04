@@ -88,7 +88,7 @@ export class ArrayObservable<A> {
 	}
 
 	update(state: A[]): void {
-		for (let i = this.state.length; i >= 0; i--) {
+		for (let i = this.state.length - 1; i >= 0; i--) {
 			this.splice(i);
 		}
 		for (let v of state) {

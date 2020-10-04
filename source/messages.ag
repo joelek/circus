@@ -1,4 +1,7 @@
 {
+	Authenticate: {
+		token?: string
+	},
 	DeviceBecameAvailable: {
 		id: string
 	},
@@ -11,11 +14,9 @@
 	},
 	TransferPlayback: {
 		device: string,
-		token: string,
 		origin: string
 	},
 	GetPlayback: {
-		token: string
 	},
 	SetContext: {
 		context?: {

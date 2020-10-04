@@ -86,14 +86,7 @@ tsc.addEventListener("app", "TransferPlayback", (message) => {
 
 
 const chromecasts = new ArrayObservable(new Array<string>());
-tsc.addEventListener("sys", "connect", (message) => {
-	tsc.send("GetDevicesAvailable", {});
-	if (token != null) {
-		tsc.send("GetPlayback", {
-			token
-		});
-	}
-});
+// TODO: Connect should be an observable.
 tsc.addEventListener("app", "DeviceBecameAvailable", (message) => {
 	chromecasts.append(message.id);
 });
@@ -406,27 +399,24 @@ function play(index: number): void {
 	setPlayback(true);
 };
 function transferPlaybackToDevice(device: string) {
-	if (token) {
-		tsc.send("TransferPlayback", {
-			device: device,
-			token: token,
-			origin: window.location.origin
-		});
-		tsc.send("SetContext", {
-			context: context.getState()
-		});
-		tsc.send("SetContextIndex", {
-			index: context_index.getState()
-		});
-		/*
-		tsc.send("SetProgress", {
-			progress: progress.getState()
-		});
-		*/
-		tsc.send("SetPlaying", {
-			playing: isPlaying.getState()
-		});
-	}
+	tsc.send("TransferPlayback", {
+		device: device,
+		origin: window.location.origin
+	});
+	tsc.send("SetContext", {
+		context: context.getState()
+	});
+	tsc.send("SetContextIndex", {
+		index: context_index.getState()
+	});
+	/*
+	tsc.send("SetProgress", {
+		progress: progress.getState()
+	});
+	*/
+	tsc.send("SetPlaying", {
+		playing: isPlaying.getState()
+	});
 }
 function resume() {
 	if (context.getState() != null) {
@@ -1596,16 +1586,28 @@ let req = <T extends api_response.ApiRequest, U extends api_response.ApiResponse
 	xhr.send(JSON.stringify(body));
 }
 
-let token = localStorage.getItem("token");
+let tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
+let token: string | undefined;
+tokenobs.addObserver((token2) => {
+	token = token2;
+	tsc.send("Authenticate", {
+		token
+	});
+})
+tsc.addEventListener("sys", "connect", () => {
+	tsc.send("Authenticate", {
+		token
+	});
+});
 let valid_token: boolean | undefined;
-async function getToken(): Promise<string | null> {
+async function getToken(): Promise<string | undefined> {
 	if (valid_token == null) {
 		return new Promise((resolve, reject) => {
 			req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?token=${token}`, {}, (status, response) => {
 				valid_token = (status >= 200 && status < 300);
 				if (!valid_token) {
 					localStorage.removeItem("token");
-					token = null;
+					token = undefined;
 				}
 				resolve(token);
 			});
@@ -1614,13 +1616,13 @@ async function getToken(): Promise<string | null> {
 		return token;
 	}
 }
-async function getNewToken(username: string, password: string): Promise<string | null> {
+async function getNewToken(username: string, password: string): Promise<string | undefined> {
 	return new Promise((resolve, reject) => {
 		req<api_response.AuthRequest, api_response.AuthResponse>(`/api/auth/`, { username, password }, (status, response) => {
 			valid_token = (status >= 200 && status < 300);
 			if (!valid_token) {
 				localStorage.removeItem("token");
-				token = null;
+				token = undefined;
 			} else {
 				token = response.token;
 				localStorage.setItem("token", token);

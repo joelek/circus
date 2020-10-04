@@ -10,7 +10,6 @@ class Controller {
 	readonly shouldPlay = new ObservableClass(false);
 	readonly isPlaying = new ObservableClass(false);
 	readonly isLaunched = new ObservableClass(false);
-	readonly isLoaded = new ObservableClass(false);
 }
 
 export const controller = new Controller();
@@ -231,7 +230,6 @@ let attempt_playback = (): void => {
 		}
 		if (status) {
 			gmedia = status.media;
-			controller.isLoaded.updateState(true);
 		}
 	});
 };
@@ -254,7 +252,11 @@ let resume = (): void => {
 	}
 };
 
-export const load = (host: string, token: string, origin: string): Promise<void> => {
+export function isPlayingUsingToken(token: string): boolean {
+	return gtoken === token;
+}
+
+export const launch = (host: string, token: string, origin: string): Promise<void> => {
 	controller.isLaunched.updateState(false);
 	gmedia = null;
 	ghost = null;
@@ -300,7 +302,6 @@ export const load = (host: string, token: string, origin: string): Promise<void>
 		});
 	});
 };
-
 
 controller.shouldPlay.addObserver((shouldPlay) => {
 	let isPlaying = controller.isPlaying.getState();

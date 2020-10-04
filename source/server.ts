@@ -17,88 +17,184 @@ import * as chromecasts from "./chromecasts";
 import * as cc from "./cc";
 
 let tss = new TypeSocketServer(messages);
-let connections = new Set<string>();
+// TODO: Keep map of connections and sessions.
+let connections = new Map<string, string | undefined>();
 
 tss.addEventListener("sys", "connect", (message) => {
-	connections.add(message.connection_id);
+	connections.set(message.connection_id, undefined);
 });
 tss.addEventListener("sys", "disconnect", (message) => {
 	connections.delete(message.connection_id);
+});
+// TODO: Make authentication part of sys.
+tss.addEventListener("app", "Authenticate", (message) => {
+	connections.set(message.connection_id, message.data.token);
 });
 
 let devices = new Set<string>();
 
 tss.addEventListener("app", "GetDevicesAvailable", (message) => {
-	for (let device of devices) {
-		tss.send("DeviceBecameAvailable", message.connection_id, {
-			id: device
-		});
-	}
+	tss.send("AvailableDevices", {
+		devices: Array.from(devices)
+	}, message.connection_id);
 });
 
 chromecasts.addObserver({
 	onconnect(id) {
 		devices.add(id);
-		for (let connection of connections) {
-			tss.send("DeviceBecameAvailable", connection, {
+		for (let [connection_id, token] of connections) {
+			tss.send("DeviceBecameAvailable", {
 				id
-			});
+			}, connection_id);
 		}
 	},
 	ondisconnect(id) {
 		devices.delete(id);
-		for (let connection of connections) {
-			tss.send("DeviceBecameUnavailable", connection, {
+		for (let [connection_id, token] of connections) {
+			tss.send("DeviceBecameUnavailable", {
 				id
-			});
+			}, connection_id);
 		}
 	}
 });
 chromecasts.observe();
 
 tss.addEventListener("app", "TransferPlayback", async (message) => {
-	let host = message.data.device;
-	let token = message.data.token;
-	let origin = message.data.origin;
-	try {
-		await cc.load(host, token, origin);
-		tss.send("TransferPlayback", message.connection_id, message.data);
-		cc.controller.contextIndex.addObserver((contextIndex) => {
-			tss.send("SetContextIndex", message.connection_id, {
+	let token = connections.get(message.connection_id);
+	if (token != null) {
+		try {
+			await cc.launch(message.data.device, token, message.data.origin);
+		} catch (error) {}
+	} else {
+		// TODO: Support switching back to playing on same device.
+	}
+});
+
+cc.controller.isLaunched.addObserver((isLaunched) => {
+	const session = cc.getSession();
+	if (session != null) {
+		let sessions = Array.from(connections.entries()).filter((entry) => entry[1] === session.token);
+		for (let [connection_id, token] of sessions) {
+			tss.send("TransferPlayback", {
+				device: isLaunched ? session.device : "",
+				origin: session.origin
+			}, connection_id);
+		}
+	}
+});
+
+cc.controller.context.addObserver((context) => {
+	const session = cc.getSession();
+	if (session != null) {
+		let sessions = Array.from(connections.entries()).filter((entry) => entry[1] === session.token);
+		for (let [connection_id, token] of sessions) {
+			tss.send("SetContext", {
+				context: context
+			}, connection_id);
+		}
+	}
+});
+
+cc.controller.contextIndex.addObserver((contextIndex) => {
+	const session = cc.getSession();
+	if (session != null) {
+		let sessions = Array.from(connections.entries()).filter((entry) => entry[1] === session.token);
+		for (let [connection_id, token] of sessions) {
+			tss.send("SetContextIndex", {
 				index: contextIndex
-			});
-		});
-	} catch (error) {}
+			}, connection_id);
+		}
+	}
+});
+
+cc.controller.isPlaying.addObserver((isPlaying) => {
+	const session = cc.getSession();
+	if (session != null) {
+		let sessions = Array.from(connections.entries()).filter((entry) => entry[1] === session.token);
+		for (let [connection_id, token] of sessions) {
+			tss.send("SetPlaying", {
+				playing: isPlaying
+			}, connection_id);
+		}
+	}
 });
 
 tss.addEventListener("app", "GetPlayback", (message) => {
 	let ccsession = cc.getSession();
-	// TODO: Use timing safe equals.
-	if (ccsession != null && message.data.token === ccsession.token) {
-		tss.send("TransferPlayback", message.connection_id, ccsession);
-		tss.send("SetContext", message.connection_id, {
+	let token = connections.get(message.connection_id);
+	if (ccsession != null && token != null && ccsession.token === token) {
+		tss.send("TransferPlayback", {
+			device: ccsession.device,
+			origin: ccsession.origin
+		}, message.connection_id);
+		tss.send("SetContext", {
 			context: cc.controller.context.getState()
-		});
-		tss.send("SetContextIndex", message.connection_id, {
+		}, message.connection_id);
+		tss.send("SetContextIndex", {
 			index: cc.controller.contextIndex.getState()
-		});
-		tss.send("SetPlaying", message.connection_id, {
+		}, message.connection_id);
+		tss.send("SetPlaying", {
 			playing: cc.controller.shouldPlay.getState()
-		});
+		}, message.connection_id);
 	}
 });
 
 tss.addEventListener("app", "SetContext", async (message) => {
-	cc.controller.context.updateState(message.data.context);
+	let token = connections.get(message.connection_id);
+	if (token == null) {
+		return;
+	}
+	if (cc.isPlayingUsingToken(token)) {
+		cc.controller.context.updateState(message.data.context);
+	} else {
+		let sessions = Array.from(connections.entries()).filter((entry) => entry[1] === token);
+		for (let [connection_id, token] of sessions) {
+			tss.send("SetContext", message.data, connection_id);
+		}
+	}
 });
 
 tss.addEventListener("app", "SetContextIndex", async (message) => {
-	cc.controller.contextIndex.updateState(message.data.index);
+	let token = connections.get(message.connection_id);
+	if (token == null) {
+		return;
+	}
+	if (cc.isPlayingUsingToken(token)) {
+		cc.controller.contextIndex.updateState(message.data.index);
+	} else {
+		let sessions = Array.from(connections.entries()).filter((entry) => entry[1] === token);
+		for (let [connection_id, token] of sessions) {
+			tss.send("SetContextIndex", message.data, connection_id);
+		}
+	}
 });
 
 tss.addEventListener("app", "SetPlaying", async (message) => {
-	cc.controller.shouldPlay.updateState(message.data.playing);
+	let token = connections.get(message.connection_id);
+	console.log(token);
+	if (token == null) {
+		return;
+	}
+	if (cc.isPlayingUsingToken(token)) {
+		cc.controller.shouldPlay.updateState(message.data.playing);
+	} else {
+		let sessions = Array.from(connections.entries()).filter((entry) => entry[1] === token);
+		for (let [connection_id, token] of sessions) {
+			tss.send("SetPlaying", message.data, connection_id);
+		}
+	}
 });
+
+
+
+
+
+
+
+
+
+
+
 
 let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>): Partial<libhttp.IncomingHttpHeaders> => {
 	let out: Partial<libhttp.IncomingHttpHeaders> = {};

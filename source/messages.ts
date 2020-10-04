@@ -2,6 +2,17 @@
 
 import { guards as autoguard } from "@joelek/ts-autoguard";
 
+export type Authenticate = {
+	"token"?: string
+};
+
+export const Authenticate = autoguard.Object.of<Authenticate>({
+	"token": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.String
+	)
+});
+
 export type DeviceBecameAvailable = {
 	"id": string
 };
@@ -32,23 +43,17 @@ export const AvailableDevices = autoguard.Object.of<AvailableDevices>({
 
 export type TransferPlayback = {
 	"device": string,
-	"token": string,
 	"origin": string
 };
 
 export const TransferPlayback = autoguard.Object.of<TransferPlayback>({
 	"device": autoguard.String,
-	"token": autoguard.String,
 	"origin": autoguard.String
 });
 
-export type GetPlayback = {
-	"token": string
-};
+export type GetPlayback = {};
 
-export const GetPlayback = autoguard.Object.of<GetPlayback>({
-	"token": autoguard.String
-});
+export const GetPlayback = autoguard.Object.of<GetPlayback>({});
 
 export type SetContext = {
 	"context"?: {
@@ -95,6 +100,7 @@ export const SetPlaying = autoguard.Object.of<SetPlaying>({
 });
 
 export type Autoguard = {
+	"Authenticate": Authenticate,
 	"DeviceBecameAvailable": DeviceBecameAvailable,
 	"DeviceBecameUnavailable": DeviceBecameUnavailable,
 	"GetDevicesAvailable": GetDevicesAvailable,
@@ -108,6 +114,7 @@ export type Autoguard = {
 };
 
 export const Autoguard = {
+	"Authenticate": Authenticate,
 	"DeviceBecameAvailable": DeviceBecameAvailable,
 	"DeviceBecameUnavailable": DeviceBecameUnavailable,
 	"GetDevicesAvailable": GetDevicesAvailable,

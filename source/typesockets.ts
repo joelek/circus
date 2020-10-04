@@ -161,7 +161,16 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 	addEventListener<B extends keyof TypeSocketServerMessageMap<A>, C extends keyof TypeSocketServerMessageMap<A>[B]>(namespace: B, type: C, listener: stdlib.routing.MessageObserver<TypeSocketServerMessageMap<A>[B][C]>): void {
 		this.router.addObserver(namespace, type, listener);
 	}
+/*
+	broadcast<B extends keyof A>(type: B, data: A[B]): void {
+		let payload = this.serializer.serialize(type, data);
+		this.socket.broadcast(payload);
+	}
 
+	close(connection_id: string): void {
+		this.socket.close(connection_id);
+	}
+*/
 	getRequestHandler(): libhttp.RequestListener {
 		return this.socket.getRequestHandler();
 	}
@@ -170,11 +179,13 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 		this.router.addObserver(namespace, type, listener);
 	}
 
-	send<B extends keyof A>(type: B, connection_id: string, data: A[B]): void {
+	send<B extends keyof A>(type: B, data: A[B], ...connection_ids: Array<string>): void {
 		let payload = this.serializer.serialize(type, data);
-		console.log(`${connection_id} <- ${type}`);
-		try {
-			this.socket.send(connection_id, payload);
-		} catch (error) {}
+		for (let connection_id of connection_ids) {
+			console.log(`${connection_id} <- ${type}`);
+			try {
+				this.socket.send(connection_id, payload);
+			} catch (error) {}
+		}
 	}
 };
