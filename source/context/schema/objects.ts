@@ -2,27 +2,6 @@
 
 import { guards as autoguard } from "@joelek/ts-autoguard";
 
-export type DeviceBase = {
-	"id": string
-};
-
-export const DeviceBase = autoguard.Object.of<DeviceBase>({
-	"id": autoguard.String
-});
-
-export type Device = DeviceBase & {
-	"title": string
-};
-
-export const Device = autoguard.Intersection.of(
-	autoguard.Reference.of<DeviceBase>(() => DeviceBase),
-	autoguard.Object.of<{
-		"title": string
-	}>({
-		"title": autoguard.String
-	})
-);
-
 export type Context = ContextItem[];
 
 export const Context = autoguard.Array.of(autoguard.Reference.of<ContextItem>(() => ContextItem));
@@ -39,16 +18,51 @@ export const ContextItem = autoguard.Object.of<ContextItem>({
 	"subtitle": autoguard.String
 });
 
+export type Device = {
+	"id": string,
+	"name": string
+};
+
+export const Device = autoguard.Object.of<Device>({
+	"id": autoguard.String,
+	"name": autoguard.String
+});
+
+export type Session = {
+	"context"?: Context,
+	"device"?: Device,
+	"index"?: number,
+	"playback": boolean,
+	"progress": number
+};
+
+export const Session = autoguard.Object.of<Session>({
+	"context": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Reference.of<Context>(() => Context)
+	),
+	"device": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Reference.of<Device>(() => Device)
+	),
+	"index": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Number
+	),
+	"playback": autoguard.Boolean,
+	"progress": autoguard.Number
+});
+
 export type Autoguard = {
-	"DeviceBase": DeviceBase,
-	"Device": Device,
 	"Context": Context,
-	"ContextItem": ContextItem
+	"ContextItem": ContextItem,
+	"Device": Device,
+	"Session": Session
 };
 
 export const Autoguard = {
-	"DeviceBase": DeviceBase,
-	"Device": Device,
 	"Context": Context,
-	"ContextItem": ContextItem
+	"ContextItem": ContextItem,
+	"Device": Device,
+	"Session": Session
 };

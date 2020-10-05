@@ -87,14 +87,18 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 		if (this.socket.readyState === WebSocket.OPEN) {
 			this.socket.send(this.serializer.serialize(type, data));
 		} else {
-			// TODO: Implement queue.
+			let open = () => {
+				this.socket.removeEventListener("open", open);
+				this.socket.send(this.serializer.serialize(type, data));
+			};
+			this.socket.addEventListener("open", open);
 		}
 	}
 
-	static connect<A>(guards: autoguard.serialization.MessageGuardMap<A>): TypeSocketClient<A> {
+	static connect<A>(path: string, guards: autoguard.serialization.MessageGuardMap<A>): TypeSocketClient<A> {
 		let protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 		let host = window.location.host;
-		let url = `${protocol}//${host}/typesockets/`;
+		let url = `${protocol}//${host}${path}`;
 		return new TypeSocketClient(url, guards);
 	}
 };
@@ -102,13 +106,16 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 export type TypeSocketServerMessageMap<A extends stdlib.routing.MessageMap<A>> = {
 	sys: {
 		connect: {
-			connection_id: string
+			connection_id: string,
+			connection_url: string
 		},
 		disconnect: {
-			connection_id: string
+			connection_id: string,
+			connection_url: string
 		}
 		message: {
 			connection_id: string,
+			connection_url: string,
 			type: keyof A,
 			data: A[keyof A]
 		}
@@ -116,6 +123,7 @@ export type TypeSocketServerMessageMap<A extends stdlib.routing.MessageMap<A>> =
 	app: {
 		[B in keyof A]: {
 			connection_id: string,
+			connection_url: string,
 			data: A[B]
 		}
 	}
@@ -132,28 +140,35 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 		this.socket = new sockets.WebSocketServer();
 		this.socket.addEventListener("connect", (message) => {
 			let connection_id = message.connection_id;
+			let connection_url = message.connection_url;
 			this.router.route("sys", "connect", {
-				connection_id
+				connection_id,
+				connection_url
 			});
 		});
 		this.socket.addEventListener("disconnect", (message) => {
 			let connection_id = message.connection_id;
+			let connection_url = message.connection_url;
 			this.router.route("sys", "disconnect", {
-				connection_id
+				connection_id,
+				connection_url
 			});
 		});
 		this.socket.addEventListener("message", (message) => {
 			let connection_id = message.connection_id;
+			let connection_url = message.connection_url;
 			let payload = message.buffer.toString();
 			this.serializer.deserialize(payload, (type, data) => {
 				console.log(`${connection_id} -> ${type}`);
 				this.router.route("sys", "message", {
 					connection_id,
+					connection_url,
 					type,
 					data
 				});
 				this.router.route("app", type, {
 					connection_id,
+					connection_url,
 					data
 				});
 			});

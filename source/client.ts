@@ -3,540 +3,143 @@ import * as utils from "./utils";
 import * as languages from "./languages";
 import { AuthToken } from "./database";
 import * as session from "./browserMediaSession";
-import { Autoguard as messages } from "./messages";
-import { TypeSocketClient } from "./typesockets";
 import { ArrayObservable, Observable, ObservableClass } from "./simpleobs";
-import { Device } from "./objects";
+import * as client from "./context/client";
+import * as schema from "./context/schema";
+import * as is from "./is";
 
-function makeRateLimiter<A extends any[]>(callable: (...args: [...A]) => void, ms: number): (...args: [...A]) => void {
-	let last = 0;
-	return (...args) => {
-		let now = Date.now();
-		if (now > last + ms) {
-			last = now;
-			callable(...args);
+
+
+
+
+
+
+
+
+
+
+
+
+let player = new client.ContextClient("Web");
+let lastVideo = document.createElement("video");
+let currentVideo = document.createElement("video");
+let nextVideo = document.createElement("video");
+currentVideo.addEventListener("ended", () => {
+	player.next();
+});
+currentVideo.addEventListener("timeupdate", () => {
+	let progress = currentVideo.currentTime;
+	player.seek(progress);
+});
+currentVideo.addEventListener("playing", () => {
+	player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
+});
+// TODO: Make dynamic.
+session.setHandlers({
+	play: player.resume.bind(player),
+	pause: player.pause.bind(player),
+	previoustrack: player.last.bind(player),
+	nexttrack: player.next.bind(player)
+});
+let mediaPlayerTitle = new ObservableClass("");
+let mediaPlayerSubtitle = new ObservableClass("");
+player.currentEntry.addObserver((currentEntry) => {
+	mediaPlayerTitle.updateState(currentEntry?.title ?? "");
+	mediaPlayerSubtitle.updateState(currentEntry?.subtitle ?? "");
+	session.setMetadata({
+		title: currentEntry?.title ?? ""
+	});
+});
+{
+	let computer = () => {
+		let lastLocalEntry = player.lastLocalEntry.getState();
+		let token = player.token.getState();
+		if (is.absent(lastLocalEntry) || is.absent(token)) {
+			lastVideo.src = ``;
+			return;
+		} else {
+			lastVideo.src = `/files/${lastLocalEntry.file_id}/?token=${token}`;
 		}
 	};
+	player.lastLocalEntry.addObserver(computer);
+	player.token.addObserver(computer);
 }
-
-let video = document.createElement('video');
-let buffer = document.createElement("video");
-let bufferneg = document.createElement("video");
-
-let tsc = TypeSocketClient.connect(messages);
-
-// TODO: Get rid of metadata and bundle with context.
+// TODO: Move metadata into protocol.
 type Metadata = {
 	[id: string]: {
 		subtitles: Array<api_response.SubtitleResponse>;
 	} | undefined;
 };
-let metadata: Metadata | null = null;
-let set_context_metadata = (md: Metadata): void => {
-	if (md !== metadata) {
-		metadata = md;
-	}
-};
-type ContextEntry = {
-	file_id: string,
-	title: string,
-	subtitle: string
-};
-type Context = ContextEntry[];
-
-
-
-
-
-
-
-
-
-const thisDeviceId = new ObservableClass<string | undefined>(undefined);
-tsc.addEventListener("app", "SetDeviceId", (message) => {
-	thisDeviceId.updateState(message.id);
-});
-
-
-
-
-
-
-
-
-
-
-const currentDevice = new ObservableClass<Device | null>(null);
-currentDevice.addObserver((currentDevice) => {
-	console.log(`Current device is ${currentDevice?.id}.`);
-});
-tsc.addEventListener("app", "TransferPlayback", (message) => {
-	currentDevice.updateState(message.device);
-});
-
-
-
-
-
-
-const isCurrentDeviceLocal = new ObservableClass(true);
-currentDevice.addObserver((currentDevice) => {
-	isCurrentDeviceLocal.updateState(currentDevice?.id === thisDeviceId.getState());
-});
-thisDeviceId.addObserver((thisDeviceId) => {
-	isCurrentDeviceLocal.updateState(currentDevice.getState()?.id === thisDeviceId);
-});
-
-
-
-
-
-
-
-
-
-const devices = new ArrayObservable(new Array<Device>());
-tsc.addEventListener("app", "DeviceBecameAvailable", (message) => {
-	devices.append(message.device);
-});
-tsc.addEventListener("app", "DeviceBecameUnavailable", (message) => {
-	let index = devices.getState().findIndex((value) => {
-		return value.id === message.device.id;
-	});
-	devices.splice(index);
-});
-tsc.addEventListener("app", "AvailableDevices", (message) => {
-	devices.update(message.devices);
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const context = new ObservableClass<Context | undefined>(undefined);
-tsc.addEventListener("app", "SetContext", (message) => {
-	let value = message.context?.map((entry) => {
-		return {
-			file_id: entry.file_id,
-			title: (entry as any).title,
-			subtitle: (entry as any).subtitle
-		};
-	});
-	context.updateState(value);
-});
-let set_context = (value?: Context): void => {
-	context.updateState(value);
-	tsc.send("SetContext", {
-		context: value
-	});
-};
-
-
-
-
-
-
-
-
-
-const context_index = new ObservableClass<number | undefined>(undefined);
-tsc.addEventListener("app", "SetContextIndex", (message) => {
-	context_index.updateState(message.index);
-});
-function setIndex(value?: number): void {
-	let current_context = context.getState();
-	if (value != null) {
-		if (current_context == null) {
-			return;
-		}
-		if (value < 0 || value >= current_context.length) {
-			return;
-		}
-	}
-	context_index.updateState(value);
-	tsc.send("SetContextIndex", {
-		index: value
-	});
-}
-
-
-
-
-
-
-
-
-
-const contextEntry = new ObservableClass<ContextEntry | undefined>(undefined);
-function computeContexEntry(): void {
-	let current_context = context.getState();
-	let current_index = context_index.getState();
-	if (current_context != null && current_index != null && current_index >= 0 && current_index < current_context.length) {
-		let entry = current_context[current_index];
-		contextEntry.updateState(entry);
-	}
-}
-context.addObserver(computeContexEntry);
-context_index.addObserver(computeContexEntry);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const mediaPlayerTitle = new ObservableClass("");
-const mediaPlayerSubtitle = new ObservableClass("");
-contextEntry.addObserver((entry) => {
-	mediaPlayerTitle.updateState(entry?.title ?? "");
-	mediaPlayerSubtitle.updateState(entry?.subtitle ?? "");
-	session.setMetadata({
-		title: entry?.title ?? ""
-	});
-});
+let gmetadata: Metadata | undefined;
 {
-	function computer() {
-		let entry = contextEntry.getState();
-		if (entry != null && isCurrentDeviceLocal.getState()) {
-			video.src = `/files/${entry.file_id}/?token=${token}`;
+	let computer = () => {
+		let currentLocalEntry = player.currentLocalEntry.getState();
+		let token = player.token.getState();
+		if (is.absent(currentLocalEntry) || is.absent(token)) {
+			currentVideo.src = ``;
+			return;
+		} else {
+			currentVideo.src = `/files/${currentLocalEntry.file_id}/?token=${token}`;
 		}
-	}
-	contextEntry.addObserver(computer);
-	isCurrentDeviceLocal.addObserver(computer);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{
-	function computer() {
-		let entry = contextEntry.getState();
-		if (entry != null && isCurrentDeviceLocal.getState()) {
-			let fid = entry.file_id;
-			while (video.lastChild !== null) {
-				video.removeChild(video.lastChild);
-			}
-			if (metadata !== null) {
-				let md = metadata[fid];
-				if (md !== undefined) {
-					let defaultSubtitle = md.subtitles.find((subtitle) => subtitle.language === "swe") || md.subtitles.find((subtitle) => subtitle.language === "eng");
-					for (let i = 0; i < md.subtitles.length; i++) {
-						let st = md.subtitles[i];
-						let e = document.createElement('track');
-						if (st.language != null) {
-							let language = languages.db[st.language];
-							if (language != null) {
-								e.label = language.title;
-								e.srclang = language.iso639_1;
-								e.kind = "subtitles";
-							}
-							if (st === defaultSubtitle) {
-								e.setAttribute("default", "");
-							}
+		if (player.playback.getState()) {
+			currentVideo.play();
+		}
+		let fid = currentLocalEntry.file_id;
+		while (currentVideo.lastChild != null) {
+			currentVideo.removeChild(currentVideo.lastChild);
+		}
+		if (gmetadata != null) {
+			let md = gmetadata[fid];
+			if (md != undefined) {
+				let defaultSubtitle = md.subtitles.find((subtitle) => subtitle.language === "swe") || md.subtitles.find((subtitle) => subtitle.language === "eng");
+				for (let i = 0; i < md.subtitles.length; i++) {
+					let st = md.subtitles[i];
+					let e = document.createElement('track');
+					if (st.language != null) {
+						let language = languages.db[st.language];
+						if (language != null) {
+							e.label = language.title;
+							e.srclang = language.iso639_1;
+							e.kind = "subtitles";
 						}
-						e.src = `/files/${st.file_id}/?token=${token}`;
-						video.appendChild(e);
+						if (st === defaultSubtitle) {
+							e.setAttribute("default", "");
+						}
 					}
+					e.src = `/files/${st.file_id}/?token=${token}`;
+					currentVideo.appendChild(e);
 				}
 			}
-			if (isPlaying.getState()) {
-				video.play();
-			}
 		}
-	}
-	contextEntry.addObserver(computer);
-	isCurrentDeviceLocal.addObserver(computer);
+	};
+	player.currentLocalEntry.addObserver(computer);
+	player.token.addObserver(computer);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-const nextContextEntry = new ObservableClass<ContextEntry | undefined>(undefined);
-(() => {
-	function computer(): void {
-		let current_context = context.getState();
-		let current_index = context_index.getState();
-		if (current_context != null && current_index != null && current_index + 1 >= 0 && current_index + 1 < current_context.length) {
-			let entry = current_context[current_index + 1];
-			nextContextEntry.updateState(entry);
-		} else {
-			nextContextEntry.updateState(undefined);
-		}
-	}
-	context.addObserver(computer);
-	context_index.addObserver(computer);
-})();
 {
-	function computer() {
-		let entry = contextEntry.getState();
-		if (entry != null && isCurrentDeviceLocal.getState()) {
-			buffer.src = `/files/${entry.file_id}/?token=${token}`;
-		}
-	}
-	contextEntry.addObserver(computer);
-	isCurrentDeviceLocal.addObserver(computer);
-}
-
-
-
-
-
-
-
-
-const prevContextEntry = new ObservableClass<ContextEntry | undefined>(undefined);
-(() => {
-	function computer(): void {
-		let current_context = context.getState();
-		let current_index = context_index.getState();
-		if (current_context != null && current_index != null && current_index - 1 >= 0 && current_index - 1 < current_context.length) {
-			let entry = current_context[current_index - 1];
-			prevContextEntry.updateState(entry);
+	let computer = () => {
+		let nextLocalEntry = player.nextLocalEntry.getState();
+		let token = player.token.getState();
+		if (is.absent(nextLocalEntry) || is.absent(token)) {
+			lastVideo.src = ``;
+			return;
 		} else {
-			prevContextEntry.updateState(undefined);
+			lastVideo.src = `/files/${nextLocalEntry.file_id}/?token=${token}`;
 		}
-	}
-	context.addObserver(computer);
-	context_index.addObserver(computer);
-})();
-prevContextEntry.addObserver((entry) => {
-	if (entry != null) {
-		bufferneg.src = `/files/${entry.file_id}/?token=${token}`;
-	}
-});
-
-
-
-
-
-
-
-
-
-
-
-
-const canSkipPrevClass = new ObservableClass(false);
-const canSkipPrev = canSkipPrevClass.addObserver((state) => state);
-prevContextEntry.addObserver((prevContextEntry) => {
-	canSkipPrevClass.updateState(currentDevice.getState() != null && prevContextEntry != null);
-});
-currentDevice.addObserver((currentDevice) => {
-	canSkipPrevClass.updateState(currentDevice != null && prevContextEntry.getState() != null);
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const canPlayPauseClass = new ObservableClass(false);
-const canPlayPause = canPlayPauseClass.addObserver((state) => state);
-contextEntry.addObserver((contextEntry) => {
-	canPlayPauseClass.updateState(currentDevice.getState() != null && contextEntry != null);
-});
-currentDevice.addObserver((currentDevice) => {
-	canPlayPauseClass.updateState(currentDevice != null && contextEntry.getState() != null);
-});
-
-
-
-
-
-
-
-
-
-
-
-
-const canSkipNextClass = new ObservableClass(false);
-const canSkipNext = canSkipNextClass.addObserver((state) => state);
-nextContextEntry.addObserver((nextContextEntry) => {
-	canSkipNextClass.updateState(currentDevice.getState() != null && nextContextEntry != null);
-});
-currentDevice.addObserver((currentDevice) => {
-	canSkipNextClass.updateState(currentDevice != null && nextContextEntry.getState() != null);
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const isPlaying = new ObservableClass(false);
-{
-	function computer() {
-		if (isCurrentDeviceLocal.getState()) {
-			if (isPlaying.getState()) {
-				video.play();
-			} else {
-				video.pause();
-			}
-		}
-	}
-	isPlaying.addObserver(computer);
-	isCurrentDeviceLocal.addObserver(computer);
+	};
+	player.nextLocalEntry.addObserver(computer);
+	player.token.addObserver(computer);
 }
-tsc.addEventListener("app", "SetPlaying", (message) => {
-	isPlaying.updateState(message.playing);
+player.progress.addObserver((progress) => {
+	if (!player.isDeviceLocal.getState()) {
+		currentVideo.currentTime = progress;
+	}
 });
-function setPlayback(value: boolean): void {
-	isPlaying.updateState(value);
-	tsc.send("SetPlaying", {
-		playing: value
-	});
-}
-
-
-
-
-
-
-
-
-
-
-
-
-function play(index: number): void {
-	setIndex(index);
-	setPlayback(true);
-};
-function transferPlaybackToDevice(device: Device) {
-	tsc.send("TransferPlayback", {
-		device: device,
-		origin: window.location.origin
-	});
-	tsc.send("SetContext", {
-		context: context.getState()
-	});
-	tsc.send("SetContextIndex", {
-		index: context_index.getState()
-	});
-	/*
-	tsc.send("SetProgress", {
-		progress: progress.getState()
-	});
-	*/
-	tsc.send("SetPlaying", {
-		playing: isPlaying.getState()
-	});
-}
-function resume() {
-	if (context.getState() != null) {
-		setPlayback(true);
-	}
-}
-function pause() {
-	if (context.getState() != null) {
-		setPlayback(false);
-	}
-}
-function pauseresume() {
-	if (isPlaying.getState()) {
-		pause();
+player.localPlayback.addObserver((localPlayback) => {
+	if (localPlayback) {
+		currentVideo.play();
 	} else {
-		resume();
+		currentVideo.pause();
 	}
-}
-// TODO: Support on other device.
-let playfile = (path: string): void => {
-	/*
-	context = null;
-	context_index = null;
-	metadata = null;
-	video.src = `${path}?token=${token}`;
-	while (video.lastChild !== null) {
-		video.removeChild(video.lastChild);
-	}
-	video.play();
-	*/
-};
-function prev(): void {
-	let state = context_index.getState();
-	if (state != null) {
-		setIndex(state - 1);
-	}
-}
-function next(): void {
-	let state = context_index.getState();
-	if (state != null) {
-		setIndex(state + 1);
-	}
-}
-session.setHandlers({
-	play: resume,
-	pause: pause,
-	previoustrack: prev,
-	nexttrack: next
 });
 
 
@@ -551,42 +154,6 @@ session.setHandlers({
 
 
 
-
-
-
-
-
-const showDevicesClass = new ObservableClass(false);
-const showDevices = showDevicesClass.addObserver((state) => state);
-const isVideoClass = new ObservableClass(false);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const showVideo = new ObservableClass(false);
-currentDevice.addObserver((currentDevice) => {
-	showVideo.updateState(currentDevice == null && isVideoClass.getState());
-});
-isVideoClass.addObserver((isVideo) => {
-	showVideo.updateState(currentDevice.getState() == null && isVideo);
-});
-
-
-
-
-
-
-const showLogin = new ObservableClass(false);
 
 
 
@@ -1664,13 +1231,15 @@ let req = <T extends api_response.ApiRequest, U extends api_response.ApiResponse
 	xhr.send(JSON.stringify(body));
 }
 
+const showDevices = new ObservableClass(false);
+const showVideo = new ObservableClass(false);
+const showLogin = new ObservableClass(false);
+
 let tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
 let token: string | undefined;
 tokenobs.addObserver((token2) => {
 	token = token2;
-	tsc.send("Authenticate", {
-		token
-	});
+	player.token.updateState(token);
 });
 let valid_token: boolean | undefined;
 async function getToken(): Promise<string | undefined> {
@@ -1779,13 +1348,13 @@ mountwrapper.appendChild(xml.element("div.login-modal")
 	.render());
 
 let device_selector = xml.element("div.device-selector")
-	.bind("data-hide", showDevices((value) => !value))
+	.bind("data-hide", showDevices.addObserver(a => !a))
 	.add(xml.element("div.device-selector__devices")
-		.repeat(devices, (device) => xml.element("div.device")
-			.add(xml.text(device.title))
+		.repeat(player.devices, (device) => xml.element("div.device")
+			.add(xml.text(device.name))
 			.on("click", () => {
-				transferPlaybackToDevice(device);
-				showDevicesClass.updateState(false);
+				player.transfer(device);
+				showDevices.updateState(false);
 			})
 		)
 	)
@@ -1906,45 +1475,45 @@ let mp = xml.element("div.content")
 		)
 		.add(xml.element("div.media-player__controls")
 			.add(makeButton()
-				.bind("data-hide", devices.compute((chromecasts) => {
-					return chromecasts.length < 2;
+				.bind("data-hide", player.devices.compute((devices) => {
+					return devices.length < 2;
 				}))
-				.bind("data-active", currentDevice.addObserver((currentDevice) => {
-					return currentDevice != null;
+				.bind("data-active", player.isDeviceLocal.addObserver((isDeviceLocal) => {
+					return isDeviceLocal === false;
 				}))
 				.add(makeBroadcastIcon())
 				.on("click", () => {
-					showDevicesClass.updateState(!showDevicesClass.getState());
+					showDevices.updateState(!showDevices.getState());
 				})
 			)
 			.add(makeButton()
-				.bind("data-enabled", canSkipPrev)
+				.bind("data-enabled", player.canPlayLast.addObserver(a => a))
 				.add(makePrevIcon())
 				.on("click", () => {
-					prev();
+					player.last();
 				})
 			)
 			.add(makeButton()
-				.bind("data-enabled", canPlayPause)
+				.bind("data-enabled", player.canPlayCurrent.addObserver(a => a))
 				.add(makePlayIcon()
-					.bind("data-hide", isPlaying.addObserver((isPlaying) => {
-						return isPlaying ? "true" : "false";
+					.bind("data-hide", player.playback.addObserver((playback) => {
+						return playback === true;
 					}))
 				)
 				.add(makePauseIcon()
-					.bind("data-hide", isPlaying.addObserver((isPlaying) => {
-						return isPlaying ? "false" : "true";
+					.bind("data-hide", player.playback.addObserver((playback) => {
+						return playback === false;
 					}))
 				)
 				.on("click", () => {
-					pauseresume();
+					player.toggle();
 				})
 			)
 			.add(makeButton()
-				.bind("data-enabled", canSkipNext)
+				.bind("data-enabled", player.canPlayNext.addObserver(a => a))
 				.add(makeNextIcon())
 				.on("click", () => {
-					next();
+					player.next();
 				})
 			)
 		)
@@ -1953,31 +1522,15 @@ let mp = xml.element("div.content")
 appcontainer.appendChild(mpw);
 mpw.appendChild(mp);
 
-video.addEventListener("ended", () => {
-	next();
-});
-video.addEventListener("pause", () => {
-	if (isCurrentDeviceLocal.getState()) {
-		setPlayback(false);
-	}
-});
-video.addEventListener("play", () => {
-	if (isCurrentDeviceLocal.getState()) {
-		setPlayback(true);
-	}
-});
-video.addEventListener("timeupdate", () => {
-	//localPlayerProgress.updateState(video.currentTime);
-});
-video.setAttribute('controls', '');
-video.setAttribute('playsinline', '');
-video.setAttribute("preload", "auto");
-video.style.setProperty('height', '100%');
-video.style.setProperty('width', '100%');
-buffer.setAttribute("preload", "auto");
-buffer.style.setProperty("display", "none");
-bufferneg.setAttribute("preload", "auto");
-bufferneg.style.setProperty("display", "none");
+currentVideo.setAttribute('controls', '');
+currentVideo.setAttribute('playsinline', '');
+currentVideo.setAttribute("preload", "auto");
+currentVideo.style.setProperty('height', '100%');
+currentVideo.style.setProperty('width', '100%');
+lastVideo.setAttribute("preload", "auto");
+lastVideo.style.setProperty("display", "none");
+nextVideo.setAttribute("preload", "auto");
+nextVideo.style.setProperty("display", "none");
 mp.appendChild(logincontainer);
 
 let videowrapper = xml.element("div")
@@ -1988,13 +1541,9 @@ let videowrapper = xml.element("div")
 	.render();
 
 scroll_container.appendChild(videowrapper);
-videowrapper.appendChild(video);
-videowrapper.appendChild(buffer);
-videowrapper.appendChild(bufferneg);
-
-video.addEventListener("playing", () => {
-	isVideoClass.updateState(video.videoWidth > 0 && video.videoHeight > 0);
-});
+videowrapper.appendChild(currentVideo);
+videowrapper.appendChild(lastVideo);
+videowrapper.appendChild(nextVideo);
 
 
 
@@ -2078,7 +1627,7 @@ function makeAlbum(album: api_response.AlbumResponse): xml.XElement {
 }
 function makeMovie(movie: api_response.MovieResponse): xml.XElement {
 	let duration_ms = 0;
-	let context = new Array<ContextEntry>();
+	let context = new Array<schema.objects.ContextItem>();
 	let metadata: Metadata = {};
 	for (let movie_part of movie.movie_parts) {
 		duration_ms += movie_part.duration;
@@ -2110,9 +1659,8 @@ function makeMovie(movie: api_response.MovieResponse): xml.XElement {
 			.add(makePlaybackButton()
 				.on("click", (event) => {
 					event.stopPropagation();
-					set_context(context);
-					set_context_metadata(metadata);
-					play(0);
+					player.play(context, 0);
+					gmetadata = metadata;
 				})
 			)
 		)
@@ -2188,7 +1736,7 @@ let updateviewforuri = (uri: string): void => {
 	let parts: RegExpExecArray | null;
 	if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/`, {}, (status, response) => {
-			let context = new Array<ContextEntry>();
+			let context = new Array<schema.objects.ContextItem>();
 			let duration_ms = 0;
 			for (let disc of response.discs) {
 				for (let track of disc.tracks) {
@@ -2229,8 +1777,8 @@ let updateviewforuri = (uri: string): void => {
 							)
 							.add(xml.element("div.playlist__content")
 								.add(...disc.tracks.map((track) => xml.element("div.playlist-item")
-									.bind("data-playing", contextEntry.addObserver((contextEntry) => {
-										return contextEntry?.file_id === track.file_id;
+									.bind("data-playing", player.currentEntry.addObserver((currentEntry) => {
+										return currentEntry?.file_id === track.file_id;
 									}))
 									.add(xml.element("div.playlist-item__title")
 										.add(xml.text(track.title))
@@ -2239,8 +1787,7 @@ let updateviewforuri = (uri: string): void => {
 										.add(xml.text(track.artists.map((artist) => artist.title).join(" \u2022 ")))
 									)
 									.on("click", () => {
-										set_context(context);
-										play(context.findIndex(entry => entry.file_id === track.file_id));
+										player.play(context, context.findIndex(entry => entry.file_id === track.file_id));
 									})
 								))
 							)
@@ -2263,7 +1810,7 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/`, {}, (status, response) => {
-			let context = new Array<ContextEntry>();
+			let context = new Array<schema.objects.ContextItem>();
 			let duration_ms = 0;
 			for (let album of response.albums) {
 				for (let disc of album.discs) {
@@ -2298,10 +1845,9 @@ let updateviewforuri = (uri: string): void => {
 				for (let album of response.albums) {
 					let widget = makeAlbum(album).render();
 					widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
-						let index = context.findIndex(entry => entry.file_id === album.discs[0].tracks[0].file_id);
-						set_context(context);
-						play(index);
 						event.stopPropagation();
+						let index = context.findIndex(entry => entry.file_id === album.discs[0].tracks[0].file_id);
+						player.play(context, index);
 					});
 					widget.addEventListener('click', () => {
 						navigate(`audio/albums/${album.album_id}/`);
@@ -2321,7 +1867,7 @@ let updateviewforuri = (uri: string): void => {
 				let mediaGrid__content = xml.element("div.media-grid__content").render();
 				mediaGrid.appendChild(mediaGrid__content);
 				for (let album of response.appearances) {
-					let context = new Array<ContextEntry>();
+					let context = new Array<schema.objects.ContextItem>();
 					for (let disc of album.discs) {
 						for (let track of disc.tracks) {
 							context.push({
@@ -2333,9 +1879,8 @@ let updateviewforuri = (uri: string): void => {
 					}
 					let widget = makeAlbum(album).render();
 					widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
-						set_context(context);
-						play(0);
 						event.stopPropagation();
+						player.play(context, 0);
 					});
 					widget.addEventListener('click', () => {
 						navigate(`audio/albums/${album.album_id}/`);
@@ -2374,8 +1919,7 @@ let updateviewforuri = (uri: string): void => {
 				d.style.setProperty('font-size', '16px');
 				d.innerText = `${item.track.title}`;
 				d.addEventListener('click', () => {
-					set_context(context);
-					play(context.findIndex(entry => entry.file_id === item.track.file_id));
+					player.play(context, context.findIndex(entry => entry.file_id === item.track.file_id));
 				});
 				mount.appendChild(d);
 			}
@@ -2437,7 +1981,7 @@ let updateviewforuri = (uri: string): void => {
 			let d = document.createElement('div');
 			d.innerText = `${response.title}`;
 			mount.appendChild(d);
-			let context: Context = response.seasons.reduce((files, season) => {
+			let context: schema.objects.Context = response.seasons.reduce((files, season) => {
 					files.push(...season.episodes.map(episode => {
 						return {
 							file_id: episode.file_id,
@@ -2446,7 +1990,7 @@ let updateviewforuri = (uri: string): void => {
 						};
 					}));
 					return files;
-				}, new Array<ContextEntry>());
+				}, new Array<schema.objects.ContextItem>());
 			let context_metadata: Metadata = {};
 			let nextEpisode = getNextEpisode(response);
 			{
@@ -2466,9 +2010,8 @@ let updateviewforuri = (uri: string): void => {
 				let button = document.createElement("button");
 				button.textContent = "Watch";
 				button.addEventListener("click", () => {
-					set_context(context);
-					set_context_metadata(context_metadata);
-					play(context.findIndex(entry => entry.file_id === nextEpisode.file_id));
+					gmetadata = context_metadata;
+					player.play(context, context.findIndex(entry => entry.file_id === nextEpisode.file_id));
 				});
 				d2.appendChild(h4);
 				d2.appendChild(p1);
@@ -2492,9 +2035,8 @@ let updateviewforuri = (uri: string): void => {
 					d2.style.setProperty('font-size', '16px');
 					d2.innerText = `${episode.title} ${format_duration(episode.duration)}`;
 					d2.addEventListener('click', () => {
-						set_context(context);
-						set_context_metadata(context_metadata);
-						play(context.findIndex(entry => entry.file_id === episode.file_id));
+						gmetadata = context_metadata;
+						player.play(context, context.findIndex(entry => entry.file_id === episode.file_id));
 					});
 					mount.appendChild(d2);
 				}
@@ -2536,7 +2078,7 @@ let updateviewforuri = (uri: string): void => {
 			d4.style.setProperty('font-size', '16px');
 			d4.innerText = response.summary || "";
 			mount.appendChild(d4);
-			let context: Context = [{
+			let context: schema.objects.Context = [{
 				file_id: response.file_id,
 				title: response.title,
 				subtitle: ["TOOD", utils.formatSeasonEpisode(0, response.number)].join(" \u2022 ")
@@ -2548,9 +2090,8 @@ let updateviewforuri = (uri: string): void => {
 			let d3 = document.createElement('button');
 			d3.innerText = `load`;
 			d3.addEventListener('click', () => {
-				set_context(context);
-				set_context_metadata(context_metadata);
-				play(context.findIndex(entry => entry.file_id === response.file_id));
+				gmetadata = context_metadata;
+				player.play(context, context.findIndex(entry => entry.file_id === response.file_id));
 				if (parts !== null && parts.length >= 3) {
 					let start_ms = Number.parseInt(parts[2], 10);
 					//set_progress(start_ms);
@@ -2568,7 +2109,7 @@ let updateviewforuri = (uri: string): void => {
 			d2.style.setProperty('font-size', '24px');
 			d2.innerText = response.summary || "";
 			mount.appendChild(d2);
-			let context: Context = response.movie_parts.map((part) => {
+			let context: schema.objects.Context = response.movie_parts.map((part) => {
 				return {
 					file_id: part.file_id,
 					title: response.title,
@@ -2595,9 +2136,8 @@ let updateviewforuri = (uri: string): void => {
 			let button = document.createElement("button");
 			button.innerText = `Play`;
 			button.addEventListener('click', () => {
-				set_context(context);
-				set_context_metadata(context_metadata);
-				play(0);
+				gmetadata = context_metadata;
+				player.play(context, 0);
 				if (parts !== null && parts.length >= 3) {
 					let start_ms = Number.parseInt(parts[2], 10);
 					//set_progress(start_ms);
@@ -2714,10 +2254,10 @@ let updateviewforuri = (uri: string): void => {
 			let button = document.createElement("button");
 			button.textContent = "Play";
 			button.addEventListener("click", () => {
-				playfile(`/media/channels/${channel_id}/${Date.now()}/`);
+				//playfile(`/media/channels/${channel_id}/${Date.now()}/`);
 			});
 			mount.appendChild(button);
-			let context: Context = response.segments.reduce((files, segment) => {
+			let context: schema.objects.Context = response.segments.reduce((files, segment) => {
 				if (segment.movie != null) {
 					let title = segment.movie.title;
 					return files.concat(segment.movie.movie_parts.map((movie_part) => {
@@ -2736,7 +2276,7 @@ let updateviewforuri = (uri: string): void => {
 					}]);
 				}
 				return files;
-			}, new Array<ContextEntry>());
+			}, new Array<schema.objects.ContextItem>());
 			let context_metadata: Metadata = {};
 			for (let segment of response.segments) {
 				const movie = segment.movie;
@@ -2776,9 +2316,8 @@ let updateviewforuri = (uri: string): void => {
 						let button = document.createElement("button");
 						button.textContent = "Play";
 						button.addEventListener("click", () => {
-							set_context(context);
-							set_context_metadata(context_metadata);
-							play(context.findIndex(entry => entry.file_id === movie_part.file_id));
+							gmetadata = context_metadata;
+							player.play(context, context.findIndex(entry => entry.file_id === movie_part.file_id));
 						});
 						right.appendChild(h3);
 						right.appendChild(h4);
@@ -2813,9 +2352,8 @@ let updateviewforuri = (uri: string): void => {
 					let button = document.createElement("button");
 					button.textContent = "Play";
 					button.addEventListener("click", () => {
-						set_context(context);
-						set_context_metadata(context_metadata);
-						play(context.findIndex(entry => entry.file_id === episode.file_id));
+						gmetadata = context_metadata;
+						player.play(context, context.findIndex(entry => entry.file_id === episode.file_id));
 					});
 					d2.appendChild(h3);
 					d2.appendChild(h4);

@@ -36,7 +36,7 @@ export class ObservableClass<A> {
 
 export interface ArrayObserver<A> {
 	onappend?(state: A): void,
-	onsplice?(index: number): void,
+	onsplice?(state: A, index: number): void,
 	onupdate?(state: Array<A>): void
 }
 
@@ -80,9 +80,10 @@ export class ArrayObservable<A> {
 		if (index < 0 || index >= this.state.length) {
 			throw `Expected an index of at most ${this.state.length}, got ${index}!`;
 		}
+		let state = this.state[index];
 		this.state.splice(index, 1);
 		for (let observer of this.observers) {
-			observer.onsplice?.(index);
+			observer.onsplice?.(state, index);
 			observer.onupdate?.(this.state);
 		}
 	}

@@ -1,37 +1,33 @@
 {
-	SetDeviceId: {
-		id: string
-	},
-
-	Authenticate: {
-		token: string
-	},
-
-	DeviceBecameAvailable: {
-		device: Device
-	},
-
-	DeviceBecameUnavailable: {
-		device: DeviceBase
-	},
-
-	AvailableDevices: {
-		devices: Device[]
-	},
-
-	TransferPlayback: {
-		device: DeviceBase
-	},
-
 	SetContext: {
 		context?: Context
 	},
 
-	SetContextIndex: {
+	SetDevice: {
+		device?: Device
+	},
+
+	SetDevices: {
+		devices: Device[]
+	},
+
+	SetIndex: {
 		index?: number
 	},
 
-	SetPlaying: {
-		playing: boolean
+	SetLocalDevice: {
+		device: Device
+	},
+
+	SetPlayback: {
+		playback: boolean
+	},
+
+	SetProgress: {
+		progress: number
+	},
+
+	SetToken: {
+		token?: string
 	}
 }

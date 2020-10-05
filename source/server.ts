@@ -11,7 +11,7 @@ import * as channels from "./channels";
 import * as data from "./data";
 import * as subsearch from "./subsearch";
 import { FileEntry, CueEntry } from "./database";
-import { server as context } from "./context";
+import * as context from "./context";
 
 
 
@@ -102,12 +102,14 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 	}
 };
 
+const contextServer = new context.server.ContextServer();
+
 function requestHandler(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 	let host = request.headers["host"] || "";
 	let method = request.method || "";
 	let path = request.url || "";
-	if (/^[/]typesockets[/]/.test(path)) {
-		return context.tss.getRequestHandler()(request, response);
+	if (/^[/]sockets[/]/.test(path)) {
+		return contextServer.getRequestHandler()(request, response);
 	}
 	let startMs = Date.now();
 	response.on("finish", () => {
