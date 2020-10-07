@@ -21,30 +21,14 @@ export type TypeSocketClientMessageMap<A extends stdlib.routing.MessageMap<A>> =
 	}
 };
 
-export enum ReadyState {
-	CONNECTING,
-	OPEN,
-	CLOSING,
-	CLOSED
-}
-
-export interface WebSocketLike {
-	addEventListener<A extends keyof WebSocketEventMap>(type: A, listenerer: (event: WebSocketEventMap[A]) => void): void;
-	removeEventListener<A extends keyof WebSocketEventMap>(type: A, listenerer: (event: WebSocketEventMap[A]) => void): void;
-	send(payload: string): void;
-	readonly readyState: ReadyState;
-}
-
-export type WebSocketFactory = (url: string) => WebSocketLike;
-
 export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	private nextConnectionAttemptDelayFactor: number;
 	private nextConnectionAttemptDelay: number;
 	private router: stdlib.routing.NamespacedMessageRouter<TypeSocketClientMessageMap<A>>;
 	private serializer: autoguard.serialization.MessageSerializer<A>;
 	private url: string;
-	private factory: WebSocketFactory;
-	private socket: WebSocketLike;
+	private factory: sockets.WebSocketFactory;
+	private socket: sockets.WebSocket;
 
 	private onClose(event: WebSocketEventMap["close"]): void {
 		this.router.route("sys", "disconnect", {});
@@ -77,7 +61,7 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 		this.router.route("sys", "connect", {});
 	}
 
-	constructor(url: string, factory: WebSocketFactory, guards: autoguard.serialization.MessageGuardMap<A>) {
+	constructor(url: string, factory: sockets.WebSocketFactory, guards: autoguard.serialization.MessageGuardMap<A>) {
 		this.nextConnectionAttemptDelayFactor = 2.0 + Math.random();
 		this.nextConnectionAttemptDelay = 2000;
 		this.router = new stdlib.routing.NamespacedMessageRouter<TypeSocketClientMessageMap<A>>();
@@ -101,7 +85,7 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 
 	send<B extends keyof A>(type: B, data: A[B]): void {
 		let readyState: ReadyState = this.socket.readyState;
-		if (readyState === ReadyState.OPEN) {
+		if (readyState === sockets.ReadyState.OPEN) {
 			this.socket.send(this.serializer.serialize(type, data));
 		} else {
 			let open = () => {
