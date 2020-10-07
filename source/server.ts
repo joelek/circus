@@ -12,9 +12,9 @@ import * as data from "./data";
 import * as subsearch from "./subsearch";
 import { FileEntry, CueEntry } from "./database";
 import * as context from "./context";
+import * as chromecasts from "./chromecast/chromecasts";
 
-
-
+chromecasts.observe();
 
 let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>): Partial<libhttp.IncomingHttpHeaders> => {
 	let out: Partial<libhttp.IncomingHttpHeaders> = {};

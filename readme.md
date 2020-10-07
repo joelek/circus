@@ -35,3 +35,7 @@ protobuf wrapped json on: 8009
 * Stream history
 * Cookies instead of tokens with one-time launch urls to auth chromecast
 * Grid default?
+
+## Bugs
+
+* Play for 5 seconds, reload, play or skip and progress gets wrongly reused.

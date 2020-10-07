@@ -176,7 +176,7 @@ function connect(host: string): void {
 	});
 }
 
-function observe() {
+export function observe() {
 	mdns.observe("_googlecast._tcp.local", (host) => {
 		if (!chromecasts.has(host)) {
 			connect(host);
@@ -186,11 +186,10 @@ function observe() {
 
 addObserver({
 	onconnect(hostname) {
+		console.log("Connect " + hostname);
 		let player = new libplayer.ChromecastPlayer(`wss://127.0.0.1/sockets/context/?client=Chromecast`);
 	},
 	ondisconnect(hostname) {
-
+		console.log("Disconnect " + hostname);
 	}
 });
-
-observe();

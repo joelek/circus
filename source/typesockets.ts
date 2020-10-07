@@ -3,8 +3,6 @@ import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as sockets from "@joelek/ts-sockets";
 
-// TODO: Add sender to TypeSockets/SocketObservable, sender === this is not sent to this.
-
 export type TypeSocketClientMessageMap<A extends stdlib.routing.MessageMap<A>> = {
 	sys: {
 		connect: {
@@ -23,14 +21,23 @@ export type TypeSocketClientMessageMap<A extends stdlib.routing.MessageMap<A>> =
 	}
 };
 
-// BUILD nodejs version of websocket client
+export interface WebSocketLike {
+	addEventListener<A extends keyof WebSocketEventMap>(type: A, listenerer: (event: WebSocketEventMap[A]) => void): void;
+	removeEventListener<A extends keyof WebSocketEventMap>(type: A, listenerer: (event: WebSocketEventMap[A]) => void): void;
+	send(payload: string): void;
+	readonly readyState: number;
+}
+
+export type WebSocketFactory = (url: string) => WebSocketLike;
 
 export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	private nextConnectionAttemptDelayFactor: number;
 	private nextConnectionAttemptDelay: number;
 	private router: stdlib.routing.NamespacedMessageRouter<TypeSocketClientMessageMap<A>>;
 	private serializer: autoguard.serialization.MessageSerializer<A>;
-	private socket: WebSocket;
+	private url: string;
+	private factory: WebSocketFactory;
+	private socket: WebSocketLike;
 
 	private onClose(event: WebSocketEventMap["close"]): void {
 		this.router.route("sys", "disconnect", {});
@@ -38,7 +45,7 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 
 	private onError(event: WebSocketEventMap["error"]): void {
 		setTimeout(() => {
-			this.socket = new WebSocket(this.socket.url);
+			this.socket = this.factory(this.url);
 			this.socket.addEventListener("close", this.onClose.bind(this));
 			this.socket.addEventListener("error", this.onError.bind(this));
 			this.socket.addEventListener("message", this.onMessage.bind(this));
@@ -63,12 +70,14 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 		this.router.route("sys", "connect", {});
 	}
 
-	constructor(url: string, guards: autoguard.serialization.MessageGuardMap<A>) {
+	constructor(url: string, factory: WebSocketFactory, guards: autoguard.serialization.MessageGuardMap<A>) {
 		this.nextConnectionAttemptDelayFactor = 2.0 + Math.random();
 		this.nextConnectionAttemptDelay = 2000;
 		this.router = new stdlib.routing.NamespacedMessageRouter<TypeSocketClientMessageMap<A>>();
 		this.serializer = new autoguard.serialization.MessageSerializer<A>(guards);
-		this.socket = new WebSocket(url);
+		this.url = url;
+		this.factory = factory;
+		this.socket = factory(url);
 		this.socket.addEventListener("close", this.onClose.bind(this));
 		this.socket.addEventListener("error", this.onError.bind(this));
 		this.socket.addEventListener("message", this.onMessage.bind(this));
@@ -84,7 +93,8 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	}
 
 	send<B extends keyof A>(type: B, data: A[B]): void {
-		if (this.socket.readyState === WebSocket.OPEN) {
+		let readyState: number = this.socket.readyState;
+		if (readyState === 1) {
 			this.socket.send(this.serializer.serialize(type, data));
 		} else {
 			let open = () => {

@@ -3,6 +3,7 @@ import * as data from "../data";
 import * as languages from "../languages";
 import * as observers from "../simpleobs";
 import * as libcontext from "../context/client";
+import * as websocket from "./websocket";
 
 /*
 class Controller {
@@ -328,11 +329,11 @@ controller.shouldPlay.addObserver((shouldPlay) => {
 	}
 });
 */
+
 export class ChromecastPlayer {
 	private context: libcontext.ContextClient;
 
 	constructor(url: string) {
-		this.context = new libcontext.ContextClient(url);
-
+		this.context = new libcontext.ContextClient(url, (url) => new websocket.WebSocketClient(url));
 	}
 }
