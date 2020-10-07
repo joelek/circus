@@ -184,10 +184,13 @@ export function observe() {
 	});
 };
 
+let players = new Map<string, libplayer.ChromecastPlayer>();
+
 addObserver({
 	onconnect(hostname) {
 		console.log("Connect " + hostname);
-		let player = new libplayer.ChromecastPlayer(`wss://127.0.0.1/sockets/context/?client=Chromecast`);
+		let player = new libplayer.ChromecastPlayer(`ws://127.0.0.1/sockets/context/?client=Chromecast`);
+		players.set(hostname, player);
 	},
 	ondisconnect(hostname) {
 		console.log("Disconnect " + hostname);

@@ -119,12 +119,14 @@ export class ContextServer {
 	constructor() {
 		this.tss = new typesockets.TypeSocketServer(schema.messages.Autoguard);
 		this.tss.addEventListener("sys", "connect", (message) => {
+			console.log("connect: " + message.connection_url);
 			let device = makeDevice(message.connection_id, message.connection_url);
 			this.tss.send("SetLocalDevice", message.connection_id, {
 				device
 			});
 		});
 		this.tss.addEventListener("sys", "disconnect", (message) => {
+			console.log("disconnect: " + message.connection_url);
 			this.revokeAuthentication(message.connection_id);
 		});
 		this.tss.addEventListener("app", "SetToken", (message) => {

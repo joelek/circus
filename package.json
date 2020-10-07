@@ -1,13 +1,13 @@
 {
 	"bin": {},
 	"devDependencies": {
-		"@types/node": "^14",
+		"@types/node": "^14.11.5",
 		"browserify": "^16",
 		"typescript": "^4"
 	},
 	"dependencies": {
 		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^4",
-		"@joelek/ts-sockets": "github:joelek/ts-sockets#wip",
+		"@joelek/ts-sockets": "github:joelek/ts-sockets#semver:^2",
 		"castv2-client": "^1.2.0"
 	},
 	"license": "MIT",
