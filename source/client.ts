@@ -27,12 +27,28 @@ let nextVideo = document.createElement("video");
 currentVideo.addEventListener("ended", () => {
 	player.next();
 });
-currentVideo.addEventListener("seeked", () => {
-	let progress = currentVideo.currentTime;
-	player.seek(progress);
+currentVideo.addEventListener("loadeddata", () => {
+	currentVideo.currentTime = player.progress.getState() ?? 0;
 });
 currentVideo.addEventListener("playing", () => {
 	player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
+});
+currentVideo.addEventListener("canplay", () => {
+	if (player.localPlayback.getState()) {
+		currentVideo.play();
+	}
+});
+player.progress.addObserver((progress) => {
+	if (!player.isDeviceLocal.getState()) {
+		currentVideo.currentTime = progress ?? 0;
+	}
+});
+player.localPlayback.addObserver((localPlayback) => {
+	if (localPlayback) {
+		currentVideo.play();
+	} else {
+		currentVideo.pause();
+	}
 });
 {
 	let computer = () => {
@@ -90,9 +106,6 @@ let gmetadata: Metadata | undefined;
 		} else {
 			currentVideo.src = `/files/${currentLocalEntry.file_id}/?token=${token}`;
 		}
-		if (player.playback.getState()) {
-			currentVideo.play();
-		}
 		let fid = currentLocalEntry.file_id;
 		while (currentVideo.lastChild != null) {
 			currentVideo.removeChild(currentVideo.lastChild);
@@ -138,18 +151,7 @@ let gmetadata: Metadata | undefined;
 	player.nextLocalEntry.addObserver(computer);
 	player.token.addObserver(computer);
 }
-player.progress.addObserver((progress) => {
-	if (!player.isDeviceLocal.getState()) {
-		currentVideo.currentTime = progress;
-	}
-});
-player.localPlayback.addObserver((localPlayback) => {
-	if (localPlayback) {
-		currentVideo.play();
-	} else {
-		currentVideo.pause();
-	}
-});
+
 
 
 
@@ -533,7 +535,6 @@ style.innerText = `
 
 	button {
 		background-color: ${ACCENT_COLOR};
-		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
 		border-radius: 4px;
 		color: rgb(255, 255, 255);
 		cursor: pointer;
@@ -1242,9 +1243,15 @@ let req = <T extends api_response.ApiRequest, U extends api_response.ApiResponse
 
 const showDevices = new ObservableClass(false);
 const showVideo = new ObservableClass(false);
-player.isCurrentEntryVideo.addObserver((isCurrentEntryVideo) => {
-	showVideo.updateState(isCurrentEntryVideo);
-});
+{
+	let computer = () => {
+		let isDeviceLocal = player.isDeviceLocal.getState();
+		let isCurrentEntryVideo = player.isCurrentEntryVideo.getState();
+		showVideo.updateState(isDeviceLocal && isCurrentEntryVideo);
+	};
+	player.isDeviceLocal.addObserver(computer);
+	player.isCurrentEntryVideo.addObserver(computer);
+}
 const showLogin = new ObservableClass(false);
 
 let tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
@@ -1306,11 +1313,16 @@ let appcontainer = xml.element("div.app")
 document.body.appendChild(appcontainer);
 
 
+let title = new ObservableClass("");
+player.estimatedProgress.addObserver((estimatedProgress) => {
+	title.updateState(`${estimatedProgress ?? 0}`);
+});
+
 let appheader = xml.element("div.app__header")
 	.add(xml.element("div.content")
 		.set("style", "padding: 24px")
 		.add(xml.element("div.page-header__title")
-			.add(xml.text("Zenplayer"))
+			.add(xml.text(title))
 			.on("click", () => {
 				navigate("/");
 			})
@@ -1534,7 +1546,6 @@ let mp = xml.element("div.content")
 appcontainer.appendChild(mpw);
 mpw.appendChild(mp);
 
-currentVideo.setAttribute('controls', '');
 currentVideo.setAttribute('playsinline', '');
 currentVideo.setAttribute("preload", "auto");
 currentVideo.style.setProperty('height', '100%');
@@ -1671,7 +1682,7 @@ function makeMovie(movie: api_response.MovieResponse): xml.XElement {
 			.add(makePlaybackButton()
 				.on("click", (event) => {
 					event.stopPropagation();
-					player.play(context, 0);
+					player.play(context, 0, 0);
 					gmetadata = metadata;
 				})
 			)
@@ -1799,7 +1810,7 @@ let updateviewforuri = (uri: string): void => {
 										.add(xml.text(track.artists.map((artist) => artist.title).join(" \u2022 ")))
 									)
 									.on("click", () => {
-										player.play(context, context.findIndex(entry => entry.file_id === track.file_id));
+										player.play(context, context.findIndex(entry => entry.file_id === track.file_id), 0);
 									})
 								))
 							)
@@ -1859,7 +1870,7 @@ let updateviewforuri = (uri: string): void => {
 					widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
 						event.stopPropagation();
 						let index = context.findIndex(entry => entry.file_id === album.discs[0].tracks[0].file_id);
-						player.play(context, index);
+						player.play(context, index, 0);
 					});
 					widget.addEventListener('click', () => {
 						navigate(`audio/albums/${album.album_id}/`);
@@ -1892,7 +1903,7 @@ let updateviewforuri = (uri: string): void => {
 					let widget = makeAlbum(album).render();
 					widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
 						event.stopPropagation();
-						player.play(context, 0);
+						player.play(context, 0, 0);
 					});
 					widget.addEventListener('click', () => {
 						navigate(`audio/albums/${album.album_id}/`);
@@ -1931,7 +1942,7 @@ let updateviewforuri = (uri: string): void => {
 				d.style.setProperty('font-size', '16px');
 				d.innerText = `${item.track.title}`;
 				d.addEventListener('click', () => {
-					player.play(context, context.findIndex(entry => entry.file_id === item.track.file_id));
+					player.play(context, context.findIndex(entry => entry.file_id === item.track.file_id), 0);
 				});
 				mount.appendChild(d);
 			}
@@ -2023,7 +2034,7 @@ let updateviewforuri = (uri: string): void => {
 				button.textContent = "Watch";
 				button.addEventListener("click", () => {
 					gmetadata = context_metadata;
-					player.play(context, context.findIndex(entry => entry.file_id === nextEpisode.file_id));
+					player.play(context, context.findIndex(entry => entry.file_id === nextEpisode.file_id), 0);
 				});
 				d2.appendChild(h4);
 				d2.appendChild(p1);
@@ -2048,7 +2059,7 @@ let updateviewforuri = (uri: string): void => {
 					d2.innerText = `${episode.title} ${format_duration(episode.duration)}`;
 					d2.addEventListener('click', () => {
 						gmetadata = context_metadata;
-						player.play(context, context.findIndex(entry => entry.file_id === episode.file_id));
+						player.play(context, context.findIndex(entry => entry.file_id === episode.file_id), 0);
 					});
 					mount.appendChild(d2);
 				}
@@ -2102,12 +2113,9 @@ let updateviewforuri = (uri: string): void => {
 			let d3 = document.createElement('button');
 			d3.innerText = `load`;
 			d3.addEventListener('click', () => {
+				let progress = parts != null && parts.length >= 3 ? Number.parseInt(parts[2], 10) / 1000 : 0;
 				gmetadata = context_metadata;
-				player.play(context, context.findIndex(entry => entry.file_id === response.file_id));
-				if (parts !== null && parts.length >= 3) {
-					let start_ms = Number.parseInt(parts[2], 10);
-					//set_progress(start_ms);
-				}
+				player.play(context, context.findIndex(entry => entry.file_id === response.file_id), progress);
 			});
 			mount.appendChild(d3);
 		});
@@ -2148,12 +2156,9 @@ let updateviewforuri = (uri: string): void => {
 			let button = document.createElement("button");
 			button.innerText = `Play`;
 			button.addEventListener('click', () => {
+				let progress = parts != null && parts.length >= 3 ? Number.parseInt(parts[2], 10) / 1000 : 0;
 				gmetadata = context_metadata;
-				player.play(context, 0);
-				if (parts !== null && parts.length >= 3) {
-					let start_ms = Number.parseInt(parts[2], 10);
-					//set_progress(start_ms);
-				}
+				player.play(context, 0, progress);
 			});
 			mount.appendChild(button);
 			let wrap = document.createElement('div');
@@ -2329,7 +2334,7 @@ let updateviewforuri = (uri: string): void => {
 						button.textContent = "Play";
 						button.addEventListener("click", () => {
 							gmetadata = context_metadata;
-							player.play(context, context.findIndex(entry => entry.file_id === movie_part.file_id));
+							player.play(context, context.findIndex(entry => entry.file_id === movie_part.file_id), 0);
 						});
 						right.appendChild(h3);
 						right.appendChild(h4);
@@ -2365,7 +2370,7 @@ let updateviewforuri = (uri: string): void => {
 					button.textContent = "Play";
 					button.addEventListener("click", () => {
 						gmetadata = context_metadata;
-						player.play(context, context.findIndex(entry => entry.file_id === episode.file_id));
+						player.play(context, context.findIndex(entry => entry.file_id === episode.file_id), 0);
 					});
 					d2.appendChild(h3);
 					d2.appendChild(h4);

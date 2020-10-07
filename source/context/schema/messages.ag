@@ -24,7 +24,7 @@
 	},
 
 	SetProgress: {
-		progress: number
+		progress?: number
 	},
 
 	SetToken: {

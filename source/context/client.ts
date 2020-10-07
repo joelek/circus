@@ -5,7 +5,8 @@ import * as typesockets from "../typesockets";
 
 export class ContextClient {
 	private tsc: typesockets.TypeSocketClient<schema.messages.Autoguard>;
-	private progressTimestamp: number;
+	readonly estimatedProgress = new observers.ObservableClass(undefined as number | undefined);
+	readonly estimatedProgressTimestamp = new observers.ObservableClass(undefined as number | undefined);
 	readonly token = new observers.ObservableClass(undefined as string | undefined);
 	readonly localDevice = new observers.ObservableClass(undefined as schema.objects.Device | undefined);
 	readonly devices = new observers.ArrayObservable(new Array<schema.objects.Device>());
@@ -22,7 +23,7 @@ export class ContextClient {
 	readonly nextEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
 	readonly nextLocalEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
 	readonly playback = new observers.ObservableClass(false);
-	readonly progress = new observers.ObservableClass(0);
+	readonly progress = new observers.ObservableClass(undefined as number | undefined);
 	readonly localPlayback = new observers.ObservableClass(false);
 	readonly canPlayLast = new observers.ObservableClass(false);
 	readonly canPlayCurrent = new observers.ObservableClass(false);
@@ -32,7 +33,6 @@ export class ContextClient {
 	constructor(name: string) {
 		let path = `/sockets/context/?client=${encodeURIComponent(name)}`;
 		this.tsc = typesockets.TypeSocketClient.connect(path, schema.messages.Autoguard);
-		this.progressTimestamp = 0;
 		this.lastEntry.addObserver((lastEntry) => {
 			this.canPlayLast.updateState(is.present(lastEntry));
 		});
@@ -41,6 +41,21 @@ export class ContextClient {
 		});
 		this.nextEntry.addObserver((nextEntry) => {
 			this.canPlayNext.updateState(is.present(nextEntry));
+		});
+		this.progress.addObserver((progress) => {
+			this.estimatedProgress.updateState(progress);
+			this.estimatedProgressTimestamp.updateState(Date.now());
+		});
+		this.playback.addObserver((playback) => {
+			let estimatedProgress = this.estimatedProgress.getState();
+			let estimatedProgressTimestamp = this.estimatedProgressTimestamp.getState();
+			let now = Date.now();
+			if (!playback) {
+				if (is.present(estimatedProgress) && is.present(estimatedProgressTimestamp)) {
+					this.estimatedProgress.updateState(estimatedProgress + (now - estimatedProgressTimestamp) / 1000);
+				}
+			}
+			this.estimatedProgressTimestamp.updateState(now);
 		});
 		{
 			let computer = () => {
@@ -185,7 +200,6 @@ export class ContextClient {
 			this.playback.updateState(message.playback);
 		});
 		this.tsc.addEventListener("app", "SetProgress", (message) => {
-			this.progressTimestamp = Date.now();
 			this.progress.updateState(message.progress);
 		});
 	}
@@ -217,7 +231,7 @@ export class ContextClient {
 		});
 	}
 
-	play(context: schema.objects.Context, index: number): void {
+	play(context: schema.objects.Context, index: number, progress: number): void {
 		this.tsc.send("SetPlayback", {
 			playback: false
 		});
@@ -228,7 +242,7 @@ export class ContextClient {
 			index
 		});
 		this.tsc.send("SetProgress", {
-			progress: 0
+			progress
 		});
 		this.tsc.send("SetPlayback", {
 			playback: true
@@ -243,8 +257,6 @@ export class ContextClient {
 	}
 
 	seek(progress: number): void {
-		this.progress.updateState(progress);
-		this.progressTimestamp = Date.now();
 		this.tsc.send("SetProgress", {
 			progress: progress
 		});

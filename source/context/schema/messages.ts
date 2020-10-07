@@ -61,11 +61,14 @@ export const SetPlayback = autoguard.Object.of<SetPlayback>({
 });
 
 export type SetProgress = {
-	"progress": number
+	"progress"?: number
 };
 
 export const SetProgress = autoguard.Object.of<SetProgress>({
-	"progress": autoguard.Number
+	"progress": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Number
+	)
 });
 
 export type SetToken = {

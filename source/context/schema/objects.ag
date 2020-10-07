@@ -17,6 +17,6 @@
 		device?: Device,
 		index?: number,
 		playback: boolean,
-		progress: number
+		progress?: number
 	}
 }

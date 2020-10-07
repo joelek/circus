@@ -26,7 +26,7 @@ function makeDevice(connection_id: string, connection_url: string): schema.objec
 
 type Session = schema.objects.Session & {
 	devices: observers.ObservableClass<Array<schema.objects.Device>>,
-	progressTimestamp: number
+	progressTimestamp?: number
 }
 
 export class ContextServer {
@@ -52,9 +52,7 @@ export class ContextServer {
 		}
 		const session: Session = {
 			playback: false,
-			progress: 0,
-			devices: new observers.ObservableClass(new Array<schema.objects.Device>()),
-			progressTimestamp: 0
+			devices: new observers.ObservableClass(new Array<schema.objects.Device>())
 		};
 		let devices = session.devices;
 		devices.addObserver((devices) => {
@@ -65,20 +63,15 @@ export class ContextServer {
 			});
 		});
 		devices.addObserver((devices) => {
-			let transfer = is.absent(devices.find((device) => {
+			this.updateProgress(session);
+		});
+		devices.addObserver((devices) => {
+			let deviceWasLost = is.absent(devices.find((device) => {
 				return device.id === session.device?.id;
 			}));
-			if (transfer) {
+			if (deviceWasLost) {
 				let device = devices[devices.length - 1] as schema.objects.Device | undefined;
 				if (session.playback) {
-					let now = Date.now();
-					session.progress = (now - session.progressTimestamp) / 1000;
-					session.progressTimestamp = now;
-					this.tss.send("SetProgress", devices.map((device) => {
-						return device.id;
-					}), {
-						progress: session.progress
-					});
 					session.playback = false;
 					this.tss.send("SetPlayback", devices.map((device) => {
 						return device.id;
@@ -113,6 +106,16 @@ export class ContextServer {
 		}
 	}
 
+	private updateProgress(session: Session): void {
+		let now = Date.now();
+		if (session.playback) {
+			if (is.present(session.progress) && is.present(session.progressTimestamp)) {
+				session.progress += (now - session.progressTimestamp) / 1000;
+			}
+		}
+		session.progressTimestamp = now;
+	}
+
 	constructor() {
 		this.tss = new typesockets.TypeSocketServer(schema.messages.Autoguard);
 		this.tss.addEventListener("sys", "connect", (message) => {
@@ -145,9 +148,8 @@ export class ContextServer {
 				this.tss.send("SetPlayback", message.connection_id, {
 					playback: session.playback
 				});
-				let progress = session.progress + (session.playback ? + (Date.now() - session.progressTimestamp) / 1000 : 0);
 				this.tss.send("SetProgress", message.connection_id, {
-					progress: progress
+					progress: session.progress
 				});
 			}
 		});
@@ -177,6 +179,7 @@ export class ContextServer {
 		});
 		this.tss.addEventListener("app", "SetPlayback", (message) => {
 			this.getExistingSession(message.connection_id, (session) => {
+				this.updateProgress(session);
 				session.playback = message.data.playback;
 				this.tss.send("SetPlayback", session.devices.getState().map((device) => {
 					return device.id;

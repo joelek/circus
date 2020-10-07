@@ -33,7 +33,7 @@ export type Session = {
 	"device"?: Device,
 	"index"?: number,
 	"playback": boolean,
-	"progress": number
+	"progress"?: number
 };
 
 export const Session = autoguard.Object.of<Session>({
@@ -50,7 +50,10 @@ export const Session = autoguard.Object.of<Session>({
 		autoguard.Number
 	),
 	"playback": autoguard.Boolean,
-	"progress": autoguard.Number
+	"progress": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Number
+	)
 });
 
 export type Autoguard = {
