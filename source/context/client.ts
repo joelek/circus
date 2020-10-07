@@ -30,9 +30,8 @@ export class ContextClient {
 	readonly canPlayNext = new observers.ObservableClass(false);
 	readonly isCurrentEntryVideo = new observers.ObservableClass(false);
 
-	constructor(name: string) {
-		let path = `/sockets/context/?client=${encodeURIComponent(name)}`;
-		this.tsc = typesockets.TypeSocketClient.connect(path, schema.messages.Autoguard);
+	constructor(url: string) {
+		this.tsc = new typesockets.TypeSocketClient(url, schema.messages.Autoguard);
 		this.lastEntry.addObserver((lastEntry) => {
 			this.canPlayLast.updateState(is.present(lastEntry));
 		});

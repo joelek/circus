@@ -1,8 +1,10 @@
-import * as libdb from "./database";
-import * as data from "./data";
-import * as languages from "./languages";
-import { ArrayObservable, Observable, ObservableClass } from "./simpleobs";
+import * as libdb from "../database";
+import * as data from "../data";
+import * as languages from "../languages";
+import * as observers from "../simpleobs";
+import * as libcontext from "../context/client";
 
+/*
 class Controller {
 	readonly context = new ObservableClass<Context | undefined>(undefined);
 	readonly contextIndex = new ObservableClass<number | undefined>(undefined);
@@ -325,3 +327,12 @@ controller.shouldPlay.addObserver((shouldPlay) => {
 		}
 	}
 });
+*/
+export class ChromecastPlayer {
+	private context: libcontext.ContextClient;
+
+	constructor(url: string) {
+		this.context = new libcontext.ContextClient(url);
+
+	}
+}

@@ -94,13 +94,6 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 			this.socket.addEventListener("open", open);
 		}
 	}
-
-	static connect<A>(path: string, guards: autoguard.serialization.MessageGuardMap<A>): TypeSocketClient<A> {
-		let protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-		let host = window.location.host;
-		let url = `${protocol}//${host}${path}`;
-		return new TypeSocketClient(url, guards);
-	}
 };
 
 export type TypeSocketServerMessageMap<A extends stdlib.routing.MessageMap<A>> = {

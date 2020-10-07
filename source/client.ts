@@ -20,7 +20,15 @@ import * as is from "./is";
 
 
 
-let player = new client.ContextClient("Web");
+
+function makeUrl(): string {
+	let path = `/sockets/context/?client=Browser`;
+	let protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+	let host = window.location.host;
+	return `${protocol}//${host}${path}`;
+}
+
+let player = new client.ContextClient(makeUrl());
 let lastVideo = document.createElement("video");
 let currentVideo = document.createElement("video");
 let nextVideo = document.createElement("video");

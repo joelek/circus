@@ -1,11 +1,8 @@
 import * as libtls from "tls";
 import * as cast_message from "./cast_message";
 import * as mdns from "./mdns";
-import * as xcast from "./xcast";
-
-/*
-default media receiver: CC1AD845
-*/
+import * as schema from "./schema";
+import * as libplayer from "./player";
 
 let requestId = 0;
 
@@ -21,7 +18,7 @@ function sendCastMessage(socket: libtls.TLSSocket, message: cast_message.CastMes
 	socket.write(buffer);
 }
 
-function sendConnection(socket: libtls.TLSSocket, json: xcast.connection.Autoguard[keyof xcast.connection.Autoguard]) {
+function sendConnection(socket: libtls.TLSSocket, json: schema.connection.Autoguard[keyof schema.connection.Autoguard]) {
 	let castMessage: cast_message.CastMessage = {
 		protocol_version: cast_message.ProtocolVersion.CASTV2_1_0,
 		source_id: "sender-0",
@@ -33,7 +30,7 @@ function sendConnection(socket: libtls.TLSSocket, json: xcast.connection.Autogua
 	sendCastMessage(socket, castMessage);
 }
 
-function sendHeartbeat(socket: libtls.TLSSocket, json: xcast.heartbeat.Autoguard[keyof xcast.heartbeat.Autoguard]) {
+function sendHeartbeat(socket: libtls.TLSSocket, json: schema.heartbeat.Autoguard[keyof schema.heartbeat.Autoguard]) {
 	let castMessage: cast_message.CastMessage = {
 		protocol_version: cast_message.ProtocolVersion.CASTV2_1_0,
 		source_id: "sender-0",
@@ -45,7 +42,7 @@ function sendHeartbeat(socket: libtls.TLSSocket, json: xcast.heartbeat.Autoguard
 	sendCastMessage(socket, castMessage);
 }
 
-function sendReceiver(socket: libtls.TLSSocket, json: xcast.receiver.Autoguard[keyof xcast.receiver.Autoguard]) {
+function sendReceiver(socket: libtls.TLSSocket, json: schema.receiver.Autoguard[keyof schema.receiver.Autoguard]) {
 	let castMessage: cast_message.CastMessage = {
 		protocol_version: cast_message.ProtocolVersion.CASTV2_1_0,
 		source_id: "sender-0",
@@ -82,16 +79,16 @@ function onpacket(host: string, socket: libtls.TLSSocket, packet: Buffer): void 
 	}
 	if (castMessage.namespace === "urn:x-cast:com.google.cast.tp.connection") {
 	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.tp.heartbeat") {
-		if (xcast.heartbeat.Ping.is(message)) {
+		if (schema.heartbeat.Ping.is(message)) {
 			sendHeartbeat(socket, {
 				"type": "PONG"
 			});
-		} else if (xcast.heartbeat.Pong.is(message)) {
+		} else if (schema.heartbeat.Pong.is(message)) {
 			clearTimeout(timers.get(host));
 			setuptimers(host, socket);
 		}
 	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.receiver") {
-		if (xcast.receiver.ReceiverStatus.is(message)) {
+		if (schema.receiver.ReceiverStatus.is(message)) {
 		}
 	}
 }
@@ -179,11 +176,21 @@ function connect(host: string): void {
 	});
 }
 
-export function observe() {
+function observe() {
 	mdns.observe("_googlecast._tcp.local", (host) => {
-		//console.log(`Got chromecast service discovery response from ${host}.`);
 		if (!chromecasts.has(host)) {
 			connect(host);
 		}
 	});
 };
+
+addObserver({
+	onconnect(hostname) {
+		let player = new libplayer.ChromecastPlayer(`wss://127.0.0.1/sockets/context/?client=Chromecast`);
+	},
+	ondisconnect(hostname) {
+
+	}
+});
+
+observe();
