@@ -27,20 +27,29 @@ let nextVideo = document.createElement("video");
 currentVideo.addEventListener("ended", () => {
 	player.next();
 });
-currentVideo.addEventListener("timeupdate", () => {
+currentVideo.addEventListener("seeked", () => {
 	let progress = currentVideo.currentTime;
 	player.seek(progress);
 });
 currentVideo.addEventListener("playing", () => {
 	player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
 });
-// TODO: Make dynamic.
-session.setHandlers({
-	play: player.resume.bind(player),
-	pause: player.pause.bind(player),
-	previoustrack: player.last.bind(player),
-	nexttrack: player.next.bind(player)
-});
+{
+	let computer = () => {
+		let canPlayLast = player.canPlayLast.getState();
+		let canPlayCurrent = player.canPlayCurrent.getState();
+		let canPlayNext = player.canPlayNext.getState();
+		session.setHandlers({
+			play: canPlayCurrent ? player.resume.bind(player) : undefined,
+			pause: canPlayCurrent ? player.pause.bind(player) : undefined,
+			previoustrack: canPlayLast ? player.last.bind(player) : undefined,
+			nexttrack: canPlayNext ? player.next.bind(player) : undefined
+		});
+	};
+	player.canPlayLast.addObserver(computer);
+	player.canPlayCurrent.addObserver(computer);
+	player.canPlayNext.addObserver(computer);
+}
 let mediaPlayerTitle = new ObservableClass("");
 let mediaPlayerSubtitle = new ObservableClass("");
 player.currentEntry.addObserver((currentEntry) => {
@@ -1233,6 +1242,9 @@ let req = <T extends api_response.ApiRequest, U extends api_response.ApiResponse
 
 const showDevices = new ObservableClass(false);
 const showVideo = new ObservableClass(false);
+player.isCurrentEntryVideo.addObserver((isCurrentEntryVideo) => {
+	showVideo.updateState(isCurrentEntryVideo);
+});
 const showLogin = new ObservableClass(false);
 
 let tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);

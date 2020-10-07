@@ -5,6 +5,7 @@ import * as typesockets from "../typesockets";
 
 export class ContextClient {
 	private tsc: typesockets.TypeSocketClient<schema.messages.Autoguard>;
+	private progressTimestamp: number;
 	readonly token = new observers.ObservableClass(undefined as string | undefined);
 	readonly localDevice = new observers.ObservableClass(undefined as schema.objects.Device | undefined);
 	readonly devices = new observers.ArrayObservable(new Array<schema.objects.Device>());
@@ -31,6 +32,7 @@ export class ContextClient {
 	constructor(name: string) {
 		let path = `/sockets/context/?client=${encodeURIComponent(name)}`;
 		this.tsc = typesockets.TypeSocketClient.connect(path, schema.messages.Autoguard);
+		this.progressTimestamp = 0;
 		this.lastEntry.addObserver((lastEntry) => {
 			this.canPlayLast.updateState(is.present(lastEntry));
 		});
@@ -183,6 +185,7 @@ export class ContextClient {
 			this.playback.updateState(message.playback);
 		});
 		this.tsc.addEventListener("app", "SetProgress", (message) => {
+			this.progressTimestamp = Date.now();
 			this.progress.updateState(message.progress);
 		});
 	}
@@ -190,6 +193,7 @@ export class ContextClient {
 	last(): void {
 		let lastIndex = this.lastIndex.getState();
 		if (is.present(lastIndex)) {
+			this.currentIndex.updateState(lastIndex);
 			this.tsc.send("SetIndex", {
 				index: lastIndex
 			});
@@ -199,6 +203,7 @@ export class ContextClient {
 	next(): void {
 		let nextIndex = this.nextIndex.getState();
 		if (is.present(nextIndex)) {
+			this.currentIndex.updateState(nextIndex);
 			this.tsc.send("SetIndex", {
 				index: nextIndex
 			});
@@ -238,6 +243,8 @@ export class ContextClient {
 	}
 
 	seek(progress: number): void {
+		this.progress.updateState(progress);
+		this.progressTimestamp = Date.now();
 		this.tsc.send("SetProgress", {
 			progress: progress
 		});
