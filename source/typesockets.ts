@@ -21,11 +21,18 @@ export type TypeSocketClientMessageMap<A extends stdlib.routing.MessageMap<A>> =
 	}
 };
 
+export enum ReadyState {
+	CONNECTING,
+	OPEN,
+	CLOSING,
+	CLOSED
+}
+
 export interface WebSocketLike {
 	addEventListener<A extends keyof WebSocketEventMap>(type: A, listenerer: (event: WebSocketEventMap[A]) => void): void;
 	removeEventListener<A extends keyof WebSocketEventMap>(type: A, listenerer: (event: WebSocketEventMap[A]) => void): void;
 	send(payload: string): void;
-	readonly readyState: number;
+	readonly readyState: ReadyState;
 }
 
 export type WebSocketFactory = (url: string) => WebSocketLike;
@@ -93,8 +100,8 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	}
 
 	send<B extends keyof A>(type: B, data: A[B]): void {
-		let readyState: number = this.socket.readyState;
-		if (readyState === 1) {
+		let readyState: ReadyState = this.socket.readyState;
+		if (readyState === ReadyState.OPEN) {
 			this.socket.send(this.serializer.serialize(type, data));
 		} else {
 			let open = () => {
