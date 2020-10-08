@@ -186,11 +186,11 @@ mdns.observe("_googlecast._tcp.local", (host) => {
 	}
 });
 
-export function observe(host: string, secure: boolean) {
-	if (is.present(url) || host === "localhost" || host === "127.0.0.1") {
+export function observe(secure: boolean) {
+	if (is.present(url)) {
 		return;
 	}
-	url = `${secure ? "wss:" : "ws:"}//${host}/sockets/context/?client=Chromecast`;
+	url = `${secure ? "wss:" : "ws:"}//127.0.0.1/sockets/context/?client=Chromecast`;
 	addObserver({
 		onconnect(hostname) {
 			let player = new libplayer.ChromecastPlayer(url as string);

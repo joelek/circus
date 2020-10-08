@@ -4,7 +4,6 @@ import * as libfs from "fs";
 import * as libhttp from "http";
 import * as libhttps from "https";
 import * as libpath from "path";
-import * as libtls from "tls";
 import * as liburl from "url";
 import * as api from "./api";
 import * as auth from "./auth";
@@ -104,7 +103,6 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 const contextServer = new context.server.ContextServer();
 
 function requestHandler(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-	chromecasts.observe(request.headers.host ?? "", request.socket instanceof libtls.TLSSocket);
 	let host = request.headers["host"] || "";
 	let method = request.method || "";
 	let path = request.url || "";
@@ -220,10 +218,12 @@ if (full_chain && certificate_key) {
 	}).listen(80, () => {
 		console.log("http://localhost:80");
 	});
+	chromecasts.observe(true);
 } else {
 	let server = libhttp.createServer({}, requestHandler);
 	server.listen(80, () => {
 		console.log("http://localhost:80");
 	});
 	server.keepAliveTimeout = 60 * 1000;
+	chromecasts.observe(false);
 }

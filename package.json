@@ -10,7 +10,7 @@
 		"@joelek/ts-sockets": "github:joelek/ts-sockets#semver:^2",
 		"castv2-client": "^1.2.0"
 	},
-	"license": "MIT",
+	"license": "UNLICENSED",
 	"main": "./build/server.js",
 	"name": "@joelek/castaway",
 	"repository": {
@@ -21,7 +21,9 @@
 		"build": "rm -rf ./build/ && npx tsc --build && npm run bundle",
 		"bundle": "npx browserify ./build/client.js --outfile ./build/client.bundle.js",
 		"clean": "rm -rf ./build/ ./node_modules/",
-		"codegen": "npx autoguard --standalone=false"
+		"codegen": "npx autoguard --standalone=false",
+		"preversion": "npm run build && git add ./",
+		"postversion": "git push && git push --tags"
 	},
-	"version": "1.0.0"
+	"version": "0.0.0"
 }

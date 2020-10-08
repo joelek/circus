@@ -70,16 +70,14 @@ export class ContextServer {
 				return device.id === session.device?.id;
 			}));
 			if (deviceWasLost) {
-				let device = devices[devices.length - 1] as schema.objects.Device | undefined;
-				if (session.playback) {
-					session.playback = false;
-					this.tss.send("SetPlayback", devices.map((device) => {
-						return device.id;
-					}), {
-						playback: session.playback
-					});
-				}
-				session.device = device;
+				this.updateProgress(session);
+				session.playback = false;
+				this.tss.send("SetPlayback", devices.map((device) => {
+					return device.id;
+				}), {
+					playback: session.playback
+				});
+				session.device = undefined;
 				this.tss.send("SetDevice", devices.map((device) => {
 					return device.id;
 				}), {
@@ -157,6 +155,14 @@ export class ContextServer {
 		});
 		this.tss.addEventListener("app", "SetContext", (message) => {
 			this.getExistingSession(message.connection_id, (session) => {
+				if (is.absent(session.device)) {
+					session.device = makeDevice(message.connection_id, message.connection_url);
+					this.tss.send("SetDevice", session.devices.getState().map((device) => {
+						return device.id;
+					}), {
+						device: session.device
+					});
+				}
 				session.context = message.data.context;
 				this.tss.send("SetContext", session.devices.getState().map((device) => {
 					return device.id;
@@ -173,6 +179,14 @@ export class ContextServer {
 		});
 		this.tss.addEventListener("app", "SetIndex", (message) => {
 			this.getExistingSession(message.connection_id, (session) => {
+				if (is.absent(session.device)) {
+					session.device = makeDevice(message.connection_id, message.connection_url);
+					this.tss.send("SetDevice", session.devices.getState().map((device) => {
+						return device.id;
+					}), {
+						device: session.device
+					});
+				}
 				session.index = message.data.index;
 				this.tss.send("SetIndex", session.devices.getState().map((device) => {
 					return device.id;
@@ -181,6 +195,14 @@ export class ContextServer {
 		});
 		this.tss.addEventListener("app", "SetPlayback", (message) => {
 			this.getExistingSession(message.connection_id, (session) => {
+				if (is.absent(session.device)) {
+					session.device = makeDevice(message.connection_id, message.connection_url);
+					this.tss.send("SetDevice", session.devices.getState().map((device) => {
+						return device.id;
+					}), {
+						device: session.device
+					});
+				}
 				this.updateProgress(session);
 				session.playback = message.data.playback;
 				this.tss.send("SetPlayback", session.devices.getState().map((device) => {
@@ -190,6 +212,14 @@ export class ContextServer {
 		});
 		this.tss.addEventListener("app", "SetProgress", (message) => {
 			this.getExistingSession(message.connection_id, (session) => {
+				if (is.absent(session.device)) {
+					session.device = makeDevice(message.connection_id, message.connection_url);
+					this.tss.send("SetDevice", session.devices.getState().map((device) => {
+						return device.id;
+					}), {
+						device: session.device
+					});
+				}
 				session.progress = message.data.progress;
 				session.progressTimestamp = Date.now();
 				this.tss.send("SetProgress", session.devices.getState().map((device) => {

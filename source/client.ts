@@ -268,10 +268,10 @@ namespace xml {
 		}
 
 		on<A extends keyof HTMLElementEventMap>(kind: A, listener: Listener<A>): this {
-			let listeners = this.listeners.get(kind);
+			let listeners = this.listeners.get(kind) as Array<Listener<A>> | undefined;
 			if (listeners == null) {
 				listeners = new Array<Listener<A>>();
-				this.listeners.set(kind, listeners);
+				this.listeners.set(kind, listeners as any);
 			}
 			listeners.push(listener);
 			return this;
@@ -390,6 +390,8 @@ style.innerText = `
 		cursor: pointer;
 		font-family: "Pacifico", cursive;
 		font-size: 32px;
+		overflow: hidden;
+		text-overflow: ellipsis;
 		transform-origin: left;
 		transition: transform 0.1s;
 		white-space: nowrap;
@@ -1514,8 +1516,8 @@ let mp = xml.element("div.content")
 				.bind("data-hide", player.devices.compute((devices) => {
 					return devices.length < 2;
 				}))
-				.bind("data-active", player.isDeviceLocal.addObserver((isDeviceLocal) => {
-					return isDeviceLocal === false;
+				.bind("data-active", player.isDeviceRemote.addObserver((isDeviceRemote) => {
+					return isDeviceRemote === true;
 				}))
 				.add(makeBroadcastIcon())
 				.on("click", () => {
@@ -1641,7 +1643,7 @@ function makeAlbum(album: api_response.AlbumResponse): xml.XElement {
 	];
 	return xml.element("div.media-widget")
 		.add(xml.element("div.media-widget__artwork")
-			.add(xml.element("img.media-widget__image")
+			.add(is.absent(album.cover_file_id) ? undefined : xml.element("img.media-widget__image")
 				.set("src", `/files/${album.cover_file_id}/?token=${token}`)
 			)
 			.add(makePlaybackButton())
@@ -1688,7 +1690,7 @@ function makeMovie(movie: api_response.MovieResponse): xml.XElement {
 		})
 		.add(xml.element("div.media-widget__artwork")
 			.set("style", "padding-bottom: 150%;")
-			.add(xml.element("img.media-widget__image")
+			.add(is.absent(movie.poster_file_id) ? undefined : xml.element("img.media-widget__image")
 				.set("src", `/files/${movie.poster_file_id}/?token=${token}`)
 			)
 			.add(makePlaybackButton()

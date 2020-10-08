@@ -12,6 +12,7 @@ export class ContextClient {
 	readonly devices = new observers.ArrayObservable(new Array<schema.objects.Device>());
 	readonly device = new observers.ObservableClass(undefined as schema.objects.Device | undefined);
 	readonly isDeviceLocal = new observers.ObservableClass(false);
+	readonly isDeviceRemote = new observers.ObservableClass(false);
 	readonly context = new observers.ObservableClass(undefined as schema.objects.Context | undefined);
 	readonly lastIndex = new observers.ObservableClass(undefined as number | undefined);
 	readonly lastEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
@@ -102,6 +103,20 @@ export class ContextClient {
 					}
 				}
 				return this.isDeviceLocal.updateState(false);
+			};
+			this.localDevice.addObserver(computer);
+			this.device.addObserver(computer);
+		}
+		{
+			let computer = () => {
+				let localDevice = this.localDevice.getState();
+				let device = this.device.getState();
+				if (is.present(localDevice) && is.present(device)) {
+					if (localDevice.id !== device.id) {
+						return this.isDeviceRemote.updateState(true);
+					}
+				}
+				return this.isDeviceRemote.updateState(false);
 			};
 			this.localDevice.addObserver(computer);
 			this.device.addObserver(computer);
