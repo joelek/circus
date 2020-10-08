@@ -177,6 +177,13 @@ export class ContextServer {
 		});
 		this.tss.addEventListener("app", "SetDevice", (message) => {
 			this.getExistingSession(message.connection_id, (session) => {
+
+				this.updateProgress(session);
+				this.tss.send("SetProgress", session.devices.getState().map((device) => {
+					return device.id;
+				}), {
+					progress: session.progress
+				});
 				session.device = message.data.device;
 				this.tss.send("SetDevice", session.devices.getState().map((device) => {
 					return device.id;
