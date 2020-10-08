@@ -924,6 +924,7 @@ style.innerText = `
 
 	@media (hover: hover) and (pointer: fine) {
 		.playlist-item:hover {
+			border-left: 4px solid rgb(255, 255, 255);
 			padding-left: 32px;
 		}
 	}

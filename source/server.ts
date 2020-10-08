@@ -4,6 +4,7 @@ import * as libfs from "fs";
 import * as libhttp from "http";
 import * as libhttps from "https";
 import * as libpath from "path";
+import * as libtls from "tls";
 import * as liburl from "url";
 import * as api from "./api";
 import * as auth from "./auth";
@@ -13,8 +14,6 @@ import * as subsearch from "./subsearch";
 import { FileEntry, CueEntry } from "./database";
 import * as context from "./context";
 import * as chromecasts from "./chromecast/chromecasts";
-
-chromecasts.observe();
 
 let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>): Partial<libhttp.IncomingHttpHeaders> => {
 	let out: Partial<libhttp.IncomingHttpHeaders> = {};
@@ -105,6 +104,7 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 const contextServer = new context.server.ContextServer();
 
 function requestHandler(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+	chromecasts.observe(request.headers.host ?? "", request.socket instanceof libtls.TLSSocket);
 	let host = request.headers["host"] || "";
 	let method = request.method || "";
 	let path = request.url || "";

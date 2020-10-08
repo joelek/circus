@@ -3,6 +3,7 @@ import * as cast_message from "./cast_message";
 import * as mdns from "./mdns";
 import * as schema from "./schema";
 import * as libplayer from "./player";
+import * as is from "../is";
 
 let requestId = 0;
 
@@ -105,7 +106,6 @@ function setuptimers(host: string, socket: libtls.TLSSocket): void {
 }
 
 function onclose(host: string, socket: libtls.TLSSocket): void {
-	console.log("close " + host);
 	for (let observer of observers) {
 		try {
 			observer.ondisconnect(host);
@@ -176,23 +176,27 @@ function connect(host: string): void {
 	});
 }
 
-export function observe() {
+let players = new Map<string, libplayer.ChromecastPlayer>();
+
+let url: string | undefined;
+
+export function observe(host: string, secure: boolean) {
+	if (is.absent(url)) {
+		return;
+	}
+	url = `${secure ? "wss:" : "ws:"}//${host}/sockets/context/?client=Chromecast`;
+	addObserver({
+		onconnect(hostname) {
+			let player = new libplayer.ChromecastPlayer(url as string);
+			players.set(hostname, player);
+		},
+		ondisconnect(hostname) {
+			players.delete(hostname);
+		}
+	});
 	mdns.observe("_googlecast._tcp.local", (host) => {
 		if (!chromecasts.has(host)) {
 			connect(host);
 		}
 	});
 };
-
-let players = new Map<string, libplayer.ChromecastPlayer>();
-
-addObserver({
-	onconnect(hostname) {
-		console.log("Connect " + hostname);
-		//let player = new libplayer.ChromecastPlayer(`ws://127.0.0.1/sockets/context/?client=Chromecast`);
-		//players.set(hostname, player);
-	},
-	ondisconnect(hostname) {
-		console.log("Disconnect " + hostname);
-	}
-});

@@ -150,7 +150,6 @@ let parse_mdns = async (buffer: Buffer): Promise<void> => {
 		additionals.push(result);
 		offset = result.offset;
 	}
-	//console.log(JSON.stringify(rcache, null, "\t"));
 };
 
 const MDNS_ADDRESS = '224.0.0.251';
@@ -164,12 +163,9 @@ socket.on('listening', () => {
 });
 
 socket.on('message', async (buffer, rinfo) => {
-	//console.log(`Received ${buffer.length} bytes from ${rinfo.address}:${rinfo.port}.`);
 	try {
 		await parse_mdns(buffer);
-	} catch (error) {
-		//console.log(error);
-	}
+	} catch (error) {}
 });
 
 socket.bind(MDNS_PORT);
