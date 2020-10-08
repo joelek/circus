@@ -36,34 +36,30 @@ currentVideo.addEventListener("ended", () => {
 	player.next();
 });
 currentVideo.addEventListener("loadeddata", () => {
-	currentVideo.currentTime = player.progress.getState() ?? 0;
+	isLoading.updateState(false);
+	currentVideo.currentTime = player.estimatedProgress.getState() ?? 0;
 });
+player.playback.addObserver((playback) => {
+	currentVideo.autoplay = playback;
+})
+let isLoading = new ObservableClass(true);
 currentVideo.addEventListener("playing", () => {
 	player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
 });
-player.progress.addObserver((progress) => {
-	if (!player.isDeviceLocal.getState()) {
-		currentVideo.currentTime = progress ?? 0;
-	}
-});
-let xcanPlay = new ObservableClass(false);
-currentVideo.addEventListener("canplay", () => {
-	xcanPlay.updateState(true);
-});
 {
-	let computer = () => {
-		let canPlay = xcanPlay.getState();
-		let localPlayback = player.localPlayback.getState();
-		if (canPlay) {
-			if (localPlayback) {
-				currentVideo.play();
+	let computer = async () => {
+		if (!isLoading.getState()) {
+			if (player.playback.getState()) {
+				try {
+					await currentVideo.play();
+				} catch (error) {}
 			} else {
 				currentVideo.pause();
 			}
 		}
 	};
-	xcanPlay.addObserver(computer);
-	player.localPlayback.addObserver(computer);
+	player.playback.addObserver(computer);
+	isLoading.addObserver(computer);
 }
 {
 	let computer = () => {
@@ -113,7 +109,7 @@ type Metadata = {
 let gmetadata: Metadata | undefined;
 {
 	let computer = () => {
-		xcanPlay.updateState(false);
+		isLoading.updateState(true);
 		let currentLocalEntry = player.currentLocalEntry.getState();
 		let token = player.token.getState();
 		if (is.absent(currentLocalEntry) || is.absent(token)) {

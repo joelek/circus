@@ -255,12 +255,8 @@ export class ContextClient {
 		this.tsc.send("SetIndex", {
 			index
 		});
-		this.tsc.send("SetProgress", {
-			progress
-		});
-		this.tsc.send("SetPlayback", {
-			playback: true
-		});
+		this.seek(progress);
+		this.resume();
 	}
 
 	resume(): void {
