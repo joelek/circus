@@ -36,7 +36,7 @@ currentVideo.addEventListener("ended", () => {
 	player.next();
 });
 currentVideo.addEventListener("timeupdate", () => {
-	console.log(currentVideo.currentTime);
+	//console.log(currentVideo.currentTime);
 });
 currentVideo.addEventListener("loadeddata", () => {
 	currentVideo.currentTime = player.progress.getState() ?? 0;

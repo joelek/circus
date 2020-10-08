@@ -163,6 +163,12 @@ export class ContextServer {
 						device: session.device
 					});
 				}
+				session.index = undefined;
+				this.tss.send("SetIndex", session.devices.getState().map((device) => {
+					return device.id;
+				}), {
+					index: session.index
+				});
 				session.context = message.data.context;
 				this.tss.send("SetContext", session.devices.getState().map((device) => {
 					return device.id;
@@ -187,6 +193,12 @@ export class ContextServer {
 						device: session.device
 					});
 				}
+				session.progress = undefined;
+				this.tss.send("SetProgress", session.devices.getState().map((device) => {
+					return device.id;
+				}), {
+					progress: session.progress
+				});
 				session.index = message.data.index;
 				this.tss.send("SetIndex", session.devices.getState().map((device) => {
 					return device.id;

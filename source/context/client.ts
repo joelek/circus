@@ -246,9 +246,6 @@ export class ContextClient {
 	}
 
 	play(context: schema.objects.Context, index: number, progress: number): void {
-		this.tsc.send("SetPlayback", {
-			playback: false
-		});
 		this.tsc.send("SetContext", {
 			context
 		});
