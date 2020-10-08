@@ -180,8 +180,14 @@ let players = new Map<string, libplayer.ChromecastPlayer>();
 
 let url: string | undefined;
 
+mdns.observe("_googlecast._tcp.local", (host) => {
+	if (!chromecasts.has(host)) {
+		connect(host);
+	}
+});
+
 export function observe(host: string, secure: boolean) {
-	if (is.absent(url)) {
+	if (is.present(url)) {
 		return;
 	}
 	url = `${secure ? "wss:" : "ws:"}//${host}/sockets/context/?client=Chromecast`;
@@ -192,11 +198,6 @@ export function observe(host: string, secure: boolean) {
 		},
 		ondisconnect(hostname) {
 			players.delete(hostname);
-		}
-	});
-	mdns.observe("_googlecast._tcp.local", (host) => {
-		if (!chromecasts.has(host)) {
-			connect(host);
 		}
 	});
 };
