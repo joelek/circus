@@ -193,7 +193,8 @@ export class ContextServer {
 						device: session.device
 					});
 				}
-				session.progress = undefined;
+				session.progress = is.present(message.data.index) ? 0 : undefined;
+				session.progressTimestamp = Date.now();
 				this.tss.send("SetProgress", session.devices.getState().map((device) => {
 					return device.id;
 				}), {
