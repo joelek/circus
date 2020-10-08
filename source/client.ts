@@ -395,8 +395,6 @@ style.innerText = `
 		cursor: pointer;
 		font-family: "Pacifico", cursive;
 		font-size: 32px;
-		overflow: hidden;
-		text-overflow: ellipsis;
 		transform-origin: left;
 		transition: transform 0.1s;
 		white-space: nowrap;
