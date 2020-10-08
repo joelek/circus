@@ -35,17 +35,25 @@ let nextVideo = document.createElement("video");
 currentVideo.addEventListener("ended", () => {
 	player.next();
 });
+let isLoading = new ObservableClass(true);
 currentVideo.addEventListener("loadeddata", () => {
 	isLoading.updateState(false);
-	currentVideo.currentTime = player.estimatedProgress.getState() ?? 0;
 });
 player.playback.addObserver((playback) => {
 	currentVideo.autoplay = playback;
 })
-let isLoading = new ObservableClass(true);
 currentVideo.addEventListener("playing", () => {
 	player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
 });
+{
+	let computer = async () => {
+		if (!isLoading.getState()) {
+			currentVideo.currentTime = player.progress.getState() ?? 0;
+		}
+	};
+	player.progress.addObserver(computer);
+	isLoading.addObserver(computer);
+}
 {
 	let computer = async () => {
 		if (!isLoading.getState()) {
