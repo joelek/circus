@@ -57,6 +57,9 @@ export class ContextClient {
 			}
 			this.estimatedProgressTimestamp.updateState(now);
 		});
+		this.estimatedProgress.addObserver((estimatedProgress) => {
+			console.log(`Estimated progress to ${estimatedProgress ?? 0}`);
+		});
 		{
 			let computer = () => {
 				let playback = this.playback.getState();

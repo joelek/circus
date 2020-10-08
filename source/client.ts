@@ -35,32 +35,36 @@ let nextVideo = document.createElement("video");
 currentVideo.addEventListener("ended", () => {
 	player.next();
 });
-currentVideo.addEventListener("timeupdate", () => {
-	//console.log(currentVideo.currentTime);
-});
 currentVideo.addEventListener("loadeddata", () => {
 	currentVideo.currentTime = player.progress.getState() ?? 0;
 });
 currentVideo.addEventListener("playing", () => {
 	player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
 });
-currentVideo.addEventListener("canplay", () => {
-	if (player.localPlayback.getState()) {
-		currentVideo.play();
-	}
-});
 player.progress.addObserver((progress) => {
 	if (!player.isDeviceLocal.getState()) {
 		currentVideo.currentTime = progress ?? 0;
 	}
 });
-player.localPlayback.addObserver((localPlayback) => {
-	if (localPlayback) {
-		currentVideo.play();
-	} else {
-		currentVideo.pause();
-	}
+let xcanPlay = new ObservableClass(false);
+currentVideo.addEventListener("canplay", () => {
+	xcanPlay.updateState(true);
 });
+{
+	let computer = () => {
+		let canPlay = xcanPlay.getState();
+		let localPlayback = player.localPlayback.getState();
+		if (canPlay) {
+			if (localPlayback) {
+				currentVideo.play();
+			} else {
+				currentVideo.pause();
+			}
+		}
+	};
+	xcanPlay.addObserver(computer);
+	player.localPlayback.addObserver(computer);
+}
 {
 	let computer = () => {
 		let canPlayLast = player.canPlayLast.getState();
@@ -109,6 +113,7 @@ type Metadata = {
 let gmetadata: Metadata | undefined;
 {
 	let computer = () => {
+		xcanPlay.updateState(false);
 		let currentLocalEntry = player.currentLocalEntry.getState();
 		let token = player.token.getState();
 		if (is.absent(currentLocalEntry) || is.absent(token)) {
@@ -1326,17 +1331,11 @@ let appcontainer = xml.element("div.app")
 	.render();
 document.body.appendChild(appcontainer);
 
-
-let title = new ObservableClass("");
-player.estimatedProgress.addObserver((estimatedProgress) => {
-	title.updateState(`${estimatedProgress ?? 0}`);
-});
-
 let appheader = xml.element("div.app__header")
 	.add(xml.element("div.content")
 		.set("style", "padding: 24px")
 		.add(xml.element("div.page-header__title")
-			.add(xml.text(title))
+			.add(xml.text("Zenplayer"))
 			.on("click", () => {
 				navigate("/");
 			})
@@ -1347,8 +1346,6 @@ appcontainer.appendChild(appheader);
 
 mountwrapper.setAttribute("class", "app__content");
 appcontainer.appendChild(mountwrapper);
-
-
 
 let username = new ObservableClass("");
 let password = new ObservableClass("");
