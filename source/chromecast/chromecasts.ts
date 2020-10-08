@@ -187,7 +187,7 @@ mdns.observe("_googlecast._tcp.local", (host) => {
 });
 
 export function observe(host: string, secure: boolean) {
-	if (is.present(url)) {
+	if (is.present(url) || host === "localhost" || host === "127.0.0.1") {
 		return;
 	}
 	url = `${secure ? "wss:" : "ws:"}//${host}/sockets/context/?client=Chromecast`;
