@@ -1,7 +1,7 @@
 {
 	"bin": {},
 	"devDependencies": {
-		"@types/node": "^14.11.5",
+		"@types/node": "^14.11.7",
 		"browserify": "^16",
 		"typescript": "^4"
 	},
