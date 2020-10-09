@@ -7,6 +7,7 @@ import { ArrayObservable, Observable, ObservableClass } from "./simpleobs";
 import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
+import { Device } from "./context/schema/objects";
 
 
 
@@ -960,38 +961,88 @@ style.innerText = `
 
 
 
+	.login-modal {
+		box-sizing: border-box;
+		display: grid;
+		gap: 16px;
+		grid-auto-rows: min-content;
+		height: 100%;
+		margin: 0px auto;
+		max-width: 320px;
+		padding: 32px;
+		width: 100%;
+	}
+
+	.login-modal__form {
+		display: grid;
+		gap: 8px;
+	}
 
 
-	.device-selector {
+
+
+
+
+
+
+	.modal-container {
 		background-color: rgb(31, 31, 31);
+		height: 100%;
 		position: absolute;
-			height: 100%;
-			width: 100%;
-		transform: translate(0, -100%);
-		transition: transform 0.25s;
+		width: 100%;
 		z-index: 1;
 	}
 
-	.device-selector[data-hide="false"] {
-		transform: none;
+	.modal-container__content {
+		margin: 0px auto;
+		height: 100%;
+		max-width: 480px;
+		overflow: hidden;
+		width: 100%;
+	}
+
+
+
+
+
+
+
+
+
+	.device-selector {
+		padding: 32px;
 	}
 
 	.device-selector__devices {
-
+		display: grid;
+		gap: 16px;
 	}
 
+	.device-selector__device {
+		cursor: pointer;
+		display: grid;
+		gap: 16px;
+		grid-template-columns: auto;
+	}
 
+	.device-selector__device-icon {
+		fill: rgb(159, 159, 159);
+	}
 
+	.device-selector__device-icon[data-active="true"] {
+		fill: rgb(255, 255, 255);
+	}
 
-
-
-
-
-	.device {
-		font-size: 16px;
+	.device-selector__device-name {
+		color: rgb(159, 159, 159);
+		font-size: 20px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	.device-selector__device-name[data-active="true"] {
+		color: rgb(255, 255, 255);
 	}
 
 
@@ -1263,6 +1314,13 @@ let req = <T extends api_response.ApiRequest, U extends api_response.ApiResponse
 }
 
 const showDevices = new ObservableClass(false);
+player.devices.addObserver({
+	onupdate: (devices) => {
+		if (devices.length < 2) {
+			showDevices.updateState(false);
+		}
+	}
+});
 const showVideo = new ObservableClass(false);
 {
 	let computer = () => {
@@ -1274,6 +1332,15 @@ const showVideo = new ObservableClass(false);
 	player.isCurrentEntryVideo.addObserver(computer);
 }
 const showLogin = new ObservableClass(false);
+const showModal = new ObservableClass(false);
+{
+	let computer = () => {
+		showModal.updateState(showLogin.getState() || showDevices.getState());
+	};
+	showLogin.addObserver(computer);
+	showDevices.addObserver(computer);
+}
+
 
 let tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
 let token: string | undefined;
@@ -1316,7 +1383,6 @@ async function getNewToken(username: string, password: string): Promise<string |
 	});
 }
 
-let logincontainer = document.createElement('div');
 let mount = document.createElement('div');
 let mountwrapper = document.createElement('div');
 
@@ -1384,19 +1450,59 @@ mountwrapper.appendChild(xml.element("div.login-modal")
 	)
 	.render());
 
-let device_selector = xml.element("div.device-selector")
-	.bind("data-hide", showDevices.addObserver(a => !a))
-	.add(xml.element("div.device-selector__devices")
-		.repeat(player.devices, (device) => xml.element("div.device")
-			.add(xml.text(device.name))
-			.on("click", () => {
-				player.transfer(device);
-				showDevices.updateState(false);
-			})
+// move
+let devicelist = new ArrayObservable<Device & {
+	active: boolean,
+	local: boolean,
+	remote: boolean
+}>([]);
+{
+	let computer = () => {
+		let devices = player.devices.getState();
+		let activeDevice = player.device.getState();
+		let localDevice = player.localDevice.getState();
+		devicelist.update(devices.map((device) => {
+			return {
+				...device,
+				active: activeDevice?.id === device.id,
+				local: localDevice?.id === device.id,
+				remote: localDevice?.id !== device.id
+			}
+		}));
+	};
+	player.devices.addObserver({
+		onupdate: computer
+	});
+	player.device.addObserver(computer);
+	player.localDevice.addObserver(computer);
+}
+
+// TODO: observer for modal content
+let modals = xml.element("div.modal-container")
+	.bind("data-hide", showModal.addObserver(a => !a))
+	.add(xml.element("div.modal-container__content")
+		.add(xml.element("div.device-selector")
+			.bind("data-hide", showDevices.addObserver(a => !a))
+			.add(xml.element("div.device-selector__devices")
+				.repeat(devicelist, (device) => xml.element("div.device-selector__device")
+					.add(xml.element("div.device-selector__device-icon")
+						.set("data-active", "" + device.active)
+						.add(makeBroadcastIcon())
+					)
+					.add(xml.element("div.device-selector__device-name")
+						.set("data-active", "" + device.active)
+						.add(xml.text(device.name))
+					)
+					.on("click", () => {
+						player.transfer(device);
+						showDevices.updateState(false);
+					})
+				)
+			)
 		)
-	)
-	.render();
-mountwrapper.appendChild(device_selector);
+	);
+
+mountwrapper.appendChild(modals.render());
 let scroll_container = xml.element("div.scroll-container")
 	.render();
 scroll_container.appendChild(mount);
@@ -1567,7 +1673,6 @@ lastVideo.setAttribute("preload", "auto");
 lastVideo.style.setProperty("display", "none");
 nextVideo.setAttribute("preload", "auto");
 nextVideo.style.setProperty("display", "none");
-mp.appendChild(logincontainer);
 
 let videowrapper = xml.element("div")
 	.bind("data-hide", showVideo.addObserver((showVideo) => {
