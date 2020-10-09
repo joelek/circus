@@ -20,11 +20,13 @@ export const ContextItem = autoguard.Object.of<ContextItem>({
 
 export type Device = {
 	"id": string,
+	"type": string,
 	"name": string
 };
 
 export const Device = autoguard.Object.of<Device>({
 	"id": autoguard.String,
+	"type": autoguard.String,
 	"name": autoguard.String
 });
 

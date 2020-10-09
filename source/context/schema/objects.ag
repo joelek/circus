@@ -9,6 +9,7 @@
 
 	Device: {
 		id: string,
+		type: string,
 		name: string
 	},
 

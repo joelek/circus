@@ -17,10 +17,12 @@ function getQuery(url: liburl.UrlWithParsedQuery, key: string): Array<string> {
 
 function makeDevice(connection_id: string, connection_url: string): schema.objects.Device {
 	let url = liburl.parse(connection_url, true);
-	let name = getQuery(url, "client").pop() ?? "Client";
+	let name = getQuery(url, "name").pop() ?? "";
+	let type = getQuery(url, "type").pop() ?? "";
 	return {
 		id: connection_id,
-		name: name
+		name: name,
+		type: type
 	};
 }
 
@@ -151,6 +153,9 @@ export class ContextServer {
 				this.tss.send("SetProgress", message.connection_id, {
 					progress: session.progress
 				});
+				this.tss.send("SetToken", message.connection_id, {
+					token: token
+				});
 			}
 		});
 		this.tss.addEventListener("app", "SetContext", (message) => {
@@ -177,7 +182,6 @@ export class ContextServer {
 		});
 		this.tss.addEventListener("app", "SetDevice", (message) => {
 			this.getExistingSession(message.connection_id, (session) => {
-
 				this.updateProgress(session);
 				this.tss.send("SetProgress", session.devices.getState().map((device) => {
 					return device.id;
@@ -188,6 +192,11 @@ export class ContextServer {
 				this.tss.send("SetDevice", session.devices.getState().map((device) => {
 					return device.id;
 				}), message.data);
+				if (is.present(session.device)) {
+					this.tss.send("SetToken", session.device.id, {
+						token: this.tokens.get(message.connection_id)
+					});
+				}
 			});
 		});
 		this.tss.addEventListener("app", "SetIndex", (message) => {

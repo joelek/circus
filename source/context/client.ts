@@ -198,12 +198,6 @@ export class ContextClient {
 		this.tsc.addEventListener("app", "SetDevices", (message) => {
 			this.devices.update(message.devices);
 		});
-		this.token.addObserver(() => {
-			let token = this.token.getState();
-			this.tsc.send("SetToken", {
-				token
-			});
-		});
 		this.tsc.addEventListener("app", "SetContext", (message) => {
 			this.context.updateState(message.context);
 		});
@@ -219,6 +213,19 @@ export class ContextClient {
 		this.tsc.addEventListener("app", "SetProgress", (message) => {
 			this.progress.updateState(message.progress);
 		});
+		this.tsc.addEventListener("app", "SetToken", (message) => {
+			this.token.updateState(message.token);
+		});
+	}
+
+	authenticate(token?: string): void {
+		this.tsc.send("SetToken", {
+			token
+		});
+	}
+
+	close(): void {
+		this.tsc.close();
 	}
 
 	last(): void {

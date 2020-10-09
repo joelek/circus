@@ -5,6 +5,7 @@ import * as sockets from "@joelek/ts-sockets";
 
 export interface WebSocketLike {
 	addEventListener<A extends keyof WebSocketEventMap>(type: A, listener: (event: WebSocketEventMap[A]) => void): void;
+	close(): void;
 	removeEventListener<A extends keyof WebSocketEventMap>(type: A, listener: (event: WebSocketEventMap[A]) => void): void;
 	send(payload: string | Buffer): void;
 	readonly readyState: sockets.client.ReadyState;
@@ -86,6 +87,10 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 
 	addEventListener<B extends keyof TypeSocketClientMessageMap<A>, C extends keyof TypeSocketClientMessageMap<A>[B]>(namespace: B, type: C, listener: stdlib.routing.MessageObserver<TypeSocketClientMessageMap<A>[B][C]>): void {
 		this.router.addObserver(namespace, type, listener);
+	}
+
+	close(): void {
+		this.socket.close();
 	}
 
 	removeEventListener<B extends keyof TypeSocketClientMessageMap<A>, C extends keyof TypeSocketClientMessageMap<A>[B]>(namespace: B, type: C, listener: stdlib.routing.MessageObserver<TypeSocketClientMessageMap<A>[B][C]>): void {
@@ -180,7 +185,7 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 	addEventListener<B extends keyof TypeSocketServerMessageMap<A>, C extends keyof TypeSocketServerMessageMap<A>[B]>(namespace: B, type: C, listener: stdlib.routing.MessageObserver<TypeSocketServerMessageMap<A>[B][C]>): void {
 		this.router.addObserver(namespace, type, listener);
 	}
-/*
+
 	broadcast<B extends keyof A>(type: B, data: A[B]): void {
 		let payload = this.serializer.serialize(type, data);
 		this.socket.broadcast(payload);
@@ -189,7 +194,7 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 	close(connection_id: string): void {
 		this.socket.close(connection_id);
 	}
-*/
+
 	getRequestHandler(): libhttp.RequestListener {
 		return this.socket.getRequestHandler();
 	}

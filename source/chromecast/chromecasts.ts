@@ -1,13 +1,19 @@
+import * as libnet from "net";
 import * as libtls from "tls";
 import * as cast_message from "./cast_message";
 import * as mdns from "./mdns";
 import * as schema from "./schema";
-import * as libplayer from "./player";
 import * as is from "../is";
+import * as libdb from "../database";
+import * as data from "../data";
+import * as languages from "../languages";
+import * as observers from "../simpleobs";
+import * as libcontext from "../context/client";
+import * as sockets from "@joelek/ts-sockets";
 
 let requestId = 0;
 
-function sendCastMessage(socket: libtls.TLSSocket, message: cast_message.CastMessage): void {
+function sendCastMessage(socket: libnet.Socket, message: cast_message.CastMessage): void {
 	if (false) {
 		console.log("outgoing");
 		console.log(JSON.stringify(JSON.parse(message.payload_utf8 || "{}"), null, "\t"));
@@ -19,7 +25,7 @@ function sendCastMessage(socket: libtls.TLSSocket, message: cast_message.CastMes
 	socket.write(buffer);
 }
 
-function sendConnection(socket: libtls.TLSSocket, json: schema.connection.Autoguard[keyof schema.connection.Autoguard]) {
+function sendConnection(socket: libnet.Socket, json: schema.connection.Autoguard[keyof schema.connection.Autoguard]) {
 	let castMessage: cast_message.CastMessage = {
 		protocol_version: cast_message.ProtocolVersion.CASTV2_1_0,
 		source_id: "sender-0",
@@ -31,7 +37,7 @@ function sendConnection(socket: libtls.TLSSocket, json: schema.connection.Autogu
 	sendCastMessage(socket, castMessage);
 }
 
-function sendHeartbeat(socket: libtls.TLSSocket, json: schema.heartbeat.Autoguard[keyof schema.heartbeat.Autoguard]) {
+function sendHeartbeat(socket: libnet.Socket, json: schema.heartbeat.Autoguard[keyof schema.heartbeat.Autoguard]) {
 	let castMessage: cast_message.CastMessage = {
 		protocol_version: cast_message.ProtocolVersion.CASTV2_1_0,
 		source_id: "sender-0",
@@ -43,12 +49,24 @@ function sendHeartbeat(socket: libtls.TLSSocket, json: schema.heartbeat.Autoguar
 	sendCastMessage(socket, castMessage);
 }
 
-function sendReceiver(socket: libtls.TLSSocket, json: schema.receiver.Autoguard[keyof schema.receiver.Autoguard]) {
+function sendReceiver(socket: libnet.Socket, json: schema.receiver.Autoguard[keyof schema.receiver.Autoguard]) {
 	let castMessage: cast_message.CastMessage = {
 		protocol_version: cast_message.ProtocolVersion.CASTV2_1_0,
 		source_id: "sender-0",
 		destination_id: "receiver-0",
 		namespace: "urn:x-cast:com.google.cast.receiver",
+		payload_type: cast_message.PayloadType.STRING,
+		payload_utf8: JSON.stringify(json)
+	};
+	sendCastMessage(socket, castMessage);
+}
+
+function sendMedia(socket: libnet.Socket, source: string, target: string, json: schema.media.Autoguard[keyof schema.media.Autoguard]) {
+	let castMessage: cast_message.CastMessage = {
+		protocol_version: cast_message.ProtocolVersion.CASTV2_1_0,
+		source_id: source,
+		destination_id: target,
+		namespace: "urn:x-cast:com.google.cast.media",
 		payload_type: cast_message.PayloadType.STRING,
 		payload_utf8: JSON.stringify(json)
 	};
@@ -62,10 +80,10 @@ interface Observer {
 
 const chromecasts = new Map<string, libtls.TLSSocket>();
 const timers = new Map<string, any>();
-const observers = new Set<Observer>();
+const ccobservers = new Set<Observer>();
 
 export function addObserver(observer: Observer): void {
-	observers.add(observer);
+	ccobservers.add(observer);
 	for (let key in chromecasts) {
 		observer.onconnect(key);
 	}
@@ -91,6 +109,8 @@ function onpacket(host: string, socket: libtls.TLSSocket, packet: Buffer): void 
 	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.receiver") {
 		if (schema.receiver.ReceiverStatus.is(message)) {
 		}
+	} else if (castMessage.namespace === "urn:x-cast:com.google.cast.media") {
+
 	}
 }
 
@@ -106,7 +126,7 @@ function setuptimers(host: string, socket: libtls.TLSSocket): void {
 }
 
 function onclose(host: string, socket: libtls.TLSSocket): void {
-	for (let observer of observers) {
+	for (let observer of ccobservers) {
 		try {
 			observer.ondisconnect(host);
 		} catch (error) {}
@@ -140,7 +160,7 @@ function packetize(host: string, socket: libtls.TLSSocket): void {
 }
 
 function onsecureconnect(host: string, socket: libtls.TLSSocket): void {
-	for (let observer of observers) {
+	for (let observer of ccobservers) {
 		try {
 			observer.onconnect(host);
 		} catch (error) {}
@@ -176,7 +196,7 @@ function connect(host: string): void {
 	});
 }
 
-let players = new Map<string, libplayer.ChromecastPlayer>();
+let players = new Map<string, ChromecastPlayer>();
 
 let url: string | undefined;
 
@@ -190,14 +210,47 @@ export function observe(secure: boolean) {
 	if (is.present(url)) {
 		return;
 	}
-	url = `${secure ? "wss:" : "ws:"}//127.0.0.1/sockets/context/?client=Chromecast`;
+	url = `${secure ? "wss:" : "ws:"}//127.0.0.1/sockets/context/?type=chromecast&name=Chromecast`;
 	addObserver({
 		onconnect(hostname) {
-			let player = new libplayer.ChromecastPlayer(url as string);
+			let player = new ChromecastPlayer(hostname, url as string);
 			players.set(hostname, player);
 		},
 		ondisconnect(hostname) {
-			players.delete(hostname);
+			let player = players.get(hostname);
+			if (is.present(player)) {
+				players.delete(hostname);
+				player.close();
+			}
 		}
 	});
 };
+
+export class ChromecastPlayer {
+	private context: libcontext.ContextClient;
+	private isConnected = new observers.ObservableClass(false);
+	private isLaunched = new observers.ObservableClass(false);
+	private isLoading = new observers.ObservableClass(false);
+
+	constructor(hostname: string, url: string) {
+		// send launch CC1AD845
+		this.context = new libcontext.ContextClient(url, (url) => new sockets.WebSocketClient(url));
+		{
+			let computer = () => {
+				let currentLocalEntry = this.context.currentLocalEntry.getState();
+				let token = this.context.token.getState();
+				if (is.absent(currentLocalEntry) || is.absent(token)) {
+					//lastVideo.src = ``;
+				} else {
+					//let url = `/files/${currentLocalEntry.file_id}/?token=${token}`;
+				}
+			};
+			this.context.currentLocalEntry.addObserver(computer);
+			this.context.token.addObserver(computer);
+		}
+	}
+
+	close(): void {
+		this.context.close();
+	}
+}

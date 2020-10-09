@@ -1,11 +1,8 @@
-import * as libdb from "../database";
-import * as data from "../data";
-import * as languages from "../languages";
-import * as observers from "../simpleobs";
-import * as libcontext from "../context/client";
-import * as sockets from "@joelek/ts-sockets";
-
 /*
+
+var Client  = require('castv2-client').Client;
+var DefaultMediaReceiver = require('castv2-client').DefaultMediaReceiver;
+
 class Controller {
 	readonly context = new ObservableClass<Context | undefined>(undefined);
 	readonly contextIndex = new ObservableClass<number | undefined>(undefined);
@@ -48,9 +45,6 @@ controller.isLaunched.addObserver((isLaunched) => {
 
 
 
-var Client  = require('castv2-client').Client;
-var DefaultMediaReceiver = require('castv2-client').DefaultMediaReceiver;
-
 type Status = {
 	playerState: "IDLE" | "PLAYING" | "BUFFERING";
 	media: Media;
@@ -88,12 +82,6 @@ type Player = {
 	on(kind: "status", cb: { (status: Status): void }): void;
 };
 
-type ContextItem = {
-	file_id: string
-};
-
-type Context = ContextItem[];
-
 type STTrack = {
 	trackId: number;
 	type: 'TEXT';
@@ -112,17 +100,6 @@ let gtoken: string | null = null;
 let gorigin: string | null = null;
 let gplayer: Player | null = null;
 let gclient: any = null;
-
-export function getSession() {
-	if (ghost && gtoken && gorigin) {
-		return {
-			device: ghost,
-			token: gtoken,
-			origin: gorigin
-		};
-	}
-	return undefined;
-}
 
 function getLanguage(language: string | null): string {
 	let entry = languages.db[language || "eng"] || languages.db["eng"];
@@ -256,10 +233,6 @@ let resume = (): void => {
 	}
 };
 
-export function isPlayingUsingToken(token: string): boolean {
-	return gtoken === token;
-}
-
 export const launch = (host: string, token: string, origin: string): Promise<void> => {
 	controller.isLaunched.updateState(false);
 	gmedia = null;
@@ -307,33 +280,4 @@ export const launch = (host: string, token: string, origin: string): Promise<voi
 		});
 	});
 };
-
-export function disconnect() {
-	if (gclient != null) {
-		console.log("!");
-		gclient.close();
-		gclient = null;
-	}
-}
-
-controller.shouldPlay.addObserver((shouldPlay) => {
-	let isPlaying = controller.isPlaying.getState();
-	if (shouldPlay) {
-		if (!isPlaying) {
-			resume();
-		}
-	} else {
-		if (isPlaying) {
-			pause();
-		}
-	}
-});
 */
-
-export class ChromecastPlayer {
-	private context: libcontext.ContextClient;
-
-	constructor(url: string) {
-		this.context = new libcontext.ContextClient(url, (url) => new sockets.WebSocketClient(url));
-	}
-}

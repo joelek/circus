@@ -23,7 +23,7 @@ import { Device } from "./context/schema/objects";
 
 
 function makeUrl(): string {
-	let path = `/sockets/context/?client=Browser`;
+	let path = `/sockets/context/?type=browser&name=Browser`;
 	let protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 	let host = window.location.host;
 	return `${protocol}//${host}${path}`;
@@ -1026,24 +1026,25 @@ style.innerText = `
 		grid-template-columns: min-content 1fr;
 	}
 
-	.device-selector__device-icon {
-		fill: rgb(159, 159, 159);
-	}
-
-	.device-selector__device-icon[data-active="true"] {
-		fill: rgb(255, 255, 255);
+	.device-selector__device-info {
+		display: grid;
+		gap: 8px;
 	}
 
 	.device-selector__device-name {
-		color: rgb(159, 159, 159);
-		font-size: 20px;
+		color: rgb(255, 255, 255);
+		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
-	.device-selector__device-name[data-active="true"] {
-		color: rgb(255, 255, 255);
+	.device-selector__device-type {
+		color: rgb(159, 159, 159);
+		font-size: 12px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 
@@ -1347,7 +1348,7 @@ let tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
 let token: string | undefined;
 tokenobs.addObserver((token2) => {
 	token = token2;
-	player.token.updateState(token);
+	player.authenticate(token);
 });
 let valid_token: boolean | undefined;
 async function getToken(): Promise<string | undefined> {
@@ -1486,13 +1487,17 @@ let modals = xml.element("div.modal-container")
 			.bind("data-hide", showDevices.addObserver(a => !a))
 			.add(xml.element("div.device-selector__devices")
 				.repeat(devicelist, (device) => xml.element("div.device-selector__device")
-					.add(xml.element("div.device-selector__device-icon")
+					.add(makeButton()
 						.set("data-active", "" + device.active)
 						.add(makeBroadcastIcon())
 					)
-					.add(xml.element("div.device-selector__device-name")
-						.set("data-active", "" + device.active)
-						.add(xml.text(device.name))
+					.add(xml.element("div.device-selector__device-info")
+						.add(xml.element("div.device-selector__device-name")
+							.add(xml.text(device.name))
+						)
+						.add(xml.element("div.device-selector__device-type")
+							.add(xml.text(device.type))
+						)
 					)
 					.on("click", () => {
 						player.transfer(device);
