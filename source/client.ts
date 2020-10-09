@@ -1019,10 +1019,11 @@ style.innerText = `
 	}
 
 	.device-selector__device {
+		align-items: center;
 		cursor: pointer;
 		display: grid;
 		gap: 16px;
-		grid-template-columns: auto;
+		grid-template-columns: min-content 1fr;
 	}
 
 	.device-selector__device-icon {
