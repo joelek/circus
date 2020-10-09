@@ -2,28 +2,28 @@
 
 import { guards as autoguard } from "@joelek/ts-autoguard";
 
-export type Connect = {
+export type CONNECT = {
 	"type": "CONNECT"
 };
 
-export const Connect = autoguard.Object.of<Connect>({
+export const CONNECT = autoguard.Object.of<CONNECT>({
 	"type": autoguard.StringLiteral.of("CONNECT")
 });
 
-export type Close = {
+export type CLOSE = {
 	"type": "CLOSE"
 };
 
-export const Close = autoguard.Object.of<Close>({
+export const CLOSE = autoguard.Object.of<CLOSE>({
 	"type": autoguard.StringLiteral.of("CLOSE")
 });
 
 export type Autoguard = {
-	"Connect": Connect,
-	"Close": Close
+	"CONNECT": CONNECT,
+	"CLOSE": CLOSE
 };
 
 export const Autoguard = {
-	"Connect": Connect,
-	"Close": Close
+	"CONNECT": CONNECT,
+	"CLOSE": CLOSE
 };

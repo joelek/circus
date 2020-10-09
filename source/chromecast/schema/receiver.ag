@@ -1,24 +1,28 @@
 {
-	Launch: {
+	LAUNCH: {
 		type: "LAUNCH",
 		requestId: number,
 		appId: string
 	},
-	Stop: {
+
+	STOP: {
 		type: "STOP",
 		requestId: number,
 		sessionId: string
 	},
-	GetStatus: {
+
+	GET_STATUS: {
 		type: "GET_STATUS",
 		requestId: number
 	},
-	GetAppAvailability: {
+
+	GET_APP_AVAILABILITY: {
 		type: "GET_APP_AVAILABILITY",
 		requestId: number,
 		appId: string[]
 	},
-	SetVolume: {
+
+	SET_VOLUME: {
 		type: "SET_VOLUME",
 		requestId: number,
 		volume: ({
@@ -27,11 +31,12 @@
 			muted: boolean
 		})
 	},
-	ReceiverStatus: {
+
+	RECEIVER_STATUS: {
 		type: "RECEIVER_STATUS",
 		requestId: number,
 		status: {
-			applications: {
+			applications?: {
 				appId: string,
 				displayName: string,
 				iconUrl: string,

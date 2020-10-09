@@ -1500,7 +1500,11 @@ let modals = xml.element("div.modal-container")
 						)
 					)
 					.on("click", () => {
-						player.transfer(device);
+						player.transfer({
+							id: device.id,
+							type: device.type,
+							name: device.name
+						});
 						showDevices.updateState(false);
 					})
 				)

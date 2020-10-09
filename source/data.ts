@@ -4,6 +4,7 @@ import * as libdb from "./database";
 import * as utils from "./utils";
 import * as auth from "./auth";
 import { NumericSort } from "./shared";
+import * as is from "./is";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -454,6 +455,14 @@ let artistAlbumsIndex = CollectionIndex.from("artist_id", media.audio.album_arti
 let trackArtistsIndex = CollectionIndex.from("track_id", media.audio.track_artists);
 let artistTracksIndex = CollectionIndex.from("artist_id", media.audio.track_artists);
 let fileSubtitlesIndex = CollectionIndex.from("video_file_id", media.video.subtitles);
+
+export function lookupFile(file_id: string): libdb.FileEntry {
+	let file = files_index[file_id];
+	if (is.absent(file)) {
+		throw `Expected a file!`;
+	}
+	return file;
+}
 
 export function lookupSubtitles(id: string): Array<libdb.SubtitleEntry & {}> {
 	return fileSubtitlesIndex.lookup(id).map((entry) => {

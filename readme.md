@@ -29,13 +29,6 @@ protobuf wrapped json on: 8009
 * Playlisting
 * Actors
 * Infinite streams (radio, channels)
-* Multi-device contexts
 * Typed & lean API
 * Music genres
 * Stream history
-* Cookies instead of tokens with one-time launch urls to auth chromecast
-* Grid default?
-
-## Bugs
-
-* Play for 5 seconds, reload, play or skip and progress gets wrongly reused.

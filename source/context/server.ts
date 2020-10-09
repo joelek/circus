@@ -32,6 +32,7 @@ type Session = schema.objects.Session & {
 }
 
 export class ContextServer {
+	private chromecasts: observers.ObservableClass<Array<schema.objects.Device>>;
 	private tss: typesockets.TypeSocketServer<schema.messages.Autoguard>;
 	private tokens = new Map<string, string>();
 	private sessions = new Map<string, Session>();
@@ -56,18 +57,31 @@ export class ContextServer {
 			playback: false,
 			devices: new observers.ObservableClass(new Array<schema.objects.Device>())
 		};
-		let devices = session.devices;
-		devices.addObserver((devices) => {
-			this.tss.send("SetDevices", devices.map((device) => {
+		let allDevices = new observers.ObservableClass<Array<schema.objects.Device>>([]);
+		{
+			let computer = () => {
+				let devices = session.devices.getState();
+				let chromecasts = this.chromecasts.getState().filter((chromecast) => {
+					return is.absent(devices.find((device) => {
+						return device.id === chromecast.id;
+					}));
+				});
+				allDevices.updateState([...devices, ...chromecasts]);
+			};
+			session.devices.addObserver(computer);
+			this.chromecasts.addObserver(computer);
+		}
+		allDevices.addObserver((allDevices) => {
+			this.tss.send("SetDevices", session.devices.getState().map((device) => {
 				return device.id;
 			}), {
-				devices
+				devices: allDevices
 			});
 		});
-		devices.addObserver((devices) => {
+		session.devices.addObserver((devices) => {
 			this.updateProgress(session);
 		});
-		devices.addObserver((devices) => {
+		session.devices.addObserver((devices) => {
 			let deviceWasLost = is.absent(devices.find((device) => {
 				return device.id === session.device?.id;
 			}));
@@ -117,6 +131,7 @@ export class ContextServer {
 	}
 
 	constructor() {
+		this.chromecasts = new observers.ObservableClass<Array<schema.objects.Device>>([]);
 		this.tss = new typesockets.TypeSocketServer(schema.messages.Autoguard);
 		this.tss.addEventListener("sys", "connect", (message) => {
 			console.log("connect: " + message.connection_url);
@@ -124,10 +139,19 @@ export class ContextServer {
 			this.tss.send("SetLocalDevice", message.connection_id, {
 				device
 			});
+			if (device.type === "chromecast") {
+				this.chromecasts.updateState([...this.chromecasts.getState(), device]);
+			}
 		});
 		this.tss.addEventListener("sys", "disconnect", (message) => {
 			console.log("disconnect: " + message.connection_url);
+			let device = makeDevice(message.connection_id, message.connection_url);
 			this.revokeAuthentication(message.connection_id);
+			if (device.type === "chromecast") {
+				this.chromecasts.updateState(this.chromecasts.getState().filter((chromecast) => {
+					return chromecast.id !== device.id;
+				}));
+			}
 		});
 		this.tss.addEventListener("app", "SetToken", (message) => {
 			this.revokeAuthentication(message.connection_id);

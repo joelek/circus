@@ -2,28 +2,28 @@
 
 import { guards as autoguard } from "@joelek/ts-autoguard";
 
-export type Ping = {
+export type PING = {
 	"type": "PING"
 };
 
-export const Ping = autoguard.Object.of<Ping>({
+export const PING = autoguard.Object.of<PING>({
 	"type": autoguard.StringLiteral.of("PING")
 });
 
-export type Pong = {
+export type PONG = {
 	"type": "PONG"
 };
 
-export const Pong = autoguard.Object.of<Pong>({
+export const PONG = autoguard.Object.of<PONG>({
 	"type": autoguard.StringLiteral.of("PONG")
 });
 
 export type Autoguard = {
-	"Ping": Ping,
-	"Pong": Pong
+	"PING": PING,
+	"PONG": PONG
 };
 
 export const Autoguard = {
-	"Ping": Ping,
-	"Pong": Pong
+	"PING": PING,
+	"PONG": PONG
 };

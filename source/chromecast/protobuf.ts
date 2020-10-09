@@ -59,9 +59,9 @@ export function serializeVarint(buffer: Buffer): Buffer {
 		let byte = (bigint & BigInt(0x7F));
 		bigint = (bigint >> BigInt(7));
 		if (bigint > 0) {
-			result.writeUInt8(numberFromBigInt(byte) | 0x80);
+			result.writeUInt8(numberFromBigInt(byte) | 0x80, i);
 		} else {
-			result.writeUInt8(numberFromBigInt(byte) | 0x00);
+			result.writeUInt8(numberFromBigInt(byte) | 0x00, i);
 			return result.slice(0, i + 1);
 		}
 	}

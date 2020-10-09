@@ -1,8 +1,9 @@
 {
-	Ping: {
+	PING: {
 		"type": "PING"
 	},
-	Pong: {
+
+	PONG: {
 		"type": "PONG"
 	}
 }

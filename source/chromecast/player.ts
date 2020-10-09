@@ -1,62 +1,8 @@
 /*
-
-var Client  = require('castv2-client').Client;
-var DefaultMediaReceiver = require('castv2-client').DefaultMediaReceiver;
-
-class Controller {
-	readonly context = new ObservableClass<Context | undefined>(undefined);
-	readonly contextIndex = new ObservableClass<number | undefined>(undefined);
-	readonly currentItem = new ObservableClass<ContextItem | undefined>(undefined);
-	readonly shouldPlay = new ObservableClass(false);
-	readonly isPlaying = new ObservableClass(false);
-	readonly isLaunched = new ObservableClass(false);
-}
-
-export const controller = new Controller();
-
-function computeCurrentItem(context?: Context, contextIndex?: number) {
-	return context != null && contextIndex != null ? context[contextIndex] : undefined;
-}
-controller.context.addObserver((context) => {
-	controller.contextIndex.updateState(undefined);
-	controller.currentItem.updateState(computeCurrentItem(context, controller.contextIndex.getState()));
-});
-controller.contextIndex.addObserver((contextIndex) => {
-	controller.currentItem.updateState(computeCurrentItem(controller.context.getState(), contextIndex));
-});
-
-function computeSomething(currentItem?: ContextItem, isLaunched?: boolean) {
-	if (currentItem != null && isLaunched) {
-		attempt_playback();
-	}
-}
-controller.currentItem.addObserver((currentItem) => {
-	computeSomething(currentItem, controller.isLaunched.getState());
-});
-controller.isLaunched.addObserver((isLaunched) => {
-	computeSomething(controller.currentItem.getState(), isLaunched);
-});
-
-
-
-
-
-
-
-
-
 type Status = {
 	playerState: "IDLE" | "PLAYING" | "BUFFERING";
 	media: Media;
 };
-
-type Media = {
-	duration: number;
-	seek(position: number): void;
-	play(): void;
-	pause(): void;
-};
-
 type MediaObject = {
 	contentId: string;
 	contentType: string;
@@ -76,12 +22,6 @@ type MediaObject = {
 	activeTrackIds: Array<number>;
 };
 
-type Player = {
-	load(media: MediaObject, data: {}, cb: { (error: Error | null, status: Status | null): void }): void;
-	media: Media;
-	on(kind: "status", cb: { (status: Status): void }): void;
-};
-
 type STTrack = {
 	trackId: number;
 	type: 'TEXT';
@@ -93,21 +33,6 @@ type STTrack = {
 	name: null,
 	customData: null
 };
-
-let gmedia: Media | null = null;
-let ghost: string | null = null;
-let gtoken: string | null = null;
-let gorigin: string | null = null;
-let gplayer: Player | null = null;
-let gclient: any = null;
-
-function getLanguage(language: string | null): string {
-	let entry = languages.db[language || "eng"] || languages.db["eng"];
-	return [
-		entry.iso639_1,
-		entry.iso3166_1
-	].join("-");
-}
 
 let make_media_object = (): MediaObject | null => {
 	let contextItem = controller.currentItem.getState();
@@ -191,93 +116,5 @@ let make_media_object = (): MediaObject | null => {
 		tracks: sttracks,
 		activeTrackIds: activeTrackIds
 	};
-};
-
-let attempt_playback = (): void => {
-	gmedia = null;
-	let media = make_media_object();
-	if (media == null) {
-		return;
-	}
-	if (gplayer == null) {
-		return;
-	}
-	gplayer.load(media, {
-		autoplay: controller.shouldPlay.getState(),
-		activeTrackIds: media.activeTrackIds
-	}, (error, status) => {
-		if (error) {
-			console.log(error);
-		}
-		if (status) {
-			gmedia = status.media;
-		}
-	});
-};
-
-let seek = (percentage: number): void => {
-	if (gplayer != null && gmedia != null) {
-		gplayer.media.seek((gmedia.duration*percentage/100) | 0);
-	}
-};
-
-let pause = (): void => {
-	if (gplayer != null && gmedia != null) {
-		gplayer.media.pause();
-	}
-};
-
-let resume = (): void => {
-	if (gplayer != null && gmedia != null) {
-		gplayer.media.play();
-	}
-};
-
-export const launch = (host: string, token: string, origin: string): Promise<void> => {
-	controller.isLaunched.updateState(false);
-	gmedia = null;
-	ghost = null;
-	gplayer = null;
-	gtoken = null;
-	gorigin = null;
-	return new Promise((resolve, reject) => {
-		var client = new Client();
-		gclient = client;
-		client.connect(host, () => {
-			client.launch(DefaultMediaReceiver, (error: Error, player: Player) => {
-				ghost = host;
-				gplayer = player;
-				gtoken = token;
-				gorigin = origin;
-				controller.isLaunched.updateState(true);
-				player.on('status', (status) => {
-					console.log('status broadcast playerState=%s', status.playerState);
-					if (status.playerState === "PLAYING") {
-						controller.isPlaying.updateState(true);
-					} else {
-						controller.isPlaying.updateState(false);
-					}
-					if (status.playerState === 'IDLE' && gmedia != null) {
-						let context = controller.context.getState();
-						let contextIndex = controller.contextIndex.getState();
-						if (context != null && contextIndex != null && contextIndex + 1 < context.length) {
-							controller.contextIndex.updateState(contextIndex + 1);
-						}
-					}
-				});
-				return resolve();
-			});
-		});
-		client.on('error', (error: Error) => {
-			console.log('Error: %s', error.message);
-			controller.isLaunched.updateState(false);
-			gmedia = null;
-			ghost = null;
-			gplayer = null;
-			gtoken = null;
-			gorigin = null;
-			client.close();
-		});
-	});
 };
 */

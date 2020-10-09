@@ -192,6 +192,11 @@ export class ContextClient {
 			this.context.addObserver(computer);
 			this.nextIndex.addObserver(computer);
 		}
+		this.token.addObserver((token) => {
+			this.tsc.send("SetToken", {
+				token
+			});
+		});
 		this.tsc.addEventListener("app", "SetLocalDevice", (message) => {
 			this.localDevice.updateState(message.device);
 		});
@@ -287,7 +292,7 @@ export class ContextClient {
 		}
 	}
 
-	transfer(device: schema.objects.Device): void {
+	transfer(device?: schema.objects.Device): void {
 		this.tsc.send("SetDevice", {
 			device: device
 		});

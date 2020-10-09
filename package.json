@@ -7,8 +7,7 @@
 	},
 	"dependencies": {
 		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^4",
-		"@joelek/ts-sockets": "github:joelek/ts-sockets#wip",
-		"castv2-client": "^1.2.0"
+		"@joelek/ts-sockets": "github:joelek/ts-sockets#wip"
 	},
 	"license": "UNLICENSED",
 	"main": "./build/server.js",
