@@ -5,10 +5,10 @@ import * as sockets from "@joelek/ts-sockets";
 
 export interface WebSocketLike {
 	addEventListener<A extends keyof WebSocketEventMap>(type: A, listener: (event: WebSocketEventMap[A]) => void): void;
-	close(): void;
+	close(status?: sockets.shared.StatusCode): void;
 	removeEventListener<A extends keyof WebSocketEventMap>(type: A, listener: (event: WebSocketEventMap[A]) => void): void;
 	send(payload: string | Buffer): void;
-	readonly readyState: sockets.client.ReadyState;
+	readonly readyState: sockets.shared.ReadyState;
 };
 
 export type WebSocketFactory = (url: string) => WebSocketLike;
@@ -98,7 +98,7 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	}
 
 	send<B extends keyof A>(type: B, data: A[B]): void {
-		if (this.socket.readyState === sockets.client.ReadyState.OPEN) {
+		if (this.socket.readyState === sockets.shared.ReadyState.OPEN) {
 			this.socket.send(this.serializer.serialize(type, data));
 		} else {
 			let open = () => {

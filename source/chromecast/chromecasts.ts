@@ -78,6 +78,9 @@ function createSocket(hostname: string): Promise<libnet.Socket> {
 export function observe(tls: boolean): void {
 	addListener(async (hostname) => {
 		let socket = await createSocket(hostname);
+		socket.on("close", () => {
+			hostnames.delete(hostname);
+		})
 		new ChromecastPlayer(socket, tls);
 	});
 };

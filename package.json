@@ -7,7 +7,7 @@
 	},
 	"dependencies": {
 		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^4",
-		"@joelek/ts-sockets": "github:joelek/ts-sockets#wip"
+		"@joelek/ts-sockets": "github:joelek/ts-sockets#semver:^2"
 	},
 	"license": "UNLICENSED",
 	"main": "./build/server.js",
