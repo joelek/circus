@@ -2,7 +2,10 @@ import * as is from "../is";
 import * as observers from "../simpleobs";
 import * as schema from "./schema";
 import * as typesockets from "../typesockets";
-import { albums_index } from "../data";
+
+type AlbumIndices = { disc: number, track: number };
+type ArtistIndices = { album: number, disc: number, track: number };
+type Indices = AlbumIndices | ArtistIndices;
 
 export class ContextClient {
 	private tsc: typesockets.TypeSocketClient<schema.messages.Autoguard>;
@@ -284,7 +287,23 @@ export class ContextClient {
 		});
 	}
 
-	play(context: schema.objects.Context, index: number, progress: number): void {
+	play(context: schema.objects.ContextAlbum, i: AlbumIndices, progress: number): void;
+	play(context: schema.objects.ContextArtist, i: ArtistIndices, progress: number): void;
+	play(context: schema.objects.Context, i: Indices, progress: number): void {
+		let index = (() => {
+			if (schema.objects.ContextAlbum.is(context)) {
+				let indices = i as AlbumIndices;
+				let index = indices.track;
+				index += context.discs.slice(0, indices.disc).reduce((sum, disc) => sum + disc.tracks.length, 0);
+				return index;
+			}
+			if (schema.objects.ContextArtist.is(context)) {
+				let indices = i as ArtistIndices;
+				let index = indices.track;
+				index += context.albums.slice(0, indices.album).reduce((sum, album) => sum + album.discs.reduce((sum, disc) => sum + disc.tracks.length, 0), 0);
+				return index;
+			}
+		})();
 		this.tsc.send("SetContext", {
 			context
 		});

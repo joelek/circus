@@ -1959,7 +1959,8 @@ let updateviewforuri = (uri: string): void => {
 					)
 					.render());
 			}
-			for (let disc of response.discs) {
+			for (let disci = 0; disci < response.discs.length; disci++) {
+				let disc = response.discs[disci];
 				if (disc.tracks.length > 0) {
 					let content = xml.element("div.content")
 						.add(xml.element("div.playlist")
@@ -1978,7 +1979,7 @@ let updateviewforuri = (uri: string): void => {
 										.add(xml.text(track.artists.map((artist) => artist.title).join(" \u2022 ")))
 									)
 									.on("click", () => {
-										player.play(context, index, 0);
+										player.play(context, { disc: disci, track: index }, 0);
 									})
 								))
 							)
@@ -2033,7 +2034,7 @@ let updateviewforuri = (uri: string): void => {
 					let widget = makeAlbum(album).render();
 					widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
 						event.stopPropagation();
-						player.play(context, index, 0);
+						player.play(context, { album: index, disc: 0, track: 0 }, 0);
 					});
 					widget.addEventListener('click', () => {
 						navigate(`audio/albums/${album.album_id}/`);
@@ -2057,7 +2058,7 @@ let updateviewforuri = (uri: string): void => {
 					let widget = makeAlbum(album).render();
 					widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
 						event.stopPropagation();
-						player.play(context, 0, 0);
+						//player.play(context, 0, 0);
 					});
 					widget.addEventListener('click', () => {
 						navigate(`audio/albums/${album.album_id}/`);
