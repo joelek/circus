@@ -1,0 +1,52 @@
+{
+	ArtistBase: {
+		artist_id: string,
+		title: string
+	},
+
+	Artist: ArtistBase & {
+		albums: Album[]
+	},
+
+	AlbumBase: {
+		album_id: string,
+		title: string,
+		year: number,
+		artists: ArtistBase[],
+		artwork?: File
+	},
+
+	Album: AlbumBase & {
+		discs: Disc[]
+	},
+
+	DiscBase: {
+		disc_id: string,
+		album: AlbumBase
+	},
+
+	Disc: DiscBase & {
+		tracks: Track[]
+	},
+
+	TrackBase: {
+		track_id: string,
+		title: string,
+		disc: DiscBase,
+		artists: ArtistBase[],
+		file: File
+	},
+
+	Track: TrackBase & {
+
+	},
+
+	FileBase: {
+		file_id: string,
+		mime: string
+	},
+
+	File: FileBase & {
+
+	}
+}
