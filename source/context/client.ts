@@ -2,6 +2,7 @@ import * as is from "../is";
 import * as observers from "../simpleobs";
 import * as schema from "./schema";
 import * as typesockets from "../typesockets";
+import { albums_index } from "../data";
 
 export class ContextClient {
 	private tsc: typesockets.TypeSocketClient<schema.messages.Autoguard>;
@@ -14,6 +15,8 @@ export class ContextClient {
 	readonly isDeviceLocal = new observers.ObservableClass(false);
 	readonly isDeviceRemote = new observers.ObservableClass(false);
 	readonly context = new observers.ObservableClass(undefined as schema.objects.Context | undefined);
+	readonly contextId = new observers.ObservableClass(undefined as string | undefined);
+	readonly flattenedContext = new observers.ObservableClass(undefined as schema.objects.ContextItem[] | undefined);
 	readonly lastIndex = new observers.ObservableClass(undefined as number | undefined);
 	readonly lastEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
 	readonly lastLocalEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
@@ -33,6 +36,27 @@ export class ContextClient {
 
 	constructor(url: string, factory: typesockets.WebSocketFactory = (url) => new WebSocket(url)) {
 		this.tsc = new typesockets.TypeSocketClient(url, factory, schema.messages.Autoguard);
+		this.context.addObserver((context) => {
+			if (is.present(context)) {
+				if (schema.objects.ContextAlbum.is(context)) {
+					this.contextId.updateState(context.album_id);
+					let tracks = [] as schema.objects.ContextItem[];
+					for (let disc of context.discs) {
+						tracks.push(...disc.tracks);
+					}
+					this.flattenedContext.updateState(tracks);
+				} else if (schema.objects.ContextArtist.is(context)) {
+					this.contextId.updateState(context.artist_id);
+					let tracks = [] as schema.objects.ContextItem[];
+					for (let album of context.albums) {
+						for (let disc of album.discs) {
+							tracks.push(...disc.tracks);
+						}
+					}
+					this.flattenedContext.updateState(tracks);
+				}
+			}
+		});
 		this.lastEntry.addObserver((lastEntry) => {
 			this.canPlayLast.updateState(is.present(lastEntry));
 		});
@@ -126,70 +150,70 @@ export class ContextClient {
 		}
 		{
 			let computer = () => {
-				let context = this.context.getState();
+				let flattenedContext = this.flattenedContext.getState();
 				let currentIndex = this.currentIndex.getState();
-				if (is.present(context) && is.present(currentIndex)) {
+				if (is.present(flattenedContext) && is.present(currentIndex)) {
 					let index = currentIndex - 1;
-					if (index >= 0 && index < context.length) {
+					if (index >= 0 && index < flattenedContext.length) {
 						return this.lastIndex.updateState(index);
 					}
 				}
 				return this.lastIndex.updateState(undefined);
 			};
-			this.context.addObserver(computer);
+			this.flattenedContext.addObserver(computer);
 			this.currentIndex.addObserver(computer);
 		}
 		{
 			let computer = () => {
-				let context = this.context.getState();
+				let flattenedContext = this.flattenedContext.getState();
 				let currentIndex = this.currentIndex.getState();
-				if (is.present(context) && is.present(currentIndex)) {
+				if (is.present(flattenedContext) && is.present(currentIndex)) {
 					let index = currentIndex + 1;
-					if (index >= 0 && index < context.length) {
+					if (index >= 0 && index < flattenedContext.length) {
 						return this.nextIndex.updateState(index);
 					}
 				}
 				return this.nextIndex.updateState(undefined);
 			};
-			this.context.addObserver(computer);
+			this.flattenedContext.addObserver(computer);
 			this.currentIndex.addObserver(computer);
 		}
 		{
 			let computer = () => {
-				let context = this.context.getState();
+				let flattenedContext = this.flattenedContext.getState();
 				let lastIndex = this.lastIndex.getState();
-				if (is.present(context) && is.present(lastIndex)) {
-					return this.lastEntry.updateState(context[lastIndex]);
+				if (is.present(flattenedContext) && is.present(lastIndex)) {
+					return this.lastEntry.updateState(flattenedContext[lastIndex]);
 				}
 				return this.lastEntry.updateState(undefined);
 			};
-			this.context.addObserver(computer);
+			this.flattenedContext.addObserver(computer);
 			this.lastIndex.addObserver(computer);
 		}
 		{
 			let computer = () => {
-				let context = this.context.getState();
+				let flattenedContext = this.flattenedContext.getState();
 				let contextIndex = this.currentIndex.getState();
-				if (is.present(context) && is.present(contextIndex)) {
-					if (contextIndex >= 0 && contextIndex + 0 < context.length) {
-						return this.currentEntry.updateState(context[contextIndex + 0]);
+				if (is.present(flattenedContext) && is.present(contextIndex)) {
+					if (contextIndex >= 0 && contextIndex + 0 < flattenedContext.length) {
+						return this.currentEntry.updateState(flattenedContext[contextIndex + 0]);
 					}
 				}
 				return this.currentEntry.updateState(undefined);
 			};
-			this.context.addObserver(computer);
+			this.flattenedContext.addObserver(computer);
 			this.currentIndex.addObserver(computer);
 		}
 		{
 			let computer = () => {
-				let context = this.context.getState();
+				let flattenedContext = this.flattenedContext.getState();
 				let nextIndex = this.nextIndex.getState();
-				if (is.present(context) && is.present(nextIndex)) {
-					return this.nextEntry.updateState(context[nextIndex]);
+				if (is.present(flattenedContext) && is.present(nextIndex)) {
+					return this.nextEntry.updateState(flattenedContext[nextIndex]);
 				}
 				return this.nextEntry.updateState(undefined);
 			};
-			this.context.addObserver(computer);
+			this.flattenedContext.addObserver(computer);
 			this.nextIndex.addObserver(computer);
 		}
 		this.token.addObserver((token) => {

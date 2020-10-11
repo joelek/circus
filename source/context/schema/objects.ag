@@ -1,11 +1,13 @@
 {
-	Context: ContextItem[],
+	ContextAlbum: Album,
 
-	ContextItem: {
-		file_id: string,
-		title: string,
-		subtitle: string
-	},
+	ContextArtist: Artist,
+
+	ContextTrack: Track,
+
+	Context: ContextArtist | ContextAlbum,
+
+	ContextItem: ContextTrack,
 
 	Device: {
 		id: string,

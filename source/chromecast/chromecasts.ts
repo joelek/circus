@@ -431,15 +431,18 @@ class ChromecastPlayer {
 				let currentLocalEntry = this.context.currentLocalEntry.getState();
 				let token = this.context.token.getState();
 				if (is.present(transportId) && is.present(currentLocalEntry) && is.present(token)) {
-					let file = data.lookupFile(currentLocalEntry.file_id);
-					let url = `${tls ? "https:" : "http:"}//${socket.localAddress}/files/${currentLocalEntry.file_id}/?token=${token}`;
+					let url = `${tls ? "https:" : "http:"}//${socket.localAddress}/files/${currentLocalEntry.file.file_id}/?token=${token}`;
 					this.mediaHandler.send("LOAD", {
 						type: "LOAD",
 						requestId: -1,
 						media: {
 							contentId: url,
-							contentType: file.mime,
-							streamType: "BUFFERED"
+							contentType: currentLocalEntry.file.mime,
+							streamType: "BUFFERED",
+							metadata: {
+								metadataType: 0,
+								title: currentLocalEntry.title
+							}
 						},
 						autoplay: false
 					});
