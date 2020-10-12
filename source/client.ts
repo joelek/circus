@@ -8,6 +8,7 @@ import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
+import { Album, Artist } from "./media/schema/objects";
 
 
 
@@ -1076,6 +1077,7 @@ style.innerText = `
 	}
 
 	.media-player__metadata {
+		cursor: pointer;
 		display: grid;
 		gap: 8px;
 	}
@@ -1622,6 +1624,11 @@ const makePauseIcon = () => xml.element("svg")
 	);
 
 const makeButton = () => xml.element("div.icon-button");
+const makeLink = (url: string) => xml.element("a")
+	.set("href", url)
+	.on("click", (event) => {
+		navigate(url);
+	});
 
 let mp = xml.element("div.content")
 	.set("style", "padding: 16px;")
@@ -1633,6 +1640,18 @@ let mp = xml.element("div.content")
 			.add(xml.element("div.media-player__subtitle")
 				.add(xml.text(mediaPlayerSubtitle))
 			)
+			.on("click", (event) => {
+				let context = player.context.getState();
+				if (is.present(context)) {
+					if (Album.is(context)) {
+						navigate(`audio/albums/${context.album_id}/`);
+					} else if (Artist.is(context)) {
+						navigate(`audio/artists/${context.artist_id}/`);
+					} else {
+						throw `Expected code to be unreachable!`;
+					}
+				}
+			})
 		)
 		.add(xml.element("div.media-player__controls")
 			.add(makeButton()
