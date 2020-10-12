@@ -1413,7 +1413,7 @@ let appheader = xml.element("div.app__header")
 	.add(xml.element("div.content")
 		.set("style", "padding: 24px")
 		.add(xml.element("div.page-header__title")
-			.add(xml.text("Zenplayer"))
+			.add(xml.text("Orbit"))
 			.on("click", () => {
 				navigate("/");
 			})
@@ -1966,7 +1966,7 @@ let updateviewforuri = (uri: string): void => {
 					.render());
 			}
 			for (let discIndex = 0; discIndex < response.discs.length; discIndex++) {
-				let disc = response.discs[discIndex];
+				let disc = context.discs[discIndex];
 				if (disc.tracks.length > 0) {
 					let content = xml.element("div.content")
 						.add(xml.element("div.playlist")
@@ -1975,11 +1975,17 @@ let updateviewforuri = (uri: string): void => {
 							)
 							.add(xml.element("div.playlist__content")
 								.add(...disc.tracks.map((track, trackIndex) => xml.element("div.playlist-item")
-									.bind("data-playing", player.currentEntry.addObserver((currentEntry) => {
-										if (is.absent(currentEntry)) {
+									.bind("data-playing", player.contextPath.addObserver((contextPath) => {
+										if (is.absent(contextPath)) {
 											return false;
 										}
-										if (currentEntry.track_id !== track.track_id) {
+										if (contextPath[contextPath.length - 3] !== track.disc.album.album_id) {
+											return false;
+										}
+										if (contextPath[contextPath.length - 2] !== track.disc.disc_id) {
+											return false;
+										}
+										if (contextPath[contextPath.length - 1] !== track.track_id) {
 											return false;
 										}
 										return true;

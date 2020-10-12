@@ -18,7 +18,7 @@ export class ContextClient {
 	readonly isDeviceLocal = new observers.ObservableClass(false);
 	readonly isDeviceRemote = new observers.ObservableClass(false);
 	readonly context = new observers.ObservableClass(undefined as schema.objects.Context | undefined);
-	readonly contextId = new observers.ObservableClass(undefined as string | undefined); // ContextID as array
+	readonly contextPath = new observers.ObservableClass(undefined as string[] | undefined);
 	readonly flattenedContext = new observers.ObservableClass(undefined as schema.objects.ContextItem[] | undefined);
 	readonly lastIndex = new observers.ObservableClass(undefined as number | undefined);
 	readonly lastEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
@@ -42,14 +42,12 @@ export class ContextClient {
 		this.context.addObserver((context) => {
 			if (is.present(context)) {
 				if (schema.objects.ContextAlbum.is(context)) {
-					this.contextId.updateState(context.album_id);
 					let tracks = [] as schema.objects.ContextItem[];
 					for (let disc of context.discs) {
 						tracks.push(...disc.tracks);
 					}
 					this.flattenedContext.updateState(tracks);
 				} else if (schema.objects.ContextArtist.is(context)) {
-					this.contextId.updateState(context.artist_id);
 					let tracks = [] as schema.objects.ContextItem[];
 					for (let album of context.albums) {
 						for (let disc of album.discs) {
@@ -60,6 +58,61 @@ export class ContextClient {
 				}
 			}
 		});
+		{
+			let computer = () => {
+				let context = this.context.getState();
+				let currentIndex = this.currentIndex.getState();
+				if (is.present(context) && is.present(currentIndex)) {
+					if (schema.objects.ContextAlbum.is(context)) {
+						let discIndex = 0;
+						let trackIndex = currentIndex;
+						let discs = context.discs;
+						for (let d = 0; d < discs.length; d++) {
+							let length = discs[d].tracks.length;
+							if (trackIndex >= length) {
+								discIndex += 1;
+								trackIndex -= length;
+							} else {
+								break;
+							}
+						}
+						return this.contextPath.updateState([
+							context.album_id,
+							context.discs[discIndex].disc_id,
+							context.discs[discIndex].tracks[trackIndex].track_id
+						]);
+					} else if (schema.objects.ContextArtist.is(context)) {
+						let albumIndex = 0;
+						let discIndex = 0;
+						let trackIndex = currentIndex;
+						let albums = context.albums;
+						outer: for (let a = 0; a < albums.length; a++) {
+							let discs = albums[a].discs;
+							for (let d = 0; d < discs.length; d++) {
+								let length = discs[d].tracks.length;
+								if (trackIndex >= length) {
+									discIndex += 1;
+									trackIndex -= length;
+								} else {
+									break outer;
+								}
+							}
+							albumIndex += 1;
+							discIndex = 0;
+						}
+						return this.contextPath.updateState([
+							context.artist_id,
+							context.albums[albumIndex].album_id,
+							context.albums[albumIndex].discs[discIndex].disc_id,
+							context.albums[albumIndex].discs[discIndex].tracks[trackIndex].track_id
+						]);
+					}
+				}
+				this.contextPath.updateState(undefined);
+			};
+			this.context.addObserver(computer);
+			this.currentIndex.addObserver(computer);
+		}
 		this.lastEntry.addObserver((lastEntry) => {
 			this.canPlayLast.updateState(is.present(lastEntry));
 		});
