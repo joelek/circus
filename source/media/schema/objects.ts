@@ -30,7 +30,7 @@ export type AlbumBase = {
 	"title": string,
 	"year": number,
 	"artists": ArtistBase[],
-	"artwork"?: File
+	"artwork"?: ImageFile
 };
 
 export const AlbumBase = autoguard.Object.of<AlbumBase>({
@@ -40,7 +40,7 @@ export const AlbumBase = autoguard.Object.of<AlbumBase>({
 	"artists": autoguard.Array.of(autoguard.Reference.of<ArtistBase>(() => ArtistBase)),
 	"artwork": autoguard.Union.of(
 		autoguard.Undefined,
-		autoguard.Reference.of<File>(() => File)
+		autoguard.Reference.of<ImageFile>(() => ImageFile)
 	)
 });
 
@@ -85,8 +85,7 @@ export type TrackBase = {
 	"title": string,
 	"disc": DiscBase,
 	"artists": ArtistBase[],
-	"duration_ms": number,
-	"file": File
+	"file": AudioFile
 };
 
 export const TrackBase = autoguard.Object.of<TrackBase>({
@@ -94,8 +93,7 @@ export const TrackBase = autoguard.Object.of<TrackBase>({
 	"title": autoguard.String,
 	"disc": autoguard.Reference.of<DiscBase>(() => DiscBase),
 	"artists": autoguard.Array.of(autoguard.Reference.of<ArtistBase>(() => ArtistBase)),
-	"duration_ms": autoguard.Number,
-	"file": autoguard.Reference.of<File>(() => File)
+	"file": autoguard.Reference.of<AudioFile>(() => AudioFile)
 });
 
 export type Track = TrackBase & {};
@@ -105,21 +103,158 @@ export const Track = autoguard.Intersection.of(
 	autoguard.Object.of<{}>({})
 );
 
-export type FileBase = {
+export type MovieBase = {
+	"movie_id": string,
+	"title": string,
+	"year": number,
+	"summary": string,
+	"artwork"?: ImageFile,
+	"file": VideoFile
+};
+
+export const MovieBase = autoguard.Object.of<MovieBase>({
+	"movie_id": autoguard.String,
+	"title": autoguard.String,
+	"year": autoguard.Number,
+	"summary": autoguard.String,
+	"artwork": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Reference.of<ImageFile>(() => ImageFile)
+	),
+	"file": autoguard.Reference.of<VideoFile>(() => VideoFile)
+});
+
+export type Movie = MovieBase & {};
+
+export const Movie = autoguard.Intersection.of(
+	autoguard.Reference.of<MovieBase>(() => MovieBase),
+	autoguard.Object.of<{}>({})
+);
+
+export type ShowBase = {
+	"show_id": string,
+	"title": string
+};
+
+export const ShowBase = autoguard.Object.of<ShowBase>({
+	"show_id": autoguard.String,
+	"title": autoguard.String
+});
+
+export type Show = ShowBase & {
+	"seasons": Season[]
+};
+
+export const Show = autoguard.Intersection.of(
+	autoguard.Reference.of<ShowBase>(() => ShowBase),
+	autoguard.Object.of<{
+		"seasons": Season[]
+	}>({
+		"seasons": autoguard.Array.of(autoguard.Reference.of<Season>(() => Season))
+	})
+);
+
+export type SeasonBase = {
+	"season_id": string
+};
+
+export const SeasonBase = autoguard.Object.of<SeasonBase>({
+	"season_id": autoguard.String
+});
+
+export type Season = SeasonBase & {
+	"episodes": Episode[]
+};
+
+export const Season = autoguard.Intersection.of(
+	autoguard.Reference.of<SeasonBase>(() => SeasonBase),
+	autoguard.Object.of<{
+		"episodes": Episode[]
+	}>({
+		"episodes": autoguard.Array.of(autoguard.Reference.of<Episode>(() => Episode))
+	})
+);
+
+export type EpisodeBase = {
+	"episode_id": string,
+	"title": string,
+	"summary": string,
+	"file": VideoFile,
+	"subtitles": SubtitleFile[]
+};
+
+export const EpisodeBase = autoguard.Object.of<EpisodeBase>({
+	"episode_id": autoguard.String,
+	"title": autoguard.String,
+	"summary": autoguard.String,
+	"file": autoguard.Reference.of<VideoFile>(() => VideoFile),
+	"subtitles": autoguard.Array.of(autoguard.Reference.of<SubtitleFile>(() => SubtitleFile))
+});
+
+export type Episode = EpisodeBase & {};
+
+export const Episode = autoguard.Intersection.of(
+	autoguard.Reference.of<EpisodeBase>(() => EpisodeBase),
+	autoguard.Object.of<{}>({})
+);
+
+export type File = {
 	"file_id": string,
 	"mime": string
 };
 
-export const FileBase = autoguard.Object.of<FileBase>({
+export const File = autoguard.Object.of<File>({
 	"file_id": autoguard.String,
 	"mime": autoguard.String
 });
 
-export type File = FileBase & {};
+export type AudioFile = File & {
+	"duration_ms": number
+};
 
-export const File = autoguard.Intersection.of(
-	autoguard.Reference.of<FileBase>(() => FileBase),
+export const AudioFile = autoguard.Intersection.of(
+	autoguard.Reference.of<File>(() => File),
+	autoguard.Object.of<{
+		"duration_ms": number
+	}>({
+		"duration_ms": autoguard.Number
+	})
+);
+
+export type ImageFile = File & {};
+
+export const ImageFile = autoguard.Intersection.of(
+	autoguard.Reference.of<File>(() => File),
 	autoguard.Object.of<{}>({})
+);
+
+export type SubtitleFile = File & {
+	"language"?: string
+};
+
+export const SubtitleFile = autoguard.Intersection.of(
+	autoguard.Reference.of<File>(() => File),
+	autoguard.Object.of<{
+		"language"?: string
+	}>({
+		"language": autoguard.Union.of(
+			autoguard.Undefined,
+			autoguard.String
+		)
+	})
+);
+
+export type VideoFile = File & {
+	"duration_ms": number
+};
+
+export const VideoFile = autoguard.Intersection.of(
+	autoguard.Reference.of<File>(() => File),
+	autoguard.Object.of<{
+		"duration_ms": number
+	}>({
+		"duration_ms": autoguard.Number
+	})
 );
 
 export type Autoguard = {
@@ -131,8 +266,19 @@ export type Autoguard = {
 	"Disc": Disc,
 	"TrackBase": TrackBase,
 	"Track": Track,
-	"FileBase": FileBase,
-	"File": File
+	"MovieBase": MovieBase,
+	"Movie": Movie,
+	"ShowBase": ShowBase,
+	"Show": Show,
+	"SeasonBase": SeasonBase,
+	"Season": Season,
+	"EpisodeBase": EpisodeBase,
+	"Episode": Episode,
+	"File": File,
+	"AudioFile": AudioFile,
+	"ImageFile": ImageFile,
+	"SubtitleFile": SubtitleFile,
+	"VideoFile": VideoFile
 };
 
 export const Autoguard = {
@@ -144,6 +290,17 @@ export const Autoguard = {
 	"Disc": Disc,
 	"TrackBase": TrackBase,
 	"Track": Track,
-	"FileBase": FileBase,
-	"File": File
+	"MovieBase": MovieBase,
+	"Movie": Movie,
+	"ShowBase": ShowBase,
+	"Show": Show,
+	"SeasonBase": SeasonBase,
+	"Season": Season,
+	"EpisodeBase": EpisodeBase,
+	"Episode": Episode,
+	"File": File,
+	"AudioFile": AudioFile,
+	"ImageFile": ImageFile,
+	"SubtitleFile": SubtitleFile,
+	"VideoFile": VideoFile
 };

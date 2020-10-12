@@ -13,7 +13,7 @@
 		title: string,
 		year: number,
 		artists: ArtistBase[],
-		artwork?: File
+		artwork?: ImageFile
 	},
 
 	Album: AlbumBase & {
@@ -34,20 +34,73 @@
 		title: string,
 		disc: DiscBase,
 		artists: ArtistBase[],
-		duration_ms: number,
-		file: File
+		file: AudioFile
 	},
 
 	Track: TrackBase & {
 
 	},
 
-	FileBase: {
+	MovieBase: {
+		movie_id: string,
+		title: string,
+		year: number,
+		summary: string,
+		artwork?: ImageFile,
+		file: VideoFile
+	},
+
+	Movie: MovieBase & {
+
+	},
+
+	ShowBase: {
+		show_id: string,
+		title: string
+	},
+
+	Show: ShowBase & {
+		seasons: Season[]
+	},
+
+	SeasonBase: {
+		season_id: string
+	},
+
+	Season: SeasonBase & {
+		episodes: Episode[]
+	},
+
+	EpisodeBase: {
+		episode_id: string,
+		title: string,
+		summary: string,
+		file: VideoFile,
+		subtitles: SubtitleFile[]
+	},
+
+	Episode: EpisodeBase & {
+
+	},
+
+	File: {
 		file_id: string,
 		mime: string
 	},
 
-	File: FileBase & {
+	AudioFile: File & {
+		duration_ms: number
+	},
 
+	ImageFile: File & {
+
+	},
+
+	SubtitleFile: File & {
+		language?: string
+	},
+
+	VideoFile: File & {
+		duration_ms: number
 	}
 }
