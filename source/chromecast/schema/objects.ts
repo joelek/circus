@@ -282,6 +282,7 @@ export type MediaStatus = {
 	"currentTime": number,
 	"supportedMediaCommands": number,
 	"volume": Volume,
+	"activeTrackIds"?: any[],
 	"customData"?: Record<string, undefined | any>
 };
 
@@ -310,6 +311,10 @@ export const MediaStatus = autoguard.Object.of<MediaStatus>({
 	"currentTime": autoguard.Number,
 	"supportedMediaCommands": autoguard.Number,
 	"volume": autoguard.Reference.of<Volume>(() => Volume),
+	"activeTrackIds": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Array.of(autoguard.Any)
+	),
 	"customData": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.Record.of(autoguard.Any)

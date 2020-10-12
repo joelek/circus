@@ -1770,7 +1770,7 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 	let duration_ms = 0;
 	for (let disc of album.discs) {
 		for (let track of disc.tracks) {
-			duration_ms += 0; //track.duration;
+			duration_ms += track.duration_ms;
 		}
 	}
 	let title = album.title;
@@ -1961,6 +1961,7 @@ function translateAlbumResponse(ralbum: api_response.AlbumResponse): ContextAlbu
 						artist_id: rartist.artist_id,
 						title: rartist.title
 					})),
+					duration_ms: rtrack.duration,
 					file: {
 						file_id: rtrack.file_id,
 						mime: "audio/mp4"

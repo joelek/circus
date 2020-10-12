@@ -85,6 +85,7 @@ export type TrackBase = {
 	"title": string,
 	"disc": DiscBase,
 	"artists": ArtistBase[],
+	"duration_ms": number,
 	"file": File
 };
 
@@ -93,6 +94,7 @@ export const TrackBase = autoguard.Object.of<TrackBase>({
 	"title": autoguard.String,
 	"disc": autoguard.Reference.of<DiscBase>(() => DiscBase),
 	"artists": autoguard.Array.of(autoguard.Reference.of<ArtistBase>(() => ArtistBase)),
+	"duration_ms": autoguard.Number,
 	"file": autoguard.Reference.of<File>(() => File)
 });
 
