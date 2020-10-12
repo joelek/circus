@@ -288,7 +288,10 @@ namespace xml {
 				listeners = new Array<Listener<A>>();
 				this.listeners.set(kind, listeners as any);
 			}
-			listeners.push(listener);
+			listeners.push((event) => {
+				event.stopPropagation();
+				listener(event);
+			});
 			return this;
 		}
 
@@ -1744,13 +1747,11 @@ chromecast.appendChild(slider_wrapper);
 
 const makeTag = (content: string) => xml.element("div.media-tag")
 	.add(xml.text(content));
-const makePlaybackButton = () => xml.element("div.playback-button")
-	.add(makePlayIcon());
-function makeAlbum(album: api_response.AlbumResponse): xml.XElement {
+function makeAlbum(album: ContextAlbum, playback: xml.XElement): xml.XElement {
 	let duration_ms = 0;
 	for (let disc of album.discs) {
 		for (let track of disc.tracks) {
-			duration_ms += track.duration;
+			duration_ms += 0; //track.duration;
 		}
 	}
 	let title = album.title;
@@ -1762,10 +1763,10 @@ function makeAlbum(album: api_response.AlbumResponse): xml.XElement {
 	];
 	return xml.element("div.media-widget")
 		.add(xml.element("div.media-widget__artwork")
-			.add(is.absent(album.cover_file_id) ? undefined : xml.element("img.media-widget__image")
-				.set("src", `/files/${album.cover_file_id}/?token=${token}`)
+			.add(is.absent(album.artwork) ? undefined : xml.element("img.media-widget__image")
+				.set("src", `/files/${album.artwork.file_id}/?token=${token}`)
 			)
-			.add(makePlaybackButton())
+			.add(playback)
 		)
 		.add(xml.element("div.media-widget__metadata")
 			.add(xml.element("div.media-widget__titles")
@@ -1779,7 +1780,9 @@ function makeAlbum(album: api_response.AlbumResponse): xml.XElement {
 			.add(xml.element("div.media-widget__tags")
 				.add(...tags.map(makeTag))
 			)
-		);
+		).on("click", (event) => {
+			navigate(`audio/albums/${album.album_id}/`);
+		});
 }
 function makeMovie(movie: api_response.MovieResponse): xml.XElement {
 	let duration_ms = 0;
@@ -1802,10 +1805,13 @@ function makeMovie(movie: api_response.MovieResponse): xml.XElement {
 			.add(is.absent(movie.poster_file_id) ? undefined : xml.element("img.media-widget__image")
 				.set("src", `/files/${movie.poster_file_id}/?token=${token}`)
 			)
-			.add(makePlaybackButton()
+			.add(xml.element("div.playback-button")
+				.bind("data-hide", player.currentEntry.addObserver((currentEntry) => {
+					return true;
+				}))
+				.add(makePlayIcon())
 				.on("click", (event) => {
-					event.stopPropagation();
-					//player.play(context, 0, 0);
+					//player.play();
 				})
 			)
 		)
@@ -1970,7 +1976,13 @@ let updateviewforuri = (uri: string): void => {
 							.add(xml.element("div.playlist__content")
 								.add(...disc.tracks.map((track, index) => xml.element("div.playlist-item")
 									.bind("data-playing", player.currentEntry.addObserver((currentEntry) => {
-										return currentEntry?.file.file_id === track.file_id;
+										if (is.absent(currentEntry)) {
+											return false;
+										}
+										if (currentEntry.track_id !== track.track_id) {
+											return false;
+										}
+										return true;
 									}))
 									.add(xml.element("div.playlist-item__title")
 										.add(xml.text(track.title))
@@ -2018,7 +2030,7 @@ let updateviewforuri = (uri: string): void => {
 				]))
 				.render();
 			mount.appendChild(widget);
-			if (response.albums.length > 0) {
+			if (context.albums.length > 0) {
 				let content = xml.element("div.content").render();
 				mount.appendChild(content);
 				let mediaGrid = xml.element("div.media-grid")
@@ -2027,20 +2039,18 @@ let updateviewforuri = (uri: string): void => {
 					)
 					.render();
 				content.appendChild(mediaGrid);
-				let mediaGrid__content = xml.element("div.media-grid__content").render();
+				let mediaGrid__content = xml.element("div.media-grid__content")
+					.add(...context.albums.map((album, index) => makeAlbum(album, xml.element("div.playback-button")
+						.bind("data-hide", player.currentEntry.addObserver((currentEntry) => {
+							return currentEntry?.disc.album.album_id === album.album_id;
+						}))
+						.add(makePlayIcon())
+						.on("click", (event) => {
+							player.play(context, { album: index, disc: 0, track: 0 }, 0);
+						}))
+					))
+				.render();
 				mediaGrid.appendChild(mediaGrid__content);
-				for (let index = 0; index < response.albums.length; index++) {
-					let album = response.albums[index];
-					let widget = makeAlbum(album).render();
-					widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
-						event.stopPropagation();
-						player.play(context, { album: index, disc: 0, track: 0 }, 0);
-					});
-					widget.addEventListener('click', () => {
-						navigate(`audio/albums/${album.album_id}/`);
-					});
-					mediaGrid__content.appendChild(widget);
-				}
 			}
 			if (response.appearances.length > 0) {
 				let content = xml.element("div.content").render();
@@ -2055,14 +2065,15 @@ let updateviewforuri = (uri: string): void => {
 				mediaGrid.appendChild(mediaGrid__content);
 				for (let album of response.appearances) {
 					let context = translateAlbumResponse(album);
-					let widget = makeAlbum(album).render();
-					widget.querySelector(".playback-button")?.addEventListener("click", (event) => {
-						event.stopPropagation();
-						//player.play(context, 0, 0);
-					});
-					widget.addEventListener('click', () => {
-						navigate(`audio/albums/${album.album_id}/`);
-					});
+					let widget = makeAlbum(context, xml.element("div.playback-button")
+						.bind("data-hide", player.currentEntry.addObserver((currentEntry) => {
+							return currentEntry?.disc.album.album_id === album.album_id;
+						}))
+						.add(makePlayIcon())
+						.on("click", (event) => {
+							player.play(context, { disc: 0, track: 0 }, 0);
+						}))
+						.render();
 					mediaGrid__content.appendChild(widget);
 				}
 			}
