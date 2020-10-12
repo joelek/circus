@@ -18,7 +18,7 @@ export class ContextClient {
 	readonly isDeviceLocal = new observers.ObservableClass(false);
 	readonly isDeviceRemote = new observers.ObservableClass(false);
 	readonly context = new observers.ObservableClass(undefined as schema.objects.Context | undefined);
-	readonly contextId = new observers.ObservableClass(undefined as string | undefined);
+	readonly contextId = new observers.ObservableClass(undefined as string | undefined); // ContextID as array
 	readonly flattenedContext = new observers.ObservableClass(undefined as schema.objects.ContextItem[] | undefined);
 	readonly lastIndex = new observers.ObservableClass(undefined as number | undefined);
 	readonly lastEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
@@ -287,30 +287,58 @@ export class ContextClient {
 		});
 	}
 
-	play(context: schema.objects.ContextAlbum, i: AlbumIndices, progress: number): void;
-	play(context: schema.objects.ContextArtist, i: ArtistIndices, progress: number): void;
-	play(context: schema.objects.Context, i: Indices, progress: number): void {
-		let index = (() => {
-			if (schema.objects.ContextAlbum.is(context)) {
-				let indices = i as AlbumIndices;
-				let index = indices.track;
-				index += context.discs.slice(0, indices.disc).reduce((sum, disc) => sum + disc.tracks.length, 0);
-				return index;
+	playAlbum(context: schema.objects.ContextAlbum, discIndex?: number, trackIndex?: number): void {
+		let index = 0;
+		if (is.present(discIndex)) {
+			let discs = context.discs;
+			if (discIndex < 0 || discIndex >= discs.length) {
+				throw `Expected ${discIndex} to be a number between 0 and ${discs.length}!`;
 			}
-			if (schema.objects.ContextArtist.is(context)) {
-				let indices = i as ArtistIndices;
-				let index = indices.track;
-				index += context.albums.slice(0, indices.album).reduce((sum, album) => sum + album.discs.reduce((sum, disc) => sum + disc.tracks.length, 0), 0);
-				return index;
+			index += discs.slice(0, discIndex).reduce((sum, disc) => sum + disc.tracks.length, 0);
+			if (is.present(trackIndex)) {
+				let tracks = discs[discIndex].tracks;
+				if (trackIndex < 0 || trackIndex >= tracks.length) {
+					throw `Expected ${trackIndex} to be a number between 0 and ${tracks.length}!`;
+				}
+				index += trackIndex;
 			}
-		})();
+		}
+		return this.play(context, index);
+	}
+
+	playArtist(context: schema.objects.ContextArtist, albumIndex?: number, discIndex?: number, trackIndex?: number): void {
+		let index = 0;
+		if (is.present(albumIndex)) {
+			let albums = context.albums;
+			if (albumIndex < 0 || albumIndex >= albums.length) {
+				throw `Expected ${albumIndex} to be a number between 0 and ${albums.length}!`;
+			}
+			index += albums.slice(0, albumIndex).reduce((sum, album) => sum + album.discs.reduce((sum, disc) => sum + disc.tracks.length, 0), 0);
+			if (is.present(discIndex)) {
+				let discs = albums[albumIndex].discs;
+				if (discIndex < 0 || discIndex >= discs.length) {
+					throw `Expected ${discIndex} to be a number between 0 and ${discs.length}!`;
+				}
+				index += discs.slice(0, discIndex).reduce((sum, disc) => sum + disc.tracks.length, 0);
+				if (is.present(trackIndex)) {
+					let tracks = discs[discIndex].tracks;
+					if (trackIndex < 0 || trackIndex >= tracks.length) {
+						throw `Expected ${trackIndex} to be a number between 0 and ${tracks.length}!`;
+					}
+					index += trackIndex;
+				}
+			}
+		}
+		return this.play(context, index);
+	}
+
+	play(context: schema.objects.Context, index: number): void {
 		this.tsc.send("SetContext", {
 			context
 		});
 		this.tsc.send("SetIndex", {
 			index
 		});
-		this.seek(progress);
 		this.resume();
 	}
 

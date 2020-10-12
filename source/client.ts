@@ -1965,8 +1965,8 @@ let updateviewforuri = (uri: string): void => {
 					)
 					.render());
 			}
-			for (let disci = 0; disci < response.discs.length; disci++) {
-				let disc = response.discs[disci];
+			for (let discIndex = 0; discIndex < response.discs.length; discIndex++) {
+				let disc = response.discs[discIndex];
 				if (disc.tracks.length > 0) {
 					let content = xml.element("div.content")
 						.add(xml.element("div.playlist")
@@ -1974,7 +1974,7 @@ let updateviewforuri = (uri: string): void => {
 								.add(renderTextHeader("Tracks"))
 							)
 							.add(xml.element("div.playlist__content")
-								.add(...disc.tracks.map((track, index) => xml.element("div.playlist-item")
+								.add(...disc.tracks.map((track, trackIndex) => xml.element("div.playlist-item")
 									.bind("data-playing", player.currentEntry.addObserver((currentEntry) => {
 										if (is.absent(currentEntry)) {
 											return false;
@@ -1991,7 +1991,7 @@ let updateviewforuri = (uri: string): void => {
 										.add(xml.text(track.artists.map((artist) => artist.title).join(" \u2022 ")))
 									)
 									.on("click", () => {
-										player.play(context, { disc: disci, track: index }, 0);
+										player.playAlbum(context, discIndex, trackIndex);
 									})
 								))
 							)
@@ -2040,13 +2040,13 @@ let updateviewforuri = (uri: string): void => {
 					.render();
 				content.appendChild(mediaGrid);
 				let mediaGrid__content = xml.element("div.media-grid__content")
-					.add(...context.albums.map((album, index) => makeAlbum(album, xml.element("div.playback-button")
+					.add(...context.albums.map((album, albumIndex) => makeAlbum(album, xml.element("div.playback-button")
 						.bind("data-hide", player.currentEntry.addObserver((currentEntry) => {
 							return currentEntry?.disc.album.album_id === album.album_id;
 						}))
 						.add(makePlayIcon())
 						.on("click", (event) => {
-							player.play(context, { album: index, disc: 0, track: 0 }, 0);
+							player.playArtist(context, albumIndex);
 						}))
 					))
 				.render();
@@ -2071,7 +2071,7 @@ let updateviewforuri = (uri: string): void => {
 						}))
 						.add(makePlayIcon())
 						.on("click", (event) => {
-							player.play(context, { disc: 0, track: 0 }, 0);
+							player.playAlbum(context);
 						}))
 						.render();
 					mediaGrid__content.appendChild(widget);
