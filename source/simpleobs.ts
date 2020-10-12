@@ -34,6 +34,22 @@ export class ObservableClass<A> {
 	}
 }
 
+type TupleOf<A extends any[]> = [...A];
+export type ObservableClassTuple<A extends TupleOf<any>> = {
+	[B in keyof A]: ObservableClass<A[B]>;
+};
+
+export function computed<A extends TupleOf<any>, B>(computer: (...values: TupleOf<A>) => B, ...observables: TupleOf<ObservableClassTuple<A>>): ObservableClass<B> {
+	let observable = new ObservableClass(computer(...observables.map((observable) => observable.getState()) as [...A]));
+	let updater = () => {
+		observable.updateState(computer(...observables.map((observable) => observable.getState()) as [...A]));
+	};
+	for (let observable of observables) {
+		observable.addObserver(updater);
+	}
+	return observable;
+}
+
 export interface ArrayObserver<A> {
 	onappend?(state: A): void,
 	onsplice?(state: A, index: number): void,

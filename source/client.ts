@@ -3,7 +3,7 @@ import * as utils from "./utils";
 import * as languages from "./languages";
 import { AuthToken } from "./database";
 import * as session from "./browserMediaSession";
-import { ArrayObservable, Observable, ObservableClass } from "./simpleobs";
+import { ArrayObservable, computed, Observable, ObservableClass } from "./simpleobs";
 import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
@@ -1766,7 +1766,7 @@ chromecast.appendChild(slider_wrapper);
 
 const makeTag = (content: string) => xml.element("div.media-tag")
 	.add(xml.text(content));
-function makeAlbum(album: ContextAlbum, playback: xml.XElement): xml.XElement {
+function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 	let duration_ms = 0;
 	for (let disc of album.discs) {
 		for (let track of disc.tracks) {
@@ -1780,12 +1780,42 @@ function makeAlbum(album: ContextAlbum, playback: xml.XElement): xml.XElement {
 		`${album.year}`,
 		format_duration(duration_ms)
 	];
+	let isContext = computed((contextPath) => {
+		if (!is.present(contextPath)) {
+			return false;
+		}
+		if (contextPath[contextPath.length - 3] !== album.album_id) {
+			return false;
+		}
+		return true;
+	}, player.contextPath);
+	let isPlaying = computed((isContext, playback) => {
+		return isContext && playback;
+	}, isContext, player.playback);
 	return xml.element("div.media-widget")
 		.add(xml.element("div.media-widget__artwork")
 			.add(is.absent(album.artwork) ? undefined : xml.element("img.media-widget__image")
 				.set("src", `/files/${album.artwork.file_id}/?token=${token}`)
 			)
-			.add(playback)
+			.add(xml.element("div.playback-button")
+				.add(makePlayIcon()
+					.bind("data-hide", isPlaying.addObserver(a => a))
+				)
+				.add(makePauseIcon()
+					.bind("data-hide", isPlaying.addObserver(a => !a))
+				)
+				.on("click", (event) => {
+					if (isPlaying.getState()) {
+						player.pause();
+					} else {
+						if (isContext.getState()) {
+							player.resume();
+						} else {
+							play();
+						}
+					}
+				})
+			)
 		)
 		.add(xml.element("div.media-widget__metadata")
 			.add(xml.element("div.media-widget__titles")
@@ -2065,15 +2095,9 @@ let updateviewforuri = (uri: string): void => {
 					.render();
 				content.appendChild(mediaGrid);
 				let mediaGrid__content = xml.element("div.media-grid__content")
-					.add(...context.albums.map((album, albumIndex) => makeAlbum(album, xml.element("div.playback-button")
-						.bind("data-hide", player.currentEntry.addObserver((currentEntry) => {
-							return currentEntry?.disc.album.album_id === album.album_id;
-						}))
-						.add(makePlayIcon())
-						.on("click", (event) => {
-							player.playArtist(context, albumIndex);
-						}))
-					))
+					.add(...context.albums.map((album, albumIndex) => {
+						return makeAlbum(album, () => player.playArtist(context, albumIndex));
+					}))
 				.render();
 				mediaGrid.appendChild(mediaGrid__content);
 			}
@@ -2090,14 +2114,7 @@ let updateviewforuri = (uri: string): void => {
 				mediaGrid.appendChild(mediaGrid__content);
 				for (let album of response.appearances) {
 					let context = translateAlbumResponse(album);
-					let widget = makeAlbum(context, xml.element("div.playback-button")
-						.bind("data-hide", player.currentEntry.addObserver((currentEntry) => {
-							return currentEntry?.disc.album.album_id === album.album_id;
-						}))
-						.add(makePlayIcon())
-						.on("click", (event) => {
-							player.playAlbum(context);
-						}))
+					let widget = makeAlbum(context, () => player.playAlbum(context))
 						.render();
 					mediaGrid__content.appendChild(widget);
 				}
