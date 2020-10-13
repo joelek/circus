@@ -2348,6 +2348,13 @@ let updateviewforuri = (uri: string): void => {
 						indices.seasonIndex = 0;
 					}
 				}
+			} else {
+				if (show.seasons.length > 0 && show.seasons[0].episodes.length > 0) {
+					indices = {
+						seasonIndex: 0,
+						episodeIndex: 0
+					};
+				}
 			}
 			return indices;
 		}
