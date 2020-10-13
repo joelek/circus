@@ -13,8 +13,8 @@ import * as sockets from "@joelek/ts-sockets";
 import * as stdlib from "@joelek/ts-stdlib";
 import { Episode, Movie, Track } from "../media/schema/objects";
 
-const DEBUG = false;
-const MEDIA_SERVER = "https://ap.joelek.se/";
+const DEBUG = true;
+const MEDIA_SERVER = "http://192.168.1.107";
 
 function getLanguage(language: string | undefined): string {
 	let entry = languages.db[language ?? "eng"] || languages.db["eng"];
@@ -445,11 +445,12 @@ class ChromecastPlayer {
 			if (is.present(status)) {
 				if (status.playerState === "PAUSED" || status.playerState === "PLAYING") {
 					this.mediaHandler.mediaSessionId.updateState(status.mediaSessionId);
-				} else {
-					this.mediaHandler.mediaSessionId.updateState(undefined);
 				}
-				if (status.playerState === "IDLE" && status.idleReason === "FINISHED") {
-					this.context.next();
+				if (status.playerState === "IDLE") {
+					this.mediaHandler.mediaSessionId.updateState(undefined);
+					if (status.idleReason === "FINISHED") {
+						this.context.next();
+					}
 				}
 			}
 		});
