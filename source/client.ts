@@ -118,7 +118,9 @@ player.currentEntry.addObserver((currentEntry) => {
 				title: movie.title,
 				artwork: is.absent(movie.artwork) ? undefined : [
 					{
-						src: `/files/${movie.artwork.file_id}/?token=${token}`
+						src: `/files/${movie.artwork.file_id}/?token=${token}`,
+						sizes: `${movie.artwork.width}x${movie.artwork.height}`,
+						type: movie.artwork.mime
 					}
 				]
 			});
