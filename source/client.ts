@@ -1828,6 +1828,9 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 		return isContext && playback;
 	}, isContext, player.playback);
 	return xml.element("div.media-widget")
+		.on("click", (event) => {
+			navigate(`audio/albums/${album.album_id}/`);
+		})
 		.add(xml.element("div.media-widget__artwork")
 			.add(is.absent(album.artwork) ? undefined : xml.element("img.media-widget__image")
 				.set("src", `/files/${album.artwork.file_id}/?token=${token}`)
@@ -1864,38 +1867,54 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 			.add(xml.element("div.media-widget__tags")
 				.add(...tags.map(makeTag))
 			)
-		).on("click", (event) => {
-			navigate(`audio/albums/${album.album_id}/`);
-		});
+		)
 }
-function makeMovie(movie: api_response.MovieResponse): xml.XElement {
-	let duration_ms = 0;
-	for (let movie_part of movie.movie_parts) {
-		duration_ms += movie_part.duration;
-	}
+function makeMovie(movie: Movie, play: () => void): xml.XElement {
 	let title = movie.title;
 	let subtitle = [].join(" \u2022 ");
 	let tags = [
 		"Movie",
 		`${movie.year}`,
-		format_duration(duration_ms)
+		format_duration(movie.file.duration_ms)
 	];
+	let isContext = computed((contextPath) => {
+		if (!is.present(contextPath)) {
+			return false;
+		}
+		if (contextPath[contextPath.length - 1] !== movie.movie_id) {
+			return false;
+		}
+		return true;
+	}, player.contextPath);
+	let isPlaying = computed((isContext, playback) => {
+		return isContext && playback;
+	}, isContext, player.playback);
 	return xml.element("div.media-widget")
 		.on("click", () => {
 			navigate(`video/movies/${movie.movie_id}/`)
 		})
 		.add(xml.element("div.media-widget__artwork")
 			.set("style", "padding-bottom: 150%;")
-			.add(is.absent(movie.poster_file_id) ? undefined : xml.element("img.media-widget__image")
-				.set("src", `/files/${movie.poster_file_id}/?token=${token}`)
+			.add(is.absent(movie.artwork) ? undefined : xml.element("img.media-widget__image")
+				.set("src", `/files/${movie.artwork.file_id}/?token=${token}`)
 			)
 			.add(xml.element("div.playback-button")
-				.bind("data-hide", player.currentEntry.addObserver((currentEntry) => {
-					return true;
-				}))
-				.add(makePlayIcon())
+				.add(makePlayIcon()
+					.bind("data-hide", isPlaying.addObserver(a => a))
+				)
+				.add(makePauseIcon()
+					.bind("data-hide", isPlaying.addObserver(a => !a))
+				)
 				.on("click", (event) => {
-					//player.play();
+					if (isPlaying.getState()) {
+						player.pause();
+					} else {
+						if (isContext.getState()) {
+							player.resume();
+						} else {
+							play();
+						}
+					}
 				})
 			)
 		)
@@ -1904,7 +1923,7 @@ function makeMovie(movie: api_response.MovieResponse): xml.XElement {
 				.add(xml.element("div.media-widget__title")
 					.add(xml.text(title))
 				)
-				.add(!subtitle ? undefined : xml.element("div.media-widget__subtitle")
+				.add(subtitle === "" ? undefined : xml.element("div.media-widget__subtitle")
 					.add(xml.text(subtitle))
 				)
 			)
@@ -1971,6 +1990,10 @@ function translateMovieResponse(rmovie: api_response.MovieResponse): Movie {
 		title: rmovie.title,
 		year: rmovie.year,
 		summary: rmovie.summary ?? "",
+		artwork: is.absent(rmovie.poster_file_id) ? undefined : {
+			file_id: rmovie.poster_file_id,
+			mime: "image/jpg"
+		},
 		file: {
 			file_id: rmovie.movie_parts[0].file_id,
 			mime: "video/mp4",
@@ -2453,8 +2476,9 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^video[/]movies[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/?token=${token}`, {}, (status, response) => {
+			let movies = response.movies.map(translateMovieResponse);
 			let element = xml.element("div.content")
-				.add(makeGrid(undefined, ...response.movies.map(makeMovie)));
+				.add(makeGrid(undefined, ...movies.map((movie) => makeMovie(movie, () => player.playMovie(movie)))));
 			mount.appendChild(element.render());
 		});
 	} else if ((parts = /^video[/]cues[/](.*)/.exec(uri)) !== null) {

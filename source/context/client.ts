@@ -385,6 +385,10 @@ export class ContextClient {
 		return this.play(context, index);
 	}
 
+	playMovie(context: schema.objects.ContextMovie): void {
+		this.play(context, 0);
+	}
+
 	play(context: schema.objects.Context, index: number): void {
 		this.tsc.send("SetContext", {
 			context
