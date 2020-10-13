@@ -16,12 +16,15 @@ import { Episode, Movie, Track } from "../media/schema/objects";
 const DEBUG = false;
 const MEDIA_SERVER = "https://ap.joelek.se";
 
-function getLanguage(language: string | undefined): string {
-	let entry = languages.db[language ?? "eng"] || languages.db["eng"];
-	return [
-		entry.iso639_1,
-		entry.iso3166_1
-	].join("-");
+function getLanguage(language: string | undefined): { language: string, name: string } {
+	let entry =  languages.db[language ?? "eng"] ?? languages.db["eng"];
+	return {
+		language: [
+			entry.iso639_1,
+			entry.iso3166_1
+		].join("-"),
+		name: entry.title
+	};
 }
 
 function makeMediaInformation(item: Episode | Movie | Track, token: string): schema.objects.MediaInformation {
@@ -41,7 +44,16 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 					show.title,
 					utils.formatSeasonEpisode(season.number, episode.number)
 				].join(" \u2022 ")
-			}
+			},
+			tracks: episode.subtitles.map((subtitle, subtitleIndex) => ({
+				...getLanguage(subtitle.language),
+				trackId: subtitleIndex,
+				type: "TEXT",
+				trackType: "TEXT",
+				trackContentId: `${MEDIA_SERVER}/files/${subtitle.file_id}/?token=${token}`,
+				trackContentType: subtitle.mime,
+				subtype: "SUBTITLES"
+			}))
 		};
 	} else if (Movie.is(item)) {
 		let movie = item;
@@ -58,7 +70,16 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 						url: `${MEDIA_SERVER}/files/${movie.artwork.file_id}/?token=${token}`
 					}
 				]
-			}
+			},
+			tracks: movie.subtitles.map((subtitle, subtitleIndex) => ({
+				...getLanguage(subtitle.language),
+				trackId: subtitleIndex,
+				type: "TEXT",
+				trackType: "TEXT",
+				trackContentId: `${MEDIA_SERVER}/files/${subtitle.file_id}/?token=${token}`,
+				trackContentType: subtitle.mime,
+				subtype: "SUBTITLES"
+			}))
 		};
 	} else if (Track.is(item)) {
 		let track = item;
@@ -493,11 +514,36 @@ class ChromecastPlayer {
 				let currentLocalEntry = this.context.currentLocalEntry.getState();
 				let token = this.context.token.getState();
 				if (is.present(transportId) && is.present(currentLocalEntry) && is.present(token)) {
+					let media = makeMediaInformation(currentLocalEntry, token);
+					let activeTrackIds: number[] | undefined;
+					if (is.present(media.tracks)) {
+						let swe = media.tracks.find((track) => {
+							return track.language === "sv-SE";
+						});
+						if (is.present(swe)) {
+							activeTrackIds = [ swe.trackId ];
+						} else {
+							let eng = media.tracks.find((track) => {
+								return track.language === "en-US";
+							});
+							if (is.present(eng)) {
+								activeTrackIds = [ eng.trackId ];
+							} else {
+								let jpn = media.tracks.find((track) => {
+									return track.language === "ja-JP";
+								});
+								if (is.present(jpn)) {
+									activeTrackIds = [ jpn.trackId ];
+								}
+							}
+						}
+					}
 					this.mediaHandler.send("LOAD", {
 						type: "LOAD",
 						requestId: -1,
-						media: makeMediaInformation(currentLocalEntry, token),
-						autoplay: false
+						media: media,
+						autoplay: false,
+						activeTrackIds: activeTrackIds
 					});
 				}
 			};

@@ -16,7 +16,18 @@
 		contentType: string,
 		metadata?: GenericMediaMetadata | MovieMediaMetadata | TvShowMediaMetadata | MusicTrackMediaMetadata | PhotoMediaMetadata,
 		duration?: number,
-		customData?: { any }
+		customData?: { any },
+		tracks?: {
+			trackId: number,
+			type: "TEXT",
+			trackType: "TEXT",
+			trackContentId: string,
+			trackContentType: string,
+			subtype: "SUBTITLES",
+			language: string,
+			name?: string,
+			customData?: { any }
+		}[]
 	},
 
 	GenericMediaMetadata: {
@@ -80,7 +91,6 @@
 		currentTime: number,
 		supportedMediaCommands: number,
 		volume: Volume,
-		activeTrackIds?: any[],
 		customData?: { any }
 	}
 }

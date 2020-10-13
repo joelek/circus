@@ -1,8 +1,5 @@
 # @joelek/castaway
 
-* Introduce video segment type (episode or movie part).
-* Figure out how to serve multiple versions of same segment (HD, SD).
-
 ## CC
 
 curl -H "Content-Type: application/json" http://192.168.1.111:8008/apps/00000000-0000-0000-0000-000000000000 -X POST -i -d '{}'
@@ -23,12 +20,13 @@ ws://localhost:8008/v2/ipc
 protobuf wrapped json on: 8009
 
 
-## Iteration ideas
+## Iterations
 
-* Deltaindexer
-* Playlisting
-* Actors
-* Infinite streams (radio, channels)
-* Typed & lean API
-* Music genres
-* Stream history
+* Create new typed REST-API that re-uses the context entities.
+* Rewrite the indexer to support delta updates.
+* Add playlisting functionality for audio content.
+
+## Improvements
+
+* Ingest actors for video content and add actor entity.
+* Ingest music genres and create music genre pages.

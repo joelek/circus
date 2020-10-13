@@ -42,7 +42,18 @@ export type MediaInformation = {
 	"contentType": string,
 	"metadata"?: GenericMediaMetadata | MovieMediaMetadata | TvShowMediaMetadata | MusicTrackMediaMetadata | PhotoMediaMetadata,
 	"duration"?: number,
-	"customData"?: Record<string, undefined | any>
+	"customData"?: Record<string, undefined | any>,
+	"tracks"?: {
+		"trackId": number,
+		"type": "TEXT",
+		"trackType": "TEXT",
+		"trackContentId": string,
+		"trackContentType": string,
+		"subtype": "SUBTITLES",
+		"language": string,
+		"name"?: string,
+		"customData"?: Record<string, undefined | any>
+	}[]
 };
 
 export const MediaInformation = autoguard.Object.of<MediaInformation>({
@@ -70,6 +81,36 @@ export const MediaInformation = autoguard.Object.of<MediaInformation>({
 	"customData": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.Record.of(autoguard.Any)
+	),
+	"tracks": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Array.of(autoguard.Object.of<{
+			"trackId": number,
+			"type": "TEXT",
+			"trackType": "TEXT",
+			"trackContentId": string,
+			"trackContentType": string,
+			"subtype": "SUBTITLES",
+			"language": string,
+			"name"?: string,
+			"customData"?: Record<string, undefined | any>
+		}>({
+			"trackId": autoguard.Number,
+			"type": autoguard.StringLiteral.of("TEXT"),
+			"trackType": autoguard.StringLiteral.of("TEXT"),
+			"trackContentId": autoguard.String,
+			"trackContentType": autoguard.String,
+			"subtype": autoguard.StringLiteral.of("SUBTITLES"),
+			"language": autoguard.String,
+			"name": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.String
+			),
+			"customData": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.Record.of(autoguard.Any)
+			)
+		}))
 	)
 });
 
@@ -282,7 +323,6 @@ export type MediaStatus = {
 	"currentTime": number,
 	"supportedMediaCommands": number,
 	"volume": Volume,
-	"activeTrackIds"?: any[],
 	"customData"?: Record<string, undefined | any>
 };
 
@@ -311,10 +351,6 @@ export const MediaStatus = autoguard.Object.of<MediaStatus>({
 	"currentTime": autoguard.Number,
 	"supportedMediaCommands": autoguard.Number,
 	"volume": autoguard.Reference.of<Volume>(() => Volume),
-	"activeTrackIds": autoguard.Union.of(
-		autoguard.Undefined,
-		autoguard.Array.of(autoguard.Any)
-	),
 	"customData": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.Record.of(autoguard.Any)

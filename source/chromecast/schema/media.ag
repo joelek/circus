@@ -5,7 +5,8 @@
 		media: MediaInformation,
 		autoplay?: boolean,
 		currentTime?: number,
-		customData?: { any }
+		customData?: { any },
+		activeTrackIds?: number[]
 	},
 
 	PAUSE: {

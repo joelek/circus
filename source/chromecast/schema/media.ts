@@ -9,7 +9,8 @@ export type LOAD = {
 	"media": MediaInformation,
 	"autoplay"?: boolean,
 	"currentTime"?: number,
-	"customData"?: Record<string, undefined | any>
+	"customData"?: Record<string, undefined | any>,
+	"activeTrackIds"?: number[]
 };
 
 export const LOAD = autoguard.Object.of<LOAD>({
@@ -27,6 +28,10 @@ export const LOAD = autoguard.Object.of<LOAD>({
 	"customData": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.Record.of(autoguard.Any)
+	),
+	"activeTrackIds": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Array.of(autoguard.Number)
 	)
 });
 

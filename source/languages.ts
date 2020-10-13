@@ -16,6 +16,13 @@ const db: { [key: string]: { title: string, iso639_1: string, iso3166_1: string 
 	}
 };
 
+const pref = [
+	"swe",
+	"eng",
+	"jpn"
+];
+
 export {
-	db
+	db,
+	pref
 };
