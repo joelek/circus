@@ -85,7 +85,8 @@ export type TrackBase = {
 	"title": string,
 	"disc": DiscBase,
 	"artists": ArtistBase[],
-	"file": AudioFile
+	"file": AudioFile,
+	"last_stream_date"?: number
 };
 
 export const TrackBase = autoguard.Object.of<TrackBase>({
@@ -93,7 +94,11 @@ export const TrackBase = autoguard.Object.of<TrackBase>({
 	"title": autoguard.String,
 	"disc": autoguard.Reference.of<DiscBase>(() => DiscBase),
 	"artists": autoguard.Array.of(autoguard.Reference.of<ArtistBase>(() => ArtistBase)),
-	"file": autoguard.Reference.of<AudioFile>(() => AudioFile)
+	"file": autoguard.Reference.of<AudioFile>(() => AudioFile),
+	"last_stream_date": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Number
+	)
 });
 
 export type Track = TrackBase & {};
@@ -110,7 +115,8 @@ export type MovieBase = {
 	"summary": string,
 	"artwork"?: ImageFile,
 	"file": VideoFile,
-	"subtitles": SubtitleFile[]
+	"subtitles": SubtitleFile[],
+	"last_stream_date"?: number
 };
 
 export const MovieBase = autoguard.Object.of<MovieBase>({
@@ -123,7 +129,11 @@ export const MovieBase = autoguard.Object.of<MovieBase>({
 		autoguard.Reference.of<ImageFile>(() => ImageFile)
 	),
 	"file": autoguard.Reference.of<VideoFile>(() => VideoFile),
-	"subtitles": autoguard.Array.of(autoguard.Reference.of<SubtitleFile>(() => SubtitleFile))
+	"subtitles": autoguard.Array.of(autoguard.Reference.of<SubtitleFile>(() => SubtitleFile)),
+	"last_stream_date": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Number
+	)
 });
 
 export type Movie = MovieBase & {};
@@ -188,7 +198,8 @@ export type EpisodeBase = {
 	"number": number,
 	"file": VideoFile,
 	"subtitles": SubtitleFile[],
-	"season": SeasonBase
+	"season": SeasonBase,
+	"last_stream_date"?: number
 };
 
 export const EpisodeBase = autoguard.Object.of<EpisodeBase>({
@@ -198,7 +209,11 @@ export const EpisodeBase = autoguard.Object.of<EpisodeBase>({
 	"number": autoguard.Number,
 	"file": autoguard.Reference.of<VideoFile>(() => VideoFile),
 	"subtitles": autoguard.Array.of(autoguard.Reference.of<SubtitleFile>(() => SubtitleFile)),
-	"season": autoguard.Reference.of<SeasonBase>(() => SeasonBase)
+	"season": autoguard.Reference.of<SeasonBase>(() => SeasonBase),
+	"last_stream_date": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Number
+	)
 });
 
 export type Episode = EpisodeBase & {};

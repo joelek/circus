@@ -2319,57 +2319,63 @@ let updateviewforuri = (uri: string): void => {
 		});
 		mount.appendChild(d3);
 	} else if ((parts = /^video[/]shows[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		function getNextEpisode(show: api_response.ShowResponse): api_response.EpisodeResponse & { season: number } {
-			let episodes = show.seasons.reduce((array, season) => {
-				return array.concat(season.episodes.map((episodes) => {
-					return {
-						...episodes,
-						season: season.number
-					};
-				}));
-			}, new Array<api_response.EpisodeResponse & { season: number }>());
-			let lastIndex = episodes.length - 1;
-			for (let i = 0; i < episodes.length; i++) {
-				if ((episodes[i].streamed || 0) > (episodes[lastIndex].streamed || 0)) {
-					lastIndex = i;
+		function getNextEpisode(show: Show): undefined | { seasonIndex: number, episodeIndex: number } {
+			let indices: undefined | {
+				seasonIndex: number,
+				episodeIndex: number;
+			};
+			show.seasons.forEach((season, seasonIndex) => {
+				season.episodes.forEach((episode, episodeIndex) => {
+					if (is.present(episode.last_stream_date)) {
+						if (is.present(indices)) {
+							if (episode.last_stream_date < (show.seasons[indices.seasonIndex].episodes[indices.episodeIndex].last_stream_date ?? 0)) {
+								return;
+							}
+						}
+						indices = {
+							seasonIndex,
+							episodeIndex
+						};
+					}
+				});
+			});
+			if (is.present(indices)) {
+				indices.episodeIndex += 1;
+				if (indices.episodeIndex === show.seasons[indices.seasonIndex].episodes.length) {
+					indices.episodeIndex = 0;
+					indices.seasonIndex += 1;
+					if (indices.seasonIndex === show.seasons.length) {
+						indices.seasonIndex = 0;
+					}
 				}
 			}
-			let nextIndex = (lastIndex + 1) % episodes.length;
-			return episodes[nextIndex];
+			return indices;
 		}
 		req<api_response.ApiRequest, api_response.ShowResponse>(`/api/video/shows/${parts[1]}/?token=${token}`, {}, (status, response) => {
+			let show = translateShowResponse(response);
 			let d = document.createElement('div');
 			d.innerText = `${response.title}`;
 			mount.appendChild(d);
-/* 			let context: schema.objects.Context = response.seasons.reduce((files, season) => {
-					files.push(...season.episodes.map(episode => {
-						return {
-							file_id: episode.file_id,
-							title: episode.title,
-							subtitle: [response.title, utils.formatSeasonEpisode(season.number, episode.number)].join(" \u2022 ")
-						};
-					}));
-					return files;
-				}, new Array<schema.objects.ContextItem>()); */
-			let nextEpisode = getNextEpisode(response);
-			{
+			const indices = getNextEpisode(show);
+			if (is.present(indices)) {
+				let nextEpisode = show.seasons[indices.seasonIndex].episodes[indices.episodeIndex];
 				let d2 = document.createElement("div");
 				d2.classList.add("group");
 				let h4 = document.createElement("h4");
 				h4.style.setProperty("font-size", "12px");
-				h4.textContent = "s" + nextEpisode.season.toString().padStart(2, "0") + "e" + nextEpisode.number.toString().padStart(2, "0") + ": " + nextEpisode.title;
+				h4.textContent = utils.formatSeasonEpisode(nextEpisode.season.number, nextEpisode.number) + ": " + nextEpisode.title;
 				let p1 = document.createElement("p");
 				p1.style.setProperty("font-size", "16px");
 				p1.textContent = nextEpisode.summary;
 				let p2 = document.createElement("p");
 				p2.style.setProperty("font-size", "16px");
 				p2.textContent = [
-					format_duration(nextEpisode.duration)
+					format_duration(nextEpisode.file.duration_ms)
 				].join(" \u2022 ");
 				let button = document.createElement("button");
 				button.textContent = "Watch";
 				button.addEventListener("click", () => {
-					//player.play(context, context.findIndex(entry => entry.file_id === nextEpisode.file_id), 0);
+					player.playShow(show, indices.seasonIndex, indices.episodeIndex);
 				});
 				d2.appendChild(h4);
 				d2.appendChild(p1);
@@ -2377,20 +2383,22 @@ let updateviewforuri = (uri: string): void => {
 				d2.appendChild(button);
 				d.appendChild(d2);
 			}
-			for (let season of response.seasons) {
+			for (let seasonIndex = 0; seasonIndex < show.seasons.length; seasonIndex++) {
+				let season = show.seasons[seasonIndex];
 				let d = document.createElement('div');
 				d.style.setProperty('font-size', '24px');
 				d.innerText = `${season.number}`;
 				mount.appendChild(d);
-				for (let episode of season.episodes) {
+				for (let episodeIndex = 0; episodeIndex < season.episodes.length; episodeIndex++) {
+					let episode = season.episodes[episodeIndex];
 					let d2 = document.createElement('div');
-					if (episode.streamed != null) {
+					if (is.present(episode.last_stream_date)) {
 						d2.classList.add("watched");
 					}
 					d2.style.setProperty('font-size', '16px');
-					d2.innerText = `${episode.title} ${format_duration(episode.duration)}`;
+					d2.innerText = `${episode.title} ${format_duration(episode.file.duration_ms)}`;
 					d2.addEventListener('click', () => {
-						//player.play(context, context.findIndex(entry => entry.file_id === episode.file_id), 0);
+						player.playShow(show, seasonIndex, episodeIndex);
 					});
 					mount.appendChild(d2);
 				}
