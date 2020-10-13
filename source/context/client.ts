@@ -149,9 +149,42 @@ export class ContextClient {
 							context.albums[albumIndex].discs[discIndex].disc_id,
 							context.albums[albumIndex].discs[discIndex].tracks[trackIndex].track_id
 						]);
+					} else if (schema.objects.ContextEpisode.is(context)) {
+						return this.contextPath.updateState([
+							context.episode_id
+						]);
 					} else if (schema.objects.ContextMovie.is(context)) {
 						return this.contextPath.updateState([
 							context.movie_id
+						]);
+					} else if (schema.objects.ContextShow.is(context)) {
+						let seasonIndex = 0;
+						let episodeIndex = currentIndex;
+						let show = context;
+						let seasons = show.seasons;
+						for (let d = 0; d < seasons.length; d++) {
+							let length = seasons[d].episodes.length;
+							if (episodeIndex >= length) {
+								seasonIndex += 1;
+								episodeIndex -= length;
+							} else {
+								break;
+							}
+						}
+						return this.contextPath.updateState([
+							context.show_id,
+							context.seasons[seasonIndex].season_id,
+							context.seasons[seasonIndex].episodes[episodeIndex].episode_id
+						]);
+					} else if (schema.objects.ContextSeason.is(context)) {
+						let episodeIndex = currentIndex;
+						return this.contextPath.updateState([
+							context.season_id,
+							context.episodes[episodeIndex].episode_id
+						]);
+					} else if (schema.objects.ContextTrack.is(context)) {
+						return this.contextPath.updateState([
+							context.track_id
 						]);
 					} else {
 						throw `Expected code to be unreachable!`;
