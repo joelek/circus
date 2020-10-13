@@ -4,16 +4,17 @@ import * as cast_message from "./cast_message";
 import * as mdns from "./mdns";
 import * as schema from "./schema";
 import * as is from "../is";
-import * as libdb from "../database";
-import * as data from "../data";
 import * as languages from "../languages";
 import * as observers from "../simpleobs";
+import * as utils from "../utils";
 import * as libcontext from "../context/client";
 import * as autoguard from "@joelek/ts-autoguard";
 import * as sockets from "@joelek/ts-sockets";
 import * as stdlib from "@joelek/ts-stdlib";
+import { Episode, Movie, Track } from "../media/schema/objects";
 
 const DEBUG = false;
+const MEDIA_SERVER = "https://ap.joelek.se/";
 
 function getLanguage(language: string | undefined): string {
 	let entry = languages.db[language ?? "eng"] || languages.db["eng"];
@@ -21,6 +22,66 @@ function getLanguage(language: string | undefined): string {
 		entry.iso639_1,
 		entry.iso3166_1
 	].join("-");
+}
+
+function makeMediaInformation(item: Episode | Movie | Track, token: string): schema.objects.MediaInformation {
+	let url = `${MEDIA_SERVER}/files/${item.file.file_id}/?token=${token}`;
+	if (Episode.is(item)) {
+		let episode = item;
+		let season = episode.season;
+		let show = season.show;
+		return {
+			contentId: url,
+			contentType: item.file.mime,
+			streamType: "BUFFERED",
+			metadata: {
+				metadataType: 0,
+				title: episode.title,
+				subtitle: [
+					show.title,
+					utils.formatSeasonEpisode(season.number, episode.number)
+				].join(" \u2022 ")
+			}
+		};
+	} else if (Movie.is(item)) {
+		let movie = item;
+		return {
+			contentId: url,
+			contentType: item.file.mime,
+			streamType: "BUFFERED",
+			metadata: {
+				metadataType: 0,
+				title: movie.title,
+				subtitle: [ movie.year ].join(" \u2022 "),
+				images: is.absent(movie.artwork) ? undefined : [
+					{
+						url: `${MEDIA_SERVER}/files/${movie.artwork.file_id}/?token=${token}`
+					}
+				]
+			}
+		};
+	} else if (Track.is(item)) {
+		let track = item;
+		let disc = track.disc;
+		let album = disc.album;
+		return {
+			contentId: url,
+			contentType: item.file.mime,
+			streamType: "BUFFERED",
+			metadata: {
+				metadataType: 0,
+				title: track.title,
+				subtitle: track.artists.map((artist) => artist.title).join(" \u2022 "),
+				images: is.absent(album.artwork) ? undefined : [
+					{
+						url: `${MEDIA_SERVER}/files/${album.artwork.file_id}/?token=${token}`
+					}
+				]
+			}
+		};
+	} else {
+		throw `Expected code to be unreachable!`;
+	}
 }
 
 type Listener = (hostname: string) => void;
@@ -431,19 +492,10 @@ class ChromecastPlayer {
 				let currentLocalEntry = this.context.currentLocalEntry.getState();
 				let token = this.context.token.getState();
 				if (is.present(transportId) && is.present(currentLocalEntry) && is.present(token)) {
-					let url = `${tls ? "https:" : "http:"}//${socket.localAddress}/files/${currentLocalEntry.file.file_id}/?token=${token}`;
 					this.mediaHandler.send("LOAD", {
 						type: "LOAD",
 						requestId: -1,
-						media: {
-							contentId: url,
-							contentType: currentLocalEntry.file.mime,
-							streamType: "BUFFERED",
-							metadata: {
-								metadataType: 0,
-								title: currentLocalEntry.title
-							}
-						},
+						media: makeMediaInformation(currentLocalEntry, token),
 						autoplay: false
 					});
 				}
