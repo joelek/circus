@@ -92,7 +92,33 @@ let mediaPlayerTitle = new ObservableClass("");
 let mediaPlayerSubtitle = new ObservableClass("");
 player.currentEntry.addObserver((currentEntry) => {
 	if (is.present(currentEntry)) {
-		if (Track.is(currentEntry)) {
+		if (Episode.is(currentEntry)) {
+			let episode = currentEntry;
+			let season = episode.season;
+			let show = season.show;
+			mediaPlayerTitle.updateState(episode.title);
+			mediaPlayerSubtitle.updateState([
+				show.title,
+				utils.formatSeasonEpisode(season.number, episode.number)
+			].join(" \u2022 "));
+			session.setMetadata({
+				title: episode.title
+			});
+		} else if (Movie.is(currentEntry)) {
+			let movie = currentEntry;
+			mediaPlayerTitle.updateState(movie.title);
+			mediaPlayerSubtitle.updateState([ movie.year ].join(" \u2022 "));
+			session.setMetadata({
+				title: movie.title,
+				artwork: is.absent(movie.artwork) ? undefined : [
+					{
+						src: `/files/${movie.artwork.file_id}/?token=${token}`,
+						sizes: `${movie.artwork.width}x${movie.artwork.height}`,
+						type: movie.artwork.mime
+					}
+				]
+			});
+		} else if (Track.is(currentEntry)) {
 			let track = currentEntry;
 			let disc = track.disc;
 			let album = disc.album;
@@ -109,32 +135,6 @@ player.currentEntry.addObserver((currentEntry) => {
 						type: album.artwork.mime
 					}
 				]
-			});
-		} else if (Movie.is(currentEntry)) {
-			let movie = currentEntry;
-			mediaPlayerTitle.updateState(movie.title);
-			mediaPlayerSubtitle.updateState([ movie.year ].join(" \u2022 "));
-			session.setMetadata({
-				title: movie.title,
-				artwork: is.absent(movie.artwork) ? undefined : [
-					{
-						src: `/files/${movie.artwork.file_id}/?token=${token}`,
-						sizes: `${movie.artwork.width}x${movie.artwork.height}`,
-						type: movie.artwork.mime
-					}
-				]
-			});
-		} else if (Episode.is(currentEntry)) {
-			let episode = currentEntry;
-			let season = episode.season;
-			let show = season.show;
-			mediaPlayerTitle.updateState(episode.title);
-			mediaPlayerSubtitle.updateState([
-				show.title,
-				utils.formatSeasonEpisode(season.number, episode.number)
-			].join(" \u2022 "));
-			session.setMetadata({
-				title: episode.title
 			});
 		} else {
 			throw `Expected code to be unreachable!`;
