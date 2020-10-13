@@ -8,7 +8,7 @@ import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Movie, MovieBase, SeasonBase, Show, ShowBase, Track, TrackBase } from "./media/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Movie, MovieBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase } from "./media/schema/objects";
 
 
 
@@ -1680,6 +1680,16 @@ let mp = xml.element("div.content")
 						navigate(`audio/albums/${context.album_id}/`);
 					} else if (Artist.is(context)) {
 						navigate(`audio/artists/${context.artist_id}/`);
+					} else if (Episode.is(context)) {
+						navigate(`video/episodes/${context.episode_id}/`);
+					} else if (Movie.is(context)) {
+						navigate(`video/movies/${context.movie_id}/`);
+					} else if (Season.is(context)) {
+						navigate(`video/seasons/${context.season_id}/`);
+					} else if (Show.is(context)) {
+						navigate(`video/shows/${context.show_id}/`);
+					} else if (Track.is(context)) {
+						navigate(`audio/tracks/${context.track_id}/`);
 					} else {
 						throw `Expected code to be unreachable!`;
 					}
