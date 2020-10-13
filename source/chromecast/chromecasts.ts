@@ -13,8 +13,8 @@ import * as sockets from "@joelek/ts-sockets";
 import * as stdlib from "@joelek/ts-stdlib";
 import { Episode, Movie, Track } from "../media/schema/objects";
 
-const DEBUG = true;
-const MEDIA_SERVER = "http://192.168.1.107";
+const DEBUG = false;
+const MEDIA_SERVER = "https://ap.joelek.se";
 
 function getLanguage(language: string | undefined): string {
 	let entry = languages.db[language ?? "eng"] || languages.db["eng"];
