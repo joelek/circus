@@ -231,11 +231,20 @@ export const AudioFile = autoguard.Intersection.of(
 	})
 );
 
-export type ImageFile = File & {};
+export type ImageFile = File & {
+	"height": number,
+	"width": number
+};
 
 export const ImageFile = autoguard.Intersection.of(
 	autoguard.Reference.of<File>(() => File),
-	autoguard.Object.of<{}>({})
+	autoguard.Object.of<{
+		"height": number,
+		"width": number
+	}>({
+		"height": autoguard.Number,
+		"width": autoguard.Number
+	})
 );
 
 export type SubtitleFile = File & {

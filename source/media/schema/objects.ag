@@ -98,7 +98,8 @@
 	},
 
 	ImageFile: File & {
-
+		height: number,
+		width: number
 	},
 
 	SubtitleFile: File & {

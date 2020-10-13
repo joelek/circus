@@ -104,7 +104,9 @@ player.currentEntry.addObserver((currentEntry) => {
 				album: album.title,
 				artwork: is.absent(album.artwork) ? undefined : [
 					{
-						src: `/files/${album.artwork.file_id}/?token=${token}`
+						src: `/files/${album.artwork.file_id}/?token=${token}`,
+						sizes: `${album.artwork.width}x${album.artwork.height}`,
+						type: album.artwork.mime
 					}
 				]
 			});
@@ -1992,7 +1994,9 @@ function translateMovieResponse(rmovie: api_response.MovieResponse): Movie {
 		summary: rmovie.summary ?? "",
 		artwork: is.absent(rmovie.poster_file_id) ? undefined : {
 			file_id: rmovie.poster_file_id,
-			mime: "image/jpg"
+			mime: "image/jpg",
+			height: 720,
+			width: 1080
 		},
 		file: {
 			file_id: rmovie.movie_parts[0].file_id,
@@ -2057,7 +2061,9 @@ function translateAlbumResponse(ralbum: api_response.AlbumResponse): ContextAlbu
 		})),
 		artwork: is.absent(ralbum.cover_file_id) ? undefined : {
 			file_id: ralbum.cover_file_id,
-			mime: "image/jpg"
+			mime: "image/jpg",
+			height: 1080,
+			width: 1080
 		}
 	};
 	return {
