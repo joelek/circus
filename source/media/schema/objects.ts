@@ -109,7 +109,8 @@ export type MovieBase = {
 	"year": number,
 	"summary": string,
 	"artwork"?: ImageFile,
-	"file": VideoFile
+	"file": VideoFile,
+	"subtitles": SubtitleFile[]
 };
 
 export const MovieBase = autoguard.Object.of<MovieBase>({
@@ -121,7 +122,8 @@ export const MovieBase = autoguard.Object.of<MovieBase>({
 		autoguard.Undefined,
 		autoguard.Reference.of<ImageFile>(() => ImageFile)
 	),
-	"file": autoguard.Reference.of<VideoFile>(() => VideoFile)
+	"file": autoguard.Reference.of<VideoFile>(() => VideoFile),
+	"subtitles": autoguard.Array.of(autoguard.Reference.of<SubtitleFile>(() => SubtitleFile))
 });
 
 export type Movie = MovieBase & {};

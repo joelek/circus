@@ -8,7 +8,7 @@ import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, Artist, Episode, Movie, Track } from "./media/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Movie, MovieBase, SeasonBase, Show, ShowBase, Track, TrackBase } from "./media/schema/objects";
 
 
 
@@ -1965,8 +1965,66 @@ function pluralize(amount: number, zero: string, one: string, many: string): str
 }
 
 // TODO: Make API and Context consistent.
+function translateMovieResponse(rmovie: api_response.MovieResponse): Movie {
+	let movie: MovieBase = {
+		movie_id: rmovie.movie_id,
+		title: rmovie.title,
+		year: rmovie.year,
+		summary: rmovie.summary ?? "",
+		file: {
+			file_id: rmovie.movie_parts[0].file_id,
+			mime: "video/mp4",
+			duration_ms: rmovie.movie_parts[0].duration
+		},
+		subtitles: rmovie.movie_parts[0].subtitles.map((rsubtitle) => ({
+			file_id: rsubtitle.file_id,
+			mime: "text/vtt",
+			language: rsubtitle.language ?? undefined
+		}))
+	};
+	return movie;
+}
+function translateShowResponse(rshow: api_response.ShowResponse): Show {
+	let show: ShowBase = {
+		show_id: rshow.show_id,
+		title: rshow.title
+	};
+	return {
+		...show,
+		seasons: rshow.seasons.map((rseason) => {
+			let season: SeasonBase = {
+				season_id: rseason.season_id,
+				number: rseason.number,
+				show: show
+			};
+			return {
+				...season,
+				episodes: rseason.episodes.map((repisode) => {
+					let episode: EpisodeBase = {
+						episode_id: repisode.episode_id,
+						title: repisode.title,
+						summary: repisode.summary ?? "",
+						number: repisode.number,
+						file: {
+							file_id: repisode.file_id,
+							mime: "video/mp4",
+							duration_ms: repisode.duration
+						},
+						subtitles: repisode.subtitles.map((rsubtitle) => ({
+							file_id: rsubtitle.file_id,
+							mime: "text/vtt",
+							language: rsubtitle.language ?? undefined
+						})),
+						season: season
+					};
+					return episode;
+				})
+			}
+		})
+	};
+}
 function translateAlbumResponse(ralbum: api_response.AlbumResponse): ContextAlbum {
-	let album = {
+	let album: AlbumBase = {
 		album_id: ralbum.album_id,
 		title: ralbum.title,
 		year: ralbum.year,
@@ -1982,38 +2040,42 @@ function translateAlbumResponse(ralbum: api_response.AlbumResponse): ContextAlbu
 	return {
 		...album,
 		discs: ralbum.discs.map((rdisc) => {
-			let disc = {
+			let disc: DiscBase = {
 				disc_id: rdisc.disc_id,
 				album: album
 			};
 			return {
 				...disc,
-				tracks: rdisc.tracks.map((rtrack) => ({
-					track_id: rtrack.track_id,
-					title: rtrack.title,
-					disc: disc,
-					artists: rtrack.artists.map((rartist) => ({
-						artist_id: rartist.artist_id,
-						title: rartist.title
-					})),
-					file: {
-						file_id: rtrack.file_id,
-						mime: "audio/mp4",
-						duration_ms: rtrack.duration
-					}
-				}))
+				tracks: rdisc.tracks.map((rtrack) => {
+					let track: TrackBase = {
+						track_id: rtrack.track_id,
+						title: rtrack.title,
+						disc: disc,
+						artists: rtrack.artists.map((rartist) => ({
+							artist_id: rartist.artist_id,
+							title: rartist.title
+						})),
+						file: {
+							file_id: rtrack.file_id,
+							mime: "audio/mp4",
+							duration_ms: rtrack.duration
+						}
+					};
+					return track;
+				})
 			}
 		})
 	};
 }
-// TODO: Make API and Context consistent.
 function translateArtistResponse(rartist: api_response.ArtistResponse): ContextArtist {
-	let artist = {
+	let artist: ArtistBase = {
 		artist_id: rartist.artist_id,
 		title: rartist.title,
+	};
+	return {
+		...artist,
 		albums: rartist.albums.map(translateAlbumResponse)
 	};
-	return artist;
 }
 
 let updateviewforuri = (uri: string): void => {

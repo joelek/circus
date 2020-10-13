@@ -47,7 +47,8 @@
 		year: number,
 		summary: string,
 		artwork?: ImageFile,
-		file: VideoFile
+		file: VideoFile,
+		subtitles: SubtitleFile[]
 	},
 
 	Movie: MovieBase & {
