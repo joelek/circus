@@ -37,6 +37,16 @@ export class ContextClient {
 	readonly canPlayNext = new observers.ObservableClass(false);
 	readonly isCurrentEntryVideo = new observers.ObservableClass(false);
 
+	private play(context: schema.objects.Context, index: number): void {
+		this.tsc.send("SetContext", {
+			context
+		});
+		this.tsc.send("SetIndex", {
+			index
+		});
+		this.resume();
+	}
+
 	constructor(url: string, factory: typesockets.WebSocketFactory = (url) => new WebSocket(url)) {
 		this.tsc = new typesockets.TypeSocketClient(url, factory, schema.messages.Autoguard);
 		this.context.addObserver((context) => {
@@ -357,10 +367,10 @@ export class ContextClient {
 		});
 	}
 
-	playAlbum(context: schema.objects.ContextAlbum, discIndex?: number, trackIndex?: number): void {
+	playAlbum(album: schema.objects.ContextAlbum, discIndex?: number, trackIndex?: number): void {
 		let index = 0;
 		if (is.present(discIndex)) {
-			let discs = context.discs;
+			let discs = album.discs;
 			if (discIndex < 0 || discIndex >= discs.length) {
 				throw `Expected ${discIndex} to be a number between 0 and ${discs.length}!`;
 			}
@@ -373,13 +383,13 @@ export class ContextClient {
 				index += trackIndex;
 			}
 		}
-		return this.play(context, index);
+		return this.play(album, index);
 	}
 
-	playArtist(context: schema.objects.ContextArtist, albumIndex?: number, discIndex?: number, trackIndex?: number): void {
+	playArtist(artist: schema.objects.ContextArtist, albumIndex?: number, discIndex?: number, trackIndex?: number): void {
 		let index = 0;
 		if (is.present(albumIndex)) {
-			let albums = context.albums;
+			let albums = artist.albums;
 			if (albumIndex < 0 || albumIndex >= albums.length) {
 				throw `Expected ${albumIndex} to be a number between 0 and ${albums.length}!`;
 			}
@@ -399,21 +409,50 @@ export class ContextClient {
 				}
 			}
 		}
-		return this.play(context, index);
+		return this.play(artist, index);
 	}
 
-	playMovie(context: schema.objects.ContextMovie): void {
-		this.play(context, 0);
+	playEpisode(episode: schema.objects.ContextEpisode): void {
+		this.play(episode, 0);
 	}
 
-	play(context: schema.objects.Context, index: number): void {
-		this.tsc.send("SetContext", {
-			context
-		});
-		this.tsc.send("SetIndex", {
-			index
-		});
-		this.resume();
+	playMovie(movie: schema.objects.ContextMovie): void {
+		this.play(movie, 0);
+	}
+
+	playSeason(season: schema.objects.ContextSeason, episodeIndex?: number): void {
+		let index = 0;
+		if (is.present(episodeIndex)) {
+			let episodes = season.episodes;
+			if (episodeIndex < 0 || episodeIndex >= episodes.length) {
+				throw `Expected ${episodeIndex} to be a number between 0 and ${episodes.length}!`;
+			}
+			index += episodeIndex;
+		}
+		return this.play(season, index);
+	}
+
+	playShow(show: schema.objects.ContextShow, seasonIndex?: number, episodeIndex?: number): void {
+		let index = 0;
+		if (is.present(seasonIndex)) {
+			let seasons = show.seasons;
+			if (seasonIndex < 0 || seasonIndex >= seasons.length) {
+				throw `Expected ${seasonIndex} to be a number between 0 and ${seasons.length}!`;
+			}
+			index += seasons.slice(0, seasonIndex).reduce((sum, season) => sum + season.episodes.length, 0);
+			if (is.present(episodeIndex)) {
+				let episodes = seasons[seasonIndex].episodes;
+				if (episodeIndex < 0 || episodeIndex >= episodes.length) {
+					throw `Expected ${episodeIndex} to be a number between 0 and ${episodes.length}!`;
+				}
+				index += episodeIndex;
+			}
+		}
+		return this.play(show, index);
+	}
+
+	playTrack(track: schema.objects.ContextTrack): void {
+		this.play(track, 0);
 	}
 
 	resume(): void {
