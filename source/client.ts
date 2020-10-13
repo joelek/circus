@@ -8,7 +8,8 @@ import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, Artist } from "./media/schema/objects";
+import { Album, Artist, Episode, Movie, Track } from "./media/schema/objects";
+
 
 
 
@@ -91,19 +92,53 @@ let mediaPlayerTitle = new ObservableClass("");
 let mediaPlayerSubtitle = new ObservableClass("");
 player.currentEntry.addObserver((currentEntry) => {
 	if (is.present(currentEntry)) {
-		mediaPlayerTitle.updateState(currentEntry.title);
-		mediaPlayerSubtitle.updateState(currentEntry.artists.map((artist) => {
-			return artist.title;
-		}).join(" \u2022 "));
-		session.setMetadata({
-			title: currentEntry.title
-		});
+		if (Track.is(currentEntry)) {
+			let track = currentEntry;
+			let disc = track.disc;
+			let album = disc.album;
+			mediaPlayerTitle.updateState(track.title);
+			mediaPlayerSubtitle.updateState(track.artists.map((artist) => artist.title).join(" \u2022 "));
+			session.setMetadata({
+				title: track.title,
+				artist: track.artists.map((artist) => artist.title).join(" \u2022 "),
+				album: album.title,
+				artwork: is.absent(album.artwork) ? undefined : [
+					{
+						src: `/files/${album.artwork.file_id}/?token=${token}`
+					}
+				]
+			});
+		} else if (Movie.is(currentEntry)) {
+			let movie = currentEntry;
+			mediaPlayerTitle.updateState(movie.title);
+			mediaPlayerSubtitle.updateState([ movie.year ].join(" \u2022 "));
+			session.setMetadata({
+				title: movie.title,
+				artwork: is.absent(movie.artwork) ? undefined : [
+					{
+						src: `/files/${movie.artwork.file_id}/?token=${token}`
+					}
+				]
+			});
+		} else if (Episode.is(currentEntry)) {
+			let episode = currentEntry;
+			let season = episode.season;
+			let show = season.show;
+			mediaPlayerTitle.updateState(episode.title);
+			mediaPlayerSubtitle.updateState([
+				show.title,
+				utils.formatSeasonEpisode(season.number, episode.number)
+			].join(" \u2022 "));
+			session.setMetadata({
+				title: episode.title
+			});
+		} else {
+			throw `Expected code to be unreachable!`;
+		}
 	} else {
 		mediaPlayerTitle.updateState("");
 		mediaPlayerSubtitle.updateState("");
-		session.setMetadata({
-			title: ""
-		});
+		session.setMetadata({});
 	}
 });
 {

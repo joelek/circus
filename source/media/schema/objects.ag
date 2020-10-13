@@ -64,7 +64,9 @@
 	},
 
 	SeasonBase: {
-		season_id: string
+		season_id: string,
+		number: number,
+		show: ShowBase
 	},
 
 	Season: SeasonBase & {
@@ -75,8 +77,10 @@
 		episode_id: string,
 		title: string,
 		summary: string,
+		number: number,
 		file: VideoFile,
-		subtitles: SubtitleFile[]
+		subtitles: SubtitleFile[],
+		season: SeasonBase
 	},
 
 	Episode: EpisodeBase & {

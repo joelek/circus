@@ -5,9 +5,17 @@
 
 	ContextTrack: Track,
 
-	Context: ContextArtist | ContextAlbum,
+	ContextMovie: Movie,
 
-	ContextItem: ContextTrack,
+	ContextShow: Show,
+
+	ContextSeason: Season,
+
+	ContextEpisode: Episode,
+
+	Context: ContextAlbum | ContextArtist | ContextTrack | ContextMovie | ContextShow | ContextSeason | ContextEpisode,
+
+	ContextItem: ContextTrack | ContextMovie | ContextEpisode,
 
 	Device: {
 		id: string,

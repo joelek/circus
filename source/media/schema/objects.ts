@@ -155,11 +155,15 @@ export const Show = autoguard.Intersection.of(
 );
 
 export type SeasonBase = {
-	"season_id": string
+	"season_id": string,
+	"number": number,
+	"show": ShowBase
 };
 
 export const SeasonBase = autoguard.Object.of<SeasonBase>({
-	"season_id": autoguard.String
+	"season_id": autoguard.String,
+	"number": autoguard.Number,
+	"show": autoguard.Reference.of<ShowBase>(() => ShowBase)
 });
 
 export type Season = SeasonBase & {
@@ -179,16 +183,20 @@ export type EpisodeBase = {
 	"episode_id": string,
 	"title": string,
 	"summary": string,
+	"number": number,
 	"file": VideoFile,
-	"subtitles": SubtitleFile[]
+	"subtitles": SubtitleFile[],
+	"season": SeasonBase
 };
 
 export const EpisodeBase = autoguard.Object.of<EpisodeBase>({
 	"episode_id": autoguard.String,
 	"title": autoguard.String,
 	"summary": autoguard.String,
+	"number": autoguard.Number,
 	"file": autoguard.Reference.of<VideoFile>(() => VideoFile),
-	"subtitles": autoguard.Array.of(autoguard.Reference.of<SubtitleFile>(() => SubtitleFile))
+	"subtitles": autoguard.Array.of(autoguard.Reference.of<SubtitleFile>(() => SubtitleFile)),
+	"season": autoguard.Reference.of<SeasonBase>(() => SeasonBase)
 });
 
 export type Episode = EpisodeBase & {};
