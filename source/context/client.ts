@@ -67,10 +67,32 @@ export class ContextClient {
 						}
 					}
 					this.flattenedContext.updateState(files);
+				} else if (schema.objects.ContextEpisode.is(context)) {
+					let files = [] as schema.objects.ContextItem[];
+					let episode = context;
+					files.push(episode);
+					this.flattenedContext.updateState(files);
 				} else if (schema.objects.ContextMovie.is(context)) {
 					let files = [] as schema.objects.ContextItem[];
 					let movie = context;
 					files.push(movie);
+					this.flattenedContext.updateState(files);
+				} else if (schema.objects.ContextSeason.is(context)) {
+					let files = [] as schema.objects.ContextItem[];
+					let season = context;
+					files.push(...season.episodes);
+					this.flattenedContext.updateState(files);
+				} else if (schema.objects.ContextShow.is(context)) {
+					let files = [] as schema.objects.ContextItem[];
+					let show = context;
+					for (let season of show.seasons) {
+						files.push(...season.episodes);
+					}
+					this.flattenedContext.updateState(files);
+				} else if (schema.objects.ContextTrack.is(context)) {
+					let files = [] as schema.objects.ContextItem[];
+					let track = context;
+					files.push(track);
 					this.flattenedContext.updateState(files);
 				} else {
 					throw `Expected code to be unreachable!`;
