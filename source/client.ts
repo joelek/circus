@@ -2013,7 +2013,8 @@ function translateMovieResponse(rmovie: api_response.MovieResponse): Movie {
 			file_id: rsubtitle.file_id,
 			mime: "text/vtt",
 			language: rsubtitle.language ?? undefined
-		}))
+		})),
+		last_stream_date: rmovie.movie_parts[0].streamed ?? undefined
 	};
 	return movie;
 }
@@ -2048,7 +2049,8 @@ function translateShowResponse(rshow: api_response.ShowResponse): Show {
 							mime: "text/vtt",
 							language: rsubtitle.language ?? undefined
 						})),
-						season: season
+						season: season,
+						last_stream_date: repisode.streamed ?? undefined
 					};
 					return episode;
 				})
@@ -2094,7 +2096,8 @@ function translateAlbumResponse(ralbum: api_response.AlbumResponse): ContextAlbu
 							file_id: rtrack.file_id,
 							mime: "audio/mp4",
 							duration_ms: rtrack.duration
-						}
+						},
+						last_stream_date: undefined
 					};
 					return track;
 				})
