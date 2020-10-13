@@ -168,35 +168,29 @@ player.currentEntry.addObserver((currentEntry) => {
 		} else {
 			currentVideo.src = `/files/${currentLocalEntry.file.file_id}/?token=${token}`;
 		}
-		/*
-		let fid = currentLocalEntry.file_id;
 		while (currentVideo.lastChild != null) {
 			currentVideo.removeChild(currentVideo.lastChild);
 		}
-		if (gmetadata != null) {
-			let md = gmetadata[fid];
-			if (md != undefined) {
-				let defaultSubtitle = md.subtitles.find((subtitle) => subtitle.language === "swe") || md.subtitles.find((subtitle) => subtitle.language === "eng");
-				for (let i = 0; i < md.subtitles.length; i++) {
-					let st = md.subtitles[i];
-					let e = document.createElement('track');
-					if (st.language != null) {
-						let language = languages.db[st.language];
-						if (language != null) {
-							e.label = language.title;
-							e.srclang = language.iso639_1;
-							e.kind = "subtitles";
-						}
-						if (st === defaultSubtitle) {
-							e.setAttribute("default", "");
-						}
+		if (Movie.is(currentLocalEntry) || Episode.is(currentLocalEntry)) {
+			let subtitles = currentLocalEntry.subtitles;
+			let defaultSubtitle = subtitles.find((subtitle) => subtitle.language === "swe") ?? subtitles.find((subtitle) => subtitle.language === "eng");
+			for (let subtitle of subtitles) {
+				let element = document.createElement("track");
+				element.src = `/files/${subtitle.file_id}/?token=${token}`;
+				if (is.present(subtitle.language)) {
+					let language = languages.db[subtitle.language];
+					if (is.present(language)) {
+						element.label = language.title;
+						element.srclang = language.iso639_1;
+						element.kind = "subtitles";
 					}
-					e.src = `/files/${st.file_id}/?token=${token}`;
-					currentVideo.appendChild(e);
+					if (subtitle === defaultSubtitle) {
+						element.setAttribute("default", "");
+					}
 				}
+				currentVideo.appendChild(element);
 			}
 		}
-		*/
 	};
 	player.currentLocalEntry.addObserver(computer);
 	player.token.addObserver(computer);
