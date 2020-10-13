@@ -42,19 +42,28 @@ export class ContextClient {
 		this.context.addObserver((context) => {
 			if (is.present(context)) {
 				if (schema.objects.ContextAlbum.is(context)) {
-					let tracks = [] as schema.objects.ContextItem[];
-					for (let disc of context.discs) {
-						tracks.push(...disc.tracks);
+					let files = [] as schema.objects.ContextItem[];
+					let album = context;
+					for (let disc of album.discs) {
+						files.push(...disc.tracks);
 					}
-					this.flattenedContext.updateState(tracks);
+					this.flattenedContext.updateState(files);
 				} else if (schema.objects.ContextArtist.is(context)) {
-					let tracks = [] as schema.objects.ContextItem[];
-					for (let album of context.albums) {
+					let files = [] as schema.objects.ContextItem[];
+					let artist = context;
+					for (let album of artist.albums) {
 						for (let disc of album.discs) {
-							tracks.push(...disc.tracks);
+							files.push(...disc.tracks);
 						}
 					}
-					this.flattenedContext.updateState(tracks);
+					this.flattenedContext.updateState(files);
+				} else if (schema.objects.ContextMovie.is(context)) {
+					let files = [] as schema.objects.ContextItem[];
+					let movie = context;
+					files.push(movie);
+					this.flattenedContext.updateState(files);
+				} else {
+					throw `Expected code to be unreachable!`;
 				}
 			}
 		});
@@ -66,7 +75,8 @@ export class ContextClient {
 					if (schema.objects.ContextAlbum.is(context)) {
 						let discIndex = 0;
 						let trackIndex = currentIndex;
-						let discs = context.discs;
+						let album = context;
+						let discs = album.discs;
 						for (let d = 0; d < discs.length; d++) {
 							let length = discs[d].tracks.length;
 							if (trackIndex >= length) {
@@ -85,7 +95,8 @@ export class ContextClient {
 						let albumIndex = 0;
 						let discIndex = 0;
 						let trackIndex = currentIndex;
-						let albums = context.albums;
+						let artist = context;
+						let albums = artist.albums;
 						outer: for (let a = 0; a < albums.length; a++) {
 							let discs = albums[a].discs;
 							for (let d = 0; d < discs.length; d++) {
@@ -106,6 +117,12 @@ export class ContextClient {
 							context.albums[albumIndex].discs[discIndex].disc_id,
 							context.albums[albumIndex].discs[discIndex].tracks[trackIndex].track_id
 						]);
+					} else if (schema.objects.ContextMovie.is(context)) {
+						return this.contextPath.updateState([
+							context.movie_id
+						]);
+					} else {
+						throw `Expected code to be unreachable!`;
 					}
 				}
 				this.contextPath.updateState(undefined);
