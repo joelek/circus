@@ -1871,6 +1871,68 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 			)
 		)
 }
+function makeEpisode(episode: Episode, play: () => void): xml.XElement {
+	let title = episode.title;
+	let subtitle = [
+		episode.season.show.title,
+		utils.formatSeasonEpisode(episode.season.number, episode.number)
+	].join(" \u2022 ");
+	let tags = [
+		"Episode",
+		format_duration(episode.file.duration_ms)
+	];
+	let isContext = computed((contextPath) => {
+		if (!is.present(contextPath)) {
+			return false;
+		}
+		if (contextPath[contextPath.length - 1] !== episode.episode_id) {
+			return false;
+		}
+		return true;
+	}, player.contextPath);
+	let isPlaying = computed((isContext, playback) => {
+		return isContext && playback;
+	}, isContext, player.playback);
+	return xml.element("div.media-widget")
+		.on("click", () => {
+			navigate(`video/episodes/${episode.episode_id}/`)
+		})
+		.add(xml.element("div.media-widget__artwork")
+			.set("style", "padding-bottom: 56.25%;")
+			.add(xml.element("div.playback-button")
+				.add(makePlayIcon()
+					.bind("data-hide", isPlaying.addObserver(a => a))
+				)
+				.add(makePauseIcon()
+					.bind("data-hide", isPlaying.addObserver(a => !a))
+				)
+				.on("click", (event) => {
+					if (isPlaying.getState()) {
+						player.pause();
+					} else {
+						if (isContext.getState()) {
+							player.resume();
+						} else {
+							play();
+						}
+					}
+				})
+			)
+		)
+		.add(xml.element("div.media-widget__metadata")
+			.add(xml.element("div.media-widget__titles")
+				.add(xml.element("div.media-widget__title")
+					.add(xml.text(title))
+				)
+				.add(subtitle === "" ? undefined : xml.element("div.media-widget__subtitle")
+					.add(xml.text(subtitle))
+				)
+			)
+			.add(xml.element("div.media-widget__tags")
+				.add(...tags.map(makeTag))
+			)
+		);
+}
 function makeMovie(movie: Movie, play: () => void): xml.XElement {
 	let title = movie.title;
 	let subtitle = [].join(" \u2022 ");
@@ -1957,13 +2019,13 @@ function renderTextHeader(title: string) {
 			.add(xml.text(title))
 		);
 }
-const makeEntityHeader = (title: string, subtitle: string | null, tags: Array<string> = []) => {
+const makeEntityHeader = (title: string, subtitle: string | undefined, tags: Array<string> = []) => {
 	return xml.element("div.entity-header")
 		.add(xml.element("div.entity-header__titles")
 			.add(xml.element("div.entity-header__title")
 				.add(xml.text(title))
 			)
-			.add(subtitle == null ? null : xml.element("div.entity-header__subtitle")
+			.add(is.absent(subtitle) ? undefined : xml.element("div.entity-header__subtitle")
 				.add(xml.text(subtitle))
 			)
 		)
@@ -2209,7 +2271,7 @@ let updateviewforuri = (uri: string): void => {
 				}
 			}
 			let widget = xml.element("div.content")
-				.add(makeEntityHeader(response.title, null, [
+				.add(makeEntityHeader(response.title, undefined, [
 					"Artist",
 					format_duration(duration_ms)
 				]))
@@ -2353,37 +2415,27 @@ let updateviewforuri = (uri: string): void => {
 			return indices;
 		}
 		req<api_response.ApiRequest, api_response.ShowResponse>(`/api/video/shows/${parts[1]}/?token=${token}`, {}, (status, response) => {
-			let show = translateShowResponse(response);
-			let d = document.createElement('div');
-			d.innerText = `${response.title}`;
-			mount.appendChild(d);
+			const show = translateShowResponse(response);
+			const duration_ms = show.seasons.reduce((sum, season) => {
+				return sum + season.episodes.reduce((sum, episode) => {
+					return sum + episode.file.duration_ms;
+				}, 0);
+			}, 0);
 			const indices = getNextEpisode(show);
-			if (is.present(indices)) {
-				let nextEpisode = show.seasons[indices.seasonIndex].episodes[indices.episodeIndex];
-				let d2 = document.createElement("div");
-				d2.classList.add("group");
-				let h4 = document.createElement("h4");
-				h4.style.setProperty("font-size", "12px");
-				h4.textContent = utils.formatSeasonEpisode(nextEpisode.season.number, nextEpisode.number) + ": " + nextEpisode.title;
-				let p1 = document.createElement("p");
-				p1.style.setProperty("font-size", "16px");
-				p1.textContent = nextEpisode.summary;
-				let p2 = document.createElement("p");
-				p2.style.setProperty("font-size", "16px");
-				p2.textContent = [
-					format_duration(nextEpisode.file.duration_ms)
-				].join(" \u2022 ");
-				let button = document.createElement("button");
-				button.textContent = "Watch";
-				button.addEventListener("click", () => {
-					player.playShow(show, indices.seasonIndex, indices.episodeIndex);
-				});
-				d2.appendChild(h4);
-				d2.appendChild(p1);
-				d2.appendChild(p2);
-				d2.appendChild(button);
-				d.appendChild(d2);
-			}
+			const episode = is.absent(indices) ? undefined : show.seasons[indices.seasonIndex].episodes[indices.episodeIndex];
+			let element = xml.element("div")
+				.add(xml.element("div.content")
+					.add(makeEntityHeader(show.title, undefined, [
+						"Show",
+						format_duration(duration_ms)
+					]))
+				)
+				.add(xml.element("div.content")
+					.add(is.absent(indices) || is.absent(episode) ? undefined : makeGrid("Continue watching", makeEpisode(episode, () => {
+						player.playShow(show, indices.seasonIndex, indices.episodeIndex);
+					})))
+				);
+			mount.appendChild(element.render());
 			for (let seasonIndex = 0; seasonIndex < show.seasons.length; seasonIndex++) {
 				let season = show.seasons[seasonIndex];
 				let d = document.createElement('div');
