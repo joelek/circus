@@ -2,7 +2,7 @@ import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as libdb from "./database";
 import * as utils from "./utils";
-import * as auth from "./auth";
+import * as passwords from "./passwords";
 import { NumericSort } from "./shared";
 import * as is from "./is";
 
@@ -29,7 +29,7 @@ if (!libfs.existsSync("./private/db/users.json")) {
 			{
 				user_id: "",
 				username: "test",
-				password: auth.password_generate("test")
+				password: passwords.generate("test")
 			}
 		],
 		tokens: []
