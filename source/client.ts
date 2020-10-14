@@ -1495,11 +1495,9 @@ mountwrapper.appendChild(xml.element("div.login-modal")
 	)
 	.render());
 
-// move
 let devicelist = new ArrayObservable<Device & {
 	active: boolean,
-	local: boolean,
-	remote: boolean
+	local: boolean
 }>([]);
 {
 	let computer = () => {
@@ -1510,8 +1508,7 @@ let devicelist = new ArrayObservable<Device & {
 			return {
 				...device,
 				active: activeDevice?.id === device.id,
-				local: localDevice?.id === device.id,
-				remote: localDevice?.id !== device.id
+				local: localDevice?.id === device.id
 			}
 		}));
 	};
@@ -1539,7 +1536,7 @@ let modals = xml.element("div.modal-container")
 							.add(xml.text(device.name))
 						)
 						.add(xml.element("div.device-selector__device-type")
-							.add(xml.text(device.type))
+							.add(xml.text(device.local ? "local" : "remote"))
 						)
 					)
 					.on("click", () => {
@@ -1700,9 +1697,6 @@ let mp = xml.element("div.content")
 			.add(makeButton()
 				.bind("data-hide", player.devices.compute((devices) => {
 					return devices.length < 2;
-				}))
-				.bind("data-active", player.isDeviceRemote.addObserver((isDeviceRemote) => {
-					return isDeviceRemote === true;
 				}))
 				.add(makeBroadcastIcon())
 				.on("click", () => {
