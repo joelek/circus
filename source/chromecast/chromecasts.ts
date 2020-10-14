@@ -203,7 +203,7 @@ class MessageHandler {
 				}
 				onmessage(message);
 			} catch (error) {
-				socket.end();
+				console.log(error);
 			}
 		});
 	}
@@ -475,10 +475,6 @@ class ChromecastPlayer {
 				}
 			}
 		});
-		this.receiverHandler.send("GET_STATUS", {
-			type: "GET_STATUS",
-			requestId: -1
-		});
 		this.setTimer();
 		this.mediaHandler.transportId.addObserver((transportId) => {
 			if (is.present(transportId)) {
@@ -518,19 +514,19 @@ class ChromecastPlayer {
 					let activeTrackIds: number[] | undefined;
 					if (is.present(media.tracks)) {
 						let swe = media.tracks.find((track) => {
-							return track.language === "sv-SE";
+							return (track as any).language === "sv-SE";
 						});
 						if (is.present(swe)) {
 							activeTrackIds = [ swe.trackId ];
 						} else {
 							let eng = media.tracks.find((track) => {
-								return track.language === "en-US";
+								return (track as any).language === "en-US";
 							});
 							if (is.present(eng)) {
 								activeTrackIds = [ eng.trackId ];
 							} else {
 								let jpn = media.tracks.find((track) => {
-									return track.language === "ja-JP";
+									return (track as any).language === "ja-JP";
 								});
 								if (is.present(jpn)) {
 									activeTrackIds = [ jpn.trackId ];

@@ -43,7 +43,10 @@ export type MediaInformation = {
 	"metadata"?: GenericMediaMetadata | MovieMediaMetadata | TvShowMediaMetadata | MusicTrackMediaMetadata | PhotoMediaMetadata,
 	"duration"?: number,
 	"customData"?: Record<string, undefined | any>,
-	"tracks"?: {
+	"tracks"?: ({
+		"trackId": number,
+		"type": string
+	} | {
 		"trackId": number,
 		"type": "TEXT",
 		"trackType": "TEXT",
@@ -53,7 +56,7 @@ export type MediaInformation = {
 		"language": string,
 		"name"?: string,
 		"customData"?: Record<string, undefined | any>
-	}[]
+	})[]
 };
 
 export const MediaInformation = autoguard.Object.of<MediaInformation>({
@@ -84,33 +87,42 @@ export const MediaInformation = autoguard.Object.of<MediaInformation>({
 	),
 	"tracks": autoguard.Union.of(
 		autoguard.Undefined,
-		autoguard.Array.of(autoguard.Object.of<{
-			"trackId": number,
-			"type": "TEXT",
-			"trackType": "TEXT",
-			"trackContentId": string,
-			"trackContentType": string,
-			"subtype": "SUBTITLES",
-			"language": string,
-			"name"?: string,
-			"customData"?: Record<string, undefined | any>
-		}>({
-			"trackId": autoguard.Number,
-			"type": autoguard.StringLiteral.of("TEXT"),
-			"trackType": autoguard.StringLiteral.of("TEXT"),
-			"trackContentId": autoguard.String,
-			"trackContentType": autoguard.String,
-			"subtype": autoguard.StringLiteral.of("SUBTITLES"),
-			"language": autoguard.String,
-			"name": autoguard.Union.of(
-				autoguard.Undefined,
-				autoguard.String
-			),
-			"customData": autoguard.Union.of(
-				autoguard.Undefined,
-				autoguard.Record.of(autoguard.Any)
-			)
-		}))
+		autoguard.Array.of(autoguard.Union.of(
+			autoguard.Object.of<{
+				"trackId": number,
+				"type": string
+			}>({
+				"trackId": autoguard.Number,
+				"type": autoguard.String
+			}),
+			autoguard.Object.of<{
+				"trackId": number,
+				"type": "TEXT",
+				"trackType": "TEXT",
+				"trackContentId": string,
+				"trackContentType": string,
+				"subtype": "SUBTITLES",
+				"language": string,
+				"name"?: string,
+				"customData"?: Record<string, undefined | any>
+			}>({
+				"trackId": autoguard.Number,
+				"type": autoguard.StringLiteral.of("TEXT"),
+				"trackType": autoguard.StringLiteral.of("TEXT"),
+				"trackContentId": autoguard.String,
+				"trackContentType": autoguard.String,
+				"subtype": autoguard.StringLiteral.of("SUBTITLES"),
+				"language": autoguard.String,
+				"name": autoguard.Union.of(
+					autoguard.Undefined,
+					autoguard.String
+				),
+				"customData": autoguard.Union.of(
+					autoguard.Undefined,
+					autoguard.Record.of(autoguard.Any)
+				)
+			})
+		))
 	)
 });
 

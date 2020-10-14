@@ -17,7 +17,10 @@
 		metadata?: GenericMediaMetadata | MovieMediaMetadata | TvShowMediaMetadata | MusicTrackMediaMetadata | PhotoMediaMetadata,
 		duration?: number,
 		customData?: { any },
-		tracks?: {
+		tracks?: ({
+			trackId: number,
+			type: string
+		} | {
 			trackId: number,
 			type: "TEXT",
 			trackType: "TEXT",
@@ -27,7 +30,7 @@
 			language: string,
 			name?: string,
 			customData?: { any }
-		}[]
+		})[]
 	},
 
 	GenericMediaMetadata: {
