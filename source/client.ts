@@ -2437,6 +2437,17 @@ let updateviewforuri = (uri: string): void => {
 			}
 			return indices;
 		}
+		function getYears(season: Season): number[] {
+			let years = season.episodes.reduce((years, episode) => {
+				if (is.present(episode.year)) {
+					if (!years.includes(episode.year)) {
+						years.push(episode.year);
+					}
+				}
+				return years;
+			}, [] as number[]);
+			return years.sort();
+		}
 		req<api_response.ApiRequest, api_response.ShowResponse>(`/api/video/shows/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			const show = translateShowResponse(response);
 			const duration_ms = show.seasons.reduce((sum, season) => {
@@ -2446,43 +2457,6 @@ let updateviewforuri = (uri: string): void => {
 			}, 0);
 			const indices = getNextEpisode(show);
 			const episode = is.absent(indices) ? undefined : show.seasons[indices.seasonIndex].episodes[indices.episodeIndex];
-			const yearMin = show.seasons.reduce((min, season) => {
-				const episodeMin = season.episodes.reduce((min, episode) => {
-					if (is.present(episode.year)) {
-						if (is.present(min)) {
-							return Math.min(min, episode.year);
-						} else {
-							return episode.year;
-						}
-					}
-				}, undefined as number | undefined);
-				if (is.present(episodeMin)) {
-					if (is.present(min)) {
-						return Math.min(min, episodeMin);
-					} else {
-						return episodeMin;
-					}
-				}
-			}, undefined as number | undefined);
-			const yearMax = show.seasons.reduce((min, season) => {
-				const episodeMax = season.episodes.reduce((min, episode) => {
-					if (is.present(episode.year)) {
-						if (is.present(min)) {
-							return Math.max(min, episode.year);
-						} else {
-							return episode.year;
-						}
-					}
-				}, undefined as number | undefined);
-				if (is.present(episodeMax)) {
-					if (is.present(min)) {
-						return Math.max(min, episodeMax);
-					} else {
-						return episodeMax;
-					}
-				}
-			}, undefined as number | undefined);
-			const years = is.absent(yearMin) || is.absent(yearMax) ? [] : yearMin === yearMax ? [`${yearMin}`] : [`${yearMin}`, `${yearMax}`];
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(makeEntityHeader(show.title, undefined, [
@@ -2502,7 +2476,7 @@ let updateviewforuri = (uri: string): void => {
 						.add(xml.element("div.playlist__header")
 							.add(renderTextHeader(`Season ${season.number}`))
 							.add(xml.element("div.playlist__tags")
-								.add(...years.map(makeTag))
+								.add(...getYears(season).map((year) => makeTag(year.toString())))
 							)
 						)
 						.add(xml.element("div.playlist__content")
