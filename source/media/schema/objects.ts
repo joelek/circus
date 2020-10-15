@@ -59,12 +59,14 @@ export const Album = autoguard.Intersection.of(
 
 export type DiscBase = {
 	"disc_id": string,
-	"album": AlbumBase
+	"album": AlbumBase,
+	"number": number
 };
 
 export const DiscBase = autoguard.Object.of<DiscBase>({
 	"disc_id": autoguard.String,
-	"album": autoguard.Reference.of<AlbumBase>(() => AlbumBase)
+	"album": autoguard.Reference.of<AlbumBase>(() => AlbumBase),
+	"number": autoguard.Number
 });
 
 export type Disc = DiscBase & {
@@ -86,6 +88,7 @@ export type TrackBase = {
 	"disc": DiscBase,
 	"artists": ArtistBase[],
 	"file": AudioFile,
+	"number": number,
 	"last_stream_date"?: number
 };
 
@@ -95,6 +98,7 @@ export const TrackBase = autoguard.Object.of<TrackBase>({
 	"disc": autoguard.Reference.of<DiscBase>(() => DiscBase),
 	"artists": autoguard.Array.of(autoguard.Reference.of<ArtistBase>(() => ArtistBase)),
 	"file": autoguard.Reference.of<AudioFile>(() => AudioFile),
+	"number": autoguard.Number,
 	"last_stream_date": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.Number
@@ -199,6 +203,7 @@ export type EpisodeBase = {
 	"file": VideoFile,
 	"subtitles": SubtitleFile[],
 	"season": SeasonBase,
+	"year"?: number,
 	"last_stream_date"?: number
 };
 
@@ -210,6 +215,10 @@ export const EpisodeBase = autoguard.Object.of<EpisodeBase>({
 	"file": autoguard.Reference.of<VideoFile>(() => VideoFile),
 	"subtitles": autoguard.Array.of(autoguard.Reference.of<SubtitleFile>(() => SubtitleFile)),
 	"season": autoguard.Reference.of<SeasonBase>(() => SeasonBase),
+	"year": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Number
+	),
 	"last_stream_date": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.Number

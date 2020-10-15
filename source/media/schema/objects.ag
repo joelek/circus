@@ -22,7 +22,8 @@
 
 	DiscBase: {
 		disc_id: string,
-		album: AlbumBase
+		album: AlbumBase,
+		number: number
 	},
 
 	Disc: DiscBase & {
@@ -35,6 +36,7 @@
 		disc: DiscBase,
 		artists: ArtistBase[],
 		file: AudioFile,
+		number: number,
 		last_stream_date?: number
 	},
 
@@ -84,6 +86,7 @@
 		file: VideoFile,
 		subtitles: SubtitleFile[],
 		season: SeasonBase,
+		year?: number,
 		last_stream_date?: number
 	},
 

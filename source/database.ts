@@ -176,6 +176,7 @@ export type EpisodeEntry = {
 	"title": string,
 	"number": number,
 	"duration": number,
+	"year": (number | null),
 	"summary": (string | null)
 };
 
@@ -186,6 +187,10 @@ export const EpisodeEntry = autoguard.Object.of<EpisodeEntry>({
 	"title": autoguard.String,
 	"number": autoguard.Number,
 	"duration": autoguard.Number,
+	"year": autoguard.Union.of(
+		autoguard.Number,
+		autoguard.Null
+	),
 	"summary": autoguard.Union.of(
 		autoguard.String,
 		autoguard.Null

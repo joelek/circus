@@ -570,6 +570,7 @@ let visit_video = (node: string): void => {
 			title: tag.title,
 			number: tag.episode,
 			duration: tag.duration,
+			year: tag.year,
 			summary: tag.comment
 		});
 		return;

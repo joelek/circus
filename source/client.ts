@@ -808,15 +808,20 @@ style.innerText = `
 
 
 	.text-header {
-
-	}
-
-	.text-header__title {
-		color: rgb(159, 159, 159);
+		color: rgb(255, 255, 255);
 		font-size: 20px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	.text-paragraph {
+		color: rgb(159, 159, 159);
+		font-size: 16px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: normal;
+		word-break: break-word;
 	}
 
 
@@ -940,7 +945,15 @@ style.innerText = `
 	}
 
 	.playlist__header {
+		display: grid;
+		gap: 8px;
+	}
 
+	.playlist__tags {
+		display: grid;
+		gap: 8px;
+		grid-auto-columns: minmax(auto, min-content);
+		grid-auto-flow: column;
 	}
 
 	.playlist__content {
@@ -2013,11 +2026,15 @@ function makeImage(file_id: string) {
 			.set("src", `/files/${file_id}/?token=${token}`)
 		);
 }
-function renderTextHeader(title: string) {
+function renderTextHeader(content: string) {
 	return xml.element("div.text-header")
-		.add(xml.element("div.text-header__title")
-			.add(xml.text(title))
-		);
+		.add(xml.text(content)
+	);
+}
+function renderTextParagraph(content: string) {
+	return xml.element("div.text-paragraph")
+		.add(xml.text(content)
+	);
 }
 const makeEntityHeader = (title: string, subtitle: string | undefined, tags: Array<string> = []) => {
 	return xml.element("div.entity-header")
@@ -2106,6 +2123,7 @@ function translateShowResponse(rshow: api_response.ShowResponse): Show {
 							language: rsubtitle.language ?? undefined
 						})),
 						season: season,
+						year: repisode.year ?? undefined,
 						last_stream_date: repisode.streamed ?? undefined
 					};
 					return episode;
@@ -2135,7 +2153,8 @@ function translateAlbumResponse(ralbum: api_response.AlbumResponse): ContextAlbu
 		discs: ralbum.discs.map((rdisc) => {
 			let disc: DiscBase = {
 				disc_id: rdisc.disc_id,
-				album: album
+				album: album,
+				number: rdisc.number
 			};
 			return {
 				...disc,
@@ -2153,6 +2172,7 @@ function translateAlbumResponse(ralbum: api_response.AlbumResponse): ContextAlbu
 							mime: "audio/mp4",
 							duration_ms: rtrack.duration
 						},
+						number: rtrack.number,
 						last_stream_date: undefined
 					};
 					return track;
@@ -2212,7 +2232,7 @@ let updateviewforuri = (uri: string): void => {
 					let content = xml.element("div.content")
 						.add(xml.element("div.playlist")
 							.add(xml.element("div.playlist__header")
-								.add(renderTextHeader("Tracks"))
+								.add(renderTextHeader(`Disc ${disc.number}`))
 							)
 							.add(xml.element("div.playlist__content")
 								.add(...disc.tracks.map((track, trackIndex) => xml.element("div.playlist-item")
@@ -2423,7 +2443,44 @@ let updateviewforuri = (uri: string): void => {
 			}, 0);
 			const indices = getNextEpisode(show);
 			const episode = is.absent(indices) ? undefined : show.seasons[indices.seasonIndex].episodes[indices.episodeIndex];
-			let element = xml.element("div")
+			const yearMin = show.seasons.reduce((min, season) => {
+				const episodeMin = season.episodes.reduce((min, episode) => {
+					if (is.present(episode.year)) {
+						if (is.present(min)) {
+							return Math.min(min, episode.year);
+						} else {
+							return episode.year;
+						}
+					}
+				}, undefined as number | undefined);
+				if (is.present(episodeMin)) {
+					if (is.present(min)) {
+						return Math.min(min, episodeMin);
+					} else {
+						return episodeMin;
+					}
+				}
+			}, undefined as number | undefined);
+			const yearMax = show.seasons.reduce((min, season) => {
+				const episodeMax = season.episodes.reduce((min, episode) => {
+					if (is.present(episode.year)) {
+						if (is.present(min)) {
+							return Math.max(min, episode.year);
+						} else {
+							return episode.year;
+						}
+					}
+				}, undefined as number | undefined);
+				if (is.present(episodeMax)) {
+					if (is.present(min)) {
+						return Math.max(min, episodeMax);
+					} else {
+						return episodeMax;
+					}
+				}
+			}, undefined as number | undefined);
+			const years = is.absent(yearMin) || is.absent(yearMax) ? [] : yearMin === yearMax ? [`${yearMin}`] : [`${yearMin}`, `${yearMax}`];
+			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(makeEntityHeader(show.title, undefined, [
 						"Show",
@@ -2431,31 +2488,49 @@ let updateviewforuri = (uri: string): void => {
 					]))
 				)
 				.add(xml.element("div.content")
-					.add(is.absent(indices) || is.absent(episode) ? undefined : makeGrid("Continue watching", makeEpisode(episode, () => {
-						player.playShow(show, indices.seasonIndex, indices.episodeIndex);
-					})))
-				);
-			mount.appendChild(element.render());
-			for (let seasonIndex = 0; seasonIndex < show.seasons.length; seasonIndex++) {
-				let season = show.seasons[seasonIndex];
-				let d = document.createElement('div');
-				d.style.setProperty('font-size', '24px');
-				d.innerText = `${season.number}`;
-				mount.appendChild(d);
-				for (let episodeIndex = 0; episodeIndex < season.episodes.length; episodeIndex++) {
-					let episode = season.episodes[episodeIndex];
-					let d2 = document.createElement('div');
-					if (is.present(episode.last_stream_date)) {
-						d2.classList.add("watched");
-					}
-					d2.style.setProperty('font-size', '16px');
-					d2.innerText = `${episode.title} ${format_duration(episode.file.duration_ms)}`;
-					d2.addEventListener('click', () => {
-						player.playShow(show, seasonIndex, episodeIndex);
-					});
-					mount.appendChild(d2);
-				}
-			}
+					.add(is.absent(indices) || is.absent(episode) ? undefined : makeGrid("Suggested episode", ...[
+						makeEpisode(episode, () => {
+							player.playShow(show, indices.seasonIndex, indices.episodeIndex);
+						})
+					]))
+				)
+				.add(...show.seasons.map((season, seasonIndex) => xml.element("div.content")
+					.add(xml.element("div.playlist")
+						.add(xml.element("div.playlist__header")
+							.add(renderTextHeader(`Season ${season.number}`))
+							.add(xml.element("div.playlist__tags")
+								.add(...years.map(makeTag))
+							)
+						)
+						.add(xml.element("div.playlist__content")
+							.add(...season.episodes.map((episode, episodeIndex) => xml.element("div.playlist-item")
+								.bind("data-playing", player.contextPath.addObserver((contextPath) => {
+									if (is.absent(contextPath)) {
+										return false;
+									}
+									if (contextPath[contextPath.length - 2] !== episode.season.season_id) {
+										return false;
+									}
+									if (contextPath[contextPath.length - 1] !== episode.episode_id) {
+										return false;
+									}
+									return true;
+								}))
+								.add(xml.element("div.playlist-item__title")
+									.add(xml.text(episode.title))
+								)
+								.add(xml.element("div.playlist-item__subtitle")
+									.add(xml.text([ episode.season.show.title, utils.formatSeasonEpisode(season.number, episode.number) ].join(" \u2022 ")))
+								)
+								.on("click", () => {
+									player.playShow(show, seasonIndex, episodeIndex);
+								})
+							))
+						)
+					)
+				))
+				.render()
+			);
 		});
 	} else if ((parts = /^video[/]shows[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ShowsResponse>(`/api/video/shows/`, {}, (status, response) => {
