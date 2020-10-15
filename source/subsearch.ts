@@ -4,6 +4,7 @@ import * as libcrypto from "crypto";
 import * as data from "./data";
 import * as database from "./database";
 import * as utils from "./utils";
+import * as keyframes from "./keyframes";
 
 function getMediaFile(subtitle: database.SubtitleEntry): database.FileEntry | null {
 	return data.files_index[subtitle.video_file_id] || null;
@@ -32,6 +33,33 @@ function deleteTree(root: string): void {
 	} else if (stats.isFile()) {
 		libfs.unlinkSync(root);
 	}
+}
+
+function generateStill(target: string[], file: database.FileEntry): Promise<void> {
+	return new Promise(async (resolve, reject) => {
+		let offsets = await keyframes.getKeyframeOffsets([".", ...file.path], 0);
+		let offset = offsets[Math.floor(offsets.length / 2)];
+		createWorkingDirectory((wd, id) => {
+			let still = [...wd, "still.jpeg"];
+			let cp = libcp.spawn("ffmpeg", [
+				"-ss", utils.formatTimestamp(offset),
+				"-i", [".", ...file.path].join("/"),
+				"-vf", "scale=w=960:h=540:force_original_aspect_ratio=decrease,pad=960:540:-1:-1",
+				"-map_metadata", "-1",
+				still.join("/"),
+				"-y"
+			]);
+			cp.on("error", () => {
+				deleteTree(wd.join("/"));
+				return reject();
+			});
+			cp.on("exit", () => {
+				renameFile(still, target);
+				deleteTree(wd.join("/"));
+				return resolve();
+			});
+		});
+	});
 }
 
 function generateMeme(target: string[], cue: database.CueEntry, cb: { (): void }): void {
@@ -89,5 +117,6 @@ function generateMeme(target: string[], cue: database.CueEntry, cb: { (): void }
 }
 
 export {
+	generateStill,
 	generateMeme
 };

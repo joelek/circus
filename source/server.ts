@@ -131,6 +131,38 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 		return send_data(file_id, request, response);
 	}
 	if (/^[/]media[/]/.test(path)) {
+		if ((parts = /^[/]media[/]stills[/]([0-9a-f]{32})[/]/.exec(path)) != null) {
+			let file_id = parts[1];
+			let file = data.files_index[file_id] as FileEntry;
+			let filename = [".", "private", "stills", file.file_id];
+			if (libfs.existsSync(filename.join("/"))) {
+				let stream = libfs.createReadStream(filename.join("/"));
+				stream.on("open", () => {
+					response.writeHead(200, {
+						"Access-Control-Allow-Origin": "*",
+						"Content-Type": "image/jpeg"
+					});
+					stream.pipe(response);
+				});
+			} else {
+				(async (resolve, reject) => {
+					let still = await subsearch.generateStill(filename, file);
+					if (!libfs.existsSync(filename.join("/"))) {
+						response.writeHead(500);
+						return response.end();
+					}
+					let stream = libfs.createReadStream(filename.join("/"));
+					stream.on("open", () => {
+						response.writeHead(200, {
+							"Access-Control-Allow-Origin": "*",
+							"Content-Type": "image/gif"
+						});
+						stream.pipe(response);
+					});
+				})();
+			}
+			return;
+		}
 		if ((parts = /^[/]media[/]gifs[/]([0-9a-f]{32})[/]/.exec(path)) != null) {
 			let cue_id = parts[1];
 			let cue = data.cues_index[cue_id] as CueEntry;
