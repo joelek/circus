@@ -1,5 +1,6 @@
 import * as libnet from "net";
 import * as libtls from "tls";
+import * as libhttp from "http";
 import * as cast_message from "./cast_message";
 import * as mdns from "./mdns";
 import * as schema from "./schema";
@@ -157,13 +158,39 @@ function createSocket(hostname: string): Promise<libnet.Socket> {
 	});
 }
 
+function getDeviceName(hostname: string): Promise<string | undefined> {
+	return new Promise((resolve, reject) => {
+		libhttp.get(`http://${hostname}:8008/ssdp/device-desc.xml`, (response) => {
+			let chunks = [] as Buffer[];
+			response.on("data", (chunk) => {
+				chunks.push(chunk);
+			});
+			response.on("end", () => {
+				let body = Buffer.concat(chunks);
+				let string = body.toString();
+				let parts = /<friendlyName>([^<]+)<\/friendlyName>/.exec(string);
+				if (is.present(parts)) {
+					resolve(parts[1]);
+				} else {
+					resolve(undefined);
+				}
+			});
+			response.on("error", () => {
+				reject();
+			});
+		});
+	});
+}
+
 export function observe(tls: boolean): void {
 	addListener(async (hostname) => {
 		let socket = await createSocket(hostname);
 		socket.on("close", () => {
 			hostnames.delete(hostname);
-		})
-		new ChromecastPlayer(socket, tls);
+		});
+		let deviceName = await getDeviceName(hostname);
+		console.log(deviceName);
+		//new ChromecastPlayer(socket, deviceName ?? "Chromecast", tls);
 	});
 };
 
@@ -413,7 +440,7 @@ class ChromecastPlayer {
 		}, 5000);
 	}
 
-	constructor(socket: libnet.Socket, tls: boolean) {
+	constructor(socket: libnet.Socket, deviceName: string, tls: boolean) {
 		let messageHandler = new MessageHandler(socket, (message) => {
 			let namespace = message.namespace;
 			if (namespace === ConnectionHandler.NAMESPACE) {
@@ -431,7 +458,7 @@ class ChromecastPlayer {
 		this.connectionHandler = new ConnectionHandler(messageHandler);
 		this.mediaHandler = new MediaHandler(messageHandler);
 		this.receiverHandler = new ReceiverHandler(messageHandler);
-		let url = `${tls ? "wss:" : "ws:"}//127.0.0.1/sockets/context/?type=chromecast&name=Chromecast`;
+		let url = `${tls ? "wss:" : "ws:"}//127.0.0.1/sockets/context/?type=chromecast&name=${deviceName}`;
 		this.context = new libcontext.ContextClient(url, (url) => new sockets.WebSocketClient(url));
 		this.timer = undefined;
 		socket.on("close", () => {
