@@ -189,8 +189,7 @@ export function observe(tls: boolean): void {
 			hostnames.delete(hostname);
 		});
 		let deviceName = await getDeviceName(hostname);
-		console.log(deviceName);
-		//new ChromecastPlayer(socket, deviceName ?? "Chromecast", tls);
+		new ChromecastPlayer(socket, deviceName ?? "Chromecast", tls);
 	});
 };
 
@@ -344,12 +343,12 @@ class MediaHandler {
 		let type = autoguard.guards.String.as(data.type);
 		try {
 			this.serializer.deserialize(JSON.stringify({ type, data }), (type, data) => {
-				this.listeners.route(type, data);
 				let callback = this.callbacks.get(data.requestId);
 				if (is.present(callback)) {
 					this.callbacks.delete(data.requestId);
 					callback(data);
 				}
+				this.listeners.route(type, data);
 			});
 		} catch (error) {
 			console.log(JSON.stringify(data, null, 2));
@@ -392,12 +391,12 @@ class ReceiverHandler {
 		let data = JSON.parse(message.payload_utf8 ?? "{}");
 		let type = autoguard.guards.String.as(data.type);
 		this.serializer.deserialize(JSON.stringify({ type, data }), (type, data) => {
-			this.listeners.route(type, data);
 			let callback = this.callbacks.get(data.requestId);
 			if (is.present(callback)) {
 				this.callbacks.delete(data.requestId);
 				callback(data);
 			}
+			this.listeners.route(type, data);
 		});
 	}
 
