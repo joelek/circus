@@ -112,6 +112,23 @@ export const Track = autoguard.Intersection.of(
 	autoguard.Object.of<{}>({})
 );
 
+export type GenreBase = {
+	"genre_id": string,
+	"title": string
+};
+
+export const GenreBase = autoguard.Object.of<GenreBase>({
+	"genre_id": autoguard.String,
+	"title": autoguard.String
+});
+
+export type Genre = GenreBase & {};
+
+export const Genre = autoguard.Intersection.of(
+	autoguard.Reference.of<GenreBase>(() => GenreBase),
+	autoguard.Object.of<{}>({})
+);
+
 export type MovieBase = {
 	"movie_id": string,
 	"title": string,
@@ -309,6 +326,8 @@ export type Autoguard = {
 	"Disc": Disc,
 	"TrackBase": TrackBase,
 	"Track": Track,
+	"GenreBase": GenreBase,
+	"Genre": Genre,
 	"MovieBase": MovieBase,
 	"Movie": Movie,
 	"ShowBase": ShowBase,
@@ -333,6 +352,8 @@ export const Autoguard = {
 	"Disc": Disc,
 	"TrackBase": TrackBase,
 	"Track": Track,
+	"GenreBase": GenreBase,
+	"Genre": Genre,
 	"MovieBase": MovieBase,
 	"Movie": Movie,
 	"ShowBase": ShowBase,

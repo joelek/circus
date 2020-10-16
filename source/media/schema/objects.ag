@@ -44,6 +44,15 @@
 
 	},
 
+	GenreBase: {
+		genre_id: string,
+		title: string
+	},
+
+	Genre: GenreBase & {
+
+	},
+
 	MovieBase: {
 		movie_id: string,
 		title: string,

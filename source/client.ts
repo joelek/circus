@@ -8,7 +8,7 @@ import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Movie, MovieBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase } from "./media/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Genre, Movie, MovieBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase } from "./media/schema/objects";
 
 
 
@@ -1895,6 +1895,22 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 			)
 		)
 }
+function makeGenreLink(genre: Genre): xml.XElement {
+	return xml.element("div.media-widget")
+		.add(xml.element("div.media-widget__artwork")
+			.set("style", "padding-bottom: 56.25%;")
+		)
+		.add(xml.element("div.media-widget__metadata")
+			.add(xml.element("div.media-widget__titles")
+				.add(xml.element("div.media-widget__title")
+					.add(xml.text(genre.title))
+				)
+			)
+		).on("click", () => {
+			navigate(`video/genres/${genre.genre_id}/`);
+		});
+}
+
 function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 	let title = episode.title;
 	let subtitle = episode.season.show.title;
@@ -2906,21 +2922,14 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^video[/]genres[/]/.exec(uri)) !== null) {
 		req<api_response.GenresRequest, api_response.GenresResponse>(`/api/video/genres/`, {}, (status, response) => {
-			for (let genre of response.genres) {
-				let d = document.createElement('div');
-				d.classList.add("group");
-				let h2 = document.createElement("h2");
-				h2.style.setProperty("font-size", "24px");
-				h2.textContent = `${genre.title}`;
-				d.appendChild(h2);
-				let b = document.createElement("button");
-				b.textContent = "Browse";
-				b.addEventListener('click', () => {
-					navigate(`video/genres/${genre.video_genre_id}/`);
-				});
-				d.appendChild(b);
-				mount.appendChild(d);
-			}
+			let genres: Genre[] = response.genres.map((rgenre) => ({
+				genre_id: rgenre.video_genre_id,
+				title: rgenre.title
+			}));
+			mount.appendChild(xml.element("div.content")
+				.add(makeGrid(undefined, ...genres.map(makeGenreLink)))
+				.render()
+			);
 		});
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
 		let d = document.createElement('div');
