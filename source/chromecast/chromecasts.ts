@@ -494,13 +494,16 @@ class ChromecastPlayer {
 		this.mediaHandler.listeners.addObserver("MEDIA_STATUS", (message) => {
 			let status = message.status[message.status.length - 1] as schema.objects.MediaStatus | undefined;
 			if (is.present(status)) {
-				if (status.playerState === "PAUSED" || status.playerState === "PLAYING") {
-					this.mediaHandler.mediaSessionId.updateState(status.mediaSessionId);
-				}
-				if (status.playerState === "IDLE") {
-					this.mediaHandler.mediaSessionId.updateState(undefined);
-					if (status.idleReason === "FINISHED") {
-						this.context.next();
+				let mediaSessionId = this.mediaHandler.mediaSessionId.getState();
+				if (is.present(mediaSessionId)) {
+					if (status.mediaSessionId === mediaSessionId) {
+						if (this.context.isDeviceLocal.getState()) {
+							if (status.playerState === "IDLE" && status.idleReason === "FINISHED") {
+								this.context.next();
+							}
+						}
+					} else {
+						this.mediaHandler.mediaSessionId.updateState(undefined);
 					}
 				}
 			}
@@ -570,6 +573,13 @@ class ChromecastPlayer {
 						media: media,
 						autoplay: false,
 						activeTrackIds: activeTrackIds
+					}, (message) => {
+						if (schema.media.MEDIA_STATUS.is(message)) {
+							let status = message.status[message.status.length - 1] as schema.objects.MediaStatus | undefined;
+							if (is.present(status)) {
+								this.mediaHandler.mediaSessionId.updateState(status.mediaSessionId);
+							}
+						}
 					});
 				}
 			};

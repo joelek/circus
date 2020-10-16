@@ -328,7 +328,7 @@ export const PhotoMediaMetadata = autoguard.Object.of<PhotoMediaMetadata>({
 
 export type MediaStatus = {
 	"mediaSessionId": number,
-	"media"?: MediaInformation,
+	"media"?: MediaInformation | {},
 	"playbackRate": number,
 	"playerState": "IDLE" | "PLAYING" | "BUFFERING" | "PAUSED",
 	"idleReason"?: "CANCELLED" | "INTERRUPTED" | "FINISHED" | "ERROR",
@@ -342,7 +342,10 @@ export const MediaStatus = autoguard.Object.of<MediaStatus>({
 	"mediaSessionId": autoguard.Number,
 	"media": autoguard.Union.of(
 		autoguard.Undefined,
-		autoguard.Reference.of<MediaInformation>(() => MediaInformation)
+		autoguard.Union.of(
+			autoguard.Reference.of<MediaInformation>(() => MediaInformation),
+			autoguard.Object.of<{}>({})
+		)
 	),
 	"playbackRate": autoguard.Number,
 	"playerState": autoguard.Union.of(

@@ -87,7 +87,7 @@
 
 	MediaStatus: {
 		mediaSessionId: number,
-		media?: MediaInformation,
+		media?: MediaInformation | {},
 		playbackRate: number,
 		playerState: "IDLE" | "PLAYING" | "BUFFERING" | "PAUSED",
 		idleReason?: "CANCELLED" | "INTERRUPTED" | "FINISHED" | "ERROR",
