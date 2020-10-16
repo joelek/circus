@@ -1,13 +1,13 @@
 import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
-import * as sockets from "@joelek/ts-sockets";
+import * as sockets from "@joelek/ts-sockets/build/shared";
 
 export interface WebSocketLike {
 	addEventListener<A extends keyof WebSocketEventMap>(type: A, listener: (event: WebSocketEventMap[A]) => void): void;
-	close(status?: sockets.shared.StatusCode): void;
+	close(status?: sockets.StatusCode): void;
 	removeEventListener<A extends keyof WebSocketEventMap>(type: A, listener: (event: WebSocketEventMap[A]) => void): void;
 	send(payload: string | Buffer): void;
-	readonly readyState: sockets.shared.ReadyState;
+	readonly readyState: sockets.ReadyState;
 };
 
 export type WebSocketFactory = (url: string) => WebSocketLike;
@@ -97,7 +97,7 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	}
 
 	send<B extends keyof A>(type: B, data: A[B]): void {
-		if (this.socket.readyState === sockets.shared.ReadyState.OPEN) {
+		if (this.socket.readyState === sockets.ReadyState.OPEN) {
 			this.socket.send(this.serializer.serialize(type, data));
 		} else {
 			let open = () => {

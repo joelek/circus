@@ -1,7 +1,7 @@
 import * as is from "../is";
 import * as observers from "../simpleobs";
 import * as schema from "./schema";
-import * as typesockets from "../typesockets";
+import * as typesockets from "../typesockets/client";
 
 type AlbumIndices = { disc: number, track: number };
 type ArtistIndices = { album: number, disc: number, track: number };
@@ -47,7 +47,7 @@ export class ContextClient {
 		this.resume();
 	}
 
-	constructor(url: string, factory: typesockets.client.WebSocketFactory = (url) => new WebSocket(url)) {
+	constructor(url: string, factory: typesockets.WebSocketFactory = (url) => new WebSocket(url)) {
 		this.tsc = new typesockets.TypeSocketClient(url, factory, schema.messages.Autoguard);
 		this.context.addObserver((context) => {
 			if (is.present(context)) {
