@@ -763,6 +763,10 @@ style.innerText = `
 		white-space: nowrap;
 	}
 
+	.media-tag--accent {
+		background-color: ${ACCENT_COLOR};
+		color: rgb(255, 255, 255);
+	}
 
 
 
@@ -1005,6 +1009,12 @@ style.innerText = `
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	.playlist-item__tags {
+		display: grid;
+		gap: 8px;
+		grid-auto-columns: minmax(auto, min-content);
 	}
 
 
@@ -1813,6 +1823,10 @@ chromecast.appendChild(slider_wrapper);
 
 const makeTag = (content: string) => xml.element("div.media-tag")
 	.add(xml.text(content));
+
+const makeAccentTag = (content: string, accent: boolean = false) => xml.element("div.media-tag.media-tag--accent")
+	.add(xml.text(content));
+
 function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 	let duration_ms = 0;
 	for (let disc of album.discs) {
@@ -2493,6 +2507,9 @@ let updateviewforuri = (uri: string): void => {
 								)
 								.add(xml.element("div.playlist-item__subtitle")
 									.add(xml.text(episode.season.show.title))
+								)
+								.add(is.absent(episode.last_stream_date) ? undefined : xml.element("div.playlist-item__tags")
+									.add(makeAccentTag("Watched"))
 								)
 								.on("click", () => {
 									player.playShow(show, seasonIndex, episodeIndex);
