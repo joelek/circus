@@ -943,7 +943,7 @@ style.innerText = `
 
 	.playlist__header {
 		display: grid;
-		gap: 8px;
+		gap: 16px;
 	}
 
 	.playlist__tags {
