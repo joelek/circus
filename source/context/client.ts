@@ -47,7 +47,7 @@ export class ContextClient {
 		this.resume();
 	}
 
-	constructor(url: string, factory: typesockets.WebSocketFactory = (url) => new WebSocket(url)) {
+	constructor(url: string, factory: typesockets.client.WebSocketFactory = (url) => new WebSocket(url)) {
 		this.tsc = new typesockets.TypeSocketClient(url, factory, schema.messages.Autoguard);
 		this.context.addObserver((context) => {
 			if (is.present(context)) {
