@@ -982,7 +982,7 @@ style.innerText = `
 		grid-auto-flow: row;
 		grid-auto-rows: max-content;
 		margin-left: -16px;
-		padding-left: 16px;
+		padding-left: 12px;
 	}
 
 	.playlist-item[data-playing="true"] {
