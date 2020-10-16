@@ -975,23 +975,23 @@ style.innerText = `
 
 
 	.playlist-item {
+		border-left: 4px solid transparent;
 		cursor: pointer;
 		display: grid;
 		gap: 8px;
 		grid-auto-flow: row;
 		grid-auto-rows: max-content;
-		transition: padding 0.1s;
+		margin-left: -16px;
+		padding-left: 16px;
 	}
 
 	.playlist-item[data-playing="true"] {
-		border-left: 4px solid ${ACCENT_COLOR};
-		padding-left: 32px;
+		border-color: ${ACCENT_COLOR};
 	}
 
 	@media (hover: hover) and (pointer: fine) {
 		.playlist-item:hover {
-			border-left: 4px solid rgb(255, 255, 255);
-			padding-left: 32px;
+			border-color: rgb(255, 255, 255);
 		}
 	}
 
