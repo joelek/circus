@@ -97,10 +97,7 @@ player.currentEntry.addObserver((currentEntry) => {
 			let season = episode.season;
 			let show = season.show;
 			mediaPlayerTitle.updateState(episode.title);
-			mediaPlayerSubtitle.updateState([
-				show.title,
-				utils.formatSeasonEpisode(season.number, episode.number)
-			].join(" \u2022 "));
+			mediaPlayerSubtitle.updateState(show.title);
 			session.setMetadata({
 				title: episode.title
 			});
@@ -1886,12 +1883,10 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 }
 function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 	let title = episode.title;
-	let subtitle = [
-		episode.season.show.title,
-		utils.formatSeasonEpisode(episode.season.number, episode.number)
-	].join(" \u2022 ");
+	let subtitle = episode.season.show.title;
 	let tags = [
 		"Episode",
+		utils.formatSeasonEpisode(episode.season.number, episode.number),
 		format_duration(episode.file.duration_ms)
 	];
 	let isContext = computed((contextPath) => {
@@ -2497,7 +2492,7 @@ let updateviewforuri = (uri: string): void => {
 									.add(xml.text(episode.title))
 								)
 								.add(xml.element("div.playlist-item__subtitle")
-									.add(xml.text([ episode.season.show.title, utils.formatSeasonEpisode(season.number, episode.number) ].join(" \u2022 ")))
+									.add(xml.text(episode.season.show.title))
 								)
 								.on("click", () => {
 									player.playShow(show, seasonIndex, episodeIndex);
