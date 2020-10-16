@@ -315,14 +315,18 @@ class MediaHandler {
 	handle(message: cast_message.CastMessage): void {
 		let data = JSON.parse(message.payload_utf8 ?? "{}");
 		let type = autoguard.guards.String.as(data.type);
-		this.serializer.deserialize(JSON.stringify({ type, data }), (type, data) => {
-			this.listeners.route(type, data);
-			let callback = this.callbacks.get(data.requestId);
-			if (is.present(callback)) {
-				this.callbacks.delete(data.requestId);
-				callback(data);
-			}
-		});
+		try {
+			this.serializer.deserialize(JSON.stringify({ type, data }), (type, data) => {
+				this.listeners.route(type, data);
+				let callback = this.callbacks.get(data.requestId);
+				if (is.present(callback)) {
+					this.callbacks.delete(data.requestId);
+					callback(data);
+				}
+			});
+		} catch (error) {
+			console.log(JSON.stringify(data, null, 2));
+		}
 	}
 
 	send<A extends keyof schema.media.Autoguard>(type: A, data: schema.media.Autoguard[A], callback?: MediaCallback): void {
