@@ -434,7 +434,7 @@ class ChromecastPlayer {
 				type: "PING"
 			});
 			this.timer = setTimeout(() => {
-				this.socket.end();
+				this.socket.destroy();
 			}, 5000);
 		}, 5000);
 	}
