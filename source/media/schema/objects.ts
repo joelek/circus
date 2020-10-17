@@ -166,12 +166,17 @@ export const Movie = autoguard.Intersection.of(
 
 export type ShowBase = {
 	"show_id": string,
-	"title": string
+	"title": string,
+	"artwork"?: ImageFile
 };
 
 export const ShowBase = autoguard.Object.of<ShowBase>({
 	"show_id": autoguard.String,
-	"title": autoguard.String
+	"title": autoguard.String,
+	"artwork": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Reference.of<ImageFile>(() => ImageFile)
+	)
 });
 
 export type Show = ShowBase & {

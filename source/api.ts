@@ -739,24 +739,75 @@ class GenresRoute implements Route<api_response.GenresRequest, api_response.Genr
 
 class GenreRoute implements Route<api_response.GenreRequest, api_response.GenreResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
 		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]/.exec(request.url || "/");
 		if (parts == null) {
 			throw "";
 		}
 		let video_genre_id = parts[1];
+		let genre = data.video_genres_index[video_genre_id] as libdb.VideoGenreEntry;
 		let movies = data.media.video.movie_genres.filter((movie_genre) => {
 			return movie_genre.video_genre_id === video_genre_id;
 		}).map((movie_genre) => {
 			return data.movies_index[movie_genre.movie_id] as libdb.MovieEntry;
+		}).map((movie) => {
+			let movie_parts = data.media.video.movie_parts.filter((movie_part) => {
+				return movie_part.movie_id === movie.movie_id;
+			}).map((movie_part) => {
+				let subtitles = data.lookupSubtitles(movie_part.file_id);
+				let streamed = data.getLatestStream(username, movie_part.file_id);
+				return {
+					...movie_part,
+					streamed,
+					subtitles
+				};
+			});
+			return {
+				...movie,
+				movie_parts
+			}
 		});
 		let shows = data.media.video.show_genres.filter((show_genre) => {
 			return show_genre.video_genre_id === video_genre_id;
 		}).map((show_genre) => {
 			return data.shows_index[show_genre.show_id] as libdb.ShowEntry;
+		}).map((show) => {
+			let seasons = data.media.video.seasons
+				.filter((season) => {
+					return season.show_id === show.show_id
+				})
+				.map((season) => {
+					let episodes = data.media.video.episodes
+						.filter((episode) => {
+							return episode.season_id === season.season_id
+						})
+						.map((episode) => {
+							let subtitles = data.lookupSubtitles(episode.file_id);
+							let streamed = data.getLatestStream(username, episode.file_id);
+							let payload: api_response.EpisodeResponse = {
+								...episode,
+								streamed,
+								subtitles
+							};
+							return payload;
+						});
+					let payload: api_response.SeasonResponse = {
+						...season,
+						episodes
+					};
+					return payload;
+				});
+			return {
+				...show,
+				seasons
+			};
 		});
 		let payload: api_response.GenreResponse = {
-			movies,
-			shows
+			genre: {
+				...genre,
+				movies,
+				shows
+			}
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));

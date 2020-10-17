@@ -162,8 +162,10 @@ interface GenreRequest extends ApiRequest {
 }
 
 interface GenreResponse extends ApiResponse {
-	movies: Array<libdb.MovieEntry>;
-	shows: Array<libdb.ShowEntry>;
+	genre: libdb.VideoGenreEntry & {
+		shows: Array<ShowResponse>;
+		movies: Array<MovieResponse>;
+	}
 }
 
 interface SearchRequest extends ApiRequest {

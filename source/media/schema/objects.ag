@@ -70,7 +70,8 @@
 
 	ShowBase: {
 		show_id: string,
-		title: string
+		title: string,
+		artwork?: ImageFile
 	},
 
 	Show: ShowBase & {

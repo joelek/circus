@@ -16,6 +16,29 @@ import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, G
 
 
 
+		function getYears(season: Season): number[] {
+			let years = season.episodes.reduce((years, episode) => {
+				if (is.present(episode.year)) {
+					if (!years.includes(episode.year)) {
+						years.push(episode.year);
+					}
+				}
+				return years;
+			}, [] as number[]);
+			return years.sort();
+		}
+		function getYearsForShow(show: Show): number[] {
+			let set = new Set<number>();
+			for (let season of show.seasons) {
+				for (let episode of season.episodes) {
+					if (is.present(episode.year)) {
+						set.add(episode.year);
+					}
+				}
+			}
+			let years = Array.from(set);
+			return years.sort();
+		}
 
 
 
@@ -1898,13 +1921,16 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 function makeGenreLink(genre: Genre): xml.XElement {
 	return xml.element("div.media-widget")
 		.add(xml.element("div.media-widget__artwork")
-			.set("style", "padding-bottom: 56.25%;")
+			.set("style", "padding-bottom: 50%;")
 		)
 		.add(xml.element("div.media-widget__metadata")
 			.add(xml.element("div.media-widget__titles")
 				.add(xml.element("div.media-widget__title")
 					.add(xml.text(genre.title))
 				)
+			)
+			.add(xml.element("div.media-widget__tags")
+				.add(makeTag("Video Genre"))
 			)
 		).on("click", () => {
 			navigate(`video/genres/${genre.genre_id}/`);
@@ -1967,6 +1993,68 @@ function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 				)
 				.add(subtitle === "" ? undefined : xml.element("div.media-widget__subtitle")
 					.add(xml.text(subtitle))
+				)
+			)
+			.add(xml.element("div.media-widget__tags")
+				.add(...tags.map(makeTag))
+			)
+		);
+}
+
+function makeShow(show: Show, play: () => void): xml.XElement {
+	let years = getYearsForShow(show);
+	if (years.length > 2) {
+		years = [ years[0], years[years.length - 1] ];
+	}
+	let tags = [
+		"Show",
+		...years.map(year => "" + year)
+	];
+	let isContext = computed((contextPath) => {
+		if (!is.present(contextPath)) {
+			return false;
+		}
+		if (contextPath[contextPath.length - 3] !== show.show_id) {
+			return false;
+		}
+		return true;
+	}, player.contextPath);
+	let isPlaying = computed((isContext, playback) => {
+		return isContext && playback;
+	}, isContext, player.playback);
+	return xml.element("div.media-widget")
+		.on("click", () => {
+			navigate(`video/shows/${show.show_id}/`)
+		})
+		.add(xml.element("div.media-widget__artwork")
+			.set("style", "padding-bottom: 150%;")
+			.add(is.absent(show.artwork) ? undefined : xml.element("img.media-widget__image")
+				.set("src", `/files/${show.artwork.file_id}/?token=${token}`)
+			)
+			.add(xml.element("div.playback-button")
+				.add(makePlayIcon()
+					.bind("data-hide", isPlaying.addObserver(a => a))
+				)
+				.add(makePauseIcon()
+					.bind("data-hide", isPlaying.addObserver(a => !a))
+				)
+				.on("click", (event) => {
+					if (isPlaying.getState()) {
+						player.pause();
+					} else {
+						if (isContext.getState()) {
+							player.resume();
+						} else {
+							play();
+						}
+					}
+				})
+			)
+		)
+		.add(xml.element("div.media-widget__metadata")
+			.add(xml.element("div.media-widget__titles")
+				.add(xml.element("div.media-widget__title")
+					.add(xml.text(show.title))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2064,7 +2152,7 @@ function renderTextParagraph(content: string) {
 		.add(xml.text(content)
 	);
 }
-const makeEntityHeader = (title: string, subtitle: string | undefined, tags: Array<string> = []) => {
+const makeEntityHeader = (title: string, subtitle?: string, tags: Array<string> = []) => {
 	return xml.element("div.entity-header")
 		.add(xml.element("div.entity-header__titles")
 			.add(xml.element("div.entity-header__title")
@@ -2462,17 +2550,6 @@ let updateviewforuri = (uri: string): void => {
 			}
 			return indices;
 		}
-		function getYears(season: Season): number[] {
-			let years = season.episodes.reduce((years, episode) => {
-				if (is.present(episode.year)) {
-					if (!years.includes(episode.year)) {
-						years.push(episode.year);
-					}
-				}
-				return years;
-			}, [] as number[]);
-			return years.sort();
-		}
 		req<api_response.ApiRequest, api_response.ShowResponse>(`/api/video/shows/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			const show = translateShowResponse(response);
 			const duration_ms = show.seasons.reduce((sum, season) => {
@@ -2859,66 +2936,25 @@ let updateviewforuri = (uri: string): void => {
 			}
 		});
 	} else if ((parts = /^video[/]genres[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		let genre_id = parts[1];
-		req<api_response.GenreRequest, api_response.GenreResponse>(`/api/video/genres/${genre_id}/`, {}, (status, response) => {
-			let movies = document.createElement("div");
-			for (let movie of response.movies) {
-				let d2 = document.createElement("div");
-				d2.style.setProperty("display", "flex");
-				d2.classList.add("group");
-				let left = document.createElement("div");
-				left.style.setProperty("width", "25%");
-				let image = document.createElement("img");
-				image.setAttribute("src", `/files/${movie.poster_file_id || ""}/?token=${token}`);
-				image.style.setProperty("width", "100%");
-				left.appendChild(image);
-				let right = document.createElement("div");
-				right.style.setProperty("width", "100%");
-				d2.appendChild(left);
-				d2.appendChild(right);
-				let h3 = document.createElement("h3");
-				h3.style.setProperty("font-size", "16px");
-				h3.textContent = movie.title;
-				let h4 = document.createElement("h4");
-				h4.style.setProperty("font-size", "12px");
-				h4.textContent = "";
-				let p1 = document.createElement("p");
-				p1.style.setProperty("font-size", "16px");
-				p1.textContent = movie.summary;
-				let p2 = document.createElement("p");
-				p2.style.setProperty("font-size", "16px");
-				p2.textContent = [
-					movie.year.toString().padStart(4, "0")
-				].join(" | ");
-				let button = document.createElement("button");
-				button.textContent = "View";
-				button.addEventListener("click", () => {
-					navigate(`video/movies/${movie.movie_id}/`);
-				});
-				right.appendChild(h3);
-				right.appendChild(h4);
-				right.appendChild(p1);
-				right.appendChild(p2);
-				right.appendChild(button);
-				movies.appendChild(d2);
-			}
-			let shows = document.createElement("div");
-			for (let show of response.shows) {
-				let d2 = document.createElement("div");
-				d2.classList.add("group");
-				let h3 = document.createElement("h3");
-				h3.style.setProperty("font-size", "16px");
-				h3.textContent = show.title;
-				d2.appendChild(h3);
-				let button = document.createElement("button");
-				button.textContent = "View";
-				button.addEventListener("click", () => {
-					navigate(`video/shows/${show.show_id}/`);
-				});
-				shows.appendChild(d2);
-			}
-			mount.appendChild(movies);
-			mount.appendChild(shows);
+		req<api_response.GenreRequest, api_response.GenreResponse>(`/api/video/genres/${parts[1]}/?token=${token}`, {}, (status, response) => {
+			let shows = response.genre.shows.map(translateShowResponse);
+			let movies = response.genre.movies.map(translateMovieResponse);
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(makeEntityHeader(response.genre.title, undefined, ["Video Genre"]))
+				)
+				.add(shows.length === 0 ? undefined : xml.element("div.content")
+					.add(makeGrid("Shows", ...shows.map((show, movieIndex) => makeShow(show, () => {
+						player.playShow(show);
+					}))))
+				)
+				.add(movies.length === 0 ? undefined : xml.element("div.content")
+					.add(makeGrid("Movies", ...movies.map((movie, movieIndex) => makeMovie(movie, () => {
+						player.playMovie(movie);
+					}))))
+				)
+				.render()
+			);
 		});
 	} else if ((parts = /^video[/]genres[/]/.exec(uri)) !== null) {
 		req<api_response.GenresRequest, api_response.GenresResponse>(`/api/video/genres/`, {}, (status, response) => {
@@ -2926,8 +2962,13 @@ let updateviewforuri = (uri: string): void => {
 				genre_id: rgenre.video_genre_id,
 				title: rgenre.title
 			}));
-			mount.appendChild(xml.element("div.content")
-				.add(makeGrid(undefined, ...genres.map(makeGenreLink)))
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(makeEntityHeader("Video Genres"))
+				)
+				.add(xml.element("div.content")
+					.add(makeGrid(undefined, ...genres.map(makeGenreLink)))
+				)
 				.render()
 			);
 		});
