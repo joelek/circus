@@ -350,12 +350,26 @@ let getMoviePartFromFileId = RecordIndex.from("file_id", media.video.movie_parts
 let getMoviePartsFromMovieIdIndex = CollectionIndex.from("movie_id", media.video.movie_parts);
 let getShowGenresFromShowId = CollectionIndex.from("show_id", media.video.show_genres);
 let getMovieGenresFromMovieId = CollectionIndex.from("movie_id", media.video.movie_genres);
+let getMoviesFromVideoGenreIdIndex = CollectionIndex.from("video_genre_id", media.video.movie_genres);
+let getShowsFromVideoGenreIdIndex = CollectionIndex.from("video_genre_id", media.video.show_genres);
 let getVideoGenreFromVideoGenreId = RecordIndex.from("video_genre_id", media.video.genres);
 let getSeasonsFromShowIdIndex = CollectionIndex.from("show_id", media.video.seasons);
 let getEpisodesFromSeasonIdIndex = CollectionIndex.from("season_id", media.video.episodes);
 let getStreamsFromFileIdIndex = CollectionIndex.from("file_id", streams.streams);
 let getChannelFromChannelIdIndex = RecordIndex.from("channel_id", channels.channels);
 let getProgramsFromChannelIdIndex = CollectionIndex.from("channel_id", channels.programs);
+
+export function getMoviesFromVideoGenreId(video_genre_id: string): libdb.MovieEntry[] {
+	return getMoviesFromVideoGenreIdIndex.lookup(video_genre_id).map((movie_genre) => {
+		return lookupMovie(movie_genre.movie_id);
+	});
+}
+
+export function getShowsFromVideoGenreId(video_genre_id: string): libdb.ShowEntry[] {
+	return getShowsFromVideoGenreIdIndex.lookup(video_genre_id).map((show_genre) => {
+		return lookupShow(show_genre.show_id);
+	});
+}
 
 export function getChannelFromChannelId(channelId: string): libdb.ChannelEntry {
 	return getChannelFromChannelIdIndex.lookup(channelId);
@@ -391,6 +405,18 @@ export function getStreamsFromFileId(fileId: string): Array<libdb.Stream> {
 		.sort((one, two) => {
 			return one.timestamp_ms - two.timestamp_ms;
 		});
+}
+
+export function getSeasonsFromShowId(show_id: string): (libdb.SeasonEntry & {
+	episodes: libdb.EpisodeEntry[]
+})[] {
+	return getSeasonsFromShowIdIndex.lookup(show_id).map((season) => {
+		let episodes = getEpisodesFromSeasonIdIndex.lookup(season.season_id);
+		return {
+			...season,
+			episodes
+		}
+	});
 }
 
 export function getEpisodesFromShowId(showId: string): Array<libdb.EpisodeEntry> {

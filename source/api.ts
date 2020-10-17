@@ -297,15 +297,9 @@ class ShowRoute implements Route<api_response.ApiRequest, api_response.ShowRespo
 		if (show === undefined) {
 			throw new Error();
 		}
-		let seasons = data.media.video.seasons
-			.filter((season) => {
-				return season.show_id === show_id
-			})
+		let seasons = data.getSeasonsFromShowId(show_id)
 			.map((season) => {
-				let episodes = data.media.video.episodes
-					.filter((episode) => {
-						return episode.season_id === season.season_id
-					})
+				let episodes = season.episodes
 					.map((episode) => {
 						let subtitles = data.lookupSubtitles(episode.file_id);
 						let streamed = data.getLatestStream(username, episode.file_id);
@@ -352,15 +346,9 @@ class ShowsRoute implements Route<api_response.ApiRequest, api_response.ShowsRes
 				genres
 			};
 		}).map((show) => {
-			let seasons = data.media.video.seasons
-				.filter((season) => {
-					return season.show_id === show.show_id
-				})
+			let seasons = data.getSeasonsFromShowId(show.show_id)
 				.map((season) => {
-					let episodes = data.media.video.episodes
-						.filter((episode) => {
-							return episode.season_id === season.season_id
-						})
+					let episodes = season.episodes
 						.map((episode) => {
 							let subtitles = data.lookupSubtitles(episode.file_id);
 							let streamed = data.getLatestStream(username, episode.file_id);
@@ -487,9 +475,7 @@ class MovieRoute implements Route<api_response.AuthRequest, api_response.MovieRe
 		if (movie === undefined) {
 			throw new Error();
 		}
-		let movie_parts = data.media.video.movie_parts.filter((movie_part) => {
-			return movie_part.movie_id === movie_id;
-		}).map((movie_part) => {
+		let movie_parts = data.getMoviePartsFromMovieId(movie_id).map((movie_part) => {
 			let subtitles = data.lookupSubtitles(movie_part.file_id);
 			let streamed = data.getLatestStream(username, movie_part.file_id);
 			return {
@@ -522,9 +508,7 @@ class MoviesRoute implements Route<api_response.AuthRequest, api_response.Movies
 		}
 		let username = getUsername(request);
 		let movies = data.media.video.movies.map((movie) => {
-			let movie_parts = data.media.video.movie_parts.filter((movie_part) => {
-				return movie_part.movie_id === movie.movie_id;
-			}).map((movie_part) => {
+			let movie_parts = data.getMoviePartsFromMovieId(movie.movie_id).map((movie_part) => {
 				let subtitles = data.lookupSubtitles(movie_part.file_id);
 				let streamed = data.getLatestStream(username, movie_part.file_id);
 				return {
@@ -777,14 +761,8 @@ class GenreRoute implements Route<api_response.GenreRequest, api_response.GenreR
 		}
 		let video_genre_id = parts[1];
 		let genre = data.video_genres_index[video_genre_id] as libdb.VideoGenreEntry;
-		let movies = data.media.video.movie_genres.filter((movie_genre) => {
-			return movie_genre.video_genre_id === video_genre_id;
-		}).map((movie_genre) => {
-			return data.movies_index[movie_genre.movie_id] as libdb.MovieEntry;
-		}).map((movie) => {
-			let movie_parts = data.media.video.movie_parts.filter((movie_part) => {
-				return movie_part.movie_id === movie.movie_id;
-			}).map((movie_part) => {
+		let movies = data.getMoviesFromVideoGenreId(video_genre_id).map((movie) => {
+			let movie_parts = data.getMoviePartsFromMovieId(movie.movie_id).map((movie_part) => {
 				let subtitles = data.lookupSubtitles(movie_part.file_id);
 				let streamed = data.getLatestStream(username, movie_part.file_id);
 				return {
@@ -798,30 +776,18 @@ class GenreRoute implements Route<api_response.GenreRequest, api_response.GenreR
 				movie_parts
 			}
 		});
-		let shows = data.media.video.show_genres.filter((show_genre) => {
-			return show_genre.video_genre_id === video_genre_id;
-		}).map((show_genre) => {
-			return data.shows_index[show_genre.show_id] as libdb.ShowEntry;
-		}).map((show) => {
-			let seasons = data.media.video.seasons
-				.filter((season) => {
-					return season.show_id === show.show_id
-				})
-				.map((season) => {
-					let episodes = data.media.video.episodes
-						.filter((episode) => {
-							return episode.season_id === season.season_id
-						})
-						.map((episode) => {
-							let subtitles = data.lookupSubtitles(episode.file_id);
-							let streamed = data.getLatestStream(username, episode.file_id);
-							let payload: api_response.EpisodeResponse = {
-								...episode,
-								streamed,
-								subtitles
-							};
-							return payload;
-						});
+		let shows = data.getShowsFromVideoGenreId(video_genre_id).map((show) => {
+			let seasons = data.getSeasonsFromShowId(show.show_id).map((season) => {
+					let episodes = season.episodes.map((episode) => {
+						let subtitles = data.lookupSubtitles(episode.file_id);
+						let streamed = data.getLatestStream(username, episode.file_id);
+						let payload: api_response.EpisodeResponse = {
+							...episode,
+							streamed,
+							subtitles
+						};
+						return payload;
+					});
 					let payload: api_response.SeasonResponse = {
 						...season,
 						episodes
