@@ -352,7 +352,7 @@ class ShowsRoute implements Route<api_response.ApiRequest, api_response.ShowsRes
 					let episodes = season.episodes
 						.map((episode) => {
 							let subtitles = data.lookupSubtitles(episode.file_id);
-							let streamed = data.getLatestStream(username, episode.file_id);
+							let streamed = null;
 							let payload: api_response.EpisodeResponse = {
 								...episode,
 								streamed,
@@ -511,7 +511,7 @@ class MoviesRoute implements Route<api_response.AuthRequest, api_response.Movies
 		let movies = data.media.video.movies.map((movie) => {
 			let movie_parts = data.getMoviePartsFromMovieId(movie.movie_id).map((movie_part) => {
 				let subtitles = data.lookupSubtitles(movie_part.file_id);
-				let streamed = data.getLatestStream(username, movie_part.file_id);
+				let streamed = null;
 				return {
 					...movie_part,
 					streamed,
@@ -773,7 +773,7 @@ class GenreRoute implements Route<api_response.GenreRequest, api_response.GenreR
 		let movies = data.getMoviesFromVideoGenreId(video_genre_id).map((movie) => {
 			let movie_parts = data.getMoviePartsFromMovieId(movie.movie_id).map((movie_part) => {
 				let subtitles = data.lookupSubtitles(movie_part.file_id);
-				let streamed = data.getLatestStream(username, movie_part.file_id);
+				let streamed = null;
 				return {
 					...movie_part,
 					streamed,
@@ -789,7 +789,7 @@ class GenreRoute implements Route<api_response.GenreRequest, api_response.GenreR
 			let seasons = data.getSeasonsFromShowId(show.show_id).map((season) => {
 					let episodes = season.episodes.map((episode) => {
 						let subtitles = data.lookupSubtitles(episode.file_id);
-						let streamed = data.getLatestStream(username, episode.file_id);
+						let streamed = null;
 						let payload: api_response.EpisodeResponse = {
 							...episode,
 							streamed,
