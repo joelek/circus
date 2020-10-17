@@ -127,7 +127,7 @@ player.currentEntry.addObserver((currentEntry) => {
 		} else if (Movie.is(currentEntry)) {
 			let movie = currentEntry;
 			mediaPlayerTitle.updateState(movie.title);
-			mediaPlayerSubtitle.updateState([ movie.year ].join(" \u2022 "));
+			mediaPlayerSubtitle.updateState("");
 			session.setMetadata({
 				title: movie.title,
 				artwork: is.absent(movie.artwork) ? undefined : [

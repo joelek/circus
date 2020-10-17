@@ -41,10 +41,7 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 			metadata: {
 				metadataType: 0,
 				title: episode.title,
-				subtitle: [
-					show.title,
-					utils.formatSeasonEpisode(season.number, episode.number)
-				].join(" \u2022 ")
+				subtitle: show.title
 			},
 			tracks: episode.subtitles.map((subtitle, subtitleIndex) => ({
 				...getLanguage(subtitle.language),
@@ -65,7 +62,6 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 			metadata: {
 				metadataType: 0,
 				title: movie.title,
-				subtitle: [ movie.year ].join(" \u2022 "),
 				images: is.absent(movie.artwork) ? undefined : [
 					{
 						url: `${MEDIA_SERVER}/files/${movie.artwork.file_id}/?token=${token}`
