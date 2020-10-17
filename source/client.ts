@@ -722,9 +722,17 @@ style.innerText = `
 		position: relative;
 	}
 
-	.media-widget__image {
+	.media-widget__images {
+		display: grid;
+		grid-auto-flow: column;
+		height: 100%;
+		justify-content: start;
 		position: absolute;
 		width: 100%;
+	}
+
+	.media-widget__image {
+		height: 100%;
 	}
 
 	.media-widget__metadata {
@@ -1881,8 +1889,10 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 			navigate(`audio/albums/${album.album_id}/`);
 		})
 		.add(xml.element("div.media-widget__artwork")
-			.add(is.absent(album.artwork) ? undefined : xml.element("img.media-widget__image")
-				.set("src", `/files/${album.artwork.file_id}/?token=${token}`)
+			.add(is.absent(album.artwork) ? undefined : xml.element("div.media-widget__images")
+				.add(xml.element("img.media-widget__image")
+					.set("src", `/files/${album.artwork.file_id}/?token=${token}`)
+				)
 			)
 			.add(xml.element("div.playback-button")
 				.add(makePlayIcon()
@@ -1922,6 +1932,11 @@ function makeGenreLink(genre: Genre): xml.XElement {
 	return xml.element("div.media-widget")
 		.add(xml.element("div.media-widget__artwork")
 			.set("style", "padding-bottom: 50%;")
+			.add(...genre.artwork.map((artwork) => xml.element("div.media-widget__images")
+				.add(xml.element("img.media-widget__image")
+					.set("src", `/files/${artwork.file_id}/?token=${token}`)
+				)
+			))
 		)
 		.add(xml.element("div.media-widget__metadata")
 			.add(xml.element("div.media-widget__titles")
@@ -1963,8 +1978,10 @@ function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 		})
 		.add(xml.element("div.media-widget__artwork")
 			.set("style", "padding-bottom: 56.25%;")
-			.add(xml.element("img.media-widget__image")
-				.set("src", `/media/stills/${episode.file.file_id}/?token=${token}`)
+			.add(xml.element("div.media-widget__images")
+				.add(xml.element("img.media-widget__image")
+					.set("src", `/media/stills/${episode.file.file_id}/?token=${token}`)
+				)
 			)
 			.add(xml.element("div.playback-button")
 				.add(makePlayIcon()
@@ -2028,8 +2045,10 @@ function makeShow(show: Show, play: () => void): xml.XElement {
 		})
 		.add(xml.element("div.media-widget__artwork")
 			.set("style", "padding-bottom: 150%;")
-			.add(is.absent(show.artwork) ? undefined : xml.element("img.media-widget__image")
-				.set("src", `/files/${show.artwork.file_id}/?token=${token}`)
+			.add(is.absent(show.artwork) ? undefined : xml.element("div.media-widget__images")
+				.add(xml.element("img.media-widget__image")
+					.set("src", `/files/${show.artwork.file_id}/?token=${token}`)
+				)
 			)
 			.add(xml.element("div.playback-button")
 				.add(makePlayIcon()
@@ -2088,8 +2107,10 @@ function makeMovie(movie: Movie, play: () => void): xml.XElement {
 		})
 		.add(xml.element("div.media-widget__artwork")
 			.set("style", "padding-bottom: 150%;")
-			.add(is.absent(movie.artwork) ? undefined : xml.element("img.media-widget__image")
-				.set("src", `/files/${movie.artwork.file_id}/?token=${token}`)
+			.add(is.absent(movie.artwork) ? undefined : xml.element("div.media-widget__images")
+				.add(xml.element("img.media-widget__image")
+					.set("src", `/files/${movie.artwork.file_id}/?token=${token}`)
+				)
 			)
 			.add(xml.element("div.playback-button")
 				.add(makePlayIcon()
