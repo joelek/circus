@@ -2710,9 +2710,17 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^video[/]movies[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/?token=${token}`, {}, (status, response) => {
 			let movies = response.movies.map(translateMovieResponse);
-			let element = xml.element("div.content")
-				.add(makeGrid(undefined, ...movies.map((movie) => makeMovie(movie, () => player.playMovie(movie)))));
-			mount.appendChild(element.render());
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(makeEntityHeader("Movies"))
+				)
+				.add(xml.element("div.content")
+					.add(makeGrid(undefined, ...movies.map((movie, movieIndex) => makeMovie(movie, () => {
+						player.playMovie(movie);
+					}))))
+				)
+				.render()
+			);
 		});
 	} else if ((parts = /^video[/]cues[/](.*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
