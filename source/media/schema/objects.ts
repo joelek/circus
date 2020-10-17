@@ -114,12 +114,14 @@ export const Track = autoguard.Intersection.of(
 
 export type GenreBase = {
 	"genre_id": string,
-	"title": string
+	"title": string,
+	"artwork": ImageFile[]
 };
 
 export const GenreBase = autoguard.Object.of<GenreBase>({
 	"genre_id": autoguard.String,
-	"title": autoguard.String
+	"title": autoguard.String,
+	"artwork": autoguard.Array.of(autoguard.Reference.of<ImageFile>(() => ImageFile))
 });
 
 export type Genre = GenreBase & {};

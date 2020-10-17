@@ -7,6 +7,7 @@ import * as auth from "./auth";
 import * as api_response from "./api_response";
 import * as lchannels from "./channels";
 import * as data from "./data";
+import * as is from "./is";
 
 function getUsername(request: libhttp.IncomingMessage): string {
 	var url = liburl.parse(request.url || "/", true);
@@ -739,7 +740,15 @@ class ChannelRoute implements Route<api_response.ChannelRequest, api_response.Ch
 
 class GenresRoute implements Route<api_response.GenresRequest, api_response.GenresResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		let genres = data.media.video.genres;
+		let genres = data.media.video.genres.map((genre) => {
+			let artwork = data.getMoviesFromVideoGenreId(genre.video_genre_id).map((movie) => {
+				return movie.poster_file_id;
+			}).filter(is.present).slice(0, 3);
+			return {
+				...genre,
+				artwork
+			}
+		});
 		let payload: api_response.GenresResponse = {
 			genres
 		};

@@ -2980,9 +2980,15 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^video[/]genres[/]/.exec(uri)) !== null) {
 		req<api_response.GenresRequest, api_response.GenresResponse>(`/api/video/genres/`, {}, (status, response) => {
-			let genres: Genre[] = response.genres.map((rgenre) => ({
-				genre_id: rgenre.video_genre_id,
-				title: rgenre.title
+			let genres: Genre[] = response.genres.map((genre) => ({
+				genre_id: genre.video_genre_id,
+				title: genre.title,
+				artwork: genre.artwork.map((artwork) => ({
+					file_id: artwork,
+					mime: "image/jpeg",
+					height: 1080,
+					width: 720
+				}))
 			}));
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
