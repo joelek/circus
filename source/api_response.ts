@@ -67,7 +67,7 @@ interface SeasonResponse extends ApiResponse, libdb.SeasonEntry {
 }
 
 interface ShowsResponse extends ApiResponse {
-	shows: Array<libdb.ShowEntry & {
+	shows: Array<ShowResponse & {
 		genres: Array<libdb.VideoGenreEntry>
 	}>
 }

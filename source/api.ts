@@ -341,6 +341,7 @@ class ShowsRoute implements Route<api_response.ApiRequest, api_response.ShowsRes
 	}
 
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
 		if (request.url === undefined) {
 			throw new Error();
 		}
@@ -349,6 +350,36 @@ class ShowsRoute implements Route<api_response.ApiRequest, api_response.ShowsRes
 			return {
 				...show,
 				genres
+			};
+		}).map((show) => {
+			let seasons = data.media.video.seasons
+				.filter((season) => {
+					return season.show_id === show.show_id
+				})
+				.map((season) => {
+					let episodes = data.media.video.episodes
+						.filter((episode) => {
+							return episode.season_id === season.season_id
+						})
+						.map((episode) => {
+							let subtitles = data.lookupSubtitles(episode.file_id);
+							let streamed = data.getLatestStream(username, episode.file_id);
+							let payload: api_response.EpisodeResponse = {
+								...episode,
+								streamed,
+								subtitles
+							};
+							return payload;
+						});
+					let payload: api_response.SeasonResponse = {
+						...season,
+						episodes
+					};
+					return payload;
+				});
+			return {
+				...show,
+				seasons
 			};
 		});
 		let payload: api_response.ShowsResponse = {
