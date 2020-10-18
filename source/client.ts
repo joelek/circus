@@ -453,8 +453,10 @@ style.innerText = `
 		transition: color 0.1s;
 	}
 
-	a:hover {
-		color: rgb(255, 255, 255);
+	@media (hover: hover) and (pointer: fine) {
+		a:hover {
+			color: rgb(255, 255, 255);
+		}
 	}
 
 	html {
@@ -479,14 +481,9 @@ style.innerText = `
 		white-space: nowrap;
 	}
 
-
 	@media (hover: hover) and (pointer: fine) {
 		.page-header__title:hover {
 			transform: scale(1.25);
-		}
-
-		.page-header__title:active {
-			transform: none;
 		}
 	}
 
