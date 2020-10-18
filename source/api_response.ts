@@ -154,9 +154,7 @@ interface GenresRequest extends ApiRequest {
 }
 
 interface GenresResponse extends ApiResponse {
-	genres: Array<libdb.VideoGenreEntry & {
-		artwork: string[]
-	}>
+	genres: Array<libdb.VideoGenreEntry & {}>
 }
 
 interface GenreRequest extends ApiRequest {

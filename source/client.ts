@@ -1933,14 +1933,7 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 }
 function makeGenreLink(genre: Genre): xml.XElement {
 	return xml.element("div.media-widget")
-		.add(xml.element("div.media-widget__artwork")
-			.set("style", "padding-bottom: 50%;")
-			.add(xml.element("div.media-widget__images")
-				.add(...genre.artwork.map((artwork) => xml.element("img.media-widget__image")
-					.set("src", `/files/${artwork.file_id}/?token=${token}`)
-				)
-			))
-		)
+		.add(xml.element("div.media-widget__artwork"))
 		.add(xml.element("div.media-widget__metadata")
 			.add(xml.element("div.media-widget__titles")
 				.add(xml.element("div.media-widget__title")
@@ -3007,13 +3000,7 @@ let updateviewforuri = (uri: string): void => {
 		req<api_response.GenresRequest, api_response.GenresResponse>(`/api/video/genres/`, {}, (status, response) => {
 			let genres: Genre[] = response.genres.map((genre) => ({
 				genre_id: genre.video_genre_id,
-				title: genre.title,
-				artwork: genre.artwork.map((artwork) => ({
-					file_id: artwork,
-					mime: "image/jpeg",
-					height: 1080,
-					width: 720
-				}))
+				title: genre.title
 			}));
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")

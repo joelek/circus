@@ -46,8 +46,7 @@
 
 	GenreBase: {
 		genre_id: string,
-		title: string,
-		artwork: ImageFile[]
+		title: string
 	},
 
 	Genre: GenreBase & {

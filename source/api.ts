@@ -740,12 +740,8 @@ class ChannelRoute implements Route<api_response.ChannelRequest, api_response.Ch
 class GenresRoute implements Route<api_response.GenresRequest, api_response.GenresResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let genres = data.media.video.genres.map((genre) => {
-			let artwork = data.getMoviesFromVideoGenreId(genre.video_genre_id).map((movie) => {
-				return movie.poster_file_id;
-			}).filter(is.present).slice(0, 3);
 			return {
-				...genre,
-				artwork
+				...genre
 			}
 		});
 		let payload: api_response.GenresResponse = {
