@@ -58,7 +58,7 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 		response.writeHead(206, {
 			'Access-Control-Allow-Origin': '*',
 			'Accept-Ranges': `bytes`,
-			"Cache-Control": "public, max-age=0",
+			"Cache-Control": "private, max-age=86400",
 			'Content-Range': `bytes ${offset}-${offset2}/${size}`,
 			'Content-Type': mime,
 			'Content-Length': `${length}`
@@ -84,7 +84,7 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 			response.writeHead(200, {
 				'Access-Control-Allow-Origin': '*',
 				'Accept-Ranges': `bytes`,
-				"Cache-Control": "public, max-age=0",
+				"Cache-Control": "private, max-age=86400",
 				'Content-Type': mime,
 				'Content-Length': `${size}`
 			});
@@ -137,7 +137,7 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 				stream.on("open", () => {
 					response.writeHead(200, {
 						"Access-Control-Allow-Origin": "*",
-						"Cache-Control": "public, max-age=0",
+						"Cache-Control": "public, max-age=86400",
 						"Content-Type": "image/jpeg"
 					});
 					stream.pipe(response);
@@ -153,7 +153,7 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 					stream.on("open", () => {
 						response.writeHead(200, {
 							"Access-Control-Allow-Origin": "*",
-							"Cache-Control": "public, max-age=0",
+							"Cache-Control": "public, max-age=86400",
 							"Content-Type": "image/jpeg"
 						});
 						stream.pipe(response);
@@ -171,7 +171,7 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 				stream.on("open", () => {
 					response.writeHead(200, {
 						"Access-Control-Allow-Origin": "*",
-						"Cache-Control": "public, max-age=0",
+						"Cache-Control": "public, max-age=86400",
 						"Content-Type": "image/gif"
 					});
 					stream.pipe(response);
@@ -186,7 +186,7 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 					stream.on("open", () => {
 						response.writeHead(200, {
 							"Access-Control-Allow-Origin": "*",
-							"Cache-Control": "public, max-age=0",
+							"Cache-Control": "public, max-age=86400",
 							"Content-Type": "image/gif"
 						});
 						stream.pipe(response);
