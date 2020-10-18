@@ -2679,12 +2679,43 @@ let updateviewforuri = (uri: string): void => {
 			}, 0);
 			const indices = getNextEpisode(show);
 			const episode = is.absent(indices) ? undefined : show.seasons[indices.seasonIndex].episodes[indices.episodeIndex];
+			let isContext = computed((contextPath) => {
+				if (!is.present(contextPath)) {
+					return false;
+				}
+				if (contextPath[contextPath.length - 3] !== show.show_id) {
+					return false;
+				}
+				return true;
+			}, player.contextPath);
+			let isPlaying = computed((isContext, playback) => {
+				return isContext && playback;
+			}, isContext, player.playback);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(makeEntityHeader(show.title, undefined, [
 						"Show",
 						format_duration(duration_ms)
-					]))
+					], maybe(show.artwork, (artwork) => makeImage(artwork.file_id).set("style", "padding-bottom: 150%")),
+					xml.element("div.playback-button")
+						.add(makePlayIcon()
+							.bind("data-hide", isPlaying.addObserver(a => a))
+						)
+						.add(makePauseIcon()
+							.bind("data-hide", isPlaying.addObserver(a => !a))
+						)
+						.on("click", (event) => {
+							if (isPlaying.getState()) {
+								player.pause();
+							} else {
+								if (isContext.getState()) {
+									player.resume();
+								} else {
+									player.playShow(show);
+								}
+							}
+						}))
+					)
 				)
 				.add(xml.element("div.content")
 					.add(is.absent(indices) || is.absent(episode) ? undefined : makeGrid("Suggested episode", ...[
