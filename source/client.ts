@@ -3349,27 +3349,17 @@ let updateviewforuri = (uri: string): void => {
 			});
 		}
 	} else {
-		let s = document.createElement('div');
-		s.style.setProperty("font-size", "24px");
-		s.innerText = 'Search';
-		s.addEventListener('click', () => {
-			navigate('search/');
-		});
-		mount.appendChild(s)
-		let d = document.createElement('div');
-		d.style.setProperty("font-size", "24px");
-		d.innerText = 'Audio';
-		d.addEventListener('click', () => {
-			navigate('audio/');
-		});
-		mount.appendChild(d);
-		let v = document.createElement('div');
-		v.style.setProperty("font-size", "24px");
-		v.innerText = 'Video';
-		v.addEventListener('click', () => {
-			navigate('video/');
-		});
-		mount.appendChild(v);
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(makeEntityHeader("Home"))
+			)
+			.add(xml.element("div.content")
+				.set("style", "display: grid; gap: 32px;")
+				.add(renderTextHeader(makeLink("search/", "Search")))
+				.add(renderTextHeader(makeLink("audio/", "Audio")))
+				.add(renderTextHeader(makeLink("video/", "Video")))
+			)
+		.render());
 	}
 };
 let get_basehref = (): string => {
