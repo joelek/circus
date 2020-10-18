@@ -2607,27 +2607,17 @@ let updateviewforuri = (uri: string): void => {
 			}
 		});
 	} else if ((parts = /^audio[/]/.exec(uri)) !== null) {
-		let d = document.createElement('div');
-		d.innerText = 'Artists';
-		d.style.setProperty('font-size', '24px');
-		d.addEventListener('click', () => {
-			navigate('audio/artists/');
-		});
-		mount.appendChild(d);
-		let d2 = document.createElement('div');
-		d2.style.setProperty('font-size', '24px');
-		d2.innerText = 'Albums';
-		d2.addEventListener('click', () => {
-			navigate('audio/albums/');
-		});
-		mount.appendChild(d2);
-		let d3 = document.createElement('div');
-		d3.style.setProperty('font-size', '24px');
-		d3.innerText = 'Lists';
-		d3.addEventListener('click', () => {
-			navigate('audio/lists/');
-		});
-		mount.appendChild(d3);
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(makeEntityHeader("Audio"))
+			)
+			.add(xml.element("div.content")
+				.set("style", "display: grid; gap: 32px;")
+				.add(renderTextHeader(makeLink("audio/artists/", "Artists")))
+				.add(renderTextHeader(makeLink("audio/albums/", "Albums")))
+				.add(renderTextHeader(makeLink("video/lists/", "Playlists")))
+			)
+		.render());
 	} else if ((parts = /^video[/]shows[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		function getNextEpisode(show: Show): undefined | { seasonIndex: number, episodeIndex: number } {
 			let indices: undefined | {
