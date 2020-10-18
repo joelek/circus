@@ -873,7 +873,8 @@ style.innerText = `
 	}
 
 	.entity-header__artwork {
-
+		background-color: rgb(0, 0, 0);
+		position: relative;
 	}
 
 	.entity-header__metadata {
@@ -2176,11 +2177,19 @@ function renderTextParagraph(content: string) {
 		.add(xml.text(content)
 	);
 }
-const makeEntityHeader = (title: string, subtitle?: string, tags: Array<string> = [], image?: xml.XElement) => {
+
+function maybe<A, B>(value: A | undefined | null, cb: (value: A) => B): B | undefined {
+	if (is.present(value)) {
+		return cb(value);
+	}
+}
+
+const makeEntityHeader = (title: string, subtitle?: string, tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement) => {
 	return xml.element("div.entity-header")
-		.add(is.absent(image) ? undefined : xml.element("div.entity-header__artwork")
+		.add(maybe(image, (image) => xml.element("div.entity-header__artwork")
 			.add(image)
-		)
+			.add(playButton)
+		))
 		.add(xml.element("div.entity-header__metadata")
 			.add(xml.element("div.entity-header__titles")
 				.add(xml.element("div.entity-header__title")
