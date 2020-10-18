@@ -2012,13 +2012,14 @@ function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 }
 
 function makeShow(show: Show, play: () => void): xml.XElement {
-	let years = getYearsForShow(show);
-	if (years.length > 2) {
-		years = [ years[0], years[years.length - 1] ];
-	}
+	const duration_ms = show.seasons.reduce((sum, season) => {
+		return sum + season.episodes.reduce((sum, episode) => {
+			return sum + episode.file.duration_ms;
+		}, 0);
+	}, 0);
 	let tags = [
 		"Show",
-		...years.map(year => "" + year)
+		format_duration(duration_ms)
 	];
 	let isContext = computed((contextPath) => {
 		if (!is.present(contextPath)) {
