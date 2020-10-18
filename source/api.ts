@@ -634,7 +634,7 @@ class AudiolistRoute implements Route<api_response.AuthRequest, api_response.Aud
 						},
 						number: disc.number
 					},
-					artists: [],
+					artists: data.lookupTrackArtists(track.track_id),
 					file: {
 						file_id: track.file_id,
 						mime: "audio/mp4",

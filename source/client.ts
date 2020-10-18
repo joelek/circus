@@ -2582,9 +2582,13 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AudiolistResponse>(`/api/audio/playlists/${parts[1]}/`, {}, (status, playlist) => {
+			let duration_ms = 0;
+			for (let item of playlist.items) {
+				duration_ms += item.track.file.duration_ms;
+			}
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader(playlist.title, undefined, ["Playlist"]))
+					.add(makeEntityHeader(playlist.title, undefined, ["Playlist", format_duration(duration_ms)]))
 				)
 				.add(xml.element("div.content")
 					.add(xml.element("div.playlist__content")
@@ -2605,7 +2609,7 @@ let updateviewforuri = (uri: string): void => {
 								.add(xml.text(item.track.title))
 							)
 							.add(xml.element("div.playlist-item__subtitle")
-								.add(xml.text(item.track.artists.join(" \u2022 ")))
+								.add(xml.text(item.track.artists.map((artist) => artist.title).join(" \u2022 ")))
 							)
 							.on("click", () => {
 								player.playPlaylist(playlist, itemIndex);
@@ -2623,7 +2627,7 @@ let updateviewforuri = (uri: string): void => {
 				)
 				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 32px;")
-					.add(...response.audiolists.map((playlist) => renderTextHeader(makeLink(`audio/playlists/${playlist.audiolist_id}`, playlist.title))))
+					.add(...response.audiolists.map((playlist) => renderTextHeader(makeLink(`audio/playlists/${playlist.audiolist_id}/`, playlist.title))))
 				)
 			.render());
 
