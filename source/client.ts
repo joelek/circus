@@ -869,7 +869,7 @@ style.innerText = `
 	.entity-header {
 		display: grid;
 		gap: 32px;
-		grid-template-columns: repeat(auto-fit, minmax(240px, auto));
+		grid-template-columns: repeat(auto-fit, minmax(240px, max-content));
 	}
 
 	.entity-header__artwork {
