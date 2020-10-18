@@ -112,6 +112,48 @@ export const Track = autoguard.Intersection.of(
 	autoguard.Object.of<{}>({})
 );
 
+export type PlaylistBase = {
+	"playlist_id": string,
+	"title": string
+};
+
+export const PlaylistBase = autoguard.Object.of<PlaylistBase>({
+	"playlist_id": autoguard.String,
+	"title": autoguard.String
+});
+
+export type Playlist = PlaylistBase & {
+	"items": PlaylistItem[]
+};
+
+export const Playlist = autoguard.Intersection.of(
+	autoguard.Reference.of<PlaylistBase>(() => PlaylistBase),
+	autoguard.Object.of<{
+		"items": PlaylistItem[]
+	}>({
+		"items": autoguard.Array.of(autoguard.Reference.of<PlaylistItem>(() => PlaylistItem))
+	})
+);
+
+export type PlaylistItemBase = {
+	"number": number,
+	"playlist": PlaylistBase,
+	"track": Track
+};
+
+export const PlaylistItemBase = autoguard.Object.of<PlaylistItemBase>({
+	"number": autoguard.Number,
+	"playlist": autoguard.Reference.of<PlaylistBase>(() => PlaylistBase),
+	"track": autoguard.Reference.of<Track>(() => Track)
+});
+
+export type PlaylistItem = PlaylistItemBase & {};
+
+export const PlaylistItem = autoguard.Intersection.of(
+	autoguard.Reference.of<PlaylistItemBase>(() => PlaylistItemBase),
+	autoguard.Object.of<{}>({})
+);
+
 export type GenreBase = {
 	"genre_id": string,
 	"title": string
@@ -331,6 +373,10 @@ export type Autoguard = {
 	"Disc": Disc,
 	"TrackBase": TrackBase,
 	"Track": Track,
+	"PlaylistBase": PlaylistBase,
+	"Playlist": Playlist,
+	"PlaylistItemBase": PlaylistItemBase,
+	"PlaylistItem": PlaylistItem,
 	"GenreBase": GenreBase,
 	"Genre": Genre,
 	"MovieBase": MovieBase,
@@ -357,6 +403,10 @@ export const Autoguard = {
 	"Disc": Disc,
 	"TrackBase": TrackBase,
 	"Track": Track,
+	"PlaylistBase": PlaylistBase,
+	"Playlist": Playlist,
+	"PlaylistItemBase": PlaylistItemBase,
+	"PlaylistItem": PlaylistItem,
 	"GenreBase": GenreBase,
 	"Genre": Genre,
 	"MovieBase": MovieBase,

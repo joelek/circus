@@ -8,7 +8,7 @@ import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Genre, Movie, MovieBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase } from "./media/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Genre, Movie, MovieBase, Playlist, Season, SeasonBase, Show, ShowBase, Track, TrackBase } from "./media/schema/objects";
 
 
 
@@ -1745,6 +1745,8 @@ let mp = xml.element("div.content")
 						navigate(`video/episodes/${context.episode_id}/`);
 					} else if (Movie.is(context)) {
 						navigate(`video/movies/${context.movie_id}/`);
+					} else if (Playlist.is(context)) {
+						navigate(`audio/playlists/${context.playlist_id}/`);
 					} else if (Season.is(context)) {
 						navigate(`video/seasons/${context.season_id}/`);
 					} else if (Show.is(context)) {
@@ -2579,20 +2581,39 @@ let updateviewforuri = (uri: string): void => {
 			.render());
 		});
 	} else if ((parts = /^audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.AudiolistResponse>(`/api/audio/playlists/${parts[1]}/`, {}, (status, response) => {
-			let a = document.createElement('div');
-			a.style.setProperty('font-size', '24px');
-			a.innerText = `${response.title}`;
-			mount.appendChild(a);
-			for (let item of response.items) {
-				let d = document.createElement('div');
-				d.style.setProperty('font-size', '16px');
-				d.innerText = `${item.track.title}`;
-				d.addEventListener('click', () => {
-					//player.play(context, context.findIndex(entry => entry.file_id === item.track.file_id), 0);
-				});
-				mount.appendChild(d);
-			}
+		req<api_response.ApiRequest, api_response.AudiolistResponse>(`/api/audio/playlists/${parts[1]}/`, {}, (status, playlist) => {
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(makeEntityHeader(playlist.title, undefined, ["Playlist"]))
+				)
+				.add(xml.element("div.content")
+					.add(xml.element("div.playlist__content")
+						.add(...playlist.items.map((item, itemIndex) => xml.element("div.playlist-item")
+							.bind("data-playing", player.contextPath.addObserver((contextPath) => {
+								if (is.absent(contextPath)) {
+									return false;
+								}
+								if (contextPath[contextPath.length - 2] !== playlist.playlist_id) {
+									return false;
+								}
+								if (contextPath[contextPath.length - 1] !== item.track.track_id) {
+									return false;
+								}
+								return true;
+							}))
+							.add(xml.element("div.playlist-item__title")
+								.add(xml.text(item.track.title))
+							)
+							.add(xml.element("div.playlist-item__subtitle")
+								.add(xml.text(item.track.artists.join(" \u2022 ")))
+							)
+							.on("click", () => {
+								player.playPlaylist(playlist, itemIndex);
+							})
+						))
+					)
+				)
+			.render());
 		});
 	} else if ((parts = /^audio[/]playlists[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AudiolistsResponse>(`/api/audio/playlists/`, {}, (status, response) => {

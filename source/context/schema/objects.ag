@@ -5,6 +5,8 @@
 
 	ContextTrack: Track,
 
+	ContextPlaylist: Playlist,
+
 	ContextMovie: Movie,
 
 	ContextShow: Show,
@@ -13,7 +15,7 @@
 
 	ContextEpisode: Episode,
 
-	Context: ContextAlbum | ContextArtist | ContextTrack | ContextMovie | ContextShow | ContextSeason | ContextEpisode,
+	Context: ContextAlbum | ContextArtist | ContextTrack | ContextPlaylist | ContextMovie | ContextShow | ContextSeason | ContextEpisode,
 
 	ContextItem: ContextTrack | ContextMovie | ContextEpisode,
 

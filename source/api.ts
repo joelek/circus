@@ -8,6 +8,7 @@ import * as api_response from "./api_response";
 import * as lchannels from "./channels";
 import * as data from "./data";
 import * as is from "./is";
+import { PlaylistBase } from "./media/schema/objects";
 
 function getUsername(request: libhttp.IncomingMessage): string {
 	var url = liburl.parse(request.url || "/", true);
@@ -603,38 +604,48 @@ class AudiolistRoute implements Route<api_response.AuthRequest, api_response.Aud
 		if (audiolist === undefined) {
 			throw new Error();
 		}
-		let items = data.lists.audiolist_items
-			.filter((audiolist_item) => {
-				return audiolist_item.audiolist_id === audiolist_id
-			})
-			.map((audiolist_item) => {
-				let track = data.tracks_index[audiolist_item.track_id];
-				if (track !== undefined) {
-					let artists = data.media.audio.track_artists
-						.filter((track_artist) => {
-							return track_artist.track_id === (track as libdb.TrackEntry).track_id;
-						}).map((track_artist) => {
-							return data.artists_index[track_artist.artist_id];
-						}).filter((artist) => {
-							return artist !== undefined;
-						}) as Array<libdb.ArtistEntry>;
-					let disc = data.discs_index[track.disc_id];
-					if (disc !== undefined) {
-						let album = data.albums_index[disc.album_id];
-						if (album !== undefined) {
-							let payload: api_response.AudiolistItemResponse = {
-								...audiolist_item,
-								track
-							};
-							return payload;
-						}
-					}
+		let playlist: PlaylistBase = {
+			playlist_id: audiolist.audiolist_id,
+			title: audiolist.title
+		};
+		let items = data.getPlaylistItemsFromPlaylistId.lookup(playlist.playlist_id).map((audiolist_item) => {
+			let track = data.getTrackFromTrackId.lookup(audiolist_item.track_id);
+			let disc = data.getDiscFromDiscId.lookup(track.disc_id);
+			let album = data.getAlbumFromAlbumId.lookup(disc.album_id);
+			return {
+				playlist,
+				number: audiolist_item.number,
+				track: {
+					track_id: track.track_id,
+					title: track.title,
+					disc: {
+						disc_id: disc.disc_id,
+						album: {
+							album_id: album.album_id,
+							title: album.title,
+							year: album.year,
+							artists: data.lookupAlbumArtists(album.album_id),
+							artwork: is.absent(album.cover_file_id) ? undefined : {
+								file_id: album.cover_file_id,
+								mime: "image/jpeg",
+								height: 1080,
+								width: 1080
+							}
+						},
+						number: disc.number
+					},
+					artists: [],
+					file: {
+						file_id: track.file_id,
+						mime: "audio/mp4",
+						duration_ms: track.duration
+					},
+					number: track.number
 				}
-				return null;
-			})
-			.filter((audiolist_item) => audiolist_item !== null) as Array<api_response.AudiolistItemResponse>;
+			};
+		});
 		let payload: api_response.AudiolistResponse = {
-			...audiolist,
+			...playlist,
 			items
 		};
 		response.writeHead(200);

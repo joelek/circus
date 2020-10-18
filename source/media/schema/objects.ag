@@ -44,6 +44,25 @@
 
 	},
 
+	PlaylistBase: {
+		playlist_id: string,
+		title: string
+	},
+
+	Playlist: PlaylistBase & {
+		items: PlaylistItem[]
+	},
+
+	PlaylistItemBase: {
+		number: number,
+		playlist: PlaylistBase,
+		track: Track
+	},
+
+	PlaylistItem: PlaylistItemBase & {
+
+	},
+
 	GenreBase: {
 		genre_id: string,
 		title: string

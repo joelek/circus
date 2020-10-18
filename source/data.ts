@@ -484,6 +484,9 @@ let fileSubtitlesIndex = CollectionIndex.from("video_file_id", media.video.subti
 export const getDiscsFromAlbumId = CollectionIndex.from("album_id", media.audio.discs);
 export const getTracksFromDiscId = CollectionIndex.from("disc_id", media.audio.tracks);
 export const getAlbumFromAlbumId = RecordIndex.from("album_id", media.audio.albums);
+export const getPlaylistItemsFromPlaylistId = CollectionIndex.from("audiolist_id", lists.audiolist_items);
+export const getTrackFromTrackId = RecordIndex.from("track_id", media.audio.tracks);
+export const getDiscFromDiscId = RecordIndex.from("disc_id", media.audio.discs);
 
 export function lookupFile(file_id: string): libdb.FileEntry {
 	let file = files_index[file_id];

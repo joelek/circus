@@ -2,6 +2,7 @@ import * as is from "../is";
 import * as observers from "../simpleobs";
 import * as schema from "./schema";
 import * as typesockets from "../typesockets/client";
+import { ContextPlaylist } from "./schema/objects";
 
 type AlbumIndices = { disc: number, track: number };
 type ArtistIndices = { album: number, disc: number, track: number };
@@ -76,6 +77,13 @@ export class ContextClient {
 					let files = [] as schema.objects.ContextItem[];
 					let movie = context;
 					files.push(movie);
+					this.flattenedContext.updateState(files);
+				} else if (schema.objects.ContextPlaylist.is(context)) {
+					let files = [] as schema.objects.ContextItem[];
+					let playlist = context;
+					for (let item of playlist.items) {
+						files.push(item.track);
+					}
 					this.flattenedContext.updateState(files);
 				} else if (schema.objects.ContextSeason.is(context)) {
 					let files = [] as schema.objects.ContextItem[];
@@ -156,6 +164,12 @@ export class ContextClient {
 					} else if (schema.objects.ContextMovie.is(context)) {
 						return this.contextPath.updateState([
 							context.movie_id
+						]);
+					} else if (schema.objects.ContextPlaylist.is(context)) {
+						let itemIndex = currentIndex;
+						return this.contextPath.updateState([
+							context.playlist_id,
+							context.items[itemIndex].track.track_id
 						]);
 					} else if (schema.objects.ContextShow.is(context)) {
 						let seasonIndex = 0;
@@ -473,6 +487,18 @@ export class ContextClient {
 
 	playMovie(movie: schema.objects.ContextMovie): void {
 		this.play(movie, 0);
+	}
+
+	playPlaylist(playlist: ContextPlaylist, itemIndex?: number): void {
+		let index = 0;
+		if (is.present(itemIndex)) {
+			let items = playlist.items;
+			if (itemIndex < 0 || itemIndex >= items.length) {
+				throw `Expected ${itemIndex} to be a number between 0 and ${items.length}!`;
+			}
+			index += itemIndex;
+		}
+		return this.play(playlist, index);
 	}
 
 	playSeason(season: schema.objects.ContextSeason, episodeIndex?: number): void {
