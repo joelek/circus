@@ -3024,13 +3024,6 @@ let updateviewforuri = (uri: string): void => {
 		mount.appendChild(d);
 		d = document.createElement('div');
 		d.style.setProperty("font-size", "24px");
-		d.innerText = 'Channels';
-		d.addEventListener('click', () => {
-			navigate('video/channels/');
-		});
-		mount.appendChild(d);
-		d = document.createElement('div');
-		d.style.setProperty("font-size", "24px");
 		d.innerText = 'Genres';
 		d.addEventListener('click', () => {
 			navigate('video/genres/');
@@ -3247,13 +3240,6 @@ let updateviewforuri = (uri: string): void => {
 			navigate('video/');
 		});
 		mount.appendChild(v);
-		let t = document.createElement('div');
-		t.style.setProperty("font-size", "24px");
-		t.innerText = 'Tokens';
-		t.addEventListener('click', () => {
-			navigate('tokens/');
-		});
-		mount.appendChild(t);
 	}
 };
 let get_basehref = (): string => {
