@@ -298,25 +298,23 @@ class ShowRoute implements Route<api_response.ApiRequest, api_response.ShowRespo
 		if (show === undefined) {
 			throw new Error();
 		}
-		let seasons = data.getSeasonsFromShowId(show_id)
-			.map((season) => {
-				let episodes = season.episodes
-					.map((episode) => {
-						let subtitles = data.lookupSubtitles(episode.file_id);
-						let streamed = data.getLatestStream(username, episode.file_id);
-						let payload: api_response.EpisodeResponse = {
-							...episode,
-							streamed,
-							subtitles
-						};
-						return payload;
-					});
-				let payload: api_response.SeasonResponse = {
-					...season,
-					episodes
+		let seasons = data.getSeasonsFromShowId(show_id).map((season) => {
+			let episodes = season.episodes.map((episode) => {
+				let subtitles = data.lookupSubtitles(episode.file_id);
+				let streamed = data.getLatestStream(username, episode.file_id);
+				let payload: api_response.EpisodeResponse = {
+					...episode,
+					streamed,
+					subtitles
 				};
 				return payload;
 			});
+			let payload: api_response.SeasonResponse = {
+				...season,
+				episodes
+			};
+			return payload;
+		});
 		let payload: api_response.ShowResponse = {
 			...show,
 			seasons
@@ -341,12 +339,6 @@ class ShowsRoute implements Route<api_response.ApiRequest, api_response.ShowsRes
 			throw new Error();
 		}
 		let shows = data.media.video.shows.map((show) => {
-			let genres = data.getVideoGenresFromShowId(show.show_id);
-			return {
-				...show,
-				genres
-			};
-		}).map((show) => {
 			let seasons = data.getSeasonsFromShowId(show.show_id)
 				.map((season) => {
 					let episodes = season.episodes
@@ -369,6 +361,12 @@ class ShowsRoute implements Route<api_response.ApiRequest, api_response.ShowsRes
 			return {
 				...show,
 				seasons
+			};
+		}).map((show) => {
+			let genres = data.getVideoGenresFromShowId(show.show_id);
+			return {
+				...show,
+				genres
 			};
 		});
 		let payload: api_response.ShowsResponse = {
@@ -477,12 +475,10 @@ class MovieRoute implements Route<api_response.AuthRequest, api_response.MovieRe
 			throw new Error();
 		}
 		let movie_parts = data.getMoviePartsFromMovieId(movie_id).map((movie_part) => {
-			let subtitles = data.lookupSubtitles(movie_part.file_id);
 			let streamed = data.getLatestStream(username, movie_part.file_id);
 			return {
 				...movie_part,
-				streamed,
-				subtitles
+				streamed
 			};
 		});
 		let payload: api_response.MovieResponse = {
@@ -510,12 +506,10 @@ class MoviesRoute implements Route<api_response.AuthRequest, api_response.Movies
 		let username = getUsername(request);
 		let movies = data.media.video.movies.map((movie) => {
 			let movie_parts = data.getMoviePartsFromMovieId(movie.movie_id).map((movie_part) => {
-				let subtitles = data.lookupSubtitles(movie_part.file_id);
 				let streamed = null;
 				return {
 					...movie_part,
-					streamed,
-					subtitles
+					streamed
 				};
 			});
 			return {
