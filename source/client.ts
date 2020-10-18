@@ -306,7 +306,7 @@ namespace xml {
 			let parts = selector.split(".");
 			this.tag = parts[0];
 			this.attributes = new Map<string, string>();
-			this.children = new Array<Node<any>>();
+			this.children = new Array<xml.Node<any>>();
 			this.bound = new Map<string, Observable<any>>();
 			this.bound2 = new Map<string, ObservableClass<string>>();
 			this.listeners = new Map<keyof HTMLElementEventMap, Array<Listener<keyof HTMLElementEventMap>>>();
@@ -316,7 +316,7 @@ namespace xml {
 			}
 		}
 
-		add(...nodes: Array<Node<any> | null | undefined>): this {
+		add(...nodes: Array<xml.Node<any> | null | undefined>): this {
 			// TODO: Detach node from current parent.
 			for (let node of nodes) {
 				if (node != null) {
@@ -2217,7 +2217,7 @@ function makeMovie(movie: Movie, play: () => void): xml.XElement {
 function makeGrid(title: string | undefined, ...elements: xml.XElement[]) {
 	return xml.element("div.media-grid")
 		.add(!title ? undefined : xml.element("div.media-grid__header")
-			.add(renderTextHeader(title))
+			.add(renderTextHeader(xml.text(title)))
 		)
 		.add(xml.element("div.media-grid__content")
 			.add(...elements)
@@ -2230,15 +2230,13 @@ function makeImage(file_id: string) {
 			.set("src", `/files/${file_id}/?token=${token}`)
 		);
 }
-function renderTextHeader(content: string) {
+function renderTextHeader(content: xml.Node<any>) {
 	return xml.element("div.text-header")
-		.add(xml.text(content)
-	);
+		.add(content);
 }
-function renderTextParagraph(content: string) {
+function renderTextParagraph(content: xml.Node<any>) {
 	return xml.element("div.text-paragraph")
-		.add(xml.text(content)
-	);
+		.add(content);
 }
 
 function maybe<A, B>(value: A | undefined | null, cb: (value: A) => B): B | undefined {
@@ -2247,7 +2245,7 @@ function maybe<A, B>(value: A | undefined | null, cb: (value: A) => B): B | unde
 	}
 }
 
-const makeEntityHeader = (title: string, subtitles: (xml.Text | xml.XElement)[] = [], tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement) => {
+const makeEntityHeader = (title: string, subtitles: xml.Node<any>[] = [], tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement) => {
 	return xml.element("div.entity-header")
 		.add(maybe(image, (image) => xml.element("div.entity-header__artwork")
 			.add(image)
@@ -2468,7 +2466,7 @@ let updateviewforuri = (uri: string): void => {
 					let content = xml.element("div.content")
 						.add(xml.element("div.playlist")
 							.add(xml.element("div.playlist__header")
-								.add(renderTextHeader(`Disc ${disc.number}`))
+								.add(renderTextHeader(xml.text(`Disc ${disc.number}`)))
 							)
 							.add(xml.element("div.playlist__content")
 								.add(...disc.tracks.map((track, trackIndex) => xml.element("div.playlist-item")
@@ -2538,7 +2536,7 @@ let updateviewforuri = (uri: string): void => {
 				mount.appendChild(content);
 				let mediaGrid = xml.element("div.media-grid")
 					.add(xml.element("div.media-grid__header")
-						.add(renderTextHeader("Discography"))
+						.add(renderTextHeader(xml.text("Discography")))
 					)
 					.render();
 				content.appendChild(mediaGrid);
@@ -2554,7 +2552,7 @@ let updateviewforuri = (uri: string): void => {
 				mount.appendChild(content);
 				let mediaGrid = xml.element("div.media-grid")
 					.add(xml.element("div.media-grid__header")
-						.add(renderTextHeader("Appearances"))
+						.add(renderTextHeader(xml.text("Appearances")))
 					)
 					.render();
 				content.appendChild(mediaGrid);
@@ -2727,7 +2725,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(...show.seasons.map((season, seasonIndex) => xml.element("div.content")
 					.add(xml.element("div.playlist")
 						.add(xml.element("div.playlist__header")
-							.add(renderTextHeader(`Season ${season.number}`))
+							.add(renderTextHeader(xml.text(`Season ${season.number}`)))
 							.add(xml.element("div.playlist__tags")
 								.add(...getYears(season).map((year) => makeTag(year.toString())))
 							)
@@ -3176,7 +3174,7 @@ let updateviewforuri = (uri: string): void => {
 			mount.appendChild(xml.element("div.content")
 				.add(xml.element("div.playlist")
 					.add(xml.element("div.playlist__header")
-						.add(renderTextHeader("Tokens"))
+						.add(renderTextHeader(xml.text("Tokens")))
 					)
 					.add(xml.element("div.playlist__content")
 						.add(...response.tokens.map((token) => {
