@@ -2596,15 +2596,16 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^audio[/]playlists[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AudiolistsResponse>(`/api/audio/playlists/`, {}, (status, response) => {
-			for (let list of response.audiolists) {
-				let d = document.createElement('div');
-				d.style.setProperty('font-size', '24px');
-				d.innerText = `${list.title}`;
-				d.addEventListener('click', () => {
-					navigate(`audio/playlists/${list.audiolist_id}/`);
-				});
-				mount.appendChild(d);
-			}
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(makeEntityHeader("Playlists"))
+				)
+				.add(xml.element("div.content")
+					.set("style", "display: grid; gap: 32px;")
+					.add(...response.audiolists.map((playlist) => renderTextHeader(makeLink(`audio/playlists/${playlist.audiolist_id}`, playlist.title))))
+				)
+			.render());
+
 		});
 	} else if ((parts = /^audio[/]/.exec(uri)) !== null) {
 		mount.appendChild(xml.element("div")
