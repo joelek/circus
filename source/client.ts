@@ -2347,6 +2347,18 @@ let updateviewforuri = (uri: string): void => {
 	if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/`, {}, (status, response) => {
 			let context = translateAlbumResponse(response);
+			let isContext = computed((contextPath) => {
+				if (!is.present(contextPath)) {
+					return false;
+				}
+				if (contextPath[contextPath.length - 3] !== context.album_id) {
+					return false;
+				}
+				return true;
+			}, player.contextPath);
+			let isPlaying = computed((isContext, playback) => {
+				return isContext && playback;
+			}, isContext, player.playback);
 			let duration_ms = 0;
 			for (let disc of response.discs) {
 				for (let track of disc.tracks) {
@@ -2358,21 +2370,28 @@ let updateviewforuri = (uri: string): void => {
 					"Album",
 					`${response.year}`,
 					format_duration(duration_ms)
-				]))
+				], is.absent(context.artwork) ? undefined : makeImage(context.artwork.file_id),
+					xml.element("div.playback-button")
+						.add(makePlayIcon()
+							.bind("data-hide", isPlaying.addObserver(a => a))
+						)
+						.add(makePauseIcon()
+							.bind("data-hide", isPlaying.addObserver(a => !a))
+						)
+						.on("click", (event) => {
+							if (isPlaying.getState()) {
+								player.pause();
+							} else {
+								if (isContext.getState()) {
+									player.resume();
+								} else {
+									player.playAlbum(context);
+								}
+							}
+						})
+					))
 				.render();
 			mount.appendChild(header);
-			if (response.cover_file_id) {
-				mount.appendChild(xml.element("div.content")
-					.add(xml.element("div.media-grid")
-						.add(xml.element("div.media-grid__header")
-							.add(renderTextHeader("Artwork"))
-						)
-						.add(xml.element("div.media-grid__content")
-							.add(makeImage(response.cover_file_id))
-						)
-					)
-					.render());
-			}
 			for (let discIndex = 0; discIndex < response.discs.length; discIndex++) {
 				let disc = context.discs[discIndex];
 				if (disc.tracks.length > 0) {
