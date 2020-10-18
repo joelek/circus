@@ -343,6 +343,7 @@ namespace xml {
 				this.listeners.set(kind, listeners as any);
 			}
 			listeners.push((event) => {
+				event.preventDefault();
 				event.stopPropagation();
 				listener(event);
 			});
@@ -435,8 +436,7 @@ style.innerText = `
 		border-radius: 4px;
 	}
 
-
-	:not(a) {
+	* {
 		border: none;
 		font-size: 0px;
 		margin: 0px;
@@ -447,7 +447,10 @@ style.innerText = `
 
 	a {
 		color: inherit;
+		display: inline-block;
+		font-size: inherit;
 		text-decoration: none;
+		transition: color 0.1s;
 	}
 
 	a:hover {
@@ -2763,7 +2766,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeGrid("Actors"))
 				)
 				.add(xml.element("div.content")
-					.add(makeGrid("Genres"))
+					.add(makeGrid("Suggested movies"))
 				)
 				.render()
 			);
