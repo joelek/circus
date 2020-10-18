@@ -503,8 +503,11 @@ class MoviesRoute implements Route<api_response.AuthRequest, api_response.Movies
 		if (request.url === undefined) {
 			throw new Error();
 		}
+		let sum0 = Date.now();
+		let sum: number = 0;
 		let username = getUsername(request);
 		let movies = data.media.video.movies.map((movie) => {
+			sum -= Date.now();
 			let movie_parts = data.getMoviePartsFromMovieId(movie.movie_id).map((movie_part) => {
 				let streamed = null;
 				return {
@@ -512,6 +515,7 @@ class MoviesRoute implements Route<api_response.AuthRequest, api_response.Movies
 					streamed
 				};
 			});
+			sum += Date.now();
 			return {
 				...movie,
 				movie_parts
@@ -520,6 +524,7 @@ class MoviesRoute implements Route<api_response.AuthRequest, api_response.Movies
 		let payload: api_response.MoviesResponse = {
 			movies
 		};
+		console.log(sum, Date.now() - sum0);
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
 	}
