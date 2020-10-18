@@ -436,13 +436,22 @@ style.innerText = `
 	}
 
 
-	* {
+	:not(a) {
 		border: none;
 		font-size: 0px;
 		margin: 0px;
 		line-height: 1;
 		outline: none;
 		padding: 0px;
+	}
+
+	a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	a:hover {
+		color: rgb(255, 255, 255);
 	}
 
 	html {
@@ -1708,11 +1717,12 @@ const makePauseIcon = () => xml.element("svg")
 	);
 
 const makeButton = () => xml.element("div.icon-button");
-const makeLink = (url: string) => xml.element("a")
-	.set("href", url)
+const makeLink = (url: string, title: string) => xml.element("a")
 	.on("click", (event) => {
 		navigate(url);
-	});
+	})
+	.set("href", url)
+	.add(xml.text(title));
 
 let mp = xml.element("div.content")
 	.set("style", "padding: 16px;")
@@ -2177,7 +2187,7 @@ function maybe<A, B>(value: A | undefined | null, cb: (value: A) => B): B | unde
 	}
 }
 
-const makeEntityHeader = (title: string, subtitle?: string, tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement) => {
+const makeEntityHeader = (title: string, subtitles: (xml.Text | xml.XElement)[] = [], tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement) => {
 	return xml.element("div.entity-header")
 		.add(maybe(image, (image) => xml.element("div.entity-header__artwork")
 			.add(image)
@@ -2188,8 +2198,8 @@ const makeEntityHeader = (title: string, subtitle?: string, tags: Array<string> 
 				.add(xml.element("div.entity-header__title")
 					.add(xml.text(title))
 				)
-				.add(is.absent(subtitle) ? undefined : xml.element("div.entity-header__subtitle")
-					.add(xml.text(subtitle))
+				.add(...subtitles.map((subtitle) => xml.element("div.entity-header__subtitle")
+					.add(subtitle))
 				)
 			)
 			.add(xml.element("div.entity-header__tags")
@@ -2366,7 +2376,7 @@ let updateviewforuri = (uri: string): void => {
 				}
 			}
 			let header = xml.element("div.content")
-				.add(makeEntityHeader(response.title, response.artists.map(artist => artist.title).join(" \u2022 "), [
+				.add(makeEntityHeader(response.title, response.artists.map((artist) => makeLink(`audio/artists/${artist.artist_id}/`, artist.title)), [
 					"Album",
 					`${response.year}`,
 					format_duration(duration_ms)
@@ -2723,7 +2733,7 @@ let updateviewforuri = (uri: string): void => {
 			}, isContext, player.playback);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader(movie.title, movie.summary, [
+					.add(makeEntityHeader(movie.title, [xml.text(movie.summary)], [
 						"Movie",
 						`${movie.year}`,
 						format_duration(movie.file.duration_ms)
