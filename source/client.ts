@@ -2615,7 +2615,7 @@ let updateviewforuri = (uri: string): void => {
 				.set("style", "display: grid; gap: 32px;")
 				.add(renderTextHeader(makeLink("audio/artists/", "Artists")))
 				.add(renderTextHeader(makeLink("audio/albums/", "Albums")))
-				.add(renderTextHeader(makeLink("video/playlists/", "Playlists")))
+				.add(renderTextHeader(makeLink("audio/playlists/", "Playlists")))
 			)
 		.render());
 	} else if ((parts = /^video[/]shows[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
