@@ -756,7 +756,7 @@ class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResp
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]video[/]cues[/]/.test(request.url);
+		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]cues[/]/.test(request.url);
 	}
 }
 

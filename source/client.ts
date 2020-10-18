@@ -2888,7 +2888,7 @@ let updateviewforuri = (uri: string): void => {
 				.render()
 			);
 		});
-	} else if ((parts = /^video[/]cues[/](.*)/.exec(uri)) !== null) {
+	} else if ((parts = /^cues[/](.*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
 		let wrapper = document.createElement("div");
 		let searchbox = document.createElement("input");
@@ -2904,7 +2904,7 @@ let updateviewforuri = (uri: string): void => {
 		let cb = () => {
 			let new_query = searchbox.value;
 			if (new_query !== "" && new_query !== query) {
-				navigate("video/cues/" + encodeURIComponent(new_query));
+				navigate("cues/" + encodeURIComponent(new_query));
 			}
 		};
 		searchbox.addEventListener("keyup", (event) => {
@@ -2916,7 +2916,7 @@ let updateviewforuri = (uri: string): void => {
 			cb();
 		});
 		mount.appendChild(wrapper);
-		req<api_response.CuesRequest, api_response.CuesResponse>(`/api/video/cues/`, { query }, (status, response) => {
+		req<api_response.CuesRequest, api_response.CuesResponse>(`/api/cues/`, { query }, (status, response) => {
 			while (results.lastChild !== null) {
 				results.removeChild(results.lastChild);
 			}
@@ -3156,7 +3156,6 @@ let updateviewforuri = (uri: string): void => {
 				.add(renderTextHeader(makeLink("video/shows/", "Shows")))
 				.add(renderTextHeader(makeLink("video/movies/", "Movies")))
 				.add(renderTextHeader(makeLink("video/genres/", "Genres")))
-				.add(renderTextHeader(makeLink("video/cues/", "Cue Search")))
 			)
 		.render());
 	} else if ((parts = /^tokens[/]/.exec(uri)) !== null) {
@@ -3355,9 +3354,10 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(xml.element("div.content")
 				.set("style", "display: grid; gap: 32px;")
-				.add(renderTextHeader(makeLink("search/", "Search")))
 				.add(renderTextHeader(makeLink("audio/", "Audio")))
 				.add(renderTextHeader(makeLink("video/", "Video")))
+				.add(renderTextHeader(makeLink("search/", "Search")))
+				.add(renderTextHeader(makeLink("cues/", "Cues")))
 			)
 		.render());
 	}
