@@ -868,8 +868,17 @@ style.innerText = `
 
 	.entity-header {
 		display: grid;
+		gap: 32px;
+		grid-template-columns: repeat(auto-fit, minmax(240px, auto));
+	}
+
+	.entity-header__artwork {
+
+	}
+
+	.entity-header__metadata {
+		display: grid;
 		gap: 16px;
-		grid-auto-flow: row;
 		grid-auto-rows: max-content;
 	}
 
@@ -2167,18 +2176,23 @@ function renderTextParagraph(content: string) {
 		.add(xml.text(content)
 	);
 }
-const makeEntityHeader = (title: string, subtitle?: string, tags: Array<string> = []) => {
+const makeEntityHeader = (title: string, subtitle?: string, tags: Array<string> = [], image?: xml.XElement) => {
 	return xml.element("div.entity-header")
-		.add(xml.element("div.entity-header__titles")
-			.add(xml.element("div.entity-header__title")
-				.add(xml.text(title))
-			)
-			.add(is.absent(subtitle) ? undefined : xml.element("div.entity-header__subtitle")
-				.add(xml.text(subtitle))
-			)
+		.add(is.absent(image) ? undefined : xml.element("div.entity-header__artwork")
+			.add(image)
 		)
-		.add(xml.element("div.entity-header__tags")
-			.add(...tags.map(makeTag))
+		.add(xml.element("div.entity-header__metadata")
+			.add(xml.element("div.entity-header__titles")
+				.add(xml.element("div.entity-header__title")
+					.add(xml.text(title))
+				)
+				.add(is.absent(subtitle) ? undefined : xml.element("div.entity-header__subtitle")
+					.add(xml.text(subtitle))
+				)
+			)
+			.add(xml.element("div.entity-header__tags")
+				.add(...tags.map(makeTag))
+			)
 		);
 }
 
