@@ -3131,34 +3131,18 @@ let updateviewforuri = (uri: string): void => {
 			);
 		});
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
-		let d = document.createElement('div');
-		d.style.setProperty("font-size", "24px");
-		d.innerText = 'Shows';
-		d.addEventListener('click', () => {
-			navigate('video/shows/');
-		});
-		mount.appendChild(d);
-		d = document.createElement('div');
-		d.style.setProperty("font-size", "24px");
-		d.innerText = 'Movies';
-		d.addEventListener('click', () => {
-			navigate('video/movies/');
-		});
-		mount.appendChild(d);
-		d = document.createElement('div');
-		d.style.setProperty("font-size", "24px");
-		d.innerText = 'Cues';
-		d.addEventListener('click', () => {
-			navigate('video/cues/');
-		});
-		mount.appendChild(d);
-		d = document.createElement('div');
-		d.style.setProperty("font-size", "24px");
-		d.innerText = 'Genres';
-		d.addEventListener('click', () => {
-			navigate('video/genres/');
-		});
-		mount.appendChild(d);
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(makeEntityHeader("Video"))
+			)
+			.add(xml.element("div.content")
+				.set("style", "display: grid; gap: 32px;")
+				.add(renderTextHeader(makeLink("video/shows/", "Shows")))
+				.add(renderTextHeader(makeLink("video/movies/", "Movies")))
+				.add(renderTextHeader(makeLink("video/genres/", "Genres")))
+				.add(renderTextHeader(makeLink("video/cues/", "Cue Search")))
+			)
+		.render());
 	} else if ((parts = /^tokens[/]/.exec(uri)) !== null) {
 		req<api_response.TokensRequest, api_response.TokensResponse>(`/api/tokens/?token=${token}`, {}, (status, response) => {
 			function renderAccessToken(token: AuthToken): xml.XElement {
