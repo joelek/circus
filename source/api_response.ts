@@ -31,7 +31,7 @@ interface ArtistResponse extends ApiResponse, libdb.ArtistEntry {
 }
 
 interface ArtistsResponse extends ApiResponse {
-	artists: Array<libdb.ArtistEntry>;
+	artists: Array<ArtistResponse>;
 }
 
 interface AlbumResponse extends ApiResponse, libdb.AlbumEntry {

@@ -1939,8 +1939,68 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 			.add(xml.element("div.media-widget__tags")
 				.add(...tags.map(makeTag))
 			)
-		)
+		);
 }
+
+function makeArtist(artist: ContextArtist, play: () => void = () => player.playArtist(artist)): xml.XElement {
+	let duration_ms = 0;
+	for (let album of artist.albums) {
+		for (let disc of album.discs) {
+			for (let track of disc.tracks) {
+				duration_ms += track.file.duration_ms;
+			}
+		}
+	}
+	let isContext = computed((contextPath) => {
+		if (!is.present(contextPath)) {
+			return false;
+		}
+		if (contextPath[contextPath.length - 4] !== artist.artist_id) {
+			return false;
+		}
+		return true;
+	}, player.contextPath);
+	let isPlaying = computed((isContext, playback) => {
+		return isContext && playback;
+	}, isContext, player.playback);
+	return xml.element("div.media-widget")
+		.on("click", () => {
+			navigate(`audio/artists/${artist.artist_id}/`);
+		})
+		.add(xml.element("div.media-widget__artwork")
+			.add(xml.element("div.playback-button")
+				.add(makePlayIcon()
+					.bind("data-hide", isPlaying.addObserver(a => a))
+				)
+				.add(makePauseIcon()
+					.bind("data-hide", isPlaying.addObserver(a => !a))
+				)
+				.on("click", () => {
+					if (isPlaying.getState()) {
+						player.pause();
+					} else {
+						if (isContext.getState()) {
+							player.resume();
+						} else {
+							play();
+						}
+					}
+				})
+			)
+		)
+		.add(xml.element("div.media-widget__metadata")
+			.add(xml.element("div.media-widget__titles")
+				.add(xml.element("div.media-widget__title")
+					.add(xml.text(artist.title))
+				)
+			)
+			.add(xml.element("div.media-widget__tags")
+				.add(makeTag("Artist"))
+				.add(makeTag(format_duration(duration_ms)))
+			)
+		);
+}
+
 function makeGenreLink(genre: Genre): xml.XElement {
 	return xml.element("div.media-widget")
 		.add(xml.element("div.media-widget__artwork"))
@@ -2510,15 +2570,15 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^audio[/]artists[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ArtistsResponse>(`/api/audio/artists/`, {}, (status, response) => {
-			for (let artist of response.artists) {
-				let d = document.createElement('div');
-				d.style.setProperty('font-size', '24px');
-				d.innerText = `${artist.title}`;
-				d.addEventListener('click', () => {
-					navigate(`audio/artists/${artist.artist_id}/`);
-				});
-				mount.appendChild(d);
-			}
+			let artists = response.artists.map(translateArtistResponse);
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(makeEntityHeader("Artists"))
+				)
+				.add(xml.element("div.content")
+					.add(makeGrid(undefined, ...artists.map((artist) => makeArtist(artist, () => player.playArtist(artist)))))
+				)
+			.render());
 		});
 	} else if ((parts = /^audio[/]lists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AudiolistResponse>(`/api/audio/lists/${parts[1]}/`, {}, (status, response) => {
