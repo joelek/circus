@@ -2696,47 +2696,55 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.MovieResponse>(`/api/video/movies/${parts[1]}/?token=${token}`, {}, (status, response) => {
-			let d = document.createElement('div');
-			d.innerText = `${response.title} (${response.year})`;
-			d.style.setProperty('font-size', '24px');
-			mount.appendChild(d);
-			let d2 = document.createElement('div');
-			d2.style.setProperty('font-size', '24px');
-			d2.innerText = response.summary || "";
-			mount.appendChild(d2);
-/* 			let context: schema.objects.Context = response.movie_parts.map((part) => {
-				return {
-					file_id: part.file_id,
-					title: response.title,
-					subtitle: `${response.year}`
-				};
-			}); */
-			let streamed = true;
-			let duration = 0;
-			for (let movie_part of response.movie_parts) {
-				streamed = streamed && (movie_part.streamed != null);
-				duration += movie_part.duration;
-			}
-			let d3 = document.createElement('div');
-			if (streamed) {
-				d3.classList.add("watched");
-			}
-			d3.style.setProperty('font-size', '12px');
-			d3.innerText = format_duration(duration);
-			mount.appendChild(d3);
-			let button = document.createElement("button");
-			button.innerText = `Play`;
-			button.addEventListener('click', () => {
-				let progress = parts != null && parts.length >= 3 ? Number.parseInt(parts[2], 10) / 1000 : 0;
-				//player.play(context, 0, progress);
-			});
-			mount.appendChild(button);
-			let wrap = document.createElement('div');
-			let img = document.createElement('img');
-			img.src = `/files/${response.poster_file_id}/?token=${token}`;
-			img.style.setProperty('width', '100%');
-			wrap.appendChild(img);
-			mount.appendChild(wrap);
+			let movie = translateMovieResponse(response);
+			let isContext = computed((contextPath) => {
+				if (!is.present(contextPath)) {
+					return false;
+				}
+				if (contextPath[contextPath.length - 1] !== movie.movie_id) {
+					return false;
+				}
+				return true;
+			}, player.contextPath);
+			let isPlaying = computed((isContext, playback) => {
+				return isContext && playback;
+			}, isContext, player.playback);
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(makeEntityHeader(movie.title, movie.summary, [
+						"Movie",
+						`${movie.year}`,
+						format_duration(movie.file.duration_ms)
+						], is.absent(movie.artwork) ? undefined : makeImage(movie.artwork.file_id).set("style", "padding-bottom: 150%"),
+						xml.element("div.playback-button")
+							.add(makePlayIcon()
+								.bind("data-hide", isPlaying.addObserver(a => a))
+							)
+							.add(makePauseIcon()
+								.bind("data-hide", isPlaying.addObserver(a => !a))
+							)
+							.on("click", (event) => {
+								if (isPlaying.getState()) {
+									player.pause();
+								} else {
+									if (isContext.getState()) {
+										player.resume();
+									} else {
+										player.playMovie(movie);
+									}
+								}
+							})
+						)
+					)
+				)
+				.add(xml.element("div.content")
+					.add(makeGrid("Actors"))
+				)
+				.add(xml.element("div.content")
+					.add(makeGrid("Genres"))
+				)
+				.render()
+			);
 		});
 	} else if ((parts = /^video[/]movies[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/?token=${token}`, {}, (status, response) => {
