@@ -594,7 +594,7 @@ class AudiolistRoute implements Route<api_response.AuthRequest, api_response.Aud
 		if (request.url === undefined) {
 			throw new Error();
 		}
-		let parts = /^[/]api[/]audio[/]lists[/]([0-9a-f]{32})[/]/.exec(request.url);
+		let parts = /^[/]api[/]audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(request.url);
 		if (parts === null) {
 			throw new Error();
 		}
@@ -642,7 +642,7 @@ class AudiolistRoute implements Route<api_response.AuthRequest, api_response.Aud
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]audio[/]lists[/]([0-9a-f]{32})[/]/.test(request.url);
+		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]audio[/]playlists[/]([0-9a-f]{32})[/]/.test(request.url);
 	}
 }
 
@@ -663,7 +663,7 @@ class AudiolistsRoute implements Route<api_response.AuthRequest, api_response.Au
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]audio[/]lists[/]/.test(request.url);
+		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]audio[/]playlists[/]/.test(request.url);
 	}
 }
 

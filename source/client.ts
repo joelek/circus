@@ -2578,8 +2578,8 @@ let updateviewforuri = (uri: string): void => {
 				)
 			.render());
 		});
-	} else if ((parts = /^audio[/]lists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.AudiolistResponse>(`/api/audio/lists/${parts[1]}/`, {}, (status, response) => {
+	} else if ((parts = /^audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+		req<api_response.ApiRequest, api_response.AudiolistResponse>(`/api/audio/playlists/${parts[1]}/`, {}, (status, response) => {
 			let a = document.createElement('div');
 			a.style.setProperty('font-size', '24px');
 			a.innerText = `${response.title}`;
@@ -2594,14 +2594,14 @@ let updateviewforuri = (uri: string): void => {
 				mount.appendChild(d);
 			}
 		});
-	} else if ((parts = /^audio[/]lists[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.AudiolistsResponse>(`/api/audio/lists/`, {}, (status, response) => {
+	} else if ((parts = /^audio[/]playlists[/]/.exec(uri)) !== null) {
+		req<api_response.ApiRequest, api_response.AudiolistsResponse>(`/api/audio/playlists/`, {}, (status, response) => {
 			for (let list of response.audiolists) {
 				let d = document.createElement('div');
 				d.style.setProperty('font-size', '24px');
 				d.innerText = `${list.title}`;
 				d.addEventListener('click', () => {
-					navigate(`audio/lists/${list.audiolist_id}/`);
+					navigate(`audio/playlists/${list.audiolist_id}/`);
 				});
 				mount.appendChild(d);
 			}
@@ -2615,7 +2615,7 @@ let updateviewforuri = (uri: string): void => {
 				.set("style", "display: grid; gap: 32px;")
 				.add(renderTextHeader(makeLink("audio/artists/", "Artists")))
 				.add(renderTextHeader(makeLink("audio/albums/", "Albums")))
-				.add(renderTextHeader(makeLink("video/lists/", "Playlists")))
+				.add(renderTextHeader(makeLink("video/playlists/", "Playlists")))
 			)
 		.render());
 	} else if ((parts = /^video[/]shows[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
