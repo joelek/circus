@@ -232,8 +232,29 @@ class AlbumsRoute implements Route<api_response.ApiRequest, api_response.AlbumsR
 		if (request.url === undefined) {
 			throw new Error();
 		}
+		let albums = data.media.audio.albums.map((album) => {
+			let artists = data.lookupAlbumArtists(album.album_id);
+			let discs = data.getDiscsFromAlbumId.lookup(album.album_id).map((disc) => {
+				let tracks = data.getTracksFromDiscId.lookup(disc.disc_id).map((track) => {
+					let artists = data.lookupTrackArtists(track.track_id);
+					return {
+						...track,
+						artists
+					};
+				});
+				return {
+					...disc,
+					tracks
+				};
+			});
+			return {
+				...album,
+				artists,
+				discs
+			};
+		});
 		let payload: api_response.AlbumsResponse = {
-			albums: data.media.audio.albums
+			albums
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));

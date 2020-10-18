@@ -2445,15 +2445,15 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^audio[/]albums[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumsResponse>(`/api/audio/albums/`, {}, (status, response) => {
-			for (let album of response.albums) {
-				let d = document.createElement('div');
-				d.style.setProperty('font-size', '24px');
-				d.innerText = `${album.title}`;
-				d.addEventListener('click', () => {
-					navigate(`audio/albums/${album.album_id}/`);
-				});
-				mount.appendChild(d);
-			}
+			let albums = response.albums.map(translateAlbumResponse);
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(makeEntityHeader("Albums"))
+				)
+				.add(xml.element("div.content")
+					.add(makeGrid(undefined, ...albums.map((album) => makeAlbum(album, () => player.playAlbum(album)))))
+				)
+			.render());
 		});
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/`, {}, (status, response) => {

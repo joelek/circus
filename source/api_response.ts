@@ -40,7 +40,7 @@ interface AlbumResponse extends ApiResponse, libdb.AlbumEntry {
 }
 
 interface AlbumsResponse extends ApiResponse {
-	albums: Array<libdb.AlbumEntry>;
+	albums: Array<AlbumResponse>;
 }
 
 interface DiscResponse extends ApiResponse, libdb.DiscEntry {
