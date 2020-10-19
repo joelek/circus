@@ -296,7 +296,7 @@ class AlbumsRoute implements Route<api_response.ApiRequest, api_response.AlbumsR
 	}
 }
 
-class EpisodeRoute implements Route<api_response.ApiRequest, api_response.EpisodeResponse> {
+class EpisodeRoute implements Route<api_response.ApiRequest, api_response.EpisodeResponseV2> {
 	constructor() {
 
 	}
@@ -311,16 +311,9 @@ class EpisodeRoute implements Route<api_response.ApiRequest, api_response.Episod
 			throw new Error();
 		}
 		let episode_id = parts[1];
-		let episode = data.episodes_index[episode_id];
-		if (episode === undefined) {
-			throw new Error();
-		}
-		let subtitles = data.lookupSubtitles(episode.file_id);
-		let streamed = data.getLatestStream(username, episode.file_id);
-		let payload: api_response.EpisodeResponse = {
-			...episode,
-			streamed,
-			subtitles
+		let episode = data.lookupEpisodeV2(episode_id)
+		let payload = {
+			episode
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));

@@ -2795,31 +2795,55 @@ let updateviewforuri = (uri: string): void => {
 			);
 		});
 	} else if ((parts = /^video[/]episodes[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.EpisodeResponse>(`/api/video/episodes/${parts[1]}/?token=${token}`, {}, (status, response) => {
-			let d = document.createElement('div');
-			d.innerText = `${response.title}`;
-			d.style.setProperty('font-size', '24px');
-			mount.appendChild(d);
-			let d2 = document.createElement('div');
-			d2.style.setProperty('font-size', '12px');
-			d2.innerText = format_duration(response.duration);
-			mount.appendChild(d2);
-			let d4 = document.createElement('div');
-			d4.style.setProperty('font-size', '16px');
-			d4.innerText = response.summary || "";
-			mount.appendChild(d4);
-/* 			let context: schema.objects.Context = [{
-				file_id: response.file_id,
-				title: response.title,
-				subtitle: ["TOOD", utils.formatSeasonEpisode(0, response.number)].join(" \u2022 ")
-			}]; */
-			let d3 = document.createElement('button');
-			d3.innerText = `load`;
-			d3.addEventListener('click', () => {
-				let progress = parts != null && parts.length >= 3 ? Number.parseInt(parts[2], 10) / 1000 : 0;
-				//player.play(context, context.findIndex(entry => entry.file_id === response.file_id), progress);
-			});
-			mount.appendChild(d3);
+		req<api_response.ApiRequest, api_response.EpisodeResponseV2>(`/api/video/episodes/${parts[1]}/?token=${token}`, {}, (status, response) => {
+			let episode = response.episode;
+			let season = episode.season;
+			let show = season.show;
+			let isContext = computed((contextPath) => {
+				if (!is.present(contextPath)) {
+					return false;
+				}
+				if (contextPath[contextPath.length - 1] !== episode.episode_id) {
+					return false;
+				}
+				return true;
+			}, player.contextPath);
+			let isPlaying = computed((isContext, playback) => {
+				return isContext && playback;
+			}, isContext, player.playback);
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(makeEntityHeader(
+						episode.title,
+						[xml.text(show.title)],
+						["Episode", utils.formatSeasonEpisode(season.number, episode.number), format_duration(episode.file.duration_ms)],
+						makeImage(`/media/stills/${episode.file.file_id}/?token=${token}`).set("style", "padding-bottom: 56.25%;"),
+						xml.element("div.playback-button")
+							.add(makePlayIcon()
+								.bind("data-hide", isPlaying.addObserver(a => a))
+							)
+							.add(makePauseIcon()
+								.bind("data-hide", isPlaying.addObserver(a => !a))
+							)
+							.on("click", (event) => {
+								if (isPlaying.getState()) {
+									player.pause();
+								} else {
+									if (isContext.getState()) {
+										player.resume();
+									} else {
+										player.playEpisode(episode);
+									}
+								}
+							})
+						)
+					)
+				)
+				.add(xml.element("div.content")
+					.add(renderTextParagraph(xml.text(episode.summary)))
+				)
+				.render()
+			);
 		});
 	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.MovieResponse>(`/api/video/movies/${parts[1]}/?token=${token}`, {}, (status, response) => {

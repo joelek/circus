@@ -5,6 +5,7 @@ import * as utils from "./utils";
 import * as passwords from "./passwords";
 import { NumericSort } from "./shared";
 import * as is from "./is";
+import { Episode } from "./media/schema/objects";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -610,10 +611,37 @@ export function lookupEpisode(id: string): libdb.EpisodeEntry & { season: libdb.
 	};
 }
 
-
-
-
-
+export function lookupEpisodeV2(episode_id: string): Episode {
+	let episode = lookup(episodes_index, episode_id);
+	let season = lookup(seasons_index, episode.season_id);
+	let show = lookup(shows_index, season.show_id);
+	return {
+		episode_id: episode.episode_id,
+		title: episode.title,
+		summary: episode.summary ?? "",
+		number: episode.number,
+		file: {
+			file_id: episode.file_id,
+			mime: "video/mp4",
+			duration_ms: episode.duration
+		},
+		subtitles: lookupSubtitles(episode.file_id).map((subtitle) => ({
+			file_id: subtitle.file_id,
+			mime: "text/vtt",
+			language: subtitle.language ?? undefined
+		})),
+		season: {
+			season_id: season.season_id,
+			number: season.number,
+			show: {
+				show_id: show.show_id,
+				title: show.title
+			}
+		},
+		year: episode.year ?? undefined,
+		last_stream_date: undefined
+	};
+}
 
 class SearchIndex {
 	private map: Map<string, Set<string>>;

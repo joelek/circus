@@ -1,5 +1,6 @@
 import { ContextPlaylist } from "./context/schema/objects";
 import * as libdb from "./database";
+import { Episode } from "./media/schema/objects";
 
 interface ApiRequest {
 
@@ -57,6 +58,10 @@ interface SubtitleResponse extends ApiResponse, libdb.SubtitleEntry {
 interface EpisodeResponse extends ApiResponse, libdb.EpisodeEntry {
 	streamed: number | null,
 	subtitles: Array<SubtitleResponse>;
+}
+
+type EpisodeResponseV2 = {
+	episode: Episode
 }
 
 interface ShowResponse extends ApiResponse, libdb.ShowEntry {
@@ -217,6 +222,7 @@ export {
 	DiscResponse,
 	SubtitleResponse,
 	EpisodeResponse,
+	EpisodeResponseV2,
 	ShowResponse,
 	SeasonResponse,
 	ShowsResponse,
