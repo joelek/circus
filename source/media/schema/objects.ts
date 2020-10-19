@@ -112,14 +112,35 @@ export const Track = autoguard.Intersection.of(
 	autoguard.Object.of<{}>({})
 );
 
+export type UserBase = {
+	"user_id": string,
+	"username": string
+};
+
+export const UserBase = autoguard.Object.of<UserBase>({
+	"user_id": autoguard.String,
+	"username": autoguard.String
+});
+
+export type User = UserBase & {};
+
+export const User = autoguard.Intersection.of(
+	autoguard.Reference.of<UserBase>(() => UserBase),
+	autoguard.Object.of<{}>({})
+);
+
 export type PlaylistBase = {
 	"playlist_id": string,
-	"title": string
+	"title": string,
+	"description": string,
+	"user": UserBase
 };
 
 export const PlaylistBase = autoguard.Object.of<PlaylistBase>({
 	"playlist_id": autoguard.String,
-	"title": autoguard.String
+	"title": autoguard.String,
+	"description": autoguard.String,
+	"user": autoguard.Reference.of<UserBase>(() => UserBase)
 });
 
 export type Playlist = PlaylistBase & {
@@ -382,6 +403,8 @@ export type Autoguard = {
 	"Disc": Disc,
 	"TrackBase": TrackBase,
 	"Track": Track,
+	"UserBase": UserBase,
+	"User": User,
 	"PlaylistBase": PlaylistBase,
 	"Playlist": Playlist,
 	"PlaylistItemBase": PlaylistItemBase,
@@ -412,6 +435,8 @@ export const Autoguard = {
 	"Disc": Disc,
 	"TrackBase": TrackBase,
 	"Track": Track,
+	"UserBase": UserBase,
+	"User": User,
 	"PlaylistBase": PlaylistBase,
 	"Playlist": Playlist,
 	"PlaylistItemBase": PlaylistItemBase,

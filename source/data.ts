@@ -488,6 +488,7 @@ export const getAlbumFromAlbumId = RecordIndex.from("album_id", media.audio.albu
 export const getPlaylistItemsFromPlaylistId = CollectionIndex.from("audiolist_id", lists.audiolist_items);
 export const getTrackFromTrackId = RecordIndex.from("track_id", media.audio.tracks);
 export const getDiscFromDiscId = RecordIndex.from("disc_id", media.audio.discs);
+export const getUserFromUserId = RecordIndex.from("user_id", users.users);
 
 export function lookupFile(file_id: string): libdb.FileEntry {
 	let file = files_index[file_id];

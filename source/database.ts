@@ -332,12 +332,16 @@ export const SubtitlesDatabase = autoguard.Record.of(autoguard.Array.of(autoguar
 
 export type AudiolistEntry = {
 	"audiolist_id": string,
-	"title": string
+	"title": string,
+	"description": string,
+	"user_id": string
 };
 
 export const AudiolistEntry = autoguard.Object.of<AudiolistEntry>({
 	"audiolist_id": autoguard.String,
-	"title": autoguard.String
+	"title": autoguard.String,
+	"description": autoguard.String,
+	"user_id": autoguard.String
 });
 
 export type AudiolistItemEntry = {

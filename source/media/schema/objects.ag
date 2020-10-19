@@ -44,9 +44,20 @@
 
 	},
 
+	UserBase: {
+		user_id: string,
+		username: string
+	},
+
+	User: UserBase & {
+
+	},
+
 	PlaylistBase: {
 		playlist_id: string,
-		title: string
+		title: string,
+		description: string,
+		user: UserBase
 	},
 
 	Playlist: PlaylistBase & {

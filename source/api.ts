@@ -601,9 +601,15 @@ class AudiolistRoute implements Route<api_response.AuthRequest, api_response.Aud
 		if (audiolist === undefined) {
 			throw new Error();
 		}
+		let user = data.getUserFromUserId.lookup(audiolist.user_id);
 		let playlist: PlaylistBase = {
 			playlist_id: audiolist.audiolist_id,
-			title: audiolist.title
+			title: audiolist.title,
+			description: audiolist.description,
+			user: {
+				user_id: user.user_id,
+				username: user.username
+			}
 		};
 		let items = data.getPlaylistItemsFromPlaylistId.lookup(playlist.playlist_id).map((audiolist_item) => {
 			let track = data.getTrackFromTrackId.lookup(audiolist_item.track_id);

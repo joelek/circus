@@ -2606,7 +2606,15 @@ let updateviewforuri = (uri: string): void => {
 			}
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader(playlist.title, undefined, ["Playlist", format_duration(duration_ms)]))
+					.add(makeEntityHeader(
+							playlist.title,
+							[makeLink(`users/${playlist.user.user_id}/`, playlist.user.username)],
+							["Playlist", format_duration(duration_ms)],
+							undefined,
+							undefined,
+							playlist.description
+						)
+					)
 				)
 				.add(xml.element("div.content")
 					.add(xml.element("div.playlist__content")
