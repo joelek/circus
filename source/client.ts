@@ -2226,10 +2226,10 @@ function makeGrid(title: string | undefined, ...elements: xml.XElement[]) {
 		);
 }
 
-function makeImage(file_id: string) {
+function makeImage(url: string) {
 	return xml.element("div.image-box")
 		.add(xml.element("img.image-box__image")
-			.set("src", `/files/${file_id}/?token=${token}`)
+			.set("src", url)
 		);
 }
 function renderTextHeader(content: xml.Node<any>) {
@@ -2440,7 +2440,7 @@ let updateviewforuri = (uri: string): void => {
 					"Album",
 					`${response.year}`,
 					format_duration(duration_ms)
-				], is.absent(context.artwork) ? undefined : makeImage(context.artwork.file_id),
+				], is.absent(context.artwork) ? undefined : makeImage(`/files/${context.artwork.file_id}/?token=${token}`),
 					xml.element("div.playback-button")
 						.add(makePlayIcon()
 							.bind("data-hide", isPlaying.addObserver(a => a))
@@ -2710,7 +2710,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeEntityHeader(show.title, undefined, [
 						"Show",
 						format_duration(duration_ms)
-					], maybe(show.artwork, (artwork) => makeImage(artwork.file_id).set("style", "padding-bottom: 150%")),
+					], maybe(show.artwork, (artwork) => makeImage(`/files/${artwork.file_id}/?token=${token}`).set("style", "padding-bottom: 150%")),
 					xml.element("div.playback-button")
 						.add(makePlayIcon()
 							.bind("data-hide", isPlaying.addObserver(a => a))
@@ -2866,7 +2866,7 @@ let updateviewforuri = (uri: string): void => {
 						"Movie",
 						`${movie.year}`,
 						format_duration(movie.file.duration_ms)
-						], is.absent(movie.artwork) ? undefined : makeImage(movie.artwork.file_id).set("style", "padding-bottom: 150%"),
+						], is.absent(movie.artwork) ? undefined : makeImage(`/files/${movie.artwork.file_id}/?token=${token}`).set("style", "padding-bottom: 150%"),
 						xml.element("div.playback-button")
 							.add(makePlayIcon()
 								.bind("data-hide", isPlaying.addObserver(a => a))
