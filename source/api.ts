@@ -9,6 +9,7 @@ import * as lchannels from "./channels";
 import * as data from "./data";
 import * as is from "./is";
 import { PlaylistBase } from "./media/schema/objects";
+import { LexicalSort, NumericSort, CombinedSort } from "./shared";
 
 function getUsername(request: libhttp.IncomingMessage): string {
 	var url = liburl.parse(request.url || "/", true);
@@ -190,7 +191,10 @@ class ArtistsRoute implements Route<api_response.ApiRequest, api_response.Artist
 				albums,
 				appearances
 			};
-		});
+		}).sort(CombinedSort.of(
+			NumericSort.increasing((value) => value.appearances.length),
+			LexicalSort.increasing((value) => value.title)
+		));
 		let payload: api_response.ArtistsResponse = {
 			artists
 		};

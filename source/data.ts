@@ -385,7 +385,7 @@ export function createChannel(channel: libdb.ChannelEntry): libdb.ChannelEntry {
 
 export function getProgramsFromChannelId(channelId: string): Array<libdb.ProgramEntry> {
 	return getProgramsFromChannelIdIndex.lookup(channelId)
-		.sort(NumericSort.increasing("start_time_ms"));
+		.sort(NumericSort.increasing((value) => value.start_time_ms));
 }
 
 export function createProgram(program: libdb.ProgramEntry): libdb.ProgramEntry {
@@ -754,7 +754,7 @@ export function getStreams(username: string, file_id: string): Array<libdb.Strea
 		.filter((stream) => {
 			return stream.username === username;
 		})
-		.sort(NumericSort.increasing("timestamp_ms"));
+		.sort(NumericSort.increasing((value) => value.timestamp_ms));
 }
 
 export function getLatestStream(username: string, file_id: string): number | null {
