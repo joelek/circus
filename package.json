@@ -10,7 +10,7 @@
 	},
 	"dependencies": {},
 	"license": "UNLICENSED",
-	"main": "./dist/server.js",
+	"main": "./dist/server.min.js",
 	"name": "@joelek/castaway",
 	"repository": {
 		"type": "git",
@@ -18,8 +18,8 @@
 	},
 	"scripts": {
 		"build": "rm -rf ./dist/ && npx tsc && npm run bundle",
-		"bundle:client": "npx webpack --entry ./build/client.js --output-filename client.js --target web",
-		"bundle:server": "npx webpack --entry ./build/server.js --output-filename server.js --target node",
+		"bundle:client": "npx webpack --entry ./build/client.js --output-filename client.min.js --target web",
+		"bundle:server": "npx webpack --entry ./build/server.js --output-filename server.min.js --target node",
 		"bundle": "npm run bundle:client && npm run bundle:server",
 		"clean": "rm -rf ./build/ ./node_modules/",
 		"codegen": "npx autoguard --standalone=false",
