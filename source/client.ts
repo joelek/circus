@@ -2815,7 +2815,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(makeEntityHeader(
 						episode.title,
-						[xml.text(show.title)],
+						[makeLink(`video/shows/${show.show_id}/`, show.title)],
 						["Episode", utils.formatSeasonEpisode(season.number, episode.number), format_duration(episode.file.duration_ms)],
 						makeImage(`/media/stills/${episode.file.file_id}/?token=${token}`).set("style", "padding-bottom: 56.25%;"),
 						xml.element("div.playback-button")
