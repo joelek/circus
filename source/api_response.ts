@@ -1,6 +1,5 @@
-import { ContextPlaylist } from "./context/schema/objects";
 import * as libdb from "./database";
-import { Episode } from "./media/schema/objects";
+import { Episode, Playlist } from "./media/schema/objects";
 
 interface ApiRequest {
 
@@ -93,12 +92,12 @@ interface AudiolistItemResponse extends ApiResponse, libdb.AudiolistItemEntry {
 	track: libdb.TrackEntry;
 }
 
-interface AudiolistResponse extends ApiResponse, ContextPlaylist {
+interface AudiolistResponse extends ApiResponse, Playlist {
 
 }
 
 interface AudiolistsResponse extends ApiResponse {
-	audiolists: Array<libdb.AudiolistEntry>;
+	playlists: Playlist[];
 }
 
 interface CuesRequest extends ApiResponse {

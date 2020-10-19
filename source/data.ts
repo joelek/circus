@@ -5,7 +5,7 @@ import * as utils from "./utils";
 import * as passwords from "./passwords";
 import { NumericSort } from "./shared";
 import * as is from "./is";
-import { Episode } from "./media/schema/objects";
+import { Episode, Playlist, PlaylistBase, User, UserBase } from "./media/schema/objects";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -489,6 +489,7 @@ export const getPlaylistItemsFromPlaylistId = CollectionIndex.from("audiolist_id
 export const getTrackFromTrackId = RecordIndex.from("track_id", media.audio.tracks);
 export const getDiscFromDiscId = RecordIndex.from("disc_id", media.audio.discs);
 export const getUserFromUserId = RecordIndex.from("user_id", users.users);
+export const getPlaylistFromPlaylistId = RecordIndex.from("audiolist_id", lists.audiolists);
 
 export function lookupFile(file_id: string): libdb.FileEntry {
 	let file = files_index[file_id];
@@ -776,4 +777,82 @@ export function addStream(username: string, file_id: string): void {
 		timestamp_ms
 	});
 	libfs.writeFileSync("./private/db/streams.json", JSON.stringify(streams, null, "\t"));
+}
+
+
+
+
+
+
+
+
+
+
+export function api_lookupUserBase(user_id: string): UserBase {
+	let entry = getUserFromUserId.lookup(user_id);
+	return {
+		user_id: entry.user_id,
+		username: entry.username
+	};
+}
+
+export function api_lookupUser(user_id: string): User {
+	let user = api_lookupUserBase(user_id);
+	return {
+		...user
+	};
+}
+
+export function api_lookupPlaylistBase(playlist_id: string): PlaylistBase {
+	let entry = getPlaylistFromPlaylistId.lookup(playlist_id);
+	return {
+		playlist_id: entry.audiolist_id,
+		title: entry.title,
+		description: entry.description,
+		user: api_lookupUserBase(entry.user_id)
+	};
+}
+
+export function api_lookupPlaylist(playlist_id: string): Playlist {
+	let playlist = api_lookupPlaylistBase(playlist_id);
+	let items = getPlaylistItemsFromPlaylistId.lookup(playlist.playlist_id).map((audiolist_item) => {
+		let track = getTrackFromTrackId.lookup(audiolist_item.track_id);
+		let disc = getDiscFromDiscId.lookup(track.disc_id);
+		let album = getAlbumFromAlbumId.lookup(disc.album_id);
+		return {
+			playlist,
+			number: audiolist_item.number,
+			track: {
+				track_id: track.track_id,
+				title: track.title,
+				disc: {
+					disc_id: disc.disc_id,
+					album: {
+						album_id: album.album_id,
+						title: album.title,
+						year: album.year,
+						artists: lookupAlbumArtists(album.album_id),
+						artwork: is.absent(album.cover_file_id) ? undefined : {
+							file_id: album.cover_file_id,
+							mime: "image/jpeg",
+							height: 1080,
+							width: 1080
+						}
+					},
+					number: disc.number
+				},
+				artists: lookupTrackArtists(track.track_id),
+				file: {
+					file_id: track.file_id,
+					mime: "audio/mp4",
+					duration_ms: track.duration
+				},
+				number: track.number
+			}
+		};
+	});
+	return {
+		...playlist,
+		items
+	};
 }

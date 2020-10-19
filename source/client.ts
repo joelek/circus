@@ -2236,6 +2236,67 @@ function makeMovie(movie: Movie, play: () => void): xml.XElement {
 		);
 }
 
+function makePlaylist(playlist: Playlist, play: () => void = () => player.playPlaylist(playlist)): xml.XElement {
+	let duration_ms = 0;
+	for (let item of playlist.items) {
+		duration_ms += item.track.file.duration_ms;
+	}
+	let isContext = computed((contextPath) => {
+		if (!is.present(contextPath)) {
+			return false;
+		}
+		if (contextPath[contextPath.length - 2] !== playlist.playlist_id) {
+			return false;
+		}
+		return true;
+	}, player.contextPath);
+	let isPlaying = computed((isContext, playback) => {
+		return isContext && playback;
+	}, isContext, player.playback);
+	return xml.element("div.media-widget")
+		.on("click", () => {
+			navigate(`audio/playlists/${playlist.playlist_id}/`);
+		})
+		.add(xml.element("div.media-widget__artwork")
+			.add(xml.element("div.playback-button")
+				.add(makePlayIcon()
+					.bind("data-hide", isPlaying.addObserver((isPlaying) => isPlaying))
+				)
+				.add(makePauseIcon()
+					.bind("data-hide", isPlaying.addObserver((isPlaying) => !isPlaying))
+				)
+				.on("click", () => {
+					if (isPlaying.getState()) {
+						player.pause();
+					} else {
+						if (isContext.getState()) {
+							player.resume();
+						} else {
+							play();
+						}
+					}
+				})
+			)
+		)
+		.add(xml.element("div.media-widget__metadata")
+			.add(xml.element("div.media-widget__titles")
+				.add(xml.element("div.media-widget__title")
+					.add(xml.text(playlist.title))
+				)
+				.add(xml.element("div.media-widget__subtitle")
+					.add(xml.text(playlist.user.username))
+				)
+			)
+			.add(xml.element("div.media-widget__tags")
+				.add(makeTag("Playlist"))
+				.add(makeTag(format_duration(duration_ms)))
+			)
+			.add(xml.element("div.media-widget__description")
+				.add(xml.text(playlist.description))
+			)
+		);
+}
+
 function makeGrid(title: string | undefined, ...elements: xml.XElement[]) {
 	return xml.element("div.media-grid")
 		.add(!title ? undefined : xml.element("div.media-grid__header")
@@ -2654,13 +2715,17 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^audio[/]playlists[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AudiolistsResponse>(`/api/audio/playlists/`, {}, (status, response) => {
+			let playlists = response.playlists;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(makeEntityHeader("Playlists"))
 				)
 				.add(xml.element("div.content")
-					.set("style", "display: grid; gap: 32px;")
-					.add(...response.audiolists.map((playlist) => renderTextHeader(makeLink(`audio/playlists/${playlist.audiolist_id}/`, playlist.title))))
+					.add(makeGrid(
+							undefined,
+							...playlists.map((playlist) => makePlaylist(playlist))
+						)
+					)
 				)
 			.render());
 

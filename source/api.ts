@@ -589,68 +589,13 @@ class AudiolistRoute implements Route<api_response.AuthRequest, api_response.Aud
 	}
 
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		if (request.url === undefined) {
-			throw new Error();
-		}
-		let parts = /^[/]api[/]audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(request.url);
+		let parts = /^[/]api[/]audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/");
 		if (parts === null) {
 			throw new Error();
 		}
-		let audiolist_id = parts[1];
-		let audiolist = data.audiolists_index[audiolist_id];
-		if (audiolist === undefined) {
-			throw new Error();
-		}
-		let user = data.getUserFromUserId.lookup(audiolist.user_id);
-		let playlist: PlaylistBase = {
-			playlist_id: audiolist.audiolist_id,
-			title: audiolist.title,
-			description: audiolist.description,
-			user: {
-				user_id: user.user_id,
-				username: user.username
-			}
-		};
-		let items = data.getPlaylistItemsFromPlaylistId.lookup(playlist.playlist_id).map((audiolist_item) => {
-			let track = data.getTrackFromTrackId.lookup(audiolist_item.track_id);
-			let disc = data.getDiscFromDiscId.lookup(track.disc_id);
-			let album = data.getAlbumFromAlbumId.lookup(disc.album_id);
-			return {
-				playlist,
-				number: audiolist_item.number,
-				track: {
-					track_id: track.track_id,
-					title: track.title,
-					disc: {
-						disc_id: disc.disc_id,
-						album: {
-							album_id: album.album_id,
-							title: album.title,
-							year: album.year,
-							artists: data.lookupAlbumArtists(album.album_id),
-							artwork: is.absent(album.cover_file_id) ? undefined : {
-								file_id: album.cover_file_id,
-								mime: "image/jpeg",
-								height: 1080,
-								width: 1080
-							}
-						},
-						number: disc.number
-					},
-					artists: data.lookupTrackArtists(track.track_id),
-					file: {
-						file_id: track.file_id,
-						mime: "audio/mp4",
-						duration_ms: track.duration
-					},
-					number: track.number
-				}
-			};
-		});
-		let payload: api_response.AudiolistResponse = {
-			...playlist,
-			items
-		};
+		let playlist_id = parts[1];
+		let playlist = data.api_lookupPlaylist(playlist_id);
+		let payload: api_response.AudiolistResponse = playlist;
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
 	}
@@ -669,8 +614,9 @@ class AudiolistsRoute implements Route<api_response.AuthRequest, api_response.Au
 		if (request.url === undefined) {
 			throw new Error();
 		}
+		let playlists = data.lists.audiolists.map((playlist) => data.api_lookupPlaylist(playlist.audiolist_id));
 		let payload: api_response.AudiolistsResponse = {
-			audiolists: data.lists.audiolists
+			playlists
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
