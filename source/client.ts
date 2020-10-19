@@ -2849,11 +2849,17 @@ let updateviewforuri = (uri: string): void => {
 									if (isPlaying.getState()) {
 										player.pause();
 									} else {
-										if (isContext.getState() && is.absent(progress)) {
-											player.resume();
-										} else {
-											player.playEpisode(episode);
+										if (is.present(progress)) {
+											if (!isContext.getState()) {
+												player.playEpisode(episode);
+											}
 											player.seek(progress);
+										} else {
+											if (isContext.getState()) {
+												player.resume();
+											} else {
+												player.playEpisode(episode);
+											}
 										}
 									}
 								}),
@@ -2865,7 +2871,9 @@ let updateviewforuri = (uri: string): void => {
 			);
 		});
 	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.MovieResponse>(`/api/video/movies/${parts[1]}/?token=${token}`, {}, (status, response) => {
+		let movie_id = parts[1];
+		let progress = is.present(parts[2]) ? Number.parseInt(parts[2]) / 1000 : undefined;
+		req<api_response.ApiRequest, api_response.MovieResponse>(`/api/video/movies/${movie_id}/?token=${token}`, {}, (status, response) => {
 			let movie = translateMovieResponse(response);
 			let isContext = computed((contextPath) => {
 				if (!is.present(contextPath)) {
@@ -2897,10 +2905,17 @@ let updateviewforuri = (uri: string): void => {
 									if (isPlaying.getState()) {
 										player.pause();
 									} else {
-										if (isContext.getState()) {
-											player.resume();
+										if (is.present(progress)) {
+											if (!isContext.getState()) {
+												player.playMovie(movie);
+											}
+											player.seek(progress);
 										} else {
-											player.playMovie(movie);
+											if (isContext.getState()) {
+												player.resume();
+											} else {
+												player.playMovie(movie);
+											}
 										}
 									}
 								}),
