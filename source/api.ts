@@ -504,35 +504,38 @@ class AuthRoute implements Route<api_response.AuthRequest, api_response.AuthResp
 	}
 }
 
-class MovieRoute implements Route<api_response.AuthRequest, api_response.MovieResponse> {
+class MovieRoute implements Route<api_response.AuthRequest, api_response.MovieResponseV2> {
 	constructor() {
 
 	}
 
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
-		if (request.url === undefined) {
-			throw new Error();
-		}
-		let parts = /^[/]api[/]video[/]movies[/]([0-9a-f]{32})[/]/.exec(request.url);
+		let parts = /^[/]api[/]video[/]movies[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/");
 		if (parts === null) {
 			throw new Error();
 		}
 		let movie_id = parts[1];
-		let movie = data.movies_index[movie_id];
-		if (movie === undefined) {
-			throw new Error();
+		let movie = data.api_lookupMovie(movie_id, username);
+		let map = new Map<string, number>();
+		for (let genre of movie.genres) {
+			let movie_genres = data.getMoviesFromVideoGenreIdIndex.lookup(genre.genre_id);
+			for (let movie_genre of movie_genres) {
+				let value = map.get(movie_genre.movie_id) ?? 0;
+				map.set(movie_genre.movie_id, value + 1);
+			}
 		}
-		let movie_parts = data.getMoviePartsFromMovieId(movie_id).map((movie_part) => {
-			let streamed = data.getLatestStream(username, movie_part.file_id);
-			return {
-				...movie_part,
-				streamed
-			};
-		});
-		let payload: api_response.MovieResponse = {
-			...movie,
-			movie_parts
+		map.delete(movie.movie_id);
+		let suggestions = Array.from(map.entries())
+			.sort(CombinedSort.of(
+				NumericSort.decreasing((value) => value[1])
+			))
+			.slice(0, 6)
+			.map((entry) => entry[0])
+			.map((movie_id) => data.api_lookupMovie(movie_id, username))
+		let payload: api_response.MovieResponseV2 = {
+			movie,
+			suggestions
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));

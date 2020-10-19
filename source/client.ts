@@ -2171,7 +2171,7 @@ function makeShow(show: Show, play: () => void): xml.XElement {
 			)
 		);
 }
-function makeMovie(movie: Movie, play: () => void): xml.XElement {
+function makeMovie(movie: Movie, play: () => void = () => player.playMovie): xml.XElement {
 	let title = movie.title;
 	let tags = [
 		"Movie",
@@ -2953,8 +2953,9 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
 		let movie_id = parts[1];
 		let progress = is.present(parts[2]) ? Number.parseInt(parts[2]) / 1000 : undefined;
-		req<api_response.ApiRequest, api_response.MovieResponse>(`/api/video/movies/${movie_id}/?token=${token}`, {}, (status, response) => {
-			let movie = translateMovieResponse(response);
+		req<api_response.ApiRequest, api_response.MovieResponseV2>(`/api/video/movies/${movie_id}/?token=${token}`, {}, (status, response) => {
+			let movie = response.movie;
+			let suggestions = response.suggestions;
 			let isContext = computed((contextPath) => {
 				if (!is.present(contextPath)) {
 					return false;
@@ -3006,8 +3007,12 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(makeGrid("Actors"))
 				)
-				.add(xml.element("div.content")
-					.add(makeGrid("Suggested movies"))
+				.add(suggestions.length === 0 ? undefined : xml.element("div.content")
+					.add(makeGrid(
+							"Suggested movies",
+							...suggestions.map((movie) => makeMovie(movie))
+						)
+					)
 				)
 				.render()
 			);

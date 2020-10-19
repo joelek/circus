@@ -1,5 +1,5 @@
 import * as libdb from "./database";
-import { Episode, Playlist } from "./media/schema/objects";
+import { Episode, Movie, Playlist } from "./media/schema/objects";
 
 interface ApiRequest {
 
@@ -82,6 +82,11 @@ interface MovieResponse extends ApiResponse, libdb.MovieEntry {
 		streamed: number | null,
 		subtitles: Array<libdb.SubtitleEntry>
 	}>;
+}
+
+type MovieResponseV2 = {
+	movie: Movie,
+	suggestions: Movie[]
 }
 
 interface MoviesResponse extends ApiResponse {
@@ -226,6 +231,7 @@ export {
 	SeasonResponse,
 	ShowsResponse,
 	MovieResponse,
+	MovieResponseV2,
 	MoviesResponse,
 	AudiolistItemResponse,
 	AudiolistResponse,

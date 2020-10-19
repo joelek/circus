@@ -3,9 +3,9 @@ import * as libfs from "fs";
 import * as libdb from "./database";
 import * as utils from "./utils";
 import * as passwords from "./passwords";
-import { NumericSort } from "./shared";
+import { LexicalSort, NumericSort } from "./shared";
 import * as is from "./is";
-import { Episode, Playlist, PlaylistBase, User, UserBase } from "./media/schema/objects";
+import { Episode, Movie, MovieBase, Playlist, PlaylistBase, User, UserBase } from "./media/schema/objects";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -351,7 +351,7 @@ let getMoviePartFromFileId = RecordIndex.from("file_id", media.video.movie_parts
 let getMoviePartsFromMovieIdIndex = CollectionIndex.from("movie_id", media.video.movie_parts);
 let getShowGenresFromShowId = CollectionIndex.from("show_id", media.video.show_genres);
 let getMovieGenresFromMovieId = CollectionIndex.from("movie_id", media.video.movie_genres);
-let getMoviesFromVideoGenreIdIndex = CollectionIndex.from("video_genre_id", media.video.movie_genres);
+export const getMoviesFromVideoGenreIdIndex = CollectionIndex.from("video_genre_id", media.video.movie_genres);
 let getShowsFromVideoGenreIdIndex = CollectionIndex.from("video_genre_id", media.video.show_genres);
 let getVideoGenreFromVideoGenreId = RecordIndex.from("video_genre_id", media.video.genres);
 let getSeasonsFromShowIdIndex = CollectionIndex.from("show_id", media.video.seasons);
@@ -800,6 +800,48 @@ export function api_lookupUser(user_id: string): User {
 	let user = api_lookupUserBase(user_id);
 	return {
 		...user
+	};
+}
+
+export function api_lookupMovieBase(movie_id: string, username: string): MovieBase {
+	let entry = lookup(movies_index, movie_id);
+	let parts = getMoviePartsFromMovieId(movie_id);
+	return {
+		movie_id: entry.movie_id,
+		title: entry.title,
+		year: entry.year,
+		summary: entry.summary ?? "",
+		artwork: is.absent(entry.poster_file_id) ? undefined : {
+			file_id: entry.poster_file_id,
+			mime: "image/jpeg",
+			height: 720,
+			width: 1080
+		},
+		file: {
+			file_id: parts[0].file_id,
+			mime: "video/mp4",
+			duration_ms: parts[0].duration
+		},
+		subtitles: parts[0].subtitles.map((subtitle) => ({
+			file_id: subtitle.file_id,
+			mime: "text/vtt",
+			language: subtitle.language ?? undefined
+		})),
+		last_stream_date: getLatestStream(username, parts[0].file_id) ?? undefined
+	};
+}
+
+export function api_lookupMovie(movie_id: string, username: string): Movie {
+	let movie = api_lookupMovieBase(movie_id, username);
+	return {
+		...movie,
+		genres: getMovieGenresFromMovieId.lookup(movie_id).map((movie_genre) => {
+			let entry = getVideoGenreFromVideoGenreId.lookup(movie_genre.video_genre_id);
+			return {
+				genre_id: entry.video_genre_id,
+				title: entry.title
+			};
+		}).sort(LexicalSort.increasing((value) => value.title))
 	};
 }
 
