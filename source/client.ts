@@ -782,6 +782,13 @@ style.innerText = `
 		grid-auto-flow: column;
 	}
 
+	.media-widget__description {
+		color: rgb(159, 159, 159);
+		font-size: 12px;
+		line-height: 1.25;
+		word-break: break-word;
+	}
+
 
 
 
