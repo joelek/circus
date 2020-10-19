@@ -543,7 +543,7 @@ export class ContextClient {
 		});
 	}
 
-	seek(progress: number): void {
+	seek(progress?: number): void {
 		this.tsc.send("SetProgress", {
 			progress: progress
 		});

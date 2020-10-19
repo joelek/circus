@@ -2795,7 +2795,9 @@ let updateviewforuri = (uri: string): void => {
 			);
 		});
 	} else if ((parts = /^video[/]episodes[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.EpisodeResponseV2>(`/api/video/episodes/${parts[1]}/?token=${token}`, {}, (status, response) => {
+		let episode_id = parts[1];
+		let progress = is.present(parts[2]) ? Number.parseInt(parts[2]) / 1000 : undefined;
+		req<api_response.ApiRequest, api_response.EpisodeResponseV2>(`/api/video/episodes/${episode_id}/?token=${token}`, {}, (status, response) => {
 			let episode = response.episode;
 			let season = episode.season;
 			let show = season.show;
@@ -2829,10 +2831,11 @@ let updateviewforuri = (uri: string): void => {
 								if (isPlaying.getState()) {
 									player.pause();
 								} else {
-									if (isContext.getState()) {
+									if (isContext.getState() && is.absent(progress)) {
 										player.resume();
 									} else {
 										player.playEpisode(episode);
+										player.seek(progress);
 									}
 								}
 							})
