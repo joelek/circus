@@ -2038,8 +2038,9 @@ function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 	let subtitle = episode.season.show.title;
 	let tags = [
 		"Episode",
-		utils.formatSeasonEpisode(episode.season.number, episode.number),
-		format_duration(episode.file.duration_ms)
+		`${episode.year}`,
+		format_duration(episode.file.duration_ms),
+		utils.formatSeasonEpisode(episode.season.number, episode.number)
 	];
 	let isContext = computed((contextPath) => {
 		if (!is.present(contextPath)) {
@@ -2834,7 +2835,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeEntityHeader(
 							episode.title,
 							[makeLink(`video/shows/${show.show_id}/`, show.title)],
-							["Episode", utils.formatSeasonEpisode(season.number, episode.number), format_duration(episode.file.duration_ms)],
+							["Episode", `${episode.year}`, format_duration(episode.file.duration_ms), utils.formatSeasonEpisode(season.number, episode.number)],
 							makeImage(`/media/stills/${episode.file.file_id}/?token=${token}`).set("style", "padding-bottom: 56.25%;"),
 							xml.element("div.playback-button")
 								.add(makePlayIcon()
