@@ -877,6 +877,7 @@ style.innerText = `
 
 
 	.entity-header {
+		align-items: start;
 		display: grid;
 		gap: 32px;
 		grid-template-columns: repeat(auto-fit, minmax(240px, max-content));
@@ -921,6 +922,13 @@ style.innerText = `
 		gap: 8px;
 		grid-auto-columns: minmax(auto, min-content);
 		grid-auto-flow: column;
+	}
+
+	.entity-header__description {
+		color: rgb(159, 159, 159);
+		font-size: 16px;
+		line-height: 1.25;
+		word-break: break-word;
 	}
 
 
@@ -2252,7 +2260,7 @@ function maybe<A, B>(value: A | undefined | null, cb: (value: A) => B): B | unde
 	}
 }
 
-const makeEntityHeader = (title: string, subtitles: xml.Node<any>[] = [], tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement) => {
+const makeEntityHeader = (title: string, subtitles: xml.Node<any>[] = [], tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement, description?: string) => {
 	return xml.element("div.entity-header")
 		.add(maybe(image, (image) => xml.element("div.entity-header__artwork")
 			.add(image)
@@ -2269,6 +2277,9 @@ const makeEntityHeader = (title: string, subtitles: xml.Node<any>[] = [], tags: 
 			)
 			.add(xml.element("div.entity-header__tags")
 				.add(...tags.map(makeTag))
+			)
+			.add(maybe(description, (description) => xml.element("div.entity-header__description")
+				.add(xml.text(description)))
 			)
 		);
 }
@@ -2821,34 +2832,32 @@ let updateviewforuri = (uri: string): void => {
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(makeEntityHeader(
-						episode.title,
-						[makeLink(`video/shows/${show.show_id}/`, show.title)],
-						["Episode", utils.formatSeasonEpisode(season.number, episode.number), format_duration(episode.file.duration_ms)],
-						makeImage(`/media/stills/${episode.file.file_id}/?token=${token}`).set("style", "padding-bottom: 56.25%;"),
-						xml.element("div.playback-button")
-							.add(makePlayIcon()
-								.bind("data-hide", isPlaying.addObserver(a => a))
-							)
-							.add(makePauseIcon()
-								.bind("data-hide", isPlaying.addObserver(a => !a))
-							)
-							.on("click", (event) => {
-								if (isPlaying.getState()) {
-									player.pause();
-								} else {
-									if (isContext.getState() && is.absent(progress)) {
-										player.resume();
+							episode.title,
+							[makeLink(`video/shows/${show.show_id}/`, show.title)],
+							["Episode", utils.formatSeasonEpisode(season.number, episode.number), format_duration(episode.file.duration_ms)],
+							makeImage(`/media/stills/${episode.file.file_id}/?token=${token}`).set("style", "padding-bottom: 56.25%;"),
+							xml.element("div.playback-button")
+								.add(makePlayIcon()
+									.bind("data-hide", isPlaying.addObserver(a => a))
+								)
+								.add(makePauseIcon()
+									.bind("data-hide", isPlaying.addObserver(a => !a))
+								)
+								.on("click", (event) => {
+									if (isPlaying.getState()) {
+										player.pause();
 									} else {
-										player.playEpisode(episode);
-										player.seek(progress);
+										if (isContext.getState() && is.absent(progress)) {
+											player.resume();
+										} else {
+											player.playEpisode(episode);
+											player.seek(progress);
+										}
 									}
-								}
-							})
+								}),
+							episode.summary
 						)
 					)
-				)
-				.add(xml.element("div.content")
-					.add(renderTextParagraph(xml.text(episode.summary)))
 				)
 				.render()
 			);
@@ -2870,29 +2879,30 @@ let updateviewforuri = (uri: string): void => {
 			}, isContext, player.playback);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader(movie.title, [xml.text(movie.summary)], [
-						"Movie",
-						`${movie.year}`,
-						format_duration(movie.file.duration_ms)
-						], is.absent(movie.artwork) ? undefined : makeImage(`/files/${movie.artwork.file_id}/?token=${token}`).set("style", "padding-bottom: 150%"),
-						xml.element("div.playback-button")
-							.add(makePlayIcon()
-								.bind("data-hide", isPlaying.addObserver(a => a))
-							)
-							.add(makePauseIcon()
-								.bind("data-hide", isPlaying.addObserver(a => !a))
-							)
-							.on("click", (event) => {
-								if (isPlaying.getState()) {
-									player.pause();
-								} else {
-									if (isContext.getState()) {
-										player.resume();
+					.add(makeEntityHeader(
+							movie.title,
+							[],
+							["Movie", `${movie.year}`, format_duration(movie.file.duration_ms)],
+							is.absent(movie.artwork) ? undefined : makeImage(`/files/${movie.artwork.file_id}/?token=${token}`).set("style", "padding-bottom: 150%"),
+							xml.element("div.playback-button")
+								.add(makePlayIcon()
+									.bind("data-hide", isPlaying.addObserver(a => a))
+								)
+								.add(makePauseIcon()
+									.bind("data-hide", isPlaying.addObserver(a => !a))
+								)
+								.on("click", (event) => {
+									if (isPlaying.getState()) {
+										player.pause();
 									} else {
-										player.playMovie(movie);
+										if (isContext.getState()) {
+											player.resume();
+										} else {
+											player.playMovie(movie);
+										}
 									}
-								}
-							})
+								}),
+							movie.summary
 						)
 					)
 				)
