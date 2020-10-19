@@ -2166,7 +2166,6 @@ function makeShow(show: Show, play: () => void): xml.XElement {
 }
 function makeMovie(movie: Movie, play: () => void): xml.XElement {
 	let title = movie.title;
-	let subtitle = [].join(" \u2022 ");
 	let tags = [
 		"Movie",
 		`${movie.year}`,
@@ -2220,8 +2219,8 @@ function makeMovie(movie: Movie, play: () => void): xml.XElement {
 				.add(xml.element("div.media-widget__title")
 					.add(xml.text(title))
 				)
-				.add(subtitle === "" ? undefined : xml.element("div.media-widget__subtitle")
-					.add(xml.text(subtitle))
+				.add(xml.element("div.media-widget__subtitle")
+					.add(xml.text(movie.genres.map((genre) => genre.title).join(" \u2022 ")))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2300,7 +2299,7 @@ function pluralize(amount: number, zero: string, one: string, many: string): str
 
 // TODO: Make API and Context consistent.
 function translateMovieResponse(rmovie: api_response.MovieResponse): Movie {
-	let movie: MovieBase = {
+	let movie: Movie = {
 		movie_id: rmovie.movie_id,
 		title: rmovie.title,
 		year: rmovie.year,
@@ -2321,7 +2320,8 @@ function translateMovieResponse(rmovie: api_response.MovieResponse): Movie {
 			mime: "text/vtt",
 			language: rsubtitle.language ?? undefined
 		})),
-		last_stream_date: rmovie.movie_parts[0].streamed ?? undefined
+		last_stream_date: rmovie.movie_parts[0].streamed ?? undefined,
+		genres: []
 	};
 	return movie;
 }
@@ -2363,7 +2363,8 @@ function translateShowResponse(rshow: api_response.ShowResponse): Show {
 					return episode;
 				})
 			}
-		})
+		}),
+		genres: []
 	};
 }
 function translateAlbumResponse(ralbum: api_response.AlbumResponse): ContextAlbum {
@@ -2882,7 +2883,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(makeEntityHeader(
 							movie.title,
-							[],
+							movie.genres.map((genre) => makeLink(`video/genres/${genre.genre_id}/`, genre.title)),
 							["Movie", `${movie.year}`, format_duration(movie.file.duration_ms)],
 							is.absent(movie.artwork) ? undefined : makeImage(`/files/${movie.artwork.file_id}/?token=${token}`).set("style", "padding-bottom: 150%"),
 							xml.element("div.playback-button")

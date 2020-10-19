@@ -84,7 +84,7 @@
 	},
 
 	Movie: MovieBase & {
-
+		genres: Genre[]
 	},
 
 	ShowBase: {
@@ -94,7 +94,8 @@
 	},
 
 	Show: ShowBase & {
-		seasons: Season[]
+		seasons: Season[],
+		genres: Genre[]
 	},
 
 	SeasonBase: {

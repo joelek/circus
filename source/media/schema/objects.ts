@@ -199,11 +199,17 @@ export const MovieBase = autoguard.Object.of<MovieBase>({
 	)
 });
 
-export type Movie = MovieBase & {};
+export type Movie = MovieBase & {
+	"genres": Genre[]
+};
 
 export const Movie = autoguard.Intersection.of(
 	autoguard.Reference.of<MovieBase>(() => MovieBase),
-	autoguard.Object.of<{}>({})
+	autoguard.Object.of<{
+		"genres": Genre[]
+	}>({
+		"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre))
+	})
 );
 
 export type ShowBase = {
@@ -222,15 +228,18 @@ export const ShowBase = autoguard.Object.of<ShowBase>({
 });
 
 export type Show = ShowBase & {
-	"seasons": Season[]
+	"seasons": Season[],
+	"genres": Genre[]
 };
 
 export const Show = autoguard.Intersection.of(
 	autoguard.Reference.of<ShowBase>(() => ShowBase),
 	autoguard.Object.of<{
-		"seasons": Season[]
+		"seasons": Season[],
+		"genres": Genre[]
 	}>({
-		"seasons": autoguard.Array.of(autoguard.Reference.of<Season>(() => Season))
+		"seasons": autoguard.Array.of(autoguard.Reference.of<Season>(() => Season)),
+		"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre))
 	})
 );
 
