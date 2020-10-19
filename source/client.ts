@@ -859,6 +859,7 @@ style.innerText = `
 	.text-paragraph {
 		color: rgb(159, 159, 159);
 		font-size: 16px;
+		line-height: 1.25;
 		word-break: break-word;
 	}
 
@@ -902,13 +903,17 @@ style.innerText = `
 	.entity-header__title {
 		color: rgb(255, 255, 255);
 		font-size: 24px;
-		word-break: break-word;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.entity-header__subtitle {
 		color: rgb(159, 159, 159);
 		font-size: 20px;
-		word-break: break-word;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.entity-header__tags {
