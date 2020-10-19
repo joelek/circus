@@ -2171,7 +2171,7 @@ function makeShow(show: Show, play: () => void): xml.XElement {
 			)
 		);
 }
-function makeMovie(movie: Movie, play: () => void = () => player.playMovie): xml.XElement {
+function makeMovie(movie: Movie, play: () => void = () => player.playMovie(movie)): xml.XElement {
 	let title = movie.title;
 	let tags = [
 		"Movie",
