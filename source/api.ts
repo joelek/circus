@@ -8,7 +8,7 @@ import * as api_response from "./api_response";
 import * as lchannels from "./channels";
 import * as data from "./data";
 import * as is from "./is";
-import { PlaylistBase } from "./media/schema/objects";
+import { PlaylistBase } from "./api/schema/objects";
 import { LexicalSort, NumericSort, CombinedSort } from "./shared";
 
 function getUsername(request: libhttp.IncomingMessage): string {

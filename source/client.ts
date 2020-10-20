@@ -8,7 +8,7 @@ import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Genre, Movie, MovieBase, Playlist, Season, SeasonBase, Show, ShowBase, Track, TrackBase } from "./media/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Genre, Movie, MovieBase, Playlist, Season, SeasonBase, Show, ShowBase, Track, TrackBase } from "./api/schema/objects";
 
 
 

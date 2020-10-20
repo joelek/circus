@@ -1,5 +1,5 @@
 import * as libdb from "./database";
-import { Episode, Movie, Playlist } from "./media/schema/objects";
+import { Episode, Movie, Playlist } from "./api/schema/objects";
 
 interface ApiRequest {
 

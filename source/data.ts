@@ -5,7 +5,7 @@ import * as utils from "./utils";
 import * as passwords from "./passwords";
 import { LexicalSort, NumericSort } from "./shared";
 import * as is from "./is";
-import { Episode, Movie, MovieBase, Playlist, PlaylistBase, User, UserBase } from "./media/schema/objects";
+import { Episode, Movie, MovieBase, Playlist, PlaylistBase, User, UserBase } from "./api/schema/objects";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 

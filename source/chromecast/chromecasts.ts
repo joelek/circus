@@ -12,7 +12,7 @@ import * as libcontext from "../context/client";
 import * as autoguard from "@joelek/ts-autoguard";
 import * as sockets from "@joelek/ts-sockets";
 import * as stdlib from "@joelek/ts-stdlib";
-import { Episode, Movie, Track } from "../media/schema/objects";
+import { Episode, Movie, Track } from "../api/schema/objects";
 
 const DEBUG = false;
 const MEDIA_SERVER = "https://ap.joelek.se";
