@@ -2325,6 +2325,16 @@ function maybe<A, B>(value: A | undefined | null, cb: (value: A) => B): B | unde
 	}
 }
 
+function joinarray(nodes: xml.Node<any>[]): xml.Node<any>[] {
+	let array = [] as xml.Node<any>[];
+	for (let node of nodes) {
+		array.push(node);
+		array.push(xml.text(" \u2022 "));
+	}
+	array.pop();
+	return array;
+}
+
 const makeEntityHeader = (title: string, subtitles: xml.Node<any>[] = [], tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement, description?: string) => {
 	return xml.element("div.entity-header")
 		.add(maybe(image, (image) => xml.element("div.entity-header__artwork")
@@ -2336,8 +2346,8 @@ const makeEntityHeader = (title: string, subtitles: xml.Node<any>[] = [], tags: 
 				.add(xml.element("div.entity-header__title")
 					.add(xml.text(title))
 				)
-				.add(...subtitles.map((subtitle) => xml.element("div.entity-header__subtitle")
-					.add(subtitle))
+				.add(subtitles.length === 0 ? undefined : xml.element("div.entity-header__subtitle")
+					.add(...joinarray(subtitles))
 				)
 			)
 			.add(xml.element("div.entity-header__tags")
