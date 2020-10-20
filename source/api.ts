@@ -525,10 +525,14 @@ class MovieRoute implements Route<api_response.AuthRequest, api_response.MovieRe
 				map.set(movie_genre.movie_id, value + 1);
 			}
 		}
+		for (let entry of map) {
+			let video_genres = data.getVideoGenresFromMovieId(entry[0]);
+			map.set(entry[0], entry[1] - video_genres.length);
+		}
 		map.delete(movie.movie_id);
 		let suggestions = Array.from(map.entries())
 			.sort(CombinedSort.of(
-				NumericSort.decreasing((value) => value[1])
+				NumericSort.decreasing((entry) => entry[1])
 			))
 			.slice(0, 6)
 			.map((entry) => entry[0])
