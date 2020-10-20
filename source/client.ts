@@ -143,10 +143,10 @@ player.currentEntry.addObserver((currentEntry) => {
 			let disc = track.disc;
 			let album = disc.album;
 			mediaPlayerTitle.updateState(track.title);
-			mediaPlayerSubtitle.updateState(track.artists.map((artist) => artist.title).join(" \u2022 "));
+			mediaPlayerSubtitle.updateState(track.artists.map((artist) => artist.title).join(" \u00b7 "));
 			session.setMetadata({
 				title: track.title,
-				artist: track.artists.map((artist) => artist.title).join(" \u2022 "),
+				artist: track.artists.map((artist) => artist.title).join(" \u00b7 "),
 				album: album.title,
 				artwork: is.absent(album.artwork) ? undefined : [
 					{
@@ -697,7 +697,7 @@ style.innerText = `
 	}
 
 	.watched::before {
-		content: "\u2022";
+		content: "\u00b7";
 		color: ${ACCENT_COLOR};
 	}
 
@@ -1901,7 +1901,7 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 		}
 	}
 	let title = album.title;
-	let subtitle = album.artists.map(artist => artist.title).join(" \u2022 ");
+	let subtitle = album.artists.map(artist => artist.title).join(" \u00b7 ");
 	let tags = [
 		"Album",
 		`${album.year}`,
@@ -2227,7 +2227,7 @@ function makeMovie(movie: Movie, play: () => void = () => player.playMovie(movie
 					.add(xml.text(title))
 				)
 				.add(xml.element("div.media-widget__subtitle")
-					.add(xml.text(movie.genres.map((genre) => genre.title).join(" \u2022 ")))
+					.add(xml.text(movie.genres.map((genre) => genre.title).join(" \u00b7 ")))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2329,7 +2329,7 @@ function joinarray(nodes: xml.Node<any>[]): xml.Node<any>[] {
 	let array = [] as xml.Node<any>[];
 	for (let node of nodes) {
 		array.push(node);
-		array.push(xml.text(" \u2022 "));
+		array.push(xml.text(" \u00b7 "));
 	}
 	array.pop();
 	return array;
@@ -2584,7 +2584,7 @@ let updateviewforuri = (uri: string): void => {
 										.add(xml.text(track.title))
 									)
 									.add(xml.element("div.playlist-item__subtitle")
-										.add(xml.text(track.artists.map((artist) => artist.title).join(" \u2022 ")))
+										.add(xml.text(track.artists.map((artist) => artist.title).join(" \u00b7 ")))
 									)
 									.on("click", () => {
 										player.playAlbum(context, discIndex, trackIndex);
@@ -2710,7 +2710,7 @@ let updateviewforuri = (uri: string): void => {
 								.add(xml.text(item.track.title))
 							)
 							.add(xml.element("div.playlist-item__subtitle")
-								.add(xml.text(item.track.artists.map((artist) => artist.title).join(" \u2022 ")))
+								.add(xml.text(item.track.artists.map((artist) => artist.title).join(" \u00b7 ")))
 							)
 							.on("click", () => {
 								player.playPlaylist(playlist, itemIndex);
@@ -3094,7 +3094,7 @@ let updateviewforuri = (uri: string): void => {
 					h3.innerText = [
 						episode.season.show.title,
 						utils.formatSeasonEpisode(episode.season.number, episode.number)
-					].join(" \u2022 ");
+					].join(" \u00b7 ");
 					d.appendChild(h3);
 				}
 				let pre = document.createElement("pre");
@@ -3190,7 +3190,7 @@ let updateviewforuri = (uri: string): void => {
 						p2.textContent = [
 							movie.year.toString().padStart(4, "0"),
 							format_duration(movie_part.duration)
-						].join(" \u2022 ");
+						].join(" \u00b7 ");
 						let button = document.createElement("button");
 						button.textContent = "Play";
 						button.addEventListener("click", () => {
@@ -3222,7 +3222,7 @@ let updateviewforuri = (uri: string): void => {
 					p2.style.setProperty("font-size", "16px");
 					p2.textContent = [
 						format_duration(episode.duration)
-					].join(" \u2022 ");
+					].join(" \u00b7 ");
 					let button = document.createElement("button");
 					button.textContent = "Play";
 					button.addEventListener("click", () => {

@@ -89,7 +89,7 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 			metadata: {
 				metadataType: 0,
 				title: track.title,
-				subtitle: track.artists.map((artist) => artist.title).join(" \u2022 "),
+				subtitle: track.artists.map((artist) => artist.title).join(" \u00b7 "),
 				images: is.absent(album.artwork) ? undefined : [
 					{
 						url: `${MEDIA_SERVER}/files/${album.artwork.file_id}/?token=${token}`
