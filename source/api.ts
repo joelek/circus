@@ -522,7 +522,7 @@ class MovieRoute implements Route<api_response.AuthRequest, api_response.MovieRe
 			let movie_genres = data.getMoviesFromVideoGenreIdIndex.lookup(genre.genre_id);
 			for (let movie_genre of movie_genres) {
 				let value = map.get(movie_genre.movie_id) ?? 0;
-				map.set(movie_genre.movie_id, value + 1);
+				map.set(movie_genre.movie_id, value + 2);
 			}
 		}
 		for (let entry of map) {
