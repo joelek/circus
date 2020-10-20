@@ -1644,17 +1644,31 @@ let sentinel = xml.element("div.scroll-container__sentinel")
 scroll_container.appendChild(mount);
 scroll_container.appendChild(sentinel);
 mountwrapper.appendChild(scroll_container);
-let scrollobserver: undefined | (() => void);
-let observer = new IntersectionObserver((entries) => {
+let scrollobserver: undefined | (() => Promise<void>);
+function setScrollObserver(obs?: () => Promise<void>): void {
+	if (is.present(scrollobserver)) {
+		observer.unobserve(sentinel);
+	}
+	scrollobserver = obs;
+	if (is.present(scrollobserver)) {
+		observer.observe(sentinel);
+	}
+}
+let observer = new IntersectionObserver(async (entries) => {
+	console.log(entries);
+	if (is.absent(scrollobserver)) {
+		return;
+	}
 	for (let entry of entries) {
 		if (entry.target === sentinel && entry.isIntersecting) {
-			scrollobserver?.();
+			await scrollobserver();
+			setScrollObserver(scrollobserver);
+			break;
 		}
 	}
 }, {
 	root: scroll_container
 });
-observer.observe(sentinel);
 
 /*
     if (document.webkitFullscreenElement) {
@@ -2516,7 +2530,7 @@ function translateArtistResponse(rartist: api_response.ArtistResponse): ContextA
 }
 
 let updateviewforuri = (uri: string): void => {
-	scrollobserver = undefined;
+	setScrollObserver();
 	while (mount.lastChild !== null) {
 		mount.removeChild(mount.lastChild);
 	}
@@ -3080,7 +3094,7 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let movies = new ArrayObservable<Movie>([]);
-		scrollobserver = () => {
+		setScrollObserver(() => new Promise((resolve, reject) => {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
 				req<api_response.ApiRequest, api_response.MoviesResponseV2>(`/api/video/movies/?offset=${offset}&token=${token}`, {}, (status, response) => {
@@ -3092,9 +3106,10 @@ let updateviewforuri = (uri: string): void => {
 						reachedEnd.updateState(true);
 					}
 					isLoading.updateState(false);
+					resolve();
 				});
 			}
-		};
+		}));
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Movies")))
