@@ -2284,7 +2284,7 @@ function makePlaylist(playlist: Playlist, play: () => void = () => player.playPl
 					.add(xml.text(playlist.title))
 				)
 				.add(xml.element("div.media-widget__subtitle")
-					.add(xml.text(`By ${playlist.user.username}`))
+					.add(xml.text(playlist.user.username))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2717,7 +2717,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(makeEntityHeader(
 							playlist.title,
-							[makeLink(`users/${playlist.user.user_id}/`, `By ${playlist.user.username}`)],
+							[makeLink(`users/${playlist.user.user_id}/`, `${playlist.user.username}`)],
 							["Playlist", format_duration(duration_ms)],
 							makeImage(),
 							undefined,
