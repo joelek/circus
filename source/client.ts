@@ -1638,10 +1638,23 @@ let modals = xml.element("div.modal-container")
 mountwrapper.appendChild(modals.render());
 let scroll_container = xml.element("div.scroll-container")
 	.render();
+let sentinel = xml.element("div.scroll-container__sentinel")
+	.set("style", "height: 1px")
+	.render();
 scroll_container.appendChild(mount);
+scroll_container.appendChild(sentinel);
 mountwrapper.appendChild(scroll_container);
-
-
+let scrollobserver: undefined | (() => void);
+let observer = new IntersectionObserver((entries) => {
+	for (let entry of entries) {
+		if (entry.target === sentinel && entry.isIntersecting) {
+			scrollobserver?.();
+		}
+	}
+}, {
+	root: scroll_container
+});
+observer.observe(sentinel);
 
 /*
     if (document.webkitFullscreenElement) {
@@ -2503,6 +2516,7 @@ function translateArtistResponse(rartist: api_response.ArtistResponse): ContextA
 }
 
 let updateviewforuri = (uri: string): void => {
+	scrollobserver = undefined;
 	while (mount.lastChild !== null) {
 		mount.removeChild(mount.lastChild);
 	}
@@ -3066,18 +3080,20 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let movies = new ArrayObservable<Movie>([]);
-		let load = () => {
-			isLoading.updateState(true);
-			req<api_response.ApiRequest, api_response.MoviesResponseV2>(`/api/video/movies/?offset=${offset}&token=${token}`, {}, (status, response) => {
-				for (let movie of response.movies) {
-					movies.append(movie);
-				}
-				offset += response.movies.length;
-				if (response.movies.length === 0) {
-					reachedEnd.updateState(true);
-				}
-				isLoading.updateState(false);
-			});
+		scrollobserver = () => {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				req<api_response.ApiRequest, api_response.MoviesResponseV2>(`/api/video/movies/?offset=${offset}&token=${token}`, {}, (status, response) => {
+					for (let movie of response.movies) {
+						movies.append(movie);
+					}
+					offset += response.movies.length;
+					if (response.movies.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
+				});
+			}
 		};
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
@@ -3088,21 +3104,8 @@ let updateviewforuri = (uri: string): void => {
 					.repeat(movies, (movie) => makeMovie(movie, () => player.playMovie(movie)))
 				)
 			)
-			.add(xml.element("div.content")
-				.add(xml.element("button")
-					.on("click", () => {
-						if (!isLoading.getState()) {
-							load();
-						}
-					})
-					.bind("data-hide", reachedEnd.addObserver((reachedEnd) => reachedEnd))
-					.bind("data-enabled", isLoading.addObserver((isLoading) => !isLoading))
-					.add(xml.text("More"))
-				)
-			)
 			.render()
 		);
-		load();
 	} else if ((parts = /^cues[/](.*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
 		let wrapper = document.createElement("div");
