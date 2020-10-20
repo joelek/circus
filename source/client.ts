@@ -2291,9 +2291,6 @@ function makePlaylist(playlist: Playlist, play: () => void = () => player.playPl
 				.add(makeTag("Playlist"))
 				.add(makeTag(format_duration(duration_ms)))
 			)
-			.add(xml.element("div.media-widget__description")
-				.add(xml.text(playlist.description))
-			)
 		);
 }
 
