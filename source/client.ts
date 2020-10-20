@@ -2304,9 +2304,9 @@ function makeGrid(title: string | undefined, ...elements: xml.XElement[]) {
 		);
 }
 
-function makeImage(url: string) {
+function makeImage(url?: string) {
 	return xml.element("div.image-box")
-		.add(xml.element("img.image-box__image")
+		.add(is.absent(url) ? undefined : xml.element("img.image-box__image")
 			.set("src", url)
 		);
 }
@@ -2337,10 +2337,10 @@ function joinarray(nodes: xml.Node<any>[]): xml.Node<any>[] {
 
 const makeEntityHeader = (title: string, subtitles: xml.Node<any>[] = [], tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement, description?: string) => {
 	return xml.element("div.entity-header")
-		.add(maybe(image, (image) => xml.element("div.entity-header__artwork")
+		.add(xml.element("div.entity-header__artwork")
 			.add(image)
 			.add(playButton)
-		))
+		)
 		.add(xml.element("div.entity-header__metadata")
 			.add(xml.element("div.entity-header__titles")
 				.add(xml.element("div.entity-header__title")
@@ -2533,7 +2533,7 @@ let updateviewforuri = (uri: string): void => {
 					"Album",
 					`${response.year}`,
 					format_duration(duration_ms)
-				], is.absent(context.artwork) ? undefined : makeImage(`/files/${context.artwork.file_id}/?token=${token}`),
+				], makeImage(is.absent(context.artwork) ? undefined : `/files/${context.artwork.file_id}/?token=${token}`),
 					xml.element("div.playback-button")
 						.add(makePlayIcon()
 							.bind("data-hide", isPlaying.addObserver(a => a))
@@ -2601,7 +2601,7 @@ let updateviewforuri = (uri: string): void => {
 			let albums = response.albums.map(translateAlbumResponse);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader("Albums"))
+					.add(renderTextHeader(xml.text("Albums")))
 				)
 				.add(xml.element("div.content")
 					.add(makeGrid(undefined, ...albums.map((album) => makeAlbum(album, () => player.playAlbum(album)))))
@@ -2611,6 +2611,18 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/`, {}, (status, response) => {
 			let context = translateArtistResponse(response);
+			let isContext = computed((contextPath) => {
+				if (!is.present(contextPath)) {
+					return false;
+				}
+				if (contextPath[contextPath.length - 4] !== context.artist_id) {
+					return false;
+				}
+				return true;
+			}, player.contextPath);
+			let isPlaying = computed((isContext, playback) => {
+				return isContext && playback;
+			}, isContext, player.playback);
 			let duration_ms = 0;
 			for (let album of response.albums) {
 				for (let disc of album.discs) {
@@ -2620,10 +2632,32 @@ let updateviewforuri = (uri: string): void => {
 				}
 			}
 			let widget = xml.element("div.content")
-				.add(makeEntityHeader(response.title, undefined, [
-					"Artist",
-					format_duration(duration_ms)
-				]))
+				.add(makeEntityHeader(
+						response.title,
+						[],
+						["Artist", format_duration(duration_ms)],
+						makeImage(),
+						xml.element("div.playback-button")
+							.add(makePlayIcon()
+								.bind("data-hide", isPlaying.addObserver(a => a))
+							)
+							.add(makePauseIcon()
+								.bind("data-hide", isPlaying.addObserver(a => !a))
+							)
+							.on("click", () => {
+								if (isPlaying.getState()) {
+									player.pause();
+								} else {
+									if (isContext.getState()) {
+										player.resume();
+									} else {
+										player.playArtist(context);
+									}
+								}
+							}),
+						undefined
+					)
+				)
 				.render();
 			mount.appendChild(widget);
 			if (context.albums.length > 0) {
@@ -2666,7 +2700,7 @@ let updateviewforuri = (uri: string): void => {
 			let artists = response.artists.map(translateArtistResponse);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader("Artists"))
+					.add(renderTextHeader(xml.text("Artists")))
 				)
 				.add(xml.element("div.content")
 					.add(makeGrid(undefined, ...artists.map((artist) => makeArtist(artist, () => player.playArtist(artist)))))
@@ -2685,7 +2719,7 @@ let updateviewforuri = (uri: string): void => {
 							playlist.title,
 							[makeLink(`users/${playlist.user.user_id}/`, `By ${playlist.user.username}`)],
 							["Playlist", format_duration(duration_ms)],
-							undefined,
+							makeImage(),
 							undefined,
 							playlist.description
 						)
@@ -2725,7 +2759,7 @@ let updateviewforuri = (uri: string): void => {
 			let playlists = response.playlists;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader("Playlists"))
+					.add(renderTextHeader(xml.text("Playlists")))
 				)
 				.add(xml.element("div.content")
 					.add(makeGrid(
@@ -2740,7 +2774,7 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^audio[/]/.exec(uri)) !== null) {
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
-				.add(makeEntityHeader("Audio"))
+				.add(renderTextHeader(xml.text("Audio")))
 			)
 			.add(xml.element("div.content")
 				.set("style", "display: grid; gap: 32px;")
@@ -2815,7 +2849,8 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeEntityHeader(show.title, undefined, [
 						"Show",
 						format_duration(duration_ms)
-					], maybe(show.artwork, (artwork) => makeImage(`/files/${artwork.file_id}/?token=${token}`).set("style", "padding-bottom: 150%")),
+					], makeImage(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/?token=${token}`)
+						.set("style", "padding-bottom: 150%"),
 					xml.element("div.playback-button")
 						.add(makePlayIcon()
 							.bind("data-hide", isPlaying.addObserver(a => a))
@@ -2889,7 +2924,7 @@ let updateviewforuri = (uri: string): void => {
 			let shows = response.shows.map(translateShowResponse);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader("Shows"))
+					.add(renderTextHeader(xml.text("Shows")))
 				)
 				.add(xml.element("div.content")
 					.add(makeGrid(undefined, ...shows.map((show, showIndex) => makeShow(show, () => {
@@ -2924,7 +2959,8 @@ let updateviewforuri = (uri: string): void => {
 							episode.title,
 							[makeLink(`video/shows/${show.show_id}/`, show.title)],
 							["Episode", `${episode.year}`, format_duration(episode.file.duration_ms), utils.formatSeasonEpisode(season.number, episode.number)],
-							makeImage(`/media/stills/${episode.file.file_id}/?token=${token}`).set("style", "padding-bottom: 56.25%;"),
+							makeImage(`/media/stills/${episode.file.file_id}/?token=${token}`)
+								.set("style", "padding-bottom: 56.25%;"),
 							xml.element("div.playback-button")
 								.add(makePlayIcon()
 									.bind("data-hide", isPlaying.addObserver(a => a))
@@ -2932,7 +2968,7 @@ let updateviewforuri = (uri: string): void => {
 								.add(makePauseIcon()
 									.bind("data-hide", isPlaying.addObserver(a => !a))
 								)
-								.on("click", (event) => {
+								.on("click", () => {
 									if (isPlaying.getState()) {
 										player.pause();
 									} else {
@@ -2981,7 +3017,8 @@ let updateviewforuri = (uri: string): void => {
 							movie.title,
 							movie.genres.map((genre) => makeLink(`video/genres/${genre.genre_id}/`, genre.title)),
 							["Movie", `${movie.year}`, format_duration(movie.file.duration_ms)],
-							is.absent(movie.artwork) ? undefined : makeImage(`/files/${movie.artwork.file_id}/?token=${token}`).set("style", "padding-bottom: 150%"),
+							makeImage(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/?token=${token}`)
+								.set("style", "padding-bottom: 150%"),
 							xml.element("div.playback-button")
 								.add(makePlayIcon()
 									.bind("data-hide", isPlaying.addObserver(a => a))
@@ -2989,7 +3026,7 @@ let updateviewforuri = (uri: string): void => {
 								.add(makePauseIcon()
 									.bind("data-hide", isPlaying.addObserver(a => !a))
 								)
-								.on("click", (event) => {
+								.on("click", () => {
 									if (isPlaying.getState()) {
 										player.pause();
 									} else {
@@ -3029,7 +3066,7 @@ let updateviewforuri = (uri: string): void => {
 			let movies = response.movies.map(translateMovieResponse);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader("Movies"))
+					.add(renderTextHeader(xml.text("Movies")))
 				)
 				.add(xml.element("div.content")
 					.add(makeGrid(undefined, ...movies.map((movie, movieIndex) => makeMovie(movie, () => {
@@ -3266,7 +3303,13 @@ let updateviewforuri = (uri: string): void => {
 			let movies = response.genre.movies.map(translateMovieResponse);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader(response.genre.title, undefined, ["Video Genre"]))
+					.add(makeEntityHeader(
+							response.genre.title,
+							undefined,
+							["Video Genre"],
+							makeImage()
+						)
+					)
 				)
 				.add(shows.length === 0 ? undefined : xml.element("div.content")
 					.add(makeGrid("Shows", ...shows.map((show, movieIndex) => makeShow(show, () => {
@@ -3289,7 +3332,7 @@ let updateviewforuri = (uri: string): void => {
 			}));
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader("Video Genres"))
+					.add(renderTextHeader(xml.text("Video Genres")))
 				)
 				.add(xml.element("div.content")
 					.add(makeGrid(undefined, ...genres.map(makeGenreLink)))
@@ -3300,7 +3343,7 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
-				.add(makeEntityHeader("Video"))
+				.add(renderTextHeader(xml.text("Video")))
 			)
 			.add(xml.element("div.content")
 				.set("style", "display: grid; gap: 32px;")
@@ -3501,7 +3544,7 @@ let updateviewforuri = (uri: string): void => {
 	} else {
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
-				.add(makeEntityHeader("Home"))
+				.add(renderTextHeader(xml.text("Home")))
 			)
 			.add(xml.element("div.content")
 				.set("style", "display: grid; gap: 32px;")
