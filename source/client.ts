@@ -3062,8 +3062,8 @@ let updateviewforuri = (uri: string): void => {
 			);
 		});
 	} else if ((parts = /^video[/]movies[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/?token=${token}`, {}, (status, response) => {
-			let movies = response.movies.map(translateMovieResponse);
+		req<api_response.ApiRequest, api_response.MoviesResponseV2>(`/api/video/movies/?token=${token}`, {}, (status, response) => {
+			let movies = response.movies;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(renderTextHeader(xml.text("Movies")))

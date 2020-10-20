@@ -550,37 +550,60 @@ class MovieRoute implements Route<api_response.AuthRequest, api_response.MovieRe
 	}
 }
 
-class MoviesRoute implements Route<api_response.AuthRequest, api_response.MoviesResponse> {
+function getParameter(url: liburl.UrlWithParsedQuery, key: string): string[] {
+	let values = url.query[key] ?? [];
+	if (Array.isArray(values)) {
+		return values;
+	}
+	return [values];
+}
+
+function getRequiredString(url: liburl.UrlWithParsedQuery, key: string): string {
+	let values = getParameter(url, key);
+	let value = values.pop();
+	if (is.absent(value)) {
+		throw `Expected parameter ${key}!`;
+	}
+	return value;
+}
+
+function getOptionalString(url: liburl.UrlWithParsedQuery, key: string): string | undefined {
+	try {
+		return getRequiredString(url, key);
+	} catch (error) {}
+}
+
+function getRequiredInteger(url: liburl.UrlWithParsedQuery, key: string): number {
+	let value = Number.parseInt(getRequiredString(url, key), 10);
+	if (!Number.isInteger(value)) {
+		throw `Expected integer ${key}!`;
+	}
+	return value;
+}
+
+function getOptionalInteger(url: liburl.UrlWithParsedQuery, key: string): number | undefined {
+	try {
+		return getRequiredInteger(url, key);
+	} catch (error) {}
+}
+
+class MoviesRoute implements Route<api_response.AuthRequest, api_response.MoviesResponseV2> {
 	constructor() {
 
 	}
 
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		if (request.url === undefined) {
-			throw new Error();
-		}
-		let sum0 = Date.now();
-		let sum: number = 0;
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
 		let username = getUsername(request);
-		let movies = data.media.video.movies.map((movie) => {
-			sum -= Date.now();
-			let movie_parts = data.getMoviePartsFromMovieId(movie.movie_id).map((movie_part) => {
-				let streamed = null;
-				return {
-					...movie_part,
-					streamed
-				};
-			});
-			sum += Date.now();
-			return {
-				...movie,
-				movie_parts
-			}
-		});
-		let payload: api_response.MoviesResponse = {
+		let movies = data.media.video.movies.slice()
+			.sort(LexicalSort.increasing((entry) => entry.title))
+			.slice(offset, offset + length)
+			.map((entry) => data.api_lookupMovie(entry.movie_id, username));
+		let payload: api_response.MoviesResponseV2 = {
 			movies
 		};
-		console.log(sum, Date.now() - sum0);
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
 	}

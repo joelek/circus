@@ -89,6 +89,10 @@ type MovieResponseV2 = {
 	suggestions: Movie[]
 }
 
+type MoviesResponseV2 = {
+	movies: Movie[]
+}
+
 interface MoviesResponse extends ApiResponse {
 	movies: Array<MovieResponse>;
 }
@@ -233,6 +237,7 @@ export {
 	MovieResponse,
 	MovieResponseV2,
 	MoviesResponse,
+	MoviesResponseV2,
 	AudiolistItemResponse,
 	AudiolistResponse,
 	AudiolistsResponse,
