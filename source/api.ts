@@ -192,7 +192,7 @@ class ArtistsRoute implements Route<api_response.ApiRequest, api_response.Artist
 				appearances
 			};
 		}).sort(CombinedSort.of(
-			NumericSort.increasing((value) => value.appearances.length),
+			NumericSort.increasing((value) => value.albums.length > 0 ? -1 : 1),
 			LexicalSort.increasing((value) => value.title)
 		));
 		let payload: api_response.ArtistsResponse = {
