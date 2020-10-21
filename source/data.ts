@@ -5,7 +5,7 @@ import * as utils from "./utils";
 import * as passwords from "./passwords";
 import { LexicalSort, NumericSort } from "./shared";
 import * as is from "./is";
-import { Album, AlbumBase, Artist, ArtistBase, Disc, DiscBase, Episode, EpisodeBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, Disc, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -909,6 +909,21 @@ export function api_lookupEpisode(episode_id: string, user_id: string, season?: 
 	let episode = api_lookupEpisodeBase(episode_id, user_id, season);
 	return {
 		...episode
+	};
+};
+
+export function api_lookupGenreBase(genre_id: string, user_id: string): GenreBase {
+	let entry = getVideoGenreFromVideoGenreId.lookup(genre_id);
+	return {
+		genre_id: entry.video_genre_id,
+		title: entry.title
+	};
+};
+
+export function api_lookupGenre(genre_id: string, user_id: string): Genre {
+	let genre = api_lookupGenreBase(genre_id, user_id);
+	return {
+		...genre
 	};
 };
 

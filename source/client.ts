@@ -2174,34 +2174,6 @@ function pluralize(amount: number, zero: string, one: string, many: string): str
 	throw "Expected a non-negative amount!";
 }
 
-// TODO: Make API and Context consistent.
-function translateMovieResponse(rmovie: api_response.MovieResponse): Movie {
-	let movie: Movie = {
-		movie_id: rmovie.movie_id,
-		title: rmovie.title,
-		year: rmovie.year,
-		summary: rmovie.summary ?? "",
-		artwork: is.absent(rmovie.poster_file_id) ? undefined : {
-			file_id: rmovie.poster_file_id,
-			mime: "image/jpg",
-			height: 720,
-			width: 1080
-		},
-		file: {
-			file_id: rmovie.movie_parts[0].file_id,
-			mime: "video/mp4",
-			duration_ms: rmovie.movie_parts[0].duration
-		},
-		subtitles: rmovie.movie_parts[0].subtitles.map((rsubtitle) => ({
-			file_id: rsubtitle.file_id,
-			mime: "text/vtt",
-			language: rsubtitle.language ?? undefined
-		})),
-		last_stream_date: rmovie.movie_parts[0].streamed ?? undefined,
-		genres: []
-	};
-	return movie;
-}
 function translateShowResponse(rshow: api_response.ShowResponse): Show {
 	let show: ShowBase = {
 		show_id: rshow.show_id,
@@ -2511,7 +2483,8 @@ let updateviewforuri = (uri: string): void => {
 			.render());
 		});
 	} else if ((parts = /^audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.AudiolistResponse>(`/api/audio/playlists/${parts[1]}/?token=${token}`, {}, (status, playlist) => {
+		req<api_response.ApiRequest, api_response.PlaylistResponse>(`/api/audio/playlists/${parts[1]}/?token=${token}`, {}, (status, response) => {
+			let playlist = response.playlist;
 			let duration_ms = 0;
 			for (let item of playlist.items) {
 				duration_ms += item.track.file.duration_ms;
@@ -2558,7 +2531,7 @@ let updateviewforuri = (uri: string): void => {
 			.render());
 		});
 	} else if ((parts = /^audio[/]playlists[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.AudiolistsResponse>(`/api/audio/playlists/?token=${token}`, {}, (status, response) => {
+		req<api_response.ApiRequest, api_response.PlaylistsResponse>(`/api/audio/playlists/?token=${token}`, {}, (status, response) => {
 			let playlists = response.playlists;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
@@ -2799,7 +2772,7 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
 		let movie_id = parts[1];
 		let progress = is.present(parts[2]) ? Number.parseInt(parts[2]) / 1000 : undefined;
-		req<api_response.ApiRequest, api_response.MovieResponseV2>(`/api/video/movies/${movie_id}/?token=${token}`, {}, (status, response) => {
+		req<api_response.ApiRequest, api_response.MovieResponse>(`/api/video/movies/${movie_id}/?token=${token}`, {}, (status, response) => {
 			let movie = response.movie;
 			let suggestions = response.suggestions;
 			let isContext = computed((contextPath) => {
@@ -2872,7 +2845,7 @@ let updateviewforuri = (uri: string): void => {
 		setScrollObserver(() => new Promise((resolve, reject) => {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<api_response.ApiRequest, api_response.MoviesResponseV2>(`/api/video/movies/?offset=${offset}&token=${token}`, {}, (status, response) => {
+				req<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/?offset=${offset}&token=${token}`, {}, (status, response) => {
 					for (let movie of response.movies) {
 						movies.append(movie);
 					}
@@ -3119,12 +3092,13 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^video[/]genres[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.GenreRequest, api_response.GenreResponse>(`/api/video/genres/${parts[1]}/?token=${token}`, {}, (status, response) => {
-			let shows = response.genre.shows.map(translateShowResponse);
-			let movies = response.genre.movies.map(translateMovieResponse);
+			let genre = response.genre;
+			let shows = response.shows;
+			let movies = response.movies;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(makeEntityHeader(
-							response.genre.title,
+							genre.title,
 							undefined,
 							["Video Genre"],
 							ImageBox.forSquare()
@@ -3132,12 +3106,12 @@ let updateviewforuri = (uri: string): void => {
 					)
 				)
 				.add(shows.length === 0 ? undefined : xml.element("div.content")
-					.add(makeGrid("Shows", ...shows.map((show, movieIndex) => makeShow(show, () => {
+					.add(makeGrid("Shows", ...shows.map((show) => makeShow(show, () => {
 						player.playShow(show);
 					}))))
 				)
 				.add(movies.length === 0 ? undefined : xml.element("div.content")
-					.add(makeGrid("Movies", ...movies.map((movie, movieIndex) => makeMovie(movie, () => {
+					.add(makeGrid("Movies", ...movies.map((movie) => makeMovie(movie, () => {
 						player.playMovie(movie);
 					}))))
 				)
@@ -3145,11 +3119,8 @@ let updateviewforuri = (uri: string): void => {
 			);
 		});
 	} else if ((parts = /^video[/]genres[/]/.exec(uri)) !== null) {
-		req<api_response.GenresRequest, api_response.GenresResponse>(`/api/video/genres/`, {}, (status, response) => {
-			let genres: Genre[] = response.genres.map((genre) => ({
-				genre_id: genre.video_genre_id,
-				title: genre.title
-			}));
+		req<api_response.GenresRequest, api_response.GenresResponse>(`/api/video/genres/?token=${token}`, {}, (status, response) => {
+			let genres = response.genres;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(renderTextHeader(xml.text("Video Genres")))

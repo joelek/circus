@@ -1,5 +1,5 @@
 import * as libdb from "./database";
-import { Episode, Movie, Playlist } from "./api/schema/objects";
+import { Episode, Genre, Movie, Playlist, Show } from "./api/schema/objects";
 
 interface ApiRequest {
 
@@ -77,37 +77,26 @@ interface ShowsResponse extends ApiResponse {
 	}>
 }
 
-interface MovieResponse extends ApiResponse, libdb.MovieEntry {
-	movie_parts: Array<libdb.MoviePartEntry & {
-		streamed: number | null,
-		subtitles: Array<libdb.SubtitleEntry>
-	}>;
-}
-
-type MovieResponseV2 = {
+type MovieResponse = {
 	movie: Movie,
 	suggestions: Movie[]
-}
+};
 
-type MoviesResponseV2 = {
+type MoviesResponse = {
 	movies: Movie[]
-}
-
-interface MoviesResponse extends ApiResponse {
-	movies: Array<MovieResponse>;
-}
+};
 
 interface AudiolistItemResponse extends ApiResponse, libdb.AudiolistItemEntry {
 	track: libdb.TrackEntry;
 }
 
-interface AudiolistResponse extends ApiResponse, Playlist {
+type PlaylistResponse = {
+	playlist: Playlist
+};
 
-}
-
-interface AudiolistsResponse extends ApiResponse {
-	playlists: Playlist[];
-}
+type PlaylistsResponse = {
+	playlists: Playlist[]
+};
 
 interface CuesRequest extends ApiResponse {
 	query: string;
@@ -167,20 +156,19 @@ interface GenresRequest extends ApiRequest {
 
 }
 
-interface GenresResponse extends ApiResponse {
-	genres: Array<libdb.VideoGenreEntry & {}>
-}
+type GenresResponse = {
+	genres: Genre[]
+};
 
 interface GenreRequest extends ApiRequest {
 
 }
 
-interface GenreResponse extends ApiResponse {
-	genre: libdb.VideoGenreEntry & {
-		shows: Array<ShowResponse>;
-		movies: Array<MovieResponse>;
-	}
-}
+type GenreResponse = {
+	genre: Genre,
+	shows: Show[],
+	movies: Movie[]
+};
 
 interface SearchRequest extends ApiRequest {
 
@@ -235,12 +223,10 @@ export {
 	SeasonResponse,
 	ShowsResponse,
 	MovieResponse,
-	MovieResponseV2,
 	MoviesResponse,
-	MoviesResponseV2,
 	AudiolistItemResponse,
-	AudiolistResponse,
-	AudiolistsResponse,
+	PlaylistResponse,
+	PlaylistsResponse,
 	CuesRequest,
 	CuesResponse,
 	Segment,
