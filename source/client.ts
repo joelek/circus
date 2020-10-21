@@ -2300,17 +2300,37 @@ let updateviewforuri = (uri: string): void => {
 			}
 		});
 	} else if ((parts = /^audio[/]albums[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.AlbumsResponse>(`/api/audio/albums/?token=${token}`, {}, (status, response) => {
-			let albums = response.albums;
-			mount.appendChild(xml.element("div")
-				.add(xml.element("div.content")
-					.add(renderTextHeader(xml.text("Albums")))
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let albums = new ArrayObservable<Album>([]);
+		setScrollObserver(() => new Promise((resolve, reject) => {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				req<api_response.ApiRequest, api_response.AlbumsResponse>(`/api/audio/albums/?offset=${offset}&token=${token}`, {}, (status, response) => {
+					for (let album of response.albums) {
+						albums.append(album);
+					}
+					offset += response.albums.length;
+					if (response.albums.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
+					resolve();
+				});
+			}
+		}));
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(renderTextHeader(xml.text("Albums")))
+			)
+			.add(xml.element("div.content")
+				.add(xml.element("div.media-grid__content")
+					.repeat(albums, (album) => makeAlbum(album, () => player.playAlbum(album)))
 				)
-				.add(xml.element("div.content")
-					.add(makeGrid(undefined, ...albums.map((album) => makeAlbum(album, () => player.playAlbum(album)))))
-				)
-			.render());
-		});
+			)
+			.render()
+		);
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let artist = response.artist;
@@ -2399,17 +2419,37 @@ let updateviewforuri = (uri: string): void => {
 			}
 		});
 	} else if ((parts = /^audio[/]artists[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.ArtistsResponse>(`/api/audio/artists/?token=${token}`, {}, (status, response) => {
-			let artists = response.artists;
-			mount.appendChild(xml.element("div")
-				.add(xml.element("div.content")
-					.add(renderTextHeader(xml.text("Artists")))
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let artists = new ArrayObservable<Artist>([]);
+		setScrollObserver(() => new Promise((resolve, reject) => {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				req<api_response.ApiRequest, api_response.ArtistsResponse>(`/api/audio/artists/?offset=${offset}&token=${token}`, {}, (status, response) => {
+					for (let artist of response.artists) {
+						artists.append(artist);
+					}
+					offset += response.artists.length;
+					if (response.artists.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
+					resolve();
+				});
+			}
+		}));
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(renderTextHeader(xml.text("Artists")))
+			)
+			.add(xml.element("div.content")
+				.add(xml.element("div.media-grid__content")
+					.repeat(artists, (artist) => makeArtist(artist, () => player.playArtist(artist)))
 				)
-				.add(xml.element("div.content")
-					.add(makeGrid(undefined, ...artists.map((artist) => makeArtist(artist, () => player.playArtist(artist)))))
-				)
-			.render());
-		});
+			)
+			.render()
+		);
 	} else if ((parts = /^audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.PlaylistResponse>(`/api/audio/playlists/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let playlist = response.playlist;
