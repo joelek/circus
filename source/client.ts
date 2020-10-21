@@ -830,8 +830,14 @@ style.innerText = `
 		width: 100%;
 	}
 
+	[data-opaque] {
+		opacity: 0;
+		transition: opacity 0.1s;
+	}
 
-
+	[data-opaque="true"] {
+		opacity: 1;
+	}
 
 
 
@@ -2358,9 +2364,14 @@ function makeGrid(title: string | undefined, ...elements: xml.XElement[]) {
 }
 
 function makeImage(url?: string) {
+	let isLoaded = new ObservableClass(false);
 	return xml.element("div.image-box")
 		.add(is.absent(url) ? undefined : xml.element("img.image-box__image")
+			.bind("data-opaque", isLoaded.addObserver((isLoaded) => isLoaded))
 			.set("src", url)
+			.on("load", () => {
+				isLoaded.updateState(true);
+			})
 		);
 }
 function renderTextHeader(content: xml.Node<any>) {
@@ -2926,7 +2937,7 @@ let updateviewforuri = (uri: string): void => {
 					)
 				)
 				.add(xml.element("div.content")
-					.add(is.absent(indices) || is.absent(episode) ? undefined : makeGrid("Suggested episode", ...[
+					.add(is.absent(indices) || is.absent(episode) ? undefined : makeGrid("Suggested episodes", ...[
 						makeEpisode(episode, () => {
 							player.playShow(show, indices.seasonIndex, indices.episodeIndex);
 						})
