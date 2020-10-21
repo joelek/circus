@@ -1824,7 +1824,7 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 					.add(xml.text(title))
 				)
 				.add(xml.element("div.media-widget__subtitle")
-					.add(...xml.joinarray(album.artists.map(EntityLink.forArtist)))
+					.add(...xml.joinarray(album.artists.map((artist) => EntityLink.forArtist(artist))))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2095,7 +2095,7 @@ function makeMovie(movie: Movie, play: () => void = () => player.playMovie(movie
 					.add(xml.text(title))
 				)
 				.add(xml.element("div.media-widget__subtitle")
-					.add(...xml.joinarray(movie.genres.map(EntityLink.forGenre)))
+					.add(...xml.joinarray(movie.genres.map((genre) => EntityLink.forGenre(genre))))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2393,7 +2393,7 @@ let updateviewforuri = (uri: string): void => {
 				}
 			}
 			let header = xml.element("div.content")
-				.add(makeEntityHeader(response.title, response.artists.map(EntityLink.forArtist), [
+				.add(makeEntityHeader(response.title, response.artists.map((artist) => EntityLink.forArtist(artist)), [
 					"Album",
 					`${response.year}`,
 					format_duration(duration_ms)
@@ -2879,7 +2879,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(makeEntityHeader(
 							movie.title,
-							movie.genres.map(EntityLink.forGenre),
+							movie.genres.map((genre) => EntityLink.forGenre(genre)),
 							["Movie", `${movie.year}`, format_duration(movie.file.duration_ms)],
 							makeImage(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/?token=${token}`)
 								.set("style", "padding-bottom: 150%"),
