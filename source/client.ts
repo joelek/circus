@@ -10,9 +10,23 @@ import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
 import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, UserBase } from "./api/schema/objects";
 import * as xml from "./xnode";
-import { EntityLinkFactory } from "./ui/EntityLink";
-const EntityLink = new EntityLinkFactory(navigate);
+import { formatDuration as format_duration } from "./ui/metadata";
 
+
+
+
+import { ImageBoxFactory } from "./ui/ImageBox";
+import { EntityLinkFactory } from "./ui/EntityLink";
+import { EntityRowFactory } from "./ui/EntityRow";
+
+const ImageBox = new ImageBoxFactory();
+document.head.appendChild(ImageBoxFactory.makeStyle().render())
+
+const EntityLink = new EntityLinkFactory(navigate);
+document.head.appendChild(EntityLinkFactory.makeStyle().render())
+
+const EntityRow = new EntityRowFactory(EntityLink, ImageBox);
+document.head.appendChild(EntityRowFactory.makeStyle().render())
 
 
 
@@ -661,27 +675,6 @@ style.innerText = `
 
 
 
-	.image-box {
-		border-radius: 2px;
-		overflow: hidden;
-		padding-bottom: 100%;
-		position: relative;
-	}
-
-	.image-box__image {
-		position: absolute;
-		width: 100%;
-	}
-
-	[data-opaque] {
-		opacity: 0;
-		transition: opacity 0.1s;
-	}
-
-	[data-opaque="true"] {
-		opacity: 1;
-	}
-
 
 
 
@@ -740,7 +733,8 @@ style.innerText = `
 	}
 
 	.entity-header__artwork {
-		background-color: rgb(0, 0, 0);
+		border-radius: 2px;
+		overflow: hidden;
 		position: relative;
 	}
 
@@ -1231,49 +1225,6 @@ style.innerText = `
 	}
 `;
 document.head.appendChild(style);
-
-function computeDuration(ms: number): {
-	ms: number,
-	s: number,
-	m: number,
-	h: number,
-	d: number
-} {
-	let s = Math.floor(ms / 1000);
-	ms -= s * 1000;
-	let m = Math.floor(s / 60);
-	s -= m * 60;
-	let h = Math.floor(m / 60);
-	m -= h * 60;
-	let d = Math.floor(h / 24);
-	h -= d * 24;
-	return {
-		ms,
-		s,
-		m,
-		h,
-		d
-	};
-}
-
-let format_duration = (ms: number): string => {
-	let duration = computeDuration(ms);
-	if (duration.d >= 10) {
-		return `${duration.d}d`;
-	} else if (duration.d >= 1) {
-		return `${duration.d}d ${duration.h}h`;
-	} else if (duration.h >= 10) {
-		return `${duration.h}h`;
-	} else if (duration.h >= 1) {
-		return `${duration.h}h ${duration.m}m`;
-	} else if (duration.m >= 10) {
-		return `${duration.m}m`;
-	} else if (duration.m >= 1) {
-		return `${duration.m}m ${duration.s}s`;
-	} else {
-		return `${duration.s}s`;
-	}
-};
 
 interface ReqCallback<T extends api_response.ApiResponse> {
 	(status: number, value: T): void;
@@ -2172,17 +2123,6 @@ function makeGrid(title: string | undefined, ...elements: xml.XElement[]) {
 		);
 }
 
-function makeImage(url?: string) {
-	let isLoaded = new ObservableClass(false);
-	return xml.element("div.image-box")
-		.add(is.absent(url) ? undefined : xml.element("img.image-box__image")
-			.bind("data-opaque", isLoaded.addObserver((isLoaded) => isLoaded))
-			.set("src", url)
-			.on("load", () => {
-				isLoaded.updateState(true);
-			})
-		);
-}
 function renderTextHeader(content: xml.XNode<any>) {
 	return xml.element("div.text-header")
 		.add(content);
@@ -2397,7 +2337,7 @@ let updateviewforuri = (uri: string): void => {
 					"Album",
 					`${response.year}`,
 					format_duration(duration_ms)
-				], makeImage(is.absent(context.artwork) ? undefined : `/files/${context.artwork.file_id}/?token=${token}`),
+				], ImageBox.forSquare(is.absent(context.artwork) ? undefined : `/files/${context.artwork.file_id}/?token=${token}`),
 					xml.element("div.playback-button")
 						.add(makePlayIcon()
 							.bind("data-hide", isPlaying.addObserver(a => a))
@@ -2417,6 +2357,7 @@ let updateviewforuri = (uri: string): void => {
 							}
 						})
 					))
+					.add(EntityRow.forAlbum(context))
 				.render();
 			mount.appendChild(header);
 			for (let discIndex = 0; discIndex < response.discs.length; discIndex++) {
@@ -2500,7 +2441,7 @@ let updateviewforuri = (uri: string): void => {
 						response.title,
 						[],
 						["Artist", format_duration(duration_ms)],
-						makeImage(),
+						ImageBox.forSquare(),
 						xml.element("div.playback-button")
 							.add(makePlayIcon()
 								.bind("data-hide", isPlaying.addObserver(a => a))
@@ -2583,7 +2524,7 @@ let updateviewforuri = (uri: string): void => {
 							playlist.title,
 							[EntityLink.forUser(playlist.user)],
 							["Playlist", format_duration(duration_ms)],
-							makeImage(),
+							ImageBox.forSquare(),
 							undefined,
 							playlist.description
 						)
@@ -2713,7 +2654,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeEntityHeader(show.title, undefined, [
 						"Show",
 						format_duration(duration_ms)
-					], makeImage(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/?token=${token}`)
+					], ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/?token=${token}`)
 						.set("style", "padding-bottom: 150%"),
 					xml.element("div.playback-button")
 						.add(makePlayIcon()
@@ -2823,7 +2764,7 @@ let updateviewforuri = (uri: string): void => {
 							episode.title,
 							[EntityLink.forShow(show)],
 							["Episode", `${episode.year}`, format_duration(episode.file.duration_ms), utils.formatSeasonEpisode(season.number, episode.number)],
-							makeImage(`/media/stills/${episode.file.file_id}/?token=${token}`)
+							ImageBox.forVideo(`/media/stills/${episode.file.file_id}/?token=${token}`)
 								.set("style", "padding-bottom: 56.25%;"),
 							xml.element("div.playback-button")
 								.add(makePlayIcon()
@@ -2881,7 +2822,7 @@ let updateviewforuri = (uri: string): void => {
 							movie.title,
 							movie.genres.map((genre) => EntityLink.forGenre(genre)),
 							["Movie", `${movie.year}`, format_duration(movie.file.duration_ms)],
-							makeImage(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/?token=${token}`)
+							ImageBox.forPoster(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/?token=${token}`)
 								.set("style", "padding-bottom: 150%"),
 							xml.element("div.playback-button")
 								.add(makePlayIcon()
@@ -3188,7 +3129,7 @@ let updateviewforuri = (uri: string): void => {
 							response.genre.title,
 							undefined,
 							["Video Genre"],
-							makeImage()
+							ImageBox.forSquare()
 						)
 					)
 				)
