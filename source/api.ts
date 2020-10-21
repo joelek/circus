@@ -619,12 +619,13 @@ class AudiolistRoute implements Route<api_response.AuthRequest, api_response.Aud
 	}
 
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
 		let parts = /^[/]api[/]audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/");
 		if (parts === null) {
 			throw new Error();
 		}
 		let playlist_id = parts[1];
-		let playlist = data.api_lookupPlaylist(playlist_id);
+		let playlist = data.api_lookupPlaylist(playlist_id, username);
 		let payload: api_response.AudiolistResponse = playlist;
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
@@ -641,10 +642,11 @@ class AudiolistsRoute implements Route<api_response.AuthRequest, api_response.Au
 	}
 
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
 		if (request.url === undefined) {
 			throw new Error();
 		}
-		let playlists = data.lists.audiolists.map((playlist) => data.api_lookupPlaylist(playlist.audiolist_id));
+		let playlists = data.lists.audiolists.map((playlist) => data.api_lookupPlaylist(playlist.audiolist_id, username));
 		let payload: api_response.AudiolistsResponse = {
 			playlists
 		};

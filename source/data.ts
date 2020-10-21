@@ -5,7 +5,7 @@ import * as utils from "./utils";
 import * as passwords from "./passwords";
 import { LexicalSort, NumericSort } from "./shared";
 import * as is from "./is";
-import { Episode, Movie, MovieBase, Playlist, PlaylistBase, User, UserBase } from "./api/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, Disc, DiscBase, Episode, EpisodeBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -490,6 +490,10 @@ export const getTrackFromTrackId = RecordIndex.from("track_id", media.audio.trac
 export const getDiscFromDiscId = RecordIndex.from("disc_id", media.audio.discs);
 export const getUserFromUserId = RecordIndex.from("user_id", users.users);
 export const getPlaylistFromPlaylistId = RecordIndex.from("audiolist_id", lists.audiolists);
+export const getShowFromShowId = RecordIndex.from("show_id", media.video.shows);
+export const getArtistFromArtistId = RecordIndex.from("artist_id", media.audio.artists);
+export const getEpisodeFromEpisodeId = RecordIndex.from("episode_id", media.video.episodes);
+export const getSeasonFromSeasonId = RecordIndex.from("season_id", media.video.seasons);
 
 export function lookupFile(file_id: string): libdb.FileEntry {
 	let file = files_index[file_id];
@@ -788,22 +792,127 @@ export function addStream(username: string, file_id: string): void {
 
 
 
-export function api_lookupUserBase(user_id: string): UserBase {
-	let entry = getUserFromUserId.lookup(user_id);
-	return {
-		user_id: entry.user_id,
-		username: entry.username
-	};
-}
 
-export function api_lookupUser(user_id: string): User {
-	let user = api_lookupUserBase(user_id);
-	return {
-		...user
-	};
-}
 
-export function api_lookupMovieBase(movie_id: string, username: string): MovieBase {
+
+
+
+
+
+
+
+export function api_lookupAlbumBase(album_id: string, user_id: string): AlbumBase {
+	let entry = getAlbumFromAlbumId.lookup(album_id);
+	return {
+		album_id: entry.album_id,
+		title: entry.title,
+		year: entry.year,
+		artists: albumArtistsIndex.lookup(entry.album_id).map((entry) => {
+			return getArtistFromArtistId.lookup(entry.artist_id);
+		}),
+		artwork: is.absent(entry.cover_file_id) ? undefined : {
+			file_id: entry.cover_file_id,
+			mime: "image/jpeg",
+			height: 1080,
+			width: 1080
+		}
+	};
+};
+
+export function api_lookupAlbum(album_id: string, user_id: string): Album {
+	let album = api_lookupAlbumBase(album_id, user_id);
+	return {
+		...album,
+		discs: getDiscsFromAlbumId.lookup(album_id).map((entry) => {
+			return api_lookupDisc(entry.disc_id, user_id, album);
+		})
+	};
+};
+
+export function api_lookupArtistBase(artist_id: string, user_id: string): ArtistBase {
+	let entry = getArtistFromArtistId.lookup(artist_id);
+	return {
+		artist_id: entry.artist_id,
+		title: entry.title
+	};
+};
+
+export function api_lookupArtist(artist_id: string, user_id: string): Artist {
+	let artist = api_lookupArtistBase(artist_id, user_id);
+	return {
+		...artist,
+		albums: getAlbumArtistsFromArtistId.lookup(artist_id).map((entry) => {
+			return api_lookupAlbum(entry.album_id, user_id);
+		})
+	};
+};
+
+export function api_lookupDiscBase(disc_id: string, user_id: string, album?: AlbumBase): DiscBase {
+	let entry = getDiscFromDiscId.lookup(disc_id);
+	return {
+		disc_id: entry.disc_id,
+		album: is.present(album) ? album : api_lookupAlbum(entry.album_id, user_id),
+		number: entry.number
+	};
+};
+
+export function api_lookupDisc(disc_id: string, user_id: string, album?: AlbumBase): Disc {
+	let disc = api_lookupDiscBase(disc_id, user_id, album);
+	let tracks = getTracksFromDiscId.lookup(disc_id).map((entry) => {
+		let track: TrackBase = {
+			track_id: entry.track_id,
+			title: entry.title,
+			disc: disc,
+			artists: trackArtistsIndex.lookup(entry.track_id).map((entry) => {
+				return getArtistFromArtistId.lookup(entry.artist_id);
+			}),
+			file: {
+				file_id: entry.file_id,
+				mime: "audio/mp4",
+				duration_ms: entry.duration
+			},
+			number: entry.number,
+			last_stream_date: undefined
+		};
+		return track;
+	});
+	return {
+		...disc,
+		tracks
+	};
+};
+
+export function api_lookupEpisodeBase(episode_id: string, user_id: string, season?: SeasonBase): EpisodeBase {
+	let entry = getEpisodeFromEpisodeId.lookup(episode_id);
+	return {
+		episode_id: entry.episode_id,
+		title: entry.title,
+		summary: entry.summary ?? "",
+		number: entry.number,
+		file: {
+			file_id: entry.file_id,
+			mime: "video/mp4",
+			duration_ms: entry.duration
+		},
+		subtitles: lookupSubtitles(entry.file_id).map((entry) => ({
+			file_id: entry.file_id,
+			mime: "text/vtt",
+			language: entry.language ?? undefined
+		})),
+		season: is.present(season) ? season : api_lookupSeasonBase(entry.season_id, user_id),
+		year: entry.year ?? undefined,
+		last_stream_date: undefined
+	};
+};
+
+export function api_lookupEpisode(episode_id: string, user_id: string, season?: SeasonBase): Episode {
+	let episode = api_lookupEpisodeBase(episode_id, user_id, season);
+	return {
+		...episode
+	};
+};
+
+export function api_lookupMovieBase(movie_id: string, user_id: string): MovieBase {
 	let entry = lookup(movies_index, movie_id);
 	let parts = getMoviePartsFromMovieId(movie_id);
 	return {
@@ -827,25 +936,26 @@ export function api_lookupMovieBase(movie_id: string, username: string): MovieBa
 			mime: "text/vtt",
 			language: subtitle.language ?? undefined
 		})),
-		last_stream_date: getLatestStream(username, parts[0].file_id) ?? undefined
+		last_stream_date: is.present(user_id) ? getLatestStream(user_id, parts[0].file_id) ?? undefined : undefined
 	};
-}
+};
 
-export function api_lookupMovie(movie_id: string, username: string): Movie {
-	let movie = api_lookupMovieBase(movie_id, username);
+export function api_lookupMovie(movie_id: string, user_id: string): Movie {
+	let movie = api_lookupMovieBase(movie_id, user_id);
+	let genres = getMovieGenresFromMovieId.lookup(movie_id).map((movie_genre) => {
+		let entry = getVideoGenreFromVideoGenreId.lookup(movie_genre.video_genre_id);
+		return {
+			genre_id: entry.video_genre_id,
+			title: entry.title
+		};
+	}).sort(LexicalSort.increasing((value) => value.title));
 	return {
 		...movie,
-		genres: getMovieGenresFromMovieId.lookup(movie_id).map((movie_genre) => {
-			let entry = getVideoGenreFromVideoGenreId.lookup(movie_genre.video_genre_id);
-			return {
-				genre_id: entry.video_genre_id,
-				title: entry.title
-			};
-		}).sort(LexicalSort.increasing((value) => value.title))
+		genres
 	};
-}
+};
 
-export function api_lookupPlaylistBase(playlist_id: string): PlaylistBase {
+export function api_lookupPlaylistBase(playlist_id: string, user_id: string): PlaylistBase {
 	let entry = getPlaylistFromPlaylistId.lookup(playlist_id);
 	return {
 		playlist_id: entry.audiolist_id,
@@ -853,48 +963,105 @@ export function api_lookupPlaylistBase(playlist_id: string): PlaylistBase {
 		description: entry.description,
 		user: api_lookupUserBase(entry.user_id)
 	};
-}
+};
 
-export function api_lookupPlaylist(playlist_id: string): Playlist {
-	let playlist = api_lookupPlaylistBase(playlist_id);
+export function api_lookupPlaylist(playlist_id: string, user_id: string): Playlist {
+	let playlist = api_lookupPlaylistBase(playlist_id, user_id);
 	let items = getPlaylistItemsFromPlaylistId.lookup(playlist.playlist_id).map((audiolist_item) => {
-		let track = getTrackFromTrackId.lookup(audiolist_item.track_id);
-		let disc = getDiscFromDiscId.lookup(track.disc_id);
-		let album = getAlbumFromAlbumId.lookup(disc.album_id);
 		return {
 			playlist,
 			number: audiolist_item.number,
-			track: {
-				track_id: track.track_id,
-				title: track.title,
-				disc: {
-					disc_id: disc.disc_id,
-					album: {
-						album_id: album.album_id,
-						title: album.title,
-						year: album.year,
-						artists: lookupAlbumArtists(album.album_id),
-						artwork: is.absent(album.cover_file_id) ? undefined : {
-							file_id: album.cover_file_id,
-							mime: "image/jpeg",
-							height: 1080,
-							width: 1080
-						}
-					},
-					number: disc.number
-				},
-				artists: lookupTrackArtists(track.track_id),
-				file: {
-					file_id: track.file_id,
-					mime: "audio/mp4",
-					duration_ms: track.duration
-				},
-				number: track.number
-			}
+			track: api_lookupTrack(audiolist_item.track_id, user_id)
 		};
 	});
 	return {
 		...playlist,
 		items
 	};
-}
+};
+
+export function api_lookupSeasonBase(season_id: string, user_id: string, show?: ShowBase): SeasonBase {
+	let entry = getSeasonFromSeasonId.lookup(season_id);
+	return  {
+		season_id: entry.season_id,
+		number: entry.number,
+		show: is.present(show) ? show : api_lookupShowBase(entry.season_id, user_id)
+	};
+};
+
+export function api_lookupSeason(season_id: string, user_id: string, show?: ShowBase): Season {
+	let season = api_lookupSeasonBase(season_id, user_id, show);
+	let episodes = getEpisodesFromSeasonIdIndex.lookup(season.season_id).map((entry) => {
+		return api_lookupEpisode(entry.episode_id, user_id, season);
+	});
+	return {
+		...season,
+		episodes
+	}
+};
+
+export function api_lookupShowBase(show_id: string, user_id: string): ShowBase {
+	let entry = getShowFromShowId.lookup(show_id);
+	return {
+		show_id: entry.show_id,
+		title: entry.title,
+		artwork: undefined
+	};
+};
+
+export function api_lookupShow(show_id: string, user_id: string): Show {
+	let show = api_lookupShowBase(show_id, user_id);
+	let seasons = getSeasonsFromShowIdIndex.lookup(show_id).map((entry) => {
+		return api_lookupSeason(entry.season_id, user_id, show);
+	});
+	let genres = getVideoGenresFromShowId(show_id).map((video_genre) => ({
+		genre_id: video_genre.video_genre_id,
+		title: video_genre.title
+	}));
+	return {
+		...show,
+		seasons,
+		genres
+	};
+};
+
+export function api_lookupTrackBase(track_id: string, user_id: string, disc?: DiscBase): TrackBase {
+	let entry = getTrackFromTrackId.lookup(track_id);
+	return {
+		track_id: entry.track_id,
+		title: entry.title,
+		disc: is.present(disc) ? disc : api_lookupDiscBase(entry.disc_id, user_id),
+		artists: trackArtistsIndex.lookup(entry.track_id).map((entry) => {
+			return getArtistFromArtistId.lookup(entry.artist_id);
+		}),
+		file: {
+			file_id: entry.file_id,
+			mime: "audio/mp4",
+			duration_ms: entry.duration
+		},
+		number: entry.number,
+		last_stream_date: undefined
+	};
+};
+
+export function api_lookupTrack(track_id: string, user_id: string, disc?: DiscBase): Track {
+	let track = api_lookupTrackBase(track_id, user_id, disc);
+	return {
+		...track
+	};
+};
+
+export function api_lookupUserBase(user_id: string): UserBase {
+	let entry = getUserFromUserId.lookup(user_id);
+	return {
+		user_id: entry.user_id,
+		username: entry.username
+	};
+};
+
+export function api_lookupUser(user_id: string): User {
+	let user = api_lookupUserBase(user_id);
+	return {
+		...user
+	};
+};

@@ -2356,7 +2356,6 @@ let updateviewforuri = (uri: string): void => {
 							}
 						})
 					))
-					.add(EntityRow.forAlbum(context))
 				.render();
 			mount.appendChild(header);
 			for (let discIndex = 0; discIndex < response.discs.length; discIndex++) {
@@ -2512,7 +2511,7 @@ let updateviewforuri = (uri: string): void => {
 			.render());
 		});
 	} else if ((parts = /^audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.AudiolistResponse>(`/api/audio/playlists/${parts[1]}/`, {}, (status, playlist) => {
+		req<api_response.ApiRequest, api_response.AudiolistResponse>(`/api/audio/playlists/${parts[1]}/?token=${token}`, {}, (status, playlist) => {
 			let duration_ms = 0;
 			for (let item of playlist.items) {
 				duration_ms += item.track.file.duration_ms;
@@ -2559,7 +2558,7 @@ let updateviewforuri = (uri: string): void => {
 			.render());
 		});
 	} else if ((parts = /^audio[/]playlists[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.AudiolistsResponse>(`/api/audio/playlists/`, {}, (status, response) => {
+		req<api_response.ApiRequest, api_response.AudiolistsResponse>(`/api/audio/playlists/?token=${token}`, {}, (status, response) => {
 			let playlists = response.playlists;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
