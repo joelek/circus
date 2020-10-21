@@ -8,7 +8,7 @@ import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Genre, Movie, MovieBase, Playlist, Season, SeasonBase, Show, ShowBase, Track, TrackBase } from "./api/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, UserBase } from "./api/schema/objects";
 
 
 
@@ -1771,6 +1771,34 @@ const makeLink = (url: string, title: string) => xml.element("a")
 	.set("href", url)
 	.add(xml.text(title));
 
+function makeAlbumLink(album: AlbumBase): xml.XElement {
+	return makeLink(`audio/albums/${album.album_id}/`, album.title);
+}
+
+function makeArtistLink(artist: ArtistBase): xml.XElement {
+	return makeLink(`audio/artists/${artist.artist_id}/`, artist.title);
+}
+
+function makeGenreLink(genre: GenreBase): xml.XElement {
+	return makeLink(`video/genres/${genre.genre_id}/`, genre.title);
+}
+
+function makeMovieLink(movie: MovieBase): xml.XElement {
+	return makeLink(`video/movies/${movie.movie_id}/`, movie.title);
+}
+
+function makePlaylistLink(playlist: PlaylistBase): xml.XElement {
+	return makeLink(`audio/playlists/${playlist.playlist_id}/`, playlist.title);
+}
+
+function makeShowLink(show: ShowBase): xml.XElement {
+	return makeLink(`video/shows/${show.show_id}/`, show.title);
+}
+
+function makeUserLink(user: UserBase): xml.XElement {
+	return makeLink(`users/${user.user_id}/`, user.username);
+}
+
 let mp = xml.element("div.content")
 	.set("style", "padding: 16px;")
 	.add(xml.element("div.media-player")
@@ -1928,7 +1956,6 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 		}
 	}
 	let title = album.title;
-	let subtitle = album.artists.map(artist => artist.title).join(" \u00b7 ");
 	let tags = [
 		"Album",
 		`${album.year}`,
@@ -1982,7 +2009,7 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 					.add(xml.text(title))
 				)
 				.add(xml.element("div.media-widget__subtitle")
-					.add(xml.text(subtitle))
+					.add(...joinarray(album.artists.map(makeArtistLink)))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2050,7 +2077,7 @@ function makeArtist(artist: ContextArtist, play: () => void = () => player.playA
 		);
 }
 
-function makeGenreLink(genre: Genre): xml.XElement {
+function makeGenre(genre: Genre): xml.XElement {
 	return xml.element("div.media-widget")
 		.add(xml.element("div.media-widget__artwork"))
 		.add(xml.element("div.media-widget__metadata")
@@ -2069,7 +2096,6 @@ function makeGenreLink(genre: Genre): xml.XElement {
 
 function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 	let title = episode.title;
-	let subtitle = episode.season.show.title;
 	let tags = [
 		"Episode",
 		`${episode.year}`,
@@ -2124,8 +2150,8 @@ function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 				.add(xml.element("div.media-widget__title")
 					.add(xml.text(title))
 				)
-				.add(subtitle === "" ? undefined : xml.element("div.media-widget__subtitle")
-					.add(xml.text(subtitle))
+				.add(xml.element("div.media-widget__subtitle")
+					.add(makeShowLink(episode.season.show))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2254,7 +2280,7 @@ function makeMovie(movie: Movie, play: () => void = () => player.playMovie(movie
 					.add(xml.text(title))
 				)
 				.add(xml.element("div.media-widget__subtitle")
-					.add(xml.text(movie.genres.map((genre) => genre.title).join(" \u00b7 ")))
+					.add(...joinarray(movie.genres.map(makeGenreLink)))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2311,7 +2337,7 @@ function makePlaylist(playlist: Playlist, play: () => void = () => player.playPl
 					.add(xml.text(playlist.title))
 				)
 				.add(xml.element("div.media-widget__subtitle")
-					.add(xml.text(playlist.user.username))
+					.add(makeUserLink(playlist.user))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -3380,7 +3406,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(renderTextHeader(xml.text("Video Genres")))
 				)
 				.add(xml.element("div.content")
-					.add(makeGrid(undefined, ...genres.map(makeGenreLink)))
+					.add(makeGrid(undefined, ...genres.map(makeGenre)))
 				)
 				.render()
 			);
