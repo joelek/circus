@@ -1,5 +1,5 @@
 import * as libdb from "./database";
-import { Episode, Genre, Movie, Playlist, Show } from "./api/schema/objects";
+import { Album, Artist, Episode, Genre, Movie, Playlist, Show } from "./api/schema/objects";
 
 interface ApiRequest {
 
@@ -26,23 +26,22 @@ interface ChromeCastResponse extends ApiResponse {
 
 }
 
-interface ArtistResponse extends ApiResponse, libdb.ArtistEntry {
-	albums: Array<AlbumResponse>;
-	appearances: Array<AlbumResponse>;
-}
+type ArtistResponse = {
+	artist: Artist,
+	appearances: Album[]
+};
 
-interface ArtistsResponse extends ApiResponse {
-	artists: Array<ArtistResponse>;
-}
+type ArtistsResponse = {
+	artists: Artist[]
+};
 
-interface AlbumResponse extends ApiResponse, libdb.AlbumEntry {
-	artists: Array<libdb.ArtistEntry>;
-	discs: Array<DiscResponse>;
-}
+type AlbumResponse = {
+	album: Album
+};
 
-interface AlbumsResponse extends ApiResponse {
-	albums: Array<AlbumResponse>;
-}
+type AlbumsResponse = {
+	albums: Album[]
+};
 
 interface DiscResponse extends ApiResponse, libdb.DiscEntry {
 	tracks: Array<libdb.TrackEntry & {

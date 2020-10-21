@@ -2161,19 +2161,6 @@ const makeEntityHeader = (title: string, subtitles: xml.XNode<any>[] = [], tags:
 		);
 }
 
-function pluralize(amount: number, zero: string, one: string, many: string): string {
-	if (amount >= 2) {
-		return amount + " " + many;
-	}
-	if (amount >= 1) {
-		return amount + " " + one;
-	}
-	if (amount >= 0) {
-		return amount + " " + zero;
-	}
-	throw "Expected a non-negative amount!";
-}
-
 function translateShowResponse(rshow: api_response.ShowResponse): Show {
 	let show: ShowBase = {
 		show_id: rshow.show_id,
@@ -2216,65 +2203,6 @@ function translateShowResponse(rshow: api_response.ShowResponse): Show {
 		genres: []
 	};
 }
-function translateAlbumResponse(ralbum: api_response.AlbumResponse): ContextAlbum {
-	let album: AlbumBase = {
-		album_id: ralbum.album_id,
-		title: ralbum.title,
-		year: ralbum.year,
-		artists: ralbum.artists.map((artist) => ({
-			artist_id: artist.artist_id,
-			title: artist.title
-		})),
-		artwork: is.absent(ralbum.cover_file_id) ? undefined : {
-			file_id: ralbum.cover_file_id,
-			mime: "image/jpg",
-			height: 1080,
-			width: 1080
-		}
-	};
-	return {
-		...album,
-		discs: ralbum.discs.map((rdisc) => {
-			let disc: DiscBase = {
-				disc_id: rdisc.disc_id,
-				album: album,
-				number: rdisc.number
-			};
-			return {
-				...disc,
-				tracks: rdisc.tracks.map((rtrack) => {
-					let track: TrackBase = {
-						track_id: rtrack.track_id,
-						title: rtrack.title,
-						disc: disc,
-						artists: rtrack.artists.map((rartist) => ({
-							artist_id: rartist.artist_id,
-							title: rartist.title
-						})),
-						file: {
-							file_id: rtrack.file_id,
-							mime: "audio/mp4",
-							duration_ms: rtrack.duration
-						},
-						number: rtrack.number,
-						last_stream_date: undefined
-					};
-					return track;
-				})
-			}
-		})
-	};
-}
-function translateArtistResponse(rartist: api_response.ArtistResponse): ContextArtist {
-	let artist: ArtistBase = {
-		artist_id: rartist.artist_id,
-		title: rartist.title,
-	};
-	return {
-		...artist,
-		albums: rartist.albums.map(translateAlbumResponse)
-	};
-}
 
 let updateviewforuri = (uri: string): void => {
 	setScrollObserver();
@@ -2283,13 +2211,13 @@ let updateviewforuri = (uri: string): void => {
 	}
 	let parts: RegExpExecArray | null;
 	if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/`, {}, (status, response) => {
-			let context = translateAlbumResponse(response);
+		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/?token=${token}`, {}, (status, response) => {
+			let album = response.album;
 			let isContext = computed((contextPath) => {
 				if (!is.present(contextPath)) {
 					return false;
 				}
-				if (contextPath[contextPath.length - 3] !== context.album_id) {
+				if (contextPath[contextPath.length - 3] !== album.album_id) {
 					return false;
 				}
 				return true;
@@ -2298,17 +2226,17 @@ let updateviewforuri = (uri: string): void => {
 				return isContext && playback;
 			}, isContext, player.playback);
 			let duration_ms = 0;
-			for (let disc of response.discs) {
+			for (let disc of album.discs) {
 				for (let track of disc.tracks) {
-					duration_ms += track.duration;
+					duration_ms += track.file.duration_ms;
 				}
 			}
 			let header = xml.element("div.content")
-				.add(makeEntityHeader(response.title, response.artists.map((artist) => EntityLink.forArtist(artist)), [
+				.add(makeEntityHeader(album.title, album.artists.map((artist) => EntityLink.forArtist(artist)), [
 					"Album",
-					`${response.year}`,
+					`${album.year}`,
 					format_duration(duration_ms)
-				], ImageBox.forSquare(is.absent(context.artwork) ? undefined : `/files/${context.artwork.file_id}/?token=${token}`),
+				], ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/?token=${token}`),
 					xml.element("div.playback-button")
 						.add(makePlayIcon()
 							.bind("data-hide", isPlaying.addObserver(a => a))
@@ -2323,15 +2251,15 @@ let updateviewforuri = (uri: string): void => {
 								if (isContext.getState()) {
 									player.resume();
 								} else {
-									player.playAlbum(context);
+									player.playAlbum(album);
 								}
 							}
 						})
 					))
 				.render();
 			mount.appendChild(header);
-			for (let discIndex = 0; discIndex < response.discs.length; discIndex++) {
-				let disc = context.discs[discIndex];
+			for (let discIndex = 0; discIndex < album.discs.length; discIndex++) {
+				let disc = album.discs[discIndex];
 				if (disc.tracks.length > 0) {
 					let content = xml.element("div.content")
 						.add(xml.element("div.playlist")
@@ -2362,7 +2290,7 @@ let updateviewforuri = (uri: string): void => {
 										.add(xml.text(track.artists.map((artist) => artist.title).join(" \u00b7 ")))
 									)
 									.on("click", () => {
-										player.playAlbum(context, discIndex, trackIndex);
+										player.playAlbum(album, discIndex, trackIndex);
 									})
 								))
 							)
@@ -2372,8 +2300,8 @@ let updateviewforuri = (uri: string): void => {
 			}
 		});
 	} else if ((parts = /^audio[/]albums[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.AlbumsResponse>(`/api/audio/albums/`, {}, (status, response) => {
-			let albums = response.albums.map(translateAlbumResponse);
+		req<api_response.ApiRequest, api_response.AlbumsResponse>(`/api/audio/albums/?token=${token}`, {}, (status, response) => {
+			let albums = response.albums;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(renderTextHeader(xml.text("Albums")))
@@ -2384,13 +2312,14 @@ let updateviewforuri = (uri: string): void => {
 			.render());
 		});
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/`, {}, (status, response) => {
-			let context = translateArtistResponse(response);
+		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/?token=${token}`, {}, (status, response) => {
+			let artist = response.artist;
+			let appearances = response.appearances;
 			let isContext = computed((contextPath) => {
 				if (!is.present(contextPath)) {
 					return false;
 				}
-				if (contextPath[contextPath.length - 4] !== context.artist_id) {
+				if (contextPath[contextPath.length - 4] !== artist.artist_id) {
 					return false;
 				}
 				return true;
@@ -2399,16 +2328,16 @@ let updateviewforuri = (uri: string): void => {
 				return isContext && playback;
 			}, isContext, player.playback);
 			let duration_ms = 0;
-			for (let album of response.albums) {
+			for (let album of artist.albums) {
 				for (let disc of album.discs) {
 					for (let track of disc.tracks) {
-						duration_ms += track.duration;
+						duration_ms += track.file.duration_ms;
 					}
 				}
 			}
 			let widget = xml.element("div.content")
 				.add(makeEntityHeader(
-						response.title,
+						artist.title,
 						[],
 						["Artist", format_duration(duration_ms)],
 						ImageBox.forSquare(),
@@ -2426,7 +2355,7 @@ let updateviewforuri = (uri: string): void => {
 									if (isContext.getState()) {
 										player.resume();
 									} else {
-										player.playArtist(context);
+										player.playArtist(artist);
 									}
 								}
 							}),
@@ -2435,7 +2364,7 @@ let updateviewforuri = (uri: string): void => {
 				)
 				.render();
 			mount.appendChild(widget);
-			if (context.albums.length > 0) {
+			if (artist.albums.length > 0) {
 				let content = xml.element("div.content").render();
 				mount.appendChild(content);
 				let mediaGrid = xml.element("div.media-grid")
@@ -2445,13 +2374,13 @@ let updateviewforuri = (uri: string): void => {
 					.render();
 				content.appendChild(mediaGrid);
 				let mediaGrid__content = xml.element("div.media-grid__content")
-					.add(...context.albums.map((album, albumIndex) => {
-						return makeAlbum(album, () => player.playArtist(context, albumIndex));
+					.add(...artist.albums.map((album, albumIndex) => {
+						return makeAlbum(album, () => player.playArtist(artist, albumIndex));
 					}))
 				.render();
 				mediaGrid.appendChild(mediaGrid__content);
 			}
-			if (response.appearances.length > 0) {
+			if (appearances.length > 0) {
 				let content = xml.element("div.content").render();
 				mount.appendChild(content);
 				let mediaGrid = xml.element("div.media-grid")
@@ -2462,17 +2391,16 @@ let updateviewforuri = (uri: string): void => {
 				content.appendChild(mediaGrid);
 				let mediaGrid__content = xml.element("div.media-grid__content").render();
 				mediaGrid.appendChild(mediaGrid__content);
-				for (let album of response.appearances) {
-					let context = translateAlbumResponse(album);
-					let widget = makeAlbum(context, () => player.playAlbum(context))
+				for (let appearance of response.appearances) {
+					let widget = makeAlbum(appearance, () => player.playAlbum(appearance))
 						.render();
 					mediaGrid__content.appendChild(widget);
 				}
 			}
 		});
 	} else if ((parts = /^audio[/]artists[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.ArtistsResponse>(`/api/audio/artists/`, {}, (status, response) => {
-			let artists = response.artists.map(translateArtistResponse);
+		req<api_response.ApiRequest, api_response.ArtistsResponse>(`/api/audio/artists/?token=${token}`, {}, (status, response) => {
+			let artists = response.artists;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(renderTextHeader(xml.text("Artists")))

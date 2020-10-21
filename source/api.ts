@@ -108,76 +108,17 @@ class Router {
 	}
 }
 
-class ArtistRoute implements Route<api_response.ApiRequest, api_response.ArtistResponse> {
-	constructor() {
-
-	}
-
+class ArtistRoute implements Route<{}, api_response.ArtistResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		if (request.url === undefined) {
-			throw new Error();
-		}
-		let parts = /^\/api\/audio\/artists\/([0-9a-f]{32})\//.exec(request.url);
-		if (parts === null) {
-			throw new Error();
-		}
+		let username = getUsername(request);
+		let parts = /^[/]api[/]audio[/]artists[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let artist_id = parts[1];
-		let artist = data.artists_index[artist_id];
-		if (artist === undefined) {
-			throw new Error();
-		}
-		let album_artists = data.media.audio.album_artists.filter((album_artist) => {
-			return album_artist.artist_id === artist_id;
+		let artist = data.api_lookupArtist(artist_id, username);
+		let appearances = data.lookupAppearances(artist_id).map((album_id) => {
+			return data.api_lookupAlbum(album_id, username);
 		});
-		// TODO: Reuse functionality for looking up playable albums.
-		let albums = album_artists.map((album_artist) => {
-			let album = data.albums_index[album_artist.album_id] as libdb.AlbumEntry;
-			let discs = data.media.audio.discs.filter((disc) => disc.album_id === album.album_id).map((disc) => {
-				let tracks = data.media.audio.tracks.filter((track) => track.disc_id === disc.disc_id).map((track) => {
-					let artists = data.lookupTrackArtists(track.track_id);
-					return {
-						...track,
-						artists
-					};
-				});
-				return {
-					...disc,
-					tracks
-				}
-			});
-			let artists = data.lookupAlbumArtists(album_artist.album_id);
-			return {
-				...album,
-				artists,
-				discs
-			};
-		});
-		let appearances = data.lookupAppearances(artist_id)
-			.map((album_id) => {
-				let album = data.lookupAlbum(album_id);
-				let discs = data.media.audio.discs.filter((disc) => disc.album_id === album.album_id).map((disc) => {
-					let tracks = data.media.audio.tracks.filter((track) => track.disc_id === disc.disc_id).map((track) => {
-						let artists = data.lookupTrackArtists(track.track_id);
-						return {
-							...track,
-							artists
-						};
-					});
-					return {
-						...disc,
-						tracks
-					}
-				});
-				let artists = data.lookupAlbumArtists(album_id);
-				return {
-					...album,
-					artists,
-					discs
-				};
-			});
 		let payload: api_response.ArtistResponse = {
-			...artist,
-			albums,
+			artist,
 			appearances
 		};
 		response.writeHead(200);
@@ -185,52 +126,23 @@ class ArtistRoute implements Route<api_response.ApiRequest, api_response.ArtistR
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === 'POST' && request.url !== undefined && /^\/api\/audio\/artists\/([0-9a-f]{32})\//.test(request.url);
+		return /^[/]api[/]audio[/]artists[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
 	}
 }
 
-class ArtistsRoute implements Route<api_response.ApiRequest, api_response.ArtistsResponse> {
-	constructor() {
-
-	}
-
+class ArtistsRoute implements Route<{}, api_response.ArtistsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		if (request.url === undefined) {
-			throw new Error();
-		}
-		let artists = data.media.audio.artists.map((artist) => {
-			let albums = data.getAlbumArtistsFromArtistId.lookup(artist.artist_id).map((album_artist) => {
-				let album = data.getAlbumFromAlbumId.lookup(album_artist.album_id);
-				let artists = data.lookupAlbumArtists(album.album_id);
-				let discs = data.getDiscsFromAlbumId.lookup(album.album_id).map((disc) => {
-					let tracks = data.getTracksFromDiscId.lookup(disc.disc_id).map((track) => {
-						let artists = data.lookupTrackArtists(track.track_id);
-						return {
-							...track,
-							artists
-						};
-					});
-					return {
-						...disc,
-						tracks
-					};
-				});
-				return {
-					...album,
-					artists,
-					discs
-				};
+		let username = getUsername(request);
+		let parts = /^[/]api[/]audio[/]artists[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let artists = data.media.audio.artists.slice()
+			.sort(LexicalSort.increasing((entry) => entry.title))
+			.slice(offset, offset + length)
+			.map((entry) => {
+				return data.api_lookupArtist(entry.artist_id, username);
 			});
-			let appearances = [] as api_response.AlbumResponse[]
-			return {
-				...artist,
-				albums,
-				appearances
-			};
-		}).sort(CombinedSort.of(
-			NumericSort.increasing((value) => value.albums.length > 0 ? -1 : 1),
-			LexicalSort.increasing((value) => value.title)
-		));
 		let payload: api_response.ArtistsResponse = {
 			artists
 		};
@@ -239,91 +151,41 @@ class ArtistsRoute implements Route<api_response.ApiRequest, api_response.Artist
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === 'POST' && request.url !== undefined && /^\/api\/audio\/artists\//.test(request.url);
+		return /^[/]api[/]audio[/]artists[/]/.test(request.url ?? "/");
 	}
 }
 
-class AlbumRoute implements Route<api_response.ApiRequest, api_response.AlbumResponse> {
-	constructor() {
-
-	}
-
+class AlbumRoute implements Route<{}, api_response.AlbumResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		if (request.url === undefined) {
-			throw new Error();
-		}
-		let parts = /^\/api\/audio\/albums\/([0-9a-f]{32})\//.exec(request.url);
-		if (parts === null) {
-			throw new Error();
-		}
+		let username = getUsername(request);
+		let parts = /^[/]api[/]audio[/]albums[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let album_id = parts[1];
-		let album = data.albums_index[album_id];
-		if (album === undefined) {
-			throw new Error();
-		}
-		let discs = data.media.audio.discs.filter((disc) => {
-			return disc.album_id === album_id;
-		}).map((disc) => {
-			let tracks = data.media.audio.tracks.filter((track) => {
-				return track.disc_id === disc.disc_id;
-			}).map((track) => {
-				let artists = data.lookupTrackArtists(track.track_id);
-				return {
-					...track,
-					artists
-				};
-			});
-			let payload: api_response.DiscResponse = {
-				...disc,
-				tracks
-			};
-			return payload;
-		});
-		let artists = data.lookupAlbumArtists(album_id);
+		let album = data.api_lookupAlbum(album_id, username);
 		let payload: api_response.AlbumResponse = {
-			...album,
-			artists,
-			discs
+			album
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === 'POST' && request.url !== undefined && /^\/api\/audio\/albums\/([0-9a-f]{32})\//.test(request.url);
+		return /^[/]api[/]audio[/]albums[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
 	}
 }
 
-class AlbumsRoute implements Route<api_response.ApiRequest, api_response.AlbumsResponse> {
-	constructor() {
-
-	}
-
+class AlbumsRoute implements Route<{}, api_response.AlbumsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		if (request.url === undefined) {
-			throw new Error();
-		}
-		let albums = data.media.audio.albums.map((album) => {
-			let artists = data.lookupAlbumArtists(album.album_id);
-			let discs = data.getDiscsFromAlbumId.lookup(album.album_id).map((disc) => {
-				let tracks = data.getTracksFromDiscId.lookup(disc.disc_id).map((track) => {
-					let artists = data.lookupTrackArtists(track.track_id);
-					return {
-						...track,
-						artists
-					};
-				});
-				return {
-					...disc,
-					tracks
-				};
+		let username = getUsername(request);
+		let parts = /^[/]api[/]audio[/]albums[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let albums = data.media.audio.albums.slice()
+			.sort(LexicalSort.increasing((entry) => entry.title))
+			.slice(offset, offset + length)
+			.map((entry) => {
+				return data.api_lookupAlbum(entry.album_id, username);
 			});
-			return {
-				...album,
-				artists,
-				discs
-			};
-		});
 		let payload: api_response.AlbumsResponse = {
 			albums
 		};
@@ -332,7 +194,7 @@ class AlbumsRoute implements Route<api_response.ApiRequest, api_response.AlbumsR
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === 'POST' && request.url !== undefined && /^\/api\/audio\/albums\//.test(request.url);
+		return /^[/]api[/]audio[/]albums[/]/.test(request.url ?? "/");
 	}
 }
 
