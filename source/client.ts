@@ -304,7 +304,6 @@ style.innerText = `
 
 	a {
 		color: inherit;
-		display: inline-block;
 		font-size: inherit;
 		text-decoration: none;
 		transition: color 0.1s;
