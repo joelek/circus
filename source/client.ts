@@ -9,7 +9,9 @@ import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
 import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, UserBase } from "./api/schema/objects";
-
+import * as xml from "./xnode";
+import { EntityLinkFactory } from "./ui/EntityLink";
+const EntityLink = new EntityLinkFactory(navigate);
 
 
 
@@ -257,165 +259,6 @@ player.currentEntry.addObserver((currentEntry) => {
 
 
 
-
-
-namespace xml {
-	export interface Node<A extends globalThis.Node> {
-		render(): A;
-	}
-
-	export class Text implements Node<globalThis.Text> {
-		private content: string | ObservableClass<string>;
-
-		constructor(content: string | ObservableClass<string>) {
-			this.content = content;
-		}
-
-		render(): globalThis.Text {
-			let node = document.createTextNode("");
-			if (this.content instanceof ObservableClass) {
-				this.content.addObserver((content) => {
-					node.textContent = content;
-				});
-			} else {
-				node.textContent = this.content;
-			}
-			return node;
-		}
-	}
-
-	export interface Listener<A extends keyof HTMLElementEventMap> {
-		(event: HTMLElementEventMap[A]): void;
-	}
-
-	export interface Renderer<A> {
-		(state: A): XElement;
-	}
-
-	export class XElement implements Node<globalThis.Element> {
-		private tag: string;
-		private attributes: Map<string, string>;
-		private children: Array<Node<any>>;
-		private bound: Map<string, Observable<any>>;
-		private bound2: Map<string, ObservableClass<string>>;
-		private listeners: Map<keyof HTMLElementEventMap, Array<Listener<keyof HTMLElementEventMap>>>;
-		private array?: ArrayObservable<any>;
-		private renderer?: Renderer<any>;
-
-		constructor(selector: string) {
-			let parts = selector.split(".");
-			this.tag = parts[0];
-			this.attributes = new Map<string, string>();
-			this.children = new Array<xml.Node<any>>();
-			this.bound = new Map<string, Observable<any>>();
-			this.bound2 = new Map<string, ObservableClass<string>>();
-			this.listeners = new Map<keyof HTMLElementEventMap, Array<Listener<keyof HTMLElementEventMap>>>();
-			let classes = parts.slice(1).join(" ");
-			if (classes !== "") {
-				this.attributes.set("class", classes);
-			}
-		}
-
-		add(...nodes: Array<xml.Node<any> | null | undefined>): this {
-			// TODO: Detach node from current parent.
-			for (let node of nodes) {
-				if (node != null) {
-					this.children.push(node);
-				}
-			}
-			return this;
-		}
-
-		bind(key: string, observable: Observable<any>): this {
-			this.bound.set(key, observable);
-			return this;
-		}
-
-		bind2(key: string, observable: ObservableClass<string>): this {
-			this.bound2.set(key, observable);
-			return this;
-		}
-
-		on<A extends keyof HTMLElementEventMap>(kind: A, listener: Listener<A>): this {
-			let listeners = this.listeners.get(kind) as Array<Listener<A>> | undefined;
-			if (listeners == null) {
-				listeners = new Array<Listener<A>>();
-				this.listeners.set(kind, listeners as any);
-			}
-			listeners.push((event) => {
-				event.preventDefault();
-				event.stopPropagation();
-				listener(event);
-			});
-			return this;
-		}
-
-		render(): globalThis.Element {
-			let ns = ["svg", "path"].indexOf(this.tag) >= 0 ? "http://www.w3.org/2000/svg" : "http://www.w3.org/1999/xhtml";
-			let element = document.createElementNS(ns, this.tag);
-			for (let [kind, listeners] of this.listeners) {
-				for (let listener of listeners) {
-					element.addEventListener(kind, listener);
-				}
-			}
-			for (let [key, value] of this.attributes) {
-				element.setAttribute(key, value);
-			}
-			for (let [key, observable] of this.bound) {
-				observable((value) => {
-					element.setAttribute(key, `${value}`);
-				});
-			}
-			for (let [key, observable] of this.bound2) {
-				observable.addObserver((value) => {
-					element.setAttribute(key, `${value}`);
-				});
-				if (this.tag === "input" && key === "value") {
-					element.addEventListener("change", () => {
-						observable.updateState((element as any).value);
-					});
-				}
-			}
-			for (let child of this.children) {
-				element.appendChild(child.render());
-			}
-			if (this.array) {
-				this.array.addObserver({
-					onupdate: (state) => {
-						if (this.renderer) {
-							while (element.firstChild) {
-								element.firstChild.remove();
-							}
-							for (let value of state) {
-								element.appendChild(this.renderer(value).render());
-							}
-						}
-					}
-				})
-			}
-			return element;
-		}
-
-		repeat<A>(array: ArrayObservable<A>, renderer: Renderer<A>): this {
-			this.array = array;
-			this.renderer = renderer;
-			return this;
-		}
-
-		set(key: string, value: string = ""): this {
-			this.attributes.set(key, value);
-			return this;
-		}
-	}
-
-	export function element(selector: string): XElement {
-		return new XElement(selector);
-	}
-
-	export function text(content: string | ObservableClass<string>): Text {
-		return new Text(content);
-	}
-}
 
 
 const ACCENT_COLOR = "rgb(223, 79, 127)";
@@ -1770,40 +1613,6 @@ const makePauseIcon = () => xml.element("svg")
 	);
 
 const makeButton = () => xml.element("div.icon-button");
-const makeLink = (url: string, title: string) => xml.element("a")
-	.on("click", (event) => {
-		navigate(url);
-	})
-	.set("href", url)
-	.add(xml.text(title));
-
-function makeAlbumLink(album: AlbumBase): xml.XElement {
-	return makeLink(`audio/albums/${album.album_id}/`, album.title);
-}
-
-function makeArtistLink(artist: ArtistBase): xml.XElement {
-	return makeLink(`audio/artists/${artist.artist_id}/`, artist.title);
-}
-
-function makeGenreLink(genre: GenreBase): xml.XElement {
-	return makeLink(`video/genres/${genre.genre_id}/`, genre.title);
-}
-
-function makeMovieLink(movie: MovieBase): xml.XElement {
-	return makeLink(`video/movies/${movie.movie_id}/`, movie.title);
-}
-
-function makePlaylistLink(playlist: PlaylistBase): xml.XElement {
-	return makeLink(`audio/playlists/${playlist.playlist_id}/`, playlist.title);
-}
-
-function makeShowLink(show: ShowBase): xml.XElement {
-	return makeLink(`video/shows/${show.show_id}/`, show.title);
-}
-
-function makeUserLink(user: UserBase): xml.XElement {
-	return makeLink(`users/${user.user_id}/`, user.username);
-}
 
 let mp = xml.element("div.content")
 	.set("style", "padding: 16px;")
@@ -2015,7 +1824,7 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 					.add(xml.text(title))
 				)
 				.add(xml.element("div.media-widget__subtitle")
-					.add(...joinarray(album.artists.map(makeArtistLink)))
+					.add(...xml.joinarray(album.artists.map(EntityLink.forArtist)))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2157,7 +1966,7 @@ function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 					.add(xml.text(title))
 				)
 				.add(xml.element("div.media-widget__subtitle")
-					.add(makeShowLink(episode.season.show))
+					.add(EntityLink.forShow(episode.season.show))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2286,7 +2095,7 @@ function makeMovie(movie: Movie, play: () => void = () => player.playMovie(movie
 					.add(xml.text(title))
 				)
 				.add(xml.element("div.media-widget__subtitle")
-					.add(...joinarray(movie.genres.map(makeGenreLink)))
+					.add(...xml.joinarray(movie.genres.map(EntityLink.forGenre)))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2343,7 +2152,7 @@ function makePlaylist(playlist: Playlist, play: () => void = () => player.playPl
 					.add(xml.text(playlist.title))
 				)
 				.add(xml.element("div.media-widget__subtitle")
-					.add(makeUserLink(playlist.user))
+					.add(EntityLink.forUser(playlist.user))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2374,11 +2183,11 @@ function makeImage(url?: string) {
 			})
 		);
 }
-function renderTextHeader(content: xml.Node<any>) {
+function renderTextHeader(content: xml.XNode<any>) {
 	return xml.element("div.text-header")
 		.add(content);
 }
-function renderTextParagraph(content: xml.Node<any>) {
+function renderTextParagraph(content: xml.XNode<any>) {
 	return xml.element("div.text-paragraph")
 		.add(content);
 }
@@ -2389,17 +2198,7 @@ function maybe<A, B>(value: A | undefined | null, cb: (value: A) => B): B | unde
 	}
 }
 
-function joinarray(nodes: xml.Node<any>[]): xml.Node<any>[] {
-	let array = [] as xml.Node<any>[];
-	for (let node of nodes) {
-		array.push(node);
-		array.push(xml.text(" \u00b7 "));
-	}
-	array.pop();
-	return array;
-}
-
-const makeEntityHeader = (title: string, subtitles: xml.Node<any>[] = [], tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement, description?: string) => {
+const makeEntityHeader = (title: string, subtitles: xml.XNode<any>[] = [], tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement, description?: string) => {
 	return xml.element("div.entity-header")
 		.add(xml.element("div.entity-header__artwork")
 			.add(image)
@@ -2411,7 +2210,7 @@ const makeEntityHeader = (title: string, subtitles: xml.Node<any>[] = [], tags: 
 					.add(xml.text(title))
 				)
 				.add(subtitles.length === 0 ? undefined : xml.element("div.entity-header__subtitle")
-					.add(...joinarray(subtitles))
+					.add(...xml.joinarray(subtitles))
 				)
 			)
 			.add(xml.element("div.entity-header__tags")
@@ -2594,7 +2393,7 @@ let updateviewforuri = (uri: string): void => {
 				}
 			}
 			let header = xml.element("div.content")
-				.add(makeEntityHeader(response.title, response.artists.map((artist) => makeLink(`audio/artists/${artist.artist_id}/`, artist.title)), [
+				.add(makeEntityHeader(response.title, response.artists.map(EntityLink.forArtist), [
 					"Album",
 					`${response.year}`,
 					format_duration(duration_ms)
@@ -2782,7 +2581,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(makeEntityHeader(
 							playlist.title,
-							[makeLink(`users/${playlist.user.user_id}/`, `${playlist.user.username}`)],
+							[EntityLink.forUser(playlist.user)],
 							["Playlist", format_duration(duration_ms)],
 							makeImage(),
 							undefined,
@@ -2843,9 +2642,9 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(xml.element("div.content")
 				.set("style", "display: grid; gap: 32px;")
-				.add(renderTextHeader(makeLink("audio/artists/", "Artists")))
-				.add(renderTextHeader(makeLink("audio/albums/", "Albums")))
-				.add(renderTextHeader(makeLink("audio/playlists/", "Playlists")))
+				.add(renderTextHeader(EntityLink.for("audio/artists/", "Artists")))
+				.add(renderTextHeader(EntityLink.for("audio/albums/", "Albums")))
+				.add(renderTextHeader(EntityLink.for("audio/playlists/", "Playlists")))
 			)
 		.render());
 	} else if ((parts = /^video[/]shows[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
@@ -3022,7 +2821,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(makeEntityHeader(
 							episode.title,
-							[makeLink(`video/shows/${show.show_id}/`, show.title)],
+							[EntityLink.forShow(show)],
 							["Episode", `${episode.year}`, format_duration(episode.file.duration_ms), utils.formatSeasonEpisode(season.number, episode.number)],
 							makeImage(`/media/stills/${episode.file.file_id}/?token=${token}`)
 								.set("style", "padding-bottom: 56.25%;"),
@@ -3080,7 +2879,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(makeEntityHeader(
 							movie.title,
-							movie.genres.map((genre) => makeLink(`video/genres/${genre.genre_id}/`, genre.title)),
+							movie.genres.map(EntityLink.forGenre),
 							["Movie", `${movie.year}`, format_duration(movie.file.duration_ms)],
 							makeImage(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/?token=${token}`)
 								.set("style", "padding-bottom: 150%"),
@@ -3429,9 +3228,9 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(xml.element("div.content")
 				.set("style", "display: grid; gap: 32px;")
-				.add(renderTextHeader(makeLink("video/shows/", "Shows")))
-				.add(renderTextHeader(makeLink("video/movies/", "Movies")))
-				.add(renderTextHeader(makeLink("video/genres/", "Genres")))
+				.add(renderTextHeader(EntityLink.for("video/shows/", "Shows")))
+				.add(renderTextHeader(EntityLink.for("video/movies/", "Movies")))
+				.add(renderTextHeader(EntityLink.for("video/genres/", "Genres")))
 			)
 		.render());
 	} else if ((parts = /^tokens[/]/.exec(uri)) !== null) {
@@ -3630,10 +3429,10 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(xml.element("div.content")
 				.set("style", "display: grid; gap: 32px;")
-				.add(renderTextHeader(makeLink("audio/", "Audio")))
-				.add(renderTextHeader(makeLink("video/", "Video")))
-				.add(renderTextHeader(makeLink("search/", "Search")))
-				.add(renderTextHeader(makeLink("cues/", "Cues")))
+				.add(renderTextHeader(EntityLink.for("audio/", "Audio")))
+				.add(renderTextHeader(EntityLink.for("video/", "Video")))
+				.add(renderTextHeader(EntityLink.for("search/", "Search")))
+				.add(renderTextHeader(EntityLink.for("cues/", "Cues")))
 			)
 		.render());
 	}
@@ -3662,7 +3461,7 @@ let get_route = (pathname: string = window.location.pathname, basehref: string =
 
 
 
-let navigate = (uri: string): void => {
+function navigate (uri: string): void {
 	getToken().then((token) => {
 		if (token == null) {
 			showLogin.updateState(true);
