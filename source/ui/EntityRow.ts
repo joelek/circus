@@ -82,18 +82,68 @@ export class EntityRowFactory {
 	private ImageBox: ImageBoxFactory;
 	private PlaybackButton: PlaybackButtonFactory;
 
+	private make(link: xnode.XElement, image: xnode.XElement, playbackButton: xnode.XElement, title: xnode.XElement, subtitles: xnode.XElement[], tags: string[]): xnode.XElement {
+		return link
+			.add(xnode.element("div.entity-row")
+				.add(xnode.element("div.entity-row__artwork")
+					.add(image)
+					.add(xnode.element("div.entity-row__playback")
+						.add(playbackButton)
+					)
+				)
+				.add(xnode.element("div.entity-row__metadata")
+					.add(xnode.element("div.entity-row__titles")
+						.add(xnode.element("div.entity-row__title")
+							.add(title)
+						)
+						.add(xnode.element("div.entity-row__subtitle")
+							.add(...xnode.joinarray(subtitles))
+						)
+					)
+					.add(xnode.element("div.entity-row__tags")
+						.add(...tags.map((tag) => xnode.element("div.entity-row__tag")
+							.add(xnode.text(tag)))
+						)
+					)
+				)
+			);
+	}
+
 	constructor(EntityLink: EntityLinkFactory, ImageBox: ImageBoxFactory, PlaybackButton: PlaybackButtonFactory) {
 		this.EntityLink = EntityLink;
 		this.ImageBox = ImageBox;
 		this.PlaybackButton = PlaybackButton;
 	}
 
-	forEntity(entity: api.Album | api.Artist | api.Episode | api.Movie | api.Show | api.Track): xnode.XElement {
+	forEntity(entity: api.Album | api.Artist | api.Disc | api.Episode | api.Movie | api.Playlist | api.Season | api.Show | api.Track): xnode.XElement {
 		if (api.Album.is(entity)) {
 			return this.forAlbum(entity);
 		}
-		return xnode.element("div");
-		//throw `Expected code to be unreachable!`;
+		if (api.Artist.is(entity)) {
+			return this.forArtist(entity);
+		}
+		if (api.Disc.is(entity)) {
+			return this.forDisc(entity);
+		}
+		if (api.Episode.is(entity)) {
+			return this.forEpisode(entity);
+		}
+		if (api.Playlist.is(entity)) {
+			return this.forPlaylist(entity);
+		}
+		if (api.Movie.is(entity)) {
+			return this.forMovie(entity);
+		}
+		if (api.Season.is(entity)) {
+			return this.forSeason(entity);
+		}
+		if (api.Show.is(entity)) {
+			return this.forShow(entity);
+		}
+		if (api.Track.is(entity)) {
+			return this.forTrack(entity);
+		}
+		throw `Expected code to be unreachable!`;
 	}
 
 	forAlbum(album: api.Album, playbackButton: xnode.XElement = this.PlaybackButton.forAlbum(album)): xnode.XElement {
@@ -103,36 +153,158 @@ export class EntityRowFactory {
 				duration_ms += track.file.duration_ms;
 			}
 		}
-		return this.EntityLink.forAlbum(album)
-			.add(xnode.element("div.entity-row")
-				.add(xnode.element("div.entity-row__artwork")
-					.add(this.ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`))
-					.add(xnode.element("div.entity-row__playback")
-						.add(playbackButton)
-					)
-				)
-				.add(xnode.element("div.entity-row__metadata")
-					.add(xnode.element("div.entity-row__titles")
-						.add(xnode.element("div.entity-row__title")
-							.add(xnode.text(album.title))
-						)
-						.add(xnode.element("div.entity-row__subtitle")
-							.add(...xnode.joinarray(album.artists.map((artist) => this.EntityLink.forArtist(artist))))
-						)
-					)
-					.add(xnode.element("div.entity-row__tags")
-						.add(xnode.element("div.entity-row__tag")
-							.add(xnode.text("Album"))
-						)
-						.add(xnode.element("div.entity-row__tag")
-							.add(xnode.text(`${album.year}`))
-						)
-						.add(xnode.element("div.entity-row__tag")
-							.add(xnode.text(metadata.formatDuration(duration_ms)))
-						)
-					)
-				)
-			);
+		let link = this.EntityLink.forAlbum(album);
+		let image = this.ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`);
+		let title = this.EntityLink.forAlbum(album);
+		let subtitles = album.artists.map((artist) => this.EntityLink.forArtist(artist));
+		let tags = [
+			"Album",
+			`${album.year}`,
+			metadata.formatDuration(duration_ms)
+		];
+		return this.make(link, image, playbackButton, title, subtitles, tags);
+	}
+
+	forArtist(artist: api.Artist, playbackButton: xnode.XElement = this.PlaybackButton.forArtist(artist)): xnode.XElement {
+		let duration_ms = 0;
+		for (let album of artist.albums) {
+			for (let disc of album.discs) {
+				for (let track of disc.tracks) {
+					duration_ms += track.file.duration_ms;
+				}
+			}
+		}
+		let link = this.EntityLink.forArtist(artist);
+		let image = this.ImageBox.forSquare();
+		let title = this.EntityLink.forArtist(artist);
+		let subtitles = new Array<xnode.XElement>();
+		let tags = [
+			"Artist",
+			metadata.formatDuration(duration_ms)
+		];
+		return this.make(link, image, playbackButton, title, subtitles, tags);
+	}
+
+	forDisc(disc: api.Disc, playbackButton: xnode.XElement = this.PlaybackButton.forDisc(disc)): xnode.XElement {
+		let duration_ms = 0;
+		for (let track of disc.tracks) {
+			duration_ms += track.file.duration_ms;
+		}
+		let link = this.EntityLink.forDisc(disc);
+		let image = this.ImageBox.forSquare(is.absent(disc.album.artwork) ? undefined : `/files/${disc.album.artwork.file_id}/`);
+		let title = this.EntityLink.forDisc(disc);
+		let subtitles = [
+			this.EntityLink.forAlbum(disc.album)
+		];
+		let tags = [
+			"Disc",
+			metadata.formatDuration(duration_ms)
+		];
+		return this.make(link, image, playbackButton, title, subtitles, tags);
+	}
+
+	forEpisode(episode: api.Episode, playbackButton: xnode.XElement = this.PlaybackButton.forEpisode(episode)): xnode.XElement {
+		let duration_ms = 0;
+		duration_ms += episode.file.duration_ms;
+		let link = this.EntityLink.forEpisode(episode);
+		let image = this.ImageBox.forVideo(`/media/stills/${episode.file.file_id}/`);
+		let title = this.EntityLink.forEpisode(episode);
+		let subtitles = [
+			this.EntityLink.forShow(episode.season.show),
+			this.EntityLink.forSeason(episode.season)
+		];
+		let tags = [
+			"Episode",
+			`${episode.year}`,
+			metadata.formatDuration(duration_ms)
+		];
+		return this.make(link, image, playbackButton, title, subtitles, tags);
+	}
+
+	forMovie(movie: api.Movie, playbackButton: xnode.XElement = this.PlaybackButton.forMovie(movie)): xnode.XElement {
+		let duration_ms = 0;
+		duration_ms += movie.file.duration_ms;
+		let link = this.EntityLink.forMovie(movie);
+		let image = this.ImageBox.forPoster(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/`);
+		let title = this.EntityLink.forMovie(movie);
+		let subtitles = movie.genres.map((genre) => this.EntityLink.forGenre(genre));
+		let tags = [
+			"Movie",
+			`${movie.year}`,
+			metadata.formatDuration(duration_ms)
+		];
+		return this.make(link, image, playbackButton, title, subtitles, tags);
+	}
+
+	forPlaylist(playlist: api.Playlist, playbackButton: xnode.XElement = this.PlaybackButton.forPlaylist(playlist)): xnode.XElement {
+		let duration_ms = 0;
+		for (let item of playlist.items) {
+			duration_ms += item.track.file.duration_ms;
+		}
+		let link = this.EntityLink.forPlaylist(playlist);
+		let image = this.ImageBox.forSquare();
+		let title = this.EntityLink.forPlaylist(playlist);
+		let subtitles = [
+			this.EntityLink.forUser(playlist.user)
+		];
+		let tags = [
+			"Playlist",
+			metadata.formatDuration(duration_ms)
+		];
+		return this.make(link, image, playbackButton, title, subtitles, tags);
+	}
+
+	forSeason(season: api.Season, playbackButton: xnode.XElement = this.PlaybackButton.forSeason(season)): xnode.XElement {
+		let duration_ms = 0;
+		for (let episode of season.episodes) {
+			duration_ms += episode.file.duration_ms;
+		}
+		let link = this.EntityLink.forSeason(season);
+		let image = this.ImageBox.forPoster(is.absent(season.show.artwork) ? undefined : `/files/${season.show.artwork.file_id}/`);
+		let title = this.EntityLink.forSeason(season);
+		let subtitles = [
+			this.EntityLink.forShow(season.show)
+		];
+		let tags = [
+			"Season",
+			metadata.formatDuration(duration_ms)
+		];
+		return this.make(link, image, playbackButton, title, subtitles, tags);
+	}
+
+	forShow(show: api.Show, playbackButton: xnode.XElement = this.PlaybackButton.forShow(show)): xnode.XElement {
+		let duration_ms = 0;
+		for (let season of show.seasons) {
+			for (let episode of season.episodes) {
+				duration_ms += episode.file.duration_ms;
+			}
+		}
+		let link = this.EntityLink.forShow(show);
+		let image = this.ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`);
+		let title = this.EntityLink.forShow(show);
+		let subtitles = show.genres.map((genre) => this.EntityLink.forGenre(genre));
+		let tags = [
+			"Show",
+			metadata.formatDuration(duration_ms)
+		];
+		return this.make(link, image, playbackButton, title, subtitles, tags);
+	}
+
+	forTrack(track: api.Track, playbackButton: xnode.XElement = this.PlaybackButton.forTrack(track)): xnode.XElement {
+		let duration_ms = 0;
+		duration_ms += track.file.duration_ms;
+		let link = this.EntityLink.forTrack(track);
+		let image = this.ImageBox.forSquare(is.absent(track.disc.album.artwork) ? undefined : `/files/${track.disc.album.artwork.file_id}/`);
+		let title = this.EntityLink.forTrack(track);
+		let subtitles = [
+			this.EntityLink.forAlbum(track.disc.album),
+			this.EntityLink.forDisc(track.disc),
+		];
+		let tags = [
+			"Track",
+			metadata.formatDuration(duration_ms)
+		];
+		return this.make(link, image, playbackButton, title, subtitles, tags);
 	}
 
 	static makeStyle(): xnode.XElement {

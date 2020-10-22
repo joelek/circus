@@ -65,7 +65,7 @@ export class EntityLinkFactory {
 	}
 
 	forDisc(disc: api.DiscBase): xnode.XElement {
-		return this.for(`audio/discs/${disc.disc_id}/`, `Disc ${disc.number} of ${disc.album.title}`);
+		return this.for(`audio/discs/${disc.disc_id}/`, `Disc ${disc.number}`);
 	}
 
 	forEpisode(episode: api.EpisodeBase): xnode.XElement {
@@ -85,7 +85,7 @@ export class EntityLinkFactory {
 	}
 
 	forSeason(season: api.SeasonBase): xnode.XElement {
-		return this.for(`video/seasons/${season.season_id}/`, `Season ${season.number} of ${season.show.title}`);
+		return this.for(`video/seasons/${season.season_id}/`, `Season ${season.number}`);
 	}
 
 	forShow(show: api.ShowBase): xnode.XElement {
