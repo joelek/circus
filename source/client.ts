@@ -521,7 +521,7 @@ style.innerText = `
 	}
 
 	input {
-		background-color: rgb(63, 63, 63);
+		background-color: rgb(47, 47, 47);
 		border-radius: 2px;
 		box-sizing: border-box;
 		color: rgb(255, 255, 255);
@@ -1340,11 +1340,13 @@ mountwrapper.appendChild(xml.element("div.login-modal")
 		.add(xml.element("input.login-modal__username")
 			.bind2("value", username)
 			.set("type", "text")
+			.set("spellcheck", "false")
 			.set("placeholder", "Username...")
 		)
 		.add(xml.element("input.login-modal__password")
 			.bind2("value", password)
 			.set("type", "password")
+			.set("spellcheck", "false")
 			.set("placeholder", "Password...")
 			.on("keyup", async (event) => {
 				if (event.key === "Enter") {
@@ -2709,6 +2711,7 @@ let updateviewforuri = (uri: string): void => {
 		let query = decodeURIComponent(parts[1]);
 		let wrapper = document.createElement("div");
 		let searchbox = document.createElement("input");
+		searchbox.setAttribute("spellcheck", "false");
 		searchbox.setAttribute("type", "text");
 		searchbox.setAttribute("placeholder", "Search query...");
 		searchbox.setAttribute("value", query);
@@ -3009,6 +3012,7 @@ let updateviewforuri = (uri: string): void => {
 		mount.appendChild(xml.element("div.content")
 			.add(xml.element("input")
 				.set("type", "text")
+				.set("spellcheck", "false")
 				.set("placeholder", "Search for content...")
 				.bind2("value", query)
 				.on("keyup", (event) => {

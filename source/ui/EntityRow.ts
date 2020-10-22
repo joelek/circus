@@ -22,13 +22,9 @@ const CSS = `
 	}
 
 	.entity-row__playback {
-		align-items: center;
-		display: grid;
-		height: 100%;
-		justify-content: center;
 		position: absolute;
-			top: 0px; left: 0px;
-		width: 100%;
+			top: 50%; left: 50%;
+		transform: translate(-50%, -50%);
 	}
 
 	.entity-row__metadata {
