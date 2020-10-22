@@ -614,6 +614,14 @@ style.innerText = `
 
 	.media-widget__image {
 		height: 100%;
+		object-fit: contain;
+		width: 100%;
+	}
+
+	.media-widget__playback {
+		position: absolute;
+			bottom: 16px;
+			right: 16px;
 	}
 
 	.media-widget__metadata {
@@ -751,6 +759,12 @@ style.innerText = `
 		border-radius: 2px;
 		overflow: hidden;
 		position: relative;
+	}
+
+	.entity-header__playback {
+		position: absolute;
+			bottom: 16px;
+			right: 16px;
 	}
 
 	.entity-header__metadata {
@@ -1661,24 +1675,27 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 					.set("src", `/files/${album.artwork.file_id}/?token=${token}`)
 				)
 			)
-			.add(xml.element("div.playback-button")
-				.add(Icon.makePlay()
-					.bind("data-hide", isPlaying.addObserver(a => a))
-				)
-				.add(Icon.makePause()
-					.bind("data-hide", isPlaying.addObserver(a => !a))
-				)
-				.on("click", (event) => {
-					if (isPlaying.getState()) {
-						player.pause();
-					} else {
-						if (isContext.getState()) {
-							player.resume();
+			.add(xml.element("div.media-widget__playback")
+				.add(
+					xml.element("div.playback-button")
+					.add(Icon.makePlay()
+						.bind("data-hide", isPlaying.addObserver(a => a))
+					)
+					.add(Icon.makePause()
+						.bind("data-hide", isPlaying.addObserver(a => !a))
+					)
+					.on("click", (event) => {
+						if (isPlaying.getState()) {
+							player.pause();
 						} else {
-							play();
+							if (isContext.getState()) {
+								player.resume();
+							} else {
+								play();
+							}
 						}
-					}
-				})
+					})
+				)
 			)
 		)
 		.add(xml.element("div.media-widget__metadata")
@@ -1722,24 +1739,26 @@ function makeArtist(artist: ContextArtist, play: () => void = () => player.playA
 			navigate(`audio/artists/${artist.artist_id}/`);
 		})
 		.add(xml.element("div.media-widget__artwork")
-			.add(xml.element("div.playback-button")
-				.add(Icon.makePlay()
-					.bind("data-hide", isPlaying.addObserver(a => a))
-				)
-				.add(Icon.makePause()
-					.bind("data-hide", isPlaying.addObserver(a => !a))
-				)
-				.on("click", () => {
-					if (isPlaying.getState()) {
-						player.pause();
-					} else {
-						if (isContext.getState()) {
-							player.resume();
+			.add(xml.element("div.media-widget__playback")
+				.add(xml.element("div.playback-button")
+					.add(Icon.makePlay()
+						.bind("data-hide", isPlaying.addObserver(a => a))
+					)
+					.add(Icon.makePause()
+						.bind("data-hide", isPlaying.addObserver(a => !a))
+					)
+					.on("click", () => {
+						if (isPlaying.getState()) {
+							player.pause();
 						} else {
-							play();
+							if (isContext.getState()) {
+								player.resume();
+							} else {
+								play();
+							}
 						}
-					}
-				})
+					})
+				)
 			)
 		)
 		.add(xml.element("div.media-widget__metadata")
@@ -1803,24 +1822,26 @@ function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 					.set("src", `/media/stills/${episode.file.file_id}/?token=${token}`)
 				)
 			)
-			.add(xml.element("div.playback-button")
-				.add(Icon.makePlay()
-					.bind("data-hide", isPlaying.addObserver(a => a))
-				)
-				.add(Icon.makePause()
-					.bind("data-hide", isPlaying.addObserver(a => !a))
-				)
-				.on("click", (event) => {
-					if (isPlaying.getState()) {
-						player.pause();
-					} else {
-						if (isContext.getState()) {
-							player.resume();
+			.add(xml.element("div.media-widget__playback")
+				.add(xml.element("div.playback-button")
+					.add(Icon.makePlay()
+						.bind("data-hide", isPlaying.addObserver(a => a))
+					)
+					.add(Icon.makePause()
+						.bind("data-hide", isPlaying.addObserver(a => !a))
+					)
+					.on("click", (event) => {
+						if (isPlaying.getState()) {
+							player.pause();
 						} else {
-							play();
+							if (isContext.getState()) {
+								player.resume();
+							} else {
+								play();
+							}
 						}
-					}
-				})
+					})
+				)
 			)
 		)
 		.add(xml.element("div.media-widget__metadata")
@@ -1871,24 +1892,26 @@ function makeShow(show: Show, play: () => void): xml.XElement {
 					.set("src", `/files/${show.artwork.file_id}/?token=${token}`)
 				)
 			)
-			.add(xml.element("div.playback-button")
-				.add(Icon.makePlay()
-					.bind("data-hide", isPlaying.addObserver(a => a))
-				)
-				.add(Icon.makePause()
-					.bind("data-hide", isPlaying.addObserver(a => !a))
-				)
-				.on("click", (event) => {
-					if (isPlaying.getState()) {
-						player.pause();
-					} else {
-						if (isContext.getState()) {
-							player.resume();
+			.add(xml.element("div.media-widget__playback")
+				.add(xml.element("div.playback-button")
+					.add(Icon.makePlay()
+						.bind("data-hide", isPlaying.addObserver(a => a))
+					)
+					.add(Icon.makePause()
+						.bind("data-hide", isPlaying.addObserver(a => !a))
+					)
+					.on("click", (event) => {
+						if (isPlaying.getState()) {
+							player.pause();
 						} else {
-							play();
+							if (isContext.getState()) {
+								player.resume();
+							} else {
+								play();
+							}
 						}
-					}
-				})
+					})
+				)
 			)
 		)
 		.add(xml.element("div.media-widget__metadata")
@@ -1932,24 +1955,26 @@ function makeMovie(movie: Movie, play: () => void = () => player.playMovie(movie
 					.set("src", `/files/${movie.artwork.file_id}/?token=${token}`)
 				)
 			)
-			.add(xml.element("div.playback-button")
-				.add(Icon.makePlay()
-					.bind("data-hide", isPlaying.addObserver(a => a))
-				)
-				.add(Icon.makePause()
-					.bind("data-hide", isPlaying.addObserver(a => !a))
-				)
-				.on("click", (event) => {
-					if (isPlaying.getState()) {
-						player.pause();
-					} else {
-						if (isContext.getState()) {
-							player.resume();
+			.add(xml.element("div.media-widget__playback")
+				.add(xml.element("div.playback-button")
+					.add(Icon.makePlay()
+						.bind("data-hide", isPlaying.addObserver(a => a))
+					)
+					.add(Icon.makePause()
+						.bind("data-hide", isPlaying.addObserver(a => !a))
+					)
+					.on("click", (event) => {
+						if (isPlaying.getState()) {
+							player.pause();
 						} else {
-							play();
+							if (isContext.getState()) {
+								player.resume();
+							} else {
+								play();
+							}
 						}
-					}
-				})
+					})
+				)
 			)
 		)
 		.add(xml.element("div.media-widget__metadata")
@@ -1989,24 +2014,26 @@ function makePlaylist(playlist: Playlist, play: () => void = () => player.playPl
 			navigate(`audio/playlists/${playlist.playlist_id}/`);
 		})
 		.add(xml.element("div.media-widget__artwork")
-			.add(xml.element("div.playback-button")
-				.add(Icon.makePlay()
-					.bind("data-hide", isPlaying.addObserver((isPlaying) => isPlaying))
-				)
-				.add(Icon.makePause()
-					.bind("data-hide", isPlaying.addObserver((isPlaying) => !isPlaying))
-				)
-				.on("click", () => {
-					if (isPlaying.getState()) {
-						player.pause();
-					} else {
-						if (isContext.getState()) {
-							player.resume();
+			.add(xml.element("div.media-widget__playback")
+				.add(xml.element("div.playback-button")
+					.add(Icon.makePlay()
+						.bind("data-hide", isPlaying.addObserver((isPlaying) => isPlaying))
+					)
+					.add(Icon.makePause()
+						.bind("data-hide", isPlaying.addObserver((isPlaying) => !isPlaying))
+					)
+					.on("click", () => {
+						if (isPlaying.getState()) {
+							player.pause();
 						} else {
-							play();
+							if (isContext.getState()) {
+								player.resume();
+							} else {
+								play();
+							}
 						}
-					}
-				})
+					})
+				)
 			)
 		)
 		.add(xml.element("div.media-widget__metadata")
@@ -2054,7 +2081,8 @@ const makeEntityHeader = (title: string, subtitles: xml.XNode<any>[] = [], tags:
 	return xml.element("div.entity-header")
 		.add(xml.element("div.entity-header__artwork")
 			.add(image)
-			.add(playButton)
+			.add(xml.element("div.entity-header__playback")
+				.add(playButton))
 		)
 		.add(xml.element("div.entity-header__metadata")
 			.add(xml.element("div.entity-header__titles")
