@@ -633,15 +633,7 @@ class SearchRoute implements Route<{}, api_response.SearchResponse> {
 		let username = getUsername(request);
 		let parts = /^[/]api[/]search[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
 		let query = decodeURIComponent(parts[1]);
-		let ids = data.search(query, 2);
-		let entities = [
-			...ids.artistIds.map((artist_id) => data.api_lookupArtist(artist_id, username)),
-			...ids.albumIds.map((album_id) => data.api_lookupAlbum(album_id, username)),
-			...ids.trackIds.map((track_id) => data.api_lookupTrack(track_id, username)),
-			...ids.showIds.map((show_id) => data.api_lookupShow(show_id, username)),
-			...ids.movieIds.map((movie_id) => data.api_lookupMovie(movie_id, username)),
-			...ids.episodeIds.map((episode_id) => data.api_lookupEpisode(episode_id, username))
-		];
+		let entities = data.search(query, username, 10);
 		let payload: api_response.SearchResponse = {
 			entities
 		};

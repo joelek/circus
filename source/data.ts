@@ -683,7 +683,7 @@ class SearchIndex {
 		}
 	}
 
-	search(query: string, limit?: number): Array<string> {
+	search(query: string): Array<[string, number]> {
 		let terms = utils.getSearchTerms(query);
 		let sets = terms.map((term) => {
 			let set = this.map.get(term);
@@ -694,25 +694,17 @@ class SearchIndex {
 		});
 		sets = sets.filter((set) => {
 			return set.size > 0;
-		})
-		sets = sets.sort((one, two) => {
-			return one.size - two.size;
 		});
-		let values = new Array<string>();
+		let map = new Map<string, number>();
 		if (sets.length > 0) {
-			outer: for (let value of sets[0]) {
-				inner: for (let i = 1; i < sets.length; i++) {
-					if (!sets[i].has(value)) {
-						continue outer;
-					}
-				}
-				values.push(value);
-				if (limit != null && values.length >= limit) {
-					break outer;
+			for (let set of sets) {
+				for (let id of set) {
+					let rank = map.get(id) ?? 0;
+					map.set(id, rank + 1);
 				}
 			}
 		}
-		return values;
+		return Array.from(map.entries()).sort(NumericSort.increasing((value) => value[1]));
 	}
 
 	static from<A extends { [key: string]: any }>(idField: keyof A, valueField: keyof A, collection: Iterable<A>): SearchIndex {
@@ -734,24 +726,61 @@ let showTitleSearchIndex = SearchIndex.from("show_id", "title", media.video.show
 let movieTitleSearchIndex = SearchIndex.from("movie_id", "title", media.video.movies);
 let episodeTitleSearchIndex = SearchIndex.from("episode_id", "title", media.video.episodes);
 
-export type SearchResults = {
-	artistIds: Array<string>,
-	albumIds: Array<string>,
-	trackIds: Array<string>,
-	showIds: Array<string>,
-	movieIds: Array<string>,
-	episodeIds: Array<string>
-};
-
-export function search(query: string, limit?: number): SearchResults {
-	return {
-		artistIds: artistTitleSearchIndex.search(query, limit),
-		albumIds: albumTitleSearchIndex.search(query, limit),
-		trackIds: trackTitleSearchIndex.search(query, limit),
-		showIds: showTitleSearchIndex.search(query, limit),
-		movieIds: movieTitleSearchIndex.search(query, limit),
-		episodeIds: episodeTitleSearchIndex.search(query, limit)
-	};
+export function search(query: string, user_id: string, limit?: number): (Album | Artist | Episode | Movie | Show | Track)[] {
+	let albumIds = albumTitleSearchIndex.search(query);
+	let artistIds = artistTitleSearchIndex.search(query);
+	let episodeIds = episodeTitleSearchIndex.search(query);
+	let movieIds = movieTitleSearchIndex.search(query);
+	let showIds = showTitleSearchIndex.search(query);
+	let trackIds = trackTitleSearchIndex.search(query);
+	let entities = [] as (Album | Artist | Episode | Movie | Show | Track)[];
+	while (true) {
+		let album = albumIds.pop();
+		let artist = artistIds.pop();
+		let episode = episodeIds.pop();
+		let movie = movieIds.pop();
+		let show = showIds.pop();
+		let track = trackIds.pop();
+		let rank = 0 - Infinity;
+		if (is.present(album)) {
+			rank = Math.max(rank, album[1]);
+		}
+		if (is.present(artist)) {
+			rank = Math.max(rank, artist[1]);
+		}
+		if (is.present(episode)) {
+			rank = Math.max(rank, episode[1]);
+		}
+		if (is.present(movie)) {
+			rank = Math.max(rank, movie[1]);
+		}
+		if (is.present(show)) {
+			rank = Math.max(rank, show[1]);
+		}
+		if (is.present(track)) {
+			rank = Math.max(rank, track[1]);
+		}
+		if (rank <= 0) {
+			break;
+		}
+		if (is.present(album) && album[1] === rank) {
+			entities.push(api_lookupAlbum(album[0], user_id));
+		} else if (is.present(artist) && artist[1] === rank) {
+			entities.push(api_lookupArtist(artist[0], user_id));
+		} else if (is.present(episode) && episode[1] === rank) {
+			entities.push(api_lookupEpisode(episode[0], user_id));
+		} else if (is.present(movie) && movie[1] === rank) {
+			entities.push(api_lookupMovie(movie[0], user_id));
+		} else if (is.present(show) && show[1] === rank) {
+			entities.push(api_lookupShow(show[0], user_id));
+		} else if (is.present(track) && track[1] === rank) {
+			entities.push(api_lookupTrack(track[0], user_id));
+		}
+		if (is.present(limit) && entities.length >= limit) {
+			break;
+		}
+	}
+	return entities;
 }
 
 // TODO: Create and use index class that supports multiple keys.
