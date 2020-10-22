@@ -44,7 +44,7 @@ function generateStill(target: string[], file: database.FileEntry): Promise<void
 			let cp = libcp.spawn("ffmpeg", [
 				"-ss", utils.formatTimestamp(offset),
 				"-i", [".", ...file.path].join("/"),
-				"-vf", "scale=w=960:h=540:force_original_aspect_ratio=decrease,pad=960:540:-1:-1",
+				"-vf", "scale=w=960:h=540:force_original_aspect_ratio=decrease",
 				"-map_metadata", "-1",
 				still.join("/"),
 				"-y"

@@ -207,7 +207,7 @@ export class EntityRowFactory {
 		let duration_ms = 0;
 		duration_ms += episode.file.duration_ms;
 		let link = this.EntityLink.forEpisode(episode);
-		let image = this.ImageBox.forVideo(`/media/stills/${episode.file.file_id}/`);
+		let image = this.ImageBox.forSquare(`/media/stills/${episode.file.file_id}/`);
 		let title = this.EntityLink.forEpisode(episode);
 		let subtitles = [
 			this.EntityLink.forShow(episode.season.show),
@@ -225,7 +225,7 @@ export class EntityRowFactory {
 		let duration_ms = 0;
 		duration_ms += movie.file.duration_ms;
 		let link = this.EntityLink.forMovie(movie);
-		let image = this.ImageBox.forPoster(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/`);
+		let image = this.ImageBox.forSquare(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/`);
 		let title = this.EntityLink.forMovie(movie);
 		let subtitles = movie.genres.map((genre) => this.EntityLink.forGenre(genre));
 		let tags = [
@@ -260,7 +260,7 @@ export class EntityRowFactory {
 			duration_ms += episode.file.duration_ms;
 		}
 		let link = this.EntityLink.forSeason(season);
-		let image = this.ImageBox.forPoster(is.absent(season.show.artwork) ? undefined : `/files/${season.show.artwork.file_id}/`);
+		let image = this.ImageBox.forSquare(is.absent(season.show.artwork) ? undefined : `/files/${season.show.artwork.file_id}/`);
 		let title = this.EntityLink.forSeason(season);
 		let subtitles = [
 			this.EntityLink.forShow(season.show)
@@ -280,7 +280,7 @@ export class EntityRowFactory {
 			}
 		}
 		let link = this.EntityLink.forShow(show);
-		let image = this.ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`);
+		let image = this.ImageBox.forSquare(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`);
 		let title = this.EntityLink.forShow(show);
 		let subtitles = show.genres.map((genre) => this.EntityLink.forGenre(genre));
 		let tags = [
