@@ -5,6 +5,7 @@ import * as metadata from "./metadata";
 import * as is from "../is";
 import { EntityLinkFactory } from "./EntityLink";
 import { ImageBoxFactory } from "./ImageBox";
+import { PlaybackButtonFactory } from "./PlaybackButton";
 
 const CSS = `
 	.entity-row {
@@ -73,10 +74,12 @@ const CSS = `
 export class EntityRowFactory {
 	private EntityLink: EntityLinkFactory;
 	private ImageBox: ImageBoxFactory;
+	private PlaybackButton: PlaybackButtonFactory;
 
-	constructor(EntityLink: EntityLinkFactory, ImageBox: ImageBoxFactory) {
+	constructor(EntityLink: EntityLinkFactory, ImageBox: ImageBoxFactory, PlaybackButton: PlaybackButtonFactory) {
 		this.EntityLink = EntityLink;
 		this.ImageBox = ImageBox;
+		this.PlaybackButton = PlaybackButton;
 	}
 
 	forEntity(entity: api.Album | api.Artist | api.Episode | api.Movie | api.Show | api.Track): xnode.XElement {
@@ -87,7 +90,7 @@ export class EntityRowFactory {
 		//throw `Expected code to be unreachable!`;
 	}
 
-	forAlbum(album: api.Album): xnode.XElement {
+	forAlbum(album: api.Album, playbackButton: xnode.XElement = this.PlaybackButton.forAlbum(album)): xnode.XElement {
 		let duration_ms = 0;
 		for (let disc of album.discs) {
 			for (let track of disc.tracks) {
@@ -98,6 +101,7 @@ export class EntityRowFactory {
 			.add(xnode.element("div.entity-row")
 				.add(xnode.element("div.entity-row__artwork")
 					.add(this.ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`))
+					.add(playbackButton)
 				)
 				.add(xnode.element("div.entity-row__metadata")
 					.add(xnode.element("div.entity-row__titles")

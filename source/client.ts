@@ -12,27 +12,12 @@ import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, G
 import * as xml from "./xnode";
 import { formatDuration as format_duration } from "./ui/metadata";
 
-
-
-
 import { IconFactory } from "./ui/Icon";
 import { ImageBoxFactory } from "./ui/ImageBox";
 import { EntityLinkFactory } from "./ui/EntityLink";
 import { EntityRowFactory } from "./ui/EntityRow";
+import { PlaybackButtonFactory } from "./ui/PlaybackButton";
 
-const tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
-
-const Icon = new IconFactory();
-document.head.appendChild(IconFactory.makeStyle().render())
-
-const ImageBox = new ImageBoxFactory(tokenobs);
-document.head.appendChild(ImageBoxFactory.makeStyle().render())
-
-const EntityLink = new EntityLinkFactory(navigate);
-document.head.appendChild(EntityLinkFactory.makeStyle().render())
-
-const EntityRow = new EntityRowFactory(EntityLink, ImageBox);
-document.head.appendChild(EntityRowFactory.makeStyle().render())
 
 
 
@@ -256,6 +241,29 @@ player.currentEntry.addObserver((currentEntry) => {
 
 
 
+
+
+
+
+
+
+
+const tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
+
+const Icon = new IconFactory();
+document.head.appendChild(IconFactory.makeStyle().render())
+
+const PlaybackButton = new PlaybackButtonFactory(player, Icon);
+document.head.appendChild(PlaybackButtonFactory.makeStyle().render())
+
+const ImageBox = new ImageBoxFactory(tokenobs);
+document.head.appendChild(ImageBoxFactory.makeStyle().render())
+
+const EntityLink = new EntityLinkFactory(navigate);
+document.head.appendChild(EntityLinkFactory.makeStyle().render())
+
+const EntityRow = new EntityRowFactory(EntityLink, ImageBox, PlaybackButton);
+document.head.appendChild(EntityRowFactory.makeStyle().render())
 
 
 
@@ -792,31 +800,6 @@ style.innerText = `
 
 
 
-
-
-	.playback-button {
-		background-color: rgb(255, 255, 255);
-		border-radius: 50%;
-		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
-		cursor: pointer;
-		fill: rgb(31, 31, 31);
-		margin: 16px;
-		padding: 8px;
-		position: absolute;
-			bottom: 0%;
-			right: 0%;
-		transition: transform 0.1s;
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.playback-button:not([data-enabled="false"]):hover {
-			transform: scale(1.25);
-		}
-
-		.playback-button:active {
-			transform: none;
-		}
-	}
 
 
 
