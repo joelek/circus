@@ -207,7 +207,8 @@ export class EntityRowFactory {
 		let duration_ms = 0;
 		duration_ms += episode.file.duration_ms;
 		let link = this.EntityLink.forEpisode(episode);
-		let image = this.ImageBox.forSquare(`/media/stills/${episode.file.file_id}/`);
+		let image = this.ImageBox.forSquare();
+		//let image = this.ImageBox.forSquare(`/media/stills/${episode.file.file_id}/`);
 		let title = this.EntityLink.forEpisode(episode);
 		let subtitles = [
 			this.EntityLink.forShow(episode.season.show),

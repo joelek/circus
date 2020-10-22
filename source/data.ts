@@ -683,7 +683,7 @@ class SearchIndex {
 		}
 	}
 
-	search(query: string): Array<[string, number]> {
+	search(query: string): Array<{ id: string, rank: number }> {
 		let terms = utils.getSearchTerms(query);
 		let sets = terms.map((term) => {
 			let set = this.map.get(term);
@@ -704,7 +704,10 @@ class SearchIndex {
 				}
 			}
 		}
-		return Array.from(map.entries()).sort(NumericSort.increasing((value) => value[1]));
+		return Array.from(map.entries()).sort(NumericSort.increasing((value) => value[1])).map((entry) => ({
+			id: entry[0],
+			rank: entry[1]
+		}));
 	}
 
 	static from<A extends { [key: string]: any }>(idField: keyof A, valueField: keyof A, collection: Iterable<A>): SearchIndex {
@@ -727,54 +730,32 @@ let movieTitleSearchIndex = SearchIndex.from("movie_id", "title", media.video.mo
 let episodeTitleSearchIndex = SearchIndex.from("episode_id", "title", media.video.episodes);
 
 export function search(query: string, user_id: string, limit?: number): (Album | Artist | Episode | Movie | Show | Track)[] {
-	let albumIds = albumTitleSearchIndex.search(query);
-	let artistIds = artistTitleSearchIndex.search(query);
-	let episodeIds = episodeTitleSearchIndex.search(query);
-	let movieIds = movieTitleSearchIndex.search(query);
-	let showIds = showTitleSearchIndex.search(query);
-	let trackIds = trackTitleSearchIndex.search(query);
-	let entities = [] as (Album | Artist | Episode | Movie | Show | Track)[];
+	let entries = [
+		...albumTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "ALBUM" })),
+		...artistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "ARTIST" })),
+		...episodeTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "EPISODE" })),
+		...movieTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "MOVIE" })),
+		...showTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "SHOW" })),
+		...trackTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "TRACK" }))
+	].sort(NumericSort.increasing((value) => value.rank));
+	let entities = new Array<Album | Artist | Episode | Movie | Show | Track>();
 	while (true) {
-		let album = albumIds.pop();
-		let artist = artistIds.pop();
-		let episode = episodeIds.pop();
-		let movie = movieIds.pop();
-		let show = showIds.pop();
-		let track = trackIds.pop();
-		let rank = 0 - Infinity;
-		if (is.present(album)) {
-			rank = Math.max(rank, album[1]);
-		}
-		if (is.present(artist)) {
-			rank = Math.max(rank, artist[1]);
-		}
-		if (is.present(episode)) {
-			rank = Math.max(rank, episode[1]);
-		}
-		if (is.present(movie)) {
-			rank = Math.max(rank, movie[1]);
-		}
-		if (is.present(show)) {
-			rank = Math.max(rank, show[1]);
-		}
-		if (is.present(track)) {
-			rank = Math.max(rank, track[1]);
-		}
-		if (rank <= 0) {
+		let entry = entries.pop();
+		if (is.absent(entry)) {
 			break;
 		}
-		if (is.present(album) && album[1] === rank) {
-			entities.push(api_lookupAlbum(album[0], user_id));
-		} else if (is.present(artist) && artist[1] === rank) {
-			entities.push(api_lookupArtist(artist[0], user_id));
-		} else if (is.present(episode) && episode[1] === rank) {
-			entities.push(api_lookupEpisode(episode[0], user_id));
-		} else if (is.present(movie) && movie[1] === rank) {
-			entities.push(api_lookupMovie(movie[0], user_id));
-		} else if (is.present(show) && show[1] === rank) {
-			entities.push(api_lookupShow(show[0], user_id));
-		} else if (is.present(track) && track[1] === rank) {
-			entities.push(api_lookupTrack(track[0], user_id));
+		if (entry.type === "ALBUM") {
+			entities.push(api_lookupAlbum(entry.id, user_id));
+		} else if (entry.type === "ARTIST") {
+			entities.push(api_lookupArtist(entry.id, user_id));
+		} else if (entry.type === "EPISODE") {
+			entities.push(api_lookupEpisode(entry.id, user_id));
+		} else if (entry.type === "MOVIE") {
+			entities.push(api_lookupMovie(entry.id, user_id));
+		} else if (entry.type === "SHOW") {
+			entities.push(api_lookupShow(entry.id, user_id));
+		} else if (entry.type === "TRACK") {
+			entities.push(api_lookupTrack(entry.id, user_id));
 		}
 		if (is.present(limit) && entities.length >= limit) {
 			break;
