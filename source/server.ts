@@ -108,9 +108,8 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 	}
 	let startMs = Date.now();
 	response.on("finish", () => {
-		let endMs = Date.now();
-		let ms = endMs - startMs;
-		process.stderr.write(`${("    " + ms).slice(-4)}ms ${method}:${path}\n`);
+		let duration_ms = Date.now() - startMs;
+		process.stderr.write(`${response.statusCode} ${method}:${path} (${duration_ms} ms)\n`);
 	});
 	if (false && /^[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+(:[0-9]+)?$/.test(host)) {
 		response.writeHead(400);
