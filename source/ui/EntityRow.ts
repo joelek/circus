@@ -9,15 +9,14 @@ import { ImageBoxFactory } from "./ImageBox";
 const CSS = `
 	.entity-row {
 		align-items: start;
-		background-color: ${theme.BACKGROUND_3};
-		border-radius: 2px;
 		display: grid;
 		gap: 16px;
 		grid-template-columns: 72px 1fr;
-		overflow: hidden;
 	}
 
 	.entity-row__artwork {
+		border-radius: 2px;
+		overflow: hidden;
 		position: relative;
 	}
 
@@ -80,6 +79,14 @@ export class EntityRowFactory {
 		this.ImageBox = ImageBox;
 	}
 
+	forEntity(entity: api.Album | api.Artist | api.Episode | api.Movie | api.Show | api.Track): xnode.XElement {
+		if (api.Album.is(entity)) {
+			return this.forAlbum(entity);
+		}
+		return xnode.element("div");
+		//throw `Expected code to be unreachable!`;
+	}
+
 	forAlbum(album: api.Album): xnode.XElement {
 		let duration_ms = 0;
 		for (let disc of album.discs) {
@@ -87,28 +94,30 @@ export class EntityRowFactory {
 				duration_ms += track.file.duration_ms;
 			}
 		}
-		return xnode.element("div.entity-row")
-			.add(xnode.element("div.entity-row__artwork")
-				.add(this.ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/?token=${null}`))
-			)
-			.add(xnode.element("div.entity-row__metadata")
-				.add(xnode.element("div.entity-row__titles")
-					.add(xnode.element("div.entity-row__title")
-						.add(xnode.text(album.title))
-					)
-					.add(xnode.element("div.entity-row__subtitle")
-						.add(...xnode.joinarray(album.artists.map((artist) => this.EntityLink.forArtist(artist))))
-					)
+		return this.EntityLink.forAlbum(album)
+			.add(xnode.element("div.entity-row")
+				.add(xnode.element("div.entity-row__artwork")
+					.add(this.ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`))
 				)
-				.add(xnode.element("div.entity-row__tags")
-					.add(xnode.element("div.entity-row__tag")
-						.add(xnode.text("Album"))
+				.add(xnode.element("div.entity-row__metadata")
+					.add(xnode.element("div.entity-row__titles")
+						.add(xnode.element("div.entity-row__title")
+							.add(xnode.text(album.title))
+						)
+						.add(xnode.element("div.entity-row__subtitle")
+							.add(...xnode.joinarray(album.artists.map((artist) => this.EntityLink.forArtist(artist))))
+						)
 					)
-					.add(xnode.element("div.entity-row__tag")
-						.add(xnode.text(`${album.year}`))
-					)
-					.add(xnode.element("div.entity-row__tag")
-						.add(xnode.text(metadata.formatDuration(duration_ms)))
+					.add(xnode.element("div.entity-row__tags")
+						.add(xnode.element("div.entity-row__tag")
+							.add(xnode.text("Album"))
+						)
+						.add(xnode.element("div.entity-row__tag")
+							.add(xnode.text(`${album.year}`))
+						)
+						.add(xnode.element("div.entity-row__tag")
+							.add(xnode.text(metadata.formatDuration(duration_ms)))
+						)
 					)
 				)
 			);

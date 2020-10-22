@@ -19,7 +19,9 @@ import { ImageBoxFactory } from "./ui/ImageBox";
 import { EntityLinkFactory } from "./ui/EntityLink";
 import { EntityRowFactory } from "./ui/EntityRow";
 
-const ImageBox = new ImageBoxFactory();
+const tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
+
+const ImageBox = new ImageBoxFactory(tokenobs);
 document.head.appendChild(ImageBoxFactory.makeStyle().render())
 
 const EntityLink = new EntityLinkFactory(navigate);
@@ -508,10 +510,12 @@ style.innerText = `
 
 	input {
 		background-color: rgb(63, 63, 63);
-		border-radius: 4px;
+		border-radius: 2px;
+		box-sizing: border-box;
 		color: rgb(255, 255, 255);
 		font-size: 16px;
 		padding: 8px;
+		width: 100%;
 	}
 
 	.group {
@@ -1269,7 +1273,6 @@ const showModal = new ObservableClass(false);
 }
 
 
-let tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
 let token: string | undefined;
 tokenobs.addObserver((token2) => {
 	token = token2;
@@ -2193,7 +2196,7 @@ let updateviewforuri = (uri: string): void => {
 					"Album",
 					`${album.year}`,
 					format_duration(duration_ms)
-				], ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/?token=${token}`),
+				], ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`),
 					xml.element("div.playback-button")
 						.add(makePlayIcon()
 							.bind("data-hide", isPlaying.addObserver(a => a))
@@ -2550,7 +2553,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeEntityHeader(show.title, undefined, [
 						"Show",
 						format_duration(duration_ms)
-					], ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/?token=${token}`)
+					], ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`)
 						.set("style", "padding-bottom: 150%"),
 					xml.element("div.playback-button")
 						.add(makePlayIcon()
@@ -2660,7 +2663,7 @@ let updateviewforuri = (uri: string): void => {
 							episode.title,
 							[EntityLink.forShow(show)],
 							["Episode", `${episode.year}`, format_duration(episode.file.duration_ms), utils.formatSeasonEpisode(season.number, episode.number)],
-							ImageBox.forVideo(`/media/stills/${episode.file.file_id}/?token=${token}`)
+							ImageBox.forVideo(`/media/stills/${episode.file.file_id}/`)
 								.set("style", "padding-bottom: 56.25%;"),
 							xml.element("div.playback-button")
 								.add(makePlayIcon()
@@ -2718,7 +2721,7 @@ let updateviewforuri = (uri: string): void => {
 							movie.title,
 							movie.genres.map((genre) => EntityLink.forGenre(genre)),
 							["Movie", `${movie.year}`, format_duration(movie.file.duration_ms)],
-							ImageBox.forPoster(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/?token=${token}`)
+							ImageBox.forPoster(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/`)
 								.set("style", "padding-bottom: 150%"),
 							xml.element("div.playback-button")
 								.add(makePlayIcon()
@@ -3093,168 +3096,32 @@ let updateviewforuri = (uri: string): void => {
 				)
 				.render());
 		});
-	} else if ((parts = /^search[/](.*)/.exec(uri)) !== null) {
-		let query = decodeURIComponent(parts[1]);
-		{
-			let input = document.createElement("input");
-			input.setAttribute("placeholder", "Search for content...");
-			input.setAttribute("type", "text");
-			input.setAttribute("value", query);
-			input.addEventListener("keyup", (event) => {
-				if (event.key === "Enter") {
-					let new_query = input.value;
-					if (new_query !== "" && new_query !== query) {
-						navigate("search/" + encodeURIComponent(new_query));
+	} else if ((parts = /^search[/]([^/]*)/.exec(uri)) !== null) {
+		let query = new ObservableClass(decodeURIComponent(parts[1]));
+		mount.appendChild(xml.element("div.content")
+			.add(xml.element("input")
+				.set("type", "text")
+				.set("placeholder", "Search for content...")
+				.bind2("value", query)
+				.on("keyup", (event) => {
+					if (event.key === "Enter") {
+						navigate(`search/${encodeURIComponent(query.getState())}/`);
 					}
-				}
-			});
-			mount.appendChild(input);
-		}
+				})
+			)
+			.render());
 		{
 			let results = document.createElement("div");
 			mount.appendChild(results);
-			req<{}, api_response.SearchResponse>(`/api/search/${parts[1]}/?token=${token}`, {}, (status, response) => {
+			req<{}, api_response.SearchResponse>(`/api/search/${parts[1]}?token=${token}`, {}, (status, response) => {
 				while (results.lastChild !== null) {
 					results.removeChild(results.lastChild);
 				}
-				if (response.movies.length > 0) {
-					{
-						let h2 = document.createElement("h2");
-						h2.style.setProperty("font-size", "24px");
-						h2.textContent = "Movies";
-						results.appendChild(h2);
-					}
-					for (let movie of response.movies) {
-						let wrapper = document.createElement("div");
-						wrapper.setAttribute("class", "group");
-						let p = document.createElement("p");
-						p.style.setProperty("font-size", "16px");
-						p.textContent = movie.title;
-						let button = document.createElement("button");
-						button.textContent = "View";
-						button.addEventListener("click", () => {
-							navigate(`video/movies/${movie.movie_id}/`);
-						});
-						wrapper.appendChild(p);
-						wrapper.appendChild(button);
-						results.appendChild(wrapper);
-					}
-				}
-				if (response.episodes.length > 0) {
-					{
-						let h2 = document.createElement("h2");
-						h2.style.setProperty("font-size", "24px");
-						h2.textContent = "Episodes";
-						results.appendChild(h2);
-					}
-					for (let episode of response.episodes) {
-						let wrapper = document.createElement("div");
-						wrapper.setAttribute("class", "group");
-						let p = document.createElement("p");
-						p.style.setProperty("font-size", "16px");
-						p.textContent = episode.title;
-						let button = document.createElement("button");
-						button.textContent = "View";
-						button.addEventListener("click", () => {
-							navigate(`video/episodes/${episode.episode_id}/`);
-						});
-						wrapper.appendChild(p);
-						wrapper.appendChild(button);
-						results.appendChild(wrapper);
-					}
-				}
-				if (response.shows.length > 0) {
-					{
-						let h2 = document.createElement("h2");
-						h2.style.setProperty("font-size", "24px");
-						h2.textContent = "Shows";
-						results.appendChild(h2);
-					}
-					for (let show of response.shows) {
-						let wrapper = document.createElement("div");
-						wrapper.setAttribute("class", "group");
-						let p = document.createElement("p");
-						p.style.setProperty("font-size", "16px");
-						p.textContent = show.title;
-						let button = document.createElement("button");
-						button.textContent = "View";
-						button.addEventListener("click", () => {
-							navigate(`video/shows/${show.show_id}/`);
-						});
-						wrapper.appendChild(p);
-						wrapper.appendChild(button);
-						results.appendChild(wrapper);
-					}
-				}
-				if (response.artists.length > 0) {
-					{
-						let h2 = document.createElement("h2");
-						h2.style.setProperty("font-size", "24px");
-						h2.textContent = "Artists";
-						results.appendChild(h2);
-					}
-					for (let artist of response.artists) {
-						let wrapper = document.createElement("div");
-						wrapper.setAttribute("class", "group");
-						let p = document.createElement("p");
-						p.style.setProperty("font-size", "16px");
-						p.textContent = artist.title;
-						let button = document.createElement("button");
-						button.textContent = "View";
-						button.addEventListener("click", () => {
-							navigate(`audio/artists/${artist.artist_id}/`);
-						});
-						wrapper.appendChild(p);
-						wrapper.appendChild(button);
-						results.appendChild(wrapper);
-					}
-				}
-				if (response.albums.length > 0) {
-					{
-						let h2 = document.createElement("h2");
-						h2.style.setProperty("font-size", "24px");
-						h2.textContent = "Albums";
-						results.appendChild(h2);
-					}
-					for (let album of response.albums) {
-						let wrapper = document.createElement("div");
-						wrapper.setAttribute("class", "group");
-						let p = document.createElement("p");
-						p.style.setProperty("font-size", "16px");
-						p.textContent = album.title;
-						let button = document.createElement("button");
-						button.textContent = "View";
-						button.addEventListener("click", () => {
-							navigate(`audio/albums/${album.album_id}/`);
-						});
-						wrapper.appendChild(p);
-						wrapper.appendChild(button);
-						results.appendChild(wrapper);
-					}
-				}
-				if (response.tracks.length > 0) {
-					{
-						let h2 = document.createElement("h2");
-						h2.style.setProperty("font-size", "24px");
-						h2.textContent = "Tracks";
-						results.appendChild(h2);
-					}
-					for (let track of response.tracks) {
-						let wrapper = document.createElement("div");
-						wrapper.setAttribute("class", "group");
-						let p = document.createElement("p");
-						p.style.setProperty("font-size", "16px");
-						p.textContent = track.title;
-						let button = document.createElement("button");
-						button.textContent = "View";
-						button.addEventListener("click", () => {
-							navigate(`audio/albums/${track.disc.album.album_id}/`);
-						});
-						wrapper.appendChild(p);
-						wrapper.appendChild(button);
-						results.appendChild(wrapper);
-					}
-				}
+				results.appendChild(xml.element("div.content")
+					.set("style", "display: grid; gap: 16px;")
+					.add(...response.entities.map((entity) => EntityRow.forEntity(entity)))
+					.render()
+				);
 			});
 		}
 	} else {

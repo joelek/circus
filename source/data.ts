@@ -1000,7 +1000,7 @@ export function api_lookupSeasonBase(season_id: string, user_id: string, show?: 
 	return  {
 		season_id: entry.season_id,
 		number: entry.number,
-		show: is.present(show) ? show : api_lookupShowBase(entry.season_id, user_id)
+		show: is.present(show) ? show : api_lookupShowBase(entry.show_id, user_id)
 	};
 };
 

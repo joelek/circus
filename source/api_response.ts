@@ -86,12 +86,7 @@ type TracksResponse = {
 };
 
 type SearchResponse = {
-	artists: objects.Artist[],
-	albums: objects.Album[],
-	tracks: objects.Track[],
-	shows: objects.Show[],
-	movies: objects.Movie[],
-	episodes: objects.Episode[]
+	entities: (objects.Album | objects.Artist | objects.Episode | objects.Movie | objects.Show | objects.Track)[],
 };
 
 

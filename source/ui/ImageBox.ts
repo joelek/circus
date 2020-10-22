@@ -39,8 +39,10 @@ const CSS = `
 `;
 
 export class ImageBoxFactory {
-	constructor() {
+	private token: observables.ObservableClass<undefined | string>;
 
+	constructor(token: observables.ObservableClass<undefined | string>) {
+		this.token = token;
 	}
 
 	for(url?: string, aspectRatio: "1-1" | "16-9" | "2-3" = "1-1"): xnode.XElement {
@@ -48,7 +50,11 @@ export class ImageBoxFactory {
 		return xnode.element(`div.image-box.image-box--aspect-${aspectRatio}`)
 			.add(is.absent(url) ? undefined : xnode.element("img.image-box__image")
 				.bind("data-opaque", isLoaded.addObserver((isLoaded) => isLoaded))
-				.set("src", url)
+				.bind("src", this.token.addObserver((token) => {
+					if (is.present(token) && is.present(url)) {
+						return `${url}?token=${token}`;
+					}
+				}))
 				.on("load", () => {
 					isLoaded.updateState(true);
 				})
