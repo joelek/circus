@@ -2161,49 +2161,6 @@ const makeEntityHeader = (title: string, subtitles: xml.XNode<any>[] = [], tags:
 		);
 }
 
-function translateShowResponse(rshow: api_response.ShowResponse): Show {
-	let show: ShowBase = {
-		show_id: rshow.show_id,
-		title: rshow.title
-	};
-	return {
-		...show,
-		seasons: rshow.seasons.map((rseason) => {
-			let season: SeasonBase = {
-				season_id: rseason.season_id,
-				number: rseason.number,
-				show: show
-			};
-			return {
-				...season,
-				episodes: rseason.episodes.map((repisode) => {
-					let episode: EpisodeBase = {
-						episode_id: repisode.episode_id,
-						title: repisode.title,
-						summary: repisode.summary ?? "",
-						number: repisode.number,
-						file: {
-							file_id: repisode.file_id,
-							mime: "video/mp4",
-							duration_ms: repisode.duration
-						},
-						subtitles: repisode.subtitles.map((rsubtitle) => ({
-							file_id: rsubtitle.file_id,
-							mime: "text/vtt",
-							language: rsubtitle.language ?? undefined
-						})),
-						season: season,
-						year: repisode.year ?? undefined,
-						last_stream_date: repisode.streamed ?? undefined
-					};
-					return episode;
-				})
-			}
-		}),
-		genres: []
-	};
-}
-
 let updateviewforuri = (uri: string): void => {
 	setScrollObserver();
 	while (mount.lastChild !== null) {
@@ -2568,7 +2525,7 @@ let updateviewforuri = (uri: string): void => {
 			return indices;
 		}
 		req<api_response.ApiRequest, api_response.ShowResponse>(`/api/video/shows/${parts[1]}/?token=${token}`, {}, (status, response) => {
-			const show = translateShowResponse(response);
+			const show = response.show;
 			const duration_ms = show.seasons.reduce((sum, season) => {
 				return sum + season.episodes.reduce((sum, episode) => {
 					return sum + episode.file.duration_ms;
@@ -2665,13 +2622,13 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^video[/]shows[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ShowsResponse>(`/api/video/shows/?token=${token}`, {}, (status, response) => {
-			let shows = response.shows.map(translateShowResponse);
+			let shows = response.shows;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(renderTextHeader(xml.text("Shows")))
 				)
 				.add(xml.element("div.content")
-					.add(makeGrid(undefined, ...shows.map((show, showIndex) => makeShow(show, () => {
+					.add(makeGrid(undefined, ...shows.map((show) => makeShow(show, () => {
 						player.playShow(show);
 					}))))
 				)
@@ -2681,7 +2638,7 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^video[/]episodes[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
 		let episode_id = parts[1];
 		let progress = is.present(parts[2]) ? Number.parseInt(parts[2]) / 1000 : undefined;
-		req<api_response.ApiRequest, api_response.EpisodeResponseV2>(`/api/video/episodes/${episode_id}/?token=${token}`, {}, (status, response) => {
+		req<api_response.ApiRequest, api_response.EpisodeResponse>(`/api/video/episodes/${episode_id}/?token=${token}`, {}, (status, response) => {
 			let episode = response.episode;
 			let season = episode.season;
 			let show = season.show;
@@ -3059,7 +3016,7 @@ let updateviewforuri = (uri: string): void => {
 			}
 		});
 	} else if ((parts = /^video[/]genres[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		req<api_response.GenreRequest, api_response.GenreResponse>(`/api/video/genres/${parts[1]}/?token=${token}`, {}, (status, response) => {
+		req<{}, api_response.GenreResponse>(`/api/video/genres/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let genre = response.genre;
 			let shows = response.shows;
 			let movies = response.movies;
@@ -3087,7 +3044,7 @@ let updateviewforuri = (uri: string): void => {
 			);
 		});
 	} else if ((parts = /^video[/]genres[/]/.exec(uri)) !== null) {
-		req<api_response.GenresRequest, api_response.GenresResponse>(`/api/video/genres/?token=${token}`, {}, (status, response) => {
+		req<{}, api_response.GenresResponse>(`/api/video/genres/?token=${token}`, {}, (status, response) => {
 			let genres = response.genres;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")

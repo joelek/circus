@@ -198,23 +198,13 @@ class AlbumsRoute implements Route<{}, api_response.AlbumsResponse> {
 	}
 }
 
-class EpisodeRoute implements Route<api_response.ApiRequest, api_response.EpisodeResponseV2> {
-	constructor() {
-
-	}
-
+class EpisodeRoute implements Route<api_response.ApiRequest, api_response.EpisodeResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
-		if (request.url === undefined) {
-			throw new Error();
-		}
-		let parts = /^[/]api[/]video[/]episodes[/]([0-9a-f]{32})[/]/.exec(request.url);
-		if (parts === null) {
-			throw new Error();
-		}
+		let parts = /^[/]api[/]video[/]episodes[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let episode_id = parts[1];
-		let episode = data.lookupEpisodeV2(episode_id)
-		let payload = {
+		let episode = data.api_lookupEpisode(episode_id, username);
+		let payload: api_response.EpisodeResponse = {
 			episode
 		};
 		response.writeHead(200);
@@ -222,99 +212,34 @@ class EpisodeRoute implements Route<api_response.ApiRequest, api_response.Episod
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]video[/]episodes[/]([0-9a-f]{32})[/]/.test(request.url);
+		return /^[/]api[/]video[/]episodes[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
 	}
 }
 
-class ShowRoute implements Route<api_response.ApiRequest, api_response.ShowResponse> {
-	constructor() {
-
-	}
-
+class ShowRoute implements Route<{}, api_response.ShowResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
-		if (request.url === undefined) {
-			throw new Error();
-		}
-		let parts = /^[/]api[/]video[/]shows[/]([0-9a-f]{32})[/]/.exec(request.url);
-		if (parts === null) {
-			throw new Error();
-		}
+		let parts = /^[/]api[/]video[/]shows[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let show_id = parts[1];
-		let show = data.shows_index[show_id];
-		if (show === undefined) {
-			throw new Error();
-		}
-		let seasons = data.getSeasonsFromShowId(show_id).map((season) => {
-			let episodes = season.episodes.map((episode) => {
-				let subtitles = data.lookupSubtitles(episode.file_id);
-				let streamed = data.getLatestStream(username, episode.file_id);
-				let payload: api_response.EpisodeResponse = {
-					...episode,
-					streamed,
-					subtitles
-				};
-				return payload;
-			});
-			let payload: api_response.SeasonResponse = {
-				...season,
-				episodes
-			};
-			return payload;
-		});
+		let show = data.api_lookupShow(show_id, username);
 		let payload: api_response.ShowResponse = {
-			...show,
-			seasons
+			show
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]video[/]shows[/]([0-9a-f]{32})[/]/.test(request.url);
+		return /^[/]api[/]video[/]shows[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
 	}
 }
 
-class ShowsRoute implements Route<api_response.ApiRequest, api_response.ShowsResponse> {
-	constructor() {
-
-	}
-
+class ShowsRoute implements Route<{}, api_response.ShowsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
-		if (request.url === undefined) {
-			throw new Error();
-		}
-		let shows = data.media.video.shows.map((show) => {
-			let seasons = data.getSeasonsFromShowId(show.show_id)
-				.map((season) => {
-					let episodes = season.episodes
-						.map((episode) => {
-							let subtitles = data.lookupSubtitles(episode.file_id);
-							let streamed = null;
-							let payload: api_response.EpisodeResponse = {
-								...episode,
-								streamed,
-								subtitles
-							};
-							return payload;
-						});
-					let payload: api_response.SeasonResponse = {
-						...season,
-						episodes
-					};
-					return payload;
-				});
-			return {
-				...show,
-				seasons
-			};
-		}).map((show) => {
-			let genres = data.getVideoGenresFromShowId(show.show_id);
-			return {
-				...show,
-				genres
-			};
+		let parts = /^[/]api[/]video[/]shows[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let shows = data.media.video.shows.map((entry)  => {
+			return data.api_lookupShow(entry.show_id, username);
 		});
 		let payload: api_response.ShowsResponse = {
 			shows
@@ -324,7 +249,7 @@ class ShowsRoute implements Route<api_response.ApiRequest, api_response.ShowsRes
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]video[/]shows[/]/.test(request.url);
+		return /^[/]api[/]video[/]shows[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -658,7 +583,7 @@ class ChannelRoute implements Route<api_response.ChannelRequest, api_response.Ch
 	}
 }
 
-class GenresRoute implements Route<api_response.GenresRequest, api_response.GenresResponse> {
+class GenresRoute implements Route<{}, api_response.GenresResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
 		let parts = /^[/]api[/]video[/]genres[/]/.exec(request.url ?? "/") as RegExpExecArray;
@@ -677,7 +602,7 @@ class GenresRoute implements Route<api_response.GenresRequest, api_response.Genr
 	}
 }
 
-class GenreRoute implements Route<api_response.GenreRequest, api_response.GenreResponse> {
+class GenreRoute implements Route<{}, api_response.GenreResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
 		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;

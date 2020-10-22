@@ -1,5 +1,98 @@
 import * as libdb from "./database";
-import { Album, Artist, Episode, Genre, Movie, Playlist, Show } from "./api/schema/objects";
+import * as objects from "./api/schema/objects";
+
+type AlbumResponse = {
+	album: objects.Album
+};
+
+type AlbumsResponse = {
+	albums: objects.Album[]
+};
+
+type ArtistResponse = {
+	artist: objects.Artist,
+	appearances: objects.Album[]
+};
+
+type ArtistsResponse = {
+	artists: objects.Artist[]
+};
+
+type DiscResponse = {
+	disc: objects.Disc
+};
+
+type DiscsResponse = {
+	discs: objects.Disc[]
+};
+
+type EpisodeResponse = {
+	episode: objects.Episode
+};
+
+type EpisodesResponse = {
+	episodes: objects.Episode[]
+};
+
+type GenreResponse = {
+	genre: objects.Genre,
+	shows: objects.Show[],
+	movies: objects.Movie[]
+};
+
+type GenresResponse = {
+	genres: objects.Genre[]
+};
+
+type MovieResponse = {
+	movie: objects.Movie,
+	suggestions: objects.Movie[]
+};
+
+type MoviesResponse = {
+	movies: objects.Movie[]
+};
+
+type PlaylistResponse = {
+	playlist: objects.Playlist
+};
+
+type PlaylistsResponse = {
+	playlists: objects.Playlist[]
+};
+
+type SeasonResponse = {
+	season: objects.Season
+};
+
+type SeasonsResponse = {
+	seasons: objects.Season[]
+};
+
+type ShowResponse = {
+	show: objects.Show
+};
+
+type ShowsResponse = {
+	shows: objects.Show[]
+};
+
+type TrackResponse = {
+	track: objects.Track
+};
+
+type TracksResponse = {
+	track: objects.Track[]
+};
+
+
+
+
+
+
+
+
+
 
 interface ApiRequest {
 
@@ -21,81 +114,6 @@ interface AuthRequest extends ApiRequest {
 interface AuthResponse extends ApiResponse {
 	token: string
 }
-
-interface ChromeCastResponse extends ApiResponse {
-
-}
-
-type ArtistResponse = {
-	artist: Artist,
-	appearances: Album[]
-};
-
-type ArtistsResponse = {
-	artists: Artist[]
-};
-
-type AlbumResponse = {
-	album: Album
-};
-
-type AlbumsResponse = {
-	albums: Album[]
-};
-
-interface DiscResponse extends ApiResponse, libdb.DiscEntry {
-	tracks: Array<libdb.TrackEntry & {
-		artists: Array<libdb.ArtistEntry>
-	}>;
-}
-
-interface SubtitleResponse extends ApiResponse, libdb.SubtitleEntry {
-
-}
-
-interface EpisodeResponse extends ApiResponse, libdb.EpisodeEntry {
-	streamed: number | null,
-	subtitles: Array<SubtitleResponse>;
-}
-
-type EpisodeResponseV2 = {
-	episode: Episode
-}
-
-interface ShowResponse extends ApiResponse, libdb.ShowEntry {
-	seasons: Array<SeasonResponse>;
-}
-
-interface SeasonResponse extends ApiResponse, libdb.SeasonEntry {
-	episodes: Array<EpisodeResponse>;
-}
-
-interface ShowsResponse extends ApiResponse {
-	shows: Array<ShowResponse & {
-		genres: Array<libdb.VideoGenreEntry>
-	}>
-}
-
-type MovieResponse = {
-	movie: Movie,
-	suggestions: Movie[]
-};
-
-type MoviesResponse = {
-	movies: Movie[]
-};
-
-interface AudiolistItemResponse extends ApiResponse, libdb.AudiolistItemEntry {
-	track: libdb.TrackEntry;
-}
-
-type PlaylistResponse = {
-	playlist: Playlist
-};
-
-type PlaylistsResponse = {
-	playlists: Playlist[]
-};
 
 interface CuesRequest extends ApiResponse {
 	query: string;
@@ -155,19 +173,9 @@ interface GenresRequest extends ApiRequest {
 
 }
 
-type GenresResponse = {
-	genres: Genre[]
-};
-
 interface GenreRequest extends ApiRequest {
 
 }
-
-type GenreResponse = {
-	genre: Genre,
-	shows: Show[],
-	movies: Movie[]
-};
 
 interface SearchRequest extends ApiRequest {
 
@@ -204,28 +212,34 @@ interface TokensResponse extends ApiResponse {
 }
 
 export {
+	AlbumResponse,
+	AlbumsResponse,
+	ArtistResponse,
+	ArtistsResponse,
+	DiscResponse,
+	DiscsResponse,
+	EpisodeResponse,
+	EpisodesResponse,
+	GenreResponse,
+	GenresResponse,
+	SeasonResponse,
+	SeasonsResponse,
+	ShowResponse,
+	ShowsResponse,
+	MovieResponse,
+	MoviesResponse,
+	PlaylistResponse,
+	PlaylistsResponse,
+	TrackResponse,
+	TracksResponse,
+
+
+
 	ApiRequest,
 	ApiResponse,
 	AuthWithTokenReponse,
 	AuthRequest,
 	AuthResponse,
-	ChromeCastResponse,
-	ArtistResponse,
-	ArtistsResponse,
-	AlbumResponse,
-	AlbumsResponse,
-	DiscResponse,
-	SubtitleResponse,
-	EpisodeResponse,
-	EpisodeResponseV2,
-	ShowResponse,
-	SeasonResponse,
-	ShowsResponse,
-	MovieResponse,
-	MoviesResponse,
-	AudiolistItemResponse,
-	PlaylistResponse,
-	PlaylistsResponse,
 	CuesRequest,
 	CuesResponse,
 	Segment,
@@ -234,10 +248,6 @@ export {
 	ChannelsResponse,
 	ChannelRequest,
 	ChannelResponse,
-	GenresRequest,
-	GenresResponse,
-	GenreRequest,
-	GenreResponse,
 	SearchRequest,
 	SearchResponse,
 	TokensRequest,
