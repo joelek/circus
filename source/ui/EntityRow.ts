@@ -9,7 +9,7 @@ import { PlaybackButtonFactory } from "./PlaybackButton";
 
 const CSS = `
 	.entity-row {
-		align-items: start;
+		align-items: center;
 		display: grid;
 		gap: 16px;
 		grid-template-columns: 72px 1fr;
@@ -96,7 +96,7 @@ export class EntityRowFactory {
 						.add(xnode.element("div.entity-row__title")
 							.add(title)
 						)
-						.add(xnode.element("div.entity-row__subtitle")
+						.add(subtitles.length === 0 ? undefined : xnode.element("div.entity-row__subtitle")
 							.add(...xnode.joinarray(subtitles))
 						)
 					)
@@ -297,8 +297,9 @@ export class EntityRowFactory {
 		let image = this.ImageBox.forSquare(is.absent(track.disc.album.artwork) ? undefined : `/files/${track.disc.album.artwork.file_id}/`);
 		let title = this.EntityLink.forTrack(track);
 		let subtitles = [
+			...track.artists.map((artist) => this.EntityLink.forArtist(artist)),
 			this.EntityLink.forAlbum(track.disc.album),
-			this.EntityLink.forDisc(track.disc),
+			this.EntityLink.forDisc(track.disc)
 		];
 		let tags = [
 			"Track",
