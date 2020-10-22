@@ -15,11 +15,15 @@ import { formatDuration as format_duration } from "./ui/metadata";
 
 
 
+import { IconFactory } from "./ui/Icon";
 import { ImageBoxFactory } from "./ui/ImageBox";
 import { EntityLinkFactory } from "./ui/EntityLink";
 import { EntityRowFactory } from "./ui/EntityRow";
 
 const tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
+
+const Icon = new IconFactory();
+document.head.appendChild(IconFactory.makeStyle().render())
 
 const ImageBox = new ImageBoxFactory(tokenobs);
 document.head.appendChild(ImageBoxFactory.makeStyle().render())
@@ -1414,7 +1418,7 @@ let modals = xml.element("div.modal-container")
 				.repeat(devicelist, (device) => xml.element("div.device-selector__device")
 					.add(makeButton()
 						.set("data-active", "" + device.active)
-						.add(makeBroadcastIcon())
+						.add(Icon.makeBroadcast())
 					)
 					.add(xml.element("div.device-selector__device-info")
 						.add(xml.element("div.device-selector__device-name")
@@ -1485,85 +1489,6 @@ let observer = new IntersectionObserver(async (entries) => {
 let mpw = xml.element("div.app__navigation")
 	.render();
 
-const makeNextIcon = () => xml.element("svg")
-	.set("width", "12px")
-	.set("height", "12px")
-	.set("viewBox", "0 0 16 16")
-	.add(xml.element("path")
-		.set("d", "M1,15.268c-0.173,0-0.345-0.045-0.5-0.134C0.19,14.955,0,14.625,0,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C0.655,0.776,0.827,0.732,1,0.732s0.345,0.044,0.5,0.134l10.855,6.269c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L1.5,15.134C1.345,15.223,1.173,15.268,1,15.268z")
-	).add(xml.element("path")
-		.set("d", "M13,16c-0.553,0-1-0.447-1-1V1c0-0.552,0.447-1,1-1h2c0.553,0,1,0.448,1,1v14c0,0.553-0.447,1-1,1H13z")
-	);
-
-const makePrevIcon = () => xml.element("svg")
-	.set("width", "12px")
-	.set("height", "12px")
-	.set("viewBox", "0 0 16 16")
-	.add(xml.element("path")
-		.set("d", "M15,15.268c-0.173,0-0.346-0.045-0.5-0.134L3.645,8.867c-0.31-0.179-0.5-0.509-0.5-0.866s0.19-0.688,0.5-0.866L14.5,0.866c0.154-0.089,0.327-0.134,0.5-0.134s0.346,0.044,0.5,0.134C15.81,1.044,16,1.375,16,1.732v12.536c0,0.357-0.19,0.688-0.5,0.866C15.346,15.223,15.173,15.268,15,15.268z")
-	).add(xml.element("path")
-		.set("d", "M1,16c-0.552,0-1-0.447-1-1V1c0-0.552,0.448-1,1-1h2c0.552,0,1,0.448,1,1v14c0,0.553-0.448,1-1,1H1z")
-	);
-
-const makeHomeIcon = () => xml.element("svg")
-	.set("width", "12px")
-	.set("height", "12px")
-	.set("viewBox", "0 0 16 16")
-	.add(xml.element("path")
-		.set("d", "M3,16c-0.552,0-1-0.447-1-1V9H1.334C0.929,9,0.563,8.755,0.409,8.38C0.255,8.005,0.342,7.574,0.631,7.289l6.662-6.59C7.488,0.506,7.742,0.41,7.996,0.41c0.256,0,0.512,0.098,0.707,0.293L11,3V2c0-0.552,0.447-1,1-1h1c0.553,0,1,0.448,1,1v4l1.293,1.293c0.286,0.286,0.372,0.716,0.217,1.09C15.355,8.756,14.99,9,14.586,9H14v6c0,0.553-0.447,1-1,1H3z")
-	);
-
-const makeFullscreenIcon = () => xml.element("svg")
-	.set("width", "12px")
-	.set("height", "12px")
-	.set("viewBox", "0 0 16 16")
-	.add(xml.element("path")
-		.set("d", "M10.343,8.071c-0.266,0-0.52-0.105-0.707-0.293L8.222,6.364c-0.391-0.391-0.391-1.023,0-1.414l2.121-2.121L9.222,1.707C8.936,1.421,8.85,0.991,9.005,0.617C9.16,0.244,9.524,0,9.929,0H15c0.553,0,1,0.448,1,1v5.071c0,0.404-0.243,0.769-0.617,0.924C15.259,7.046,15.129,7.071,15,7.071c-0.26,0-0.516-0.102-0.707-0.293l-1.121-1.121L11.05,7.778C10.862,7.966,10.608,8.071,10.343,8.071L10.343,8.071z")
-	)
-	.add(xml.element("path")
-		.set("d", "M1,16c-0.552,0-1-0.447-1-1V9.929C0,9.524,0.244,9.16,0.617,9.005C0.741,8.954,0.871,8.929,1,8.929c0.26,0,0.516,0.102,0.707,0.293l1.122,1.121L4.95,8.222c0.195-0.195,0.451-0.293,0.707-0.293s0.512,0.098,0.707,0.293l1.415,1.414c0.188,0.188,0.293,0.441,0.293,0.707c0,0.265-0.105,0.52-0.293,0.707l-2.122,2.122l1.121,1.121c0.286,0.286,0.372,0.716,0.217,1.09S6.475,16,6.071,16H1z")
-	);
-
-const makeBackIcon = () => xml.element("svg")
-	.set("width", "12px")
-	.set("height", "12px")
-	.set("viewBox", "0 0 16 16")
-	.add(xml.element("path")
-		.set("d", "M13,15.268c-0.173,0-0.346-0.045-0.5-0.134L1.645,8.867c-0.31-0.179-0.5-0.509-0.5-0.866s0.19-0.688,0.5-0.866L12.5,0.866c0.154-0.089,0.327-0.134,0.5-0.134s0.346,0.044,0.5,0.134C13.81,1.044,14,1.375,14,1.732v12.536c0,0.357-0.19,0.688-0.5,0.866C13.346,15.223,13.173,15.268,13,15.268z")
-	);
-
-const makeBroadcastIcon = () => xml.element("svg")
-	.set("width", "12px")
-	.set("height", "12px")
-	.set("viewBox", "0 0 16 16")
-	.add(xml.element("path")
-		.set("d", "M1,16c-0.552,0-1-0.447-1-1v-1.829c0-0.325,0.158-0.629,0.423-0.816C0.594,12.233,0.795,12.171,1,12.171c0.112,0,0.226,0.019,0.334,0.058c1.144,0.405,2.032,1.294,2.438,2.438c0.109,0.306,0.062,0.646-0.125,0.911C3.458,15.843,3.153,16,2.829,16H1z")
-	)
-	.add(xml.element("path")
-		.set("d", "M6.929,16c-0.498,0-0.919-0.365-0.99-0.857c-0.376-2.616-2.465-4.706-5.081-5.081C0.366,9.99,0,9.568,0,9.071l0-2.016C0,6.771,0.121,6.5,0.333,6.31C0.517,6.145,0.754,6.055,1,6.055c0.037,0,0.073,0.002,0.11,0.006c4.604,0.511,8.317,4.224,8.829,8.829c0.031,0.282-0.059,0.565-0.248,0.777C9.5,15.879,9.229,16,8.945,16H6.929z")
-	)
-	.add(xml.element("path")
-		.set("d", "M12.962,16c-0.522,0-0.957-0.402-0.997-0.924C11.518,9.229,6.771,4.482,0.924,4.035C0.403,3.996,0,3.561,0,3.038l0-2.005c0-0.276,0.115-0.541,0.316-0.73C0.502,0.129,0.747,0.033,1,0.033c0.022,0,0.044,0,0.066,0.002c7.968,0.527,14.373,6.933,14.899,14.898c0.018,0.276-0.079,0.548-0.268,0.75C15.508,15.886,15.243,16,14.967,16H12.962z")
-	);;
-
-const makePlayIcon = () => xml.element("svg")
-	.set("width", "12px")
-	.set("height", "12px")
-	.set("viewBox", "0 0 16 16")
-	.add(xml.element("path")
-		.set("d", "M3,15.268c-0.173,0-0.345-0.045-0.5-0.134C2.19,14.955,2,14.625,2,14.268V1.732c0-0.357,0.19-0.688,0.5-0.866C2.655,0.776,2.827,0.732,3,0.732s0.345,0.044,0.5,0.134l10.855,6.269c0.31,0.179,0.5,0.509,0.5,0.866s-0.19,0.688-0.5,0.866L3.5,15.134C3.345,15.223,3.173,15.268,3,15.268z")
-	);
-
-const makePauseIcon = () => xml.element("svg")
-	.set("width", "12px")
-	.set("height", "12px")
-	.set("viewBox", "0 0 16 16")
-	.add(xml.element("path")
-		.set("d", "M3,16c-0.552,0-1-0.447-1-1V1c0-0.552,0.448-1,1-1h2c0.552,0,1,0.448,1,1v14c0,0.553-0.448,1-1,1H3z")
-	)
-	.add(xml.element("path")
-		.set("d", "M11,16c-0.553,0-1-0.447-1-1V1c0-0.552,0.447-1,1-1h2c0.553,0,1,0.448,1,1v14c0,0.553-0.447,1-1,1H11z")
-	);
 
 const makeButton = () => xml.element("div.icon-button");
 
@@ -1607,26 +1532,26 @@ let mp = xml.element("div.content")
 				.bind("data-hide", player.devices.compute((devices) => {
 					return devices.length < 2;
 				}))
-				.add(makeBroadcastIcon())
+				.add(Icon.makeBroadcast())
 				.on("click", () => {
 					showDevices.updateState(!showDevices.getState());
 				})
 			)
 			.add(makeButton()
 				.bind("data-enabled", player.canPlayLast.addObserver(a => a))
-				.add(makePrevIcon())
+				.add(Icon.makeLast())
 				.on("click", () => {
 					player.last();
 				})
 			)
 			.add(makeButton()
 				.bind("data-enabled", player.canPlayCurrent.addObserver(a => a))
-				.add(makePlayIcon()
+				.add(Icon.makePlay()
 					.bind("data-hide", player.playback.addObserver((playback) => {
 						return playback === true;
 					}))
 				)
-				.add(makePauseIcon()
+				.add(Icon.makePause()
 					.bind("data-hide", player.playback.addObserver((playback) => {
 						return playback === false;
 					}))
@@ -1637,7 +1562,7 @@ let mp = xml.element("div.content")
 			)
 			.add(makeButton()
 				.bind("data-enabled", player.canPlayNext.addObserver(a => a))
-				.add(makeNextIcon())
+				.add(Icon.makeNext())
 				.on("click", () => {
 					player.next();
 				})
@@ -1752,10 +1677,10 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 				)
 			)
 			.add(xml.element("div.playback-button")
-				.add(makePlayIcon()
+				.add(Icon.makePlay()
 					.bind("data-hide", isPlaying.addObserver(a => a))
 				)
-				.add(makePauseIcon()
+				.add(Icon.makePause()
 					.bind("data-hide", isPlaying.addObserver(a => !a))
 				)
 				.on("click", (event) => {
@@ -1813,10 +1738,10 @@ function makeArtist(artist: ContextArtist, play: () => void = () => player.playA
 		})
 		.add(xml.element("div.media-widget__artwork")
 			.add(xml.element("div.playback-button")
-				.add(makePlayIcon()
+				.add(Icon.makePlay()
 					.bind("data-hide", isPlaying.addObserver(a => a))
 				)
-				.add(makePauseIcon()
+				.add(Icon.makePause()
 					.bind("data-hide", isPlaying.addObserver(a => !a))
 				)
 				.on("click", () => {
@@ -1894,10 +1819,10 @@ function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 				)
 			)
 			.add(xml.element("div.playback-button")
-				.add(makePlayIcon()
+				.add(Icon.makePlay()
 					.bind("data-hide", isPlaying.addObserver(a => a))
 				)
-				.add(makePauseIcon()
+				.add(Icon.makePause()
 					.bind("data-hide", isPlaying.addObserver(a => !a))
 				)
 				.on("click", (event) => {
@@ -1962,10 +1887,10 @@ function makeShow(show: Show, play: () => void): xml.XElement {
 				)
 			)
 			.add(xml.element("div.playback-button")
-				.add(makePlayIcon()
+				.add(Icon.makePlay()
 					.bind("data-hide", isPlaying.addObserver(a => a))
 				)
-				.add(makePauseIcon()
+				.add(Icon.makePause()
 					.bind("data-hide", isPlaying.addObserver(a => !a))
 				)
 				.on("click", (event) => {
@@ -2023,10 +1948,10 @@ function makeMovie(movie: Movie, play: () => void = () => player.playMovie(movie
 				)
 			)
 			.add(xml.element("div.playback-button")
-				.add(makePlayIcon()
+				.add(Icon.makePlay()
 					.bind("data-hide", isPlaying.addObserver(a => a))
 				)
-				.add(makePauseIcon()
+				.add(Icon.makePause()
 					.bind("data-hide", isPlaying.addObserver(a => !a))
 				)
 				.on("click", (event) => {
@@ -2080,10 +2005,10 @@ function makePlaylist(playlist: Playlist, play: () => void = () => player.playPl
 		})
 		.add(xml.element("div.media-widget__artwork")
 			.add(xml.element("div.playback-button")
-				.add(makePlayIcon()
+				.add(Icon.makePlay()
 					.bind("data-hide", isPlaying.addObserver((isPlaying) => isPlaying))
 				)
-				.add(makePauseIcon()
+				.add(Icon.makePause()
 					.bind("data-hide", isPlaying.addObserver((isPlaying) => !isPlaying))
 				)
 				.on("click", () => {
@@ -2198,10 +2123,10 @@ let updateviewforuri = (uri: string): void => {
 					format_duration(duration_ms)
 				], ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`),
 					xml.element("div.playback-button")
-						.add(makePlayIcon()
+						.add(Icon.makePlay()
 							.bind("data-hide", isPlaying.addObserver(a => a))
 						)
-						.add(makePauseIcon()
+						.add(Icon.makePause()
 							.bind("data-hide", isPlaying.addObserver(a => !a))
 						)
 						.on("click", (event) => {
@@ -2322,10 +2247,10 @@ let updateviewforuri = (uri: string): void => {
 						["Artist", format_duration(duration_ms)],
 						ImageBox.forSquare(),
 						xml.element("div.playback-button")
-							.add(makePlayIcon()
+							.add(Icon.makePlay()
 								.bind("data-hide", isPlaying.addObserver(a => a))
 							)
-							.add(makePauseIcon()
+							.add(Icon.makePause()
 								.bind("data-hide", isPlaying.addObserver(a => !a))
 							)
 							.on("click", () => {
@@ -2556,10 +2481,10 @@ let updateviewforuri = (uri: string): void => {
 					], ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`)
 						.set("style", "padding-bottom: 150%"),
 					xml.element("div.playback-button")
-						.add(makePlayIcon()
+						.add(Icon.makePlay()
 							.bind("data-hide", isPlaying.addObserver(a => a))
 						)
-						.add(makePauseIcon()
+						.add(Icon.makePause()
 							.bind("data-hide", isPlaying.addObserver(a => !a))
 						)
 						.on("click", (event) => {
@@ -2666,10 +2591,10 @@ let updateviewforuri = (uri: string): void => {
 							ImageBox.forVideo(`/media/stills/${episode.file.file_id}/`)
 								.set("style", "padding-bottom: 56.25%;"),
 							xml.element("div.playback-button")
-								.add(makePlayIcon()
+								.add(Icon.makePlay()
 									.bind("data-hide", isPlaying.addObserver(a => a))
 								)
-								.add(makePauseIcon()
+								.add(Icon.makePause()
 									.bind("data-hide", isPlaying.addObserver(a => !a))
 								)
 								.on("click", () => {
@@ -2724,10 +2649,10 @@ let updateviewforuri = (uri: string): void => {
 							ImageBox.forPoster(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/`)
 								.set("style", "padding-bottom: 150%"),
 							xml.element("div.playback-button")
-								.add(makePlayIcon()
+								.add(Icon.makePlay()
 									.bind("data-hide", isPlaying.addObserver(a => a))
 								)
-								.add(makePauseIcon()
+								.add(Icon.makePause()
 									.bind("data-hide", isPlaying.addObserver(a => !a))
 								)
 								.on("click", () => {
