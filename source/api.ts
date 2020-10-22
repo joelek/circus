@@ -631,7 +631,7 @@ class GenreRoute implements Route<{}, api_response.GenreResponse> {
 class SearchRoute implements Route<{}, api_response.SearchResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
-		let parts = /^[/]api[/]search[/](.*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]search[/]([^/]+)[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let query = decodeURIComponent(parts[1]);
 		let results = data.search(query, 10);
 		let payload: api_response.SearchResponse = {
@@ -647,7 +647,7 @@ class SearchRoute implements Route<{}, api_response.SearchResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]search[/]/.test(request.url ?? "/");
+		return /^[/]api[/]search[/]([^/]+)[/]/.test(request.url ?? "/");
 	}
 }
 
