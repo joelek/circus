@@ -61,7 +61,7 @@ export class PlaybackButtonFactory {
 		this.iconFactory = iconFactory;
 	}
 
-	forEntity(entity: api.Album | api.Artist | api.Disc | api.Episode | api.Movie | api.Season | api.Show | api.Track): xnode.XElement {
+	forEntity(entity: api.Album | api.Artist | api.Disc | api.Episode | api.Movie | api.Playlist | api.Season | api.Show | api.Track): xnode.XElement {
 		if (api.Album.is(entity)) {
 			return this.forAlbum(entity);
 		}
@@ -76,6 +76,9 @@ export class PlaybackButtonFactory {
 		}
 		if (api.Movie.is(entity)) {
 			return this.forMovie(entity);
+		}
+		if (api.Playlist.is(entity)) {
+			return this.forPlaylist(entity);
 		}
 		if (api.Season.is(entity)) {
 			return this.forSeason(entity);
@@ -147,6 +150,19 @@ export class PlaybackButtonFactory {
 				return false;
 			}
 			if (contextPath[contextPath.length - 1] !== movie.movie_id) {
+				return false;
+			}
+			return true;
+		}, this.player.contextPath);
+		return this.make(isContext, play);
+	}
+
+	forPlaylist(playlist: api.Playlist, play: () => void = () => this.player.playPlaylist(playlist)): xnode.XElement {
+		let isContext = observables.computed((contextPath) => {
+			if (!is.present(contextPath)) {
+				return false;
+			}
+			if (contextPath[contextPath.length - 2] !== playlist.playlist_id) {
 				return false;
 			}
 			return true;
