@@ -21,6 +21,16 @@ const CSS = `
 		position: relative;
 	}
 
+	.entity-row__playback {
+		align-items: center;
+		display: grid;
+		height: 100%;
+		justify-content: center;
+		position: absolute;
+			top: 0px; left: 0px;
+		width: 100%;
+	}
+
 	.entity-row__metadata {
 		display: grid;
 		gap: 16px;
@@ -101,7 +111,9 @@ export class EntityRowFactory {
 			.add(xnode.element("div.entity-row")
 				.add(xnode.element("div.entity-row__artwork")
 					.add(this.ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`))
-					.add(playbackButton)
+					.add(xnode.element("div.entity-row__playback")
+						.add(playbackButton)
+					)
 				)
 				.add(xnode.element("div.entity-row__metadata")
 					.add(xnode.element("div.entity-row__titles")
