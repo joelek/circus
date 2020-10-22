@@ -3,6 +3,8 @@
 
 	ContextArtist: Artist,
 
+	ContextDisc: Disc,
+
 	ContextTrack: Track,
 
 	ContextPlaylist: Playlist,
@@ -15,7 +17,7 @@
 
 	ContextEpisode: Episode,
 
-	Context: ContextAlbum | ContextArtist | ContextTrack | ContextPlaylist | ContextMovie | ContextShow | ContextSeason | ContextEpisode,
+	Context: ContextAlbum | ContextArtist | ContextDisc | ContextTrack | ContextPlaylist | ContextMovie | ContextShow | ContextSeason | ContextEpisode,
 
 	ContextItem: ContextTrack | ContextMovie | ContextEpisode,
 

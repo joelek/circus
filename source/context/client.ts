@@ -2,11 +2,6 @@ import * as is from "../is";
 import * as observers from "../simpleobs";
 import * as schema from "./schema";
 import * as typesockets from "../typesockets/client";
-import { ContextPlaylist } from "./schema/objects";
-
-type AlbumIndices = { disc: number, track: number };
-type ArtistIndices = { album: number, disc: number, track: number };
-type Indices = AlbumIndices | ArtistIndices;
 
 export class ContextClient {
 	private tsc: typesockets.TypeSocketClient<schema.messages.Autoguard>;
@@ -481,6 +476,18 @@ export class ContextClient {
 		return this.play(artist, index);
 	}
 
+	playDisc(disc: schema.objects.ContextDisc, trackIndex?: number): void {
+		let index = 0;
+		if (is.present(trackIndex)) {
+			let tracks = disc.tracks;
+			if (trackIndex < 0 || trackIndex >= tracks.length) {
+				throw `Expected ${trackIndex} to be a number between 0 and ${tracks.length}!`;
+			}
+			index += trackIndex;
+		}
+		return this.play(disc, index);
+	}
+
 	playEpisode(episode: schema.objects.ContextEpisode): void {
 		this.play(episode, 0);
 	}
@@ -489,7 +496,7 @@ export class ContextClient {
 		this.play(movie, 0);
 	}
 
-	playPlaylist(playlist: ContextPlaylist, itemIndex?: number): void {
+	playPlaylist(playlist: schema.objects.ContextPlaylist, itemIndex?: number): void {
 		let index = 0;
 		if (is.present(itemIndex)) {
 			let items = playlist.items;
