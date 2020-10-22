@@ -3113,7 +3113,7 @@ let updateviewforuri = (uri: string): void => {
 		{
 			let results = document.createElement("div");
 			mount.appendChild(results);
-			req<api_response.SearchRequest, api_response.SearchResponse>(`/api/search/${parts[1]}`, {}, (status, response) => {
+			req<{}, api_response.SearchResponse>(`/api/search/${parts[1]}`, {}, (status, response) => {
 				while (results.lastChild !== null) {
 					results.removeChild(results.lastChild);
 				}

@@ -628,28 +628,26 @@ class GenreRoute implements Route<{}, api_response.GenreResponse> {
 	}
 }
 
-class SearchRoute implements Route<api_response.SearchRequest, api_response.SearchResponse> {
+class SearchRoute implements Route<{}, api_response.SearchResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		let parts = /^[/]api[/]search[/](.*)/.exec(request.url || "/");
-		if (parts == null) {
-			throw "";
-		}
+		let username = getUsername(request);
+		let parts = /^[/]api[/]search[/](.*)/.exec(request.url ?? "/") as RegExpExecArray;
 		let query = decodeURIComponent(parts[1]);
 		let results = data.search(query, 10);
 		let payload: api_response.SearchResponse = {
-			artists: results.artistIds.map(data.lookupArtist),
-			albums: results.albumIds.map(data.lookupAlbum),
-			tracks: results.trackIds.map(data.lookupTrack),
-			shows: results.showIds.map(data.lookupShow),
-			movies: results.movieIds.map(data.lookupMovie),
-			episodes: results.episodeIds.map(data.lookupEpisode)
+			artists: results.artistIds.map((artist_id) => data.api_lookupArtist(artist_id, username)),
+			albums: results.albumIds.map((album_id) => data.api_lookupAlbum(album_id, username)),
+			tracks: results.trackIds.map((track_id) => data.api_lookupTrack(track_id, username)),
+			shows: results.showIds.map((show_id) => data.api_lookupShow(show_id, username)),
+			movies: results.movieIds.map((movie_id) => data.api_lookupMovie(movie_id, username)),
+			episodes: results.episodeIds.map((episode_id) => data.api_lookupEpisode(episode_id, username))
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === "POST" && /^[/]api[/]search[/]/.test(request.url || "/");
+		return /^[/]api[/]search[/]/.test(request.url ?? "/");
 	}
 }
 

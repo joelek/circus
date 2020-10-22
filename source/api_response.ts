@@ -85,6 +85,15 @@ type TracksResponse = {
 	track: objects.Track[]
 };
 
+type SearchResponse = {
+	artists: objects.Artist[],
+	albums: objects.Album[],
+	tracks: objects.Track[],
+	shows: objects.Show[],
+	movies: objects.Movie[],
+	episodes: objects.Episode[]
+};
+
 
 
 
@@ -169,40 +178,6 @@ interface ChannelResponse extends ApiResponse {
 	segments: Array<Segment>
 }
 
-interface GenresRequest extends ApiRequest {
-
-}
-
-interface GenreRequest extends ApiRequest {
-
-}
-
-interface SearchRequest extends ApiRequest {
-
-}
-
-interface SearchResponse extends ApiResponse {
-	artists: Array<libdb.ArtistEntry>,
-	albums: Array<libdb.AlbumEntry & {
-		artists: Array<libdb.ArtistEntry>
-	}>,
-	tracks: Array<libdb.TrackEntry & {
-		disc: libdb.DiscEntry & {
-			album: libdb.AlbumEntry & {
-				artists: Array<libdb.ArtistEntry>
-			}
-		},
-		artists: Array<libdb.ArtistEntry>
-	}>,
-	shows: Array<libdb.ShowEntry>,
-	movies: Array<libdb.MovieEntry>,
-	episodes: Array<libdb.EpisodeEntry & {
-		season: libdb.SeasonEntry & {
-			show: libdb.ShowEntry
-		}
-	}>
-}
-
 interface TokensRequest extends ApiRequest {
 
 }
@@ -232,6 +207,7 @@ export {
 	PlaylistsResponse,
 	TrackResponse,
 	TracksResponse,
+	SearchResponse,
 
 
 
@@ -248,8 +224,6 @@ export {
 	ChannelsResponse,
 	ChannelRequest,
 	ChannelResponse,
-	SearchRequest,
-	SearchResponse,
 	TokensRequest,
 	TokensResponse
 };
