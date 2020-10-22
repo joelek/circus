@@ -19,6 +19,43 @@ export class EntityLinkFactory {
 			.add(xnode.text(title));
 	}
 
+	forEntity(entity: api.Album | api.Artist | api.Disc | api.Episode | api.Genre | api.Movie | api.Playlist | api.Season | api.Show | api.Track | api.User): xnode.XElement {
+		if (api.Album.is(entity)) {
+			return this.forAlbum(entity);
+		}
+		if (api.Artist.is(entity)) {
+			return this.forArtist(entity);
+		}
+		if (api.Disc.is(entity)) {
+			return this.forDisc(entity);
+		}
+		if (api.Episode.is(entity)) {
+			return this.forEpisode(entity);
+		}
+		if (api.Genre.is(entity)) {
+			return this.forGenre(entity);
+		}
+		if (api.Movie.is(entity)) {
+			return this.forMovie(entity);
+		}
+		if (api.Playlist.is(entity)) {
+			return this.forPlaylist(entity);
+		}
+		if (api.Season.is(entity)) {
+			return this.forSeason(entity);
+		}
+		if (api.Show.is(entity)) {
+			return this.forShow(entity);
+		}
+		if (api.Track.is(entity)) {
+			return this.forTrack(entity);
+		}
+		if (api.User.is(entity)) {
+			return this.forUser(entity);
+		}
+		throw `Expected code to be unreachable!`;
+	}
+
 	forAlbum(album: api.AlbumBase): xnode.XElement {
 		return this.for(`audio/albums/${album.album_id}/`, album.title);
 	}
