@@ -2964,13 +2964,7 @@ let updateviewforuri = (uri: string): void => {
 			let movies = response.movies;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader(
-							genre.title,
-							undefined,
-							["Video Genre"],
-							ImageBox.forSquare()
-						)
-					)
+					.add(renderTextHeader(xml.text(genre.title)))
 				)
 				.add(shows.length === 0 ? undefined : xml.element("div.content")
 					.add(makeGrid("Shows", ...shows.map((show) => makeShow(show, () => {
