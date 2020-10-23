@@ -299,8 +299,7 @@ export class EntityRowFactory {
 		let title = this.EntityLink.forTrack(track);
 		let subtitles = [
 			...track.artists.map((artist) => this.EntityLink.forArtist(artist)),
-			this.EntityLink.forAlbum(track.disc.album),
-			this.EntityLink.forDisc(track.disc)
+			this.EntityLink.forAlbum(track.disc.album)
 		];
 		let tags = [
 			"Track",
