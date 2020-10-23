@@ -772,7 +772,6 @@ style.innerText = `
 	}
 
 	.entity-header__whitespace {
-		color: transparent;
 		font-size: 16px;
 		line-height: 0;
 		overflow: hidden;
