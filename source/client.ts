@@ -1790,8 +1790,7 @@ function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 	let tags = [
 		"Episode",
 		`${episode.year}`,
-		format_duration(episode.file.duration_ms),
-		utils.formatSeasonEpisode(episode.season.number, episode.number)
+		format_duration(episode.file.duration_ms)
 	];
 	let isContext = computed((contextPath) => {
 		if (!is.present(contextPath)) {
@@ -1844,7 +1843,7 @@ function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 					.add(xml.text(title))
 				)
 				.add(xml.element("div.media-widget__subtitle")
-					.add(EntityLink.forShow(episode.season.show))
+					.add(...xml.joinarray([EntityLink.forShow(episode.season.show), EntityLink.forSeason(episode.season)]))
 				)
 			)
 			.add(xml.element("div.media-widget__tags")
@@ -2598,8 +2597,8 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(makeEntityHeader(
 							episode.title,
-							[EntityLink.forShow(show)],
-							["Episode", `${episode.year}`, format_duration(episode.file.duration_ms), utils.formatSeasonEpisode(season.number, episode.number)],
+							[EntityLink.forShow(show), EntityLink.forSeason(season)],
+							["Episode", `${episode.year}`, format_duration(episode.file.duration_ms)],
 							ImageBox.forVideo(`/media/stills/${episode.file.file_id}/`)
 								.set("style", "padding-bottom: 56.25%;"),
 							xml.element("div.playback-button")
