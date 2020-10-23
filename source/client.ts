@@ -751,7 +751,7 @@ style.innerText = `
 	.entity-header {
 		align-items: start;
 		display: grid;
-		gap: 32px;
+		gap: 24px;
 		grid-template-columns: repeat(auto-fit, minmax(240px, auto));
 	}
 

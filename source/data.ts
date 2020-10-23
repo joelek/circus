@@ -686,25 +686,19 @@ class SearchIndex {
 	search(query: string): Array<{ id: string, rank: number }> {
 		let terms = utils.getSearchTerms(query);
 		let sets = terms.map((term) => {
-			let set = this.map.get(term);
-			if (set) {
-				return set;
-			}
-			return new Set<string>();
-		});
-		sets = sets.filter((set) => {
-			return set.size > 0;
-		});
+			return this.map.get(term);
+		}).filter(is.present);
 		let map = new Map<string, number>();
-		if (sets.length > 0) {
-			for (let set of sets) {
-				for (let id of set) {
-					let rank = map.get(id) ?? 0;
-					map.set(id, rank + 1);
-				}
+		for (let set of sets) {
+			for (let id of set) {
+				let rank = map.get(id) ?? 0 - terms.length;
+				map.set(id, rank + 2);
 			}
 		}
-		return Array.from(map.entries()).sort(NumericSort.increasing((value) => value[1])).map((entry) => ({
+		return Array.from(map.entries())
+		.filter((entry) => entry[1] >= 0)
+		.sort(NumericSort.increasing((entry) => entry[1]))
+		.map((entry) => ({
 			id: entry[0],
 			rank: entry[1]
 		}));
