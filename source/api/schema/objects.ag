@@ -85,8 +85,7 @@
 	},
 
 	SegmentBase: {
-		file: VideoFile,
-		media: EpisodeBase | MovieBase
+		file: VideoFile
 	},
 
 	Segment: SegmentBase & {

@@ -205,16 +205,11 @@ export const Genre = autoguard.Intersection.of(
 );
 
 export type SegmentBase = {
-	"file": VideoFile,
-	"media": EpisodeBase | MovieBase
+	"file": VideoFile
 };
 
 export const SegmentBase = autoguard.Object.of<SegmentBase>({
-	"file": autoguard.Reference.of<VideoFile>(() => VideoFile),
-	"media": autoguard.Union.of(
-		autoguard.Reference.of<EpisodeBase>(() => EpisodeBase),
-		autoguard.Reference.of<MovieBase>(() => MovieBase)
-	)
+	"file": autoguard.Reference.of<VideoFile>(() => VideoFile)
 });
 
 export type Segment = SegmentBase & {

@@ -885,8 +885,7 @@ export function api_lookupEpisode(episode_id: string, user_id: string, season?: 
 			duration_ms: entry.duration,
 			height: 0,
 			width: 0
-		},
-		media: episode
+		}
 	};
 	let segment: Segment = {
 		...segment_base,
@@ -950,8 +949,7 @@ export function api_lookupMovie(movie_id: string, user_id: string): Movie {
 			duration_ms: parts[0].duration,
 			height: 0,
 			width: 0
-		},
-		media: movie
+		}
 	};
 	let segment: Segment = {
 		...segment_base,
