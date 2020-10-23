@@ -7,7 +7,7 @@
 		album_id: string,
 		title: string,
 		year: number,
-		cover_file_id: (string | null)
+		cover_file_id: string | null
 	},
 	DiscEntry: {
 		disc_id: string,
@@ -38,8 +38,8 @@
 		movie_id: string,
 		title: string,
 		year: number,
-		summary: (string | null),
-		poster_file_id: (string | null)
+		summary: string | null,
+		poster_file_id: string | null
 	},
 	MovieGenreEntry: {
 		movie_id: string,
@@ -72,14 +72,14 @@
 		title: string,
 		number: number,
 		duration: number,
-		year: (number | null),
-		summary: (string | null)
+		year: number | null,
+		summary: string | null
 	},
 	SubtitleEntry: {
 		subtitle_id: string,
 		file_id: string,
 		video_file_id: string,
-		language: (string | null)
+		language: string | null
 	},
 	SubtitleContentEntry: {
 		subtitle_id: string,
@@ -99,26 +99,26 @@
 	},
 	MediaDatabase: {
 		audio: {
-			artists: @ArtistEntry[],
-			albums: @AlbumEntry[],
-			discs: @DiscEntry[],
-			tracks: @TrackEntry[],
-			album_artists: @AlbumArtistEntry[],
-			track_artists: @TrackArtistEntry[]
+			artists: ArtistEntry[],
+			albums: AlbumEntry[],
+			discs: DiscEntry[],
+			tracks: TrackEntry[],
+			album_artists: AlbumArtistEntry[],
+			track_artists: TrackArtistEntry[]
 		},
 		video: {
-			genres: @VideoGenreEntry[],
-			movie_parts: @MoviePartEntry[],
-			movies: @MovieEntry[],
-			movie_genres: @MovieGenreEntry[],
-			shows: @ShowEntry[],
-			show_genres: @ShowGenreEntry[],
-			seasons: @SeasonEntry[],
-			episodes: @EpisodeEntry[],
-			subtitles: @SubtitleEntry[],
-			subtitle_contents: @SubtitleContentEntry[]
+			genres: VideoGenreEntry[],
+			movie_parts: MoviePartEntry[],
+			movies: MovieEntry[],
+			movie_genres: MovieGenreEntry[],
+			shows: ShowEntry[],
+			show_genres: ShowGenreEntry[],
+			seasons: SeasonEntry[],
+			episodes: EpisodeEntry[],
+			subtitles: SubtitleEntry[],
+			subtitle_contents: SubtitleContentEntry[]
 		},
-		files: @FileEntry[]
+		files: FileEntry[]
 	},
 	SubtitlesDatabase: { string[] },
 	AudiolistEntry: {
@@ -133,8 +133,8 @@
 		number: number
 	},
 	ListDatabase: {
-		audiolists: @AudiolistEntry[],
-		audiolist_items: @AudiolistItemEntry[]
+		audiolists: AudiolistEntry[],
+		audiolist_items: AudiolistItemEntry[]
 	},
 	UserEntry: {
 		user_id: string,
@@ -148,8 +148,8 @@
 		expires_ms: number
 	},
 	UserDatabase: {
-		users: @UserEntry[],
-		tokens: @AuthToken[]
+		users: UserEntry[],
+		tokens: AuthToken[]
 	},
 	Stream: {
 		username: string,
@@ -157,7 +157,7 @@
 		timestamp_ms: number
 	},
 	StreamDatabase: {
-		streams: @Stream[]
+		streams: Stream[]
 	},
 	ChannelEntry: {
 		channel_id: string
@@ -169,7 +169,7 @@
 		start_time_ms: number
 	},
 	ChannelDatabase: {
-		channels: @ChannelEntry[],
-		programs: @ProgramEntry[]
+		channels: ChannelEntry[],
+		programs: ProgramEntry[]
 	}
 }

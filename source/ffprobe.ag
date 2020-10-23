@@ -3,13 +3,13 @@
 		"pkt_pts_time": string
 	},
 	ShowFrames: {
-		"frames": @VideoFrame[]
+		"frames": VideoFrame[]
 	},
 	Stream: {
 		"start_time": string,
 		"duration": string
 	},
 	ShowStreams: {
-		"streams": @Stream[]
+		"streams": Stream[]
 	}
 }
