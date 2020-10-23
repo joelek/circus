@@ -87,7 +87,6 @@ export type TrackBase = {
 	"title": string,
 	"disc": DiscBase,
 	"artists": ArtistBase[],
-	"file": AudioFile,
 	"number": number,
 	"last_stream_date"?: number
 };
@@ -97,7 +96,6 @@ export const TrackBase = autoguard.Object.of<TrackBase>({
 	"title": autoguard.String,
 	"disc": autoguard.Reference.of<DiscBase>(() => DiscBase),
 	"artists": autoguard.Array.of(autoguard.Reference.of<ArtistBase>(() => ArtistBase)),
-	"file": autoguard.Reference.of<AudioFile>(() => AudioFile),
 	"number": autoguard.Number,
 	"last_stream_date": autoguard.Union.of(
 		autoguard.Undefined,
@@ -105,11 +103,25 @@ export const TrackBase = autoguard.Object.of<TrackBase>({
 	)
 });
 
-export type Track = TrackBase & {};
+export type Track = TrackBase & {
+	"segment": {
+		"file": AudioFile
+	}
+};
 
 export const Track = autoguard.Intersection.of(
 	autoguard.Reference.of<TrackBase>(() => TrackBase),
-	autoguard.Object.of<{}>({})
+	autoguard.Object.of<{
+		"segment": {
+			"file": AudioFile
+		}
+	}>({
+		"segment": autoguard.Object.of<{
+			"file": AudioFile
+		}>({
+			"file": autoguard.Reference.of<AudioFile>(() => AudioFile)
+		})
+	})
 );
 
 export type UserBase = {
@@ -192,14 +204,38 @@ export const Genre = autoguard.Intersection.of(
 	autoguard.Object.of<{}>({})
 );
 
+export type SegmentBase = {
+	"file": VideoFile,
+	"media": EpisodeBase | MovieBase
+};
+
+export const SegmentBase = autoguard.Object.of<SegmentBase>({
+	"file": autoguard.Reference.of<VideoFile>(() => VideoFile),
+	"media": autoguard.Union.of(
+		autoguard.Reference.of<EpisodeBase>(() => EpisodeBase),
+		autoguard.Reference.of<MovieBase>(() => MovieBase)
+	)
+});
+
+export type Segment = SegmentBase & {
+	"subtitles": Subtitle[]
+};
+
+export const Segment = autoguard.Intersection.of(
+	autoguard.Reference.of<SegmentBase>(() => SegmentBase),
+	autoguard.Object.of<{
+		"subtitles": Subtitle[]
+	}>({
+		"subtitles": autoguard.Array.of(autoguard.Reference.of<Subtitle>(() => Subtitle))
+	})
+);
+
 export type MovieBase = {
 	"movie_id": string,
 	"title": string,
 	"year": number,
 	"summary": string,
 	"artwork"?: ImageFile,
-	"file": VideoFile,
-	"subtitles": SubtitleFile[],
 	"last_stream_date"?: number
 };
 
@@ -212,8 +248,6 @@ export const MovieBase = autoguard.Object.of<MovieBase>({
 		autoguard.Undefined,
 		autoguard.Reference.of<ImageFile>(() => ImageFile)
 	),
-	"file": autoguard.Reference.of<VideoFile>(() => VideoFile),
-	"subtitles": autoguard.Array.of(autoguard.Reference.of<SubtitleFile>(() => SubtitleFile)),
 	"last_stream_date": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.Number
@@ -221,14 +255,17 @@ export const MovieBase = autoguard.Object.of<MovieBase>({
 });
 
 export type Movie = MovieBase & {
+	"segment": Segment,
 	"genres": Genre[]
 };
 
 export const Movie = autoguard.Intersection.of(
 	autoguard.Reference.of<MovieBase>(() => MovieBase),
 	autoguard.Object.of<{
+		"segment": Segment,
 		"genres": Genre[]
 	}>({
+		"segment": autoguard.Reference.of<Segment>(() => Segment),
 		"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre))
 	})
 );
@@ -294,8 +331,6 @@ export type EpisodeBase = {
 	"title": string,
 	"summary": string,
 	"number": number,
-	"file": VideoFile,
-	"subtitles": SubtitleFile[],
 	"season": SeasonBase,
 	"year"?: number,
 	"last_stream_date"?: number
@@ -306,8 +341,6 @@ export const EpisodeBase = autoguard.Object.of<EpisodeBase>({
 	"title": autoguard.String,
 	"summary": autoguard.String,
 	"number": autoguard.Number,
-	"file": autoguard.Reference.of<VideoFile>(() => VideoFile),
-	"subtitles": autoguard.Array.of(autoguard.Reference.of<SubtitleFile>(() => SubtitleFile)),
 	"season": autoguard.Reference.of<SeasonBase>(() => SeasonBase),
 	"year": autoguard.Union.of(
 		autoguard.Undefined,
@@ -319,10 +352,69 @@ export const EpisodeBase = autoguard.Object.of<EpisodeBase>({
 	)
 });
 
-export type Episode = EpisodeBase & {};
+export type Episode = EpisodeBase & {
+	"segment": Segment
+};
 
 export const Episode = autoguard.Intersection.of(
 	autoguard.Reference.of<EpisodeBase>(() => EpisodeBase),
+	autoguard.Object.of<{
+		"segment": Segment
+	}>({
+		"segment": autoguard.Reference.of<Segment>(() => Segment)
+	})
+);
+
+export type SubtitleBase = {
+	"subtitle_id": string,
+	"file": SubtitleFile,
+	"segment": SegmentBase,
+	"language"?: string
+};
+
+export const SubtitleBase = autoguard.Object.of<SubtitleBase>({
+	"subtitle_id": autoguard.String,
+	"file": autoguard.Reference.of<SubtitleFile>(() => SubtitleFile),
+	"segment": autoguard.Reference.of<SegmentBase>(() => SegmentBase),
+	"language": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.String
+	)
+});
+
+export type Subtitle = SubtitleBase & {
+	"cues": Cue[]
+};
+
+export const Subtitle = autoguard.Intersection.of(
+	autoguard.Reference.of<SubtitleBase>(() => SubtitleBase),
+	autoguard.Object.of<{
+		"cues": Cue[]
+	}>({
+		"cues": autoguard.Array.of(autoguard.Reference.of<Cue>(() => Cue))
+	})
+);
+
+export type CueBase = {
+	"cue_id": string,
+	"subtitle": SubtitleBase,
+	"start_ms": number,
+	"duration_ms": number,
+	"lines": string[]
+};
+
+export const CueBase = autoguard.Object.of<CueBase>({
+	"cue_id": autoguard.String,
+	"subtitle": autoguard.Reference.of<SubtitleBase>(() => SubtitleBase),
+	"start_ms": autoguard.Number,
+	"duration_ms": autoguard.Number,
+	"lines": autoguard.Array.of(autoguard.String)
+});
+
+export type Cue = CueBase & {};
+
+export const Cue = autoguard.Intersection.of(
+	autoguard.Reference.of<CueBase>(() => CueBase),
 	autoguard.Object.of<{}>({})
 );
 
@@ -365,32 +457,29 @@ export const ImageFile = autoguard.Intersection.of(
 	})
 );
 
-export type SubtitleFile = File & {
-	"language"?: string
-};
+export type SubtitleFile = File & {};
 
 export const SubtitleFile = autoguard.Intersection.of(
 	autoguard.Reference.of<File>(() => File),
-	autoguard.Object.of<{
-		"language"?: string
-	}>({
-		"language": autoguard.Union.of(
-			autoguard.Undefined,
-			autoguard.String
-		)
-	})
+	autoguard.Object.of<{}>({})
 );
 
 export type VideoFile = File & {
-	"duration_ms": number
+	"duration_ms": number,
+	"height": number,
+	"width": number
 };
 
 export const VideoFile = autoguard.Intersection.of(
 	autoguard.Reference.of<File>(() => File),
 	autoguard.Object.of<{
-		"duration_ms": number
+		"duration_ms": number,
+		"height": number,
+		"width": number
 	}>({
-		"duration_ms": autoguard.Number
+		"duration_ms": autoguard.Number,
+		"height": autoguard.Number,
+		"width": autoguard.Number
 	})
 );
 
@@ -411,6 +500,8 @@ export type Autoguard = {
 	"PlaylistItem": PlaylistItem,
 	"GenreBase": GenreBase,
 	"Genre": Genre,
+	"SegmentBase": SegmentBase,
+	"Segment": Segment,
 	"MovieBase": MovieBase,
 	"Movie": Movie,
 	"ShowBase": ShowBase,
@@ -419,6 +510,10 @@ export type Autoguard = {
 	"Season": Season,
 	"EpisodeBase": EpisodeBase,
 	"Episode": Episode,
+	"SubtitleBase": SubtitleBase,
+	"Subtitle": Subtitle,
+	"CueBase": CueBase,
+	"Cue": Cue,
 	"File": File,
 	"AudioFile": AudioFile,
 	"ImageFile": ImageFile,
@@ -443,6 +538,8 @@ export const Autoguard = {
 	"PlaylistItem": PlaylistItem,
 	"GenreBase": GenreBase,
 	"Genre": Genre,
+	"SegmentBase": SegmentBase,
+	"Segment": Segment,
 	"MovieBase": MovieBase,
 	"Movie": Movie,
 	"ShowBase": ShowBase,
@@ -451,6 +548,10 @@ export const Autoguard = {
 	"Season": Season,
 	"EpisodeBase": EpisodeBase,
 	"Episode": Episode,
+	"SubtitleBase": SubtitleBase,
+	"Subtitle": Subtitle,
+	"CueBase": CueBase,
+	"Cue": Cue,
 	"File": File,
 	"AudioFile": AudioFile,
 	"ImageFile": ImageFile,

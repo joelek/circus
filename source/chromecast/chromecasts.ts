@@ -29,35 +29,34 @@ function getLanguage(language: string | undefined): { language: string, name: st
 }
 
 function makeMediaInformation(item: Episode | Movie | Track, token: string): schema.objects.MediaInformation {
-	let url = `${MEDIA_SERVER}/files/${item.file.file_id}/?token=${token}`;
 	if (Episode.is(item)) {
 		let episode = item;
 		let season = episode.season;
 		let show = season.show;
 		return {
-			contentId: url,
-			contentType: item.file.mime,
+			contentId: `${MEDIA_SERVER}/files/${item.segment.file.file_id}/?token=${token}`,
+			contentType: episode.segment.file.mime,
 			streamType: "BUFFERED",
 			metadata: {
 				metadataType: 0,
 				title: episode.title,
 				subtitle: show.title
 			},
-			tracks: episode.subtitles.map((subtitle, subtitleIndex) => ({
+			tracks: episode.segment.subtitles.map((subtitle, subtitleIndex) => ({
 				...getLanguage(subtitle.language),
 				trackId: subtitleIndex,
 				type: "TEXT",
 				trackType: "TEXT",
-				trackContentId: `${MEDIA_SERVER}/files/${subtitle.file_id}/?token=${token}`,
-				trackContentType: subtitle.mime,
+				trackContentId: `${MEDIA_SERVER}/files/${subtitle.file.file_id}/?token=${token}`,
+				trackContentType: subtitle.file.mime,
 				subtype: "SUBTITLES"
 			}))
 		};
 	} else if (Movie.is(item)) {
 		let movie = item;
 		return {
-			contentId: url,
-			contentType: item.file.mime,
+			contentId: `${MEDIA_SERVER}/files/${item.segment.file.file_id}/?token=${token}`,
+			contentType: movie.segment.file.mime,
 			streamType: "BUFFERED",
 			metadata: {
 				metadataType: 0,
@@ -68,13 +67,13 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 					}
 				]
 			},
-			tracks: movie.subtitles.map((subtitle, subtitleIndex) => ({
+			tracks: movie.segment.subtitles.map((subtitle, subtitleIndex) => ({
 				...getLanguage(subtitle.language),
 				trackId: subtitleIndex,
 				type: "TEXT",
 				trackType: "TEXT",
-				trackContentId: `${MEDIA_SERVER}/files/${subtitle.file_id}/?token=${token}`,
-				trackContentType: subtitle.mime,
+				trackContentId: `${MEDIA_SERVER}/files/${subtitle.file.file_id}/?token=${token}`,
+				trackContentType: subtitle.file.mime,
 				subtype: "SUBTITLES"
 			}))
 		};
@@ -83,8 +82,8 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 		let disc = track.disc;
 		let album = disc.album;
 		return {
-			contentId: url,
-			contentType: item.file.mime,
+			contentId: `${MEDIA_SERVER}/files/${item.segment.file.file_id}/?token=${token}`,
+			contentType: item.segment.file.mime,
 			streamType: "BUFFERED",
 			metadata: {
 				metadataType: 0,

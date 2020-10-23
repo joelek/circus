@@ -180,7 +180,7 @@ player.currentEntry.addObserver((currentEntry) => {
 			lastVideo.src = ``;
 			return;
 		} else {
-			lastVideo.src = `/files/${lastLocalEntry.file.file_id}/?token=${token}`;
+			lastVideo.src = `/files/${lastLocalEntry.segment.file.file_id}/?token=${token}`;
 		}
 	};
 	player.lastLocalEntry.addObserver(computer);
@@ -195,17 +195,17 @@ player.currentEntry.addObserver((currentEntry) => {
 			currentVideo.src = ``;
 			return;
 		} else {
-			currentVideo.src = `/files/${currentLocalEntry.file.file_id}/?token=${token}`;
+			currentVideo.src = `/files/${currentLocalEntry.segment.file.file_id}/?token=${token}`;
 		}
 		while (currentVideo.lastChild != null) {
 			currentVideo.removeChild(currentVideo.lastChild);
 		}
 		if (Movie.is(currentLocalEntry) || Episode.is(currentLocalEntry)) {
-			let subtitles = currentLocalEntry.subtitles;
+			let subtitles = currentLocalEntry.segment.subtitles;
 			let defaultSubtitle = subtitles.find((subtitle) => subtitle.language === "swe") ?? subtitles.find((subtitle) => subtitle.language === "eng");
 			for (let subtitle of subtitles) {
 				let element = document.createElement("track");
-				element.src = `/files/${subtitle.file_id}/?token=${token}`;
+				element.src = `/files/${subtitle.file.file_id}/?token=${token}`;
 				if (is.present(subtitle.language)) {
 					let language = languages.db[subtitle.language];
 					if (is.present(language)) {
@@ -232,7 +232,7 @@ player.currentEntry.addObserver((currentEntry) => {
 			lastVideo.src = ``;
 			return;
 		} else {
-			lastVideo.src = `/files/${nextLocalEntry.file.file_id}/?token=${token}`;
+			lastVideo.src = `/files/${nextLocalEntry.segment.file.file_id}/?token=${token}`;
 		}
 	};
 	player.nextLocalEntry.addObserver(computer);
@@ -1654,7 +1654,7 @@ function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
 	let duration_ms = 0;
 	for (let disc of album.discs) {
 		for (let track of disc.tracks) {
-			duration_ms += track.file.duration_ms;
+			duration_ms += track.segment.file.duration_ms;
 		}
 	}
 	let title = album.title;
@@ -1728,7 +1728,7 @@ function makeArtist(artist: ContextArtist, play: () => void = () => player.playA
 	for (let album of artist.albums) {
 		for (let disc of album.discs) {
 			for (let track of disc.tracks) {
-				duration_ms += track.file.duration_ms;
+				duration_ms += track.segment.file.duration_ms;
 			}
 		}
 	}
@@ -1789,7 +1789,7 @@ function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 	let tags = [
 		"Episode",
 		`${episode.year}`,
-		format_duration(episode.file.duration_ms)
+		format_duration(episode.segment.file.duration_ms)
 	];
 	let isContext = computed((contextPath) => {
 		if (!is.present(contextPath)) {
@@ -1811,7 +1811,7 @@ function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 			.set("style", "padding-bottom: 56.25%;")
 			.add(xml.element("div.media-widget__images")
 				.add(xml.element("img.media-widget__image")
-					.set("src", `/media/stills/${episode.file.file_id}/?token=${token}`)
+					.set("src", `/media/stills/${episode.segment.file.file_id}/?token=${token}`)
 				)
 			)
 			.add(xml.element("div.media-widget__playback")
@@ -1854,7 +1854,7 @@ function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 function makeShow(show: Show, play: () => void): xml.XElement {
 	const duration_ms = show.seasons.reduce((sum, season) => {
 		return sum + season.episodes.reduce((sum, episode) => {
-			return sum + episode.file.duration_ms;
+			return sum + episode.segment.file.duration_ms;
 		}, 0);
 	}, 0);
 	let tags = [
@@ -1922,7 +1922,7 @@ function makeMovie(movie: Movie, play: () => void = () => player.playMovie(movie
 	let tags = [
 		"Movie",
 		`${movie.year}`,
-		format_duration(movie.file.duration_ms)
+		format_duration(movie.segment.file.duration_ms)
 	];
 	let isContext = computed((contextPath) => {
 		if (!is.present(contextPath)) {
@@ -1987,7 +1987,7 @@ function makeMovie(movie: Movie, play: () => void = () => player.playMovie(movie
 function makePlaylist(playlist: Playlist, play: () => void = () => player.playPlaylist(playlist)): xml.XElement {
 	let duration_ms = 0;
 	for (let item of playlist.items) {
-		duration_ms += item.track.file.duration_ms;
+		duration_ms += item.track.segment.file.duration_ms;
 	}
 	let isContext = computed((contextPath) => {
 		if (!is.present(contextPath)) {
@@ -2123,7 +2123,7 @@ let updateviewforuri = (uri: string): void => {
 			let duration_ms = 0;
 			for (let disc of album.discs) {
 				for (let track of disc.tracks) {
-					duration_ms += track.file.duration_ms;
+					duration_ms += track.segment.file.duration_ms;
 				}
 			}
 			let header = xml.element("div.content")
@@ -2246,7 +2246,7 @@ let updateviewforuri = (uri: string): void => {
 			for (let album of artist.albums) {
 				for (let disc of album.discs) {
 					for (let track of disc.tracks) {
-						duration_ms += track.file.duration_ms;
+						duration_ms += track.segment.file.duration_ms;
 					}
 				}
 			}
@@ -2350,7 +2350,7 @@ let updateviewforuri = (uri: string): void => {
 			let playlist = response.playlist;
 			let duration_ms = 0;
 			for (let item of playlist.items) {
-				duration_ms += item.track.file.duration_ms;
+				duration_ms += item.track.segment.file.duration_ms;
 			}
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
@@ -2466,7 +2466,7 @@ let updateviewforuri = (uri: string): void => {
 			const show = response.show;
 			const duration_ms = show.seasons.reduce((sum, season) => {
 				return sum + season.episodes.reduce((sum, episode) => {
-					return sum + episode.file.duration_ms;
+					return sum + episode.segment.file.duration_ms;
 				}, 0);
 			}, 0);
 			const indices = getNextEpisode(show);
@@ -2597,8 +2597,8 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeEntityHeader(
 							episode.title,
 							[EntityLink.forShow(show), EntityLink.forSeason(season)],
-							["Episode", `${episode.year}`, format_duration(episode.file.duration_ms)],
-							ImageBox.forVideo(`/media/stills/${episode.file.file_id}/`)
+							["Episode", `${episode.year}`, format_duration(episode.segment.file.duration_ms)],
+							ImageBox.forVideo(`/media/stills/${episode.segment.file.file_id}/`)
 								.set("style", "padding-bottom: 56.25%;"),
 							xml.element("div.playback-button")
 								.add(Icon.makePlay()
@@ -2655,7 +2655,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeEntityHeader(
 							movie.title,
 							movie.genres.map((genre) => EntityLink.forGenre(genre)),
-							["Movie", `${movie.year}`, format_duration(movie.file.duration_ms)],
+							["Movie", `${movie.year}`, format_duration(movie.segment.file.duration_ms)],
 							ImageBox.forPoster(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/`)
 								.set("style", "padding-bottom: 150%"),
 							xml.element("div.playback-button")

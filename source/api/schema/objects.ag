@@ -35,13 +35,14 @@
 		title: string,
 		disc: DiscBase,
 		artists: ArtistBase[],
-		file: AudioFile,
 		number: number,
 		last_stream_date?: number
 	},
 
 	Track: TrackBase & {
-
+		segment: {
+			file: AudioFile
+		}
 	},
 
 	UserBase: {
@@ -83,18 +84,26 @@
 
 	},
 
+	SegmentBase: {
+		file: VideoFile,
+		media: EpisodeBase | MovieBase
+	},
+
+	Segment: SegmentBase & {
+		subtitles: Subtitle[]
+	},
+
 	MovieBase: {
 		movie_id: string,
 		title: string,
 		year: number,
 		summary: string,
 		artwork?: ImageFile,
-		file: VideoFile,
-		subtitles: SubtitleFile[],
 		last_stream_date?: number
 	},
 
 	Movie: MovieBase & {
+		segment: Segment,
 		genres: Genre[]
 	},
 
@@ -124,14 +133,35 @@
 		title: string,
 		summary: string,
 		number: number,
-		file: VideoFile,
-		subtitles: SubtitleFile[],
 		season: SeasonBase,
 		year?: number,
 		last_stream_date?: number
 	},
 
 	Episode: EpisodeBase & {
+		segment: Segment
+	},
+
+	SubtitleBase: {
+		subtitle_id: string,
+		file: SubtitleFile,
+		segment: SegmentBase,
+		language?: string
+	},
+
+	Subtitle: SubtitleBase & {
+		cues: Cue[]
+	},
+
+	CueBase: {
+		cue_id: string,
+		subtitle: SubtitleBase,
+		start_ms: number,
+		duration_ms: number,
+		lines: string[]
+	},
+
+	Cue: CueBase & {
 
 	},
 
@@ -150,10 +180,12 @@
 	},
 
 	SubtitleFile: File & {
-		language?: string
+
 	},
 
 	VideoFile: File & {
-		duration_ms: number
+		duration_ms: number,
+		height: number,
+		width: number
 	}
 }

@@ -5,7 +5,7 @@ import * as utils from "./utils";
 import * as passwords from "./passwords";
 import { LexicalSort, NumericSort } from "./shared";
 import * as is from "./is";
-import { Album, AlbumBase, Artist, ArtistBase, Disc, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, Disc, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, SegmentBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -617,38 +617,6 @@ export function lookupEpisode(id: string): libdb.EpisodeEntry & { season: libdb.
 	};
 }
 
-export function lookupEpisodeV2(episode_id: string): Episode {
-	let episode = lookup(episodes_index, episode_id);
-	let season = lookup(seasons_index, episode.season_id);
-	let show = lookup(shows_index, season.show_id);
-	return {
-		episode_id: episode.episode_id,
-		title: episode.title,
-		summary: episode.summary ?? "",
-		number: episode.number,
-		file: {
-			file_id: episode.file_id,
-			mime: "video/mp4",
-			duration_ms: episode.duration
-		},
-		subtitles: lookupSubtitles(episode.file_id).map((subtitle) => ({
-			file_id: subtitle.file_id,
-			mime: "text/vtt",
-			language: subtitle.language ?? undefined
-		})),
-		season: {
-			season_id: season.season_id,
-			number: season.number,
-			show: {
-				show_id: show.show_id,
-				title: show.title
-			}
-		},
-		year: episode.year ?? undefined,
-		last_stream_date: undefined
-	};
-}
-
 class SearchIndex {
 	private map: Map<string, Set<string>>;
 
@@ -874,15 +842,19 @@ export function api_lookupDisc(disc_id: string, user_id: string, album?: AlbumBa
 			artists: trackArtistsIndex.lookup(entry.track_id).map((entry) => {
 				return getArtistFromArtistId.lookup(entry.artist_id);
 			}),
-			file: {
-				file_id: entry.file_id,
-				mime: "audio/mp4",
-				duration_ms: entry.duration
-			},
 			number: entry.number,
 			last_stream_date: undefined
 		};
-		return track;
+		return {
+			...track,
+			segment: {
+				file: {
+					file_id: entry.file_id,
+					mime: "audio/mp4",
+					duration_ms: entry.duration
+				}
+			}
+		};
 	});
 	return {
 		...disc,
@@ -897,16 +869,6 @@ export function api_lookupEpisodeBase(episode_id: string, user_id: string, seaso
 		title: entry.title,
 		summary: entry.summary ?? "",
 		number: entry.number,
-		file: {
-			file_id: entry.file_id,
-			mime: "video/mp4",
-			duration_ms: entry.duration
-		},
-		subtitles: lookupSubtitles(entry.file_id).map((entry) => ({
-			file_id: entry.file_id,
-			mime: "text/vtt",
-			language: entry.language ?? undefined
-		})),
 		season: is.present(season) ? season : api_lookupSeasonBase(entry.season_id, user_id),
 		year: entry.year ?? undefined,
 		last_stream_date: undefined
@@ -914,9 +876,34 @@ export function api_lookupEpisodeBase(episode_id: string, user_id: string, seaso
 };
 
 export function api_lookupEpisode(episode_id: string, user_id: string, season?: SeasonBase): Episode {
+	let entry = getEpisodeFromEpisodeId.lookup(episode_id);
 	let episode = api_lookupEpisodeBase(episode_id, user_id, season);
+	let segment_base: SegmentBase = {
+		file: {
+			file_id: entry.file_id,
+			mime: "video/mp4",
+			duration_ms: entry.duration,
+			height: 0,
+			width: 0
+		},
+		media: episode
+	};
+	let segment: Segment = {
+		...segment_base,
+		subtitles: lookupSubtitles(entry.file_id).map((entry) => ({
+			subtitle_id: entry.subtitle_id,
+			file: {
+				file_id: entry.file_id,
+				mime: "text/vtt"
+			},
+			segment: segment_base,
+			language: entry.language ?? undefined,
+			cues: []
+		}))
+	};
 	return {
-		...episode
+		...episode,
+		segment
 	};
 };
 
@@ -949,22 +936,36 @@ export function api_lookupMovieBase(movie_id: string, user_id: string): MovieBas
 			height: 720,
 			width: 1080
 		},
-		file: {
-			file_id: parts[0].file_id,
-			mime: "video/mp4",
-			duration_ms: parts[0].duration
-		},
-		subtitles: parts[0].subtitles.map((subtitle) => ({
-			file_id: subtitle.file_id,
-			mime: "text/vtt",
-			language: subtitle.language ?? undefined
-		})),
 		last_stream_date: is.present(user_id) ? getLatestStream(user_id, parts[0].file_id) ?? undefined : undefined
 	};
 };
 
 export function api_lookupMovie(movie_id: string, user_id: string): Movie {
+	let parts = getMoviePartsFromMovieId(movie_id);
 	let movie = api_lookupMovieBase(movie_id, user_id);
+	let segment_base: SegmentBase = {
+		file: {
+			file_id: parts[0].file_id,
+			mime: "video/mp4",
+			duration_ms: parts[0].duration,
+			height: 0,
+			width: 0
+		},
+		media: movie
+	};
+	let segment: Segment = {
+		...segment_base,
+		subtitles: parts[0].subtitles.map((subtitle) => ({
+			subtitle_id: subtitle.subtitle_id,
+			file: {
+				file_id: subtitle.file_id,
+				mime: "text/vtt"
+			},
+			segment: segment_base,
+			language: subtitle.language ?? undefined,
+			cues: []
+		}))
+	};
 	let genres = getMovieGenresFromMovieId.lookup(movie_id).map((movie_genre) => {
 		let entry = getVideoGenreFromVideoGenreId.lookup(movie_genre.video_genre_id);
 		return {
@@ -974,6 +975,7 @@ export function api_lookupMovie(movie_id: string, user_id: string): Movie {
 	}).sort(LexicalSort.increasing((value) => value.title));
 	return {
 		...movie,
+		segment,
 		genres
 	};
 };
@@ -1057,20 +1059,23 @@ export function api_lookupTrackBase(track_id: string, user_id: string, disc?: Di
 		artists: trackArtistsIndex.lookup(entry.track_id).map((entry) => {
 			return getArtistFromArtistId.lookup(entry.artist_id);
 		}),
-		file: {
-			file_id: entry.file_id,
-			mime: "audio/mp4",
-			duration_ms: entry.duration
-		},
 		number: entry.number,
 		last_stream_date: undefined
 	};
 };
 
 export function api_lookupTrack(track_id: string, user_id: string, disc?: DiscBase): Track {
+	let entry = getTrackFromTrackId.lookup(track_id);
 	let track = api_lookupTrackBase(track_id, user_id, disc);
 	return {
-		...track
+		...track,
+		segment: {
+			file: {
+				file_id: entry.file_id,
+				mime: "audio/mp4",
+				duration_ms: entry.duration
+			}
+		}
 	};
 };
 

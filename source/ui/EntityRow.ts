@@ -150,7 +150,7 @@ export class EntityRowFactory {
 		let duration_ms = 0;
 		for (let disc of album.discs) {
 			for (let track of disc.tracks) {
-				duration_ms += track.file.duration_ms;
+				duration_ms += track.segment.file.duration_ms;
 			}
 		}
 		let link = this.EntityLink.forAlbum(album);
@@ -170,7 +170,7 @@ export class EntityRowFactory {
 		for (let album of artist.albums) {
 			for (let disc of album.discs) {
 				for (let track of disc.tracks) {
-					duration_ms += track.file.duration_ms;
+					duration_ms += track.segment.file.duration_ms;
 				}
 			}
 		}
@@ -188,7 +188,7 @@ export class EntityRowFactory {
 	forDisc(disc: api.Disc, playbackButton: xnode.XElement = this.PlaybackButton.forDisc(disc)): xnode.XElement {
 		let duration_ms = 0;
 		for (let track of disc.tracks) {
-			duration_ms += track.file.duration_ms;
+			duration_ms += track.segment.file.duration_ms;
 		}
 		let link = this.EntityLink.forDisc(disc);
 		let image = this.ImageBox.forSquare(is.absent(disc.album.artwork) ? undefined : `/files/${disc.album.artwork.file_id}/`);
@@ -205,7 +205,7 @@ export class EntityRowFactory {
 
 	forEpisode(episode: api.Episode, playbackButton: xnode.XElement = this.PlaybackButton.forEpisode(episode)): xnode.XElement {
 		let duration_ms = 0;
-		duration_ms += episode.file.duration_ms;
+		duration_ms += episode.segment.file.duration_ms;
 		let link = this.EntityLink.forEpisode(episode);
 		let image = this.ImageBox.forSquare();
 		//let image = this.ImageBox.forSquare(`/media/stills/${episode.file.file_id}/`);
@@ -224,7 +224,7 @@ export class EntityRowFactory {
 
 	forMovie(movie: api.Movie, playbackButton: xnode.XElement = this.PlaybackButton.forMovie(movie)): xnode.XElement {
 		let duration_ms = 0;
-		duration_ms += movie.file.duration_ms;
+		duration_ms += movie.segment.file.duration_ms;
 		let link = this.EntityLink.forMovie(movie);
 		let image = this.ImageBox.forSquare(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/`);
 		let title = this.EntityLink.forMovie(movie);
@@ -240,7 +240,7 @@ export class EntityRowFactory {
 	forPlaylist(playlist: api.Playlist, playbackButton: xnode.XElement = this.PlaybackButton.forPlaylist(playlist)): xnode.XElement {
 		let duration_ms = 0;
 		for (let item of playlist.items) {
-			duration_ms += item.track.file.duration_ms;
+			duration_ms += item.track.segment.file.duration_ms;
 		}
 		let link = this.EntityLink.forPlaylist(playlist);
 		let image = this.ImageBox.forSquare();
@@ -258,7 +258,7 @@ export class EntityRowFactory {
 	forSeason(season: api.Season, playbackButton: xnode.XElement = this.PlaybackButton.forSeason(season)): xnode.XElement {
 		let duration_ms = 0;
 		for (let episode of season.episodes) {
-			duration_ms += episode.file.duration_ms;
+			duration_ms += episode.segment.file.duration_ms;
 		}
 		let link = this.EntityLink.forSeason(season);
 		let image = this.ImageBox.forSquare(is.absent(season.show.artwork) ? undefined : `/files/${season.show.artwork.file_id}/`);
@@ -277,7 +277,7 @@ export class EntityRowFactory {
 		let duration_ms = 0;
 		for (let season of show.seasons) {
 			for (let episode of season.episodes) {
-				duration_ms += episode.file.duration_ms;
+				duration_ms += episode.segment.file.duration_ms;
 			}
 		}
 		let link = this.EntityLink.forShow(show);
@@ -293,7 +293,7 @@ export class EntityRowFactory {
 
 	forTrack(track: api.Track, playbackButton: xnode.XElement = this.PlaybackButton.forTrack(track)): xnode.XElement {
 		let duration_ms = 0;
-		duration_ms += track.file.duration_ms;
+		duration_ms += track.segment.file.duration_ms;
 		let link = this.EntityLink.forTrack(track);
 		let image = this.ImageBox.forSquare(is.absent(track.disc.album.artwork) ? undefined : `/files/${track.disc.album.artwork.file_id}/`);
 		let title = this.EntityLink.forTrack(track);
