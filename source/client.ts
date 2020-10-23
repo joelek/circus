@@ -1774,23 +1774,6 @@ function makeArtist(artist: ContextArtist, play: () => void = () => player.playA
 		);
 }
 
-function makeGenre(genre: Genre): xml.XElement {
-	return xml.element("div.media-widget")
-		.add(xml.element("div.media-widget__artwork"))
-		.add(xml.element("div.media-widget__metadata")
-			.add(xml.element("div.media-widget__titles")
-				.add(xml.element("div.media-widget__title")
-					.add(xml.text(genre.title))
-				)
-			)
-			.add(xml.element("div.media-widget__tags")
-				.add(makeTag("Video Genre"))
-			)
-		).on("click", () => {
-			navigate(`video/genres/${genre.genre_id}/`);
-		});
-}
-
 function makeEpisode(episode: Episode, play: () => void): xml.XElement {
 	let title = episode.title;
 	let tags = [
@@ -2987,7 +2970,8 @@ let updateviewforuri = (uri: string): void => {
 					.add(renderTextHeader(xml.text("Video Genres")))
 				)
 				.add(xml.element("div.content")
-					.add(makeGrid(undefined, ...genres.map(makeGenre)))
+					.set("style", "display: grid; gap: 32px;")
+					.add(...genres.map((genre) => renderTextHeader(EntityLink.forGenre(genre))))
 				)
 				.render()
 			);
