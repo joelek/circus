@@ -144,7 +144,6 @@
 	SubtitleBase: {
 		subtitle_id: string,
 		file: SubtitleFile,
-		segment: SegmentBase,
 		language?: string
 	},
 

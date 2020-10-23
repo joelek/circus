@@ -363,14 +363,12 @@ export const Episode = autoguard.Intersection.of(
 export type SubtitleBase = {
 	"subtitle_id": string,
 	"file": SubtitleFile,
-	"segment": SegmentBase,
 	"language"?: string
 };
 
 export const SubtitleBase = autoguard.Object.of<SubtitleBase>({
 	"subtitle_id": autoguard.String,
 	"file": autoguard.Reference.of<SubtitleFile>(() => SubtitleFile),
-	"segment": autoguard.Reference.of<SegmentBase>(() => SegmentBase),
 	"language": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.String

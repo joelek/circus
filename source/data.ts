@@ -878,24 +878,20 @@ export function api_lookupEpisodeBase(episode_id: string, user_id: string, seaso
 export function api_lookupEpisode(episode_id: string, user_id: string, season?: SeasonBase): Episode {
 	let entry = getEpisodeFromEpisodeId.lookup(episode_id);
 	let episode = api_lookupEpisodeBase(episode_id, user_id, season);
-	let segment_base: SegmentBase = {
+	let segment: Segment = {
 		file: {
 			file_id: entry.file_id,
 			mime: "video/mp4",
 			duration_ms: entry.duration,
 			height: 0,
 			width: 0
-		}
-	};
-	let segment: Segment = {
-		...segment_base,
+		},
 		subtitles: lookupSubtitles(entry.file_id).map((entry) => ({
 			subtitle_id: entry.subtitle_id,
 			file: {
 				file_id: entry.file_id,
 				mime: "text/vtt"
 			},
-			segment: segment_base,
 			language: entry.language ?? undefined,
 			cues: []
 		}))
@@ -942,24 +938,20 @@ export function api_lookupMovieBase(movie_id: string, user_id: string): MovieBas
 export function api_lookupMovie(movie_id: string, user_id: string): Movie {
 	let parts = getMoviePartsFromMovieId(movie_id);
 	let movie = api_lookupMovieBase(movie_id, user_id);
-	let segment_base: SegmentBase = {
+	let segment: Segment = {
 		file: {
 			file_id: parts[0].file_id,
 			mime: "video/mp4",
 			duration_ms: parts[0].duration,
 			height: 0,
 			width: 0
-		}
-	};
-	let segment: Segment = {
-		...segment_base,
+		},
 		subtitles: parts[0].subtitles.map((subtitle) => ({
 			subtitle_id: subtitle.subtitle_id,
 			file: {
 				file_id: subtitle.file_id,
 				mime: "text/vtt"
 			},
-			segment: segment_base,
 			language: subtitle.language ?? undefined,
 			cues: []
 		}))
