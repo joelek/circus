@@ -3,7 +3,7 @@ import * as libfs from "fs";
 import * as libdb from "./database";
 import * as utils from "./utils";
 import * as passwords from "./passwords";
-import { LexicalSort, NumericSort } from "./shared";
+import { CombinedSort, LexicalSort, NumericSort } from "./shared";
 import * as is from "./is";
 import { Album, AlbumBase, Artist, ArtistBase, Disc, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, SegmentBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
 
@@ -694,14 +694,17 @@ let playlistTitleSearchIndex = SearchIndex.from("audiolist_id", "title", lists.a
 
 export function search(query: string, user_id: string, limit?: number): (Album | Artist | Episode | Movie | Show | Track | Playlist)[] {
 	let entries = [
-		...albumTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "ALBUM" })),
-		...artistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "ARTIST" })),
-		...episodeTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "EPISODE" })),
-		...movieTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "MOVIE" })),
-		...showTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "SHOW" })),
-		...trackTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "TRACK" })),
-		...playlistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "PLAYLIST" }))
-	].sort(NumericSort.increasing((value) => value.rank));
+		...albumTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "ALBUM", type_rank: 5 })),
+		...artistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "ARTIST", type_rank: 7 })),
+		...episodeTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "EPISODE", type_rank: 2 })),
+		...movieTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "MOVIE", type_rank: 6 })),
+		...showTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "SHOW", type_rank: 3 })),
+		...trackTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "TRACK", type_rank: 1 })),
+		...playlistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "PLAYLIST", type_rank: 4 }))
+	].sort(CombinedSort.of(
+		NumericSort.increasing((value) => value.rank),
+		NumericSort.increasing((value) => value.type_rank)
+	));
 	let entities = new Array<Album | Artist | Episode | Movie | Show | Track | Playlist>();
 	while (true) {
 		let entry = entries.pop();
