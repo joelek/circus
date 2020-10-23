@@ -728,17 +728,19 @@ let trackTitleSearchIndex = SearchIndex.from("track_id", "title", media.audio.tr
 let showTitleSearchIndex = SearchIndex.from("show_id", "title", media.video.shows);
 let movieTitleSearchIndex = SearchIndex.from("movie_id", "title", media.video.movies);
 let episodeTitleSearchIndex = SearchIndex.from("episode_id", "title", media.video.episodes);
+let playlistTitleSearchIndex = SearchIndex.from("audiolist_id", "title", lists.audiolists);
 
-export function search(query: string, user_id: string, limit?: number): (Album | Artist | Episode | Movie | Show | Track)[] {
+export function search(query: string, user_id: string, limit?: number): (Album | Artist | Episode | Movie | Show | Track | Playlist)[] {
 	let entries = [
 		...albumTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "ALBUM" })),
 		...artistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "ARTIST" })),
 		...episodeTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "EPISODE" })),
 		...movieTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "MOVIE" })),
 		...showTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "SHOW" })),
-		...trackTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "TRACK" }))
+		...trackTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "TRACK" })),
+		...playlistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "PLAYLIST" }))
 	].sort(NumericSort.increasing((value) => value.rank));
-	let entities = new Array<Album | Artist | Episode | Movie | Show | Track>();
+	let entities = new Array<Album | Artist | Episode | Movie | Show | Track | Playlist>();
 	while (true) {
 		let entry = entries.pop();
 		if (is.absent(entry)) {
@@ -756,6 +758,8 @@ export function search(query: string, user_id: string, limit?: number): (Album |
 			entities.push(api_lookupShow(entry.id, user_id));
 		} else if (entry.type === "TRACK") {
 			entities.push(api_lookupTrack(entry.id, user_id));
+		} else if (entry.type === "PLAYLIST") {
+			entities.push(api_lookupPlaylist(entry.id, user_id));
 		}
 		if (is.present(limit) && entities.length >= limit) {
 			break;
