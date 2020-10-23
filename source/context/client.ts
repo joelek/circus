@@ -421,6 +421,8 @@ export class ContextClient {
 			this.tsc.send("SetIndex", {
 				index: nextIndex
 			});
+		} else {
+			this.pause();
 		}
 	}
 
