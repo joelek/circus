@@ -752,7 +752,7 @@ style.innerText = `
 		align-items: start;
 		display: grid;
 		gap: 32px;
-		grid-template-columns: repeat(auto-fit, minmax(240px, max-content));
+		grid-template-columns: repeat(auto-fit, minmax(240px, auto));
 	}
 
 	.entity-header__artwork {
@@ -765,6 +765,17 @@ style.innerText = `
 		position: absolute;
 			bottom: 16px;
 			right: 16px;
+	}
+
+	.entity-header__content {
+
+	}
+
+	.entity-header__whitespace {
+		color: transparent;
+		font-size: 16px;
+		line-height: 0;
+		overflow: hidden;
 	}
 
 	.entity-header__metadata {
@@ -2067,20 +2078,25 @@ const makeEntityHeader = (title: string, subtitles: xml.XNode<any>[] = [], tags:
 			.add(xml.element("div.entity-header__playback")
 				.add(playButton))
 		)
-		.add(xml.element("div.entity-header__metadata")
-			.add(xml.element("div.entity-header__titles")
-				.add(xml.element("div.entity-header__title")
-					.add(xml.text(title))
-				)
-				.add(subtitles.length === 0 ? undefined : xml.element("div.entity-header__subtitle")
-					.add(...xml.joinarray(subtitles))
-				)
+		.add(xml.element("div.entity-header__content")
+			.add(xml.element("div.entity-header__whitespace")
+				.add(xml.text(".".repeat(1000)))
 			)
-			.add(xml.element("div.entity-header__tags")
-				.add(...tags.map(makeTag))
-			)
-			.add(maybe(description, (description) => xml.element("div.entity-header__description")
-				.add(xml.text(description)))
+			.add(xml.element("div.entity-header__metadata")
+				.add(xml.element("div.entity-header__titles")
+					.add(xml.element("div.entity-header__title")
+						.add(xml.text(title))
+					)
+					.add(subtitles.length === 0 ? undefined : xml.element("div.entity-header__subtitle")
+						.add(...xml.joinarray(subtitles))
+					)
+				)
+				.add(xml.element("div.entity-header__tags")
+					.add(...tags.map(makeTag))
+				)
+				.add(maybe(description, (description) => xml.element("div.entity-header__description")
+					.add(xml.text(description)))
+				)
 			)
 		);
 }
