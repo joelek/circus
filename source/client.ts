@@ -2103,7 +2103,8 @@ const makeEntityHeader = (title: string, subtitles: xml.XNode<any>[] = [], tags:
 				.add(maybe(description, (description) => xml.element("div.entity-header__description")
 					.add(xml.text(description)))
 				)
-				.add(watched ? makeAccentTag("Watched") : undefined)
+				.add(!watched ? undefined : xml.element("div.entity-header__tags")
+					.add(makeAccentTag("Watched")))
 			)
 		);
 }
