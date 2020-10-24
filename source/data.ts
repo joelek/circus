@@ -684,13 +684,13 @@ class SearchIndex {
 	}
 }
 
-let artistTitleSearchIndex = SearchIndex.from("artist_id", "title", media.audio.artists);
-let albumTitleSearchIndex = SearchIndex.from("album_id", "title", media.audio.albums);
-let trackTitleSearchIndex = SearchIndex.from("track_id", "title", media.audio.tracks);
-let showTitleSearchIndex = SearchIndex.from("show_id", "title", media.video.shows);
-let movieTitleSearchIndex = SearchIndex.from("movie_id", "title", media.video.movies);
-let episodeTitleSearchIndex = SearchIndex.from("episode_id", "title", media.video.episodes);
-let playlistTitleSearchIndex = SearchIndex.from("audiolist_id", "title", lists.audiolists);
+export const artistTitleSearchIndex = SearchIndex.from("artist_id", "title", media.audio.artists);
+export const albumTitleSearchIndex = SearchIndex.from("album_id", "title", media.audio.albums);
+export const trackTitleSearchIndex = SearchIndex.from("track_id", "title", media.audio.tracks);
+export const showTitleSearchIndex = SearchIndex.from("show_id", "title", media.video.shows);
+export const movieTitleSearchIndex = SearchIndex.from("movie_id", "title", media.video.movies);
+export const episodeTitleSearchIndex = SearchIndex.from("episode_id", "title", media.video.episodes);
+export const playlistTitleSearchIndex = SearchIndex.from("audiolist_id", "title", lists.audiolists);
 
 export function search(query: string, user_id: string, limit?: number): (Album | Artist | Episode | Movie | Show | Track | Playlist)[] {
 	let entries = [

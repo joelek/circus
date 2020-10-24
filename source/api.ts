@@ -684,13 +684,14 @@ class TrackRoute implements Route<{}, api_response.TrackResponse> {
 class TracksRoute implements Route<{}, api_response.TracksResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
-		let parts = /^[/]api[/]audio[/]tracks[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]audio[/]tracks[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = parts[1];
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let tracks = data.media.audio.tracks.slice()
-			.sort(LexicalSort.increasing((entry) => entry.title))
+		let tracks = data.trackTitleSearchIndex.search(query)
 			.slice(offset, offset + length)
+			.map((entry) => data.api_lookupTrack(entry.id, username))
 			.map((entry) => {
 				return data.api_lookupTrack(entry.track_id, username);
 			});
@@ -702,7 +703,7 @@ class TracksRoute implements Route<{}, api_response.TracksResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]audio[/]tracks[/]/.test(request.url ?? "/");
+		return /^[/]api[/]audio[/]tracks[/]([^/?]*)/.test(request.url ?? "/");
 	}
 }
 

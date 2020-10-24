@@ -1178,7 +1178,8 @@ style.innerText = `
 
 	.scroll-container {
 		height: 100%;
-		overflow: auto;
+		overflow-y: scroll;
+		overflow-x: auto;
 		width: 100%;
 	}
 
@@ -2119,8 +2120,39 @@ let updateviewforuri = (uri: string): void => {
 				))
 				.render());
 		});
-	} else if ((parts = /^audio[/]tracks[/]/.exec(uri)) !== null) {
-
+	} else if ((parts = /^audio[/]tracks[/]([^/?]*)/.exec(uri)) !== null) {
+		let query = parts[1];
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let tracks = new ArrayObservable<Track>([]);
+		setScrollObserver(() => new Promise((resolve, reject) => {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				req<{}, api_response.TracksResponse>(`/api/audio/tracks/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {}, (_, response) => {
+					for (let track of response.tracks) {
+						tracks.append(track);
+					}
+					offset += response.tracks.length;
+					if (response.tracks.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
+					resolve();
+				});
+			}
+		}));
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(renderTextHeader(xml.text("Tracks")))
+			)
+			.add(xml.element("div.content")
+				.add(xml.element("div.media-grid__content")
+					.repeat(tracks, (track) => EntityRow.forTrack(track))
+				)
+			)
+			.render()
+		);
 	} else if ((parts = /^video[/]seasons[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 
 	} else if ((parts = /^video[/]seasons[/]/.exec(uri)) !== null) {
@@ -2226,7 +2258,7 @@ let updateviewforuri = (uri: string): void => {
 		setScrollObserver(() => new Promise((resolve, reject) => {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<api_response.ApiRequest, api_response.AlbumsResponse>(`/api/audio/albums/?offset=${offset}&token=${token}`, {}, (status, response) => {
+				req<{}, api_response.AlbumsResponse>(`/api/audio/albums/?offset=${offset}&token=${token}`, {}, (_, response) => {
 					for (let album of response.albums) {
 						albums.append(album);
 					}
