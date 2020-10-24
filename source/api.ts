@@ -216,6 +216,29 @@ class EpisodeRoute implements Route<api_response.ApiRequest, api_response.Episod
 	}
 }
 
+class EpisodesRoute implements Route<{}, api_response.EpisodesResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]video[/]episodes[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = parts[1];
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let episodes = data.episodeTitleSearchIndex.search(query)
+			.slice(offset, offset + length)
+			.map((entry) => data.api_lookupEpisode(entry.id, username))
+		let payload: api_response.EpisodesResponse = {
+			episodes
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]video[/]episodes[/]([^/?]*)/.test(request.url ?? "/");
+	}
+}
+
 class ShowRoute implements Route<{}, api_response.ShowResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
@@ -754,6 +777,7 @@ let router = new Router()
 	.registerRoute(new AlbumRoute())
 	.registerRoute(new AlbumsRoute())
 	.registerRoute(new EpisodeRoute())
+	.registerRoute(new EpisodesRoute())
 	.registerRoute(new ShowRoute())
 	.registerRoute(new ShowsRoute())
 	.registerRoute(new PlaylistRoute())
