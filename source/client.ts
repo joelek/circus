@@ -2216,7 +2216,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(makeEntityHeader(
 					`Disc ${disc.number}`,
 					[EntityLink.forAlbum(album)],
-					["Disc", format_duration(duration_ms)],
+					["Disc", `${album.year}`, format_duration(duration_ms)],
 					ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`),
 					PlaybackButton.forDisc(disc)
 				))
