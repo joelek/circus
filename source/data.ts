@@ -3,10 +3,9 @@ import * as libfs from "fs";
 import * as libdb from "./database";
 import * as utils from "./utils";
 import * as passwords from "./passwords";
-import { CombinedSort, LexicalSort, NumericSort } from "./shared";
+import { CombinedSort, NumericSort } from "./shared";
 import * as is from "./is";
 import { Album, AlbumBase, Artist, ArtistBase, Cue, CueBase, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, SegmentBase, Show, ShowBase, Subtitle, SubtitleBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
-import { objects } from "./context/schema";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -45,19 +44,10 @@ if (!libfs.existsSync("./private/db/media.json")) {
 	process.exit(1);
 }
 
-if (!libfs.existsSync("./private/db/channels.json")) {
-	let db: libdb.ChannelDatabase = {
-		channels: [],
-		programs: []
-	};
-	libfs.writeFileSync("./private/db/channels.json", JSON.stringify(db, null, "\t"));
-}
-
 export let streams = libdb.StreamDatabase.as(JSON.parse(libfs.readFileSync('./private/db/streams.json', "utf8")));
 export let lists = libdb.ListDatabase.as(JSON.parse(libfs.readFileSync('./private/db/lists.json', "utf8")));
 export let users = libdb.UserDatabase.as(JSON.parse(libfs.readFileSync('./private/db/users.json', "utf8")));
 export let media = libdb.MediaDatabase.as(JSON.parse(libfs.readFileSync('./private/db/media.json', "utf8")));
-export let channels = libdb.ChannelDatabase.as(JSON.parse(libfs.readFileSync('./private/db/channels.json', "utf8")));
 
 // Re-create cues from compact notation.
 for (let subtitle of media.video.subtitle_contents) {
@@ -80,13 +70,7 @@ for (let subtitle of media.video.subtitle_contents) {
 	}
 }
 
-export let users_index: utils.Index<libdb.UserEntry> = {};
-
-for (let i = 0; i < users.users.length; i++) {
-	let user = users.users[i];
-	users_index[user.username] = user;
-}
-
+// TODO: Move to class-based indices.
 export let tokens_index: utils.Index<libdb.AuthToken> = {};
 
 for (let i = 0; i < users.tokens.length; i++) {
@@ -94,95 +78,11 @@ for (let i = 0; i < users.tokens.length; i++) {
 	tokens_index[token.selector] = token;
 }
 
-export let tracks_index: utils.Index<libdb.TrackEntry> = {};
-
-for (let i = 0; i < media.audio.tracks.length; i++) {
-	let track = media.audio.tracks[i];
-	tracks_index[track.track_id] = track;
-}
-
-export let discs_index: utils.Index<libdb.DiscEntry> = {};
-
-for (let i = 0; i < media.audio.discs.length; i++) {
-	let disc = media.audio.discs[i];
-	discs_index[disc.disc_id] = disc;
-}
-
-export let albums_index: utils.Index<libdb.AlbumEntry> = {};
-
-for (let i = 0; i < media.audio.albums.length; i++) {
-	let album = media.audio.albums[i];
-	albums_index[album.album_id] = album;
-}
-
-export let artists_index: utils.Index<libdb.ArtistEntry> = {};
-
-for (let i = 0; i < media.audio.artists.length; i++) {
-	let artist = media.audio.artists[i];
-	artists_index[artist.artist_id] = artist;
-}
-
-export let shows_index: utils.Index<libdb.ShowEntry> = {};
-
-for (let i = 0; i < media.video.shows.length; i++) {
-	let show = media.video.shows[i];
-	shows_index[show.show_id] = show;
-}
-
-export let episodes_index: utils.Index<libdb.EpisodeEntry> = {};
-
-for (let i = 0; i < media.video.episodes.length; i++) {
-	let episode = media.video.episodes[i];
-	episodes_index[episode.episode_id] = episode;
-}
-
-export let seasons_index: utils.Index<libdb.SeasonEntry> = {};
-
-for (let i = 0; i < media.video.seasons.length; i++) {
-	let season = media.video.seasons[i];
-	seasons_index[season.season_id] = season;
-}
-
-export let movie_parts_index: utils.Index<libdb.MoviePartEntry> = {};
-
-for (let i = 0; i < media.video.movie_parts.length; i++) {
-	let movie_part = media.video.movie_parts[i];
-	movie_parts_index[movie_part.movie_part_id] = movie_part;
-}
-
-export let movies_index: utils.Index<libdb.MovieEntry> = {};
-
-for (let i = 0; i < media.video.movies.length; i++) {
-	let movie = media.video.movies[i];
-	movies_index[movie.movie_id] = movie;
-}
-
-export let video_genres_index: utils.Index<libdb.VideoGenreEntry> = {};
-
-for (let i = 0; i < media.video.genres.length; i++) {
-	let video_genre = media.video.genres[i];
-	video_genres_index[video_genre.video_genre_id] = video_genre;
-}
-
-export let subtitles_index: utils.Index<libdb.SubtitleEntry> = {};
-
-for (let i = 0; i < media.video.subtitles.length; i++) {
-	let subtitle = media.video.subtitles[i];
-	subtitles_index[subtitle.subtitle_id] = subtitle;
-}
-
 export let files_index: utils.Index<libdb.FileEntry> = {};
 
 for (let i = 0; i < media.files.length; i++) {
 	let file = media.files[i];
 	files_index[file.file_id] = file;
-}
-
-export let audiolists_index: utils.Index<libdb.AudiolistEntry> = {};
-
-for (let i = 0; i < lists.audiolists.length; i++) {
-	let audiolist = lists.audiolists[i];
-	audiolists_index[audiolist.audiolist_id] = audiolist;
 }
 
 export function addToken(token: libdb.AuthToken): void {
@@ -316,14 +216,7 @@ class CollectionIndex<A> {
 
 
 
-function lookup<A>(index: utils.Index<A>, id: string): A {
-	let record = index[id];
-	if (record == null) {
-		throw `Expected "${id}" to match a record!`;
-	}
-	return record;
-}
-
+const getMovieFromMovieId = RecordIndex.from("movie_id", media.video.movies);
 export const getEpisodeFromFileId = RecordIndex.from("file_id", media.video.episodes);
 export const getMoviePartFromFileId = RecordIndex.from("file_id", media.video.movie_parts);
 let getMoviePartsFromMovieIdIndex = CollectionIndex.from("movie_id", media.video.movie_parts);
@@ -335,42 +228,17 @@ let getVideoGenreFromVideoGenreId = RecordIndex.from("video_genre_id", media.vid
 let getSeasonsFromShowIdIndex = CollectionIndex.from("show_id", media.video.seasons);
 let getEpisodesFromSeasonIdIndex = CollectionIndex.from("season_id", media.video.episodes);
 let getStreamsFromFileIdIndex = CollectionIndex.from("file_id", streams.streams);
-let getChannelFromChannelIdIndex = RecordIndex.from("channel_id", channels.channels);
-let getProgramsFromChannelIdIndex = CollectionIndex.from("channel_id", channels.programs);
 
-export function getMoviesFromVideoGenreId(video_genre_id: string): libdb.MovieEntry[] {
+export function getMoviesFromVideoGenreId(video_genre_id: string, user_id: string): Movie[] {
 	return getMoviesFromVideoGenreIdIndex.lookup(video_genre_id).map((movie_genre) => {
-		return lookupMovie(movie_genre.movie_id);
+		return api_lookupMovie(movie_genre.movie_id, user_id);
 	});
 }
 
-export function getShowsFromVideoGenreId(video_genre_id: string): libdb.ShowEntry[] {
+export function getShowsFromVideoGenreId(video_genre_id: string, user_id: string): Show[] {
 	return getShowsFromVideoGenreIdIndex.lookup(video_genre_id).map((show_genre) => {
-		return lookupShow(show_genre.show_id);
+		return api_lookupShow(show_genre.show_id, user_id);
 	});
-}
-
-export function getChannelFromChannelId(channelId: string): libdb.ChannelEntry {
-	return getChannelFromChannelIdIndex.lookup(channelId);
-}
-
-export function createChannel(channel: libdb.ChannelEntry): libdb.ChannelEntry {
-	channels.channels.push(channel);
-	libfs.writeFileSync("./private/db/channels.json", JSON.stringify(channels, null, "\t"));
-	getChannelFromChannelIdIndex.insert(channel.channel_id, channel);
-	return channel;
-}
-
-export function getProgramsFromChannelId(channelId: string): Array<libdb.ProgramEntry> {
-	return getProgramsFromChannelIdIndex.lookup(channelId)
-		.sort(NumericSort.increasing((value) => value.start_time_ms));
-}
-
-export function createProgram(program: libdb.ProgramEntry): libdb.ProgramEntry {
-	channels.programs.push(program);
-	libfs.writeFileSync("./private/db/channels.json", JSON.stringify(channels, null, "\t"));
-	getProgramsFromChannelIdIndex.insert(program.channel_id, program);
-	return program;
 }
 
 export function getTokensFromUsername(username: string): Array<libdb.AuthToken> {
@@ -414,23 +282,8 @@ export function getEpisodesFromShowId(showId: string): Array<libdb.EpisodeEntry>
 		}, new Array<libdb.EpisodeEntry>());
 }
 
-export function getMoviePartsFromMovieId(movieId: string): Array<libdb.MoviePartEntry & { subtitles: Array<libdb.SubtitleEntry> }> {
-	return getMoviePartsFromMovieIdIndex.lookup(movieId).map((moviePart) => {
-		let subtitles = fileSubtitlesIndex.lookup(moviePart.file_id);
-		return {
-			...moviePart,
-			subtitles
-		};
-	});
-}
-
-export function getMovieFromMovieId(movieId: string): libdb.MovieEntry & { parts: ReturnType<typeof getMoviePartsFromMovieId> } {
-	let movie = lookup(movies_index, movieId);
-	let parts = getMoviePartsFromMovieId(movieId);
-	return {
-		...movie,
-		parts
-	};
+export function getMoviePartsFromMovieId(movieId: string): Array<libdb.MoviePartEntry> {
+	return getMoviePartsFromMovieIdIndex.lookup(movieId);
 }
 
 export function getVideoGenresFromShowId(showId: string): Array<libdb.VideoGenreEntry> {
@@ -445,16 +298,6 @@ export function getVideoGenresFromMovieId(movieId: string): Array<libdb.VideoGen
 	});
 }
 
-export function lookupMetadata(fileId: string): libdb.EpisodeEntry | libdb.MoviePartEntry {
-	try {
-		return getEpisodeFromFileId.lookup(fileId);
-	} catch (error) {}
-	try {
-		return getMoviePartFromFileId.lookup(fileId);
-	} catch (error) {}
-	throw `Expected "${fileId}" to match a metadata record!`;
-}
-
 let albumArtistsIndex = CollectionIndex.from("album_id", media.audio.album_artists);
 export const getAlbumArtistsFromArtistId = CollectionIndex.from("artist_id", media.audio.album_artists);
 let trackArtistsIndex = CollectionIndex.from("track_id", media.audio.track_artists);
@@ -467,6 +310,7 @@ export const getPlaylistItemsFromPlaylistId = CollectionIndex.from("audiolist_id
 export const getTrackFromTrackId = RecordIndex.from("track_id", media.audio.tracks);
 export const getDiscFromDiscId = RecordIndex.from("disc_id", media.audio.discs);
 export const getUserFromUserId = RecordIndex.from("user_id", users.users);
+export const getUserFromUsername = RecordIndex.from("username", users.users);
 export const getPlaylistFromPlaylistId = RecordIndex.from("audiolist_id", lists.audiolists);
 export const getShowFromShowId = RecordIndex.from("show_id", media.video.shows);
 export const getArtistFromArtistId = RecordIndex.from("artist_id", media.audio.artists);
@@ -476,40 +320,17 @@ export const getSubtitleFromSubtitleId = RecordIndex.from("subtitle_id", media.v
 export const getCueFromCueId = RecordIndex.from("cue_id", media.video.cues);
 export const getCuesFromSubtitleId = CollectionIndex.from("subtitle_id", media.video.cues);
 
-export function lookupFile(file_id: string): libdb.FileEntry {
-	let file = files_index[file_id];
-	if (is.absent(file)) {
-		throw `Expected a file!`;
-	}
-	return file;
-}
-
-export function lookupSubtitles(id: string): Array<libdb.SubtitleEntry & {}> {
-	return fileSubtitlesIndex.lookup(id).map((entry) => {
-		return {
-			...entry
-		};
-	});
-}
-
-export function lookupArtist(id: string): libdb.ArtistEntry & {} {
-	let artist = lookup(artists_index, id);
-	return {
-		...artist
-	};
-}
-
 export function lookupAppearances(artist_id: string): Array<string> {
 	let track_artists = artistTracksIndex.lookup(artist_id);
 	let tracks = track_artists.map((track_artist) => {
-		return lookup(tracks_index, track_artist.track_id);
+		return getTrackFromTrackId.lookup(track_artist.track_id);
 	});
 	let disc_ids = tracks.map((track) => {
 		return track.disc_id;
 	});
 	disc_ids = Array.from(new Set<string>(disc_ids));
 	let discs = disc_ids.map((disc_id) => {
-		return lookup(discs_index, disc_id);
+		return getDiscFromDiscId.lookup(disc_id);
 	});
 	let album_ids = discs.map((disc) => {
 		return disc.album_id;
@@ -523,79 +344,6 @@ export function lookupAppearances(artist_id: string): Array<string> {
 		}
 	}
 	return result;
-}
-
-export function lookupAlbumArtists(id: string): Array<libdb.ArtistEntry> {
-	return albumArtistsIndex.lookup(id).map((entry) => {
-		return lookupArtist(entry.artist_id);
-	});
-}
-
-export function lookupAlbum(id: string): libdb.AlbumEntry & { artists: Array<libdb.ArtistEntry> } {
-	let album = lookup(albums_index, id);
-	let artists = lookupAlbumArtists(album.album_id);
-	return {
-		...album,
-		artists
-	};
-}
-
-export function lookupDisc(id: string): libdb.DiscEntry & { album: libdb.AlbumEntry & { artists: Array<libdb.ArtistEntry> } } {
-	let disc = lookup(discs_index, id);
-	let album = lookupAlbum(disc.album_id);
-	return {
-		...disc,
-		album
-	};
-}
-
-export function lookupTrackArtists(id: string): Array<libdb.ArtistEntry> {
-	return trackArtistsIndex.lookup(id).map((entry) => {
-		return lookupArtist(entry.artist_id);
-	});
-}
-
-export function lookupTrack(id: string): libdb.TrackEntry & { disc: libdb.DiscEntry & { album: libdb.AlbumEntry & { artists: Array<libdb.ArtistEntry> } }, artists: Array<libdb.ArtistEntry> } {
-	let track = lookup(tracks_index, id);
-	let disc = lookupDisc(track.disc_id);
-	let artists = lookupTrackArtists(track.track_id);
-	return {
-		...track,
-		disc,
-		artists
-	};
-}
-
-export function lookupMovie(id: string): libdb.MovieEntry & {} {
-	let movie = lookup(movies_index, id);
-	return {
-		...movie
-	};
-}
-
-export function lookupShow(id: string): libdb.ShowEntry & {} {
-	let show = lookup(shows_index, id);
-	return {
-		...show
-	};
-}
-
-export function lookupSeason(id: string): libdb.SeasonEntry & { show: libdb.ShowEntry } {
-	let season = lookup(seasons_index, id);
-	let show = lookupShow(season.show_id);
-	return {
-		...season,
-		show
-	};
-}
-
-export function lookupEpisode(id: string): libdb.EpisodeEntry & { season: libdb.SeasonEntry & { show: libdb.ShowEntry } } {
-	let episode = lookup(episodes_index, id);
-	let season = lookupSeason(episode.season_id);
-	return {
-		...episode,
-		season
-	};
 }
 
 class SearchIndex {
@@ -908,7 +656,7 @@ export function api_lookupEpisode(episode_id: string, user_id: string, season?: 
 			height: 0,
 			width: 0
 		},
-		subtitles: lookupSubtitles(entry.file_id).map((entry) => ({
+		subtitles: fileSubtitlesIndex.lookup(entry.file_id).map((entry) => ({
 			subtitle_id: entry.subtitle_id,
 			file: {
 				file_id: entry.file_id,
@@ -940,7 +688,7 @@ export function api_lookupGenre(genre_id: string, user_id: string): Genre {
 };
 
 export function api_lookupMovieBase(movie_id: string, user_id: string): MovieBase {
-	let entry = lookup(movies_index, movie_id);
+	let entry = getMovieFromMovieId.lookup(movie_id);
 	let parts = getMoviePartsFromMovieId(movie_id);
 	return {
 		movie_id: entry.movie_id,
@@ -965,8 +713,9 @@ export function api_lookupMovieBase(movie_id: string, user_id: string): MovieBas
 };
 
 export function api_lookupMovie(movie_id: string, user_id: string): Movie {
-	let parts = getMoviePartsFromMovieId(movie_id);
 	let movie = api_lookupMovieBase(movie_id, user_id);
+	let parts = getMoviePartsFromMovieId(movie_id);
+	let subtitles = fileSubtitlesIndex.lookup(parts[0].file_id);
 	let segment: Segment = {
 		file: {
 			file_id: parts[0].file_id,
@@ -975,7 +724,7 @@ export function api_lookupMovie(movie_id: string, user_id: string): Movie {
 			height: 0,
 			width: 0
 		},
-		subtitles: parts[0].subtitles.map((subtitle) => ({
+		subtitles: subtitles.map((subtitle) => ({
 			subtitle_id: subtitle.subtitle_id,
 			file: {
 				file_id: subtitle.file_id,

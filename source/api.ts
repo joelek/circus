@@ -519,12 +519,8 @@ class GenreRoute implements Route<{}, api_response.GenreResponse> {
 		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let genre_id = parts[1];
 		let genre = data.api_lookupGenre(genre_id, username);
-		let shows = data.getShowsFromVideoGenreId(genre_id).map((entry) => {
-			return data.api_lookupShow(entry.show_id, username);
-		});
-		let movies = data.getMoviesFromVideoGenreId(genre_id).map((entry) => {
-			return data.api_lookupMovie(entry.movie_id, username);
-		});
+		let shows = data.getShowsFromVideoGenreId(genre_id, username);
+		let movies = data.getMoviesFromVideoGenreId(genre_id, username);
 		let payload: api_response.GenreResponse = {
 			genre,
 			shows,

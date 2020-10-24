@@ -18,12 +18,9 @@ function generate_token(username: string): string {
 }
 
 function getToken(username: string, password: string): string {
-	let user = data.users_index[username];
-	if (!user) {
-		throw new Error();
-	}
+	let user = data.getUserFromUsername.lookup(username);
 	if (!passwords.verify(password, user.password)) {
-		throw new Error(`Fak u dolan.`);
+		throw `Expected a valid password!`;
 	}
 	return generate_token(username);
 }
