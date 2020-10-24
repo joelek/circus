@@ -541,7 +541,10 @@ class SearchRoute implements Route<{}, api_response.SearchResponse> {
 		let username = getUsername(request);
 		let parts = /^[/]api[/]search[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
 		let query = decodeURIComponent(parts[1]);
-		let entities = data.search(query, username, 10);
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let entities = data.search(query, username, offset, length);
 		let payload: api_response.SearchResponse = {
 			entities
 		};

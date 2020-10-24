@@ -695,7 +695,7 @@ export function searchForCues(query: string, user_id: string, limit?: number): C
 	return entities;
 }
 
-export function search(query: string, user_id: string, limit?: number): Entity[] {
+export function search(query: string, user_id: string, offset: number, limit: number): Entity[] {
 	let entries = [
 		...albumTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "ALBUM", type_rank: 5 })),
 		...artistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "ARTIST", type_rank: 7 })),
@@ -708,7 +708,7 @@ export function search(query: string, user_id: string, limit?: number): Entity[]
 	].sort(CombinedSort.of(
 		NumericSort.increasing((value) => value.rank),
 		NumericSort.increasing((value) => value.type_rank)
-	));
+	)).slice(offset, offset + limit);
 	let entities = new Array<Entity>();
 	while (true) {
 		let entry = entries.pop();
@@ -731,9 +731,6 @@ export function search(query: string, user_id: string, limit?: number): Entity[]
 			entities.push(api_lookupPlaylist(entry.id, user_id));
 		} else if (entry.type === "USER") {
 			entities.push(api_lookupUser(entry.id));
-		}
-		if (is.present(limit) && entities.length >= limit) {
-			break;
 		}
 	}
 	return entities;

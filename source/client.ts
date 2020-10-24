@@ -8,7 +8,7 @@ import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, AlbumBase, Artist, ArtistBase, Cue, Disc, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, Cue, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
 import * as xml from "./xnode";
 import { formatDuration as format_duration } from "./ui/metadata";
 
@@ -3095,7 +3095,28 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^search[/]([^/]*)/.exec(uri)) !== null) {
 		let query = new ObservableClass(decodeURIComponent(parts[1]));
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let entities = new ArrayObservable<Entity>([]);
+		setScrollObserver(() => new Promise((resolve, reject) => {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				req<{}, api_response.SearchResponse>(`/api/search/${encodeURIComponent(query.getState())}?offset=${offset}&token=${token}`, {}, (_, response) => {
+					for (let entity of response.entities) {
+						entities.append(entity);
+					}
+					offset += response.entities.length;
+					if (response.entities.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
+					resolve();
+				});
+			}
+		}));
 		mount.appendChild(xml.element("div.content")
+			.set("style", "display: grid; gap: 32px;")
 			.add(xml.element("input")
 				.set("type", "text")
 				.set("spellcheck", "false")
@@ -3107,21 +3128,11 @@ let updateviewforuri = (uri: string): void => {
 					}
 				})
 			)
+			.add(xml.element("div")
+				.set("style", "display: grid; gap: 16px;")
+				.repeat(entities, (entity) => EntityRow.forEntity(entity))
+			)
 			.render());
-		{
-			let results = document.createElement("div");
-			mount.appendChild(results);
-			req<{}, api_response.SearchResponse>(`/api/search/${parts[1]}?token=${token}`, {}, (status, response) => {
-				while (results.lastChild !== null) {
-					results.removeChild(results.lastChild);
-				}
-				results.appendChild(xml.element("div.content")
-					.set("style", "display: grid; gap: 16px;")
-					.add(...response.entities.map((entity) => EntityRow.forEntity(entity)))
-					.render()
-				);
-			});
-		}
 	} else {
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
