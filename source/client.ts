@@ -2154,12 +2154,59 @@ let updateviewforuri = (uri: string): void => {
 			.render()
 		);
 	} else if ((parts = /^video[/]seasons[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-
-	} else if ((parts = /^video[/]seasons[/]/.exec(uri)) !== null) {
-
+		req<{}, api_response.SeasonResponse>(`/api/video/seasons/${parts[1]}/?token=${token}`, {}, (_, response) => {
+			let season = response.season;
+			let show = season.show;
+			let duration_ms = 0;
+			for (let episode of season.episodes) {
+				duration_ms += episode.segment.file.duration_ms;
+			}
+			mount.appendChild(xml.element("div.content")
+				.add(makeEntityHeader(
+					`Season ${season.number}`,
+					[EntityLink.forShow(show)],
+					["Season", format_duration(duration_ms)],
+					ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`),
+					PlaybackButton.forSeason(season)
+				))
+				.render());
+		});
+	} else if ((parts = /^video[/]seasons[/]([^/?]*)/.exec(uri)) !== null) {
+		let query = parts[1];
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let seasons = new ArrayObservable<Season>([]);
+		setScrollObserver(() => new Promise((resolve, reject) => {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				req<{}, api_response.SeasonsResponse>(`/api/video/seasons/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {}, (_, response) => {
+					for (let season of response.seasons) {
+						seasons.append(season);
+					}
+					offset += response.seasons.length;
+					if (response.seasons.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
+					resolve();
+				});
+			}
+		}));
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(renderTextHeader(xml.text("Seasons")))
+			)
+			.add(xml.element("div.content")
+				.add(xml.element("div.media-grid__content")
+					.repeat(seasons, (season) => EntityRow.forSeason(season))
+				)
+			)
+			.render()
+		);
 	} else if ((parts = /^audio[/]discs[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 
-	} else if ((parts = /^audio[/]discs[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^audio[/]discs[/]([^/?]*)/.exec(uri)) !== null) {
 
 	} else if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/?token=${token}`, {}, (status, response) => {
@@ -2250,7 +2297,7 @@ let updateviewforuri = (uri: string): void => {
 				}
 			}
 		});
-	} else if ((parts = /^audio[/]albums[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^audio[/]albums[/]([^/?]*)/.exec(uri)) !== null) {
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
@@ -2369,7 +2416,7 @@ let updateviewforuri = (uri: string): void => {
 				}
 			}
 		});
-	} else if ((parts = /^audio[/]artists[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^audio[/]artists[/]([^/?]*)/.exec(uri)) !== null) {
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
@@ -2449,7 +2496,7 @@ let updateviewforuri = (uri: string): void => {
 				)
 			.render());
 		});
-	} else if ((parts = /^audio[/]playlists[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^audio[/]playlists[/]([^/?]*)/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.PlaylistsResponse>(`/api/audio/playlists/?token=${token}`, {}, (status, response) => {
 			let playlists = response.playlists;
 			mount.appendChild(xml.element("div")
@@ -2614,7 +2661,7 @@ let updateviewforuri = (uri: string): void => {
 				.render()
 			);
 		});
-	} else if ((parts = /^video[/]shows[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]shows[/]([^/?]*)/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ShowsResponse>(`/api/video/shows/?token=${token}`, {}, (status, response) => {
 			let shows = response.shows;
 			mount.appendChild(xml.element("div")
@@ -2688,7 +2735,7 @@ let updateviewforuri = (uri: string): void => {
 				.render()
 			);
 		});
-	} else if ((parts = /^video[/]episodes[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]episodes[/]([^/?]*)/.exec(uri)) !== null) {
 
 	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
 		let movie_id = parts[1];
@@ -2758,7 +2805,7 @@ let updateviewforuri = (uri: string): void => {
 				.render()
 			);
 		});
-	} else if ((parts = /^video[/]movies[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]movies[/]([^/?]*)/.exec(uri)) !== null) {
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
@@ -2790,7 +2837,7 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.render()
 		);
-	} else if ((parts = /^cues[/](.*)/.exec(uri)) !== null) {
+	} else if ((parts = /^cues[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
 		let wrapper = document.createElement("div");
 		let searchbox = document.createElement("input");
@@ -3034,7 +3081,7 @@ let updateviewforuri = (uri: string): void => {
 				.render()
 			);
 		});
-	} else if ((parts = /^video[/]genres[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]genres[/]([^/?]*)/.exec(uri)) !== null) {
 		req<{}, api_response.GenresResponse>(`/api/video/genres/?token=${token}`, {}, (status, response) => {
 			let genres = response.genres;
 			mount.appendChild(xml.element("div")

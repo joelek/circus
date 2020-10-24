@@ -662,7 +662,6 @@ class TokensRoute implements Route<api_response.TokensRequest, api_response.Toke
 	}
 }
 
-
 class TrackRoute implements Route<{}, api_response.TrackResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
@@ -692,9 +691,6 @@ class TracksRoute implements Route<{}, api_response.TracksResponse> {
 		let tracks = data.trackTitleSearchIndex.search(query)
 			.slice(offset, offset + length)
 			.map((entry) => data.api_lookupTrack(entry.id, username))
-			.map((entry) => {
-				return data.api_lookupTrack(entry.track_id, username);
-			});
 		let payload: api_response.TracksResponse = {
 			tracks
 		};
@@ -704,6 +700,47 @@ class TracksRoute implements Route<{}, api_response.TracksResponse> {
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
 		return /^[/]api[/]audio[/]tracks[/]([^/?]*)/.test(request.url ?? "/");
+	}
+}
+
+class SeasonRoute implements Route<{}, api_response.SeasonResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]video[/]seasons[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let season_id = parts[1];
+		let season = data.api_lookupSeason(season_id, username);
+		let payload: api_response.SeasonResponse = {
+			season
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]video[/]seasons[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+	}
+}
+
+class SeasonsRoute implements Route<{}, api_response.SeasonsResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]video[/]seasons[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = parts[1];
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let seasons = data.media.video.seasons
+			.slice(offset, offset + length)
+			.map((entry) => data.api_lookupSeason(entry.season_id, username))
+		let payload: api_response.SeasonsResponse = {
+			seasons
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]video[/]seasons[/]([^/?]*)/.test(request.url ?? "/");
 	}
 }
 
@@ -723,6 +760,8 @@ let router = new Router()
 	.registerRoute(new PlaylistsRoute())
 	.registerRoute(new TrackRoute())
 	.registerRoute(new TracksRoute())
+	.registerRoute(new SeasonRoute())
+	.registerRoute(new SeasonsRoute())
 	.registerRoute(new CuesRoute())
 	.registerRoute(new ChannelRoute())
 	.registerRoute(new ChannelsRoute())
