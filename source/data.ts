@@ -673,26 +673,28 @@ class SearchIndex {
 		}));
 	}
 
-	static from<A extends { [key: string]: any }>(idField: keyof A, valueField: keyof A, collection: Iterable<A>): SearchIndex {
+	static from<A extends { [key: string]: any }>(collection: Iterable<A>, idField: keyof A, ...valueFields: (keyof A)[]): SearchIndex {
 		let searchIndex = new SearchIndex();
 		for (let record of collection) {
-			let terms = utils.getSearchTerms(record[valueField]);
-			for (let term of terms) {
-				searchIndex.insert(term, record[idField]);
+			for (let valueField of valueFields) {
+				let terms = utils.getSearchTerms(record[valueField]);
+				for (let term of terms) {
+					searchIndex.insert(term, record[idField]);
+				}
 			}
 		}
 		return searchIndex;
 	}
 }
 
-export const artistTitleSearchIndex = SearchIndex.from("artist_id", "title", media.audio.artists);
-export const albumTitleSearchIndex = SearchIndex.from("album_id", "title", media.audio.albums);
-export const trackTitleSearchIndex = SearchIndex.from("track_id", "title", media.audio.tracks);
-export const showTitleSearchIndex = SearchIndex.from("show_id", "title", media.video.shows);
-export const movieTitleSearchIndex = SearchIndex.from("movie_id", "title", media.video.movies);
-export const episodeTitleSearchIndex = SearchIndex.from("episode_id", "title", media.video.episodes);
-export const playlistTitleSearchIndex = SearchIndex.from("audiolist_id", "title", lists.audiolists);
-export const userUsernameSearchIndex = SearchIndex.from("user_id", "username", users.users);
+export const artistTitleSearchIndex = SearchIndex.from(media.audio.artists, "artist_id", "title");
+export const albumTitleSearchIndex = SearchIndex.from(media.audio.albums, "album_id", "title");
+export const trackTitleSearchIndex = SearchIndex.from(media.audio.tracks, "track_id", "title");
+export const showTitleSearchIndex = SearchIndex.from(media.video.shows, "show_id", "title");
+export const movieTitleSearchIndex = SearchIndex.from(media.video.movies, "movie_id", "title");
+export const episodeTitleSearchIndex = SearchIndex.from(media.video.episodes, "episode_id", "title");
+export const playlistTitleSearchIndex = SearchIndex.from(lists.audiolists, "audiolist_id", "title");
+export const userUsernameSearchIndex = SearchIndex.from(users.users, "user_id", "username");
 
 export function search(query: string, user_id: string, limit?: number): Entity[] {
 	let entries = [
