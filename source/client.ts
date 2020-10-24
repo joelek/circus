@@ -1916,6 +1916,9 @@ function makeShow(show: Show, play: () => void): xml.XElement {
 				.add(xml.element("div.media-widget__title")
 					.add(xml.text(show.title))
 				)
+				.add(xml.element("div.media-widget__subtitle")
+					.add(...xml.joinarray(show.genres.map((genre) => EntityLink.forGenre(genre))))
+				)
 			)
 			.add(xml.element("div.media-widget__tags")
 				.add(...tags.map(makeTag))
@@ -2167,8 +2170,8 @@ let updateviewforuri = (uri: string): void => {
 			}
 			mount.appendChild(xml.element("div.content")
 				.add(makeEntityHeader(
-					`Season ${season.number}`,
-					[EntityLink.forShow(show)],
+					`${season.show.title} \u00b7 Season ${season.number}`,
+					show.genres.map((genre) => EntityLink.forGenre(genre)),
 					["Season", format_duration(duration_ms)],
 					ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`),
 					PlaybackButton.forSeason(season)
