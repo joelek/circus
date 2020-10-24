@@ -1652,7 +1652,7 @@ chromecast.appendChild(slider_wrapper);
 const makeTag = (content: string) => xml.element("div.media-tag")
 	.add(xml.text(content));
 
-const makeAccentTag = (content: string, accent: boolean = false) => xml.element("div.media-tag.media-tag--accent")
+const makeAccentTag = (content: string) => xml.element("div.media-tag.media-tag--accent")
 	.add(xml.text(content));
 
 function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
@@ -2077,7 +2077,7 @@ function maybe<A, B>(value: A | undefined | null, cb: (value: A) => B): B | unde
 	}
 }
 
-const makeEntityHeader = (title: string, subtitles: xml.XNode<any>[] = [], tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement, description?: string) => {
+const makeEntityHeader = (title: string, subtitles: xml.XNode<any>[] = [], tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement, description?: string, watched?: boolean) => {
 	return xml.element("div.entity-header")
 		.add(xml.element("div.entity-header__artwork")
 			.add(image)
@@ -2103,6 +2103,7 @@ const makeEntityHeader = (title: string, subtitles: xml.XNode<any>[] = [], tags:
 				.add(maybe(description, (description) => xml.element("div.entity-header__description")
 					.add(xml.text(description)))
 				)
+				.add(watched ? makeAccentTag("Watched") : undefined)
 			)
 		);
 }
@@ -2822,7 +2823,8 @@ let updateviewforuri = (uri: string): void => {
 										}
 									}
 								}),
-							episode.summary
+							episode.summary,
+							is.present(episode.last_stream_date)
 						)
 					)
 				)
@@ -2913,7 +2915,8 @@ let updateviewforuri = (uri: string): void => {
 										}
 									}
 								}),
-							movie.summary
+							movie.summary,
+							is.present(movie.last_stream_date)
 						)
 					)
 				)
