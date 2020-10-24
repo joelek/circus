@@ -126,11 +126,13 @@ export const Track = autoguard.Intersection.of(
 
 export type UserBase = {
 	"user_id": string,
+	"name": string,
 	"username": string
 };
 
 export const UserBase = autoguard.Object.of<UserBase>({
 	"user_id": autoguard.String,
+	"name": autoguard.String,
 	"username": autoguard.String
 });
 
@@ -205,24 +207,20 @@ export const Genre = autoguard.Intersection.of(
 );
 
 export type SegmentBase = {
-	"file": VideoFile
-};
-
-export const SegmentBase = autoguard.Object.of<SegmentBase>({
-	"file": autoguard.Reference.of<VideoFile>(() => VideoFile)
-});
-
-export type Segment = SegmentBase & {
+	"file": VideoFile,
 	"subtitles": Subtitle[]
 };
 
+export const SegmentBase = autoguard.Object.of<SegmentBase>({
+	"file": autoguard.Reference.of<VideoFile>(() => VideoFile),
+	"subtitles": autoguard.Array.of(autoguard.Reference.of<Subtitle>(() => Subtitle))
+});
+
+export type Segment = SegmentBase & {};
+
 export const Segment = autoguard.Intersection.of(
 	autoguard.Reference.of<SegmentBase>(() => SegmentBase),
-	autoguard.Object.of<{
-		"subtitles": Subtitle[]
-	}>({
-		"subtitles": autoguard.Array.of(autoguard.Reference.of<Subtitle>(() => Subtitle))
-	})
+	autoguard.Object.of<{}>({})
 );
 
 export type MovieBase = {

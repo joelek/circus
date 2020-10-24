@@ -316,9 +316,13 @@ style.innerText = `
 		padding: 0px;
 	}
 
-	a {
+	a,
+	span {
 		color: inherit;
 		font-size: inherit;
+	}
+
+	a {
 		text-decoration: none;
 		transition: color 0.1s;
 	}
@@ -2259,7 +2263,7 @@ let updateviewforuri = (uri: string): void => {
 		req<{}, api_response.UserResponse>(`/api/users/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let user = response.user;
 			mount.appendChild(xml.element("div.content")
-				.add(renderTextHeader(xml.text(user.username)))
+				.add(renderTextHeader(xml.text(user.name)))
 				.render());
 		});
 	} else if ((parts = /^users[/]([^/?]*)/.exec(uri)) !== null) {

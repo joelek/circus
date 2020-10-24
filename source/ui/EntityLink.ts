@@ -97,7 +97,7 @@ export class EntityLinkFactory {
 	}
 
 	forUser(user: api.UserBase): xnode.XElement {
-		return this.for(`users/${user.user_id}/`, user.username);
+		return this.for(`users/${user.user_id}/`, user.name);
 	}
 
 	static makeStyle(): xnode.XElement {

@@ -16,7 +16,7 @@ export type AlbumEntry = {
 	"album_id": string,
 	"title": string,
 	"year": number,
-	"cover_file_id": (string | null)
+	"cover_file_id": string | null
 };
 
 export const AlbumEntry = autoguard.Object.of<AlbumEntry>({
@@ -93,8 +93,8 @@ export type MovieEntry = {
 	"movie_id": string,
 	"title": string,
 	"year": number,
-	"summary": (string | null),
-	"poster_file_id": (string | null)
+	"summary": string | null,
+	"poster_file_id": string | null
 };
 
 export const MovieEntry = autoguard.Object.of<MovieEntry>({
@@ -176,8 +176,8 @@ export type EpisodeEntry = {
 	"title": string,
 	"number": number,
 	"duration": number,
-	"year": (number | null),
-	"summary": (string | null)
+	"year": number | null,
+	"summary": string | null
 };
 
 export const EpisodeEntry = autoguard.Object.of<EpisodeEntry>({
@@ -201,7 +201,7 @@ export type SubtitleEntry = {
 	"subtitle_id": string,
 	"file_id": string,
 	"video_file_id": string,
-	"language": (string | null)
+	"language": string | null
 };
 
 export const SubtitleEntry = autoguard.Object.of<SubtitleEntry>({
@@ -368,12 +368,14 @@ export const ListDatabase = autoguard.Object.of<ListDatabase>({
 
 export type UserEntry = {
 	"user_id": string,
+	"name": string,
 	"username": string,
 	"password": string
 };
 
 export const UserEntry = autoguard.Object.of<UserEntry>({
 	"user_id": autoguard.String,
+	"name": autoguard.String,
 	"username": autoguard.String,
 	"password": autoguard.String
 });

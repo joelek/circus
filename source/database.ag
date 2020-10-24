@@ -138,6 +138,7 @@
 	},
 	UserEntry: {
 		user_id: string,
+		name: string,
 		username: string,
 		password: string
 	},

@@ -317,7 +317,9 @@ export class EntityRowFactory {
 		let link = this.EntityLink.forUser(user);
 		let image = this.ImageBox.forSquare();
 		let title = this.EntityLink.forUser(user);
-		let subtitles = [] as xnode.XElement[];
+		let subtitles = [
+			xnode.element("span").add(xnode.text(user.username))
+		];
 		let tags = [
 			"User"
 		];

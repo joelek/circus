@@ -29,6 +29,7 @@ if (!libfs.existsSync("./private/db/users.json")) {
 		users: [
 			{
 				user_id: "",
+				name: "Test User",
 				username: "test",
 				password: passwords.generate("test")
 			}
@@ -1077,6 +1078,7 @@ export function api_lookupUserBase(user_id: string): UserBase {
 	let entry = getUserFromUserId.lookup(user_id);
 	return {
 		user_id: entry.user_id,
+		name: entry.name,
 		username: entry.username
 	};
 };

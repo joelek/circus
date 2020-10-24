@@ -47,6 +47,7 @@
 
 	UserBase: {
 		user_id: string,
+		name: string,
 		username: string
 	},
 
@@ -85,11 +86,12 @@
 	},
 
 	SegmentBase: {
-		file: VideoFile
+		file: VideoFile,
+		subtitles: Subtitle[]
 	},
 
 	Segment: SegmentBase & {
-		subtitles: Subtitle[]
+
 	},
 
 	MovieBase: {
