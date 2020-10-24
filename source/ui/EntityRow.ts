@@ -278,11 +278,10 @@ export class EntityRowFactory {
 		let link = this.EntityLink.forSeason(season);
 		let image = this.ImageBox.forSquare(is.absent(season.show.artwork) ? undefined : `/files/${season.show.artwork.file_id}/`);
 		let titles = [
+			this.EntityLink.forShow(season.show),
 			this.EntityLink.forSeason(season)
 		];
-		let subtitles = [
-			this.EntityLink.forShow(season.show)
-		];
+		let subtitles = season.show.genres.map((genre) => this.EntityLink.forGenre(genre));
 		let tags = [
 			"Season",
 			metadata.formatDuration(duration_ms)

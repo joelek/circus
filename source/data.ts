@@ -832,7 +832,7 @@ export function api_lookupDiscBase(disc_id: string, user_id: string, album?: Alb
 	let entry = getDiscFromDiscId.lookup(disc_id);
 	return {
 		disc_id: entry.disc_id,
-		album: is.present(album) ? album : api_lookupAlbum(entry.album_id, user_id),
+		album: is.present(album) ? album : api_lookupAlbumBase(entry.album_id, user_id),
 		number: entry.number
 	};
 };
@@ -936,7 +936,14 @@ export function api_lookupMovieBase(movie_id: string, user_id: string): MovieBas
 			height: 720,
 			width: 1080
 		},
-		last_stream_date: is.present(user_id) ? getLatestStream(user_id, parts[0].file_id) ?? undefined : undefined
+		last_stream_date: is.present(user_id) ? getLatestStream(user_id, parts[0].file_id) ?? undefined : undefined,
+		genres: getMovieGenresFromMovieId.lookup(movie_id).map((movie_genre) => {
+			let entry = getVideoGenreFromVideoGenreId.lookup(movie_genre.video_genre_id);
+			return {
+				genre_id: entry.video_genre_id,
+				title: entry.title
+			};
+		})
 	};
 };
 
@@ -961,17 +968,9 @@ export function api_lookupMovie(movie_id: string, user_id: string): Movie {
 			cues: []
 		}))
 	};
-	let genres = getMovieGenresFromMovieId.lookup(movie_id).map((movie_genre) => {
-		let entry = getVideoGenreFromVideoGenreId.lookup(movie_genre.video_genre_id);
-		return {
-			genre_id: entry.video_genre_id,
-			title: entry.title
-		};
-	}).sort(LexicalSort.increasing((value) => value.title));
 	return {
 		...movie,
-		segment,
-		genres
+		segment
 	};
 };
 
@@ -1025,7 +1024,11 @@ export function api_lookupShowBase(show_id: string, user_id: string): ShowBase {
 	return {
 		show_id: entry.show_id,
 		title: entry.title,
-		artwork: undefined
+		artwork: undefined,
+		genres: getVideoGenresFromShowId(show_id).map((video_genre) => ({
+			genre_id: video_genre.video_genre_id,
+			title: video_genre.title
+		}))
 	};
 };
 
@@ -1034,14 +1037,9 @@ export function api_lookupShow(show_id: string, user_id: string): Show {
 	let seasons = getSeasonsFromShowIdIndex.lookup(show_id).map((entry) => {
 		return api_lookupSeason(entry.season_id, user_id, show);
 	});
-	let genres = getVideoGenresFromShowId(show_id).map((video_genre) => ({
-		genre_id: video_genre.video_genre_id,
-		title: video_genre.title
-	}));
 	return {
 		...show,
-		seasons,
-		genres
+		seasons
 	};
 };
 

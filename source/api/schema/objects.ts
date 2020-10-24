@@ -229,7 +229,8 @@ export type MovieBase = {
 	"year": number,
 	"summary": string,
 	"artwork"?: ImageFile,
-	"last_stream_date"?: number
+	"last_stream_date"?: number,
+	"genres": Genre[]
 };
 
 export const MovieBase = autoguard.Object.of<MovieBase>({
@@ -244,29 +245,28 @@ export const MovieBase = autoguard.Object.of<MovieBase>({
 	"last_stream_date": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.Number
-	)
+	),
+	"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre))
 });
 
 export type Movie = MovieBase & {
-	"segment": Segment,
-	"genres": Genre[]
+	"segment": Segment
 };
 
 export const Movie = autoguard.Intersection.of(
 	autoguard.Reference.of<MovieBase>(() => MovieBase),
 	autoguard.Object.of<{
-		"segment": Segment,
-		"genres": Genre[]
+		"segment": Segment
 	}>({
-		"segment": autoguard.Reference.of<Segment>(() => Segment),
-		"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre))
+		"segment": autoguard.Reference.of<Segment>(() => Segment)
 	})
 );
 
 export type ShowBase = {
 	"show_id": string,
 	"title": string,
-	"artwork"?: ImageFile
+	"artwork"?: ImageFile,
+	"genres": Genre[]
 };
 
 export const ShowBase = autoguard.Object.of<ShowBase>({
@@ -275,22 +275,20 @@ export const ShowBase = autoguard.Object.of<ShowBase>({
 	"artwork": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.Reference.of<ImageFile>(() => ImageFile)
-	)
+	),
+	"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre))
 });
 
 export type Show = ShowBase & {
-	"seasons": Season[],
-	"genres": Genre[]
+	"seasons": Season[]
 };
 
 export const Show = autoguard.Intersection.of(
 	autoguard.Reference.of<ShowBase>(() => ShowBase),
 	autoguard.Object.of<{
-		"seasons": Season[],
-		"genres": Genre[]
+		"seasons": Season[]
 	}>({
-		"seasons": autoguard.Array.of(autoguard.Reference.of<Season>(() => Season)),
-		"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre))
+		"seasons": autoguard.Array.of(autoguard.Reference.of<Season>(() => Season))
 	})
 );
 

@@ -100,23 +100,23 @@
 		year: number,
 		summary: string,
 		artwork?: ImageFile,
-		last_stream_date?: number
+		last_stream_date?: number,
+		genres: Genre[]
 	},
 
 	Movie: MovieBase & {
-		segment: Segment,
-		genres: Genre[]
+		segment: Segment
 	},
 
 	ShowBase: {
 		show_id: string,
 		title: string,
-		artwork?: ImageFile
+		artwork?: ImageFile,
+		genres: Genre[]
 	},
 
 	Show: ShowBase & {
-		seasons: Season[],
-		genres: Genre[]
+		seasons: Season[]
 	},
 
 	SeasonBase: {
