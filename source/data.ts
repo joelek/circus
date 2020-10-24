@@ -28,7 +28,7 @@ if (!libfs.existsSync("./private/db/users.json")) {
 	let db: libdb.UserDatabase = {
 		users: [
 			{
-				user_id: "",
+				user_id: libcrypto.randomBytes(16).toString("hex"),
 				name: "Test User",
 				username: "test",
 				password: passwords.generate("test")
