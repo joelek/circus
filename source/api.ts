@@ -460,7 +460,10 @@ class CuesRoute implements Route<{}, api_response.CuesResponse> {
 		let username = getUsername(request);
 		let parts = /^[/]api[/]video[/]cues[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
 		let query = decodeURIComponent(parts[1]);
-		let cues = data.searchForCues(query, username, 10)
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let cues = data.searchForCues(query, username, offset, length)
 			.map((cue) => {
 				let entry = data.getSubtitleFromSubtitleId.lookup(cue.subtitle.subtitle_id);
 				try {

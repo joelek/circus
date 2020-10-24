@@ -2963,16 +2963,30 @@ let updateviewforuri = (uri: string): void => {
 			.render()
 		);
 	} else if ((parts = /^video[/]cues[/]([^/?]*)/.exec(uri)) !== null) {
-		let cues = new ArrayObservable<Cue & { media: Episode | Movie }>([]);
+		//navigate(`video/episodes/${episode.episode_id}/${cue.start_ms}/`);
+		//navigate(`video/movies/${movie.movie_id}/${cue.start_ms}/`);
+		//window.open("/media/gifs/" + cue.cue_id + "/");
 		let query = new ObservableClass(decodeURIComponent(parts[1]));
-		query.addObserver((query) => {
-			req<{}, api_response.CuesResponse>(`/api/video/cues/${encodeURIComponent(query)}?token=${token}`, {}, (_, response) => {
-				cues.update(response.cues);
-				//navigate(`video/episodes/${episode.episode_id}/${cue.start_ms}/`);
-				//navigate(`video/movies/${movie.movie_id}/${cue.start_ms}/`);
-				//window.open("/media/gifs/" + cue.cue_id + "/");
-			});
-		});
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let cues = new ArrayObservable<Cue & { media: Episode | Movie }>([]);
+		setScrollObserver(() => new Promise((resolve, reject) => {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				req<{}, api_response.CuesResponse>(`/api/video/cues/${encodeURIComponent(query.getState())}?offset=${offset}&token=${token}`, {}, (_, response) => {
+					for (let cue of response.cues) {
+						cues.append(cue);
+					}
+					offset += response.cues.length;
+					if (response.cues.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
+					resolve();
+				});
+			}
+		}));
 		mount.appendChild(xml.element("div.content")
 			.set("style", "display: grid; gap: 32px;")
 			.add(xml.element("input")

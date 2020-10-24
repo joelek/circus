@@ -678,9 +678,10 @@ export const playlistTitleSearchIndex = SearchIndex.from(lists.audiolists, (entr
 export const userUsernameSearchIndex = SearchIndex.from(users.users, (entry) => entry.user_id, (entry) => [entry.name, entry.username]);
 export const cueSearchIndex = SearchIndex.from(media.video.cues, (entry) => entry.cue_id, (entry) => entry.lines);
 
-export function searchForCues(query: string, user_id: string, limit?: number): Cue[] {
+export function searchForCues(query: string, user_id: string, offset: number, limit: number): Cue[] {
 	let entries = cueSearchIndex.search(query)
-		.sort(NumericSort.increasing((value) => value.rank));
+		.sort(NumericSort.increasing((value) => value.rank))
+		.slice(offset, offset + limit);
 	let entities = new Array<Cue>();
 	while (true) {
 		let entry = entries.pop();
@@ -688,9 +689,6 @@ export function searchForCues(query: string, user_id: string, limit?: number): C
 			break;
 		}
 		entities.push(api_lookupCue(entry.id, user_id));
-		if (is.present(limit) && entities.length >= limit) {
-			break;
-		}
 	}
 	return entities;
 }
