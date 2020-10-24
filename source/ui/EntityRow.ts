@@ -115,7 +115,7 @@ export class EntityRowFactory {
 		this.PlaybackButton = PlaybackButton;
 	}
 
-	forEntity(entity: api.Album | api.Artist | api.Disc | api.Episode | api.Movie | api.Playlist | api.Season | api.Show | api.Track | api.User): xnode.XElement {
+	forEntity(entity: api.Entity): xnode.XElement {
 		if (api.Album.is(entity)) {
 			return this.forAlbum(entity);
 		}

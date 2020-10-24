@@ -5,7 +5,7 @@ import * as utils from "./utils";
 import * as passwords from "./passwords";
 import { CombinedSort, LexicalSort, NumericSort } from "./shared";
 import * as is from "./is";
-import { Album, AlbumBase, Artist, ArtistBase, Disc, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, SegmentBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, SegmentBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -694,7 +694,7 @@ export const episodeTitleSearchIndex = SearchIndex.from("episode_id", "title", m
 export const playlistTitleSearchIndex = SearchIndex.from("audiolist_id", "title", lists.audiolists);
 export const userUsernameSearchIndex = SearchIndex.from("user_id", "username", users.users);
 
-export function search(query: string, user_id: string, limit?: number): (Album | Artist | Episode | Movie | Show | Track | Playlist)[] {
+export function search(query: string, user_id: string, limit?: number): Entity[] {
 	let entries = [
 		...albumTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "ALBUM", type_rank: 5 })),
 		...artistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "ARTIST", type_rank: 7 })),
@@ -702,12 +702,13 @@ export function search(query: string, user_id: string, limit?: number): (Album |
 		...movieTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "MOVIE", type_rank: 6 })),
 		...showTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "SHOW", type_rank: 3 })),
 		...trackTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "TRACK", type_rank: 1 })),
-		...playlistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "PLAYLIST", type_rank: 4 }))
+		...playlistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "PLAYLIST", type_rank: 4 })),
+		...userUsernameSearchIndex.search(query).map((entry) => ({ ...entry, type: "USER", type_rank: 0 }))
 	].sort(CombinedSort.of(
 		NumericSort.increasing((value) => value.rank),
 		NumericSort.increasing((value) => value.type_rank)
 	));
-	let entities = new Array<Album | Artist | Episode | Movie | Show | Track | Playlist>();
+	let entities = new Array<Entity>();
 	while (true) {
 		let entry = entries.pop();
 		if (is.absent(entry)) {
@@ -727,6 +728,8 @@ export function search(query: string, user_id: string, limit?: number): (Album |
 			entities.push(api_lookupTrack(entry.id, user_id));
 		} else if (entry.type === "PLAYLIST") {
 			entities.push(api_lookupPlaylist(entry.id, user_id));
+		} else if (entry.type === "USER") {
+			entities.push(api_lookupUser(entry.id));
 		}
 		if (is.present(limit) && entities.length >= limit) {
 			break;

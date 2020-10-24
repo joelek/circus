@@ -94,7 +94,7 @@ type UsersResponse = {
 };
 
 type SearchResponse = {
-	entities: (objects.Album | objects.Artist | objects.Episode | objects.Movie | objects.Show | objects.Track | objects.Playlist)[],
+	entities: objects.Entity[],
 };
 
 

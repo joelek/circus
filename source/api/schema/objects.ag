@@ -165,6 +165,8 @@
 
 	},
 
+	Entity: Album | Artist | Disc | Episode | Genre | Movie | Season | Show | Track | Playlist | User,
+
 	File: {
 		file_id: string,
 		mime: string

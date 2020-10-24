@@ -407,6 +407,22 @@ export const Cue = autoguard.Intersection.of(
 	autoguard.Object.of<{}>({})
 );
 
+export type Entity = Album | Artist | Disc | Episode | Genre | Movie | Season | Show | Track | Playlist | User;
+
+export const Entity = autoguard.Union.of(
+	autoguard.Reference.of<Album>(() => Album),
+	autoguard.Reference.of<Artist>(() => Artist),
+	autoguard.Reference.of<Disc>(() => Disc),
+	autoguard.Reference.of<Episode>(() => Episode),
+	autoguard.Reference.of<Genre>(() => Genre),
+	autoguard.Reference.of<Movie>(() => Movie),
+	autoguard.Reference.of<Season>(() => Season),
+	autoguard.Reference.of<Show>(() => Show),
+	autoguard.Reference.of<Track>(() => Track),
+	autoguard.Reference.of<Playlist>(() => Playlist),
+	autoguard.Reference.of<User>(() => User)
+);
+
 export type File = {
 	"file_id": string,
 	"mime": string
@@ -503,6 +519,7 @@ export type Autoguard = {
 	"Subtitle": Subtitle,
 	"CueBase": CueBase,
 	"Cue": Cue,
+	"Entity": Entity,
 	"File": File,
 	"AudioFile": AudioFile,
 	"ImageFile": ImageFile,
@@ -541,6 +558,7 @@ export const Autoguard = {
 	"Subtitle": Subtitle,
 	"CueBase": CueBase,
 	"Cue": Cue,
+	"Entity": Entity,
 	"File": File,
 	"AudioFile": AudioFile,
 	"ImageFile": ImageFile,
