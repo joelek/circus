@@ -650,7 +650,7 @@ export function api_lookupEpisodeBase(episode_id: string, user_id: string, seaso
 		number: entry.number,
 		season: is.present(season) ? season : api_lookupSeasonBase(entry.season_id, user_id),
 		year: entry.year ?? undefined,
-		last_stream_date: undefined
+		last_stream_date: is.present(user_id) ? getLatestStream(user_id, entry.file_id) ?? undefined : undefined,
 	};
 };
 
