@@ -85,6 +85,14 @@ type TracksResponse = {
 	tracks: objects.Track[]
 };
 
+type UserResponse = {
+	user: objects.User
+};
+
+type UsersResponse = {
+	users: objects.User[]
+};
+
 type SearchResponse = {
 	entities: (objects.Album | objects.Artist | objects.Episode | objects.Movie | objects.Show | objects.Track | objects.Playlist)[],
 };
@@ -167,6 +175,8 @@ export {
 	PlaylistsResponse,
 	TrackResponse,
 	TracksResponse,
+	UserResponse,
+	UsersResponse,
 	SearchResponse,
 
 

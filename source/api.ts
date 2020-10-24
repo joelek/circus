@@ -768,6 +768,47 @@ class DiscsRoute implements Route<{}, api_response.SeasonsResponse> {
 	}
 }
 
+class UserRoute implements Route<{}, api_response.UserResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]users[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let user_id = parts[1];
+		let user = data.api_lookupUser(user_id);
+		let payload: api_response.UserResponse = {
+			user
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]users[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+	}
+}
+
+class UsersRoute implements Route<{}, api_response.UsersResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]users[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = parts[1];
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let users = data.userUsernameSearchIndex.search(query)
+			.slice(offset, offset + length)
+			.map((entry) => data.api_lookupUser(entry.id))
+		let payload: api_response.UsersResponse = {
+			users
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]users[/]([^/?]*)/.test(request.url ?? "/");
+	}
+}
+
 let router = new Router()
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
@@ -789,6 +830,8 @@ let router = new Router()
 	.registerRoute(new SeasonsRoute())
 	.registerRoute(new DiscRoute())
 	.registerRoute(new DiscsRoute())
+	.registerRoute(new UserRoute())
+	.registerRoute(new UsersRoute())
 
 	.registerRoute(new CuesRoute())
 	.registerRoute(new GenreRoute())

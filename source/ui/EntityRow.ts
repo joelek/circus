@@ -82,7 +82,7 @@ export class EntityRowFactory {
 	private ImageBox: ImageBoxFactory;
 	private PlaybackButton: PlaybackButtonFactory;
 
-	private make(link: xnode.XElement, image: xnode.XElement, playbackButton: xnode.XElement, title: xnode.XElement, subtitles: xnode.XElement[], tags: string[]): xnode.XElement {
+	private make(link: xnode.XElement, image: xnode.XElement, playbackButton: xnode.XElement | undefined, title: xnode.XElement, subtitles: xnode.XElement[], tags: string[]): xnode.XElement {
 		return link
 			.add(xnode.element("div.entity-row")
 				.add(xnode.element("div.entity-row__artwork")
@@ -115,7 +115,7 @@ export class EntityRowFactory {
 		this.PlaybackButton = PlaybackButton;
 	}
 
-	forEntity(entity: api.Album | api.Artist | api.Disc | api.Episode | api.Movie | api.Playlist | api.Season | api.Show | api.Track): xnode.XElement {
+	forEntity(entity: api.Album | api.Artist | api.Disc | api.Episode | api.Movie | api.Playlist | api.Season | api.Show | api.Track | api.User): xnode.XElement {
 		if (api.Album.is(entity)) {
 			return this.forAlbum(entity);
 		}
@@ -142,6 +142,9 @@ export class EntityRowFactory {
 		}
 		if (api.Track.is(entity)) {
 			return this.forTrack(entity);
+		}
+		if (api.User.is(entity)) {
+			return this.forUser(entity);
 		}
 		throw `Expected code to be unreachable!`;
 	}
@@ -308,6 +311,17 @@ export class EntityRowFactory {
 			metadata.formatDuration(duration_ms)
 		];
 		return this.make(link, image, playbackButton, title, subtitles, tags);
+	}
+
+	forUser(user: api.User): xnode.XElement {
+		let link = this.EntityLink.forUser(user);
+		let image = this.ImageBox.forSquare();
+		let title = this.EntityLink.forUser(user);
+		let subtitles = [] as xnode.XElement[];
+		let tags = [
+			"User"
+		];
+		return this.make(link, image, undefined, title, subtitles, tags);
 	}
 
 	static makeStyle(): xnode.XElement {

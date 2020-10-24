@@ -691,6 +691,7 @@ export const showTitleSearchIndex = SearchIndex.from("show_id", "title", media.v
 export const movieTitleSearchIndex = SearchIndex.from("movie_id", "title", media.video.movies);
 export const episodeTitleSearchIndex = SearchIndex.from("episode_id", "title", media.video.episodes);
 export const playlistTitleSearchIndex = SearchIndex.from("audiolist_id", "title", lists.audiolists);
+export const userUsernameSearchIndex = SearchIndex.from("user_id", "username", users.users);
 
 export function search(query: string, user_id: string, limit?: number): (Album | Artist | Episode | Movie | Show | Track | Playlist)[] {
 	let entries = [

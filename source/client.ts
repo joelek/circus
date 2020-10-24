@@ -8,7 +8,7 @@ import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, AlbumBase, Artist, ArtistBase, Disc, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, UserBase } from "./api/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, Disc, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
 import * as xml from "./xnode";
 import { formatDuration as format_duration } from "./ui/metadata";
 
@@ -2251,6 +2251,46 @@ let updateviewforuri = (uri: string): void => {
 			.add(xml.element("div.content")
 				.add(xml.element("div.media-grid__content")
 					.repeat(discs, (disc) => EntityRow.forDisc(disc))
+				)
+			)
+			.render()
+		);
+	} else if ((parts = /^users[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+		req<{}, api_response.UserResponse>(`/api/users/${parts[1]}/?token=${token}`, {}, (_, response) => {
+			let user = response.user;
+			mount.appendChild(xml.element("div.content")
+				.add(renderTextHeader(xml.text(user.username)))
+				.render());
+		});
+	} else if ((parts = /^users[/]([^/?]*)/.exec(uri)) !== null) {
+		let query = parts[1];
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let users = new ArrayObservable<User>([]);
+		setScrollObserver(() => new Promise((resolve, reject) => {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				req<{}, api_response.UsersResponse>(`/api/users/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {}, (_, response) => {
+					for (let user of response.users) {
+						users.append(user);
+					}
+					offset += response.users.length;
+					if (response.users.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
+					resolve();
+				});
+			}
+		}));
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(renderTextHeader(xml.text("Users")))
+			)
+			.add(xml.element("div.content")
+				.add(xml.element("div.media-grid__content")
+					.repeat(users, (user) => EntityRow.forUser(user))
 				)
 			)
 			.render()
