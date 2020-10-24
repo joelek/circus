@@ -7,7 +7,6 @@ import * as schema from "./schema";
 import * as is from "../is";
 import * as languages from "../languages";
 import * as observers from "../simpleobs";
-import * as utils from "../utils";
 import * as libcontext from "../context/client";
 import * as autoguard from "@joelek/ts-autoguard";
 import * as sockets from "@joelek/ts-sockets";
@@ -211,11 +210,9 @@ function unwrapPacketPayload(socket: libnet.Socket, onpayload: (buffer: Buffer) 
 
 class MessageHandler {
 	private socket: libnet.Socket;
-	private requestId: number;
 
 	constructor(socket: libnet.Socket, onmessage: (message: cast_message.CastMessage) => void) {
 		this.socket = socket;
-		this.requestId = 1;
 		unwrapPacketPayload(socket, (payload) => {
 			try {
 				let message = cast_message.parseCastMessage(payload);
@@ -320,7 +317,6 @@ class MediaHandler {
 	private messageHandler: MessageHandler;
 	private serializer: autoguard.serialization.MessageSerializer<schema.media.Autoguard>;
 	private callbacks: Map<number, MediaCallback>;
-	private requestId: number;
 	readonly listeners: stdlib.routing.MessageRouter<schema.media.Autoguard>;
 	readonly transportId = new observers.ObservableClass(undefined as string | undefined);
 	readonly mediaSessionId = new observers.ObservableClass(undefined as number | undefined);
@@ -329,7 +325,6 @@ class MediaHandler {
 		this.messageHandler = messageHandler;
 		this.serializer = new autoguard.serialization.MessageSerializer(schema.media.Autoguard);
 		this.callbacks = new Map<number, MediaCallback>();
-		this.requestId = 1;
 		this.listeners = new stdlib.routing.MessageRouter<schema.media.Autoguard>();
 	}
 
@@ -371,14 +366,12 @@ class ReceiverHandler {
 	private messageHandler: MessageHandler;
 	private serializer: autoguard.serialization.MessageSerializer<schema.receiver.Autoguard>;
 	private callbacks: Map<number, ReceiverCallback>;
-	private requestId: number;
 	readonly listeners: stdlib.routing.MessageRouter<schema.receiver.Autoguard>;
 
 	constructor(messageHandler: MessageHandler) {
 		this.messageHandler = messageHandler;
 		this.serializer = new autoguard.serialization.MessageSerializer(schema.receiver.Autoguard);
 		this.callbacks = new Map<number, ReceiverCallback>();
-		this.requestId = 1;
 		this.listeners = new stdlib.routing.MessageRouter<schema.receiver.Autoguard>();
 	}
 
