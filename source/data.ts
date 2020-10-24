@@ -691,10 +691,10 @@ export const artistTitleSearchIndex = SearchIndex.from(media.audio.artists, "art
 export const albumTitleSearchIndex = SearchIndex.from(media.audio.albums, "album_id", "title");
 export const trackTitleSearchIndex = SearchIndex.from(media.audio.tracks, "track_id", "title");
 export const showTitleSearchIndex = SearchIndex.from(media.video.shows, "show_id", "title");
-export const movieTitleSearchIndex = SearchIndex.from(media.video.movies, "movie_id", "title");
-export const episodeTitleSearchIndex = SearchIndex.from(media.video.episodes, "episode_id", "title");
-export const playlistTitleSearchIndex = SearchIndex.from(lists.audiolists, "audiolist_id", "title");
-export const userUsernameSearchIndex = SearchIndex.from(users.users, "user_id", "username");
+export const movieTitleSearchIndex = SearchIndex.from(media.video.movies, "movie_id", "title", "summary");
+export const episodeTitleSearchIndex = SearchIndex.from(media.video.episodes, "episode_id", "title", "summary");
+export const playlistTitleSearchIndex = SearchIndex.from(lists.audiolists, "audiolist_id", "title", "description");
+export const userUsernameSearchIndex = SearchIndex.from(users.users, "user_id", "name", "username");
 
 export function search(query: string, user_id: string, limit?: number): Entity[] {
 	let entries = [
