@@ -1,3 +1,4 @@
+import * as is from "../is";
 import { ObservableClass, Observable, ArrayObservable } from "../simpleobs";
 
 export interface XNode<A extends globalThis.Node> {
@@ -29,7 +30,7 @@ export interface Listener<A extends keyof HTMLElementEventMap> {
 }
 
 export interface Renderer<A> {
-	(state: A): XElement;
+	(state: A): XElement | undefined;
 }
 
 export class XElement implements XNode<globalThis.Element> {
@@ -127,7 +128,10 @@ export class XElement implements XNode<globalThis.Element> {
 							element.firstChild.remove();
 						}
 						for (let value of state) {
-							element.appendChild(this.renderer(value).render());
+							let child = this.renderer(value);
+							if (is.present(child)) {
+								element.appendChild(child.render());
+							}
 						}
 					}
 				}
