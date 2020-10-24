@@ -2962,7 +2962,7 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.render()
 		);
-	} else if ((parts = /^cues[/]([^/?]*)/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]cues[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
 		let wrapper = document.createElement("div");
 		let searchbox = document.createElement("input");
@@ -2979,7 +2979,7 @@ let updateviewforuri = (uri: string): void => {
 		let cb = () => {
 			let new_query = searchbox.value;
 			if (new_query !== "" && new_query !== query) {
-				navigate("cues/" + encodeURIComponent(new_query));
+				navigate("video/cues/" + encodeURIComponent(new_query));
 			}
 		};
 		searchbox.addEventListener("keyup", (event) => {
@@ -2991,64 +2991,19 @@ let updateviewforuri = (uri: string): void => {
 			cb();
 		});
 		mount.appendChild(wrapper);
-		req<api_response.CuesRequest, api_response.CuesResponse>(`/api/cues/`, { query }, (status, response) => {
+		req<{}, api_response.CuesResponse>(`/api/video/cues/${encodeURIComponent(query)}?token=${token}`, {}, (_, response) => {
 			while (results.lastChild !== null) {
 				results.removeChild(results.lastChild);
 			}
-			for (let cue of response.cues) {
-				let d = document.createElement('div');
-				d.classList.add("group");
-				if (cue.subtitle.movie_part) {
-					let h2 = document.createElement("h2");
-					h2.style.setProperty("font-size", "24px");
-					h2.innerText = cue.subtitle.movie_part.movie.title;
-					d.appendChild(h2);
-					let h3 = document.createElement("h3");
-					h3.style.setProperty("font-size", "12px");
-					h3.innerText = "" + cue.subtitle.movie_part.movie.year;
-					d.appendChild(h3);
-				} else if (cue.subtitle.episode) {
-					let episode = cue.subtitle.episode;
-					let h2 = document.createElement("h2");
-					h2.style.setProperty("font-size", "24px");
-					h2.innerText = episode.title;
-					d.appendChild(h2);
-					let h3 = document.createElement("h3");
-					h3.style.setProperty("font-size", "16px");
-					h3.innerText = [
-						episode.season.show.title,
-						utils.formatSeasonEpisode(episode.season.number, episode.number)
-					].join(" \u00b7 ");
-					d.appendChild(h3);
-				}
-				let pre = document.createElement("pre");
-				pre.style.setProperty("font-size", "16px");
-				pre.innerText = `${cue.lines.join("\n")}`;
-				d.appendChild(pre);
-				let p = document.createElement("p");
-				p.style.setProperty("font-size", "12px");
-				p.innerText = format_duration(cue.start_ms);
-				d.appendChild(p);
-				let b1 = document.createElement("button");
-				b1.textContent = "Go to video";
-				b1.addEventListener("click", () => {
-					let episode = cue.subtitle.episode;
-					let movie = cue.subtitle.movie_part;
-					if (episode != null) {
-						navigate(`video/episodes/${episode.episode_id}/${cue.start_ms}/`);
-					} else if (movie != null) {
-						navigate(`video/movies/${movie.movie_id}/${cue.start_ms}/`);
-					}
-				});
-				d.appendChild(b1);
-				let b2 = document.createElement("button");
-				b2.textContent = "Generate meme";
-				b2.addEventListener("click", () => {
-					window.open("/media/gifs/" + cue.cue_id + "/");
-				});
-				d.appendChild(b2);
-				results.appendChild(d);
-			}
+			let cues = response.cues;
+			results.appendChild(xml.element("div.content")
+				.set("style", "display: grid; gap: 16px;")
+				.add(...cues.map((cue) => EntityRow.forEntity(cue.media)))
+				.render()
+			);
+			//navigate(`video/episodes/${episode.episode_id}/${cue.start_ms}/`);
+			//navigate(`video/movies/${movie.movie_id}/${cue.start_ms}/`);
+			//window.open("/media/gifs/" + cue.cue_id + "/");
 		});
 	} else if ((parts = /^video[/]genres[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<{}, api_response.GenreResponse>(`/api/video/genres/${parts[1]}/?token=${token}`, {}, (status, response) => {
@@ -3096,6 +3051,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(renderTextHeader(EntityLink.for("video/shows/", "Shows")))
 				.add(renderTextHeader(EntityLink.for("video/movies/", "Movies")))
 				.add(renderTextHeader(EntityLink.for("video/genres/", "Genres")))
+				.add(renderTextHeader(EntityLink.for("video/cues/", "Cues")))
 			)
 		.render());
 	} else if ((parts = /^tokens[/]/.exec(uri)) !== null) {
@@ -3162,7 +3118,6 @@ let updateviewforuri = (uri: string): void => {
 				.add(renderTextHeader(EntityLink.for("audio/", "Audio")))
 				.add(renderTextHeader(EntityLink.for("video/", "Video")))
 				.add(renderTextHeader(EntityLink.for("search/", "Search")))
-				.add(renderTextHeader(EntityLink.for("cues/", "Cues")))
 			)
 		.render());
 	}

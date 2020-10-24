@@ -162,7 +162,7 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 		}
 		if ((parts = /^[/]media[/]gifs[/]([0-9a-f]{32})[/]/.exec(path)) != null) {
 			let cue_id = parts[1];
-			let cue = data.cues_index[cue_id] as CueEntry;
+			let cue = data.getCueFromCueId.lookup(cue_id);
 			let filename = [".", "private", "memes", cue.cue_id];
 			if (libfs.existsSync(filename.join("/"))) {
 				let stream = libfs.createReadStream(filename.join("/"));

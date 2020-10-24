@@ -32,7 +32,8 @@ let db = {
 		seasons: new Array<libdb.SeasonEntry>(),
 		episodes: new Array<libdb.EpisodeEntry>(),
 		subtitles: new Array<libdb.SubtitleEntry>(),
-		subtitle_contents: new Array<libdb.SubtitleContentEntry>()
+		subtitle_contents: new Array<libdb.SubtitleContentEntry>(),
+		cues: new Array<libdb.CueEntry>()
 	},
 	files: new Array<libdb.FileEntry>()
 };

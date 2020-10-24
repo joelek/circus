@@ -5,7 +5,8 @@ import * as utils from "./utils";
 import * as passwords from "./passwords";
 import { CombinedSort, LexicalSort, NumericSort } from "./shared";
 import * as is from "./is";
-import { Album, AlbumBase, Artist, ArtistBase, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, SegmentBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, Cue, CueBase, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, SegmentBase, Show, ShowBase, Subtitle, SubtitleBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
+import { objects } from "./context/schema";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -57,6 +58,27 @@ export let lists = libdb.ListDatabase.as(JSON.parse(libfs.readFileSync('./privat
 export let users = libdb.UserDatabase.as(JSON.parse(libfs.readFileSync('./private/db/users.json', "utf8")));
 export let media = libdb.MediaDatabase.as(JSON.parse(libfs.readFileSync('./private/db/media.json', "utf8")));
 export let channels = libdb.ChannelDatabase.as(JSON.parse(libfs.readFileSync('./private/db/channels.json', "utf8")));
+
+// Re-create cues from compact notation.
+for (let subtitle of media.video.subtitle_contents) {
+	let subtitle_id = subtitle.subtitle_id;
+	for (let cue of subtitle.cues) {
+		let start_ms = cue[0];
+		let duration_ms = cue[1];
+		let lines = cue[2].split("\n");
+		let cue_id = libcrypto.createHash("md5")
+			.update(subtitle_id)
+			.update(`${start_ms}`)
+			.digest("hex");
+		media.video.cues.push({
+			cue_id,
+			subtitle_id,
+			start_ms,
+			duration_ms,
+			lines
+		});
+	}
+}
 
 export let users_index: utils.Index<libdb.UserEntry> = {};
 
@@ -149,25 +171,6 @@ for (let i = 0; i < media.video.subtitles.length; i++) {
 	subtitles_index[subtitle.subtitle_id] = subtitle;
 }
 
-export let cues_index: utils.Index<libdb.CueEntry> = {};
-
-for (let subtitle of media.video.subtitle_contents) {
-	for (let cue of subtitle.cues) {
-		let cue_id = getCueId(subtitle.subtitle_id, cue);
-		let subtitle_id = subtitle.subtitle_id;
-		let start_ms = cue[0];
-		let duration_ms = cue[1];
-		let lines = cue[2].split("\n");
-		cues_index[cue_id] = {
-			cue_id,
-			subtitle_id,
-			start_ms,
-			duration_ms,
-			lines
-		};
-	}
-}
-
 export let files_index: utils.Index<libdb.FileEntry> = {};
 
 for (let i = 0; i < media.files.length; i++) {
@@ -180,32 +183,6 @@ export let audiolists_index: utils.Index<libdb.AudiolistEntry> = {};
 for (let i = 0; i < lists.audiolists.length; i++) {
 	let audiolist = lists.audiolists[i];
 	audiolists_index[audiolist.audiolist_id] = audiolist;
-}
-
-function getCueId(subtitle_id: string, cue: [ number, number, string ]): string {
-	let hash = libcrypto.createHash("md5");
-	hash.update(subtitle_id);
-	hash.update("" + cue[0]);
-	let cue_id = hash.digest("hex");
-	return cue_id;
-}
-
-export const cue_search_index = new Map<string, Set<string>>();
-for (let subtitle of media.video.subtitle_contents) {
-	for (let cue of subtitle.cues) {
-		let cue_id = getCueId(subtitle.subtitle_id, cue);
-		for (let line of cue[2].split("\n")) {
-			let terms = utils.getSearchTerms(line).filter((term) => term.length >= 4);
-			for (let term of terms) {
-				let cues = cue_search_index.get(term);
-				if (cues === undefined) {
-					cues = new Set<string>();
-					cue_search_index.set(term, cues);
-				}
-				cues.add(cue_id);
-			}
-		}
-	}
 }
 
 export function addToken(token: libdb.AuthToken): void {
@@ -347,8 +324,8 @@ function lookup<A>(index: utils.Index<A>, id: string): A {
 	return record;
 }
 
-let getEpisodeFromFileId = RecordIndex.from("file_id", media.video.episodes);
-let getMoviePartFromFileId = RecordIndex.from("file_id", media.video.movie_parts);
+export const getEpisodeFromFileId = RecordIndex.from("file_id", media.video.episodes);
+export const getMoviePartFromFileId = RecordIndex.from("file_id", media.video.movie_parts);
 let getMoviePartsFromMovieIdIndex = CollectionIndex.from("movie_id", media.video.movie_parts);
 let getShowGenresFromShowId = CollectionIndex.from("show_id", media.video.show_genres);
 let getMovieGenresFromMovieId = CollectionIndex.from("movie_id", media.video.movie_genres);
@@ -495,6 +472,9 @@ export const getShowFromShowId = RecordIndex.from("show_id", media.video.shows);
 export const getArtistFromArtistId = RecordIndex.from("artist_id", media.audio.artists);
 export const getEpisodeFromEpisodeId = RecordIndex.from("episode_id", media.video.episodes);
 export const getSeasonFromSeasonId = RecordIndex.from("season_id", media.video.seasons);
+export const getSubtitleFromSubtitleId = RecordIndex.from("subtitle_id", media.video.subtitles);
+export const getCueFromCueId = RecordIndex.from("cue_id", media.video.cues);
+export const getCuesFromSubtitleId = CollectionIndex.from("subtitle_id", media.video.cues);
 
 export function lookupFile(file_id: string): libdb.FileEntry {
 	let file = files_index[file_id];
@@ -673,13 +653,14 @@ class SearchIndex {
 		}));
 	}
 
-	static from<A extends { [key: string]: any }>(collection: Iterable<A>, idField: keyof A, ...valueFields: (keyof A)[]): SearchIndex {
+	static from<A>(collection: Iterable<A>, getKey: (record: A) => string, getValues: (record: A) => string[]): SearchIndex {
 		let searchIndex = new SearchIndex();
 		for (let record of collection) {
-			for (let valueField of valueFields) {
-				let terms = utils.getSearchTerms(record[valueField]);
+			let key = getKey(record);
+			for (let values of getValues(record)) {
+				let terms = utils.getSearchTerms(values);
 				for (let term of terms) {
-					searchIndex.insert(term, record[idField]);
+					searchIndex.insert(term, key);
 				}
 			}
 		}
@@ -687,14 +668,32 @@ class SearchIndex {
 	}
 }
 
-export const artistTitleSearchIndex = SearchIndex.from(media.audio.artists, "artist_id", "title");
-export const albumTitleSearchIndex = SearchIndex.from(media.audio.albums, "album_id", "title");
-export const trackTitleSearchIndex = SearchIndex.from(media.audio.tracks, "track_id", "title");
-export const showTitleSearchIndex = SearchIndex.from(media.video.shows, "show_id", "title");
-export const movieTitleSearchIndex = SearchIndex.from(media.video.movies, "movie_id", "title");
-export const episodeTitleSearchIndex = SearchIndex.from(media.video.episodes, "episode_id", "title");
-export const playlistTitleSearchIndex = SearchIndex.from(lists.audiolists, "audiolist_id", "title");
-export const userUsernameSearchIndex = SearchIndex.from(users.users, "user_id", "name", "username");
+export const artistTitleSearchIndex = SearchIndex.from(media.audio.artists, (entry) => entry.artist_id, (entry) => [entry.title]);
+export const albumTitleSearchIndex = SearchIndex.from(media.audio.albums, (entry) => entry.album_id, (entry) => [entry.title]);
+export const trackTitleSearchIndex = SearchIndex.from(media.audio.tracks, (entry) => entry.track_id, (entry) => [entry.title]);
+export const showTitleSearchIndex = SearchIndex.from(media.video.shows, (entry) => entry.show_id, (entry) => [entry.title]);
+export const movieTitleSearchIndex = SearchIndex.from(media.video.movies, (entry) => entry.movie_id, (entry) => [entry.title]);
+export const episodeTitleSearchIndex = SearchIndex.from(media.video.episodes, (entry) => entry.episode_id, (entry) => [entry.title]);
+export const playlistTitleSearchIndex = SearchIndex.from(lists.audiolists, (entry) => entry.audiolist_id, (entry) => [entry.title]);
+export const userUsernameSearchIndex = SearchIndex.from(users.users, (entry) => entry.user_id, (entry) => [entry.name, entry.username]);
+export const cueSearchIndex = SearchIndex.from(media.video.cues, (entry) => entry.cue_id, (entry) => entry.lines);
+
+export function searchForCues(query: string, user_id: string, limit?: number): Cue[] {
+	let entries = cueSearchIndex.search(query)
+		.sort(NumericSort.increasing((value) => value.rank));
+	let entities = new Array<Cue>();
+	while (true) {
+		let entry = entries.pop();
+		if (is.absent(entry)) {
+			break;
+		}
+		entities.push(api_lookupCue(entry.id, user_id));
+		if (is.present(limit) && entities.length >= limit) {
+			break;
+		}
+	}
+	return entities;
+}
 
 export function search(query: string, user_id: string, limit?: number): Entity[] {
 	let entries = [
@@ -830,6 +829,24 @@ export function api_lookupArtist(artist_id: string, user_id: string): Artist {
 		albums: getAlbumArtistsFromArtistId.lookup(artist_id).map((entry) => {
 			return api_lookupAlbum(entry.album_id, user_id);
 		})
+	};
+};
+
+export function api_lookupCueBase(cue_id: string, user_id: string): CueBase {
+	let entry = getCueFromCueId.lookup(cue_id);
+	return {
+		cue_id: entry.cue_id,
+		subtitle: api_lookupSubtitleBase(entry.subtitle_id, user_id),
+		start_ms: entry.start_ms,
+		duration_ms: entry.duration_ms,
+		lines: entry.lines
+	};
+};
+
+export function api_lookupCue(cue_id: string, user_id: string): Cue {
+	let cue = api_lookupCueBase(cue_id, user_id);
+	return {
+		...cue
 	};
 };
 
@@ -1045,6 +1062,29 @@ export function api_lookupShow(show_id: string, user_id: string): Show {
 	return {
 		...show,
 		seasons
+	};
+};
+
+export function api_lookupSubtitleBase(subtitle_id: string, user_id: string): SubtitleBase {
+	let entry = getSubtitleFromSubtitleId.lookup(subtitle_id);
+	return {
+		subtitle_id: entry.subtitle_id,
+		file: {
+			file_id: entry.file_id,
+			mime: "text/vtt"
+		},
+		language: entry.language ?? undefined
+	};
+};
+
+export function api_lookupSubtitle(subtitle_id: string, user_id: string): Subtitle {
+	let subtitle = api_lookupSubtitleBase(subtitle_id, user_id);
+	let cues = getCuesFromSubtitleId.lookup(subtitle_id)
+		.map((entry) => api_lookupCue(entry.cue_id, user_id))
+		.sort(NumericSort.increasing((entry) => entry.start_ms));
+	return {
+		...subtitle,
+		cues
 	};
 };
 

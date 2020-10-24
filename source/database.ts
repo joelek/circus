@@ -279,7 +279,8 @@ export type MediaDatabase = {
 		"seasons": SeasonEntry[],
 		"episodes": EpisodeEntry[],
 		"subtitles": SubtitleEntry[],
-		"subtitle_contents": SubtitleContentEntry[]
+		"subtitle_contents": SubtitleContentEntry[],
+		"cues": CueEntry[]
 	},
 	"files": FileEntry[]
 };
@@ -310,7 +311,8 @@ export const MediaDatabase = autoguard.Object.of<MediaDatabase>({
 		"seasons": SeasonEntry[],
 		"episodes": EpisodeEntry[],
 		"subtitles": SubtitleEntry[],
-		"subtitle_contents": SubtitleContentEntry[]
+		"subtitle_contents": SubtitleContentEntry[],
+		"cues": CueEntry[]
 	}>({
 		"genres": autoguard.Array.of(autoguard.Reference.of<VideoGenreEntry>(() => VideoGenreEntry)),
 		"movie_parts": autoguard.Array.of(autoguard.Reference.of<MoviePartEntry>(() => MoviePartEntry)),
@@ -321,7 +323,8 @@ export const MediaDatabase = autoguard.Object.of<MediaDatabase>({
 		"seasons": autoguard.Array.of(autoguard.Reference.of<SeasonEntry>(() => SeasonEntry)),
 		"episodes": autoguard.Array.of(autoguard.Reference.of<EpisodeEntry>(() => EpisodeEntry)),
 		"subtitles": autoguard.Array.of(autoguard.Reference.of<SubtitleEntry>(() => SubtitleEntry)),
-		"subtitle_contents": autoguard.Array.of(autoguard.Reference.of<SubtitleContentEntry>(() => SubtitleContentEntry))
+		"subtitle_contents": autoguard.Array.of(autoguard.Reference.of<SubtitleContentEntry>(() => SubtitleContentEntry)),
+		"cues": autoguard.Array.of(autoguard.Reference.of<CueEntry>(() => CueEntry))
 	}),
 	"files": autoguard.Array.of(autoguard.Reference.of<FileEntry>(() => FileEntry))
 });

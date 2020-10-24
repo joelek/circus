@@ -93,6 +93,18 @@ type UsersResponse = {
 	users: objects.User[]
 };
 
+type CueResponse = {
+	cue: objects.Cue & {
+		media: objects.Episode | objects.Movie
+	}
+};
+
+type CuesResponse = {
+	cues: (objects.Cue & {
+		media: objects.Episode | objects.Movie
+	})[];
+};
+
 type SearchResponse = {
 	entities: objects.Entity[],
 };
@@ -127,25 +139,6 @@ interface AuthResponse extends ApiResponse {
 	token: string
 }
 
-interface CuesRequest extends ApiResponse {
-	query: string;
-}
-
-interface CuesResponse extends ApiResponse {
-	cues: Array<libdb.CueEntry & {
-		subtitle: libdb.SubtitleEntry & {
-			episode: undefined | (libdb.EpisodeEntry & {
-				season: libdb.SeasonEntry & {
-					show: libdb.ShowEntry
-				}
-			}),
-			movie_part: undefined | (libdb.MoviePartEntry & {
-				movie: libdb.MovieEntry
-			})
-		}
-	}>;
-}
-
 interface TokensRequest extends ApiRequest {
 
 }
@@ -177,17 +170,15 @@ export {
 	TracksResponse,
 	UserResponse,
 	UsersResponse,
+	CueResponse,
+	CuesResponse,
 	SearchResponse,
-
-
 
 	ApiRequest,
 	ApiResponse,
 	AuthWithTokenReponse,
 	AuthRequest,
 	AuthResponse,
-	CuesRequest,
-	CuesResponse,
 	TokensRequest,
 	TokensResponse
 };

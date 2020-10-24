@@ -2,7 +2,6 @@ import * as liburl from "url";
 import * as libhttp from "http";
 import * as libauth from "./auth";
 import * as libdb from "./database";
-import * as libutils from "./utils";
 import * as auth from "./auth";
 import * as api_response from "./api_response";
 import * as data from "./data";
@@ -49,34 +48,6 @@ function getOptionalInteger(url: liburl.UrlWithParsedQuery, key: string): number
 function getUsername(request: libhttp.IncomingMessage): string {
 	var url = liburl.parse(request.url || "/", true);
 	return auth.getUsername(url.query.token as string);
-}
-
-function searchForCues(query: string): Array<string> {
-	let terms = libutils.getSearchTerms(query);
-	let cue_id_sets = terms.map((term) => {
-		let cues = data.cue_search_index.get(term);
-		if (cues !== undefined) {
-			return cues;
-		} else {
-			return new Set<string>();
-		}
-	}).filter((cues) => cues.size > 0);
-	let cue_ids = new Array<string>();
-	if (cue_id_sets.length > 0) {
-		outer: for (let cue_id of cue_id_sets[0]) {
-			inner: for (let i = 1; i < cue_id_sets.length; i++) {
-				if (!cue_id_sets[i].has(cue_id)) {
-					continue outer;
-				}
-			}
-			if (cue_ids.length < 10) {
-				cue_ids.push(cue_id);
-			} else {
-				break outer;
-			}
-		}
-	}
-	return cue_ids;
 }
 
 interface Route<T extends api_response.ApiRequest, U extends api_response.ApiResponse> {
@@ -219,7 +190,7 @@ class EpisodesRoute implements Route<{}, api_response.EpisodesResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
 		let parts = /^[/]api[/]video[/]episodes[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
-		let query = parts[1];
+		let query = decodeURIComponent(parts[1]);
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
@@ -484,85 +455,39 @@ class PlaylistsRoute implements Route<{}, api_response.PlaylistsResponse> {
 
 
 
-class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResponse> {
-	constructor() {
-
-	}
-
+class CuesRoute implements Route<{}, api_response.CuesResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		if (request.url === undefined) {
-			throw new Error();
-		}
-		let reqpayload = '';
-		request.on('data', (chunk) => {
-			reqpayload += chunk;
-		}).on('end', () => {
-			try {
-				let json = JSON.parse(reqpayload);
-				if (json == null || json.constructor !== Object) {
-					throw new Error();
-				}
-				let query = json.query;
-				if (query == null || query.constructor !== String) {
-					throw new Error();
-				}
-				let cues = searchForCues(query as string)
-					.map((cue_id) => {
-						return data.cues_index[cue_id] as libdb.CueEntry;
-					})
-					.map((cue) => {
-						let subtitle = data.subtitles_index[cue.subtitle_id] as libdb.SubtitleEntry;
-						let metadata = data.lookupMetadata(subtitle.video_file_id);
-						if (libdb.MoviePartEntry.is(metadata)) {
-							let movie_part = metadata;
-							let movie = data.movies_index[movie_part.movie_id] as libdb.MovieEntry;
-							return {
-								...cue,
-								subtitle: {
-									...subtitle,
-									episode: undefined,
-									movie_part: {
-										...movie_part,
-										movie
-									}
-								}
-							};
-						}
-						if (libdb.EpisodeEntry.is(metadata)) {
-							let episode = metadata;
-							let season = data.seasons_index[episode.season_id] as libdb.SeasonEntry;
-							let show = data.shows_index[season.show_id] as libdb.ShowEntry;
-							return {
-								...cue,
-								subtitle: {
-									...subtitle,
-									episode: {
-										...episode,
-										season: {
-											...season,
-											show
-										}
-									},
-									movie_part: undefined
-								}
-							};
-						}
-						throw "";
-					});
-				let payload: api_response.CuesResponse = {
-					cues
-				};
-				response.writeHead(200);
-				response.end(JSON.stringify(payload));
-			} catch (error) {
-				response.writeHead(400);
-				response.end(JSON.stringify({ error: error.message }));
-			}
-		});
+		let username = getUsername(request);
+		let parts = /^[/]api[/]video[/]cues[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = decodeURIComponent(parts[1]);
+		let cues = data.searchForCues(query, username, 10)
+			.map((cue) => {
+				let entry = data.getSubtitleFromSubtitleId.lookup(cue.subtitle.subtitle_id);
+				try {
+					let episode = data.getEpisodeFromFileId.lookup(entry.video_file_id);
+					return {
+						...cue,
+						media: data.api_lookupEpisode(episode.episode_id, username)
+					}
+				} catch (error) {}
+				try {
+					let movie = data.getMoviePartFromFileId.lookup(entry.video_file_id);
+					return {
+						...cue,
+						media: data.api_lookupMovie(movie.movie_id, username)
+					}
+				} catch (error) {}
+			})
+			.filter(is.present);
+		let payload: api_response.CuesResponse = {
+			cues
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]cues[/]/.test(request.url);
+		return /^[/]api[/]video[/]cues[/]([^/?]*)/.test(request.url ?? "/");
 	}
 }
 
@@ -667,7 +592,7 @@ class TracksRoute implements Route<{}, api_response.TracksResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
 		let parts = /^[/]api[/]audio[/]tracks[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
-		let query = parts[1];
+		let query = decodeURIComponent(parts[1]);
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
@@ -708,7 +633,7 @@ class SeasonsRoute implements Route<{}, api_response.SeasonsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
 		let parts = /^[/]api[/]video[/]seasons[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
-		let query = parts[1];
+		let query = decodeURIComponent(parts[1]);
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
@@ -749,7 +674,7 @@ class DiscsRoute implements Route<{}, api_response.SeasonsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
 		let parts = /^[/]api[/]audio[/]discs[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
-		let query = parts[1];
+		let query = decodeURIComponent(parts[1]);
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
@@ -790,7 +715,7 @@ class UsersRoute implements Route<{}, api_response.UsersResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
 		let parts = /^[/]api[/]users[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
-		let query = parts[1];
+		let query = decodeURIComponent(parts[1]);
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
