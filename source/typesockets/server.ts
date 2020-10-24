@@ -33,11 +33,13 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 	private router: stdlib.routing.NamespacedMessageRouter<TypeSocketServerMessageMap<A>>;
 	private serializer: autoguard.serialization.MessageSerializer<A>;
 	private socket: sockets.WebSocketServer;
+	private debug: boolean;
 
-	constructor(guards: autoguard.serialization.MessageGuardMap<A>) {
+	constructor(guards: autoguard.serialization.MessageGuardMap<A>, debug: boolean = false) {
 		this.router = new stdlib.routing.NamespacedMessageRouter<TypeSocketServerMessageMap<A>>();
 		this.serializer = new autoguard.serialization.MessageSerializer<A>(guards);
 		this.socket = new sockets.WebSocketServer();
+		this.debug = debug;
 		this.socket.addEventListener("connect", (message) => {
 			let connection_id = message.connection_id;
 			let connection_url = message.connection_url;
@@ -59,7 +61,9 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 			let connection_url = message.connection_url;
 			let payload = message.buffer.toString();
 			this.serializer.deserialize(payload, (type, data) => {
-				//console.log(`${connection_id} -> ${type}`);
+				if (this.debug) {
+					console.log(`${connection_id} -> ${type}`);
+				}
 				this.router.route("sys", "message", {
 					connection_id,
 					connection_url,
@@ -99,7 +103,9 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 	send<B extends keyof A>(type: B, connection_ids: string | Array<string>, data: A[B]): void {
 		let payload = this.serializer.serialize(type, data);
 		for (let connection_id of Array.isArray(connection_ids) ? connection_ids : [connection_ids]) {
-			//console.log(`${connection_id} <- ${type}`);
+			if (this.debug) {
+				console.log(`${connection_id} <- ${type}`);
+			}
 			try {
 				this.socket.send(connection_id, payload);
 			} catch (error) {}
