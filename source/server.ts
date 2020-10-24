@@ -5,7 +5,6 @@ import * as libpath from "path";
 import * as liburl from "url";
 import * as api from "./api";
 import * as auth from "./auth";
-import * as channels from "./channels";
 import * as data from "./data";
 import * as subsearch from "./subsearch";
 import { FileEntry, CueEntry } from "./database";
@@ -192,11 +191,6 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 					});
 				});
 			}
-			return;
-		}
-		if (/^[/]media[/]channels[/]/.test(path)) {
-			let token = liburl.parse(request.url || "/", true).query.token as string;
-			channels.handleRequest(token, request, response);
 			return;
 		}
 	}

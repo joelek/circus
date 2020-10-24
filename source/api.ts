@@ -5,7 +5,6 @@ import * as libdb from "./database";
 import * as libutils from "./utils";
 import * as auth from "./auth";
 import * as api_response from "./api_response";
-import * as lchannels from "./channels";
 import * as data from "./data";
 import * as is from "./is";
 import { LexicalSort, NumericSort, CombinedSort } from "./shared";
@@ -567,45 +566,6 @@ class CuesRoute implements Route<api_response.CuesRequest, api_response.CuesResp
 	}
 }
 
-class ChannelsRoute implements Route<api_response.ChannelsRequest, api_response.ChannelsResponse> {
-	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		let channels = new Array<api_response.ChannelEntry>();
-		for (let i = 0; i < 100; i++) {
-			channels.push(lchannels.getChannel(i));
-		}
-		let payload: api_response.ChannelsResponse = {
-			channels: channels
-		};
-		response.writeHead(200);
-		response.end(JSON.stringify(payload));
-	}
-
-	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === "POST" && /^[/]api[/]video[/]channels[/]/.test(request.url || "/");
-	}
-}
-
-class ChannelRoute implements Route<api_response.ChannelRequest, api_response.ChannelResponse> {
-	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		let parts = /^[/]api[/]video[/]channels[/]([0-9]+)[/]/.exec(request.url || "/");
-		if (parts == null) {
-			throw "";
-		}
-		let username = getUsername(request);
-		let channel_id = Number.parseInt(parts[1]);
-		let segments = lchannels.generateProgramming(channel_id, username);
-		let payload: api_response.ChannelResponse = {
-			segments
-		};
-		response.writeHead(200);
-		response.end(JSON.stringify(payload));
-	}
-
-	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === "POST" && /^[/]api[/]video[/]channels[/]([0-9]+)[/]/.test(request.url || "/");
-	}
-}
-
 class GenresRoute implements Route<{}, api_response.GenresResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
@@ -829,9 +789,8 @@ let router = new Router()
 	.registerRoute(new SeasonsRoute())
 	.registerRoute(new DiscRoute())
 	.registerRoute(new DiscsRoute())
+
 	.registerRoute(new CuesRoute())
-	.registerRoute(new ChannelRoute())
-	.registerRoute(new ChannelsRoute())
 	.registerRoute(new GenreRoute())
 	.registerRoute(new GenresRoute())
 	.registerRoute(new SearchRoute())

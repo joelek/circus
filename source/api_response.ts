@@ -138,41 +138,6 @@ interface CuesResponse extends ApiResponse {
 	}>;
 }
 
-interface Segment {
-	episode?: libdb.EpisodeEntry & {
-		subtitles: Array<libdb.SubtitleEntry>,
-		season: libdb.SeasonEntry & {
-			show: libdb.ShowEntry
-		}
-	},
-	movie?: libdb.MovieEntry & {
-		movie_parts: Array<libdb.MoviePartEntry & {
-			subtitles: Array<libdb.SubtitleEntry>
-		}>
-	}
-}
-
-interface ChannelEntry {
-	channel_id: number,
-	title: string
-}
-
-interface ChannelsRequest extends ApiResponse {
-
-}
-
-interface ChannelsResponse extends ApiResponse {
-	channels: Array<ChannelEntry>;
-}
-
-interface ChannelRequest extends ApiResponse {
-
-}
-
-interface ChannelResponse extends ApiResponse {
-	segments: Array<Segment>
-}
-
 interface TokensRequest extends ApiRequest {
 
 }
@@ -213,12 +178,6 @@ export {
 	AuthResponse,
 	CuesRequest,
 	CuesResponse,
-	Segment,
-	ChannelEntry,
-	ChannelsRequest,
-	ChannelsResponse,
-	ChannelRequest,
-	ChannelResponse,
 	TokensRequest,
 	TokensResponse
 };
