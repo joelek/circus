@@ -8,7 +8,7 @@ function generate_token(username: string): string {
 	let hash = libcrypto.createHash('sha256');
 	hash.update(validator);
 	let validator_hash = hash.digest('hex');
-	data.addToken({
+	data.createToken({
 		username: username,
 		selector: selector.toString('hex'),
 		validator_hash: validator_hash,
@@ -17,7 +17,7 @@ function generate_token(username: string): string {
 	return `${selector.toString('hex')}${validator.toString('hex')}`;
 }
 
-function getToken(username: string, password: string): string {
+export function createToken(username: string, password: string): string {
 	let user = data.getUserFromUsername.lookup(username);
 	if (!passwords.verify(password, user.password)) {
 		throw `Expected a valid password!`;
@@ -25,16 +25,16 @@ function getToken(username: string, password: string): string {
 	return generate_token(username);
 }
 
-function getUsername(chunk: string): string {
+export function getUsername(chunk: string): string {
 	let parts = /^([0-9a-f]{32})([0-9a-f]{32})$/.exec(chunk);
 	if (!parts) {
 		throw new Error();
 	}
 	let selector = parts[1];
 	let validator = parts[2];
-	let token = data.tokens_index[selector];
-	if (!token) {
-		throw new Error();
+	let token = data.getTokenFromTokenId.lookup(selector);
+	if (token.expires_ms < Date.now()) {
+		throw `Token has expired!`;
 	}
 	let hash = libcrypto.createHash('sha256');
 	hash.update(Buffer.from(validator, 'hex'));
@@ -49,8 +49,3 @@ function getUsername(chunk: string): string {
 	});
 	return token.username;
 }
-
-export {
-	getToken,
-	getUsername
-};

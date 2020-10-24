@@ -302,7 +302,7 @@ class AuthRoute implements Route<api_response.AuthRequest, api_response.AuthResp
 				let body = json as api_response.AuthRequest;
 				let username = body.username;
 				let password = body.password;
-				let token = libauth.getToken(username, password);
+				let token = libauth.createToken(username, password);
 				let payload: api_response.AuthResponse = {
 					token
 				};

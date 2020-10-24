@@ -49,6 +49,13 @@ export let lists = libdb.ListDatabase.as(JSON.parse(libfs.readFileSync('./privat
 export let users = libdb.UserDatabase.as(JSON.parse(libfs.readFileSync('./private/db/users.json', "utf8")));
 export let media = libdb.MediaDatabase.as(JSON.parse(libfs.readFileSync('./private/db/media.json', "utf8")));
 
+users.tokens = users.tokens.filter((token) => {
+	return token.expires_ms > Date.now();
+});
+libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
+
+
+
 // Re-create cues from compact notation.
 for (let subtitle of media.video.subtitle_contents) {
 	let subtitle_id = subtitle.subtitle_id;
@@ -69,58 +76,6 @@ for (let subtitle of media.video.subtitle_contents) {
 		});
 	}
 }
-
-// TODO: Move to class-based indices.
-export let tokens_index: utils.Index<libdb.AuthToken> = {};
-
-for (let i = 0; i < users.tokens.length; i++) {
-	let token = users.tokens[i];
-	tokens_index[token.selector] = token;
-}
-
-export let files_index: utils.Index<libdb.FileEntry> = {};
-
-for (let i = 0; i < media.files.length; i++) {
-	let file = media.files[i];
-	files_index[file.file_id] = file;
-}
-
-export function addToken(token: libdb.AuthToken): void {
-	users.tokens.push(token);
-	tokens_index[token.selector] = token;
-	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
-}
-
-export function updateToken(token: libdb.AuthToken): void {
-	let that = tokens_index[token.selector];
-	if (that) {
-		that.expires_ms = token.expires_ms;
-	}
-	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
-}
-
-export function deleteToken(token: libdb.AuthToken): void {
-	delete tokens_index[token.selector];
-	// TODO: Fix linear complexity.
-	for (let i = 0; i < users.tokens.length; i++) {
-		if (users.tokens[i].selector === token.selector) {
-			users.tokens = users.tokens.splice(i, 1);
-			break;
-		}
-	}
-	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
-}
-
-setInterval(() => {
-	users.tokens = users.tokens.filter((token) => {
-		return token.expires_ms > Date.now();
-	});
-	tokens_index = {};
-	for (let token of users.tokens) {
-		tokens_index[token.selector] = token;
-	}
-	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
-}, 60 * 60 * 1000);
 
 
 
@@ -216,6 +171,7 @@ class CollectionIndex<A> {
 
 
 
+export const getFileFromFileId = RecordIndex.from("file_id", media.files);
 const getMovieFromMovieId = RecordIndex.from("movie_id", media.video.movies);
 export const getEpisodeFromFileId = RecordIndex.from("file_id", media.video.episodes);
 export const getMoviePartFromFileId = RecordIndex.from("file_id", media.video.movie_parts);
@@ -510,6 +466,59 @@ export function addStream(username: string, file_id: string): void {
 	});
 	libfs.writeFileSync("./private/db/streams.json", JSON.stringify(streams, null, "\t"));
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const getTokenFromTokenId = RecordIndex.from("selector", users.tokens);
+
+export function createToken(token: libdb.AuthToken): void {
+	users.tokens.push(token);
+	getTokenFromTokenId.insert(token.selector, token);
+	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
+}
+
+export function updateToken(token: libdb.AuthToken): void {
+	try {
+		let other = getTokenFromTokenId.lookup(token.selector);
+		other.expires_ms = token.expires_ms;
+		libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
+	} catch (error) {}
+}
+
+export function deleteToken(token: libdb.AuthToken): void {
+	getTokenFromTokenId.remove(token.selector);
+	// TODO: Fix linear complexity.
+	for (let i = 0; i < users.tokens.length; i++) {
+		if (users.tokens[i].selector === token.selector) {
+			users.tokens = users.tokens.splice(i, 1);
+			break;
+		}
+	}
+	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
+}
+
+
+
+
+
+
+
+
+
+
 
 
 

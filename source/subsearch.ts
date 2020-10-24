@@ -7,7 +7,7 @@ import * as utils from "./utils";
 import * as keyframes from "./keyframes";
 
 function getMediaFile(subtitle: database.SubtitleEntry): database.FileEntry | null {
-	return data.files_index[subtitle.video_file_id] || null;
+	return data.getFileFromFileId.lookup(subtitle.video_file_id);
 }
 
 function createWorkingDirectory(cb: { (wd: string[], id: string): void }): void {

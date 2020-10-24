@@ -33,7 +33,7 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 		response.writeHead(401, {});
 		return response.end();
 	}
-	let file = data.files_index[file_id] as FileEntry;
+	let file = data.getFileFromFileId.lookup(file_id);
 	let path = file.path;
 	let mime = file.mime;
 	let filename = path.join(libpath.sep);
@@ -128,7 +128,7 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 	if (/^[/]media[/]/.test(path)) {
 		if ((parts = /^[/]media[/]stills[/]([0-9a-f]{32})[/]/.exec(path)) != null) {
 			let file_id = parts[1];
-			let file = data.files_index[file_id] as FileEntry;
+			let file = data.getFileFromFileId.lookup(file_id);
 			let filename = [".", "private", "stills", file.file_id];
 			if (libfs.existsSync(filename.join("/"))) {
 				let stream = libfs.createReadStream(filename.join("/"));
