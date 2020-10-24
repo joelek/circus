@@ -82,7 +82,7 @@ type TrackResponse = {
 };
 
 type TracksResponse = {
-	track: objects.Track[]
+	tracks: objects.Track[]
 };
 
 type SearchResponse = {

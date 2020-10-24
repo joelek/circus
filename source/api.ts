@@ -662,6 +662,50 @@ class TokensRoute implements Route<api_response.TokensRequest, api_response.Toke
 	}
 }
 
+
+class TrackRoute implements Route<{}, api_response.TrackResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]audio[/]tracks[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let track_id = parts[1];
+		let track = data.api_lookupTrack(track_id, username);
+		let payload: api_response.TrackResponse = {
+			track
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]audio[/]tracks[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+	}
+}
+
+class TracksRoute implements Route<{}, api_response.TracksResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]audio[/]tracks[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let tracks = data.media.audio.tracks.slice()
+			.sort(LexicalSort.increasing((entry) => entry.title))
+			.slice(offset, offset + length)
+			.map((entry) => {
+				return data.api_lookupTrack(entry.track_id, username);
+			});
+		let payload: api_response.TracksResponse = {
+			tracks
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]audio[/]tracks[/]/.test(request.url ?? "/");
+	}
+}
+
 let router = new Router()
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
@@ -676,6 +720,8 @@ let router = new Router()
 	.registerRoute(new ShowsRoute())
 	.registerRoute(new PlaylistRoute())
 	.registerRoute(new PlaylistsRoute())
+	.registerRoute(new TrackRoute())
+	.registerRoute(new TracksRoute())
 	.registerRoute(new CuesRoute())
 	.registerRoute(new ChannelRoute())
 	.registerRoute(new ChannelsRoute())

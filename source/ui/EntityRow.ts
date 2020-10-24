@@ -303,6 +303,7 @@ export class EntityRowFactory {
 		];
 		let tags = [
 			"Track",
+			`${track.disc.album.year}`,
 			metadata.formatDuration(duration_ms)
 		];
 		return this.make(link, image, playbackButton, title, subtitles, tags);

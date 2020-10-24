@@ -2105,7 +2105,31 @@ let updateviewforuri = (uri: string): void => {
 		mount.removeChild(mount.lastChild);
 	}
 	let parts: RegExpExecArray | null;
-	if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	if (false) {
+	} else if ((parts = /^audio[/]tracks[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+		req<{}, api_response.TrackResponse>(`/api/audio/tracks/${parts[1]}/?token=${token}`, {}, (_, response) => {
+			let track = response.track;
+			mount.appendChild(xml.element("div.content")
+				.add(makeEntityHeader(
+					track.title,
+					[...track.artists.map((artist) => EntityLink.forArtist(artist)), EntityLink.forAlbum(track.disc.album)],
+					["Track", `${track.disc.album.year}`, format_duration(track.segment.file.duration_ms)],
+					ImageBox.forSquare(is.absent(track.disc.album.artwork) ? undefined : `/files/${track.disc.album.artwork.file_id}/`),
+					PlaybackButton.forTrack(track)
+				))
+				.render());
+		});
+	} else if ((parts = /^audio[/]tracks[/]/.exec(uri)) !== null) {
+
+	} else if ((parts = /^video[/]seasons[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+
+	} else if ((parts = /^video[/]seasons[/]/.exec(uri)) !== null) {
+
+	} else if ((parts = /^audio[/]discs[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+
+	} else if ((parts = /^audio[/]discs[/]/.exec(uri)) !== null) {
+
+	} else if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let album = response.album;
 			let isContext = computed((contextPath) => {
@@ -2632,6 +2656,8 @@ let updateviewforuri = (uri: string): void => {
 				.render()
 			);
 		});
+	} else if ((parts = /^video[/]episodes[/]/.exec(uri)) !== null) {
+
 	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
 		let movie_id = parts[1];
 		let progress = is.present(parts[2]) ? Number.parseInt(parts[2]) / 1000 : undefined;
