@@ -8,7 +8,7 @@ import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, AlbumBase, Artist, ArtistBase, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, UserBase } from "./api/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, Disc, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, UserBase } from "./api/schema/objects";
 import * as xml from "./xnode";
 import { formatDuration as format_duration } from "./ui/metadata";
 
@@ -2205,9 +2205,56 @@ let updateviewforuri = (uri: string): void => {
 			.render()
 		);
 	} else if ((parts = /^audio[/]discs[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-
+		req<{}, api_response.DiscResponse>(`/api/audio/discs/${parts[1]}/?token=${token}`, {}, (_, response) => {
+			let disc = response.disc;
+			let album = disc.album;
+			let duration_ms = 0;
+			for (let track of disc.tracks) {
+				duration_ms += track.segment.file.duration_ms;
+			}
+			mount.appendChild(xml.element("div.content")
+				.add(makeEntityHeader(
+					`Disc ${disc.number}`,
+					[EntityLink.forAlbum(album)],
+					["Disc", format_duration(duration_ms)],
+					ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`),
+					PlaybackButton.forDisc(disc)
+				))
+				.render());
+		});
 	} else if ((parts = /^audio[/]discs[/]([^/?]*)/.exec(uri)) !== null) {
-
+		let query = parts[1];
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let discs = new ArrayObservable<Disc>([]);
+		setScrollObserver(() => new Promise((resolve, reject) => {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				req<{}, api_response.DiscsResponse>(`/api/audio/discs/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {}, (_, response) => {
+					for (let disc of response.discs) {
+						discs.append(disc);
+					}
+					offset += response.discs.length;
+					if (response.discs.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
+					resolve();
+				});
+			}
+		}));
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(renderTextHeader(xml.text("Discs")))
+			)
+			.add(xml.element("div.content")
+				.add(xml.element("div.media-grid__content")
+					.repeat(discs, (disc) => EntityRow.forDisc(disc))
+				)
+			)
+			.render()
+		);
 	} else if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let album = response.album;

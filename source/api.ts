@@ -767,6 +767,47 @@ class SeasonsRoute implements Route<{}, api_response.SeasonsResponse> {
 	}
 }
 
+class DiscRoute implements Route<{}, api_response.DiscResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]audio[/]discs[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let season_id = parts[1];
+		let disc = data.api_lookupDisc(season_id, username);
+		let payload: api_response.DiscResponse = {
+			disc
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]audio[/]discs[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+	}
+}
+
+class DiscsRoute implements Route<{}, api_response.SeasonsResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]audio[/]discs[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = parts[1];
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let discs = data.media.audio.discs
+			.slice(offset, offset + length)
+			.map((entry) => data.api_lookupDisc(entry.disc_id, username))
+		let payload: api_response.DiscsResponse = {
+			discs
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]audio[/]discs[/]([^/?]*)/.test(request.url ?? "/");
+	}
+}
+
 let router = new Router()
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
@@ -786,6 +827,8 @@ let router = new Router()
 	.registerRoute(new TracksRoute())
 	.registerRoute(new SeasonRoute())
 	.registerRoute(new SeasonsRoute())
+	.registerRoute(new DiscRoute())
+	.registerRoute(new DiscsRoute())
 	.registerRoute(new CuesRoute())
 	.registerRoute(new ChannelRoute())
 	.registerRoute(new ChannelsRoute())
