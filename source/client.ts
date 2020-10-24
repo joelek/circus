@@ -2218,8 +2218,8 @@ let updateviewforuri = (uri: string): void => {
 			}
 			mount.appendChild(xml.element("div.content")
 				.add(makeEntityHeader(
-					`Disc ${disc.number}`,
-					[EntityLink.forAlbum(album)],
+					`${disc.album.title} \u00b7 Disc ${disc.number}`,
+					disc.album.artists.map((artist) => EntityLink.forArtist(artist)),
 					["Disc", `${album.year}`, format_duration(duration_ms)],
 					ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`),
 					PlaybackButton.forDisc(disc)
