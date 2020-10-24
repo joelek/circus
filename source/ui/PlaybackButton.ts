@@ -28,11 +28,16 @@ const CSS = `
 	}
 `;
 
+interface Controller {
+	play(): void;
+	resume(): void;
+};
+
 export class PlaybackButtonFactory {
 	private player: context.client.ContextClient;
 	private iconFactory: IconFactory;
 
-	private make(isContext: observables.ObservableClass<boolean>, play: () => void): xnode.XElement {
+	private make(isContext: observables.ObservableClass<boolean>, controller: Controller): xnode.XElement {
 		let isPlaying = observables.computed((isContext, playback) => {
 			return isContext && playback;
 		}, isContext, this.player.playback);
@@ -48,9 +53,9 @@ export class PlaybackButtonFactory {
 					this.player.pause();
 				} else {
 					if (isContext.getState()) {
-						this.player.resume();
+						controller.resume();
 					} else {
-						play();
+						controller.play();
 					}
 				}
 			});
@@ -92,7 +97,10 @@ export class PlaybackButtonFactory {
 		throw `Expected code to be unreachable!`;
 	}
 
-	forAlbum(album: api.Album, play: () => void = () => this.player.playAlbum(album)): xnode.XElement {
+	forAlbum(album: api.Album, controller: Controller = {
+		play: () => this.player.playAlbum(album),
+		resume: () => this.player.resume()
+	}): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -102,10 +110,13 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, play);
+		return this.make(isContext, controller);
 	}
 
-	forArtist(artist: api.Artist, play: () => void = () => this.player.playArtist(artist)): xnode.XElement {
+	forArtist(artist: api.Artist, controller: Controller = {
+		play: () => this.player.playArtist(artist),
+		resume: () => this.player.resume()
+	}): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -115,10 +126,13 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, play);
+		return this.make(isContext, controller);
 	}
 
-	forDisc(disc: api.Disc, play: () => void = () => this.player.playDisc(disc)): xnode.XElement {
+	forDisc(disc: api.Disc, controller: Controller = {
+		play: () => this.player.playDisc(disc),
+		resume: () => this.player.resume()
+	}): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -128,10 +142,13 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, play);
+		return this.make(isContext, controller);
 	}
 
-	forEpisode(episode: api.Episode, play: () => void = () => this.player.playEpisode(episode)): xnode.XElement {
+	forEpisode(episode: api.Episode, controller: Controller = {
+		play: () => this.player.playEpisode(episode),
+		resume: () => this.player.resume()
+	}): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -141,10 +158,13 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, play);
+		return this.make(isContext, controller);
 	}
 
-	forMovie(movie: api.Movie, play: () => void = () => this.player.playMovie(movie)): xnode.XElement {
+	forMovie(movie: api.Movie, controller: Controller = {
+		play: () => this.player.playMovie(movie),
+		resume: () => this.player.resume()
+	}): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -154,10 +174,13 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, play);
+		return this.make(isContext, controller);
 	}
 
-	forPlaylist(playlist: api.Playlist, play: () => void = () => this.player.playPlaylist(playlist)): xnode.XElement {
+	forPlaylist(playlist: api.Playlist, controller: Controller = {
+		play: () => this.player.playPlaylist(playlist),
+		resume: () => this.player.resume()
+	}): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -167,10 +190,13 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, play);
+		return this.make(isContext, controller);
 	}
 
-	forSeason(season: api.Season, play: () => void = () => this.player.playSeason(season)): xnode.XElement {
+	forSeason(season: api.Season, controller: Controller = {
+		play: () => this.player.playSeason(season),
+		resume: () => this.player.resume()
+	}): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -180,10 +206,13 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, play);
+		return this.make(isContext, controller);
 	}
 
-	forShow(show: api.Show, play: () => void = () => this.player.playShow(show)): xnode.XElement {
+	forShow(show: api.Show, controller: Controller = {
+		play: () => this.player.playShow(show),
+		resume: () => this.player.resume()
+	}): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -193,10 +222,13 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, play);
+		return this.make(isContext, controller);
 	}
 
-	forTrack(track: api.Track, play: () => void = () => this.player.playTrack(track)): xnode.XElement {
+	forTrack(track: api.Track, controller: Controller = {
+		play: () => this.player.playTrack(track),
+		resume: () => this.player.resume()
+	}): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -206,7 +238,7 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, play);
+		return this.make(isContext, controller);
 	}
 
 	static makeStyle(): xnode.XElement {

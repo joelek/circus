@@ -2998,7 +2998,35 @@ let updateviewforuri = (uri: string): void => {
 			let cues = response.cues;
 			results.appendChild(xml.element("div.content")
 				.set("style", "display: grid; gap: 16px;")
-				.add(...cues.map((cue) => EntityRow.forEntity(cue.media)))
+				.add(...cues.map((cue) => {
+					let media = cue.media;
+					if (Episode.is(media)) {
+						let episode = media;
+						return EntityRow.forEpisode(episode, PlaybackButton.forEpisode(episode, {
+							play: () => {
+								player.playEpisode(episode);
+								player.seek(cue.start_ms / 1000);
+							},
+							resume: () => {
+								player.seek(cue.start_ms / 1000);
+								player.resume();
+							}
+						}));
+					}
+					if (Movie.is(media)) {
+						let movie = media;
+						return EntityRow.forMovie(movie, PlaybackButton.forMovie(movie, {
+							play: () => {
+								player.playMovie(movie);
+								player.seek(cue.start_ms / 1000);
+							},
+							resume: () => {
+								player.seek(cue.start_ms / 1000);
+								player.resume();
+							}
+						}));
+					}
+				}))
 				.render()
 			);
 			//navigate(`video/episodes/${episode.episode_id}/${cue.start_ms}/`);
