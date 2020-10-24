@@ -8,7 +8,7 @@ import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, AlbumBase, Artist, ArtistBase, Disc, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, Cue, Disc, DiscBase, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
 import * as xml from "./xnode";
 import { formatDuration as format_duration } from "./ui/metadata";
 
@@ -2963,42 +2963,32 @@ let updateviewforuri = (uri: string): void => {
 			.render()
 		);
 	} else if ((parts = /^video[/]cues[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = decodeURIComponent(parts[1]);
-		let wrapper = document.createElement("div");
-		let searchbox = document.createElement("input");
-		searchbox.setAttribute("spellcheck", "false");
-		searchbox.setAttribute("type", "text");
-		searchbox.setAttribute("placeholder", "Search query...");
-		searchbox.setAttribute("value", query);
-		wrapper.appendChild(searchbox);
-		let searchbutton = document.createElement("button");
-		searchbutton.textContent = "Search";
-		wrapper.appendChild(searchbutton);
-		let results = document.createElement("div");
-		wrapper.appendChild(results);
-		let cb = () => {
-			let new_query = searchbox.value;
-			if (new_query !== "" && new_query !== query) {
-				navigate("video/cues/" + encodeURIComponent(new_query));
-			}
-		};
-		searchbox.addEventListener("keyup", (event) => {
-			if (event.keyCode === 13) {
-				cb();
-			}
+		let cues = new ArrayObservable<Cue & { media: Episode | Movie }>([]);
+		let query = new ObservableClass(decodeURIComponent(parts[1]));
+		query.addObserver((query) => {
+			req<{}, api_response.CuesResponse>(`/api/video/cues/${encodeURIComponent(query)}?token=${token}`, {}, (_, response) => {
+				cues.update(response.cues);
+				//navigate(`video/episodes/${episode.episode_id}/${cue.start_ms}/`);
+				//navigate(`video/movies/${movie.movie_id}/${cue.start_ms}/`);
+				//window.open("/media/gifs/" + cue.cue_id + "/");
+			});
 		});
-		searchbutton.addEventListener("click", () => {
-			cb();
-		});
-		mount.appendChild(wrapper);
-		req<{}, api_response.CuesResponse>(`/api/video/cues/${encodeURIComponent(query)}?token=${token}`, {}, (_, response) => {
-			while (results.lastChild !== null) {
-				results.removeChild(results.lastChild);
-			}
-			let cues = response.cues;
-			results.appendChild(xml.element("div.content")
+		mount.appendChild(xml.element("div.content")
+			.set("style", "display: grid; gap: 32px;")
+			.add(xml.element("input")
+				.set("type", "text")
+				.set("spellcheck", "false")
+				.set("placeholder", "Search for cues...")
+				.bind2("value", query)
+				.on("keyup", (event) => {
+					if (event.key === "Enter") {
+						navigate(`video/cues/${encodeURIComponent(query.getState())}/`);
+					}
+				})
+			)
+			.add(xml.element("div")
 				.set("style", "display: grid; gap: 16px;")
-				.add(...cues.map((cue) => {
+				.repeat(cues, (cue) => {
 					let media = cue.media;
 					if (Episode.is(media)) {
 						let episode = media;
@@ -3026,13 +3016,9 @@ let updateviewforuri = (uri: string): void => {
 							}
 						}));
 					}
-				}))
-				.render()
-			);
-			//navigate(`video/episodes/${episode.episode_id}/${cue.start_ms}/`);
-			//navigate(`video/movies/${movie.movie_id}/${cue.start_ms}/`);
-			//window.open("/media/gifs/" + cue.cue_id + "/");
-		});
+				})
+			)
+			.render());
 	} else if ((parts = /^video[/]genres[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<{}, api_response.GenreResponse>(`/api/video/genres/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let genre = response.genre;
