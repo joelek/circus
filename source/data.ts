@@ -390,16 +390,11 @@ export const cueSearchIndex = SearchIndex.from(media.video.cues, (entry) => entr
 
 export function searchForCues(query: string, user_id: string, offset: number, limit: number): Cue[] {
 	let entries = cueSearchIndex.search(query)
-		.sort(NumericSort.increasing((value) => value.rank))
+		.sort(NumericSort.decreasing((value) => value.rank))
 		.slice(offset, offset + limit);
-	let entities = new Array<Cue>();
-	while (true) {
-		let entry = entries.pop();
-		if (is.absent(entry)) {
-			break;
-		}
-		entities.push(api_lookupCue(entry.id, user_id));
-	}
+	let entities = entries.map((entry) => {
+		return api_lookupCue(entry.id, user_id);
+	});
 	return entities;
 }
 
@@ -414,33 +409,29 @@ export function search(query: string, user_id: string, offset: number, limit: nu
 		...playlistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type: "PLAYLIST", type_rank: 4 })),
 		...userUsernameSearchIndex.search(query).map((entry) => ({ ...entry, type: "USER", type_rank: 0 }))
 	].sort(CombinedSort.of(
-		NumericSort.increasing((value) => value.rank),
-		NumericSort.increasing((value) => value.type_rank)
+		NumericSort.decreasing((value) => value.rank),
+		NumericSort.decreasing((value) => value.type_rank)
 	)).slice(offset, offset + limit);
-	let entities = new Array<Entity>();
-	while (true) {
-		let entry = entries.pop();
-		if (is.absent(entry)) {
-			break;
-		}
+	let entities = entries.map((entry) => {
 		if (entry.type === "ALBUM") {
-			entities.push(api_lookupAlbum(entry.id, user_id));
+			return api_lookupAlbum(entry.id, user_id);
 		} else if (entry.type === "ARTIST") {
-			entities.push(api_lookupArtist(entry.id, user_id));
+			return api_lookupArtist(entry.id, user_id);
 		} else if (entry.type === "EPISODE") {
-			entities.push(api_lookupEpisode(entry.id, user_id));
+			return api_lookupEpisode(entry.id, user_id);
 		} else if (entry.type === "MOVIE") {
-			entities.push(api_lookupMovie(entry.id, user_id));
+			return api_lookupMovie(entry.id, user_id);
 		} else if (entry.type === "SHOW") {
-			entities.push(api_lookupShow(entry.id, user_id));
+			return api_lookupShow(entry.id, user_id);
 		} else if (entry.type === "TRACK") {
-			entities.push(api_lookupTrack(entry.id, user_id));
+			return api_lookupTrack(entry.id, user_id);
 		} else if (entry.type === "PLAYLIST") {
-			entities.push(api_lookupPlaylist(entry.id, user_id));
+			return api_lookupPlaylist(entry.id, user_id);
 		} else if (entry.type === "USER") {
-			entities.push(api_lookupUser(entry.id));
+			return api_lookupUser(entry.id);
 		}
-	}
+		throw `Expected code to be unreachable!`;
+	});
 	return entities;
 }
 
