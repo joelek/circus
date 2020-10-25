@@ -6,6 +6,7 @@ import * as api_response from "./api_response";
 import * as data from "./data";
 import * as is from "./is";
 import { LexicalSort, NumericSort, CombinedSort } from "./shared";
+import { AlbumEntry, ArtistEntry, AudiolistEntry, EpisodeEntry, MovieEntry, ShowEntry, TrackEntry, UserEntry } from "./database";
 
 function getParameter(url: liburl.UrlWithParsedQuery, key: string): string[] {
 	let values = url.query[key] ?? [];
@@ -107,8 +108,13 @@ class ArtistsRoute implements Route<{}, api_response.ArtistsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let artists = data.media.audio.artists.slice()
-			.sort(LexicalSort.increasing((entry) => entry.title))
+		let entries = [] as ArtistEntry[];
+		if (query === "") {
+			entries = data.media.audio.artists.slice().sort(LexicalSort.increasing((artist) => artist.title));
+		} else {
+			entries = data.artistTitleSearchIndex.search(query).map((entry) => entry.value);
+		}
+		let artists = entries
 			.slice(offset, offset + length)
 			.map((entry) => {
 				return data.api_lookupArtist(entry.artist_id, username);
@@ -121,7 +127,7 @@ class ArtistsRoute implements Route<{}, api_response.ArtistsResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]audio[/]artists[/]/.test(request.url ?? "/");
+		return /^[/]api[/]audio[/]artists[/]([^/?]*)/.test(request.url ?? "/");
 	}
 }
 
@@ -146,12 +152,18 @@ class AlbumRoute implements Route<{}, api_response.AlbumResponse> {
 class AlbumsRoute implements Route<{}, api_response.AlbumsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
-		let parts = /^[/]api[/]audio[/]albums[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]audio[/]albums[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = parts[1];
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let albums = data.media.audio.albums.slice()
-			.sort(LexicalSort.increasing((entry) => entry.title))
+		let entries = [] as AlbumEntry[];
+		if (query === "") {
+			entries = data.media.audio.albums.slice().sort(LexicalSort.increasing((album) => album.title));
+		} else {
+			entries = data.albumTitleSearchIndex.search(query).map((entry) => entry.value);
+		}
+		let albums = entries
 			.slice(offset, offset + length)
 			.map((entry) => {
 				return data.api_lookupAlbum(entry.album_id, username);
@@ -164,7 +176,7 @@ class AlbumsRoute implements Route<{}, api_response.AlbumsResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]audio[/]albums[/]/.test(request.url ?? "/");
+		return /^[/]api[/]audio[/]albums[/]([^/?]*)/.test(request.url ?? "/");
 	}
 }
 
@@ -194,9 +206,15 @@ class EpisodesRoute implements Route<{}, api_response.EpisodesResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let episodes = data.episodeTitleSearchIndex.search(query)
+		let entries = [] as EpisodeEntry[];
+		if (query === "") {
+			entries = data.media.video.episodes.slice().sort(LexicalSort.increasing((episode) => episode.title));
+		} else {
+			entries = data.episodeTitleSearchIndex.search(query).map((entry) => entry.value);
+		}
+		let episodes = entries
 			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupEpisode(entry.value.episode_id, username))
+			.map((entry) => data.api_lookupEpisode(entry.episode_id, username));
 		let payload: api_response.EpisodesResponse = {
 			episodes
 		};
@@ -230,10 +248,20 @@ class ShowRoute implements Route<{}, api_response.ShowResponse> {
 class ShowsRoute implements Route<{}, api_response.ShowsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
-		let parts = /^[/]api[/]video[/]shows[/]/.exec(request.url ?? "/") as RegExpExecArray;
-		let shows = data.media.video.shows.map((entry)  => {
-			return data.api_lookupShow(entry.show_id, username);
-		});
+		let parts = /^[/]api[/]video[/]shows[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = decodeURIComponent(parts[1]);
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let entries = [] as ShowEntry[];
+		if (query === "") {
+			entries = data.media.video.shows.slice().sort(LexicalSort.increasing((show) => show.title));
+		} else {
+			entries = data.showTitleSearchIndex.search(query).map((entry) => entry.value);
+		}
+		let shows = entries
+			.slice(offset, offset + length)
+			.map((entry) => data.api_lookupShow(entry.show_id, username));
 		let payload: api_response.ShowsResponse = {
 			shows
 		};
@@ -242,7 +270,7 @@ class ShowsRoute implements Route<{}, api_response.ShowsResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]video[/]shows[/]/.test(request.url ?? "/");
+		return /^[/]api[/]video[/]shows[/]([^/?]*)/.test(request.url ?? "/");
 	}
 }
 
@@ -407,16 +435,20 @@ class MovieRoute implements Route<{}, api_response.MovieResponse> {
 class MoviesRoute implements Route<{}, api_response.MoviesResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
-		let parts = /^[/]api[/]video[/]movies[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]video[/]movies[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = decodeURIComponent(parts[1]);
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let movies = data.media.video.movies.slice()
-			.sort(LexicalSort.increasing((entry) => entry.title))
+		let entries = [] as MovieEntry[];
+		if (query === "") {
+			entries = data.media.video.movies.slice().sort(LexicalSort.increasing((movie) => movie.title));
+		} else {
+			entries = data.movieTitleSearchIndex.search(query).map((entry) => entry.value);
+		}
+		let movies = entries
 			.slice(offset, offset + length)
-			.map((entry) => {
-				return data.api_lookupMovie(entry.movie_id, username);
-			});
+			.map((entry) => data.api_lookupMovie(entry.movie_id, username));
 		let payload: api_response.MoviesResponse = {
 			movies
 		};
@@ -425,7 +457,7 @@ class MoviesRoute implements Route<{}, api_response.MoviesResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]video[/]movies[/]/.test(request.url ?? "/");
+		return /^[/]api[/]video[/]movies[/]([^/?]*)/.test(request.url ?? "/");
 	}
 }
 
@@ -450,8 +482,20 @@ class PlaylistRoute implements Route<{}, api_response.PlaylistResponse> {
 class PlaylistsRoute implements Route<{}, api_response.PlaylistsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
-		let parts = /^[/]api[/]audio[/]playlists[/]/.exec(request.url ?? "/") as RegExpExecArray;
-		let playlists = data.lists.audiolists.map((playlist) => data.api_lookupPlaylist(playlist.audiolist_id, username));
+		let parts = /^[/]api[/]audio[/]playlists[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = decodeURIComponent(parts[1]);
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let entries = [] as AudiolistEntry[];
+		if (query === "") {
+			entries = data.lists.audiolists.slice().sort(LexicalSort.increasing((playlist) => playlist.title));
+		} else {
+			entries = data.playlistTitleSearchIndex.search(query).map((entry) => entry.value);
+		}
+		let playlists = entries
+			.slice(offset, offset + length)
+			.map((entry) => data.api_lookupPlaylist(entry.audiolist_id, username));
 		let payload: api_response.PlaylistsResponse = {
 			playlists
 		};
@@ -460,7 +504,7 @@ class PlaylistsRoute implements Route<{}, api_response.PlaylistsResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]audio[/]playlists[/]/.test(request.url ?? "/");
+		return /^[/]api[/]audio[/]playlists[/]([^/?]*)/.test(request.url ?? "/");
 	}
 }
 
@@ -657,9 +701,15 @@ class TracksRoute implements Route<{}, api_response.TracksResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let tracks = data.trackTitleSearchIndex.search(query)
+		let entries = [] as TrackEntry[];
+		if (query === "") {
+			entries = data.media.audio.tracks.slice().sort(LexicalSort.increasing((track) => track.title));
+		} else {
+			entries = data.trackTitleSearchIndex.search(query).map((entry) => entry.value);
+		}
+		let tracks = entries
 			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupTrack(entry.value.track_id, username))
+			.map((entry) => data.api_lookupTrack(entry.track_id, username));
 		let payload: api_response.TracksResponse = {
 			tracks
 		};
@@ -700,7 +750,7 @@ class SeasonsRoute implements Route<{}, api_response.SeasonsResponse> {
 		let length = getOptionalInteger(url, "length") ?? 24;
 		let seasons = data.media.video.seasons
 			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupSeason(entry.season_id, username))
+			.map((entry) => data.api_lookupSeason(entry.season_id, username));
 		let payload: api_response.SeasonsResponse = {
 			seasons
 		};
@@ -741,7 +791,7 @@ class DiscsRoute implements Route<{}, api_response.SeasonsResponse> {
 		let length = getOptionalInteger(url, "length") ?? 24;
 		let discs = data.media.audio.discs
 			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupDisc(entry.disc_id, username))
+			.map((entry) => data.api_lookupDisc(entry.disc_id, username));
 		let payload: api_response.DiscsResponse = {
 			discs
 		};
@@ -780,9 +830,15 @@ class UsersRoute implements Route<{}, api_response.UsersResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let users = data.userUsernameSearchIndex.search(query)
+		let entries = [] as UserEntry[];
+		if (query === "") {
+			entries = data.users.users.slice().sort(LexicalSort.increasing((user) => user.name));
+		} else {
+			entries = data.userUsernameSearchIndex.search(query).map((entry) => entry.value);
+		}
+		let users = entries
 			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupUser(entry.value.user_id))
+			.map((entry) => data.api_lookupUser(entry.user_id));
 		let payload: api_response.UsersResponse = {
 			users
 		};
