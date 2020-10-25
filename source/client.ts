@@ -2089,13 +2089,12 @@ const makeEntityHeader = (title: string, subtitles: xml.XNode<any>[] = [], tags:
 					)
 				)
 				.add(xml.element("div.entity-header__tags")
+					.add(!watched ? undefined : makeAccentTag("\u2713"))
 					.add(...tags.map(makeTag))
 				)
 				.add(maybe(description, (description) => xml.element("div.entity-header__description")
 					.add(xml.text(description)))
 				)
-				.add(!watched ? undefined : xml.element("div.entity-header__tags")
-					.add(makeAccentTag("Watched")))
 			)
 		);
 }
