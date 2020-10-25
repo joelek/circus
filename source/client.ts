@@ -1332,15 +1332,6 @@ async function getNewToken(username: string, password: string): Promise<string |
 let mount = document.createElement('div');
 let mountwrapper = document.createElement('div');
 
-showVideo.addObserver((showVideo) => {
-	if (showVideo) {
-		mount.style.setProperty("display", "none");
-	} else {
-		mount.style.removeProperty("display");
-	}
-});
-
-
 let appcontainer = xml.element("div.app")
 	.render();
 document.body.appendChild(appcontainer);
@@ -1457,6 +1448,7 @@ let modals = xml.element("div.modal-container")
 
 mountwrapper.appendChild(modals.render());
 let scroll_container = xml.element("div.scroll-container")
+	.bind("data-hide", showVideo.addObserver((showVideo) => showVideo))
 	.render();
 let sentinel = xml.element("div.scroll-container__sentinel")
 	.set("style", "height: 1px")
@@ -1603,7 +1595,7 @@ let videowrapper = xml.element("div")
 	.set("style", "background-color: rgb(0, 0, 0); height: 100%;")
 	.render();
 
-scroll_container.appendChild(videowrapper);
+mountwrapper.appendChild(videowrapper);
 videowrapper.appendChild(currentVideo);
 videowrapper.appendChild(lastVideo);
 videowrapper.appendChild(nextVideo);
