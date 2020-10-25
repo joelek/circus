@@ -871,17 +871,17 @@ for (const movie_part of db.video.movie_parts) {
 	}
 }
 
-show: for (let show of db.video.shows) {
+shows: for (let show of db.video.shows) {
 	let seasons = db.video.seasons.filter((season) => season.show_id === show.show_id);
-	season: for (let season of seasons) {
+	seasons: for (let season of seasons) {
 		let episodes = db.video.episodes.filter((episode) => episode.season_id === season.season_id);
-		episode: for (let episode of episodes) {
+		episodes: for (let episode of episodes) {
 			let episode_file = files_index[episode.file_id] as libdb.FileEntry;
 			let image_files = getFilesInSameDirectory(episode_file)
 				.filter((file) => file.mime.startsWith("image/"));
 			if (image_files.length > 0) {
 				show.poster_file_id = image_files[0].file_id;
-				break show;
+				break seasons;
 			}
 		}
 	}
