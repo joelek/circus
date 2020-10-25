@@ -821,7 +821,12 @@ export function api_lookupShowBase(show_id: string, user_id: string): ShowBase {
 		show_id: entry.show_id,
 		title: entry.title,
 		summary: entry.summary ?? "",
-		artwork: undefined,
+		artwork: is.absent(entry.poster_file_id) ? undefined : {
+			file_id: entry.poster_file_id,
+			mime: "image/jpeg",
+			height: 1080,
+			width: 720
+		},
 		genres: getVideoGenresFromShowId(show_id).map((video_genre) => ({
 			genre_id: video_genre.video_genre_id,
 			title: video_genre.title
