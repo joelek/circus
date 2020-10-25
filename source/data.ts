@@ -5,7 +5,7 @@ import * as utils from "./utils";
 import * as passwords from "./passwords";
 import { CombinedSort, LexicalSort, NumericSort } from "./shared";
 import * as is from "./is";
-import { Album, AlbumBase, Artist, ArtistBase, Cue, CueBase, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, SegmentBase, Show, ShowBase, Subtitle, SubtitleBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, Cue, CueBase, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Person, PersonBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, SegmentBase, Show, ShowBase, Subtitle, SubtitleBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -167,6 +167,11 @@ class CollectionIndex<A> {
 
 
 
+
+
+const getShowPersonsFromShowId = CollectionIndex.from("show_id", media.video.show_persons);
+const getMoviePersonsFromMovieId = CollectionIndex.from("movie_id", media.video.movie_persons);
+const getPersonFromPersonId = RecordIndex.from("person_id", media.persons);
 
 
 
@@ -714,6 +719,9 @@ export function api_lookupMovieBase(movie_id: string, user_id: string): MovieBas
 				genre_id: entry.video_genre_id,
 				title: entry.title
 			};
+		}),
+		actors: getMoviePersonsFromMovieId.lookup(movie_id).map((movie_person) => {
+			return api_lookupPerson(movie_person.person_id, user_id);
 		})
 	};
 };
@@ -743,6 +751,21 @@ export function api_lookupMovie(movie_id: string, user_id: string): Movie {
 	return {
 		...movie,
 		segment
+	};
+};
+
+export function api_lookupPersonBase(person_id: string, user_id: string): PersonBase {
+	let entry = getPersonFromPersonId.lookup(person_id);
+	return {
+		person_id: entry.person_id,
+		name: entry.name
+	};
+};
+
+export function api_lookupPerson(person_id: string, user_id: string): Person {
+	let person = api_lookupPersonBase(person_id, user_id);
+	return {
+		...person
 	};
 };
 
@@ -796,11 +819,15 @@ export function api_lookupShowBase(show_id: string, user_id: string): ShowBase {
 	return {
 		show_id: entry.show_id,
 		title: entry.title,
+		summary: entry.summary ?? "",
 		artwork: undefined,
 		genres: getVideoGenresFromShowId(show_id).map((video_genre) => ({
 			genre_id: video_genre.video_genre_id,
 			title: video_genre.title
-		}))
+		})),
+		actors: getShowPersonsFromShowId.lookup(show_id).map((show_person) => {
+			return api_lookupPerson(show_person.person_id, user_id);
+		})
 	};
 };
 

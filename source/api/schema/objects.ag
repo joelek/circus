@@ -1,4 +1,13 @@
 {
+	PersonBase: {
+		person_id: string,
+		name: string
+	},
+
+	Person: PersonBase & {
+
+	},
+
 	ArtistBase: {
 		artist_id: string,
 		title: string
@@ -101,7 +110,8 @@
 		summary: string,
 		artwork?: ImageFile,
 		last_stream_date?: number,
-		genres: Genre[]
+		genres: Genre[],
+		actors: Person[]
 	},
 
 	Movie: MovieBase & {
@@ -111,8 +121,10 @@
 	ShowBase: {
 		show_id: string,
 		title: string,
+		summary: string,
 		artwork?: ImageFile,
-		genres: Genre[]
+		genres: Genre[],
+		actors: Person[]
 	},
 
 	Show: ShowBase & {

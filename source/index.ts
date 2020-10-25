@@ -13,7 +13,7 @@ if (!libfs.existsSync(media_root)) {
 	libfs.mkdirSync(media_root, { recursive: true });
 }
 
-let db = {
+let db: libdb.MediaDatabase = {
 	audio: {
 		artists: new Array<libdb.ArtistEntry>(),
 		albums: new Array<libdb.AlbumEntry>(),
@@ -30,7 +30,7 @@ let db = {
 		movie_persons: new Array<libdb.MoviePersonEntry>(),
 		shows: new Array<libdb.ShowEntry>(),
 		show_genres: new Array<libdb.ShowGenreEntry>(),
-		show_perons: new Array<libdb.ShowPersonEntry>(),
+		show_persons: new Array<libdb.ShowPersonEntry>(),
 		seasons: new Array<libdb.SeasonEntry>(),
 		episodes: new Array<libdb.EpisodeEntry>(),
 		subtitles: new Array<libdb.SubtitleEntry>(),
@@ -75,7 +75,7 @@ let add_show_person = (show_person: libdb.ShowPersonEntry): void => {
 	let key = Array.of(show_person.show_id, show_person.person_id).join(":");
 	if (!(key in show_persons_index)) {
 		show_persons_index[key] = show_person;
-		db.video.show_perons.push(show_person);
+		db.video.show_persons.push(show_person);
 	}
 };
 

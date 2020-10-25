@@ -2,6 +2,23 @@
 
 import { guards as autoguard } from "@joelek/ts-autoguard";
 
+export type PersonBase = {
+	"person_id": string,
+	"name": string
+};
+
+export const PersonBase = autoguard.Object.of<PersonBase>({
+	"person_id": autoguard.String,
+	"name": autoguard.String
+});
+
+export type Person = PersonBase & {};
+
+export const Person = autoguard.Intersection.of(
+	autoguard.Reference.of<PersonBase>(() => PersonBase),
+	autoguard.Object.of<{}>({})
+);
+
 export type ArtistBase = {
 	"artist_id": string,
 	"title": string
@@ -230,7 +247,8 @@ export type MovieBase = {
 	"summary": string,
 	"artwork"?: ImageFile,
 	"last_stream_date"?: number,
-	"genres": Genre[]
+	"genres": Genre[],
+	"actors": Person[]
 };
 
 export const MovieBase = autoguard.Object.of<MovieBase>({
@@ -246,7 +264,8 @@ export const MovieBase = autoguard.Object.of<MovieBase>({
 		autoguard.Undefined,
 		autoguard.Number
 	),
-	"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre))
+	"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre)),
+	"actors": autoguard.Array.of(autoguard.Reference.of<Person>(() => Person))
 });
 
 export type Movie = MovieBase & {
@@ -265,18 +284,22 @@ export const Movie = autoguard.Intersection.of(
 export type ShowBase = {
 	"show_id": string,
 	"title": string,
+	"summary": string,
 	"artwork"?: ImageFile,
-	"genres": Genre[]
+	"genres": Genre[],
+	"actors": Person[]
 };
 
 export const ShowBase = autoguard.Object.of<ShowBase>({
 	"show_id": autoguard.String,
 	"title": autoguard.String,
+	"summary": autoguard.String,
 	"artwork": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.Reference.of<ImageFile>(() => ImageFile)
 	),
-	"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre))
+	"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre)),
+	"actors": autoguard.Array.of(autoguard.Reference.of<Person>(() => Person))
 });
 
 export type Show = ShowBase & {
@@ -489,6 +512,8 @@ export const VideoFile = autoguard.Intersection.of(
 );
 
 export type Autoguard = {
+	"PersonBase": PersonBase,
+	"Person": Person,
 	"ArtistBase": ArtistBase,
 	"Artist": Artist,
 	"AlbumBase": AlbumBase,
@@ -528,6 +553,8 @@ export type Autoguard = {
 };
 
 export const Autoguard = {
+	"PersonBase": PersonBase,
+	"Person": Person,
 	"ArtistBase": ArtistBase,
 	"Artist": Artist,
 	"AlbumBase": AlbumBase,
