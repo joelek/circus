@@ -1,7 +1,6 @@
 import * as liburl from "url";
 import * as libhttp from "http";
 import * as libauth from "./auth";
-import * as libdb from "./database";
 import * as auth from "./auth";
 import * as api_response from "./api_response";
 import * as data from "./data";
@@ -103,7 +102,8 @@ class ArtistRoute implements Route<{}, api_response.ArtistResponse> {
 class ArtistsRoute implements Route<{}, api_response.ArtistsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
-		let parts = /^[/]api[/]audio[/]artists[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]audio[/]artists[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = decodeURIComponent(parts[1]);
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
@@ -196,7 +196,7 @@ class EpisodesRoute implements Route<{}, api_response.EpisodesResponse> {
 		let length = getOptionalInteger(url, "length") ?? 24;
 		let episodes = data.episodeTitleSearchIndex.search(query)
 			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupEpisode(entry.id, username))
+			.map((entry) => data.api_lookupEpisode(entry.value.episode_id, username))
 		let payload: api_response.EpisodesResponse = {
 			episodes
 		};
@@ -659,7 +659,7 @@ class TracksRoute implements Route<{}, api_response.TracksResponse> {
 		let length = getOptionalInteger(url, "length") ?? 24;
 		let tracks = data.trackTitleSearchIndex.search(query)
 			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupTrack(entry.id, username))
+			.map((entry) => data.api_lookupTrack(entry.value.track_id, username))
 		let payload: api_response.TracksResponse = {
 			tracks
 		};
@@ -782,7 +782,7 @@ class UsersRoute implements Route<{}, api_response.UsersResponse> {
 		let length = getOptionalInteger(url, "length") ?? 24;
 		let users = data.userUsernameSearchIndex.search(query)
 			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupUser(entry.id))
+			.map((entry) => data.api_lookupUser(entry.value.user_id))
 		let payload: api_response.UsersResponse = {
 			users
 		};
