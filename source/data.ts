@@ -170,11 +170,13 @@ class CollectionIndex<A> {
 
 
 const getShowPersonsFromShowId = CollectionIndex.from("show_id", media.video.show_persons);
+const getShowPersonsFromPersonId = CollectionIndex.from("person_id", media.video.show_persons);
 const getMoviePersonsFromMovieId = CollectionIndex.from("movie_id", media.video.movie_persons);
+const getMoviePersonsFromPersonId = CollectionIndex.from("person_id", media.video.movie_persons);
 const getPersonFromPersonId = RecordIndex.from("person_id", media.persons);
 
 export function getMoviesFromPersonId(person_id: string, user_id: string, offset: number, length: number): Movie[] {
-	return getMoviePersonsFromMovieId.lookup(person_id)
+	return getMoviePersonsFromPersonId.lookup(person_id)
 		.sort(LexicalSort.increasing((movie) => movie.movie_id))
 		.slice(offset, offset + length)
 		.map((movie_genre) => {
@@ -183,7 +185,7 @@ export function getMoviesFromPersonId(person_id: string, user_id: string, offset
 }
 
 export function getShowsFromPersonId(person_id: string, user_id: string, offset: number, length: number): Show[] {
-	return getShowPersonsFromShowId.lookup(person_id)
+	return getShowPersonsFromPersonId.lookup(person_id)
 		.sort(LexicalSort.increasing((show) => show.show_id))
 		.slice(offset, offset + length)
 		.map((show_genre) => {
