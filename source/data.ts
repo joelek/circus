@@ -173,9 +173,6 @@ const getShowPersonsFromShowId = CollectionIndex.from("show_id", media.video.sho
 const getMoviePersonsFromMovieId = CollectionIndex.from("movie_id", media.video.movie_persons);
 const getPersonFromPersonId = RecordIndex.from("person_id", media.persons);
 
-
-
-
 export const getFileFromFileId = RecordIndex.from("file_id", media.files);
 const getMovieFromMovieId = RecordIndex.from("movie_id", media.video.movies);
 export const getEpisodeFromFileId = RecordIndex.from("file_id", media.video.episodes);
@@ -391,6 +388,7 @@ export const episodeTitleSearchIndex = SearchIndex.from(media.video.episodes, (e
 export const playlistTitleSearchIndex = SearchIndex.from(lists.audiolists, (entry) => [entry.title]);
 export const userUsernameSearchIndex = SearchIndex.from(users.users, (entry) => [entry.name, entry.username]);
 export const cueSearchIndex = SearchIndex.from(media.video.cues, (entry) => entry.lines);
+export const personSearchIndex = SearchIndex.from(media.persons, (entry) => [entry.name]);
 
 export function searchForCues(query: string, user_id: string, offset: number, limit: number): Cue[] {
 	let entries = cueSearchIndex.search(query)
@@ -408,9 +406,10 @@ export function search(query: string, user_id: string, offset: number, limit: nu
 		...artistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 7 })),
 		...episodeTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 2 })),
 		...movieTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 6 })),
+		...personSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 0 })),
+		...playlistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 4 })),
 		...showTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 3 })),
 		...trackTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 1 })),
-		...playlistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 4 })),
 		...userUsernameSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 0 }))
 	].sort(CombinedSort.of(
 		NumericSort.decreasing((value) => value.rank),
@@ -426,12 +425,14 @@ export function search(query: string, user_id: string, offset: number, limit: nu
 			return api_lookupEpisode(entry.episode_id, user_id);
 		} else if (libdb.MovieEntry.is(entry)) {
 			return api_lookupMovie(entry.movie_id, user_id);
+		} else if (libdb.PersonEntry.is(entry)) {
+			return api_lookupPerson(entry.person_id, user_id);
+		} else if (libdb.AudiolistEntry.is(entry)) {
+			return api_lookupPlaylist(entry.audiolist_id, user_id);
 		} else if (libdb.ShowEntry.is(entry)) {
 			return api_lookupShow(entry.show_id, user_id);
 		} else if (libdb.TrackEntry.is(entry)) {
 			return api_lookupTrack(entry.track_id, user_id);
-		} else if (libdb.AudiolistEntry.is(entry)) {
-			return api_lookupPlaylist(entry.audiolist_id, user_id);
 		} else if (libdb.UserEntry.is(entry)) {
 			return api_lookupUser(entry.user_id);
 		}

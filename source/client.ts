@@ -8,7 +8,7 @@ import * as client from "./context/client";
 import * as schema from "./context/schema";
 import * as is from "./is";
 import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, AlbumBase, Artist, ArtistBase, Cue, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, Cue, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Person, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
 import * as xml from "./xnode";
 import { formatDuration as format_duration } from "./ui/metadata";
 
@@ -1467,7 +1467,6 @@ function setScrollObserver(obs?: () => Promise<void>): void {
 	}
 }
 let observer = new IntersectionObserver(async (entries) => {
-	console.log(entries);
 	if (is.absent(scrollobserver)) {
 		return;
 	}
@@ -2296,6 +2295,46 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.render()
 		);
+	} else if ((parts = /^persons[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+		req<{}, api_response.PersonResponse>(`/api/persons/${parts[1]}/?token=${token}`, {}, (_, response) => {
+			let person = response.person;
+			mount.appendChild(xml.element("div.content")
+				.add(renderTextHeader(xml.text(person.name)))
+				.render());
+		});
+	} else if ((parts = /^persons[/]([^/?]*)/.exec(uri)) !== null) {
+		let query = parts[1];
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let persons = new ArrayObservable<Person>([]);
+		setScrollObserver(() => new Promise((resolve, reject) => {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				req<{}, api_response.PersonsResponse>(`/api/persons/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {}, (_, response) => {
+					for (let person of response.persons) {
+						persons.append(person);
+					}
+					offset += response.persons.length;
+					if (response.persons.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
+					resolve();
+				});
+			}
+		}));
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(renderTextHeader(xml.text("Persons")))
+			)
+			.add(xml.element("div.content")
+				.add(xml.element("div.media-grid__content")
+					.repeat(persons, (person) => EntityRow.forPerson(person))
+				)
+			)
+			.render()
+		);
 	} else if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let album = response.album;
@@ -2698,8 +2737,14 @@ let updateviewforuri = (uri: string): void => {
 									player.playShow(show);
 								}
 							}
-						}))
+						}),
+					show.summary
 					)
+					)
+				)
+				.add(xml.element("div.content")
+					.set("style", "display: grid; gap: 16px;")
+					.add(...show.actors.map((actor) => renderTextParagraph(EntityLink.forPerson(actor))))
 				)
 				.add(xml.element("div.content")
 					.add(is.absent(indices) || is.absent(episode) ? undefined : makeGrid("Suggested episodes", ...[
@@ -2933,7 +2978,8 @@ let updateviewforuri = (uri: string): void => {
 					)
 				)
 				.add(xml.element("div.content")
-					.add(makeGrid("Actors"))
+					.set("style", "display: grid; gap: 16px;")
+					.add(...movie.actors.map((actor) => renderTextParagraph(EntityLink.forPerson(actor))))
 				)
 				.add(xml.element("div.content")
 					.add(xml.element("div.media-grid")

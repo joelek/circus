@@ -128,6 +128,9 @@ export class EntityRowFactory {
 		if (api.Episode.is(entity)) {
 			return this.forEpisode(entity);
 		}
+		if (api.PersonBase.is(entity)) {
+			return this.forPerson(entity);
+		}
 		if (api.Playlist.is(entity)) {
 			return this.forPlaylist(entity);
 		}
@@ -248,6 +251,19 @@ export class EntityRowFactory {
 			metadata.formatDuration(duration_ms)
 		];
 		return this.make(link, image, playbackButton, titles, subtitles, tags);
+	}
+
+	forPerson(person: api.PersonBase): xnode.XElement {
+		let link = this.EntityLink.forPerson(person);
+		let image = this.ImageBox.forSquare();
+		let titles = [
+			this.EntityLink.forPerson(person)
+		];
+		let subtitles = [] as xnode.XElement[];
+		let tags = [
+			"Person"
+		];
+		return this.make(link, image, undefined, titles, subtitles, tags);
 	}
 
 	forPlaylist(playlist: api.Playlist, playbackButton: xnode.XElement = this.PlaybackButton.forPlaylist(playlist)): xnode.XElement {

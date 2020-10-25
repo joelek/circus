@@ -62,6 +62,14 @@ type MoviesResponse = {
 	movies: objects.Movie[]
 };
 
+type PersonResponse = {
+	person: objects.Person
+};
+
+type PersonsResponse = {
+	persons: objects.Person[]
+};
+
 type PlaylistResponse = {
 	playlist: objects.Playlist
 };
@@ -176,6 +184,8 @@ export {
 	MovieMovieSuggestionsResponse,
 	MovieResponse,
 	MoviesResponse,
+	PersonResponse,
+	PersonsResponse,
 	PlaylistResponse,
 	PlaylistsResponse,
 	TrackResponse,

@@ -177,7 +177,7 @@
 
 	},
 
-	Entity: Album | Artist | Disc | Episode | Genre | Movie | Season | Show | Track | Playlist | User,
+	Entity: Album | Artist | Disc | Episode | Genre | Movie | Person | Playlist | Season | Show | Track | User,
 
 	File: {
 		file_id: string,

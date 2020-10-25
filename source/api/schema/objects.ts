@@ -430,7 +430,7 @@ export const Cue = autoguard.Intersection.of(
 	autoguard.Object.of<{}>({})
 );
 
-export type Entity = Album | Artist | Disc | Episode | Genre | Movie | Season | Show | Track | Playlist | User;
+export type Entity = Album | Artist | Disc | Episode | Genre | Movie | Person | Playlist | Season | Show | Track | User;
 
 export const Entity = autoguard.Union.of(
 	autoguard.Reference.of<Album>(() => Album),
@@ -439,10 +439,11 @@ export const Entity = autoguard.Union.of(
 	autoguard.Reference.of<Episode>(() => Episode),
 	autoguard.Reference.of<Genre>(() => Genre),
 	autoguard.Reference.of<Movie>(() => Movie),
+	autoguard.Reference.of<Person>(() => Person),
+	autoguard.Reference.of<Playlist>(() => Playlist),
 	autoguard.Reference.of<Season>(() => Season),
 	autoguard.Reference.of<Show>(() => Show),
 	autoguard.Reference.of<Track>(() => Track),
-	autoguard.Reference.of<Playlist>(() => Playlist),
 	autoguard.Reference.of<User>(() => User)
 );
 

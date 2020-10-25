@@ -6,7 +6,7 @@ import * as api_response from "./api_response";
 import * as data from "./data";
 import * as is from "./is";
 import { LexicalSort, NumericSort, CombinedSort } from "./shared";
-import { AlbumEntry, ArtistEntry, AudiolistEntry, EpisodeEntry, MovieEntry, ShowEntry, TrackEntry, UserEntry } from "./database";
+import { AlbumEntry, ArtistEntry, AudiolistEntry, EpisodeEntry, MovieEntry, PersonEntry, ShowEntry, TrackEntry, UserEntry } from "./database";
 
 function getParameter(url: liburl.UrlWithParsedQuery, key: string): string[] {
 	let values = url.query[key] ?? [];
@@ -851,6 +851,53 @@ class UsersRoute implements Route<{}, api_response.UsersResponse> {
 	}
 }
 
+class PersonRoute implements Route<{}, api_response.PersonResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]persons[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let person_id = parts[1];
+		let person = data.api_lookupPerson(person_id, username);
+		let payload: api_response.PersonResponse = {
+			person
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]persons[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+	}
+}
+
+class PersonsRoute implements Route<{}, api_response.PersonsResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]persons[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = decodeURIComponent(parts[1]);
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let entries = [] as PersonEntry[];
+		if (query === "") {
+			entries = data.media.persons.slice().sort(LexicalSort.increasing((person) => person.name));
+		} else {
+			entries = data.personSearchIndex.search(query).map((entry) => entry.value);
+		}
+		let persons = entries
+			.slice(offset, offset + length)
+			.map((entry) => data.api_lookupPerson(entry.person_id, username));
+		let payload: api_response.PersonsResponse = {
+			persons
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]persons[/]([^/?]*)/.test(request.url ?? "/");
+	}
+}
+
 let router = new Router()
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
@@ -865,6 +912,8 @@ let router = new Router()
 	.registerRoute(new EpisodesRoute())
 	.registerRoute(new ShowRoute())
 	.registerRoute(new ShowsRoute())
+	.registerRoute(new PersonRoute())
+	.registerRoute(new PersonsRoute())
 	.registerRoute(new PlaylistRoute())
 	.registerRoute(new PlaylistsRoute())
 	.registerRoute(new TrackRoute())

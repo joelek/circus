@@ -38,6 +38,9 @@ export class EntityLinkFactory {
 		if (api.Movie.is(entity)) {
 			return this.forMovie(entity);
 		}
+		if (api.Person.is(entity)) {
+			return this.forPerson(entity);
+		}
 		if (api.Playlist.is(entity)) {
 			return this.forPlaylist(entity);
 		}
@@ -78,6 +81,10 @@ export class EntityLinkFactory {
 
 	forMovie(movie: api.MovieBase): xnode.XElement {
 		return this.for(`video/movies/${movie.movie_id}/`, movie.title);
+	}
+
+	forPerson(person: api.PersonBase): xnode.XElement {
+		return this.for(`persons/${person.person_id}/`, person.name);
 	}
 
 	forPlaylist(playlist: api.PlaylistBase): xnode.XElement {
