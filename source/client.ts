@@ -2298,8 +2298,13 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^persons[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<{}, api_response.PersonResponse>(`/api/persons/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let person = response.person;
+			let shows = response.shows;
+			let movies = response.movies;
 			mount.appendChild(xml.element("div.content")
+				.set("style", "display: grid; gap: 32px;")
 				.add(renderTextHeader(xml.text(person.name)))
+				.add(makeGrid("Shows", ...shows.map((show) => makeShow(show, () => player.playShow(show)))))
+				.add(makeGrid("Movies", ...movies.map((movie) => makeMovie(movie, () => player.playMovie(movie)))))
 				.render());
 		});
 	} else if ((parts = /^persons[/]([^/?]*)/.exec(uri)) !== null) {

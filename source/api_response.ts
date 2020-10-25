@@ -63,7 +63,9 @@ type MoviesResponse = {
 };
 
 type PersonResponse = {
-	person: objects.Person
+	person: objects.Person,
+	shows: objects.Show[],
+	movies: objects.Movie[]
 };
 
 type PersonsResponse = {

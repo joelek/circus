@@ -173,6 +173,24 @@ const getShowPersonsFromShowId = CollectionIndex.from("show_id", media.video.sho
 const getMoviePersonsFromMovieId = CollectionIndex.from("movie_id", media.video.movie_persons);
 const getPersonFromPersonId = RecordIndex.from("person_id", media.persons);
 
+export function getMoviesFromPersonId(person_id: string, user_id: string, offset: number, length: number): Movie[] {
+	return getMoviePersonsFromMovieId.lookup(person_id)
+		.sort(LexicalSort.increasing((movie) => movie.movie_id))
+		.slice(offset, offset + length)
+		.map((movie_genre) => {
+			return api_lookupMovie(movie_genre.movie_id, user_id);
+		});
+}
+
+export function getShowsFromPersonId(person_id: string, user_id: string, offset: number, length: number): Show[] {
+	return getShowPersonsFromShowId.lookup(person_id)
+		.sort(LexicalSort.increasing((show) => show.show_id))
+		.slice(offset, offset + length)
+		.map((show_genre) => {
+			return api_lookupShow(show_genre.show_id, user_id);
+		});
+}
+
 export const getFileFromFileId = RecordIndex.from("file_id", media.files);
 const getMovieFromMovieId = RecordIndex.from("movie_id", media.video.movies);
 export const getEpisodeFromFileId = RecordIndex.from("file_id", media.video.episodes);

@@ -857,8 +857,12 @@ class PersonRoute implements Route<{}, api_response.PersonResponse> {
 		let parts = /^[/]api[/]persons[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let person_id = parts[1];
 		let person = data.api_lookupPerson(person_id, username);
+		let shows = data.getShowsFromPersonId(person_id, username, 0, 24);
+		let movies = data.getMoviesFromPersonId(person_id, username, 0, 24);
 		let payload: api_response.PersonResponse = {
-			person
+			person,
+			shows,
+			movies
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
