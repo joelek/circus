@@ -23,7 +23,7 @@ const CSS = `
 
 	.image-box__image {
 		height: 100%;
-		object-fit: contain;
+		object-fit: cover;
 		position: absolute;
 		width: 100%;
 	}

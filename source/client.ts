@@ -618,7 +618,7 @@ style.innerText = `
 
 	.media-widget__image {
 		height: 100%;
-		object-fit: contain;
+		object-fit: cover;
 		width: 100%;
 	}
 
