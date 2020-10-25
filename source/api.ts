@@ -341,18 +341,18 @@ class AuthRoute implements Route<api_response.AuthRequest, api_response.AuthResp
 
 
 
-
-
-
-class MovieRoute implements Route<{}, api_response.MovieResponse> {
+class MovieMovieSuggestionsRoute implements Route<{}, api_response.MovieMovieSuggestionsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
-		let parts = /^[/]api[/]video[/]movies[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]video[/]movies[/]([0-9a-f]{32})[/]suggestions[/]movies[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
 		let movie_id = parts[1];
-		let movie = data.api_lookupMovie(movie_id, username);
+		let genres = data.getVideoGenresFromMovieId(movie_id);
 		let map = new Map<string, number>();
-		for (let genre of movie.genres) {
-			let movie_genres = data.getMoviesFromVideoGenreIdIndex.lookup(genre.genre_id);
+		for (let genre of genres) {
+			let movie_genres = data.getMoviesFromVideoGenreIdIndex.lookup(genre.video_genre_id);
 			for (let movie_genre of movie_genres) {
 				let value = map.get(movie_genre.movie_id) ?? 0;
 				map.set(movie_genre.movie_id, value + 2);
@@ -362,17 +362,38 @@ class MovieRoute implements Route<{}, api_response.MovieResponse> {
 			let video_genres = data.getVideoGenresFromMovieId(entry[0]);
 			map.set(entry[0], entry[1] - video_genres.length);
 		}
-		map.delete(movie.movie_id);
-		let suggestions = Array.from(map.entries())
+		map.delete(movie_id);
+		let movies = Array.from(map.entries())
 			.sort(CombinedSort.of(
 				NumericSort.decreasing((entry) => entry[1])
 			))
-			.slice(0, 6)
+			.slice(offset, offset + length)
 			.map((entry) => entry[0])
 			.map((movie_id) => data.api_lookupMovie(movie_id, username))
+		let payload: api_response.MovieMovieSuggestionsResponse = {
+			movies
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]video[/]movies[/]([0-9a-f]{32})[/]suggestions[/]movies[/]/.test(request.url ?? "/");
+	}
+}
+
+
+
+
+
+class MovieRoute implements Route<{}, api_response.MovieResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]video[/]movies[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let movie_id = parts[1];
+		let movie = data.api_lookupMovie(movie_id, username);
 		let payload: api_response.MovieResponse = {
-			movie,
-			suggestions
+			movie
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
@@ -513,18 +534,56 @@ class GenresRoute implements Route<{}, api_response.GenresResponse> {
 	}
 }
 
+class GenreShowsRoute implements Route<{}, api_response.GenreShowsResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]shows[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let genre_id = parts[1];
+		let shows = data.getShowsFromVideoGenreId(genre_id, username, offset, length);
+		let payload: api_response.GenreShowsResponse = {
+			shows
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]shows[/]/.test(request.url ?? "/");
+	}
+}
+
+class GenreMoviesRoute implements Route<{}, api_response.GenreMoviesResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let username = getUsername(request);
+		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]movies[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let genre_id = parts[1];
+		let movies = data.getMoviesFromVideoGenreId(genre_id, username, offset, length);
+		let payload: api_response.GenreMoviesResponse = {
+			movies
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]movies[/]/.test(request.url ?? "/");
+	}
+}
+
 class GenreRoute implements Route<{}, api_response.GenreResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let username = getUsername(request);
 		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let genre_id = parts[1];
 		let genre = data.api_lookupGenre(genre_id, username);
-		let shows = data.getShowsFromVideoGenreId(genre_id, username);
-		let movies = data.getMoviesFromVideoGenreId(genre_id, username);
 		let payload: api_response.GenreResponse = {
-			genre,
-			shows,
-			movies
+			genre
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
@@ -739,6 +798,7 @@ class UsersRoute implements Route<{}, api_response.UsersResponse> {
 let router = new Router()
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
+	.registerRoute(new MovieMovieSuggestionsRoute())
 	.registerRoute(new MovieRoute())
 	.registerRoute(new MoviesRoute())
 	.registerRoute(new ArtistRoute())
@@ -761,6 +821,8 @@ let router = new Router()
 	.registerRoute(new UsersRoute())
 
 	.registerRoute(new CuesRoute())
+	.registerRoute(new GenreShowsRoute())
+	.registerRoute(new GenreMoviesRoute())
 	.registerRoute(new GenreRoute())
 	.registerRoute(new GenresRoute())
 	.registerRoute(new SearchRoute())

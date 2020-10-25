@@ -2869,8 +2869,27 @@ let updateviewforuri = (uri: string): void => {
 		let movie_id = parts[1];
 		let progress = is.present(parts[2]) ? Number.parseInt(parts[2]) / 1000 : undefined;
 		req<api_response.ApiRequest, api_response.MovieResponse>(`/api/video/movies/${movie_id}/?token=${token}`, {}, (status, response) => {
+			let offset = 0;
+			let reachedEnd = new ObservableClass(false);
+			let isLoading = new ObservableClass(false);
+			let movies = new ArrayObservable<Movie>([]);
+			setScrollObserver(() => new Promise((resolve, reject) => {
+				if (!reachedEnd.getState() && !isLoading.getState()) {
+					isLoading.updateState(true);
+					req<{}, api_response.MovieMovieSuggestionsResponse>(`/api/video/movies/${movie_id}/suggestions/movies/?offset=${offset}&token=${token}`, {}, (_, response) => {
+						for (let movie of response.movies) {
+							movies.append(movie);
+						}
+						offset += response.movies.length;
+						if (response.movies.length === 0) {
+							reachedEnd.updateState(true);
+						}
+						isLoading.updateState(false);
+						resolve();
+					});
+				}
+			}));
 			let movie = response.movie;
-			let suggestions = response.suggestions;
 			let isContext = computed((contextPath) => {
 				if (!is.present(contextPath)) {
 					return false;
@@ -2924,11 +2943,9 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(makeGrid("Actors"))
 				)
-				.add(suggestions.length === 0 ? undefined : xml.element("div.content")
-					.add(makeGrid(
-							"Suggested movies",
-							...suggestions.map((movie) => makeMovie(movie))
-						)
+				.add(xml.element("div.content")
+					.add(xml.element("div.media-grid__content")
+						.repeat(movies, (movie) => makeMovie(movie))
 					)
 				)
 				.render()
@@ -3038,26 +3055,31 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.render());
 	} else if ((parts = /^video[/]genres[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		req<{}, api_response.GenreResponse>(`/api/video/genres/${parts[1]}/?token=${token}`, {}, (status, response) => {
+		let genre_id = parts[1];
+		req<{}, api_response.GenreResponse>(`/api/video/genres/${genre_id}/?token=${token}`, {}, (status, response) => {
 			let genre = response.genre;
-			let shows = response.shows;
-			let movies = response.movies;
-			mount.appendChild(xml.element("div")
-				.add(xml.element("div.content")
-					.add(renderTextHeader(xml.text(genre.title)))
-				)
-				.add(shows.length === 0 ? undefined : xml.element("div.content")
-					.add(makeGrid("Shows", ...shows.map((show) => makeShow(show, () => {
-						player.playShow(show);
-					}))))
-				)
-				.add(movies.length === 0 ? undefined : xml.element("div.content")
-					.add(makeGrid("Movies", ...movies.map((movie) => makeMovie(movie, () => {
-						player.playMovie(movie);
-					}))))
-				)
-				.render()
-			);
+			req<{}, api_response.GenreShowsResponse>(`/api/video/genres/${genre_id}/shows/?token=${token}`, {}, (status, response) => {
+				let shows = response.shows;
+				req<{}, api_response.GenreMoviesResponse>(`/api/video/genres/${genre_id}/movies/?token=${token}`, {}, (status, response) => {
+					let movies = response.movies;
+					mount.appendChild(xml.element("div")
+						.add(xml.element("div.content")
+							.add(renderTextHeader(xml.text(genre.title)))
+						)
+						.add(shows.length === 0 ? undefined : xml.element("div.content")
+							.add(makeGrid("Shows", ...shows.map((show) => makeShow(show, () => {
+								player.playShow(show);
+							}))))
+						)
+						.add(movies.length === 0 ? undefined : xml.element("div.content")
+							.add(makeGrid("Movies", ...movies.map((movie) => makeMovie(movie, () => {
+								player.playMovie(movie);
+							}))))
+						)
+						.render()
+					);
+				});
+			});
 		});
 	} else if ((parts = /^video[/]genres[/]([^/?]*)/.exec(uri)) !== null) {
 		req<{}, api_response.GenresResponse>(`/api/video/genres/?token=${token}`, {}, (status, response) => {

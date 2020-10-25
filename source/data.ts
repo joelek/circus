@@ -3,7 +3,7 @@ import * as libfs from "fs";
 import * as libdb from "./database";
 import * as utils from "./utils";
 import * as passwords from "./passwords";
-import { CombinedSort, NumericSort } from "./shared";
+import { CombinedSort, LexicalSort, NumericSort } from "./shared";
 import * as is from "./is";
 import { Album, AlbumBase, Artist, ArtistBase, Cue, CueBase, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, SegmentBase, Show, ShowBase, Subtitle, SubtitleBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
 
@@ -185,16 +185,22 @@ let getSeasonsFromShowIdIndex = CollectionIndex.from("show_id", media.video.seas
 let getEpisodesFromSeasonIdIndex = CollectionIndex.from("season_id", media.video.episodes);
 let getStreamsFromFileIdIndex = CollectionIndex.from("file_id", streams.streams);
 
-export function getMoviesFromVideoGenreId(video_genre_id: string, user_id: string): Movie[] {
-	return getMoviesFromVideoGenreIdIndex.lookup(video_genre_id).map((movie_genre) => {
-		return api_lookupMovie(movie_genre.movie_id, user_id);
-	});
+export function getMoviesFromVideoGenreId(video_genre_id: string, user_id: string, offset: number, length: number): Movie[] {
+	return getMoviesFromVideoGenreIdIndex.lookup(video_genre_id)
+		.sort(LexicalSort.increasing((movie) => movie.movie_id))
+		.slice(offset, offset + length)
+		.map((movie_genre) => {
+			return api_lookupMovie(movie_genre.movie_id, user_id);
+		});
 }
 
-export function getShowsFromVideoGenreId(video_genre_id: string, user_id: string): Show[] {
-	return getShowsFromVideoGenreIdIndex.lookup(video_genre_id).map((show_genre) => {
-		return api_lookupShow(show_genre.show_id, user_id);
-	});
+export function getShowsFromVideoGenreId(video_genre_id: string, user_id: string, offset: number, length: number): Show[] {
+	return getShowsFromVideoGenreIdIndex.lookup(video_genre_id)
+		.sort(LexicalSort.increasing((show) => show.show_id))
+		.slice(offset, offset + length)
+		.map((show_genre) => {
+			return api_lookupShow(show_genre.show_id, user_id);
+		});
 }
 
 export function getTokensFromUsername(username: string): Array<libdb.AuthToken> {

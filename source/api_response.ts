@@ -34,19 +34,28 @@ type EpisodesResponse = {
 	episodes: objects.Episode[]
 };
 
-type GenreResponse = {
-	genre: objects.Genre,
-	shows: objects.Show[],
+type GenreShowsResponse = {
+	shows: objects.Show[]
+};
+
+type GenreMoviesResponse = {
 	movies: objects.Movie[]
+};
+
+type GenreResponse = {
+	genre: objects.Genre
 };
 
 type GenresResponse = {
 	genres: objects.Genre[]
 };
 
+type MovieMovieSuggestionsResponse = {
+	movies: objects.Movie[]
+};
+
 type MovieResponse = {
-	movie: objects.Movie,
-	suggestions: objects.Movie[]
+	movie: objects.Movie
 };
 
 type MoviesResponse = {
@@ -156,12 +165,15 @@ export {
 	DiscsResponse,
 	EpisodeResponse,
 	EpisodesResponse,
+	GenreShowsResponse,
+	GenreMoviesResponse,
 	GenreResponse,
 	GenresResponse,
 	SeasonResponse,
 	SeasonsResponse,
 	ShowResponse,
 	ShowsResponse,
+	MovieMovieSuggestionsResponse,
 	MovieResponse,
 	MoviesResponse,
 	PlaylistResponse,
