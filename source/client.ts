@@ -2158,16 +2158,37 @@ let updateviewforuri = (uri: string): void => {
 			let season = response.season;
 			let show = season.show;
 			let duration_ms = 0;
+			let watched = true;
 			for (let episode of season.episodes) {
 				duration_ms += episode.segment.file.duration_ms;
+				if (is.absent(episode.last_stream_date)) {
+					watched = false;
+				}
 			}
-			mount.appendChild(xml.element("div.content")
-				.add(makeEntityHeader(
-					`${season.show.title} \u00b7 Season ${season.number}`,
-					show.genres.map((genre) => EntityLink.forGenre(genre)),
-					["Season", format_duration(duration_ms)],
-					ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`),
-					PlaybackButton.forSeason(season)
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(makeEntityHeader(
+						`${season.show.title} \u00b7 Season ${season.number}`,
+						show.genres.map((genre) => EntityLink.forGenre(genre)),
+						["Season", format_duration(duration_ms)],
+						ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`),
+						PlaybackButton.forSeason(season),
+						show.summary,
+						watched
+						)
+					)
+				)
+				.add(xml.element("div.content")
+					.set("style", "display: grid; gap: 32px;")
+					.add(...season.episodes.map((episode, episodeIndex) => makeEntityHeader(
+						episode.title,
+						[EntityLink.forShow(show), EntityLink.forSeason(season)],
+						["Episode", `${episode.year}`, format_duration(episode.segment.file.duration_ms)],
+						ImageBox.forVideo(`/media/stills/${episode.segment.file.file_id}/`),
+						PlaybackButton.forEpisode(episode),
+						episode.summary,
+						is.present(episode.last_stream_date),
+					))
 				))
 				.render());
 		});
