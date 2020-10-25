@@ -8,7 +8,8 @@ function getSearchTerms(string: string): Array<string> {
 	let normalized = string;
 	normalized = normalized.toLowerCase();
 	normalized = normalized.normalize("NFC");
-	return Array.from(normalized.match(/(\p{L}+|\p{N}+)/gu) || []);
+	return Array.from(normalized.match(/(\p{L}+|\p{N}+)/gu) || [])
+		.filter((value) => value.length >= 3);
 }
 
 function formatSeasonEpisode(season: number, episode: number): string {

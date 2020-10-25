@@ -350,17 +350,17 @@ class SearchIndex {
 		let map = new Map<string, number>();
 		for (let set of sets) {
 			for (let id of set) {
-				let rank = map.get(id) ?? 0 - terms.length;
+				let rank = map.get(id) ?? (0 - terms.length);
 				map.set(id, rank + 2);
 			}
 		}
 		return Array.from(map.entries())
-		.filter((entry) => entry[1] >= 0)
-		.sort(NumericSort.increasing((entry) => entry[1]))
-		.map((entry) => ({
-			id: entry[0],
-			rank: entry[1]
-		}));
+			.filter((entry) => entry[1] >= 0)
+			.sort(NumericSort.increasing((entry) => entry[1]))
+			.map((entry) => ({
+				id: entry[0],
+				rank: entry[1]
+			}));
 	}
 
 	static from<A>(collection: Iterable<A>, getKey: (record: A) => string, getValues: (record: A) => string[]): SearchIndex {
