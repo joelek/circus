@@ -8,7 +8,9 @@
 		show: {
 			imdb: string,
 			title: string,
-			genres: string[]
+			summary: string,
+			genres: string[],
+			actors: string[]
 		},
 		season: number,
 		episode: number
@@ -19,6 +21,7 @@
 		title: string,
 		year: number,
 		summary: string,
-		genres: string[]
+		genres: string[],
+		actors: string[]
 	}
 }

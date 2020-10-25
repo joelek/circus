@@ -27,20 +27,25 @@ let db = {
 		movie_parts: new Array<libdb.MoviePartEntry>(),
 		movies: new Array<libdb.MovieEntry>(),
 		movie_genres: new Array<libdb.MovieGenreEntry>(),
+		movie_persons: new Array<libdb.MoviePersonEntry>(),
 		shows: new Array<libdb.ShowEntry>(),
 		show_genres: new Array<libdb.ShowGenreEntry>(),
+		show_perons: new Array<libdb.ShowPersonEntry>(),
 		seasons: new Array<libdb.SeasonEntry>(),
 		episodes: new Array<libdb.EpisodeEntry>(),
 		subtitles: new Array<libdb.SubtitleEntry>(),
 		subtitle_contents: new Array<libdb.SubtitleContentEntry>(),
 		cues: new Array<libdb.CueEntry>()
 	},
+	persons: new Array<libdb.PersonEntry>(),
 	files: new Array<libdb.FileEntry>()
 };
 
 let video_genres_index: utils.Index<libdb.VideoGenreEntry> = {};
 let show_genres_index: utils.Index<libdb.ShowGenreEntry> = {};
 let movie_genres_index: utils.Index<libdb.MovieGenreEntry> = {};
+let show_persons_index: utils.Index<libdb.ShowPersonEntry> = {};
+let movie_persons_index: utils.Index<libdb.MoviePersonEntry> = {};
 let movie_parts_index: utils.Index<libdb.MoviePartEntry> = {};
 let movies_index: utils.Index<libdb.MovieEntry> = {};
 let shows_index: utils.Index<libdb.ShowEntry> = {};
@@ -55,7 +60,32 @@ let tracks_index: utils.Index<libdb.TrackEntry> = {};
 let album_artists_index: utils.Index<libdb.AlbumArtistEntry> = {};
 let track_artists_index: utils.Index<libdb.TrackArtistEntry> = {};
 
+let persons_index: utils.Index<libdb.PersonEntry> = {};
+
 let files_index: utils.Index<libdb.FileEntry> = {};
+
+let add_person = (person: libdb.PersonEntry): void => {
+	if (!(person.person_id in persons_index)) {
+		persons_index[person.person_id] = person;
+		db.persons.push(person);
+	}
+};
+
+let add_show_person = (show_person: libdb.ShowPersonEntry): void => {
+	let key = Array.of(show_person.show_id, show_person.person_id).join(":");
+	if (!(key in show_persons_index)) {
+		show_persons_index[key] = show_person;
+		db.video.show_perons.push(show_person);
+	}
+};
+
+let add_movie_person = (movie_person: libdb.MoviePersonEntry): void => {
+	let key = Array.of(movie_person.movie_id, movie_person.person_id).join(":");
+	if (!(key in movie_persons_index)) {
+		movie_persons_index[key] = movie_person;
+		db.video.movie_persons.push(movie_person);
+	}
+};
 
 let add_video_genre = (video_genre: libdb.VideoGenreEntry): void => {
 	if (!(video_genre.video_genre_id in video_genres_index)) {
@@ -893,6 +923,17 @@ for (const metadata_file of metadata_files) {
 					video_genre_id: video_genre_id
 				});
 			}
+			for (const person of json.actors) {
+				const person_id = makeFileId(person);
+				add_person({
+					person_id: person_id,
+					name: person
+				});
+				add_movie_person({
+					movie_id: movie.movie_id,
+					person_id: person_id
+				});
+			}
 		}
 	} else if (metadata.EpisodeMetadata.is(json)) {
 		for (let video_file of video_files) {
@@ -914,6 +955,7 @@ for (const metadata_file of metadata_files) {
 			if (show == null) {
 				continue;
 			}
+			show.summary = json.show.summary;
 			for (const genre of json.show.genres) {
 				const video_genre_id = makeFileId("video", genre);
 				add_video_genre({
@@ -923,6 +965,17 @@ for (const metadata_file of metadata_files) {
 				add_show_genre({
 					show_id: show.show_id,
 					video_genre_id: video_genre_id
+				});
+			}
+			for (const person of json.show.actors) {
+				const person_id = makeFileId(person);
+				add_person({
+					person_id: person_id,
+					name: person
+				});
+				add_show_person({
+					show_id: show.show_id,
+					person_id: person_id
 				});
 			}
 		}

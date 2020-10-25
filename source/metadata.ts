@@ -11,7 +11,9 @@ export type EpisodeMetadata = {
 	"show": {
 		"imdb": string,
 		"title": string,
-		"genres": string[]
+		"summary": string,
+		"genres": string[],
+		"actors": string[]
 	},
 	"season": number,
 	"episode": number
@@ -26,11 +28,15 @@ export const EpisodeMetadata = autoguard.Object.of<EpisodeMetadata>({
 	"show": autoguard.Object.of<{
 		"imdb": string,
 		"title": string,
-		"genres": string[]
+		"summary": string,
+		"genres": string[],
+		"actors": string[]
 	}>({
 		"imdb": autoguard.String,
 		"title": autoguard.String,
-		"genres": autoguard.Array.of(autoguard.String)
+		"summary": autoguard.String,
+		"genres": autoguard.Array.of(autoguard.String),
+		"actors": autoguard.Array.of(autoguard.String)
 	}),
 	"season": autoguard.Number,
 	"episode": autoguard.Number
@@ -42,7 +48,8 @@ export type MovieMetadata = {
 	"title": string,
 	"year": number,
 	"summary": string,
-	"genres": string[]
+	"genres": string[],
+	"actors": string[]
 };
 
 export const MovieMetadata = autoguard.Object.of<MovieMetadata>({
@@ -51,7 +58,8 @@ export const MovieMetadata = autoguard.Object.of<MovieMetadata>({
 	"title": autoguard.String,
 	"year": autoguard.Number,
 	"summary": autoguard.String,
-	"genres": autoguard.Array.of(autoguard.String)
+	"genres": autoguard.Array.of(autoguard.String),
+	"actors": autoguard.Array.of(autoguard.String)
 });
 
 export type Autoguard = {

@@ -1,4 +1,16 @@
 {
+	PersonEntry: {
+		person_id: string,
+		name: string
+	},
+	MoviePersonEntry: {
+		movie_id: string,
+		person_id: string
+	},
+	ShowPersonEntry: {
+		show_id: string,
+		person_id: string
+	},
 	ArtistEntry: {
 		artist_id: string,
 		title: string
@@ -54,7 +66,9 @@
 	},
 	ShowEntry: {
 		show_id: string,
-		title: string
+		title: string,
+		summary?: string,
+		poster_file_id?: string
 	},
 	ShowGenreEntry: {
 		show_id: string,
@@ -111,14 +125,17 @@
 			movie_parts: MoviePartEntry[],
 			movies: MovieEntry[],
 			movie_genres: MovieGenreEntry[],
+			movie_persons: MoviePersonEntry[],
 			shows: ShowEntry[],
 			show_genres: ShowGenreEntry[],
+			show_persons: ShowPersonEntry[],
 			seasons: SeasonEntry[],
 			episodes: EpisodeEntry[],
 			subtitles: SubtitleEntry[],
 			subtitle_contents: SubtitleContentEntry[],
 			cues: CueEntry[]
 		},
+		persons: PersonEntry[],
 		files: FileEntry[]
 	},
 	SubtitlesDatabase: { string[] },
@@ -160,18 +177,5 @@
 	},
 	StreamDatabase: {
 		streams: Stream[]
-	},
-	ChannelEntry: {
-		channel_id: string
-	},
-	ProgramEntry: {
-		program_id: string,
-		channel_id: string,
-		file_id: string,
-		start_time_ms: number
-	},
-	ChannelDatabase: {
-		channels: ChannelEntry[],
-		programs: ProgramEntry[]
 	}
 }
