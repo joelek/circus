@@ -2163,40 +2163,20 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^video[/]seasons[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<{}, api_response.SeasonResponse>(`/api/video/seasons/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let season = response.season;
-			let show = season.show;
-			let duration_ms = 0;
-			let watched = true;
-			for (let episode of season.episodes) {
-				duration_ms += episode.segment.file.duration_ms;
-				if (is.absent(episode.last_stream_date)) {
-					watched = false;
-				}
-			}
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader(
-						`${season.show.title} \u00b7 Season ${season.number}`,
-						show.genres.map((genre) => EntityLink.forGenre(genre)),
-						["Season", format_duration(duration_ms)],
-						ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`),
-						PlaybackButton.forSeason(season),
-						show.summary,
-						watched
-						)
-					)
+					.add(EntityCard.forSeason(season))
 				)
 				.add(xml.element("div.content")
-					.set("style", "align-items: start; display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(240px, auto));")
-					.add(...season.episodes.map((episode, episodeIndex) => makeEntityHeader(
-						episode.title,
-						[EntityLink.forShow(show), EntityLink.forSeason(season)],
-						["Episode", `${episode.year}`, format_duration(episode.segment.file.duration_ms)],
-						ImageBox.forVideo(`/media/stills/${episode.segment.file.file_id}/`),
-						PlaybackButton.forEpisode(episode),
-						episode.summary,
-						is.present(episode.last_stream_date),
-					))
-				))
+					.add(Grid.make()
+						.add(...season.episodes.map((episode, episodeIndex) => {
+							return EntityCard.forEpisode(episode, PlaybackButton.forSeason(season, {
+								resume: () => player.resume(),
+								play: () => player.playSeason(season, episodeIndex)
+							}));
+						}))
+					)
+				)
 				.render());
 		});
 	} else if ((parts = /^video[/]seasons[/]([^/?]*)/.exec(uri)) !== null) {
