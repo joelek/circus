@@ -9,16 +9,22 @@ const CSS = `
 		position: relative;
 	}
 
-	.image-box--aspect-1-1 {
+	.image-box--circle {
+		border-radius: 50%;
+		overflow: hidden;
 		padding-bottom: ${1/1 * 100}%;
 	}
 
-	.image-box--aspect-16-9 {
-		padding-bottom: ${9/16 * 100}%;
+	.image-box--poster {
+		padding-bottom: ${3/2 * 100}%;
 	}
 
-	.image-box--aspect-2-3 {
-		padding-bottom: ${3/2 * 100}%;
+	.image-box--square {
+		padding-bottom: ${1/1 * 100}%;
+	}
+
+	.image-box--video {
+		padding-bottom: ${9/16 * 100}%;
 	}
 
 	.image-box__image {
@@ -45,9 +51,9 @@ export class ImageBoxFactory {
 		this.token = token;
 	}
 
-	for(url?: string, aspectRatio: "1-1" | "16-9" | "2-3" = "1-1"): xnode.XElement {
+	for(url?: string, format: "circle" | "poster" | "square" | "video" = "square"): xnode.XElement {
 		let isLoaded = new observables.ObservableClass(false);
-		return xnode.element(`div.image-box.image-box--aspect-${aspectRatio}`)
+		return xnode.element(`div.image-box.image-box--${format}`)
 			.add(is.absent(url) ? undefined : xnode.element("img.image-box__image")
 				.bind("data-opaque", isLoaded.addObserver((isLoaded) => isLoaded))
 				.bind("src", this.token.addObserver((token) => {
@@ -61,16 +67,20 @@ export class ImageBoxFactory {
 			);
 	}
 
+	forCircle(url?: string): xnode.XElement {
+		return this.for(url, "circle");
+	}
+
 	forPoster(url?: string): xnode.XElement {
-		return this.for(url, "2-3");
+		return this.for(url, "poster");
 	}
 
 	forSquare(url?: string): xnode.XElement {
-		return this.for(url, "1-1");
+		return this.for(url, "square");
 	}
 
 	forVideo(url?: string): xnode.XElement {
-		return this.for(url, "16-9");
+		return this.for(url, "video");
 	}
 
 	static makeStyle(): xnode.XElement {
