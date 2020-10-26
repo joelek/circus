@@ -2821,61 +2821,14 @@ let updateviewforuri = (uri: string): void => {
 				.render()
 			);
 		});
-	} else if ((parts = /^video[/]episodes[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]episodes[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		let episode_id = parts[1];
-		let progress = is.present(parts[2]) ? Number.parseInt(parts[2]) / 1000 : undefined;
 		req<api_response.ApiRequest, api_response.EpisodeResponse>(`/api/video/episodes/${episode_id}/?token=${token}`, {}, (status, response) => {
 			let episode = response.episode;
-			let season = episode.season;
-			let show = season.show;
-			let isContext = computed((contextPath) => {
-				if (!is.present(contextPath)) {
-					return false;
-				}
-				if (contextPath[contextPath.length - 1] !== episode.episode_id) {
-					return false;
-				}
-				return true;
-			}, player.contextPath);
-			let isPlaying = computed((isContext, playback) => {
-				return isContext && playback;
-			}, isContext, player.playback);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader(
-							episode.title,
-							[EntityLink.forShow(show), EntityLink.forSeason(season)],
-							["Episode", `${episode.year}`, format_duration(episode.segment.file.duration_ms)],
-							ImageBox.forVideo(`/media/stills/${episode.segment.file.file_id}/`)
-								.set("style", "padding-bottom: 56.25%;"),
-							xml.element("div.playback-button")
-								.add(Icon.makePlay()
-									.bind("data-hide", isPlaying.addObserver(a => a))
-								)
-								.add(Icon.makePause()
-									.bind("data-hide", isPlaying.addObserver(a => !a))
-								)
-								.on("click", () => {
-									if (isPlaying.getState()) {
-										player.pause();
-									} else {
-										if (is.present(progress)) {
-											if (!isContext.getState()) {
-												player.playEpisode(episode);
-											}
-											player.seek(progress);
-										} else {
-											if (isContext.getState()) {
-												player.resume();
-											} else {
-												player.playEpisode(episode);
-											}
-										}
-									}
-								}),
-							episode.summary,
-							is.present(episode.last_stream_date)
-						)
+					.add(EntityCard.forEpisode(episode)
+						.set("data-header", "true")
 					)
 				)
 				.render()
@@ -2914,9 +2867,8 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.render()
 		);
-	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/](?:([0-9]+)[/])?/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		let movie_id = parts[1];
-		let progress = is.present(parts[2]) ? Number.parseInt(parts[2]) / 1000 : undefined;
 		req<api_response.ApiRequest, api_response.MovieResponse>(`/api/video/movies/${movie_id}/?token=${token}`, {}, (status, response) => {
 			let offset = 0;
 			let reachedEnd = new ObservableClass(false);
@@ -2939,54 +2891,10 @@ let updateviewforuri = (uri: string): void => {
 				}
 			}));
 			let movie = response.movie;
-			let isContext = computed((contextPath) => {
-				if (!is.present(contextPath)) {
-					return false;
-				}
-				if (contextPath[contextPath.length - 1] !== movie.movie_id) {
-					return false;
-				}
-				return true;
-			}, player.contextPath);
-			let isPlaying = computed((isContext, playback) => {
-				return isContext && playback;
-			}, isContext, player.playback);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader(
-							movie.title,
-							movie.genres.map((genre) => EntityLink.forGenre(genre)),
-							["Movie", `${movie.year}`, format_duration(movie.segment.file.duration_ms)],
-							ImageBox.forPoster(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/`)
-								.set("style", "padding-bottom: 150%"),
-							xml.element("div.playback-button")
-								.add(Icon.makePlay()
-									.bind("data-hide", isPlaying.addObserver(a => a))
-								)
-								.add(Icon.makePause()
-									.bind("data-hide", isPlaying.addObserver(a => !a))
-								)
-								.on("click", () => {
-									if (isPlaying.getState()) {
-										player.pause();
-									} else {
-										if (is.present(progress)) {
-											if (!isContext.getState()) {
-												player.playMovie(movie);
-											}
-											player.seek(progress);
-										} else {
-											if (isContext.getState()) {
-												player.resume();
-											} else {
-												player.playMovie(movie);
-											}
-										}
-									}
-								}),
-							movie.summary,
-							is.present(movie.last_stream_date)
-						)
+					.add(EntityCard.forMovie(movie)
+						.set("data-header", "true")
 					)
 				)
 				.add(xml.element("div.content")
@@ -2994,13 +2902,11 @@ let updateviewforuri = (uri: string): void => {
 					.add(...movie.actors.map((actor) => renderTextParagraph(EntityLink.forPerson(actor))))
 				)
 				.add(xml.element("div.content")
-					.add(xml.element("div.media-grid")
-						.add(xml.element("div.media-grid__header")
-							.add(renderTextHeader(xml.text("Suggested movies")))
-						)
-						.add(xml.element("div.media-grid__content")
-							.repeat(movies, (movie) => makeMovie(movie))
-						)
+					.bind("data-hide", movies.compute((movies) => movies.length === 0))
+					.set("style", "display: grid; gap: 16px;")
+					.add(renderTextHeader(xml.text("Suggested movies")))
+					.add(Grid.make()
+						.repeat(movies, (movie) => EntityCard.forMovie(movie))
 					)
 				)
 				.render()
