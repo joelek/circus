@@ -16,6 +16,7 @@ import { GridFactory } from "./ui/Grid";
 import { IconFactory } from "./ui/Icon";
 import { ImageBoxFactory } from "./ui/ImageBox";
 import { EntityLinkFactory } from "./ui/EntityLink";
+import { EntityCardFactory } from "./ui/EntityCard";
 import { EntityRowFactory } from "./ui/EntityRow";
 import { PlaybackButtonFactory } from "./ui/PlaybackButton";
 
@@ -265,6 +266,9 @@ document.head.appendChild(ImageBoxFactory.makeStyle().render())
 
 const EntityLink = new EntityLinkFactory(navigate);
 document.head.appendChild(EntityLinkFactory.makeStyle().render())
+
+const EntityCard = new EntityCardFactory(EntityLink, ImageBox, PlaybackButton);
+document.head.appendChild(EntityCardFactory.makeStyle().render())
 
 const EntityRow = new EntityRowFactory(EntityLink, ImageBox, PlaybackButton);
 document.head.appendChild(EntityRowFactory.makeStyle().render())
