@@ -3,6 +3,7 @@ import * as libcp from "child_process";
 import * as libcrypto from "crypto";
 import * as data from "./data";
 import * as database from "./database";
+import * as is from "./is";
 import * as utils from "./utils";
 import * as keyframes from "./keyframes";
 
@@ -44,7 +45,10 @@ function generateStill(target: string[], file: database.FileEntry): Promise<void
 			let cp = libcp.spawn("ffmpeg", [
 				"-ss", utils.formatTimestamp(offset),
 				"-i", [".", ...file.path].join("/"),
-				"-vf", "scale=w=960:h=540:force_original_aspect_ratio=decrease",
+				"-q:v", "1",
+				"-frames:v", "1",
+				"-f", "singlejpeg",
+				"-fflags", "+bitexact",
 				"-map_metadata", "-1",
 				still.join("/"),
 				"-y"
@@ -115,6 +119,29 @@ function generateMeme(target: string[], cue: database.CueEntry, cb: { (): void }
 		});
 	}
 }
+
+const queue: {
+	target: string[],
+	file: database.FileEntry
+}[] = [];
+
+async function processQueue(): Promise<void> {
+	let job = queue.pop();
+	if (is.absent(job)) {
+		return;
+	}
+	await generateStill(job.target, job.file);
+	setTimeout(processQueue, 10 * 1000);
+}
+
+for (let episode of data.media.video.episodes) {
+	let target = [".", "private", "stills", episode.file_id];
+	if (!libfs.existsSync(target.join("/"))) {
+		let file = data.getFileFromFileId.lookup(episode.file_id);
+		queue.push({ target, file });
+	}
+}
+setTimeout(processQueue);
 
 export {
 	generateStill,

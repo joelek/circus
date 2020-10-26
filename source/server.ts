@@ -141,22 +141,8 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 					stream.pipe(response);
 				});
 			} else {
-				(async (resolve, reject) => {
-					let still = await subsearch.generateStill(filename, file);
-					if (!libfs.existsSync(filename.join("/"))) {
-						response.writeHead(500);
-						return response.end();
-					}
-					let stream = libfs.createReadStream(filename.join("/"));
-					stream.on("open", () => {
-						response.writeHead(200, {
-							"Access-Control-Allow-Origin": "*",
-							"Cache-Control": "public, max-age=86400",
-							"Content-Type": "image/jpeg"
-						});
-						stream.pipe(response);
-					});
-				})();
+				response.writeHead(404);
+				return response.end();
 			}
 			return;
 		}
