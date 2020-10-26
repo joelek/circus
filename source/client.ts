@@ -2810,9 +2810,6 @@ let updateviewforuri = (uri: string): void => {
 								.add(xml.element("div.playlist-item__subtitle")
 									.add(xml.text(episode.season.show.title))
 								)
-								.add(is.absent(episode.last_stream_date) ? undefined : xml.element("div.playlist-item__tags")
-									.add(makeAccentTag("Watched"))
-								)
 								.on("click", () => {
 									player.playShow(show, seasonIndex, episodeIndex);
 								})
