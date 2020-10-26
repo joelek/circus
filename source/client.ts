@@ -2178,7 +2178,7 @@ let updateviewforuri = (uri: string): void => {
 					)
 				)
 				.add(xml.element("div.content")
-					.set("style", "align-items: start; display: grid; gap: 32px; grid-template-columns: repeat(auto-fill, minmax(240px, auto));")
+					.set("style", "align-items: start; display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(240px, auto));")
 					.add(...season.episodes.map((episode, episodeIndex) => makeEntityHeader(
 						episode.title,
 						[EntityLink.forShow(show), EntityLink.forSeason(season)],
