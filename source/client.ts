@@ -12,6 +12,7 @@ import { Album, AlbumBase, Artist, ArtistBase, Cue, Disc, DiscBase, Entity, Epis
 import * as xml from "./xnode";
 import { formatDuration as format_duration } from "./ui/metadata";
 
+import { GridFactory } from "./ui/Grid";
 import { IconFactory } from "./ui/Icon";
 import { ImageBoxFactory } from "./ui/ImageBox";
 import { EntityLinkFactory } from "./ui/EntityLink";
@@ -249,6 +250,9 @@ player.currentEntry.addObserver((currentEntry) => {
 
 
 const tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
+
+const Grid = new GridFactory();
+document.head.appendChild(GridFactory.makeStyle().render())
 
 const Icon = new IconFactory();
 document.head.appendChild(IconFactory.makeStyle().render())
