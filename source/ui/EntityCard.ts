@@ -104,7 +104,7 @@ const CSS = `
 	}
 
 	.entity-card__link {
-		color: ${theme.TEXT_0};
+		color: ${theme.TEXT_1};
 		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
