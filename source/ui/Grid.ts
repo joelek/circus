@@ -5,7 +5,7 @@ const CSS = `
 		align-items: start;
 		display: grid;
 		gap: 24px;
-		grid-template-columns: repeat(auto-fit, minmax(240px, auto));
+		grid-template-columns: repeat(auto-fill, minmax(240px, auto));
 	}
 `;
 

@@ -128,7 +128,7 @@ export class EntityRowFactory {
 		if (api.Episode.is(entity)) {
 			return this.forEpisode(entity);
 		}
-		if (api.PersonBase.is(entity)) {
+		if (api.Person.is(entity)) {
 			return this.forPerson(entity);
 		}
 		if (api.Playlist.is(entity)) {
@@ -219,8 +219,7 @@ export class EntityRowFactory {
 		let duration_ms = 0;
 		duration_ms += episode.segment.file.duration_ms;
 		let link = this.EntityLink.forEpisode(episode);
-		let image = this.ImageBox.forSquare();
-		//let image = this.ImageBox.forSquare(`/media/stills/${episode.file.file_id}/`);
+		let image = this.ImageBox.forSquare(`/media/stills/${episode.segment.file.file_id}/`);
 		let titles = [
 			this.EntityLink.forEpisode(episode)
 		];
@@ -253,7 +252,7 @@ export class EntityRowFactory {
 		return this.make(link, image, playbackButton, titles, subtitles, tags);
 	}
 
-	forPerson(person: api.PersonBase): xnode.XElement {
+	forPerson(person: api.Person): xnode.XElement {
 		let link = this.EntityLink.forPerson(person);
 		let image = this.ImageBox.forSquare();
 		let titles = [
