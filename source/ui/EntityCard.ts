@@ -49,26 +49,28 @@ const CSS = `
 
 	.entity-card__title {
 		color: ${theme.TEXT_0};
-		font-size: 24px;
+		font-size: 20px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
-	.entity-card--header .entity-card__title {
-		font-size: 20px;
+	.entity-card[data-header="true"]
+	.entity-card__title {
+		font-size: 24px;
 	}
 
 	.entity-card__subtitle {
 		color: ${theme.TEXT_1};
-		font-size: 20px;
+		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
-	.entity-card--header .entity-card__subtitle {
-		font-size: 16px;
+	.entity-card[data-header="true"]
+	.entity-card__subtitle {
+		font-size: 20px;
 	}
 
 	.entity-card__tags {

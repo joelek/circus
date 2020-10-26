@@ -2165,7 +2165,9 @@ let updateviewforuri = (uri: string): void => {
 			let season = response.season;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forSeason(season))
+					.add(EntityCard.forSeason(season)
+						.set("data-header", "true")
+					)
 				)
 				.add(xml.element("div.content")
 					.add(Grid.make()
