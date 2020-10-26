@@ -2707,102 +2707,36 @@ let updateviewforuri = (uri: string): void => {
 			}
 			return indices;
 		}
-		req<api_response.ApiRequest, api_response.ShowResponse>(`/api/video/shows/${parts[1]}/?token=${token}`, {}, (status, response) => {
+		let show_id = parts[1];
+		req<{}, api_response.ShowResponse>(`/api/video/shows/${show_id}/?token=${token}`, {}, (_, response) => {
 			const show = response.show;
-			const duration_ms = show.seasons.reduce((sum, season) => {
-				return sum + season.episodes.reduce((sum, episode) => {
-					return sum + episode.segment.file.duration_ms;
-				}, 0);
-			}, 0);
 			const indices = getNextEpisode(show);
-			const episode = is.absent(indices) ? undefined : show.seasons[indices.seasonIndex].episodes[indices.episodeIndex];
-			let isContext = computed((contextPath) => {
-				if (!is.present(contextPath)) {
-					return false;
-				}
-				if (contextPath[contextPath.length - 3] !== show.show_id) {
-					return false;
-				}
-				return true;
-			}, player.contextPath);
-			let isPlaying = computed((isContext, playback) => {
-				return isContext && playback;
-			}, isContext, player.playback);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader(show.title, undefined, [
-						"Show",
-						format_duration(duration_ms)
-					], ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`)
-						.set("style", "padding-bottom: 150%"),
-					xml.element("div.playback-button")
-						.add(Icon.makePlay()
-							.bind("data-hide", isPlaying.addObserver(a => a))
-						)
-						.add(Icon.makePause()
-							.bind("data-hide", isPlaying.addObserver(a => !a))
-						)
-						.on("click", (event) => {
-							if (isPlaying.getState()) {
-								player.pause();
-							} else {
-								if (isContext.getState()) {
-									player.resume();
-								} else {
-									player.playShow(show);
-								}
-							}
-						}),
-					show.summary
+					.add(EntityCard.forShow(show)
+						.set("data-header", "true")
 					)
+				)
+				.add(is.absent(indices) ? undefined : xml.element("div.content")
+					.set("style", "display: grid; gap: 24px;")
+					.add(renderTextHeader(xml.text("Suggested episodes")))
+					.add(Grid.make()
+						.add(EntityCard.forEpisode(show.seasons[indices.seasonIndex].episodes[indices.episodeIndex], PlaybackButton.forShow(show, {
+							play: () => player.playShow(show, indices.seasonIndex, indices.episodeIndex),
+							resume: () => player.resume()
+						})))
 					)
 				)
 				.add(xml.element("div.content")
-					.set("style", "display: grid; gap: 16px;")
-					.add(...show.actors.map((actor) => renderTextParagraph(EntityLink.forPerson(actor))))
-				)
-				.add(xml.element("div.content")
-					.add(is.absent(indices) || is.absent(episode) ? undefined : makeGrid("Suggested episodes", ...[
-						makeEpisode(episode, () => {
-							player.playShow(show, indices.seasonIndex, indices.episodeIndex);
-						})
-					]))
-				)
-				.add(...show.seasons.map((season, seasonIndex) => xml.element("div.content")
-					.add(xml.element("div.playlist")
-						.add(xml.element("div.playlist__header")
-							.add(renderTextHeader(xml.text(`Season ${season.number}`)))
-							.add(xml.element("div.playlist__tags")
-								.add(...getYears(season).map((year) => makeTag(year.toString())))
-							)
-						)
-						.add(xml.element("div.playlist__content")
-							.add(...season.episodes.map((episode, episodeIndex) => xml.element("div.playlist-item")
-								.bind("data-playing", player.contextPath.addObserver((contextPath) => {
-									if (is.absent(contextPath)) {
-										return false;
-									}
-									if (contextPath[contextPath.length - 2] !== episode.season.season_id) {
-										return false;
-									}
-									if (contextPath[contextPath.length - 1] !== episode.episode_id) {
-										return false;
-									}
-									return true;
-								}))
-								.add(xml.element("div.playlist-item__title")
-									.add(xml.text(episode.title))
-								)
-								.add(xml.element("div.playlist-item__subtitle")
-									.add(xml.text(episode.season.show.title))
-								)
-								.on("click", () => {
-									player.playShow(show, seasonIndex, episodeIndex);
-								})
-							))
-						)
+					.add(Grid.make()
+						.add(...show.seasons.map((season, seasonIndex) => {
+							return EntityCard.forSeason(season, PlaybackButton.forShow(show, {
+								resume: () => player.resume(),
+								play: () => player.playShow(show, seasonIndex)
+							}));
+						}))
 					)
-				))
+				)
 				.render()
 			);
 		});
