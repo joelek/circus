@@ -2420,88 +2420,31 @@ let updateviewforuri = (uri: string): void => {
 		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let artist = response.artist;
 			let appearances = response.appearances;
-			let isContext = computed((contextPath) => {
-				if (!is.present(contextPath)) {
-					return false;
-				}
-				if (contextPath[contextPath.length - 4] !== artist.artist_id) {
-					return false;
-				}
-				return true;
-			}, player.contextPath);
-			let isPlaying = computed((isContext, playback) => {
-				return isContext && playback;
-			}, isContext, player.playback);
-			let duration_ms = 0;
-			for (let album of artist.albums) {
-				for (let disc of album.discs) {
-					for (let track of disc.tracks) {
-						duration_ms += track.segment.file.duration_ms;
-					}
-				}
-			}
-			let widget = xml.element("div.content")
-				.add(makeEntityHeader(
-						artist.title,
-						[],
-						["Artist", format_duration(duration_ms)],
-						ImageBox.forSquare(),
-						xml.element("div.playback-button")
-							.add(Icon.makePlay()
-								.bind("data-hide", isPlaying.addObserver(a => a))
-							)
-							.add(Icon.makePause()
-								.bind("data-hide", isPlaying.addObserver(a => !a))
-							)
-							.on("click", () => {
-								if (isPlaying.getState()) {
-									player.pause();
-								} else {
-									if (isContext.getState()) {
-										player.resume();
-									} else {
-										player.playArtist(artist);
-									}
-								}
-							}),
-						undefined
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(EntityCard.forArtist(artist)
+						.set("data-header", "true")
 					)
 				)
-				.render();
-			mount.appendChild(widget);
-			if (artist.albums.length > 0) {
-				let content = xml.element("div.content").render();
-				mount.appendChild(content);
-				let mediaGrid = xml.element("div.media-grid")
-					.add(xml.element("div.media-grid__header")
-						.add(renderTextHeader(xml.text("Discography")))
+				.add(artist.albums.length === 0 ? undefined : xml.element("div.content")
+					.set("style", "display: grid; gap: 24px;")
+					.add(renderTextHeader(xml.text("Discography")))
+					.add(Grid.make()
+						.add(...artist.albums.map((album, albumIndex) => {
+							return EntityCard.forAlbum(album, PlaybackButton.forArtist(artist, albumIndex));
+						}))
 					)
-					.render();
-				content.appendChild(mediaGrid);
-				let mediaGrid__content = xml.element("div.media-grid__content")
-					.add(...artist.albums.map((album, albumIndex) => {
-						return makeAlbum(album, () => player.playArtist(artist, albumIndex));
-					}))
-				.render();
-				mediaGrid.appendChild(mediaGrid__content);
-			}
-			if (appearances.length > 0) {
-				let content = xml.element("div.content").render();
-				mount.appendChild(content);
-				let mediaGrid = xml.element("div.media-grid")
-					.add(xml.element("div.media-grid__header")
-						.add(renderTextHeader(xml.text("Appearances")))
+				)
+				.add(appearances.length === 0 ? undefined : xml.element("div.content")
+					.set("style", "display: grid; gap: 24px;")
+					.add(renderTextHeader(xml.text("Appearances")))
+					.add(Grid.make()
+						.add(...appearances.map((album) => {
+							return EntityCard.forAlbum(album);
+						}))
 					)
-					.render();
-				content.appendChild(mediaGrid);
-				let mediaGrid__content = xml.element("div.media-grid__content").render();
-				mediaGrid.appendChild(mediaGrid__content);
-				for (let appearance of response.appearances) {
-					let widget = makeAlbum(appearance, () => player.playAlbum(appearance))
-						.render();
-					mediaGrid__content.appendChild(widget);
-				}
-			}
+				)
+				.render());
 		});
 	} else if ((parts = /^audio[/]artists[/]([^/?]*)/.exec(uri)) !== null) {
 		let offset = 0;
