@@ -1,14 +1,12 @@
 import * as api_response from "./api_response";
-import * as utils from "./utils";
 import * as languages from "./languages";
 import { AuthToken } from "./database";
 import * as session from "./browserMediaSession";
-import { ArrayObservable, computed, Observable, ObservableClass } from "./simpleobs";
+import { ArrayObservable, computed, ObservableClass } from "./simpleobs";
 import * as client from "./context/client";
-import * as schema from "./context/schema";
 import * as is from "./is";
-import { Context, ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, AlbumBase, Artist, ArtistBase, Cue, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Person, Playlist, PlaylistBase, Season, SeasonBase, Show, ShowBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
+import {  ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
+import { Album, Artist, Cue, Disc, Entity, Episode, Movie, Person, Playlist, Season, Show, Track, User } from "./api/schema/objects";
 import * as xml from "./xnode";
 import { formatDuration as format_duration } from "./ui/metadata";
 
@@ -22,32 +20,6 @@ import { PlaybackButtonFactory } from "./ui/PlaybackButton";
 
 
 
-
-
-
-		function getYears(season: Season): number[] {
-			let years = season.episodes.reduce((years, episode) => {
-				if (is.present(episode.year)) {
-					if (!years.includes(episode.year)) {
-						years.push(episode.year);
-					}
-				}
-				return years;
-			}, [] as number[]);
-			return years.sort();
-		}
-		function getYearsForShow(show: Show): number[] {
-			let set = new Set<number>();
-			for (let season of show.seasons) {
-				for (let episode of season.episodes) {
-					if (is.present(episode.year)) {
-						set.add(episode.year);
-					}
-				}
-			}
-			let years = Array.from(set);
-			return years.sort();
-		}
 
 
 
@@ -1810,73 +1782,6 @@ function makeArtist(artist: ContextArtist, play: () => void = () => player.playA
 		);
 }
 
-function makeEpisode(episode: Episode, play: () => void): xml.XElement {
-	let title = episode.title;
-	let tags = [
-		"Episode",
-		`${episode.year}`,
-		format_duration(episode.segment.file.duration_ms)
-	];
-	let isContext = computed((contextPath) => {
-		if (!is.present(contextPath)) {
-			return false;
-		}
-		if (contextPath[contextPath.length - 1] !== episode.episode_id) {
-			return false;
-		}
-		return true;
-	}, player.contextPath);
-	let isPlaying = computed((isContext, playback) => {
-		return isContext && playback;
-	}, isContext, player.playback);
-	return xml.element("div.media-widget")
-		.on("click", () => {
-			navigate(`video/episodes/${episode.episode_id}/`)
-		})
-		.add(xml.element("div.media-widget__artwork")
-			.set("style", "padding-bottom: 56.25%;")
-			.add(xml.element("div.media-widget__images")
-				.add(xml.element("img.media-widget__image")
-					.set("src", `/media/stills/${episode.segment.file.file_id}/?token=${token}`)
-				)
-			)
-			.add(xml.element("div.media-widget__playback")
-				.add(xml.element("div.playback-button")
-					.add(Icon.makePlay()
-						.bind("data-hide", isPlaying.addObserver(a => a))
-					)
-					.add(Icon.makePause()
-						.bind("data-hide", isPlaying.addObserver(a => !a))
-					)
-					.on("click", (event) => {
-						if (isPlaying.getState()) {
-							player.pause();
-						} else {
-							if (isContext.getState()) {
-								player.resume();
-							} else {
-								play();
-							}
-						}
-					})
-				)
-			)
-		)
-		.add(xml.element("div.media-widget__metadata")
-			.add(xml.element("div.media-widget__titles")
-				.add(xml.element("div.media-widget__title")
-					.add(xml.text(title))
-				)
-				.add(xml.element("div.media-widget__subtitle")
-					.add(...xml.joinarray([EntityLink.forShow(episode.season.show), EntityLink.forSeason(episode.season)]))
-				)
-			)
-			.add(xml.element("div.media-widget__tags")
-				.add(...tags.map(makeTag))
-			)
-		);
-}
-
 function makeShow(show: Show, play: () => void): xml.XElement {
 	const duration_ms = show.seasons.reduce((sum, season) => {
 		return sum + season.episodes.reduce((sum, episode) => {
@@ -2090,43 +1995,6 @@ function renderTextHeader(content: xml.XNode<any>) {
 function renderTextParagraph(content: xml.XNode<any>) {
 	return xml.element("div.text-paragraph")
 		.add(content);
-}
-
-function maybe<A, B>(value: A | undefined | null, cb: (value: A) => B): B | undefined {
-	if (is.present(value)) {
-		return cb(value);
-	}
-}
-
-const makeEntityHeader = (title: string, subtitles: xml.XNode<any>[] = [], tags: Array<string> = [], image?: xml.XElement, playButton?: xml.XElement, description?: string, watched?: boolean) => {
-	return xml.element("div.entity-header")
-		.add(xml.element("div.entity-header__artwork")
-			.add(image)
-			.add(xml.element("div.entity-header__playback")
-				.add(playButton))
-		)
-		.add(xml.element("div.entity-header__content")
-			.add(xml.element("div.entity-header__whitespace")
-				.add(xml.text(".".repeat(1000)))
-			)
-			.add(xml.element("div.entity-header__metadata")
-				.add(xml.element("div.entity-header__titles")
-					.add(xml.element("div.entity-header__title")
-						.add(xml.text(title))
-					)
-					.add(subtitles.length === 0 ? undefined : xml.element("div.entity-header__subtitle")
-						.add(...xml.joinarray(subtitles))
-					)
-				)
-				.add(xml.element("div.entity-header__tags")
-					.add(!watched ? undefined : makeAccentTag("\u2713"))
-					.add(...tags.map(makeTag))
-				)
-				.add(maybe(description, (description) => xml.element("div.entity-header__description")
-					.add(xml.text(description)))
-				)
-			)
-		);
 }
 
 let updateviewforuri = (uri: string): void => {
