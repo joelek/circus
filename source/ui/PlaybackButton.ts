@@ -28,10 +28,7 @@ const CSS = `
 	}
 `;
 
-interface Controller {
-	play(): void;
-	resume(): void;
-};
+type Controller = () => void;
 
 export class PlaybackButtonFactory {
 	private player: context.client.ContextClient;
@@ -53,9 +50,9 @@ export class PlaybackButtonFactory {
 					this.player.pause();
 				} else {
 					if (isContext.getState()) {
-						controller.resume();
+						this.player.resume();
 					} else {
-						controller.play();
+						controller();
 					}
 				}
 			});
@@ -97,10 +94,7 @@ export class PlaybackButtonFactory {
 		throw `Expected code to be unreachable!`;
 	}
 
-	forAlbum(album: api.Album, controller: Controller = {
-		play: () => this.player.playAlbum(album),
-		resume: () => this.player.resume()
-	}): xnode.XElement {
+	forAlbum(album: api.Album, discIndex?: number, trackIndex?: number): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -108,15 +102,24 @@ export class PlaybackButtonFactory {
 			if (contextPath[contextPath.length - 3] !== album.album_id) {
 				return false;
 			}
+			if (is.present(discIndex)) {
+				let disc = album.discs[discIndex];
+				if (contextPath[contextPath.length - 2] !== disc.disc_id) {
+					return false;
+				}
+				if (is.present(trackIndex)) {
+					let track = disc.tracks[trackIndex];
+					if (contextPath[contextPath.length - 1] !== track.track_id) {
+						return false;
+					}
+				}
+			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, controller);
+		return this.make(isContext, () => this.player.playAlbum(album, discIndex, trackIndex));
 	}
 
-	forArtist(artist: api.Artist, controller: Controller = {
-		play: () => this.player.playArtist(artist),
-		resume: () => this.player.resume()
-	}): xnode.XElement {
+	forArtist(artist: api.Artist, albumIndex?: number, discIndex?: number, trackIndex?: number): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -124,15 +127,30 @@ export class PlaybackButtonFactory {
 			if (contextPath[contextPath.length - 4] !== artist.artist_id) {
 				return false;
 			}
+			if (is.present(albumIndex)) {
+				let album = artist.albums[albumIndex];
+				if (contextPath[contextPath.length - 3] !== album.album_id) {
+					return false;
+				}
+				if (is.present(discIndex)) {
+					let disc = album.discs[discIndex];
+					if (contextPath[contextPath.length - 2] !== disc.disc_id) {
+						return false;
+					}
+					if (is.present(trackIndex)) {
+						let track = disc.tracks[trackIndex];
+						if (contextPath[contextPath.length - 1] !== track.track_id) {
+							return false;
+						}
+					}
+				}
+			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, controller);
+		return this.make(isContext, () => this.player.playArtist(artist, albumIndex, discIndex, trackIndex));
 	}
 
-	forDisc(disc: api.Disc, controller: Controller = {
-		play: () => this.player.playDisc(disc),
-		resume: () => this.player.resume()
-	}): xnode.XElement {
+	forDisc(disc: api.Disc, trackIndex?: number): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -140,15 +158,18 @@ export class PlaybackButtonFactory {
 			if (contextPath[contextPath.length - 2] !== disc.disc_id) {
 				return false;
 			}
+			if (is.present(trackIndex)) {
+				let track = disc.tracks[trackIndex];
+				if (contextPath[contextPath.length - 1] !== track.track_id) {
+					return false;
+				}
+			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, controller);
+		return this.make(isContext, () => this.player.playDisc(disc, trackIndex));
 	}
 
-	forEpisode(episode: api.Episode, controller: Controller = {
-		play: () => this.player.playEpisode(episode),
-		resume: () => this.player.resume()
-	}): xnode.XElement {
+	forEpisode(episode: api.Episode): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -158,13 +179,10 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, controller);
+		return this.make(isContext, () => this.player.playEpisode(episode));
 	}
 
-	forMovie(movie: api.Movie, controller: Controller = {
-		play: () => this.player.playMovie(movie),
-		resume: () => this.player.resume()
-	}): xnode.XElement {
+	forMovie(movie: api.Movie): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -174,13 +192,10 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, controller);
+		return this.make(isContext, () => this.player.playMovie(movie));
 	}
 
-	forPlaylist(playlist: api.Playlist, controller: Controller = {
-		play: () => this.player.playPlaylist(playlist),
-		resume: () => this.player.resume()
-	}): xnode.XElement {
+	forPlaylist(playlist: api.Playlist, trackIndex?: number): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -188,15 +203,18 @@ export class PlaybackButtonFactory {
 			if (contextPath[contextPath.length - 2] !== playlist.playlist_id) {
 				return false;
 			}
+			if (is.present(trackIndex)) {
+				let track = playlist.items[trackIndex].track;
+				if (contextPath[contextPath.length - 1] !== track.track_id) {
+					return false;
+				}
+			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, controller);
+		return this.make(isContext, () => this.player.playPlaylist(playlist, trackIndex));
 	}
 
-	forSeason(season: api.Season, controller: Controller = {
-		play: () => this.player.playSeason(season),
-		resume: () => this.player.resume()
-	}): xnode.XElement {
+	forSeason(season: api.Season, episodeIndex?: number): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -204,15 +222,18 @@ export class PlaybackButtonFactory {
 			if (contextPath[contextPath.length - 2] !== season.season_id) {
 				return false;
 			}
+			if (is.present(episodeIndex)) {
+				let episode = season.episodes[episodeIndex];
+				if (contextPath[contextPath.length - 1] !== episode.episode_id) {
+					return false;
+				}
+			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, controller);
+		return this.make(isContext, () => this.player.playSeason(season, episodeIndex));
 	}
 
-	forShow(show: api.Show, controller: Controller = {
-		play: () => this.player.playShow(show),
-		resume: () => this.player.resume()
-	}): xnode.XElement {
+	forShow(show: api.Show, seasonIndex?: number, episodeIndex?: number): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -220,15 +241,24 @@ export class PlaybackButtonFactory {
 			if (contextPath[contextPath.length - 3] !== show.show_id) {
 				return false;
 			}
+			if (is.present(seasonIndex)) {
+				let season = show.seasons[seasonIndex];
+				if (contextPath[contextPath.length - 2] !== season.season_id) {
+					return false;
+				}
+				if (is.present(episodeIndex)) {
+					let episode = season.episodes[episodeIndex];
+					if (contextPath[contextPath.length - 1] !== episode.episode_id) {
+						return false;
+					}
+				}
+			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, controller);
+		return this.make(isContext, () => this.player.playShow(show, seasonIndex, episodeIndex));
 	}
 
-	forTrack(track: api.Track, controller: Controller = {
-		play: () => this.player.playTrack(track),
-		resume: () => this.player.resume()
-	}): xnode.XElement {
+	forTrack(track: api.Track): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
@@ -238,7 +268,7 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, controller);
+		return this.make(isContext, () => this.player.playTrack(track));
 	}
 
 	static makeStyle(): xnode.XElement {

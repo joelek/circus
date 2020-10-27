@@ -2172,10 +2172,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(Grid.make()
 						.add(...season.episodes.map((episode, episodeIndex) => {
-							return EntityCard.forEpisode(episode, PlaybackButton.forSeason(season, {
-								resume: () => player.resume(),
-								play: () => player.playSeason(season, episodeIndex)
-							}));
+							return EntityCard.forEpisode(episode, PlaybackButton.forSeason(season, episodeIndex));
 						}))
 					)
 				)
@@ -2721,19 +2718,13 @@ let updateviewforuri = (uri: string): void => {
 					.set("style", "display: grid; gap: 24px;")
 					.add(renderTextHeader(xml.text("Suggested episodes")))
 					.add(Grid.make()
-						.add(EntityCard.forEpisode(show.seasons[indices.seasonIndex].episodes[indices.episodeIndex], PlaybackButton.forShow(show, {
-							play: () => player.playShow(show, indices.seasonIndex, indices.episodeIndex),
-							resume: () => player.resume()
-						})))
+						.add(EntityCard.forEpisode(show.seasons[indices.seasonIndex].episodes[indices.episodeIndex], PlaybackButton.forShow(show, indices.seasonIndex, indices.episodeIndex)))
 					)
 				)
 				.add(xml.element("div.content")
 					.add(Grid.make()
 						.add(...show.seasons.map((season, seasonIndex) => {
-							return EntityCard.forSeason(season, PlaybackButton.forShow(show, {
-								resume: () => player.resume(),
-								play: () => player.playShow(show, seasonIndex)
-							}));
+							return EntityCard.forSeason(season, PlaybackButton.forShow(show, seasonIndex));
 						}))
 					)
 				)
@@ -2918,29 +2909,11 @@ let updateviewforuri = (uri: string): void => {
 					let media = cue.media;
 					if (Episode.is(media)) {
 						let episode = media;
-						return EntityRow.forEpisode(episode, PlaybackButton.forEpisode(episode, {
-							play: () => {
-								player.playEpisode(episode);
-								player.seek(cue.start_ms / 1000);
-							},
-							resume: () => {
-								player.seek(cue.start_ms / 1000);
-								player.resume();
-							}
-						}));
+						return EntityRow.forEpisode(episode, PlaybackButton.forEpisode(episode));
 					}
 					if (Movie.is(media)) {
 						let movie = media;
-						return EntityRow.forMovie(movie, PlaybackButton.forMovie(movie, {
-							play: () => {
-								player.playMovie(movie);
-								player.seek(cue.start_ms / 1000);
-							},
-							resume: () => {
-								player.seek(cue.start_ms / 1000);
-								player.resume();
-							}
-						}));
+						return EntityRow.forMovie(movie, PlaybackButton.forMovie(movie));
 					}
 				})
 			)
