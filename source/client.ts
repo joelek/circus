@@ -2481,50 +2481,19 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.PlaylistResponse>(`/api/audio/playlists/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let playlist = response.playlist;
-			let duration_ms = 0;
-			for (let item of playlist.items) {
-				duration_ms += item.track.segment.file.duration_ms;
-			}
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(makeEntityHeader(
-							playlist.title,
-							[EntityLink.forUser(playlist.user)],
-							["Playlist", format_duration(duration_ms)],
-							ImageBox.forSquare(),
-							undefined,
-							playlist.description
-						)
+					.add(EntityCard.forPlaylist(playlist)
+						.set("data-header", "true")
 					)
 				)
-				.add(xml.element("div.content")
-					.add(xml.element("div.playlist__content")
-						.add(...playlist.items.map((item, itemIndex) => xml.element("div.playlist-item")
-							.bind("data-playing", player.contextPath.addObserver((contextPath) => {
-								if (is.absent(contextPath)) {
-									return false;
-								}
-								if (contextPath[contextPath.length - 2] !== playlist.playlist_id) {
-									return false;
-								}
-								if (contextPath[contextPath.length - 1] !== item.track.track_id) {
-									return false;
-								}
-								return true;
-							}))
-							.add(xml.element("div.playlist-item__title")
-								.add(xml.text(item.track.title))
-							)
-							.add(xml.element("div.playlist-item__subtitle")
-								.add(xml.text(item.track.artists.map((artist) => artist.title).join(" \u00b7 ")))
-							)
-							.on("click", () => {
-								player.playPlaylist(playlist, itemIndex);
-							})
-						))
-					)
+				.add(playlist.items.length === 0 ? undefined : xml.element("div.content")
+					.set("style", "display: grid; gap: 24px;")
+					.add(...playlist.items.map((item, itemIndex) => {
+						return EntityRow.forTrack(item.track, PlaybackButton.forPlaylist(playlist, itemIndex));
+					}))
 				)
-			.render());
+				.render());
 		});
 	} else if ((parts = /^audio[/]playlists[/]([^/?]*)/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.PlaylistsResponse>(`/api/audio/playlists/?token=${token}`, {}, (status, response) => {
