@@ -2191,11 +2191,10 @@ let updateviewforuri = (uri: string): void => {
 					)
 				)
 				.add(xml.element("div.content")
-					.add(Grid.make()
-						.add(...season.episodes.map((episode, episodeIndex) => {
-							return EntityCard.forEpisode(episode, PlaybackButton.forSeason(season, episodeIndex));
-						}))
-					)
+					.set("style", "display: grid; gap: 24px;")
+					.add(...season.episodes.map((episode, episodeIndex) => {
+						return EntityCard.forEpisode(episode, PlaybackButton.forSeason(season, episodeIndex));
+					}))
 				)
 				.render());
 		});
