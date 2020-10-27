@@ -2369,92 +2369,20 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let album = response.album;
-			let isContext = computed((contextPath) => {
-				if (!is.present(contextPath)) {
-					return false;
-				}
-				if (contextPath[contextPath.length - 3] !== album.album_id) {
-					return false;
-				}
-				return true;
-			}, player.contextPath);
-			let isPlaying = computed((isContext, playback) => {
-				return isContext && playback;
-			}, isContext, player.playback);
-			let duration_ms = 0;
-			for (let disc of album.discs) {
-				for (let track of disc.tracks) {
-					duration_ms += track.segment.file.duration_ms;
-				}
-			}
-
-			let header = xml.element("div.content")
-				.add(makeEntityHeader(album.title, album.artists.map((artist) => EntityLink.forArtist(artist)), [
-					"Album",
-					`${album.year}`,
-					format_duration(duration_ms)
-				], ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`),
-					xml.element("div.playback-button")
-						.add(Icon.makePlay()
-							.bind("data-hide", isPlaying.addObserver(a => a))
-						)
-						.add(Icon.makePause()
-							.bind("data-hide", isPlaying.addObserver(a => !a))
-						)
-						.on("click", (event) => {
-							if (isPlaying.getState()) {
-								player.pause();
-							} else {
-								if (isContext.getState()) {
-									player.resume();
-								} else {
-									player.playAlbum(album);
-								}
-							}
-						})
-					))
-				.render();
-			mount.appendChild(header);
-			for (let discIndex = 0; discIndex < album.discs.length; discIndex++) {
-				let disc = album.discs[discIndex];
-				if (disc.tracks.length > 0) {
-					let content = xml.element("div.content")
-						.add(xml.element("div.playlist")
-							.add(xml.element("div.playlist__header")
-								.add(renderTextHeader(xml.text(`Disc ${disc.number}`)))
-							)
-							.add(xml.element("div.playlist__content")
-								.add(...disc.tracks.map((track, trackIndex) => xml.element("div.playlist-item")
-									.bind("data-playing", player.contextPath.addObserver((contextPath) => {
-										if (is.absent(contextPath)) {
-											return false;
-										}
-										if (contextPath[contextPath.length - 3] !== track.disc.album.album_id) {
-											return false;
-										}
-										if (contextPath[contextPath.length - 2] !== track.disc.disc_id) {
-											return false;
-										}
-										if (contextPath[contextPath.length - 1] !== track.track_id) {
-											return false;
-										}
-										return true;
-									}))
-									.add(xml.element("div.playlist-item__title")
-										.add(xml.text(track.title))
-									)
-									.add(xml.element("div.playlist-item__subtitle")
-										.add(xml.text(track.artists.map((artist) => artist.title).join(" \u00b7 ")))
-									)
-									.on("click", () => {
-										player.playAlbum(album, discIndex, trackIndex);
-									})
-								))
-							)
-						);
-					mount.appendChild(content.render());
-				}
-			}
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(EntityCard.forAlbum(album)
+						.set("data-header", "true")
+					)
+				)
+				.add(...album.discs.map((disc, discIndex) => xml.element("div.content")
+					.set("style", "display: grid; gap: 24px;")
+					.add(renderTextHeader(xml.text(`Disc ${disc.number}`)))
+					.add(...disc.tracks.map((track, trackIndex) => {
+						return EntityRow.forTrack(track, PlaybackButton.forAlbum(album, discIndex, trackIndex));
+					})))
+				)
+				.render());
 		});
 	} else if ((parts = /^audio[/]albums[/]([^/?]*)/.exec(uri)) !== null) {
 		let offset = 0;
