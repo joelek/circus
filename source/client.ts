@@ -2234,19 +2234,18 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^audio[/]discs[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<{}, api_response.DiscResponse>(`/api/audio/discs/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let disc = response.disc;
-			let album = disc.album;
-			let duration_ms = 0;
-			for (let track of disc.tracks) {
-				duration_ms += track.segment.file.duration_ms;
-			}
-			mount.appendChild(xml.element("div.content")
-				.add(makeEntityHeader(
-					`${disc.album.title} \u00b7 Disc ${disc.number}`,
-					disc.album.artists.map((artist) => EntityLink.forArtist(artist)),
-					["Disc", `${album.year}`, format_duration(duration_ms)],
-					ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`),
-					PlaybackButton.forDisc(disc)
-				))
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(EntityCard.forDisc(disc)
+						.set("data-header", "true")
+					)
+				)
+				.add(xml.element("div.content")
+					.set("style", "display: grid; gap: 24px;")
+					.add(...disc.tracks.map((track, trackIndex) => {
+						return EntityRow.forTrack(track, PlaybackButton.forDisc(disc, trackIndex));
+					}))
+				)
 				.render());
 		});
 	} else if ((parts = /^audio[/]discs[/]([^/?]*)/.exec(uri)) !== null) {
