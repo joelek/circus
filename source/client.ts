@@ -1250,6 +1250,28 @@ style.innerText = `
 		display: grid;
 		gap: 8px;
 	}
+
+
+
+
+
+	.carousel {
+		overflow: hidden;
+	}
+
+	.carousel__content {
+		align-items: start;
+		display: grid;
+		gap: 24px;
+		grid-auto-flow: column;
+		grid-auto-columns: 100%;
+		overflow: scroll hidden;
+		scroll-snap-type: x mandatory;
+	}
+
+	.carousel__content > * {
+		scroll-snap-align: start;
+	}
 `;
 document.head.appendChild(style);
 
