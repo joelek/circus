@@ -1641,343 +1641,6 @@ chromecast.appendChild(slider_wrapper);
 }
 */
 
-
-const makeTag = (content: string) => xml.element("div.media-tag")
-	.add(xml.text(content));
-
-const makeAccentTag = (content: string) => xml.element("div.media-tag.media-tag--accent")
-	.add(xml.text(content));
-
-function makeAlbum(album: ContextAlbum, play: () => void): xml.XElement {
-	let duration_ms = 0;
-	for (let disc of album.discs) {
-		for (let track of disc.tracks) {
-			duration_ms += track.segment.file.duration_ms;
-		}
-	}
-	let title = album.title;
-	let tags = [
-		"Album",
-		`${album.year}`,
-		format_duration(duration_ms)
-	];
-	let isContext = computed((contextPath) => {
-		if (!is.present(contextPath)) {
-			return false;
-		}
-		if (contextPath[contextPath.length - 3] !== album.album_id) {
-			return false;
-		}
-		return true;
-	}, player.contextPath);
-	let isPlaying = computed((isContext, playback) => {
-		return isContext && playback;
-	}, isContext, player.playback);
-	return xml.element("div.media-widget")
-		.on("click", (event) => {
-			navigate(`audio/albums/${album.album_id}/`);
-		})
-		.add(xml.element("div.media-widget__artwork")
-			.add(is.absent(album.artwork) ? undefined : xml.element("div.media-widget__images")
-				.add(xml.element("img.media-widget__image")
-					.set("src", `/files/${album.artwork.file_id}/?token=${token}`)
-				)
-			)
-			.add(xml.element("div.media-widget__playback")
-				.add(
-					xml.element("div.playback-button")
-					.add(Icon.makePlay()
-						.bind("data-hide", isPlaying.addObserver(a => a))
-					)
-					.add(Icon.makePause()
-						.bind("data-hide", isPlaying.addObserver(a => !a))
-					)
-					.on("click", (event) => {
-						if (isPlaying.getState()) {
-							player.pause();
-						} else {
-							if (isContext.getState()) {
-								player.resume();
-							} else {
-								play();
-							}
-						}
-					})
-				)
-			)
-		)
-		.add(xml.element("div.media-widget__metadata")
-			.add(xml.element("div.media-widget__titles")
-				.add(xml.element("div.media-widget__title")
-					.add(xml.text(title))
-				)
-				.add(xml.element("div.media-widget__subtitle")
-					.add(...xml.joinarray(album.artists.map((artist) => EntityLink.forArtist(artist))))
-				)
-			)
-			.add(xml.element("div.media-widget__tags")
-				.add(...tags.map(makeTag))
-			)
-		);
-}
-
-function makeArtist(artist: ContextArtist, play: () => void = () => player.playArtist(artist)): xml.XElement {
-	let duration_ms = 0;
-	for (let album of artist.albums) {
-		for (let disc of album.discs) {
-			for (let track of disc.tracks) {
-				duration_ms += track.segment.file.duration_ms;
-			}
-		}
-	}
-	let isContext = computed((contextPath) => {
-		if (!is.present(contextPath)) {
-			return false;
-		}
-		if (contextPath[contextPath.length - 4] !== artist.artist_id) {
-			return false;
-		}
-		return true;
-	}, player.contextPath);
-	let isPlaying = computed((isContext, playback) => {
-		return isContext && playback;
-	}, isContext, player.playback);
-	return xml.element("div.media-widget")
-		.on("click", () => {
-			navigate(`audio/artists/${artist.artist_id}/`);
-		})
-		.add(xml.element("div.media-widget__artwork")
-			.add(xml.element("div.media-widget__playback")
-				.add(xml.element("div.playback-button")
-					.add(Icon.makePlay()
-						.bind("data-hide", isPlaying.addObserver(a => a))
-					)
-					.add(Icon.makePause()
-						.bind("data-hide", isPlaying.addObserver(a => !a))
-					)
-					.on("click", () => {
-						if (isPlaying.getState()) {
-							player.pause();
-						} else {
-							if (isContext.getState()) {
-								player.resume();
-							} else {
-								play();
-							}
-						}
-					})
-				)
-			)
-		)
-		.add(xml.element("div.media-widget__metadata")
-			.add(xml.element("div.media-widget__titles")
-				.add(xml.element("div.media-widget__title")
-					.add(xml.text(artist.title))
-				)
-			)
-			.add(xml.element("div.media-widget__tags")
-				.add(makeTag("Artist"))
-				.add(makeTag(format_duration(duration_ms)))
-			)
-		);
-}
-
-function makeShow(show: Show, play: () => void): xml.XElement {
-	const duration_ms = show.seasons.reduce((sum, season) => {
-		return sum + season.episodes.reduce((sum, episode) => {
-			return sum + episode.segment.file.duration_ms;
-		}, 0);
-	}, 0);
-	let tags = [
-		"Show",
-		format_duration(duration_ms)
-	];
-	let isContext = computed((contextPath) => {
-		if (!is.present(contextPath)) {
-			return false;
-		}
-		if (contextPath[contextPath.length - 3] !== show.show_id) {
-			return false;
-		}
-		return true;
-	}, player.contextPath);
-	let isPlaying = computed((isContext, playback) => {
-		return isContext && playback;
-	}, isContext, player.playback);
-	return xml.element("div.media-widget")
-		.on("click", () => {
-			navigate(`video/shows/${show.show_id}/`)
-		})
-		.add(xml.element("div.media-widget__artwork")
-			.set("style", "padding-bottom: 150%;")
-			.add(is.absent(show.artwork) ? undefined : xml.element("div.media-widget__images")
-				.add(xml.element("img.media-widget__image")
-					.set("src", `/files/${show.artwork.file_id}/?token=${token}`)
-				)
-			)
-			.add(xml.element("div.media-widget__playback")
-				.add(xml.element("div.playback-button")
-					.add(Icon.makePlay()
-						.bind("data-hide", isPlaying.addObserver(a => a))
-					)
-					.add(Icon.makePause()
-						.bind("data-hide", isPlaying.addObserver(a => !a))
-					)
-					.on("click", (event) => {
-						if (isPlaying.getState()) {
-							player.pause();
-						} else {
-							if (isContext.getState()) {
-								player.resume();
-							} else {
-								play();
-							}
-						}
-					})
-				)
-			)
-		)
-		.add(xml.element("div.media-widget__metadata")
-			.add(xml.element("div.media-widget__titles")
-				.add(xml.element("div.media-widget__title")
-					.add(xml.text(show.title))
-				)
-				.add(xml.element("div.media-widget__subtitle")
-					.add(...xml.joinarray(show.genres.map((genre) => EntityLink.forGenre(genre))))
-				)
-			)
-			.add(xml.element("div.media-widget__tags")
-				.add(...tags.map(makeTag))
-			)
-		);
-}
-function makeMovie(movie: Movie, play: () => void = () => player.playMovie(movie)): xml.XElement {
-	let title = movie.title;
-	let tags = [
-		"Movie",
-		`${movie.year}`,
-		format_duration(movie.segment.file.duration_ms)
-	];
-	let isContext = computed((contextPath) => {
-		if (!is.present(contextPath)) {
-			return false;
-		}
-		if (contextPath[contextPath.length - 1] !== movie.movie_id) {
-			return false;
-		}
-		return true;
-	}, player.contextPath);
-	let isPlaying = computed((isContext, playback) => {
-		return isContext && playback;
-	}, isContext, player.playback);
-	return xml.element("div.media-widget")
-		.on("click", () => {
-			navigate(`video/movies/${movie.movie_id}/`)
-		})
-		.add(xml.element("div.media-widget__artwork")
-			.set("style", "padding-bottom: 150%;")
-			.add(is.absent(movie.artwork) ? undefined : xml.element("div.media-widget__images")
-				.add(xml.element("img.media-widget__image")
-					.set("src", `/files/${movie.artwork.file_id}/?token=${token}`)
-				)
-			)
-			.add(xml.element("div.media-widget__playback")
-				.add(xml.element("div.playback-button")
-					.add(Icon.makePlay()
-						.bind("data-hide", isPlaying.addObserver(a => a))
-					)
-					.add(Icon.makePause()
-						.bind("data-hide", isPlaying.addObserver(a => !a))
-					)
-					.on("click", (event) => {
-						if (isPlaying.getState()) {
-							player.pause();
-						} else {
-							if (isContext.getState()) {
-								player.resume();
-							} else {
-								play();
-							}
-						}
-					})
-				)
-			)
-		)
-		.add(xml.element("div.media-widget__metadata")
-			.add(xml.element("div.media-widget__titles")
-				.add(xml.element("div.media-widget__title")
-					.add(xml.text(title))
-				)
-				.add(xml.element("div.media-widget__subtitle")
-					.add(...xml.joinarray(movie.genres.map((genre) => EntityLink.forGenre(genre))))
-				)
-			)
-			.add(xml.element("div.media-widget__tags")
-				.add(...tags.map(makeTag))
-			)
-		);
-}
-
-function makePlaylist(playlist: Playlist, play: () => void = () => player.playPlaylist(playlist)): xml.XElement {
-	let duration_ms = 0;
-	for (let item of playlist.items) {
-		duration_ms += item.track.segment.file.duration_ms;
-	}
-	let isContext = computed((contextPath) => {
-		if (!is.present(contextPath)) {
-			return false;
-		}
-		if (contextPath[contextPath.length - 2] !== playlist.playlist_id) {
-			return false;
-		}
-		return true;
-	}, player.contextPath);
-	let isPlaying = computed((isContext, playback) => {
-		return isContext && playback;
-	}, isContext, player.playback);
-	return xml.element("div.media-widget")
-		.on("click", () => {
-			navigate(`audio/playlists/${playlist.playlist_id}/`);
-		})
-		.add(xml.element("div.media-widget__artwork")
-			.add(xml.element("div.media-widget__playback")
-				.add(xml.element("div.playback-button")
-					.add(Icon.makePlay()
-						.bind("data-hide", isPlaying.addObserver((isPlaying) => isPlaying))
-					)
-					.add(Icon.makePause()
-						.bind("data-hide", isPlaying.addObserver((isPlaying) => !isPlaying))
-					)
-					.on("click", () => {
-						if (isPlaying.getState()) {
-							player.pause();
-						} else {
-							if (isContext.getState()) {
-								player.resume();
-							} else {
-								play();
-							}
-						}
-					})
-				)
-			)
-		)
-		.add(xml.element("div.media-widget__metadata")
-			.add(xml.element("div.media-widget__titles")
-				.add(xml.element("div.media-widget__title")
-					.add(xml.text(playlist.title))
-				)
-				.add(xml.element("div.media-widget__subtitle")
-					.add(EntityLink.forUser(playlist.user))
-				)
-			)
-			.add(xml.element("div.media-widget__tags")
-				.add(makeTag("Playlist"))
-				.add(makeTag(format_duration(duration_ms)))
-			)
-		);
-}
-
 function makeGrid(title: string | undefined, ...elements: xml.XElement[]) {
 	return xml.element("div.media-grid")
 		.add(!title ? undefined : xml.element("div.media-grid__header")
@@ -2197,8 +1860,8 @@ let updateviewforuri = (uri: string): void => {
 			mount.appendChild(xml.element("div.content")
 				.set("style", "display: grid; gap: 32px;")
 				.add(renderTextHeader(xml.text(person.name)))
-				.add(makeGrid("Shows", ...shows.map((show) => makeShow(show, () => player.playShow(show)))))
-				.add(makeGrid("Movies", ...movies.map((movie) => makeMovie(movie, () => player.playMovie(movie)))))
+				.add(makeGrid("Shows", ...shows.map((show) => EntityCard.forShow(show))))
+				.add(makeGrid("Movies", ...movies.map((movie) => EntityCard.forMovie(movie))))
 				.render());
 		});
 	} else if ((parts = /^persons[/]([^/?]*)/.exec(uri)) !== null) {
@@ -2279,7 +1942,7 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(xml.element("div.content")
 				.add(xml.element("div.media-grid__content")
-					.repeat(albums, (album) => makeAlbum(album, () => player.playAlbum(album)))
+					.repeat(albums, (album) => EntityCard.forAlbum(album))
 				)
 			)
 			.render()
@@ -2341,7 +2004,7 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(xml.element("div.content")
 				.add(xml.element("div.media-grid__content")
-					.repeat(artists, (artist) => makeArtist(artist, () => player.playArtist(artist)))
+					.repeat(artists, (artist) => EntityCard.forArtist(artist))
 				)
 			)
 			.render()
@@ -2373,7 +2036,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(makeGrid(
 							undefined,
-							...playlists.map((playlist) => makePlaylist(playlist))
+							...playlists.map((playlist) => EntityCard.forPlaylist(playlist))
 						)
 					)
 				)
@@ -2468,9 +2131,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(renderTextHeader(xml.text("Shows")))
 				)
 				.add(xml.element("div.content")
-					.add(makeGrid(undefined, ...shows.map((show) => makeShow(show, () => {
-						player.playShow(show);
-					}))))
+					.add(makeGrid(undefined, ...shows.map((show) => EntityCard.forShow(show))))
 				)
 				.render()
 			);
@@ -2589,7 +2250,7 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(xml.element("div.content")
 				.add(xml.element("div.media-grid__content")
-					.repeat(movies, (movie) => makeMovie(movie, () => player.playMovie(movie)))
+					.repeat(movies, (movie) => EntityCard.forMovie(movie))
 				)
 			)
 			.render()
@@ -2660,14 +2321,10 @@ let updateviewforuri = (uri: string): void => {
 							.add(renderTextHeader(xml.text(genre.title)))
 						)
 						.add(shows.length === 0 ? undefined : xml.element("div.content")
-							.add(makeGrid("Shows", ...shows.map((show) => makeShow(show, () => {
-								player.playShow(show);
-							}))))
+							.add(makeGrid("Shows", ...shows.map((show) => EntityCard.forShow(show))))
 						)
 						.add(movies.length === 0 ? undefined : xml.element("div.content")
-							.add(makeGrid("Movies", ...movies.map((movie) => makeMovie(movie, () => {
-								player.playMovie(movie);
-							}))))
+							.add(makeGrid("Movies", ...movies.map((movie) => EntityCard.forMovie(movie))))
 						)
 						.render()
 					);
