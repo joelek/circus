@@ -2388,6 +2388,7 @@ let updateviewforuri = (uri: string): void => {
 					duration_ms += track.segment.file.duration_ms;
 				}
 			}
+
 			let header = xml.element("div.content")
 				.add(makeEntityHeader(album.title, album.artists.map((artist) => EntityLink.forArtist(artist)), [
 					"Album",
@@ -2736,16 +2737,17 @@ let updateviewforuri = (uri: string): void => {
 				)
 				.add(is.absent(indices) ? undefined : xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
-					.add(renderTextHeader(xml.text("Suggested episodes")))
-					.add(Grid.make()
-						.add(EntityCard.forEpisode(show.seasons[indices.seasonIndex].episodes[indices.episodeIndex], PlaybackButton.forShow(show, indices.seasonIndex, indices.episodeIndex)))
-					)
+					.add(renderTextHeader(xml.text("Suggested episode")))
+					.add(EntityCard.forEpisode(show.seasons[indices.seasonIndex].episodes[indices.episodeIndex], PlaybackButton.forShow(show, indices.seasonIndex, indices.episodeIndex)))
 				)
-				.add(xml.element("div.content")
-					.add(Grid.make()
-						.add(...show.seasons.map((season, seasonIndex) => {
-							return EntityCard.forSeason(season, PlaybackButton.forShow(show, seasonIndex));
-						}))
+				.add(...show.seasons.map((season, seasonIndex) => xml.element("div.content")
+					.set("style", "display: grid; gap: 24px;")
+						.add(renderTextHeader(xml.text(`Season ${season.number}`)))
+						.add(xml.element("div.carousel")
+							.add(xml.element("div.carousel__content")
+								.add(...season.episodes.map((episode, episodeIndex) => EntityCard.forEpisode(episode, PlaybackButton.forShow(show, seasonIndex, episodeIndex))))
+							)
+						)
 					)
 				)
 				.render()
