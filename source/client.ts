@@ -2139,15 +2139,14 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^audio[/]tracks[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<{}, api_response.TrackResponse>(`/api/audio/tracks/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let track = response.track;
-			mount.appendChild(xml.element("div.content")
-				.add(makeEntityHeader(
-					track.title,
-					[...track.artists.map((artist) => EntityLink.forArtist(artist)), EntityLink.forAlbum(track.disc.album)],
-					["Track", `${track.disc.album.year}`, format_duration(track.segment.file.duration_ms)],
-					ImageBox.forSquare(is.absent(track.disc.album.artwork) ? undefined : `/files/${track.disc.album.artwork.file_id}/`),
-					PlaybackButton.forTrack(track)
-				))
-				.render());
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(EntityCard.forTrack(track)
+						.set("data-header", "true")
+					)
+				)
+				.render()
+			);
 		});
 	} else if ((parts = /^audio[/]tracks[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = parts[1];
