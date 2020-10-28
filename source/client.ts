@@ -36,6 +36,11 @@ function makeUrl(): string {
 }
 
 let player = new client.ContextClient(makeUrl());
+
+player.isOnline.addObserver((isOnline) => {
+	document.documentElement.setAttribute("data-online", `${isOnline}`);
+});
+
 let lastVideo = document.createElement("video");
 let currentVideo = document.createElement("video");
 let nextVideo = document.createElement("video");
@@ -1156,6 +1161,22 @@ style.innerText = `
 		z-index: 1;
 	}
 
+	.app__message-bar {
+		background-color: ${ACCENT_COLOR};
+	}
+
+	.offline-indicator {
+		margin: 0px auto;
+		max-width: 960px;
+		padding: 8px;
+	}
+
+	.offline-indicator__content {
+		font-size: 16px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 
 
 
@@ -1497,8 +1518,15 @@ let observer = new IntersectionObserver(async (entries) => {
 
 
 let mpw = xml.element("div.app__navigation")
+	.add(xml.element("div.app__message-bar")
+		.bind("data-hide", player.isOnline.addObserver((isOnline) => isOnline))
+		.add(xml.element("div.offline-indicator")
+			.add(xml.element("div.offline-indicator__content")
+				.add(xml.text("The application is currently offline."))
+			)
+		)
+	)
 	.render();
-
 
 const makeButton = () => xml.element("div.icon-button");
 

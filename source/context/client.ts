@@ -32,6 +32,7 @@ export class ContextClient {
 	readonly canPlayCurrent = new observers.ObservableClass(false);
 	readonly canPlayNext = new observers.ObservableClass(false);
 	readonly isCurrentEntryVideo = new observers.ObservableClass(false);
+	readonly isOnline = new observers.ObservableClass(false);
 
 	private play(context: schema.objects.Context, index: number): void {
 		this.tsc.send("SetContext", {
@@ -45,6 +46,12 @@ export class ContextClient {
 
 	constructor(url: string, factory: typesockets.WebSocketFactory = (url) => new WebSocket(url)) {
 		this.tsc = new typesockets.TypeSocketClient(url, factory, schema.messages.Autoguard);
+		this.tsc.addEventListener("sys", "connect", () => {
+			this.isOnline.updateState(true);
+		});
+		this.tsc.addEventListener("sys", "disconnect", () => {
+			this.isOnline.updateState(false);
+		});
 		this.context.addObserver((context) => {
 			if (is.present(context)) {
 				if (schema.objects.ContextAlbum.is(context)) {
