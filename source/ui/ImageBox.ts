@@ -5,7 +5,7 @@ import * as is from "../is";
 
 const CSS = `
 	.image-box {
-		background-color: ${theme.BACKGROUND_0};
+		background-color: ${theme.BACKGROUND_3};
 		position: relative;
 	}
 
