@@ -467,7 +467,7 @@ style.innerText = `
 	}
 
 	body {
-		background-color: rgb(31, 31, 31);
+		background-color: ${ACCENT_COLOR};
 		color: rgb(255, 255, 255);
 		font-family: "Nunito", sans-serif;
 		overflow: hidden;
@@ -1122,6 +1122,7 @@ style.innerText = `
 	}
 
 	.app__content {
+		background-color: rgb(31, 31, 31);
 		height: auto;
 		overflow: hidden;
 		position: relative;
@@ -1342,7 +1343,7 @@ document.body.appendChild(appcontainer);
 
 let appheader = xml.element("div.app__header")
 	.add(xml.element("div.content")
-		.set("style", "padding: 24px")
+		.set("style", "padding: 16px")
 		.add(xml.element("div.page-header__title")
 			.add(xml.text("Orbit"))
 			.on("click", () => {

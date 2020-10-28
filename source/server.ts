@@ -183,9 +183,28 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 	if (/^[/]api[/]/.test(path)) {
 		return api.handleRequest(request, response);
 	}
+	if (path === "/manifest.json") {
+		response.writeHead(200, {
+			"Content-Type": "application/json; charset=utf-8"
+		});
+		return response.end(JSON.stringify({
+			"name": "Orbit",
+			"start_url": "/",
+			"display": "standalone",
+			"theme_color": "#df4f7f",
+			"background_color":"#1f1f1f",
+			"icons": [
+				{
+					"src": "logo.png",
+					"sizes": "192x192",
+					"type": "image/png"
+				}
+			]
+		}));
+	}
 	if (method === 'GET') {
 		response.writeHead(200);
-		response.end(`<!doctype html><html><head><base href="/"/><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Nunito&family=Pacifico&family=Space+Mono&display=swap" rel="stylesheet"/><title>Orbit</title></head><body><script>${libfs.readFileSync('./dist/client.min.js')}</script></body></html>`);
+		response.end(`<!doctype html><html><head><base href="/"/><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0" name="viewport"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" /><link rel="manifest" href="/manifest.json"/><link href="https://fonts.googleapis.com/css2?family=Nunito&family=Pacifico&family=Space+Mono&display=swap" rel="stylesheet"/><title>Orbit</title></head><body><script>${libfs.readFileSync('./dist/client.min.js')}</script></body></html>`);
 		return;
 	}
 	console.log('unhandled', JSON.stringify(request.headers, null, "\t"));
