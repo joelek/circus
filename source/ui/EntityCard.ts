@@ -12,6 +12,7 @@ const CSS = `
 		align-items: start;
 		display: grid;
 		gap: 24px;
+		grid-auto-rows: min-content;
 		grid-template-columns: repeat(auto-fit, minmax(240px, auto));
 	}
 

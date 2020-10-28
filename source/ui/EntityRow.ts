@@ -12,7 +12,7 @@ const CSS = `
 		align-items: center;
 		display: grid;
 		gap: 16px;
-		grid-template-columns: 72px 1fr;
+		grid-template-columns: 60px 1fr;
 	}
 
 	.entity-row__artwork {
@@ -52,29 +52,6 @@ const CSS = `
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-
-	.entity-row__tags {
-		display: grid;
-		gap: 8px;
-		grid-auto-columns: minmax(auto, max-content);
-		grid-auto-flow: column;
-	}
-
-	.entity-row__tag {
-		background-color: ${theme.BACKGROUND_4};
-		border-radius: 2px;
-		color: ${theme.TEXT_1};
-		font-size: 12px;
-		padding: 4px 8px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.entity-row__tag--accent {
-		background-color: ${theme.BACKGROUND_ACCENT};
-		color: ${theme.TEXT_ACCENT};
-	}
 `;
 
 export class EntityRowFactory {
@@ -98,11 +75,6 @@ export class EntityRowFactory {
 						)
 						.add(subtitles.length === 0 ? undefined : xnode.element("div.entity-row__subtitle")
 							.add(...xnode.joinarray(subtitles))
-						)
-					)
-					.add(xnode.element("div.entity-row__tags")
-						.add(...tags.map((tag) => xnode.element("div.entity-row__tag")
-							.add(xnode.text(tag)))
 						)
 					)
 				)
