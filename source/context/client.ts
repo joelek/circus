@@ -418,6 +418,8 @@ export class ContextClient {
 			this.tsc.send("SetIndex", {
 				index: lastIndex
 			});
+		} else {
+			this.pause();
 		}
 	}
 
@@ -553,10 +555,12 @@ export class ContextClient {
 	}
 
 	resume(): void {
-		this.playback.updateState(true);
-		this.tsc.send("SetPlayback", {
-			playback: true
-		});
+		if (this.canPlayCurrent.getState()) {
+			this.playback.updateState(true);
+			this.tsc.send("SetPlayback", {
+				playback: true
+			});
+		}
 	}
 
 	seek(progress?: number): void {
