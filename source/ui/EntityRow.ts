@@ -1,7 +1,6 @@
 import * as api from "../api/schema/objects";
 import * as xnode from "../xnode";
 import * as theme from "./theme";
-import * as metadata from "./metadata";
 import * as is from "../is";
 import { EntityLinkFactory } from "./EntityLink";
 import { ImageBoxFactory } from "./ImageBox";
@@ -59,7 +58,7 @@ export class EntityRowFactory {
 	private ImageBox: ImageBoxFactory;
 	private PlaybackButton: PlaybackButtonFactory;
 
-	private make(link: xnode.XElement, image: xnode.XElement, playbackButton: xnode.XElement | undefined, titles: xnode.XElement[], subtitles: xnode.XElement[], tags: string[]): xnode.XElement {
+	private make(link: xnode.XElement, image: xnode.XElement, playbackButton: xnode.XElement | undefined, titles: xnode.XElement[], subtitles: xnode.XElement[]): xnode.XElement {
 		return link
 			.add(xnode.element("div.entity-row")
 				.add(xnode.element("div.entity-row__artwork")
@@ -137,12 +136,7 @@ export class EntityRowFactory {
 			this.EntityLink.forAlbum(album)
 		];
 		let subtitles = album.artists.map((artist) => this.EntityLink.forArtist(artist));
-		let tags = [
-			"Album",
-			`${album.year}`,
-			metadata.formatDuration(duration_ms)
-		];
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
 	forArtist(artist: api.Artist, playbackButton: xnode.XElement = this.PlaybackButton.forArtist(artist)): xnode.XElement {
@@ -160,11 +154,7 @@ export class EntityRowFactory {
 			this.EntityLink.forArtist(artist)
 		];
 		let subtitles = new Array<xnode.XElement>();
-		let tags = [
-			"Artist",
-			metadata.formatDuration(duration_ms)
-		];
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
 	forDisc(disc: api.Disc, playbackButton: xnode.XElement = this.PlaybackButton.forDisc(disc)): xnode.XElement {
@@ -179,12 +169,7 @@ export class EntityRowFactory {
 			this.EntityLink.forDisc(disc)
 		];
 		let subtitles = disc.album.artists.map((artist) => this.EntityLink.forArtist(artist));
-		let tags = [
-			"Disc",
-			`${disc.album.year}`,
-			metadata.formatDuration(duration_ms)
-		];
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
 	forEpisode(episode: api.Episode, playbackButton: xnode.XElement = this.PlaybackButton.forEpisode(episode)): xnode.XElement {
@@ -199,12 +184,7 @@ export class EntityRowFactory {
 			this.EntityLink.forShow(episode.season.show),
 			this.EntityLink.forSeason(episode.season)
 		];
-		let tags = [
-			"Episode",
-			`${episode.year}`,
-			metadata.formatDuration(duration_ms)
-		];
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
 	forMovie(movie: api.Movie, playbackButton: xnode.XElement = this.PlaybackButton.forMovie(movie)): xnode.XElement {
@@ -216,12 +196,7 @@ export class EntityRowFactory {
 			this.EntityLink.forMovie(movie)
 		];
 		let subtitles = movie.genres.map((genre) => this.EntityLink.forGenre(genre));
-		let tags = [
-			"Movie",
-			`${movie.year}`,
-			metadata.formatDuration(duration_ms)
-		];
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
 	forPerson(person: api.Person): xnode.XElement {
@@ -231,10 +206,7 @@ export class EntityRowFactory {
 			this.EntityLink.forPerson(person)
 		];
 		let subtitles = [] as xnode.XElement[];
-		let tags = [
-			"Person"
-		];
-		return this.make(link, image, undefined, titles, subtitles, tags);
+		return this.make(link, image, undefined, titles, subtitles);
 	}
 
 	forPlaylist(playlist: api.Playlist, playbackButton: xnode.XElement = this.PlaybackButton.forPlaylist(playlist)): xnode.XElement {
@@ -250,11 +222,7 @@ export class EntityRowFactory {
 		let subtitles = [
 			this.EntityLink.forUser(playlist.user)
 		];
-		let tags = [
-			"Playlist",
-			metadata.formatDuration(duration_ms)
-		];
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
 	forSeason(season: api.Season, playbackButton: xnode.XElement = this.PlaybackButton.forSeason(season)): xnode.XElement {
@@ -269,11 +237,7 @@ export class EntityRowFactory {
 			this.EntityLink.forSeason(season)
 		];
 		let subtitles = season.show.genres.map((genre) => this.EntityLink.forGenre(genre));
-		let tags = [
-			"Season",
-			metadata.formatDuration(duration_ms)
-		];
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
 	forShow(show: api.Show, playbackButton: xnode.XElement = this.PlaybackButton.forShow(show)): xnode.XElement {
@@ -289,11 +253,7 @@ export class EntityRowFactory {
 			this.EntityLink.forShow(show)
 		];
 		let subtitles = show.genres.map((genre) => this.EntityLink.forGenre(genre));
-		let tags = [
-			"Show",
-			metadata.formatDuration(duration_ms)
-		];
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
 	forTrack(track: api.Track, playbackButton: xnode.XElement = this.PlaybackButton.forTrack(track)): xnode.XElement {
@@ -308,12 +268,7 @@ export class EntityRowFactory {
 			...track.artists.map((artist) => this.EntityLink.forArtist(artist)),
 			this.EntityLink.forAlbum(track.disc.album)
 		];
-		let tags = [
-			"Track",
-			`${track.disc.album.year}`,
-			metadata.formatDuration(duration_ms)
-		];
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
 	forUser(user: api.User): xnode.XElement {
@@ -325,10 +280,7 @@ export class EntityRowFactory {
 		let subtitles = [
 			xnode.element("span").add(xnode.text(user.username))
 		];
-		let tags = [
-			"User"
-		];
-		return this.make(link, image, undefined, titles, subtitles, tags);
+		return this.make(link, image, undefined, titles, subtitles);
 	}
 
 	static makeStyle(): xnode.XElement {
