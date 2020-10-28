@@ -82,7 +82,7 @@ const CSS = `
 	}
 
 	.entity-card__tag {
-		background-color: ${theme.BACKGROUND_4};
+		background-color: ${theme.BACKGROUND_3};
 		border-radius: 2px;
 		color: ${theme.TEXT_1};
 		font-size: 12px;
