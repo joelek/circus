@@ -94,6 +94,24 @@ export class XElement implements XNode<globalThis.Element> {
 	render(): globalThis.Element {
 		let ns = ["svg", "path"].indexOf(this.tag) >= 0 ? "http://www.w3.org/2000/svg" : "http://www.w3.org/1999/xhtml";
 		let element = document.createElementNS(ns, this.tag);
+		element.setAttribute = (() => {
+			let setAttribute = element.setAttribute.bind(element);
+			return (key: string, value: string) => {
+				if (key === "src") {
+					let observer = new IntersectionObserver((entries) => {
+						for (let entry of entries) {
+							if (entry.target === element && entry.isIntersecting) {
+								observer.unobserve(element);
+								setAttribute(key, value);
+							}
+						}
+					}, { root: document.body });
+					observer.observe(element);
+				} else {
+					setAttribute(key, value);
+				}
+			};
+		})();
 		for (let [kind, listeners] of this.listeners) {
 			for (let listener of listeners) {
 				element.addEventListener(kind, listener);
