@@ -1236,7 +1236,6 @@ style.innerText = `
 		display: grid;
 		gap: 24px;
 		grid-auto-flow: column;
-		grid-auto-columns: 100%;
 		overflow: scroll hidden;
 		scroll-snap-type: x mandatory;
 	}
