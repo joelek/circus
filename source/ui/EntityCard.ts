@@ -50,7 +50,7 @@ const CSS = `
 
 	.entity-card__title {
 		color: ${theme.TEXT_0};
-		font-size: 20px;
+		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -58,7 +58,7 @@ const CSS = `
 
 	.entity-card[data-header="true"]
 	.entity-card__title {
-		font-size: 24px;
+		font-size: 20px;
 	}
 
 	.entity-card__subtitle {

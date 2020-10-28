@@ -47,7 +47,7 @@ const CSS = `
 
 	.entity-row__subtitle {
 		color: ${theme.TEXT_1};
-		font-size: 12px;
+		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;

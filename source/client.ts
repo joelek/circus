@@ -1241,9 +1241,16 @@ style.innerText = `
 		scroll-snap-type: x mandatory;
 	}
 
+	@media (hover: hover) and (pointer: fine) {
+		.carousel__content {
+			scroll-snap-type: none;
+		}
+	}
+
 	.carousel__content > * {
 		scroll-snap-align: start;
 	}
+
 `;
 document.head.appendChild(style);
 
@@ -1772,7 +1779,7 @@ let updateviewforuri = (uri: string): void => {
 					)
 				)
 				.add(xml.element("div.content")
-					.set("style", "display: grid; gap: 24px;")
+					.set("style", "display: grid; gap: 16px;")
 					.add(...disc.tracks.map((track, trackIndex) => {
 						return EntityRow.forTrack(track, PlaybackButton.forDisc(disc, trackIndex));
 					}))
@@ -1907,7 +1914,7 @@ let updateviewforuri = (uri: string): void => {
 					)
 				)
 				.add(...album.discs.map((disc, discIndex) => xml.element("div.content")
-					.set("style", "display: grid; gap: 24px;")
+					.set("style", "display: grid; gap: 16px;")
 					.add(renderTextHeader(xml.text(`Disc ${disc.number}`)))
 					.add(...disc.tracks.map((track, trackIndex) => {
 						return EntityRow.forTrack(track, PlaybackButton.forAlbum(album, discIndex, trackIndex));
@@ -2019,7 +2026,7 @@ let updateviewforuri = (uri: string): void => {
 					)
 				)
 				.add(playlist.items.length === 0 ? undefined : xml.element("div.content")
-					.set("style", "display: grid; gap: 24px;")
+					.set("style", "display: grid; gap: 16px;")
 					.add(...playlist.items.map((item, itemIndex) => {
 						return EntityRow.forTrack(item.track, PlaybackButton.forPlaylist(playlist, itemIndex));
 					}))
