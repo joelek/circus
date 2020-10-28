@@ -1228,28 +1228,24 @@ style.innerText = `
 
 
 	.carousel {
-		overflow: hidden;
-	}
-
-	.carousel__content {
 		align-items: start;
 		display: grid;
 		gap: 24px;
 		grid-auto-flow: column;
+		grid-auto-columns: 100%;
 		overflow: scroll hidden;
 		scroll-snap-type: x mandatory;
 	}
 
 	@media (hover: hover) and (pointer: fine) {
-		.carousel__content {
+		.carousel {
 			scroll-snap-type: none;
 		}
 	}
 
-	.carousel__content > * {
+	.carousel > * {
 		scroll-snap-align: start;
 	}
-
 `;
 document.head.appendChild(style);
 
@@ -2120,9 +2116,7 @@ let updateviewforuri = (uri: string): void => {
 					.set("style", "display: grid; gap: 24px;")
 						.add(renderTextHeader(xml.text(`Season ${season.number}`)))
 						.add(xml.element("div.carousel")
-							.add(xml.element("div.carousel__content")
-								.add(...season.episodes.map((episode, episodeIndex) => EntityCard.forEpisode(episode, PlaybackButton.forShow(show, seasonIndex, episodeIndex))))
-							)
+							.add(...season.episodes.map((episode, episodeIndex) => EntityCard.forEpisode(episode, PlaybackButton.forShow(show, seasonIndex, episodeIndex))))
 						)
 					)
 				)
