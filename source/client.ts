@@ -874,7 +874,9 @@ const showVideo = new ObservableClass(false);
 	player.isDeviceLocal.addObserver(computer);
 	player.isCurrentEntryVideo.addObserver(computer);
 }
-const showLogin = new ObservableClass(false);
+const showLogin = computed((tokenobs) => {
+	return is.absent(tokenobs);
+}, tokenobs);
 const showModal = new ObservableClass(false);
 {
 	let computer = () => {
@@ -948,43 +950,6 @@ appcontainer.appendChild(appheader);
 mountwrapper.setAttribute("class", "app__content");
 appcontainer.appendChild(mountwrapper);
 
-let username = new ObservableClass("");
-let password = new ObservableClass("");
-mountwrapper.appendChild(xml.element("div.login-modal")
-	.bind("data-hide", showLogin.addObserver(showLogin => !showLogin))
-	.add(xml.element("div.login-modal__form")
-		.add(xml.element("input.login-modal__username")
-			.bind2("value", username)
-			.set("type", "text")
-			.set("spellcheck", "false")
-			.set("placeholder", "Username...")
-		)
-		.add(xml.element("input.login-modal__password")
-			.bind2("value", password)
-			.set("type", "password")
-			.set("spellcheck", "false")
-			.set("placeholder", "Password...")
-			.on("keyup", async (event) => {
-				if (event.key === "Enter") {
-					let token = await getNewToken(username.getState(), password.getState());
-					if (token != null) {
-						showLogin.updateState(false);
-					}
-				}
-			})
-		)
-	)
-	.add(xml.element("button")
-		.add(xml.text("Login"))
-		.on("click", async () => {
-			let token = await getNewToken(username.getState(), password.getState());
-			if (token != null) {
-				showLogin.updateState(false);
-			}
-		})
-	)
-	.render());
-
 let devicelist = new ArrayObservable<Device & {
 	active: boolean,
 	local: boolean
@@ -1008,6 +973,9 @@ let devicelist = new ArrayObservable<Device & {
 	player.device.addObserver(computer);
 	player.localDevice.addObserver(computer);
 }
+
+let username = new ObservableClass("");
+let password = new ObservableClass("");
 
 // TODO: observer for modal content
 let modals = xml.element("div.modal-container")
@@ -1040,7 +1008,44 @@ let modals = xml.element("div.modal-container")
 				)
 			)
 		)
+	)
+	.add(xml.element("div.login-modal")
+		.bind("data-hide", showLogin.addObserver(showLogin => !showLogin))
+		.add(xml.element("div.login-modal__form")
+			.add(xml.element("input.login-modal__username")
+				.bind2("value", username)
+				.set("type", "text")
+				.set("spellcheck", "false")
+				.set("placeholder", "Username...")
+			)
+			.add(xml.element("input.login-modal__password")
+				.bind2("value", password)
+				.set("type", "password")
+				.set("spellcheck", "false")
+				.set("placeholder", "Password...")
+				.on("keyup", async (event) => {
+					if (event.key === "Enter") {
+						let token = await getNewToken(username.getState(), password.getState());
+						if (token != null) {
+							showLogin.updateState(false);
+						}
+					}
+				})
+			)
+		)
+		.add(xml.element("button")
+			.add(xml.text("Login"))
+			.on("click", async () => {
+				let token = await getNewToken(username.getState(), password.getState());
+				if (token != null) {
+					showLogin.updateState(false);
+				}
+			})
+		)
 	);
+
+
+
 
 mountwrapper.appendChild(modals.render());
 let scroll_container = xml.element("div.scroll-container")
@@ -2084,20 +2089,14 @@ let get_route = (pathname: string = window.location.pathname, basehref: string =
 
 
 function navigate (uri: string): void {
-	getToken().then((token) => {
-		if (token == null) {
-			showLogin.updateState(true);
-		} else {
-			if (window.history.state === null) {
-				window.history.replaceState({ 'uri': uri }, '', uri);
-			} else {
-				if (uri !== window.history.state.uri) {
-					window.history.pushState({ 'uri': uri }, '', uri);
-				}
-			}
-			updateviewforuri(uri);
+	if (window.history.state === null) {
+		window.history.replaceState({ 'uri': uri }, '', uri);
+	} else {
+		if (uri !== window.history.state.uri) {
+			window.history.pushState({ 'uri': uri }, '', uri);
 		}
-	});
+	}
+	updateviewforuri(uri);
 };
 navigate(get_route());
 window.addEventListener('popstate', (event) => {
