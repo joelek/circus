@@ -358,127 +358,6 @@ style.innerText = `
 		display: none !important;
 	}
 
-	[data-grid] {
-		margin: 0px auto;
-		max-width: 960px;
-		min-width: 160px;
-		padding: 16px;
-	}
-
-	[data-cell] {
-		display: inline-block;
-		vertical-align: top;
-	}
-
-	@media all and (max-width: 319px) {
-		[data-cell^="1:"] {
-			width: 16.66%;
-		}
-
-		[data-cell^="2:"] {
-			width: 33.33%;
-		}
-
-		[data-cell^="3:"] {
-			width: 50.00%;
-		}
-
-		[data-cell^="4:"] {
-			width: 66.66%;
-		}
-
-		[data-cell^="5:"] {
-			width: 83.33%;
-		}
-
-		[data-cell^="6:"] {
-			width: 100.00%;
-		}
-	}
-
-	@media all and (min-width: 320px) and (max-width: 479px) {
-		[data-cell*=":1:"] {
-			width: 16.66%;
-		}
-
-		[data-cell*=":2:"] {
-			width: 33.33%;
-		}
-
-		[data-cell*=":3:"] {
-			width: 50.00%;
-		}
-
-		[data-cell*=":4:"] {
-			width: 66.66%;
-		}
-
-		[data-cell*=":5:"] {
-			width: 83.33%;
-		}
-
-		[data-cell*=":6:"] {
-			width: 100.00%;
-		}
-	}
-
-	@media all and (min-width: 480px) {
-		[data-cell$=":1"] {
-			width: 16.66%;
-		}
-
-		[data-cell$=":2"] {
-			width: 33.33%;
-		}
-
-		[data-cell$=":3"] {
-			width: 50.00%;
-		}
-
-		[data-cell$=":4"] {
-			width: 66.66%;
-		}
-
-		[data-cell$=":5"] {
-			width: 83.33%;
-		}
-
-		[data-cell$=":6"] {
-			width: 100.00%;
-		}
-	}
-
-	[data-flex] {
-		--gap: max(0px, calc(var(--gap, 0px) - 4px));
-		display: flex;
-		flex-direction: row;
-		flex-wrap: wrap;
-	}
-
-	[data-flex="x"] {
-		flex-direction: row;
-		width: 100%;
-	}
-
-	[data-flex="x"] > :not(:first-child) {
-		margin-left: var(--gap, 0px);
-	}
-
-	[data-flex="y"] {
-		flex-direction: column;
-		height: 100%;
-	}
-
-	[data-flex="y"] > :not(:first-child) {
-		margin-top: var(--gap, 0px);
-	}
-
-	[data-wrap="false"] {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
 	body {
 		background-color: ${ACCENT_COLOR};
 		color: rgb(255, 255, 255);
@@ -527,16 +406,19 @@ style.innerText = `
 		width: 100%;
 	}
 
-	.group {
-		background-color: rgb(63, 63, 63);
-		border-radius: 2px;
-		margin: 8px;
-		padding: 4px;
-	}
 
-	.group > * {
-		margin: 4px;
-	}
+
+
+
+
+
+
+
+
+
+
+
+
 
 	.slider-widget {
 		padding: 4px;
@@ -565,10 +447,6 @@ style.innerText = `
 		margin-left: -8px;
 	}
 
-	.watched::before {
-		content: "\u00b7";
-		color: ${ACCENT_COLOR};
-	}
 
 
 
@@ -582,115 +460,12 @@ style.innerText = `
 
 
 
-	.media-widget {
-		background-color: rgb(47, 47, 47);
-		border-radius: 2px;
-		cursor: pointer;
-		display: grid;
-		gap: 0px;
-		grid-auto-flow: row;
-		grid-auto-rows: max-content;
-		overflow: hidden;
-	}
-
-	.media-widget__artwork {
-		background-color: rgb(0, 0, 0);
-		background-size: cover;
-		padding-bottom: 100%;
-		position: relative;
-	}
-
-	.media-widget__images {
-		display: grid;
-		grid-auto-flow: column;
-		height: 100%;
-		justify-content: start;
-		position: absolute;
-		width: 100%;
-	}
-
-	.media-widget__image {
-		height: 100%;
-		object-fit: cover;
-		width: 100%;
-	}
-
-	.media-widget__playback {
-		position: absolute;
-			bottom: 16px;
-			right: 16px;
-	}
-
-	.media-widget__metadata {
-		display: grid;
-		gap: 16px;
-		grid-auto-flow: row;
-		grid-auto-rows: max-content;
-		padding: 16px;
-	}
-
-	.media-widget__titles {
-		display: grid;
-		gap: 8px;
-		grid-auto-flow: row;
-		grid-auto-rows: max-content;
-	}
-
-	.media-widget__title {
-		color: rgb(255, 255, 255);
-		font-size: 16px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.media-widget__subtitle {
-		color: rgb(159, 159, 159);
-		font-size: 12px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.media-widget__tags {
-		display: grid;
-		gap: 8px;
-		grid-auto-columns: minmax(auto, min-content);
-		grid-auto-flow: column;
-	}
-
-	.media-widget__description {
-		color: rgb(159, 159, 159);
-		font-size: 12px;
-		line-height: 1.25;
-		word-break: break-word;
-	}
 
 
 
 
 
 
-
-
-
-
-
-	.media-tag {
-		background-color: rgb(63, 63, 63);
-		border-radius: 2px;
-		color: rgb(159, 159, 159);
-		font-size: 12px;
-		padding: 4px 8px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.media-tag--accent {
-		background-color: ${ACCENT_COLOR};
-		color: rgb(255, 255, 255);
-	}
 
 
 
@@ -745,77 +520,6 @@ style.innerText = `
 
 
 
-	.entity-header {
-		align-items: start;
-		display: grid;
-		gap: 24px;
-		grid-template-columns: repeat(auto-fit, minmax(240px, auto));
-	}
-
-	.entity-header__artwork {
-		border-radius: 2px;
-		overflow: hidden;
-		position: relative;
-	}
-
-	.entity-header__playback {
-		position: absolute;
-			bottom: 16px;
-			right: 16px;
-	}
-
-	.entity-header__content {
-
-	}
-
-	.entity-header__whitespace {
-		font-size: 16px;
-		line-height: 0;
-		overflow: hidden;
-	}
-
-	.entity-header__metadata {
-		display: grid;
-		gap: 16px;
-		grid-auto-rows: max-content;
-	}
-
-	.entity-header__titles {
-		display: grid;
-		gap: 8px;
-		grid-auto-flow: row;
-		grid-auto-rows: max-content;
-	}
-
-	.entity-header__title {
-		color: rgb(255, 255, 255);
-		font-size: 24px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.entity-header__subtitle {
-		color: rgb(159, 159, 159);
-		font-size: 20px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.entity-header__tags {
-		display: grid;
-		gap: 8px;
-		grid-auto-columns: minmax(auto, min-content);
-		grid-auto-flow: column;
-	}
-
-	.entity-header__description {
-		color: rgb(159, 159, 159);
-		font-size: 16px;
-		line-height: 1.25;
-		word-break: break-word;
-	}
 
 
 
@@ -827,59 +531,6 @@ style.innerText = `
 
 
 
-	.media-grid {
-		display: grid;
-		gap: 24px;
-		grid-auto-flow: row;
-		grid-auto-rows: max-content;
-	}
-
-	.media-grid__header {
-
-	}
-
-	.media-grid__content {
-		display: grid;
-		gap: 24px;
-		grid-auto-flow: row;
-		grid-auto-rows: max-content;
-		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-	}
-
-
-
-
-
-
-
-
-
-
-	.playlist {
-		display: grid;
-		gap: 24px;
-		grid-auto-flow: row;
-		grid-auto-rows: max-content;
-	}
-
-	.playlist__header {
-		display: grid;
-		gap: 16px;
-	}
-
-	.playlist__tags {
-		display: grid;
-		gap: 8px;
-		grid-auto-columns: minmax(auto, min-content);
-		grid-auto-flow: column;
-	}
-
-	.playlist__content {
-		display: grid;
-		gap: 16px;
-		grid-auto-flow: row;
-		grid-auto-rows: max-content;
-	}
 
 
 
@@ -891,48 +542,7 @@ style.innerText = `
 
 
 
-	.playlist-item {
-		border-left: 4px solid transparent;
-		cursor: pointer;
-		display: grid;
-		gap: 8px;
-		grid-auto-flow: row;
-		grid-auto-rows: max-content;
-		margin-left: -16px;
-		padding-left: 12px;
-	}
 
-	.playlist-item[data-playing="true"] {
-		border-color: ${ACCENT_COLOR};
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.playlist-item:hover {
-			border-color: rgb(255, 255, 255);
-		}
-	}
-
-	.playlist-item__title {
-		color: rgb(255, 255, 255);
-		font-size: 16px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.playlist-item__subtitle {
-		color: rgb(159, 159, 159);
-		font-size: 12px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.playlist-item__tags {
-		display: grid;
-		gap: 8px;
-		grid-auto-columns: minmax(auto, min-content);
-	}
 
 
 
@@ -1140,26 +750,6 @@ style.innerText = `
 		overflow: hidden;
 		position: relative;
 		z-index: 0;
-	}
-
-	.app__devices {
-		background-color: ${ACCENT_COLOR};
-	}
-
-	.app__devices-container {
-		cursor: pointer;
-		display: grid;
-		gap: 8px;
-		grid-template-columns: min-content 1fr;
-	}
-
-	.app__devices-icon {
-		fill: rgb(255, 255, 255);
-	}
-
-	.app__devices-text {
-		color: rgb(255, 255, 255);
-		font-size: 16px;
 	}
 
 	.app__navigation {
@@ -1656,16 +1246,6 @@ chromecast.appendChild(slider_wrapper);
 }
 */
 
-function makeGrid(title: string | undefined, ...elements: xml.XElement[]) {
-	return xml.element("div.media-grid")
-		.add(!title ? undefined : xml.element("div.media-grid__header")
-			.add(renderTextHeader(xml.text(title)))
-		)
-		.add(xml.element("div.media-grid__content")
-			.add(...elements)
-		);
-}
-
 function renderTextHeader(content: xml.XNode<any>) {
 	return xml.element("div.text-header")
 		.add(content);
@@ -1719,8 +1299,8 @@ let updateviewforuri = (uri: string): void => {
 				.add(renderTextHeader(xml.text("Tracks")))
 			)
 			.add(xml.element("div.content")
-				.add(xml.element("div.media-grid__content")
-					.repeat(tracks, (track) => EntityRow.forTrack(track))
+				.add(Grid.make()
+					.repeat(tracks, (track) => EntityCard.forTrack(track))
 				)
 			)
 			.render()
@@ -1767,7 +1347,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(renderTextHeader(xml.text("Seasons")))
 			)
 			.add(xml.element("div.content")
-				.add(xml.element("div.media-grid__content")
+				.add(Grid.make()
 					.repeat(seasons, (season) => EntityRow.forSeason(season))
 				)
 			)
@@ -1815,7 +1395,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(renderTextHeader(xml.text("Discs")))
 			)
 			.add(xml.element("div.content")
-				.add(xml.element("div.media-grid__content")
+				.add(Grid.make()
 					.repeat(discs, (disc) => EntityRow.forDisc(disc))
 				)
 			)
@@ -1855,7 +1435,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(renderTextHeader(xml.text("Users")))
 			)
 			.add(xml.element("div.content")
-				.add(xml.element("div.media-grid__content")
+				.add(Grid.make()
 					.repeat(users, (user) => EntityRow.forUser(user))
 				)
 			)
@@ -1914,7 +1494,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(renderTextHeader(xml.text("Persons")))
 			)
 			.add(xml.element("div.content")
-				.add(xml.element("div.media-grid__content")
+				.add(Grid.make()
 					.repeat(persons, (person) => EntityRow.forPerson(person))
 				)
 			)
@@ -1962,7 +1542,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(renderTextHeader(xml.text("Albums")))
 			)
 			.add(xml.element("div.content")
-				.add(xml.element("div.media-grid__content")
+				.add(Grid.make()
 					.repeat(albums, (album) => EntityCard.forAlbum(album))
 				)
 			)
@@ -2022,7 +1602,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(renderTextHeader(xml.text("Artists")))
 			)
 			.add(xml.element("div.content")
-				.add(xml.element("div.media-grid__content")
+				.add(Grid.make()
 					.repeat(artists, (artist) => EntityCard.forArtist(artist))
 				)
 			)
@@ -2051,10 +1631,8 @@ let updateviewforuri = (uri: string): void => {
 					.add(renderTextHeader(xml.text("Playlists")))
 				)
 				.add(xml.element("div.content")
-					.add(makeGrid(
-							undefined,
-							...playlists.map((playlist) => EntityCard.forPlaylist(playlist))
-						)
+					.add(Grid.make()
+						.add(...playlists.map((playlist) => EntityCard.forPlaylist(playlist)))
 					)
 				)
 			.render());
@@ -2150,7 +1728,9 @@ let updateviewforuri = (uri: string): void => {
 					.add(renderTextHeader(xml.text("Shows")))
 				)
 				.add(xml.element("div.content")
-					.add(makeGrid(undefined, ...shows.map((show) => EntityCard.forShow(show))))
+					.add(Grid.make()
+						.add(...shows.map((show) => EntityCard.forShow(show)))
+					)
 				)
 				.render()
 			);
@@ -2193,7 +1773,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(renderTextHeader(xml.text("Episodes")))
 			)
 			.add(xml.element("div.content")
-				.add(xml.element("div.media-grid__content")
+				.add(Grid.make()
 					.repeat(episodes, (episode) => EntityRow.forEpisode(episode))
 				)
 			)
@@ -2264,7 +1844,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(renderTextHeader(xml.text("Movies")))
 			)
 			.add(xml.element("div.content")
-				.add(xml.element("div.media-grid__content")
+				.add(Grid.make()
 					.repeat(movies, (movie) => EntityCard.forMovie(movie))
 				)
 			)
@@ -2336,10 +1916,18 @@ let updateviewforuri = (uri: string): void => {
 							.add(renderTextHeader(xml.text(genre.title)))
 						)
 						.add(shows.length === 0 ? undefined : xml.element("div.content")
-							.add(makeGrid("Shows", ...shows.map((show) => EntityCard.forShow(show))))
+							.set("style", "display: grid; gap: 24px;")
+							.add(renderTextHeader(xml.text("Shows")))
+							.add(Grid.make()
+								.add(...shows.map((show) => EntityCard.forShow(show)))
+							)
 						)
 						.add(movies.length === 0 ? undefined : xml.element("div.content")
-							.add(makeGrid("Movies", ...movies.map((movie) => EntityCard.forMovie(movie))))
+							.set("style", "display: grid; gap: 24px;")
+							.add(renderTextHeader(xml.text("Movies")))
+							.add(Grid.make()
+								.add(...movies.map((movie) => EntityCard.forMovie(movie)))
+							)
 						)
 						.render()
 					);
