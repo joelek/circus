@@ -12,6 +12,7 @@ import { formatDuration as format_duration } from "./ui/metadata";
 
 import { EntityTitleFactory } from "./ui/EntityTitleFactory";
 import { GridFactory } from "./ui/Grid";
+import { CarouselFactory } from "./ui/CarouselFactory";
 import { IconFactory } from "./ui/Icon";
 import { ImageBoxFactory } from "./ui/ImageBox";
 import { EntityLinkFactory } from "./ui/EntityLink";
@@ -229,6 +230,9 @@ player.currentEntry.addObserver((currentEntry) => {
 
 
 const tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
+
+const carouselFactory = new CarouselFactory();
+document.head.appendChild(CarouselFactory.makeStyle().render())
 
 const Grid = new GridFactory();
 document.head.appendChild(GridFactory.makeStyle().render())
@@ -1247,31 +1251,6 @@ style.innerText = `
 	.login-modal__form {
 		display: grid;
 		gap: 8px;
-	}
-
-
-
-
-
-	.carousel {
-		align-items: start;
-		display: grid;
-		gap: 24px;
-		grid-auto-flow: column;
-		grid-auto-columns: 100%;
-		overflow: scroll hidden;
-		scroll-snap-type: x mandatory;
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.carousel {
-			scroll-snap-type: none;
-		}
-	}
-
-	.carousel > * {
-		scroll-snap-align: start;
-		transform: translate3d(0, 0, 0);
 	}
 `;
 document.head.appendChild(style);
