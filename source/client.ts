@@ -373,7 +373,7 @@ style.innerText = `
 
 	button {
 		background-color: ${ACCENT_COLOR};
-		border-radius: 4px;
+		border-radius: 64px;
 		color: rgb(255, 255, 255);
 		cursor: pointer;
 		font-size: 16px;
@@ -383,6 +383,7 @@ style.innerText = `
 
 	button[data-enabled="false"] {
 		background-color: rgb(79, 79, 79);
+		color: rgb(159, 159, 159);
 		cursor: default;
 	}
 
@@ -475,6 +476,8 @@ style.innerText = `
 
 	.content {
 		box-sizing: border-box;
+		display: grid;
+		gap: 64px;
 		margin: 0px auto;
 		max-width: 960px;
 		padding: 32px;
