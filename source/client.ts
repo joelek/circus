@@ -582,13 +582,6 @@ style.innerText = `
 		z-index: 1;
 	}
 
-	.modal-container__content {
-		margin: 0px auto;
-		height: 100%;
-		max-width: 480px;
-		overflow: hidden;
-		width: 100%;
-	}
 
 
 
@@ -599,7 +592,7 @@ style.innerText = `
 
 
 	.device-selector {
-		padding: 32px;
+
 	}
 
 	.device-selector__devices {
@@ -1016,9 +1009,9 @@ let devicelist = new ArrayObservable<Device & {
 // TODO: observer for modal content
 let modals = xml.element("div.modal-container")
 	.bind("data-hide", showModal.addObserver(a => !a))
-	.add(xml.element("div.modal-container__content")
-		.add(xml.element("div.device-selector")
-			.bind("data-hide", showDevices.addObserver(a => !a))
+	.add(xml.element("div.device-selector")
+		.bind("data-hide", showDevices.addObserver(a => !a))
+		.add(xml.element("div.content")
 			.add(xml.element("div.device-selector__devices")
 				.repeat(devicelist, (device) => xml.element("div.device-selector__device")
 					.add(makeButton()
