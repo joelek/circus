@@ -1888,10 +1888,24 @@ let updateviewforuri = (uri: string): void => {
 			let shows = response.shows;
 			let movies = response.movies;
 			mount.appendChild(xml.element("div.content")
-				.set("style", "display: grid; gap: 32px;")
+				.set("style", "display: grid; gap: 64px;")
 				.add(renderTextHeader(xml.text(person.name)))
-				.add(makeGrid("Shows", ...shows.map((show) => EntityCard.forShow(show))))
-				.add(makeGrid("Movies", ...movies.map((movie) => EntityCard.forMovie(movie))))
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 24px;")
+					.set("data-hide", `${shows.length === 0}`)
+					.add(renderTextHeader(xml.text("Shows")))
+					.add(Grid.make()
+						.add(...shows.map((show) => EntityCard.forShow(show)))
+					)
+				)
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 24px;")
+					.set("data-hide", `${movies.length === 0}`)
+					.add(renderTextHeader(xml.text("Movies")))
+					.add(Grid.make()
+						.add(...movies.map((movie) => EntityCard.forMovie(movie)))
+					)
+				)
 				.render());
 		});
 	} else if ((parts = /^persons[/]([^/?]*)/.exec(uri)) !== null) {
