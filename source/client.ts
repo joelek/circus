@@ -1267,6 +1267,7 @@ style.innerText = `
 
 	.carousel > * {
 		scroll-snap-align: start;
+		transform: translate3d(0, 0, 0);
 	}
 `;
 document.head.appendChild(style);
