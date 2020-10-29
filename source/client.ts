@@ -10,6 +10,7 @@ import { Album, Artist, Cue, Disc, Entity, Episode, Movie, Person, Playlist, Sea
 import * as xml from "./xnode";
 import { formatDuration as format_duration } from "./ui/metadata";
 
+import { EntityTitleFactory } from "./ui/EntityTitleFactory";
 import { GridFactory } from "./ui/Grid";
 import { IconFactory } from "./ui/Icon";
 import { ImageBoxFactory } from "./ui/ImageBox";
@@ -244,10 +245,13 @@ document.head.appendChild(ImageBoxFactory.makeStyle().render())
 const EntityLink = new EntityLinkFactory(navigate);
 document.head.appendChild(EntityLinkFactory.makeStyle().render())
 
-const EntityCard = new EntityCardFactory(EntityLink, ImageBox, PlaybackButton);
+const entityTitleFactory = new EntityTitleFactory(EntityLink);
+document.head.appendChild(EntityTitleFactory.makeStyle().render())
+
+const EntityCard = new EntityCardFactory(entityTitleFactory, EntityLink, ImageBox, PlaybackButton);
 document.head.appendChild(EntityCardFactory.makeStyle().render())
 
-const EntityRow = new EntityRowFactory(EntityLink, ImageBox, PlaybackButton);
+const EntityRow = new EntityRowFactory(entityTitleFactory, EntityLink, ImageBox, PlaybackButton);
 document.head.appendChild(EntityRowFactory.makeStyle().render())
 
 
@@ -2070,9 +2074,15 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(xml.element("div.content")
 				.set("style", "display: grid; gap: 32px;")
-				.add(renderTextHeader(EntityLink.for("audio/artists/", "Artists")))
-				.add(renderTextHeader(EntityLink.for("audio/albums/", "Albums")))
-				.add(renderTextHeader(EntityLink.for("audio/playlists/", "Playlists")))
+				.add(renderTextHeader(xml.text("Artists"))
+					.on("click", () => navigate("audio/artists/"))
+				)
+				.add(renderTextHeader(xml.text("Albums"))
+					.on("click", () => navigate("audio/albums/"))
+				)
+				.add(renderTextHeader(xml.text("Playlists"))
+					.on("click", () => navigate("audio/playlists/"))
+				)
 			)
 		.render());
 	} else if ((parts = /^video[/]shows[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
@@ -2364,10 +2374,18 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(xml.element("div.content")
 				.set("style", "display: grid; gap: 32px;")
-				.add(renderTextHeader(EntityLink.for("video/shows/", "Shows")))
-				.add(renderTextHeader(EntityLink.for("video/movies/", "Movies")))
-				.add(renderTextHeader(EntityLink.for("video/genres/", "Genres")))
-				.add(renderTextHeader(EntityLink.for("video/cues/", "Cues")))
+				.add(renderTextHeader(xml.text("Shows"))
+					.on("click", () => navigate("video/shows/"))
+				)
+				.add(renderTextHeader(xml.text("Movies"))
+					.on("click", () => navigate("video/movies/"))
+				)
+				.add(renderTextHeader(xml.text("Genres"))
+					.on("click", () => navigate("video/genres/"))
+				)
+				.add(renderTextHeader(xml.text("Cues"))
+					.on("click", () => navigate("video/cues/"))
+				)
 			)
 		.render());
 	} else if ((parts = /^tokens[/]/.exec(uri)) !== null) {
@@ -2442,9 +2460,15 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(xml.element("div.content")
 				.set("style", "display: grid; gap: 32px;")
-				.add(renderTextHeader(EntityLink.for("audio/", "Audio")))
-				.add(renderTextHeader(EntityLink.for("video/", "Video")))
-				.add(renderTextHeader(EntityLink.for("search/", "Search")))
+				.add(renderTextHeader(xml.text("Audio"))
+					.on("click", () => navigate("audio/"))
+				)
+				.add(renderTextHeader(xml.text("Video"))
+					.on("click", () => navigate("video/"))
+				)
+				.add(renderTextHeader(xml.text("Search"))
+					.on("click", () => navigate("search/"))
+				)
 			)
 		.render());
 	}

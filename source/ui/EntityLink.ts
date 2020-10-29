@@ -6,105 +6,112 @@ const CSS = ``;
 export class EntityLinkFactory {
 	private navigator: (url: string) => void;
 
-	constructor(navigator: (url: string) => void) {
-		this.navigator = navigator;
-	}
-
-	for(url: string, title: string): xnode.XElement {
+	private make(url: string): xnode.XElement {
 		return xnode.element("a")
 			.set("href", url)
 			.on("click", () => {
 				this.navigator(url);
-			})
-			.add(xnode.text(title));
+			});
 	}
 
-	forEntity(entity: api.Entity): xnode.XElement {
-		if (api.Album.is(entity)) {
-			return this.forAlbum(entity);
-		}
-		if (api.Artist.is(entity)) {
-			return this.forArtist(entity);
-		}
-		if (api.Disc.is(entity)) {
-			return this.forDisc(entity);
-		}
-		if (api.Episode.is(entity)) {
-			return this.forEpisode(entity);
-		}
-		if (api.Genre.is(entity)) {
-			return this.forGenre(entity);
-		}
-		if (api.Movie.is(entity)) {
-			return this.forMovie(entity);
-		}
-		if (api.Person.is(entity)) {
-			return this.forPerson(entity);
-		}
-		if (api.Playlist.is(entity)) {
-			return this.forPlaylist(entity);
-		}
-		if (api.Season.is(entity)) {
-			return this.forSeason(entity);
-		}
-		if (api.Show.is(entity)) {
-			return this.forShow(entity);
-		}
-		if (api.Track.is(entity)) {
-			return this.forTrack(entity);
-		}
-		if (api.User.is(entity)) {
-			return this.forUser(entity);
-		}
-		throw `Expected code to be unreachable!`;
+	constructor(navigator: (url: string) => void) {
+		this.navigator = navigator;
 	}
 
 	forAlbum(album: api.AlbumBase): xnode.XElement {
-		return this.for(`audio/albums/${album.album_id}/`, album.title);
+		return this.make(`audio/albums/${album.album_id}/`);
+	}
+
+	forAlbums(): xnode.XElement {
+		return this.make(`audio/albums/`);
 	}
 
 	forArtist(artist: api.ArtistBase): xnode.XElement {
-		return this.for(`audio/artists/${artist.artist_id}/`, artist.title);
+		return this.make(`audio/artists/${artist.artist_id}/`);
+	}
+
+	forArtists(): xnode.XElement {
+		return this.make(`audio/artists/`);
 	}
 
 	forDisc(disc: api.DiscBase): xnode.XElement {
-		return this.for(`audio/discs/${disc.disc_id}/`, `Disc ${disc.number}`);
+		return this.make(`audio/discs/${disc.disc_id}/`);
+	}
+
+	forDiscs(): xnode.XElement {
+		return this.make(`audio/discs/`);
 	}
 
 	forEpisode(episode: api.EpisodeBase): xnode.XElement {
-		return this.for(`video/episodes/${episode.episode_id}/`, episode.title);
+		return this.make(`video/episodes/${episode.episode_id}/`);
+	}
+
+	forEpisodes(): xnode.XElement {
+		return this.make(`video/episodes/`);
 	}
 
 	forGenre(genre: api.GenreBase): xnode.XElement {
-		return this.for(`video/genres/${genre.genre_id}/`, genre.title);
+		return this.make(`video/genres/${genre.genre_id}/`);
+	}
+
+	forGenres(): xnode.XElement {
+		return this.make(`video/genres/`);
 	}
 
 	forMovie(movie: api.MovieBase): xnode.XElement {
-		return this.for(`video/movies/${movie.movie_id}/`, movie.title);
+		return this.make(`video/movies/${movie.movie_id}/`);
+	}
+
+	forMovies(): xnode.XElement {
+		return this.make(`video/movies/`);
 	}
 
 	forPerson(person: api.PersonBase): xnode.XElement {
-		return this.for(`persons/${person.person_id}/`, person.name);
+		return this.make(`persons/${person.person_id}/`);
+	}
+
+	forPersons(): xnode.XElement {
+		return this.make(`persons/`);
 	}
 
 	forPlaylist(playlist: api.PlaylistBase): xnode.XElement {
-		return this.for(`audio/playlists/${playlist.playlist_id}/`, playlist.title);
+		return this.make(`audio/playlists/${playlist.playlist_id}/`);
+	}
+
+	forPlaylists(): xnode.XElement {
+		return this.make(`audio/playlists/`);
 	}
 
 	forSeason(season: api.SeasonBase): xnode.XElement {
-		return this.for(`video/seasons/${season.season_id}/`, `Season ${season.number}`);
+		return this.make(`video/seasons/${season.season_id}/`);
+	}
+
+	forSeasons(): xnode.XElement {
+		return this.make(`video/seasons/`);
 	}
 
 	forShow(show: api.ShowBase): xnode.XElement {
-		return this.for(`video/shows/${show.show_id}/`, show.title);
+		return this.make(`video/shows/${show.show_id}/`);
+	}
+
+	forShows(): xnode.XElement {
+		return this.make(`video/shows/`);
 	}
 
 	forTrack(track: api.TrackBase): xnode.XElement {
-		return this.for(`audio/tracks/${track.track_id}/`, track.title);
+		return this.make(`audio/tracks/${track.track_id}/`);
+	}
+
+	forTracks(): xnode.XElement {
+		return this.make(`audio/tracks/`);
 	}
 
 	forUser(user: api.UserBase): xnode.XElement {
-		return this.for(`users/${user.user_id}/`, user.name);
+		return this.make(`users/${user.user_id}/`);
+	}
+
+	forUsers(): xnode.XElement {
+		return this.make(`users/`);
 	}
 
 	static makeStyle(): xnode.XElement {

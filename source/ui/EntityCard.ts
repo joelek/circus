@@ -3,6 +3,7 @@ import * as xnode from "../xnode";
 import * as theme from "./theme";
 import * as metadata from "./metadata";
 import * as is from "../is";
+import { EntityTitleFactory } from "./EntityTitleFactory";
 import { EntityLinkFactory } from "./EntityLink";
 import { ImageBoxFactory } from "./ImageBox";
 import { PlaybackButtonFactory } from "./PlaybackButton";
@@ -96,12 +97,13 @@ const CSS = `
 `;
 
 export class EntityCardFactory {
-	private EntityLink: EntityLinkFactory;
+	private entityTitleFactory: EntityTitleFactory;
+	private entityLinkFactory: EntityLinkFactory;
 	private ImageBox: ImageBoxFactory;
 	private PlaybackButton: PlaybackButtonFactory;
 
-	private make(image: xnode.XElement, playbackButton: xnode.XElement | undefined, titles: xnode.XElement[], subtitles: xnode.XElement[], tags: xnode.XElement[], description?: string): xnode.XElement {
-		return xnode.element("div.entity-card")
+	private make(link: xnode.XElement, image: xnode.XElement, playbackButton: xnode.XElement | undefined, titles: xnode.XElement[], subtitles: xnode.XElement[], tags: xnode.XElement[], description?: string): xnode.XElement {
+		return link.add(xnode.element("div.entity-card")
 			.add(xnode.element("div.entity-card__artwork")
 				.add(image)
 				.add(xnode.element("div.entity-card__playback")
@@ -128,11 +130,13 @@ export class EntityCardFactory {
 						.add(xnode.text(description))
 					)
 				)
-			);
+			)
+		);
 	}
 
-	constructor(EntityLink: EntityLinkFactory, ImageBox: ImageBoxFactory, PlaybackButton: PlaybackButtonFactory) {
-		this.EntityLink = EntityLink;
+	constructor(entityTitleFactory: EntityTitleFactory, entityLinkFactory: EntityLinkFactory, ImageBox: ImageBoxFactory, PlaybackButton: PlaybackButtonFactory) {
+		this.entityTitleFactory = entityTitleFactory;
+		this.entityLinkFactory = entityLinkFactory;
 		this.ImageBox = ImageBox;
 		this.PlaybackButton = PlaybackButton;
 	}
@@ -181,19 +185,18 @@ export class EntityCardFactory {
 				duration_ms += track.segment.file.duration_ms;
 			}
 		}
-		let image = this.EntityLink.forAlbum(album).add(
-			this.ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`)
-		);
+		let link = this.entityLinkFactory.forAlbum(album);
+		let image = this.ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`);
 		let titles = [
-			this.EntityLink.forAlbum(album)
+			this.entityTitleFactory.forAlbum(album)
 		];
-		let subtitles = album.artists.map((artist) => this.EntityLink.forArtist(artist));
+		let subtitles = album.artists.map((artist) => this.entityTitleFactory.forArtist(artist));
 		let tags = [
 			"Album",
 			`${album.year}`,
 			metadata.formatDuration(duration_ms)
 		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles, tags);
 	}
 
 	forArtist(artist: api.Artist, playbackButton: xnode.XElement = this.PlaybackButton.forArtist(artist)): xnode.XElement {
@@ -205,18 +208,17 @@ export class EntityCardFactory {
 				}
 			}
 		}
-		let image = this.EntityLink.forArtist(artist).add(
-			this.ImageBox.forSquare()
-		);
+		let link = this.entityLinkFactory.forArtist(artist);
+		let image = this.ImageBox.forSquare();
 		let titles = [
-			this.EntityLink.forArtist(artist)
+			this.entityTitleFactory.forArtist(artist)
 		];
 		let subtitles = new Array<xnode.XElement>();
 		let tags = [
 			"Artist",
 			metadata.formatDuration(duration_ms)
 		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles, tags);
 	}
 
 	forDisc(disc: api.Disc, playbackButton: xnode.XElement = this.PlaybackButton.forDisc(disc)): xnode.XElement {
@@ -224,34 +226,32 @@ export class EntityCardFactory {
 		for (let track of disc.tracks) {
 			duration_ms += track.segment.file.duration_ms;
 		}
-		let image = this.EntityLink.forDisc(disc).add(
-			this.ImageBox.forSquare(is.absent(disc.album.artwork) ? undefined : `/files/${disc.album.artwork.file_id}/`)
-		);
+		let link = this.entityLinkFactory.forDisc(disc);
+		let image = this.ImageBox.forSquare(is.absent(disc.album.artwork) ? undefined : `/files/${disc.album.artwork.file_id}/`);
 		let titles = [
-			this.EntityLink.forAlbum(disc.album),
-			this.EntityLink.forDisc(disc)
+			this.entityTitleFactory.forAlbum(disc.album),
+			this.entityTitleFactory.forDisc(disc)
 		];
-		let subtitles = disc.album.artists.map((artist) => this.EntityLink.forArtist(artist));
+		let subtitles = disc.album.artists.map((artist) => this.entityTitleFactory.forArtist(artist));
 		let tags = [
 			"Disc",
 			`${disc.album.year}`,
 			metadata.formatDuration(duration_ms)
 		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles, tags);
 	}
 
 	forEpisode(episode: api.Episode, playbackButton: xnode.XElement = this.PlaybackButton.forEpisode(episode)): xnode.XElement {
 		let duration_ms = 0;
 		duration_ms += episode.segment.file.duration_ms;
-		let image = this.EntityLink.forEpisode(episode).add(
-			this.ImageBox.forVideo(`/media/stills/${episode.segment.file.file_id}/`)
-		);
+		let link = this.entityLinkFactory.forEpisode(episode);
+		let image = this.ImageBox.forVideo(`/media/stills/${episode.segment.file.file_id}/`);
 		let titles = [
-			this.EntityLink.forEpisode(episode)
+			this.entityTitleFactory.forEpisode(episode)
 		];
 		let subtitles = [
-			this.EntityLink.forShow(episode.season.show),
-			this.EntityLink.forSeason(episode.season)
+			this.entityTitleFactory.forShow(episode.season.show),
+			this.entityTitleFactory.forSeason(episode.season)
 		];
 		let tags = [
 			"Episode",
@@ -261,19 +261,18 @@ export class EntityCardFactory {
 		if (is.present(episode.last_stream_date)) {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("\u2713")));
 		}
-		return this.make(image, playbackButton, titles, subtitles, tags, episode.summary);
+		return this.make(link, image, playbackButton, titles, subtitles, tags, episode.summary);
 	}
 
 	forMovie(movie: api.Movie, playbackButton: xnode.XElement = this.PlaybackButton.forMovie(movie)): xnode.XElement {
 		let duration_ms = 0;
 		duration_ms += movie.segment.file.duration_ms;
-		let image = this.EntityLink.forMovie(movie).add(
-			this.ImageBox.forPoster(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/`)
-		);
+		let link = this.entityLinkFactory.forMovie(movie);
+		let image = this.ImageBox.forPoster(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/`);
 		let titles = [
-			this.EntityLink.forMovie(movie)
+			this.entityTitleFactory.forMovie(movie)
 		];
-		let subtitles = movie.genres.map((genre) => this.EntityLink.forGenre(genre));
+		let subtitles = movie.genres.map((genre) => this.entityTitleFactory.forGenre(genre));
 		let tags = [
 			"Movie",
 			`${movie.year}`,
@@ -282,21 +281,20 @@ export class EntityCardFactory {
 		if (is.present(movie.last_stream_date)) {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("\u2713")));
 		}
-		return this.make(image, playbackButton, titles, subtitles, tags, movie.summary);
+		return this.make(link, image, playbackButton, titles, subtitles, tags, movie.summary);
 	}
 
 	forPerson(person: api.Person): xnode.XElement {
-		let image = this.EntityLink.forPerson(person).add(
-			this.ImageBox.forSquare()
-		);
+		let link = this.entityLinkFactory.forPerson(person);
+		let image = this.ImageBox.forSquare();
 		let titles = [
-			this.EntityLink.forPerson(person)
+			this.entityTitleFactory.forPerson(person)
 		];
 		let subtitles = [] as xnode.XElement[];
 		let tags = [
 			"Person"
 		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(image, undefined, titles, subtitles, tags);
+		return this.make(link, image, undefined, titles, subtitles, tags);
 	}
 
 	forPlaylist(playlist: api.Playlist, playbackButton: xnode.XElement = this.PlaybackButton.forPlaylist(playlist)): xnode.XElement {
@@ -304,20 +302,19 @@ export class EntityCardFactory {
 		for (let item of playlist.items) {
 			duration_ms += item.track.segment.file.duration_ms;
 		}
-		let image = this.EntityLink.forPlaylist(playlist).add(
-			this.ImageBox.forSquare()
-		);
+		let link = this.entityLinkFactory.forPlaylist(playlist);
+		let image = this.ImageBox.forSquare();
 		let titles = [
-			this.EntityLink.forPlaylist(playlist)
+			this.entityTitleFactory.forPlaylist(playlist)
 		];
 		let subtitles = [
-			this.EntityLink.forUser(playlist.user)
+			this.entityTitleFactory.forUser(playlist.user)
 		];
 		let tags = [
 			"Playlist",
 			metadata.formatDuration(duration_ms)
 		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(image, playbackButton, titles, subtitles, tags, playlist.description);
+		return this.make(link, image, playbackButton, titles, subtitles, tags, playlist.description);
 	}
 
 	forSeason(season: api.Season, playbackButton: xnode.XElement = this.PlaybackButton.forSeason(season)): xnode.XElement {
@@ -325,19 +322,18 @@ export class EntityCardFactory {
 		for (let episode of season.episodes) {
 			duration_ms += episode.segment.file.duration_ms;
 		}
-		let image = this.EntityLink.forSeason(season).add(
-			this.ImageBox.forPoster(is.absent(season.show.artwork) ? undefined : `/files/${season.show.artwork.file_id}/`)
-		);
+		let link = this.entityLinkFactory.forSeason(season);
+		let image = this.ImageBox.forPoster(is.absent(season.show.artwork) ? undefined : `/files/${season.show.artwork.file_id}/`);
 		let titles = [
-			this.EntityLink.forShow(season.show),
-			this.EntityLink.forSeason(season)
+			this.entityTitleFactory.forShow(season.show),
+			this.entityTitleFactory.forSeason(season)
 		];
-		let subtitles = season.show.genres.map((genre) => this.EntityLink.forGenre(genre));
+		let subtitles = season.show.genres.map((genre) => this.entityTitleFactory.forGenre(genre));
 		let tags = [
 			"Season",
 			metadata.formatDuration(duration_ms)
 		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles, tags);
 	}
 
 	forShow(show: api.Show, playbackButton: xnode.XElement = this.PlaybackButton.forShow(show)): xnode.XElement {
@@ -347,47 +343,44 @@ export class EntityCardFactory {
 				duration_ms += episode.segment.file.duration_ms;
 			}
 		}
-		let image = this.EntityLink.forShow(show).add(
-			this.ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`)
-		);
+		let link = this.entityLinkFactory.forShow(show);
+		let image = this.ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`);
 		let titles = [
-			this.EntityLink.forShow(show)
+			this.entityTitleFactory.forShow(show)
 		];
-		let subtitles = show.genres.map((genre) => this.EntityLink.forGenre(genre));
+		let subtitles = show.genres.map((genre) => this.entityTitleFactory.forGenre(genre));
 		let tags = [
 			"Show",
 			metadata.formatDuration(duration_ms)
 		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(image, playbackButton, titles, subtitles, tags, show.summary);
+		return this.make(link, image, playbackButton, titles, subtitles, tags, show.summary);
 	}
 
 	forTrack(track: api.Track, playbackButton: xnode.XElement = this.PlaybackButton.forTrack(track)): xnode.XElement {
 		let duration_ms = 0;
 		duration_ms += track.segment.file.duration_ms;
-		let image = this.EntityLink.forTrack(track).add(
-			this.ImageBox.forSquare(is.absent(track.disc.album.artwork) ? undefined : `/files/${track.disc.album.artwork.file_id}/`)
-		);
+		let link = this.entityLinkFactory.forTrack(track);
+		let image = this.ImageBox.forSquare(is.absent(track.disc.album.artwork) ? undefined : `/files/${track.disc.album.artwork.file_id}/`);
 		let titles = [
-			this.EntityLink.forTrack(track)
+			this.entityTitleFactory.forTrack(track)
 		];
 		let subtitles = [
-			...track.artists.map((artist) => this.EntityLink.forArtist(artist)),
-			this.EntityLink.forAlbum(track.disc.album)
+			...track.artists.map((artist) => this.entityTitleFactory.forArtist(artist)),
+			this.entityTitleFactory.forAlbum(track.disc.album)
 		];
 		let tags = [
 			"Track",
 			`${track.disc.album.year}`,
 			metadata.formatDuration(duration_ms)
 		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, playbackButton, titles, subtitles, tags);
 	}
 
 	forUser(user: api.User): xnode.XElement {
-		let image = this.EntityLink.forUser(user).add(
-			this.ImageBox.forSquare()
-		);
+		let link = this.entityLinkFactory.forUser(user);
+		let image = this.ImageBox.forSquare();
 		let titles = [
-			this.EntityLink.forUser(user)
+			this.entityTitleFactory.forUser(user)
 		];
 		let subtitles = [
 			xnode.element("span").add(xnode.text(user.username))
@@ -395,7 +388,7 @@ export class EntityCardFactory {
 		let tags = [
 			"User"
 		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(image, undefined, titles, subtitles, tags);
+		return this.make(link, image, undefined, titles, subtitles, tags);
 	}
 
 	static makeStyle(): xnode.XElement {
