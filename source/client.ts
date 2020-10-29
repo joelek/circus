@@ -1704,9 +1704,7 @@ let updateviewforuri = (uri: string): void => {
 			let track = response.track;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forTrack(track)
-						.set("data-header", "true")
-					)
+					.add(EntityCard.forTrack(track))
 				)
 				.render()
 			);
@@ -1749,9 +1747,7 @@ let updateviewforuri = (uri: string): void => {
 			let season = response.season;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forSeason(season)
-						.set("data-header", "true")
-					)
+					.add(EntityCard.forSeason(season))
 				)
 				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
@@ -1799,9 +1795,7 @@ let updateviewforuri = (uri: string): void => {
 			let disc = response.disc;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forDisc(disc)
-						.set("data-header", "true")
-					)
+					.add(EntityCard.forDisc(disc))
 				)
 				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 16px;")
@@ -1934,9 +1928,7 @@ let updateviewforuri = (uri: string): void => {
 			let album = response.album;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forAlbum(album)
-						.set("data-header", "true")
-					)
+					.add(EntityCard.forAlbum(album))
 				)
 				.add(...album.discs.map((disc, discIndex) => xml.element("div.content")
 					.set("style", "display: grid; gap: 16px;")
@@ -1985,9 +1977,7 @@ let updateviewforuri = (uri: string): void => {
 			let appearances = response.appearances;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forArtist(artist)
-						.set("data-header", "true")
-					)
+					.add(EntityCard.forArtist(artist))
 				)
 				.add(artist.albums.length === 0 ? undefined : xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
@@ -2046,9 +2036,7 @@ let updateviewforuri = (uri: string): void => {
 			let playlist = response.playlist;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forPlaylist(playlist)
-						.set("data-header", "true")
-					)
+					.add(EntityCard.forPlaylist(playlist))
 				)
 				.add(playlist.items.length === 0 ? undefined : xml.element("div.content")
 					.set("style", "display: grid; gap: 16px;")
@@ -2133,9 +2121,7 @@ let updateviewforuri = (uri: string): void => {
 			const indices = getNextEpisode(show);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forShow(show)
-						.set("data-header", "true")
-					)
+					.add(EntityCard.forShow(show))
 				)
 				.add(is.absent(indices) ? undefined : xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
@@ -2172,9 +2158,7 @@ let updateviewforuri = (uri: string): void => {
 			let episode = response.episode;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forEpisode(episode)
-						.set("data-header", "true")
-					)
+					.add(EntityCard.forEpisode(episode))
 				)
 				.render()
 			);
@@ -2238,9 +2222,7 @@ let updateviewforuri = (uri: string): void => {
 			let movie = response.movie;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forMovie(movie)
-						.set("data-header", "true")
-					)
+					.add(EntityCard.forMovie(movie))
 				)
 				.add(xml.element("div.content")
 					.bind("data-hide", movies.compute((movies) => movies.length === 0))

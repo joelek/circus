@@ -56,22 +56,12 @@ const CSS = `
 		white-space: nowrap;
 	}
 
-	.entity-card[data-header="true"]
-	.entity-card__title {
-		font-size: 20px;
-	}
-
 	.entity-card__subtitle {
 		color: ${theme.TEXT_1};
 		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-	}
-
-	.entity-card[data-header="true"]
-	.entity-card__subtitle {
-		font-size: 20px;
 	}
 
 	.entity-card__tags {
