@@ -99,9 +99,6 @@ export class PlaybackButtonFactory {
 			if (!is.present(contextPath)) {
 				return false;
 			}
-			if (contextPath[contextPath.length - 3] !== album.album_id) {
-				return false;
-			}
 			if (is.present(discIndex)) {
 				let disc = album.discs[discIndex];
 				if (contextPath[contextPath.length - 2] !== disc.disc_id) {
@@ -113,6 +110,10 @@ export class PlaybackButtonFactory {
 						return false;
 					}
 				}
+			} else {
+				if (contextPath[contextPath.length - 3] !== album.album_id) {
+					return false;
+				}
 			}
 			return true;
 		}, this.player.contextPath);
@@ -122,9 +123,6 @@ export class PlaybackButtonFactory {
 	forArtist(artist: api.Artist, albumIndex?: number, discIndex?: number, trackIndex?: number): xnode.XElement {
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
-				return false;
-			}
-			if (contextPath[contextPath.length - 4] !== artist.artist_id) {
 				return false;
 			}
 			if (is.present(albumIndex)) {
@@ -144,6 +142,10 @@ export class PlaybackButtonFactory {
 						}
 					}
 				}
+			} else {
+				if (contextPath[contextPath.length - 4] !== artist.artist_id) {
+					return false;
+				}
 			}
 			return true;
 		}, this.player.contextPath);
@@ -155,12 +157,13 @@ export class PlaybackButtonFactory {
 			if (!is.present(contextPath)) {
 				return false;
 			}
-			if (contextPath[contextPath.length - 2] !== disc.disc_id) {
-				return false;
-			}
 			if (is.present(trackIndex)) {
 				let track = disc.tracks[trackIndex];
 				if (contextPath[contextPath.length - 1] !== track.track_id) {
+					return false;
+				}
+			} else {
+				if (contextPath[contextPath.length - 2] !== disc.disc_id) {
 					return false;
 				}
 			}
@@ -200,12 +203,13 @@ export class PlaybackButtonFactory {
 			if (!is.present(contextPath)) {
 				return false;
 			}
-			if (contextPath[contextPath.length - 2] !== playlist.playlist_id) {
-				return false;
-			}
 			if (is.present(trackIndex)) {
 				let track = playlist.items[trackIndex].track;
 				if (contextPath[contextPath.length - 1] !== track.track_id) {
+					return false;
+				}
+			} else {
+				if (contextPath[contextPath.length - 2] !== playlist.playlist_id) {
 					return false;
 				}
 			}
@@ -219,12 +223,13 @@ export class PlaybackButtonFactory {
 			if (!is.present(contextPath)) {
 				return false;
 			}
-			if (contextPath[contextPath.length - 2] !== season.season_id) {
-				return false;
-			}
 			if (is.present(episodeIndex)) {
 				let episode = season.episodes[episodeIndex];
 				if (contextPath[contextPath.length - 1] !== episode.episode_id) {
+					return false;
+				}
+			} else {
+				if (contextPath[contextPath.length - 2] !== season.season_id) {
 					return false;
 				}
 			}
@@ -238,9 +243,6 @@ export class PlaybackButtonFactory {
 			if (!is.present(contextPath)) {
 				return false;
 			}
-			if (contextPath[contextPath.length - 3] !== show.show_id) {
-				return false;
-			}
 			if (is.present(seasonIndex)) {
 				let season = show.seasons[seasonIndex];
 				if (contextPath[contextPath.length - 2] !== season.season_id) {
@@ -251,6 +253,10 @@ export class PlaybackButtonFactory {
 					if (contextPath[contextPath.length - 1] !== episode.episode_id) {
 						return false;
 					}
+				}
+			} else {
+				if (contextPath[contextPath.length - 3] !== show.show_id) {
+					return false;
 				}
 			}
 			return true;
