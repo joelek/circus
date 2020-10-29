@@ -41,7 +41,9 @@ export class ContextClient {
 		this.tsc.send("SetIndex", {
 			index
 		});
-		this.resume();
+		this.tsc.send("SetPlayback", {
+			playback: true
+		});
 	}
 
 	constructor(url: string, factory: typesockets.WebSocketFactory = (url) => new WebSocket(url)) {
