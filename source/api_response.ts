@@ -105,7 +105,8 @@ type TracksResponse = {
 };
 
 type UserResponse = {
-	user: objects.User
+	user: objects.User,
+	playlists: objects.Playlist[]
 };
 
 type UsersResponse = {

@@ -291,6 +291,7 @@ export const getDiscsFromAlbumId = CollectionIndex.from("album_id", media.audio.
 export const getTracksFromDiscId = CollectionIndex.from("disc_id", media.audio.tracks);
 export const getAlbumFromAlbumId = RecordIndex.from("album_id", media.audio.albums);
 export const getPlaylistItemsFromPlaylistId = CollectionIndex.from("audiolist_id", lists.audiolist_items);
+export const getPlaylistsFromUserId = CollectionIndex.from("user_id", lists.audiolists);
 export const getTrackFromTrackId = RecordIndex.from("track_id", media.audio.tracks);
 export const getDiscFromDiscId = RecordIndex.from("disc_id", media.audio.discs);
 export const getUserFromUserId = RecordIndex.from("user_id", users.users);

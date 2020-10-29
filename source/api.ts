@@ -810,8 +810,12 @@ class UserRoute implements Route<{}, api_response.UserResponse> {
 		let parts = /^[/]api[/]users[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let user_id = parts[1];
 		let user = data.api_lookupUser(user_id);
+		let playlists = data.getPlaylistsFromUserId.lookup(user.user_id).map((playlist) => {
+			return data.api_lookupPlaylist(playlist.audiolist_id, username);
+		});
 		let payload: api_response.UserResponse = {
-			user
+			user,
+			playlists
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));

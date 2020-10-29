@@ -1404,8 +1404,17 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^users[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<{}, api_response.UserResponse>(`/api/users/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let user = response.user;
+			let playlists = response.playlists;
 			mount.appendChild(xml.element("div.content")
+				.set("style", "display: grid; gap: 64px;")
 				.add(renderTextHeader(xml.text(user.name)))
+				.add(xml.element("div")
+					.set("data-hide", `${playlists.length === 0}`)
+					.set("style", "display: grid; gap: 24px;")
+					.add(Grid.make()
+						.add(...playlists.map((playlist) => EntityCard.forPlaylist(playlist)))
+					)
+				)
 				.render());
 		});
 	} else if ((parts = /^users[/]([^/?]*)/.exec(uri)) !== null) {
