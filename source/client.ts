@@ -2376,7 +2376,7 @@ let updateviewforuri = (uri: string): void => {
 				)
 				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 32px;")
-					.add(...genres.map((genre) => renderTextHeader(EntityLink.forGenre(genre))))
+					.add(...genres.map((genre) => renderTextHeader(entityTitleFactory.forGenre(genre))))
 				)
 				.render()
 			);
