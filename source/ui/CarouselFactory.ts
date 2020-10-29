@@ -8,6 +8,7 @@ const CSS = `
 		grid-auto-flow: column;
 		grid-auto-columns: 100%;
 		overflow: scroll hidden;
+		padding-bottom: 16px;
 		scroll-snap-type: x mandatory;
 	}
 
