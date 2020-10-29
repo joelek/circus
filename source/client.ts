@@ -313,7 +313,7 @@ style.innerText = `
 
 	a {
 		text-decoration: none;
-		transition: color 0.1s;
+		transition: color 0.125s;
 	}
 
 	@media (hover: hover) and (pointer: fine) {
@@ -340,7 +340,7 @@ style.innerText = `
 		font-family: "Pacifico", cursive;
 		font-size: 32px;
 		transform-origin: left;
-		transition: transform 0.1s;
+		transition: transform 0.125s;
 		white-space: nowrap;
 	}
 
@@ -495,7 +495,7 @@ style.innerText = `
 		cursor: pointer;
 		font-size: 16px;
 		padding: 8px 16px;
-		transition: transform 0.1s;
+		transition: transform 0.125s;
 	}
 
 	button[data-enabled="false"] {
@@ -1085,7 +1085,7 @@ style.innerText = `
 		cursor: pointer;
 		fill: rgb(31, 31, 31);
 		padding: 8px;
-		transition: transform 0.1s;
+		transition: transform 0.125s;
 	}
 
 	.icon-button[data-enabled="false"] {

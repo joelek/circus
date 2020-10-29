@@ -14,7 +14,7 @@ const CSS = `
 		cursor: pointer;
 		fill: ${theme.BACKGROUND_2};
 		padding: 8px;
-		transition: transform 0.1s;
+		transition: transform 0.125s;
 	}
 
 	@media (hover: hover) and (pointer: fine) {
