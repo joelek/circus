@@ -1012,7 +1012,7 @@ style.innerText = `
 
 	.device-selector__device-type {
 		color: rgb(159, 159, 159);
-		font-size: 12px;
+		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -1054,7 +1054,7 @@ style.innerText = `
 
 	.media-player__subtitle {
 		color: rgb(159, 159, 159);
-		font-size: 12px;
+		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
