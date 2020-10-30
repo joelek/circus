@@ -588,19 +588,19 @@ export function api_lookupArtist(artist_id: string, user_id: string): Artist {
 	};
 };
 
-export function api_lookupCueBase(cue_id: string, user_id: string): CueBase {
+export function api_lookupCueBase(cue_id: string, user_id: string, subtitle?: SubtitleBase): CueBase {
 	let entry = getCueFromCueId.lookup(cue_id);
 	return {
 		cue_id: entry.cue_id,
-		subtitle: api_lookupSubtitleBase(entry.subtitle_id, user_id),
+		subtitle: is.present(subtitle) ? subtitle : api_lookupSubtitleBase(entry.subtitle_id, user_id),
 		start_ms: entry.start_ms,
 		duration_ms: entry.duration_ms,
 		lines: entry.lines
 	};
 };
 
-export function api_lookupCue(cue_id: string, user_id: string): Cue {
-	let cue = api_lookupCueBase(cue_id, user_id);
+export function api_lookupCue(cue_id: string, user_id: string, subtitle?: SubtitleBase): Cue {
+	let cue = api_lookupCueBase(cue_id, user_id, subtitle);
 	return {
 		...cue
 	};
