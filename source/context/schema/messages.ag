@@ -1,14 +1,14 @@
 {
 	SetContext: {
-		context?: Context
+		context?: ./objects/Context
 	},
 
 	SetDevice: {
-		device?: Device
+		device?: ./objects/Device
 	},
 
 	SetDevices: {
-		devices: Device[]
+		devices: ./objects/Device[]
 	},
 
 	SetIndex: {
@@ -16,7 +16,7 @@
 	},
 
 	SetLocalDevice: {
-		device: Device
+		device: ./objects/Device
 	},
 
 	SetPlayback: {

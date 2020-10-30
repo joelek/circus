@@ -1,21 +1,21 @@
 {
-	ContextAlbum: Album,
+	ContextAlbum: ../../api/schema/objects/Album,
 
-	ContextArtist: Artist,
+	ContextArtist: ../../api/schema/objects/Artist,
 
-	ContextDisc: Disc,
+	ContextDisc: ../../api/schema/objects/Disc,
 
-	ContextTrack: Track,
+	ContextTrack: ../../api/schema/objects/Track,
 
-	ContextPlaylist: Playlist,
+	ContextPlaylist: ../../api/schema/objects/Playlist,
 
-	ContextMovie: Movie,
+	ContextMovie: ../../api/schema/objects/Movie,
 
-	ContextShow: Show,
+	ContextShow: ../../api/schema/objects/Show,
 
-	ContextSeason: Season,
+	ContextSeason: ../../api/schema/objects/Season,
 
-	ContextEpisode: Episode,
+	ContextEpisode: ../../api/schema/objects/Episode,
 
 	Context: ContextAlbum | ContextArtist | ContextDisc | ContextTrack | ContextPlaylist | ContextMovie | ContextShow | ContextSeason | ContextEpisode,
 

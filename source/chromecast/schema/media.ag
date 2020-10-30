@@ -2,7 +2,7 @@
 	LOAD: {
 		requestId: number,
 		type: "LOAD",
-		media: MediaInformation,
+		media: ./objects/MediaInformation,
 		autoplay?: boolean,
 		currentTime?: number,
 		customData?: { any },
@@ -50,7 +50,7 @@
 		mediaSessionId: number,
 		requestId: number,
 		type: "VOLUME",
-		volume: Volume,
+		volume: ./objects/Volume,
 		customData?: { any }
 	},
 
@@ -82,7 +82,7 @@
 	MEDIA_STATUS: {
 		requestId: number,
 		type: "MEDIA_STATUS",
-		status: MediaStatus[],
+		status: ./objects/MediaStatus[],
 		customData?: { any }
 	}
 }
