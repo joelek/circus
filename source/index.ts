@@ -384,7 +384,7 @@ let visit_audio = (node: string): void => {
 			year: tag.year,
 			cover_file_id: null
 		});
-		for (let album_artist of tag.album_artists) {
+		for (let [index, album_artist] of tag.album_artists.entries()) {
 			let album_artist_id = makeFileId(album_artist);
 			add_artist({
 				artist_id: album_artist_id,
@@ -392,7 +392,8 @@ let visit_audio = (node: string): void => {
 			});
 			add_album_artist({
 				album_id: album_id,
-				artist_id: album_artist_id
+				artist_id: album_artist_id,
+				order: index + 1
 			});
 		}
 		let disc_id = makeFileId(...tag.album_artists, tag.album_name, zeropad(tag.year, 4), zeropad(tag.disc, 2));
@@ -410,7 +411,7 @@ let visit_audio = (node: string): void => {
 			number: tag.track,
 			duration: tag.duration
 		});
-		for (let track_artist of tag.track_artists) {
+		for (let [index, track_artist] of tag.track_artists.entries()) {
 			let track_artist_id = makeFileId(track_artist);
 			add_artist({
 				artist_id: track_artist_id,
@@ -418,7 +419,8 @@ let visit_audio = (node: string): void => {
 			});
 			add_track_artist({
 				track_id: track_id,
-				artist_id: track_artist_id
+				artist_id: track_artist_id,
+				order: index + 1
 			});
 		}
 	}
@@ -617,7 +619,7 @@ let visit_video = (node: string): void => {
 			year: tag.year,
 			cover_file_id: null
 		});
-		for (let album_artist of tag.album_artists) {
+		for (let [index, album_artist] of tag.album_artists.entries()) {
 			let album_artist_id = makeFileId(album_artist);
 			add_artist({
 				artist_id: album_artist_id,
@@ -625,7 +627,8 @@ let visit_video = (node: string): void => {
 			});
 			add_album_artist({
 				album_id: album_id,
-				artist_id: album_artist_id
+				artist_id: album_artist_id,
+				order: index + 1
 			});
 		}
 		let disc_id = makeFileId(...tag.album_artists, tag.album, zeropad(tag.year, 4), zeropad(tag.disc_number, 2));
@@ -643,7 +646,7 @@ let visit_video = (node: string): void => {
 			number: tag.track_number,
 			duration: tag.duration
 		});
-		for (let track_artist of tag.artists) {
+		for (let [index, track_artist] of tag.artists.entries()) {
 			let track_artist_id = makeFileId(track_artist);
 			add_artist({
 				artist_id: track_artist_id,
@@ -651,7 +654,8 @@ let visit_video = (node: string): void => {
 			});
 			add_track_artist({
 				track_id: track_id,
-				artist_id: track_artist_id
+				artist_id: track_artist_id,
+				order: index + 1
 			});
 		}
 		return;
@@ -928,7 +932,7 @@ for (const metadata_file of metadata_files) {
 			if (movie == null) {
 				continue;
 			}
-			for (const genre of json.genres) {
+			for (const [index, genre] of json.genres.entries()) {
 				const video_genre_id = makeFileId("video", genre);
 				add_video_genre({
 					video_genre_id: video_genre_id,
@@ -936,10 +940,11 @@ for (const metadata_file of metadata_files) {
 				});
 				add_movie_genre({
 					movie_id: movie.movie_id,
-					video_genre_id: video_genre_id
+					video_genre_id: video_genre_id,
+					order: index + 1
 				});
 			}
-			for (const person of json.actors) {
+			for (const [index, person] of json.actors.entries()) {
 				const person_id = makeFileId(person);
 				add_person({
 					person_id: person_id,
@@ -947,7 +952,8 @@ for (const metadata_file of metadata_files) {
 				});
 				add_movie_person({
 					movie_id: movie.movie_id,
-					person_id: person_id
+					person_id: person_id,
+					order: index + 1
 				});
 			}
 		}
@@ -972,7 +978,7 @@ for (const metadata_file of metadata_files) {
 				continue;
 			}
 			show.summary = json.show.summary;
-			for (const genre of json.show.genres) {
+			for (const [index, genre] of json.show.genres.entries()) {
 				const video_genre_id = makeFileId("video", genre);
 				add_video_genre({
 					video_genre_id: video_genre_id,
@@ -980,10 +986,11 @@ for (const metadata_file of metadata_files) {
 				});
 				add_show_genre({
 					show_id: show.show_id,
-					video_genre_id: video_genre_id
+					video_genre_id: video_genre_id,
+					order: index + 1
 				});
 			}
-			for (const person of json.show.actors) {
+			for (const [index, person] of json.show.actors.entries()) {
 				const person_id = makeFileId(person);
 				add_person({
 					person_id: person_id,
@@ -991,7 +998,8 @@ for (const metadata_file of metadata_files) {
 				});
 				add_show_person({
 					show_id: show.show_id,
-					person_id: person_id
+					person_id: person_id,
+					order: index + 1
 				});
 			}
 		}

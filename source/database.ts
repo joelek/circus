@@ -14,22 +14,26 @@ export const PersonEntry = autoguard.Object.of<PersonEntry>({
 
 export type MoviePersonEntry = {
 	"movie_id": string,
-	"person_id": string
+	"person_id": string,
+	"order": number
 };
 
 export const MoviePersonEntry = autoguard.Object.of<MoviePersonEntry>({
 	"movie_id": autoguard.String,
-	"person_id": autoguard.String
+	"person_id": autoguard.String,
+	"order": autoguard.Number
 });
 
 export type ShowPersonEntry = {
 	"show_id": string,
-	"person_id": string
+	"person_id": string,
+	"order": number
 };
 
 export const ShowPersonEntry = autoguard.Object.of<ShowPersonEntry>({
 	"show_id": autoguard.String,
-	"person_id": autoguard.String
+	"person_id": autoguard.String,
+	"order": autoguard.Number
 });
 
 export type ArtistEntry = {
@@ -91,22 +95,26 @@ export const TrackEntry = autoguard.Object.of<TrackEntry>({
 
 export type AlbumArtistEntry = {
 	"album_id": string,
-	"artist_id": string
+	"artist_id": string,
+	"order": number
 };
 
 export const AlbumArtistEntry = autoguard.Object.of<AlbumArtistEntry>({
 	"album_id": autoguard.String,
-	"artist_id": autoguard.String
+	"artist_id": autoguard.String,
+	"order": autoguard.Number
 });
 
 export type TrackArtistEntry = {
 	"track_id": string,
-	"artist_id": string
+	"artist_id": string,
+	"order": number
 };
 
 export const TrackArtistEntry = autoguard.Object.of<TrackArtistEntry>({
 	"track_id": autoguard.String,
-	"artist_id": autoguard.String
+	"artist_id": autoguard.String,
+	"order": autoguard.Number
 });
 
 export type VideoGenreEntry = {
@@ -143,12 +151,14 @@ export const MovieEntry = autoguard.Object.of<MovieEntry>({
 
 export type MovieGenreEntry = {
 	"movie_id": string,
-	"video_genre_id": string
+	"video_genre_id": string,
+	"order": number
 };
 
 export const MovieGenreEntry = autoguard.Object.of<MovieGenreEntry>({
 	"movie_id": autoguard.String,
-	"video_genre_id": autoguard.String
+	"video_genre_id": autoguard.String,
+	"order": autoguard.Number
 });
 
 export type MoviePartEntry = {
@@ -189,12 +199,14 @@ export const ShowEntry = autoguard.Object.of<ShowEntry>({
 
 export type ShowGenreEntry = {
 	"show_id": string,
-	"video_genre_id": string
+	"video_genre_id": string,
+	"order": number
 };
 
 export const ShowGenreEntry = autoguard.Object.of<ShowGenreEntry>({
 	"show_id": autoguard.String,
-	"video_genre_id": autoguard.String
+	"video_genre_id": autoguard.String,
+	"order": autoguard.Number
 });
 
 export type SeasonEntry = {

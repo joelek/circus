@@ -15,7 +15,6 @@
 * Make client reconnect after going offline.
 * Move redundant data from base types to full types in API.
 * Create and use layout components with standard spacing.
-* Ingest relation order for show genres, movie genres, show actors, movie actors, album artists and track artists.
 * Re-add support for movie segments.
 * Create modal media player.
 * Make artist view more interesting

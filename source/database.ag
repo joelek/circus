@@ -5,11 +5,13 @@
 	},
 	MoviePersonEntry: {
 		movie_id: string,
-		person_id: string
+		person_id: string,
+		order: number
 	},
 	ShowPersonEntry: {
 		show_id: string,
-		person_id: string
+		person_id: string,
+		order: number
 	},
 	ArtistEntry: {
 		artist_id: string,
@@ -36,11 +38,13 @@
 	},
 	AlbumArtistEntry: {
 		album_id: string,
-		artist_id: string
+		artist_id: string,
+		order: number
 	},
 	TrackArtistEntry: {
 		track_id: string,
-		artist_id: string
+		artist_id: string,
+		order: number
 	},
 	VideoGenreEntry: {
 		video_genre_id: string,
@@ -55,7 +59,8 @@
 	},
 	MovieGenreEntry: {
 		movie_id: string,
-		video_genre_id: string
+		video_genre_id: string,
+		order: number
 	},
 	MoviePartEntry: {
 		movie_part_id: string,
@@ -72,7 +77,8 @@
 	},
 	ShowGenreEntry: {
 		show_id: string,
-		video_genre_id: string
+		video_genre_id: string,
+		order: number
 	},
 	SeasonEntry: {
 		season_id: string,
