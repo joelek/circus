@@ -7,19 +7,8 @@ import * as api from "./api";
 import * as auth from "./auth";
 import * as data from "./data";
 import * as subsearch from "./subsearch";
-import { FileEntry, CueEntry } from "./database";
 import * as context from "./context";
 import * as chromecasts from "./chromecast/chromecasts";
-
-let filter_headers = (headers: libhttp.IncomingHttpHeaders, keys: Array<string>): Partial<libhttp.IncomingHttpHeaders> => {
-	let out: Partial<libhttp.IncomingHttpHeaders> = {};
-	for (let key in headers) {
-		if (keys.indexOf(key) >= 0) {
-			out[key] = headers[key];
-		}
-	}
-	return out;
-};
 
 let send_data = (file_id: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	if (request.url === undefined) {
