@@ -6,4 +6,3 @@
 * Rewrite the indexer to support delta updates.
 * Add support for mutiple media sources.
 * Add playlisting functionality for audio content.
-* Ingest actors for video content and add actor entity.
