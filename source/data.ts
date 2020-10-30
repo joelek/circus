@@ -293,7 +293,15 @@ export function getArtistAppearances(artist_id: string, user_id: string): Album[
 		.map((entry) => {
 			return api_lookupAlbum(entry.album_id, user_id);
 		});
-}
+};
+
+export function getUserPlaylists(subject_user_id: string, user_id: string): Playlist[] {
+	return getPlaylistsFromUserId.lookup(subject_user_id)
+		.sort(LexicalSort.increasing((entry) => entry.title))
+		.map((entry) => {
+			return api_lookupPlaylist(entry.audiolist_id, user_id);
+		});
+};
 
 class SearchIndex<A> {
 	private map: Map<string, Set<A>>;

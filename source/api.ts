@@ -5,7 +5,6 @@ import * as auth from "./auth";
 import * as api_response from "./api_response";
 import * as data from "./data";
 import * as is from "./is";
-import { LexicalSort } from "./shared";
 
 function getParameter(url: liburl.UrlWithParsedQuery, key: string): string[] {
 	let values = url.query[key] ?? [];
@@ -706,11 +705,7 @@ class UserRoute implements Route<{}, api_response.UserResponse> {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]users[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let user = data.api_lookupUser(parts[1]);
-		let playlists = data.getPlaylistsFromUserId.lookup(user.user_id)
-			.sort(LexicalSort.increasing((entry) => entry.title))
-			.map((entry) => {
-				return data.api_lookupPlaylist(entry.audiolist_id, user_id);
-			});
+		let playlists = data.getUserPlaylists(user.user_id, user_id);
 		let payload: api_response.UserResponse = {
 			user,
 			playlists
