@@ -380,27 +380,7 @@ class MovieMovieSuggestionsRoute implements Route<{}, api_response.MovieMovieSug
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
 		let movie_id = parts[1];
-		let genres = data.getVideoGenresFromMovieId(movie_id);
-		let map = new Map<string, number>();
-		for (let genre of genres) {
-			let movie_genres = data.getMoviesFromVideoGenreIdIndex.lookup(genre.video_genre_id);
-			for (let movie_genre of movie_genres) {
-				let value = map.get(movie_genre.movie_id) ?? 0;
-				map.set(movie_genre.movie_id, value + 2);
-			}
-		}
-		for (let entry of map) {
-			let video_genres = data.getVideoGenresFromMovieId(entry[0]);
-			map.set(entry[0], entry[1] - video_genres.length);
-		}
-		map.delete(movie_id);
-		let movies = Array.from(map.entries())
-			.sort(CombinedSort.of(
-				NumericSort.decreasing((entry) => entry[1])
-			))
-			.slice(offset, offset + length)
-			.map((entry) => entry[0])
-			.map((movie_id) => data.api_lookupMovie(movie_id, user_id))
+		let movies = data.getMovieSuggestions(movie_id, offset, length, user_id);
 		let payload: api_response.MovieMovieSuggestionsResponse = {
 			movies
 		};

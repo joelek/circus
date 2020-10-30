@@ -241,12 +241,6 @@ export function getTokensFromUserId(user_id: string): Array<libdb.AuthToken> {
 	});
 }
 
-export function getVideoGenresFromMovieId(movieId: string): Array<libdb.VideoGenreEntry> {
-	return getMovieGenresFromMovieId.lookup(movieId).map((movieGenre) => {
-		return getVideoGenreFromVideoGenreId.lookup(movieGenre.video_genre_id);
-	});
-}
-
 let albumArtistsIndex = CollectionIndex.from("album_id", media.audio.album_artists);
 export const getAlbumArtistsFromArtistId = CollectionIndex.from("artist_id", media.audio.album_artists);
 let trackArtistsIndex = CollectionIndex.from("track_id", media.audio.track_artists);
@@ -507,6 +501,34 @@ export function deleteToken(token: libdb.AuthToken): void {
 
 
 
+
+
+
+
+
+export function getMovieSuggestions(movie_id: string, offset: number, length: number, user_id: string): Movie[] {
+	let genres = getMovieGenresFromMovieId.lookup(movie_id);
+	let map = new Map<string, number>();
+	for (let genre of genres) {
+		let movie_genres = getMoviesFromVideoGenreIdIndex.lookup(genre.video_genre_id);
+		for (let movie_genre of movie_genres) {
+			let value = map.get(movie_genre.movie_id) ?? 0;
+			map.set(movie_genre.movie_id, value + 2);
+		}
+	}
+	for (let entry of map) {
+		let video_genres = getMovieGenresFromMovieId.lookup(entry[0]);
+		map.set(entry[0], entry[1] - video_genres.length);
+	}
+	map.delete(movie_id);
+	return Array.from(map.entries())
+		.sort(CombinedSort.of(
+			NumericSort.decreasing((entry) => entry[1])
+		))
+		.slice(offset, offset + length)
+		.map((entry) => entry[0])
+		.map((movie_id) => api_lookupMovie(movie_id, user_id))
+};
 
 
 
