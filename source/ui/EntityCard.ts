@@ -154,6 +154,9 @@ export class EntityCardFactory {
 		if (api.Episode.is(entity)) {
 			return this.forEpisode(entity);
 		}
+		if (api.Genre.is(entity)) {
+			return this.forGenre(entity);
+		}
 		if (api.Person.is(entity)) {
 			return this.forPerson(entity);
 		}
@@ -262,6 +265,19 @@ export class EntityCardFactory {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("\u2713")));
 		}
 		return this.make(link, image, playbackButton, titles, subtitles, tags, episode.summary);
+	}
+
+	forGenre(genre: api.Genre): xnode.XElement {
+		let link = this.entityLinkFactory.forGenre(genre);
+		let image = this.ImageBox.forSquare();
+		let titles = [
+			this.entityTitleFactory.forGenre(genre)
+		];
+		let subtitles = [] as xnode.XElement[];
+		let tags = [
+			"Genre"
+		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		return this.make(link, image, undefined, titles, subtitles, tags);
 	}
 
 	forMovie(movie: api.Movie, playbackButton: xnode.XElement = this.PlaybackButton.forMovie(movie)): xnode.XElement {

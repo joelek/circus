@@ -106,6 +106,9 @@ export class EntityRowFactory {
 		if (api.Episode.is(entity)) {
 			return this.forEpisode(entity);
 		}
+		if (api.Genre.is(entity)) {
+			return this.forGenre(entity);
+		}
 		if (api.Person.is(entity)) {
 			return this.forPerson(entity);
 		}
@@ -172,6 +175,16 @@ export class EntityRowFactory {
 			this.entityTitleFactory.forSeason(episode.season)
 		];
 		return this.make(link, image, playbackButton, titles, subtitles);
+	}
+
+	forGenre(genre: api.Genre): xnode.XElement {
+		let link = this.entityLinkFactory.forGenre(genre);
+		let image = this.ImageBox.forSquare();
+		let titles = [
+			this.entityTitleFactory.forGenre(genre)
+		];
+		let subtitles = [] as xnode.XElement[];
+		return this.make(link, image, undefined, titles, subtitles);
 	}
 
 	forMovie(movie: api.Movie, playbackButton: xnode.XElement = this.PlaybackButton.forMovie(movie)): xnode.XElement {
