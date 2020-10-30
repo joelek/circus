@@ -5,7 +5,7 @@ import * as utils from "./utils";
 import * as passwords from "./passwords";
 import { CombinedSort, LexicalSort, NumericSort } from "./shared";
 import * as is from "./is";
-import { Album, AlbumBase, Artist, ArtistBase, Cue, CueBase, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Person, PersonBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, SegmentBase, Show, ShowBase, Subtitle, SubtitleBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
+import { Album, AlbumBase, Artist, ArtistBase, Cue, CueBase, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Person, PersonBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, Show, ShowBase, Subtitle, SubtitleBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -53,8 +53,6 @@ users.tokens = users.tokens.filter((token) => {
 	return token.expires_ms > Date.now();
 });
 libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
-
-
 
 // Re-create cues from compact notation.
 for (let subtitle of media.video.subtitle_contents) {
@@ -241,41 +239,6 @@ export function getTokensFromUsername(username: string): Array<libdb.AuthToken> 
 	return users.tokens.filter((token) => {
 		return token.username === username;
 	});
-}
-
-export function getStreamsFromFileId(fileId: string): Array<libdb.Stream> {
-	return getStreamsFromFileIdIndex.lookup(fileId)
-		.sort((one, two) => {
-			return one.timestamp_ms - two.timestamp_ms;
-		});
-}
-
-export function getSeasonsFromShowId(show_id: string): (libdb.SeasonEntry & {
-	episodes: libdb.EpisodeEntry[]
-})[] {
-	return getSeasonsFromShowIdIndex.lookup(show_id).map((season) => {
-		let episodes = getEpisodesFromSeasonIdIndex.lookup(season.season_id);
-		return {
-			...season,
-			episodes
-		}
-	});
-}
-
-export function getEpisodesFromShowId(showId: string): Array<libdb.EpisodeEntry> {
-	return getSeasonsFromShowIdIndex.lookup(showId)
-		.sort((one, two) => {
-			return one.number - two.number;
-		})
-		.map((season) => {
-			return getEpisodesFromSeasonIdIndex.lookup(season.season_id)
-				.sort((one, two) => {
-					return one.number - two.number;
-				});
-		})
-		.reduce((array, episodes) => {
-			return array.concat(episodes);
-		}, new Array<libdb.EpisodeEntry>());
 }
 
 export function getMoviePartsFromMovieId(movieId: string): Array<libdb.MoviePartEntry> {
