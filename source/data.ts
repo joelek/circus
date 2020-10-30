@@ -375,6 +375,7 @@ export const playlistTitleSearchIndex = SearchIndex.from(lists.audiolists, (entr
 export const userUsernameSearchIndex = SearchIndex.from(users.users, (entry) => [entry.name, entry.username]);
 export const cueSearchIndex = SearchIndex.from(media.video.cues, (entry) => entry.lines);
 export const personSearchIndex = SearchIndex.from(media.persons, (entry) => [entry.name]);
+export const genreSearchIndex = SearchIndex.from(media.video.genres, (entry) => [entry.title]);
 
 export function searchForCues(query: string, user_id: string, offset: number, limit: number): Cue[] {
 	let entries = cueSearchIndex.search(query)
@@ -388,14 +389,15 @@ export function searchForCues(query: string, user_id: string, offset: number, li
 
 export function search(query: string, user_id: string, offset: number, limit: number): Entity[] {
 	let entries = [
-		...albumTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 5 })),
-		...artistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 7 })),
-		...episodeTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 2 })),
-		...movieTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 6 })),
-		...personSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 0 })),
-		...playlistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 4 })),
-		...showTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 3 })),
-		...trackTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 1 })),
+		...albumTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 9 })),
+		...artistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 6 })),
+		...episodeTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 4 })),
+		...genreSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 2 })),
+		...movieTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 8 })),
+		...personSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 1 })),
+		...playlistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 3 })),
+		...showTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 7 })),
+		...trackTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 5 })),
 		...userUsernameSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 0 }))
 	].sort(CombinedSort.of(
 		NumericSort.decreasing((value) => value.rank),
@@ -409,6 +411,8 @@ export function search(query: string, user_id: string, offset: number, limit: nu
 			return api_lookupArtist(entry.artist_id, user_id);
 		} else if (libdb.EpisodeEntry.is(entry)) {
 			return api_lookupEpisode(entry.episode_id, user_id);
+		} else if (libdb.VideoGenreEntry.is(entry)) {
+			return api_lookupGenre(entry.video_genre_id, user_id);
 		} else if (libdb.MovieEntry.is(entry)) {
 			return api_lookupMovie(entry.movie_id, user_id);
 		} else if (libdb.PersonEntry.is(entry)) {
