@@ -84,12 +84,7 @@ class ArtistRoute implements Route<{}, api_response.ArtistResponse> {
 		let parts = /^[/]api[/]audio[/]artists[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let artist_id = parts[1];
 		let artist = data.api_lookupArtist(artist_id, user_id);
-		let appearances = data.lookupAppearances(artist_id)
-			.map((entry) => data.getAlbumFromAlbumId.lookup(entry))
-			.sort(LexicalSort.increasing((entry) => entry.title))
-			.map((entry) => {
-				return data.api_lookupAlbum(entry.album_id, user_id);
-			});
+		let appearances = data.getArtistAppearances(artist_id, user_id);
 		let payload: api_response.ArtistResponse = {
 			artist,
 			appearances

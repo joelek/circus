@@ -264,7 +264,7 @@ export const getSubtitleFromSubtitleId = RecordIndex.from("subtitle_id", media.v
 export const getCueFromCueId = RecordIndex.from("cue_id", media.video.cues);
 export const getCuesFromSubtitleId = CollectionIndex.from("subtitle_id", media.video.cues);
 
-export function lookupAppearances(artist_id: string): Array<string> {
+export function getArtistAppearances(artist_id: string, user_id: string): Album[] {
 	let track_artists = artistTracksIndex.lookup(artist_id);
 	let tracks = track_artists.map((track_artist) => {
 		return getTrackFromTrackId.lookup(track_artist.track_id);
@@ -287,7 +287,12 @@ export function lookupAppearances(artist_id: string): Array<string> {
 			result.push(album_id);
 		}
 	}
-	return result;
+	return result
+		.map((entry) => getAlbumFromAlbumId.lookup(entry))
+		.sort(LexicalSort.increasing((entry) => entry.title))
+		.map((entry) => {
+			return api_lookupAlbum(entry.album_id, user_id);
+		});
 }
 
 class SearchIndex<A> {
