@@ -1949,7 +1949,7 @@ let updateviewforuri = (uri: string): void => {
 			let genres = response.genres;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(renderTextHeader(xml.text("Video Genres")))
+					.add(renderTextHeader(xml.text("Genres")))
 				)
 				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 32px;")
