@@ -21,3 +21,5 @@
 * Make start view a combined search and nav view.
 * Create back and forward buttons for navigation.
 * Create and use router that remembers scroll position for page views.
+* Re-add support for cues.
+* Add icons to text inputs.
