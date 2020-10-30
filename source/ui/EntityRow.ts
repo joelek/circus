@@ -131,12 +131,6 @@ export class EntityRowFactory {
 	}
 
 	forAlbum(album: api.Album, playbackButton: xnode.XElement = this.PlaybackButton.forAlbum(album)): xnode.XElement {
-		let duration_ms = 0;
-		for (let disc of album.discs) {
-			for (let track of disc.tracks) {
-				duration_ms += track.segment.file.duration_ms;
-			}
-		}
 		let link = this.entityLinkFactory.forAlbum(album);
 		let image = this.ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`);
 		let titles = [
@@ -147,14 +141,6 @@ export class EntityRowFactory {
 	}
 
 	forArtist(artist: api.Artist, playbackButton: xnode.XElement = this.PlaybackButton.forArtist(artist)): xnode.XElement {
-		let duration_ms = 0;
-		for (let album of artist.albums) {
-			for (let disc of album.discs) {
-				for (let track of disc.tracks) {
-					duration_ms += track.segment.file.duration_ms;
-				}
-			}
-		}
 		let link = this.entityLinkFactory.forArtist(artist);
 		let image = this.ImageBox.forSquare();
 		let titles = [
@@ -165,10 +151,6 @@ export class EntityRowFactory {
 	}
 
 	forDisc(disc: api.Disc, playbackButton: xnode.XElement = this.PlaybackButton.forDisc(disc)): xnode.XElement {
-		let duration_ms = 0;
-		for (let track of disc.tracks) {
-			duration_ms += track.segment.file.duration_ms;
-		}
 		let link = this.entityLinkFactory.forDisc(disc);
 		let image = this.ImageBox.forSquare(is.absent(disc.album.artwork) ? undefined : `/files/${disc.album.artwork.file_id}/`);
 		let titles = [
@@ -180,8 +162,6 @@ export class EntityRowFactory {
 	}
 
 	forEpisode(episode: api.Episode, playbackButton: xnode.XElement = this.PlaybackButton.forEpisode(episode)): xnode.XElement {
-		let duration_ms = 0;
-		duration_ms += episode.segment.file.duration_ms;
 		let link = this.entityLinkFactory.forEpisode(episode);
 		let image = this.ImageBox.forSquare(`/media/stills/${episode.segment.file.file_id}/`);
 		let titles = [
@@ -195,8 +175,6 @@ export class EntityRowFactory {
 	}
 
 	forMovie(movie: api.Movie, playbackButton: xnode.XElement = this.PlaybackButton.forMovie(movie)): xnode.XElement {
-		let duration_ms = 0;
-		duration_ms += movie.segment.file.duration_ms;
 		let link = this.entityLinkFactory.forMovie(movie);
 		let image = this.ImageBox.forSquare(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/`);
 		let titles = [
@@ -217,10 +195,6 @@ export class EntityRowFactory {
 	}
 
 	forPlaylist(playlist: api.Playlist, playbackButton: xnode.XElement = this.PlaybackButton.forPlaylist(playlist)): xnode.XElement {
-		let duration_ms = 0;
-		for (let item of playlist.items) {
-			duration_ms += item.track.segment.file.duration_ms;
-		}
 		let link = this.entityLinkFactory.forPlaylist(playlist);
 		let image = this.ImageBox.forSquare();
 		let titles = [
@@ -233,10 +207,6 @@ export class EntityRowFactory {
 	}
 
 	forSeason(season: api.Season, playbackButton: xnode.XElement = this.PlaybackButton.forSeason(season)): xnode.XElement {
-		let duration_ms = 0;
-		for (let episode of season.episodes) {
-			duration_ms += episode.segment.file.duration_ms;
-		}
 		let link = this.entityLinkFactory.forSeason(season);
 		let image = this.ImageBox.forSquare(is.absent(season.show.artwork) ? undefined : `/files/${season.show.artwork.file_id}/`);
 		let titles = [
@@ -248,12 +218,6 @@ export class EntityRowFactory {
 	}
 
 	forShow(show: api.Show, playbackButton: xnode.XElement = this.PlaybackButton.forShow(show)): xnode.XElement {
-		let duration_ms = 0;
-		for (let season of show.seasons) {
-			for (let episode of season.episodes) {
-				duration_ms += episode.segment.file.duration_ms;
-			}
-		}
 		let link = this.entityLinkFactory.forShow(show);
 		let image = this.ImageBox.forSquare(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`);
 		let titles = [
@@ -264,8 +228,6 @@ export class EntityRowFactory {
 	}
 
 	forTrack(track: api.Track, playbackButton: xnode.XElement = this.PlaybackButton.forTrack(track)): xnode.XElement {
-		let duration_ms = 0;
-		duration_ms += track.segment.file.duration_ms;
 		let link = this.entityLinkFactory.forTrack(track);
 		let image = this.ImageBox.forSquare(is.absent(track.disc.album.artwork) ? undefined : `/files/${track.disc.album.artwork.file_id}/`);
 		let titles = [
