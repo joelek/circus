@@ -177,19 +177,25 @@ const getPersonFromPersonId = RecordIndex.from("person_id", media.persons);
 
 export function getMoviesFromPersonId(person_id: string, user_id: string, offset: number, length: number): Movie[] {
 	return getMoviePersonsFromPersonId.lookup(person_id)
-		.sort(LexicalSort.increasing((movie) => movie.movie_id))
+		.map((entry) => {
+			return getMovieFromMovieId.lookup(entry.movie_id);
+		})
+		.sort(LexicalSort.increasing((movie) => movie.title))
 		.slice(offset, offset + length)
-		.map((movie_genre) => {
-			return api_lookupMovie(movie_genre.movie_id, user_id);
+		.map((entry) => {
+			return api_lookupMovie(entry.movie_id, user_id);
 		});
 }
 
 export function getShowsFromPersonId(person_id: string, user_id: string, offset: number, length: number): Show[] {
 	return getShowPersonsFromPersonId.lookup(person_id)
-		.sort(LexicalSort.increasing((show) => show.show_id))
+		.map((entry) => {
+			return getShowFromShowId.lookup(entry.show_id);
+		})
+		.sort(LexicalSort.increasing((entry) => entry.title))
 		.slice(offset, offset + length)
-		.map((show_genre) => {
-			return api_lookupShow(show_genre.show_id, user_id);
+		.map((entry) => {
+			return api_lookupShow(entry.show_id, user_id);
 		});
 }
 
@@ -209,19 +215,25 @@ let getStreamsFromFileIdIndex = CollectionIndex.from("file_id", streams.streams)
 
 export function getMoviesFromVideoGenreId(video_genre_id: string, user_id: string, offset: number, length: number): Movie[] {
 	return getMoviesFromVideoGenreIdIndex.lookup(video_genre_id)
-		.sort(LexicalSort.increasing((movie) => movie.movie_id))
+		.map((entry) => {
+			return getMovieFromMovieId.lookup(entry.movie_id);
+		})
+		.sort(LexicalSort.increasing((entry) => entry.title))
 		.slice(offset, offset + length)
-		.map((movie_genre) => {
-			return api_lookupMovie(movie_genre.movie_id, user_id);
+		.map((entry) => {
+			return api_lookupMovie(entry.movie_id, user_id);
 		});
 }
 
 export function getShowsFromVideoGenreId(video_genre_id: string, user_id: string, offset: number, length: number): Show[] {
 	return getShowsFromVideoGenreIdIndex.lookup(video_genre_id)
-		.sort(LexicalSort.increasing((show) => show.show_id))
+		.map((entry) => {
+			return getShowFromShowId.lookup(entry.show_id);
+		})
+		.sort(LexicalSort.increasing((entry) => entry.title))
 		.slice(offset, offset + length)
-		.map((show_genre) => {
-			return api_lookupShow(show_genre.show_id, user_id);
+		.map((entry) => {
+			return api_lookupShow(entry.show_id, user_id);
 		});
 }
 
@@ -602,9 +614,14 @@ export function api_lookupArtist(artist_id: string, user_id: string): Artist {
 	let artist = api_lookupArtistBase(artist_id, user_id);
 	return {
 		...artist,
-		albums: getAlbumArtistsFromArtistId.lookup(artist_id).map((entry) => {
-			return api_lookupAlbum(entry.album_id, user_id);
-		})
+		albums: getAlbumArtistsFromArtistId.lookup(artist_id)
+			.map((entry) => {
+				return getAlbumFromAlbumId.lookup(entry.album_id);
+			})
+			.sort(NumericSort.decreasing((entry) => entry.year))
+			.map((entry) => {
+				return api_lookupAlbum(entry.album_id, user_id);
+			})
 	};
 };
 
@@ -637,28 +654,30 @@ export function api_lookupDiscBase(disc_id: string, user_id: string, album?: Alb
 
 export function api_lookupDisc(disc_id: string, user_id: string, album?: AlbumBase): Disc {
 	let disc = api_lookupDiscBase(disc_id, user_id, album);
-	let tracks = getTracksFromDiscId.lookup(disc_id).map((entry) => {
-		let track: TrackBase = {
-			track_id: entry.track_id,
-			title: entry.title,
-			disc: disc,
-			artists: trackArtistsIndex.lookup(entry.track_id).map((entry) => {
-				return getArtistFromArtistId.lookup(entry.artist_id);
-			}),
-			number: entry.number,
-			last_stream_date: undefined
-		};
-		return {
-			...track,
-			segment: {
-				file: {
-					file_id: entry.file_id,
-					mime: "audio/mp4",
-					duration_ms: entry.duration
+	let tracks = getTracksFromDiscId.lookup(disc_id)
+		.sort(NumericSort.increasing((entry) => entry.number))
+		.map((entry) => {
+			let track: TrackBase = {
+				track_id: entry.track_id,
+				title: entry.title,
+				disc: disc,
+				artists: trackArtistsIndex.lookup(entry.track_id).map((entry) => {
+					return getArtistFromArtistId.lookup(entry.artist_id);
+				}),
+				number: entry.number,
+				last_stream_date: undefined
+			};
+			return {
+				...track,
+				segment: {
+					file: {
+						file_id: entry.file_id,
+						mime: "audio/mp4",
+						duration_ms: entry.duration
+					}
 				}
-			}
-		};
-	});
+			};
+		});
 	return {
 		...disc,
 		tracks
@@ -803,13 +822,15 @@ export function api_lookupPlaylistBase(playlist_id: string, user_id: string): Pl
 
 export function api_lookupPlaylist(playlist_id: string, user_id: string): Playlist {
 	let playlist = api_lookupPlaylistBase(playlist_id, user_id);
-	let items = getPlaylistItemsFromPlaylistId.lookup(playlist.playlist_id).map((audiolist_item) => {
-		return {
-			playlist,
-			number: audiolist_item.number,
-			track: api_lookupTrack(audiolist_item.track_id, user_id)
-		};
-	});
+	let items = getPlaylistItemsFromPlaylistId.lookup(playlist.playlist_id)
+		.sort(NumericSort.increasing((entry) => entry.number))
+		.map((entry) => {
+			return {
+				playlist,
+				number: entry.number,
+				track: api_lookupTrack(entry.track_id, user_id)
+			};
+		});
 	return {
 		...playlist,
 		items
@@ -827,9 +848,11 @@ export function api_lookupSeasonBase(season_id: string, user_id: string, show?: 
 
 export function api_lookupSeason(season_id: string, user_id: string, show?: ShowBase): Season {
 	let season = api_lookupSeasonBase(season_id, user_id, show);
-	let episodes = getEpisodesFromSeasonIdIndex.lookup(season.season_id).map((entry) => {
-		return api_lookupEpisode(entry.episode_id, user_id, season);
-	});
+	let episodes = getEpisodesFromSeasonIdIndex.lookup(season.season_id)
+		.sort(NumericSort.increasing((entry) => entry.number))
+		.map((entry) => {
+			return api_lookupEpisode(entry.episode_id, user_id, season);
+		});
 	return {
 		...season,
 		episodes
@@ -860,9 +883,11 @@ export function api_lookupShowBase(show_id: string, user_id: string): ShowBase {
 
 export function api_lookupShow(show_id: string, user_id: string): Show {
 	let show = api_lookupShowBase(show_id, user_id);
-	let seasons = getSeasonsFromShowIdIndex.lookup(show_id).map((entry) => {
-		return api_lookupSeason(entry.season_id, user_id, show);
-	});
+	let seasons = getSeasonsFromShowIdIndex.lookup(show_id)
+		.sort(NumericSort.increasing((entry) => entry.number))
+		.map((entry) => {
+			return api_lookupSeason(entry.season_id, user_id, show);
+		});
 	return {
 		...show,
 		seasons
