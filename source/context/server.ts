@@ -40,16 +40,16 @@ export class ContextServer {
 	private getExistingSession(connection_id: string, callback: (session: Session) => void): void {
 		let token = this.tokens.get(connection_id);
 		if (is.present(token)) {
-			let username = auth.getUsername(token);
-			let session = this.sessions.get(username);
+			let user_id = auth.getUserId(token);
+			let session = this.sessions.get(user_id);
 			if (is.present(session)) {
 				callback(session);
 			}
 		}
 	}
 
-	private getSession(username: string): Session {
-		let existingSession = this.sessions.get(username);
+	private getSession(user_id: string): Session {
+		let existingSession = this.sessions.get(user_id);
 		if (is.present(existingSession)) {
 			return existingSession;
 		}
@@ -101,7 +101,7 @@ export class ContextServer {
 				});
 			}
 		});
-		this.sessions.set(username, session);
+		this.sessions.set(user_id, session);
 		return session;
 	}
 
@@ -109,8 +109,8 @@ export class ContextServer {
 		let token = this.tokens.get(connection_id);
 		this.tokens.delete(connection_id);
 		if (is.present(token)) {
-			let username = auth.getUsername(token);
-			let session = this.sessions.get(username);
+			let user_id = auth.getUserId(token);
+			let session = this.sessions.get(user_id);
 			if (is.present(session)) {
 				let devices = session.devices;
 				devices.updateState(devices.getState().filter((device) => {
@@ -157,9 +157,9 @@ export class ContextServer {
 			this.revokeAuthentication(message.connection_id);
 			let token = message.data.token;
 			if (is.present(token)) {
-				let username = auth.getUsername(token);
+				let user_id = auth.getUserId(token);
 				this.tokens.set(message.connection_id, token);
-				let session = this.getSession(username);
+				let session = this.getSession(user_id);
 				let device = makeDevice(message.connection_id, message.connection_url);
 				session.devices.updateState([...session.devices.getState(), device]);
 				this.tss.send("SetContext", message.connection_id, {

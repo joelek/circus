@@ -14,10 +14,10 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 	if (request.url === undefined) {
 		throw new Error();
 	}
-	let username = "";
+	let user_id = "";
 	try {
 		var url = liburl.parse(request.url, true);
-		username = auth.getUsername(url.query.token as string);
+		user_id = auth.getUserId(url.query.token as string);
 	} catch (error) {
 		response.writeHead(401, {});
 		return response.end();
@@ -57,7 +57,7 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 		});
 		s.addListener("close", () => {
 			if (offset + s.bytesRead === size) {
-				data.addStream(username, file_id);
+				data.addStream(user_id, file_id);
 			}
 		});
 		s.on('open', function () {

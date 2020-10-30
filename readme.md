@@ -10,7 +10,6 @@
 * Index video resolution and image sizes.
 * Split person into three routes.
 * Set titles based on page.
-* User user_id as key for stream logs.
 * Make search function for each entity in data.
 * Export icons with 24px sizes.
 * Make client reconnect after going offline.

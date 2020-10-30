@@ -2,14 +2,14 @@ import * as libcrypto from "crypto";
 import * as data from "./data";
 import * as passwords from "./passwords";
 
-function generate_token(username: string): string {
+function generate_token(user_id: string): string {
 	let selector = libcrypto.randomBytes(16);
 	let validator = libcrypto.randomBytes(16);
 	let hash = libcrypto.createHash('sha256');
 	hash.update(validator);
 	let validator_hash = hash.digest('hex');
 	data.createToken({
-		username: username,
+		user_id: user_id,
 		selector: selector.toString('hex'),
 		validator_hash: validator_hash,
 		expires_ms: Date.now() + (7 * 24 * 60 * 60 * 1000)
@@ -22,10 +22,10 @@ export function createToken(username: string, password: string): string {
 	if (!passwords.verify(password, user.password)) {
 		throw `Expected a valid password!`;
 	}
-	return generate_token(username);
+	return generate_token(user.user_id);
 }
 
-export function getUsername(chunk: string): string {
+export function getUserId(chunk: string): string {
 	let parts = /^([0-9a-f]{32})([0-9a-f]{32})$/.exec(chunk);
 	if (!parts) {
 		throw new Error();
@@ -47,5 +47,5 @@ export function getUsername(chunk: string): string {
 		...token,
 		expires_ms
 	});
-	return token.username;
+	return token.user_id;
 }

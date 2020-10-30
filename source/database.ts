@@ -432,14 +432,14 @@ export const UserEntry = autoguard.Object.of<UserEntry>({
 });
 
 export type AuthToken = {
-	"username": string,
+	"user_id": string,
 	"selector": string,
 	"validator_hash": string,
 	"expires_ms": number
 };
 
 export const AuthToken = autoguard.Object.of<AuthToken>({
-	"username": autoguard.String,
+	"user_id": autoguard.String,
 	"selector": autoguard.String,
 	"validator_hash": autoguard.String,
 	"expires_ms": autoguard.Number
@@ -456,13 +456,13 @@ export const UserDatabase = autoguard.Object.of<UserDatabase>({
 });
 
 export type Stream = {
-	"username": string,
+	"user_id": string,
 	"file_id": string,
 	"timestamp_ms": number
 };
 
 export const Stream = autoguard.Object.of<Stream>({
-	"username": autoguard.String,
+	"user_id": autoguard.String,
 	"file_id": autoguard.String,
 	"timestamp_ms": autoguard.Number
 });

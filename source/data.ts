@@ -235,9 +235,9 @@ export function getShowsFromVideoGenreId(video_genre_id: string, user_id: string
 		});
 }
 
-export function getTokensFromUsername(username: string): Array<libdb.AuthToken> {
+export function getTokensFromUserId(user_id: string): Array<libdb.AuthToken> {
 	return users.tokens.filter((token) => {
-		return token.username === username;
+		return token.user_id === user_id;
 	});
 }
 
@@ -438,29 +438,29 @@ export function search(query: string, user_id: string, offset: number, limit: nu
 }
 
 // TODO: Create and use index class that supports multiple keys.
-export function getStreams(username: string, file_id: string): Array<libdb.Stream> {
+export function getStreams(user_id: string, file_id: string): Array<libdb.Stream> {
 	return getStreamsFromFileIdIndex.lookup(file_id)
 		.filter((stream) => {
-			return stream.username === username;
+			return stream.user_id === user_id;
 		})
 		.sort(NumericSort.increasing((value) => value.timestamp_ms));
 }
 
-export function getLatestStream(username: string, file_id: string): number | null {
-	let streams = getStreams(username, file_id);
+export function getLatestStream(user_id: string, file_id: string): number | null {
+	let streams = getStreams(user_id, file_id);
 	return streams.pop()?.timestamp_ms || null;
 }
 
-export function addStream(username: string, file_id: string): void {
+export function addStream(user_id: string, file_id: string): void {
 	let timestamp_ms = Date.now();
 	streams.streams.push({
-		username,
+		user_id,
 		file_id,
 		timestamp_ms
 	});
 	getStreamsFromFileIdIndex.insert(file_id, {
 		file_id,
-		username,
+		user_id,
 		timestamp_ms
 	});
 	libfs.writeFileSync("./private/db/streams.json", JSON.stringify(streams, null, "\t"));
