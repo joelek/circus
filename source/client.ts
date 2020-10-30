@@ -892,28 +892,25 @@ tokenobs.addObserver((token2) => {
 	token = token2;
 	player.authenticate(token);
 });
-let valid_token: boolean | undefined;
 async function getToken(): Promise<string | undefined> {
-	if (valid_token == null) {
-		return new Promise((resolve, reject) => {
-			req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?token=${token}`, {}, (status, response) => {
-				valid_token = (status >= 200 && status < 300);
-				if (!valid_token) {
-					localStorage.removeItem("token");
-					token = undefined;
-				}
-				tokenobs.updateState(token);
-				resolve(token);
-			});
+	return new Promise((resolve, reject) => {
+		req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?token=${token}`, {}, (status, response) => {
+			let valid_token = (status >= 200 && status < 300);
+			if (!valid_token) {
+				localStorage.removeItem("token");
+				token = undefined;
+			}
+			tokenobs.updateState(token);
+			resolve(token);
 		});
-	} else {
-		return token;
-	}
+	});
 }
+getToken().catch(() => {});
+
 async function getNewToken(username: string, password: string): Promise<string | undefined> {
 	return new Promise((resolve, reject) => {
 		req<api_response.AuthRequest, api_response.AuthResponse>(`/api/auth/`, { username, password }, (status, response) => {
-			valid_token = (status >= 200 && status < 300);
+			let valid_token = (status >= 200 && status < 300);
 			if (!valid_token) {
 				localStorage.removeItem("token");
 				token = undefined;
