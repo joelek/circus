@@ -614,28 +614,7 @@ export function api_lookupDisc(disc_id: string, user_id: string, album?: AlbumBa
 	let tracks = getTracksFromDiscId.lookup(disc_id)
 		.sort(NumericSort.increasing((entry) => entry.number))
 		.map((entry) => {
-			let track: TrackBase = {
-				track_id: entry.track_id,
-				title: entry.title,
-				disc: disc,
-				artists: trackArtistsIndex.lookup(entry.track_id)
-					.sort(NumericSort.increasing((entry) => entry.order))
-					.map((entry) => {
-						return getArtistFromArtistId.lookup(entry.artist_id);
-					}),
-				number: entry.number,
-				last_stream_date: undefined
-			};
-			return {
-				...track,
-				segment: {
-					file: {
-						file_id: entry.file_id,
-						mime: "audio/mp4",
-						duration_ms: entry.duration
-					}
-				}
-			};
+			return api_lookupTrack(entry.track_id, user_id, disc);
 		});
 	return {
 		...disc,
