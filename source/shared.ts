@@ -1,9 +1,11 @@
+import * as is from "./is";
+
 export type Deferred<A> = A | undefined;
 
 type Comparator<A> = (one: A, two: A) => number;
 
 export const CombinedSort = {
-	of<A>(...comparators: Comparator<A>[]): (one: A, two: A) => number {
+	of<A>(...comparators: Comparator<A>[]): Comparator<A> {
 		return (one, two) => {
 			for (let comparator of comparators) {
 				let rank = comparator(one, two);
@@ -17,19 +19,19 @@ export const CombinedSort = {
 };
 
 export const LexicalSort = {
-	decreasing<A>(getter: (value: A) => string | null | undefined): (one: A, two: A) => number {
+	decreasing<A>(getter: (value: A) => string | null | undefined): Comparator<A> {
 		return (one, two) => {
 			let o = getter(one);
 			let t = getter(two);
-			if (o == null) {
-				if (t == null) {
+			if (is.absent(o)) {
+				if (is.absent(t)) {
 					return 0;
 				} else {
 					return -1;
 				}
 			}
-			if (t == null) {
-				if (o == null) {
+			if (is.absent(t)) {
+				if (is.absent(o)) {
 					return 0;
 				} else {
 					return 1;
@@ -38,19 +40,19 @@ export const LexicalSort = {
 			return t.localeCompare(o);
 		};
 	},
-	increasing<A>(getter: (value: A) => string | null | undefined): (one: A, two: A) => number {
+	increasing<A>(getter: (value: A) => string | null | undefined): Comparator<A> {
 		return (one, two) => {
 			let o = getter(one);
 			let t = getter(two);
-			if (o == null) {
-				if (t == null) {
+			if (is.absent(o)) {
+				if (is.absent(t)) {
 					return 0;
 				} else {
 					return 1;
 				}
 			}
-			if (t == null) {
-				if (o == null) {
+			if (is.absent(t)) {
+				if (is.absent(o)) {
 					return 0;
 				} else {
 					return -1;
@@ -62,19 +64,19 @@ export const LexicalSort = {
 };
 
 export const NumericSort = {
-	decreasing<A>(getter: (value: A) => number | null | undefined): (one: A, two: A) => number {
+	decreasing<A>(getter: (value: A) => number | null | undefined): Comparator<A> {
 		return (one, two) => {
 			let o = getter(one);
 			let t = getter(two);
-			if (o == null) {
-				if (t == null) {
+			if (is.absent(o)) {
+				if (is.absent(t)) {
 					return 0;
 				} else {
 					return -1;
 				}
 			}
-			if (t == null) {
-				if (o == null) {
+			if (is.absent(t)) {
+				if (is.absent(o)) {
 					return 0;
 				} else {
 					return 1;
@@ -83,19 +85,19 @@ export const NumericSort = {
 			return t - o;
 		};
 	},
-	increasing<A>(getter: (value: A) => number | null | undefined): (one: A, two: A) => number {
+	increasing<A>(getter: (value: A) => number | null | undefined): Comparator<A> {
 		return (one, two) => {
 			let o = getter(one);
 			let t = getter(two);
-			if (o == null) {
-				if (t == null) {
+			if (is.absent(o)) {
+				if (is.absent(t)) {
 					return 0;
 				} else {
 					return 1;
 				}
 			}
-			if (t == null) {
-				if (o == null) {
+			if (is.absent(t)) {
+				if (is.absent(o)) {
 					return 0;
 				} else {
 					return -1;
