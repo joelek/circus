@@ -5,8 +5,7 @@ import * as auth from "./auth";
 import * as api_response from "./api_response";
 import * as data from "./data";
 import * as is from "./is";
-import { LexicalSort, NumericSort, CombinedSort } from "./shared";
-import { AlbumEntry, ArtistEntry, AudiolistEntry, EpisodeEntry, MovieEntry, PersonEntry, ShowEntry, TrackEntry, UserEntry } from "./database";
+import { LexicalSort } from "./shared";
 
 function getParameter(url: liburl.UrlWithParsedQuery, key: string): string[] {
 	let values = url.query[key] ?? [];
@@ -106,17 +105,7 @@ class ArtistsRoute implements Route<{}, api_response.ArtistsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let entries = [] as ArtistEntry[];
-		if (query === "") {
-			entries = data.media.audio.artists.slice().sort(LexicalSort.increasing((entry) => entry.title));
-		} else {
-			entries = data.artistTitleSearchIndex.search(query).map((entry) => entry.value);
-		}
-		let artists = entries
-			.slice(offset, offset + length)
-			.map((entry) => {
-				return data.api_lookupArtist(entry.artist_id, user_id);
-			});
+		let artists = data.searchForArtists(query, offset, length, user_id);
 		let payload: api_response.ArtistsResponse = {
 			artists
 		};
@@ -155,17 +144,7 @@ class AlbumsRoute implements Route<{}, api_response.AlbumsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let entries = [] as AlbumEntry[];
-		if (query === "") {
-			entries = data.media.audio.albums.slice().sort(LexicalSort.increasing((entry) => entry.title));
-		} else {
-			entries = data.albumTitleSearchIndex.search(query).map((entry) => entry.value);
-		}
-		let albums = entries
-			.slice(offset, offset + length)
-			.map((entry) => {
-				return data.api_lookupAlbum(entry.album_id, user_id);
-			});
+		let albums = data.searchForAlbums(query, offset, length, user_id);
 		let payload: api_response.AlbumsResponse = {
 			albums
 		};
@@ -204,15 +183,7 @@ class EpisodesRoute implements Route<{}, api_response.EpisodesResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let entries = [] as EpisodeEntry[];
-		if (query === "") {
-			entries = data.media.video.episodes.slice().sort(LexicalSort.increasing((entry) => entry.title));
-		} else {
-			entries = data.episodeTitleSearchIndex.search(query).map((entry) => entry.value);
-		}
-		let episodes = entries
-			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupEpisode(entry.episode_id, user_id));
+		let episodes = data.searchForEpisodes(query, offset, length, user_id);
 		let payload: api_response.EpisodesResponse = {
 			episodes
 		};
@@ -251,15 +222,7 @@ class ShowsRoute implements Route<{}, api_response.ShowsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let entries = [] as ShowEntry[];
-		if (query === "") {
-			entries = data.media.video.shows.slice().sort(LexicalSort.increasing((entry) => entry.title));
-		} else {
-			entries = data.showTitleSearchIndex.search(query).map((entry) => entry.value);
-		}
-		let shows = entries
-			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupShow(entry.show_id, user_id));
+		let shows = data.searchForShows(query, offset, length, user_id);
 		let payload: api_response.ShowsResponse = {
 			shows
 		};
@@ -418,15 +381,7 @@ class MoviesRoute implements Route<{}, api_response.MoviesResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let entries = [] as MovieEntry[];
-		if (query === "") {
-			entries = data.media.video.movies.slice().sort(LexicalSort.increasing((entry) => entry.title));
-		} else {
-			entries = data.movieTitleSearchIndex.search(query).map((entry) => entry.value);
-		}
-		let movies = entries
-			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupMovie(entry.movie_id, user_id));
+		let movies = data.searchForMovies(query, offset, length, user_id);
 		let payload: api_response.MoviesResponse = {
 			movies
 		};
@@ -465,15 +420,7 @@ class PlaylistsRoute implements Route<{}, api_response.PlaylistsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let entries = [] as AudiolistEntry[];
-		if (query === "") {
-			entries = data.lists.audiolists.slice().sort(LexicalSort.increasing((entry) => entry.title));
-		} else {
-			entries = data.playlistTitleSearchIndex.search(query).map((entry) => entry.value);
-		}
-		let playlists = entries
-			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupPlaylist(entry.audiolist_id, user_id));
+		let playlists = data.searchForPlaylists(query, offset, length, user_id);
 		let payload: api_response.PlaylistsResponse = {
 			playlists
 		};
@@ -506,25 +453,7 @@ class CuesRoute implements Route<{}, api_response.CuesResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let cues = data.searchForCues(query, user_id, offset, length)
-			.map((cue) => {
-				let entry = data.getSubtitleFromSubtitleId.lookup(cue.subtitle.subtitle_id);
-				try {
-					let episode = data.getEpisodeFromFileId.lookup(entry.video_file_id);
-					return {
-						...cue,
-						media: data.api_lookupEpisode(episode.episode_id, user_id)
-					}
-				} catch (error) {}
-				try {
-					let movie = data.getMoviePartFromFileId.lookup(entry.video_file_id);
-					return {
-						...cue,
-						media: data.api_lookupMovie(movie.movie_id, user_id)
-					}
-				} catch (error) {}
-			})
-			.filter(is.present);
+		let cues = data.searchForCues(query, offset, length, user_id);
 		let payload: api_response.CuesResponse = {
 			cues
 		};
@@ -540,12 +469,12 @@ class CuesRoute implements Route<{}, api_response.CuesResponse> {
 class GenresRoute implements Route<{}, api_response.GenresResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]video[/]genres[/]/.exec(request.url ?? "/") as RegExpExecArray;
-		let genres = data.media.video.genres.slice()
-			.sort(LexicalSort.increasing((entry) => entry.title))
-			.map((entry) => {
-				return data.api_lookupGenre(entry.video_genre_id, user_id);
-			});
+		let parts = /^[/]api[/]video[/]genres[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = decodeURIComponent(parts[1]);
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let genres = data.searchForGenres(query, offset, length, user_id);
 		let payload: api_response.GenresResponse = {
 			genres
 		};
@@ -554,7 +483,7 @@ class GenresRoute implements Route<{}, api_response.GenresResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]video[/]genres[/]/.test(request.url ?? "/");
+		return /^[/]api[/]video[/]genres[/]([^/?]*)/.test(request.url ?? "/");
 	}
 }
 
@@ -681,15 +610,7 @@ class TracksRoute implements Route<{}, api_response.TracksResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let entries = [] as TrackEntry[];
-		if (query === "") {
-			entries = data.media.audio.tracks.slice().sort(LexicalSort.increasing((entry) => entry.title));
-		} else {
-			entries = data.trackTitleSearchIndex.search(query).map((entry) => entry.value);
-		}
-		let tracks = entries
-			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupTrack(entry.track_id, user_id));
+		let tracks = data.searchForTracks(query, offset, length, user_id);
 		let payload: api_response.TracksResponse = {
 			tracks
 		};
@@ -728,10 +649,7 @@ class SeasonsRoute implements Route<{}, api_response.SeasonsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let seasons = data.media.video.seasons
-			.sort(LexicalSort.increasing((entry) => entry.season_id))
-			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupSeason(entry.season_id, user_id));
+		let seasons = data.searchForSeasons(query, offset, length, user_id);
 		let payload: api_response.SeasonsResponse = {
 			seasons
 		};
@@ -770,10 +688,7 @@ class DiscsRoute implements Route<{}, api_response.SeasonsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let discs = data.media.audio.discs
-			.sort(LexicalSort.increasing((entry) => entry.disc_id))
-			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupDisc(entry.disc_id, user_id));
+		let discs = data.searchForDiscs(query, offset, length, user_id);
 		let payload: api_response.DiscsResponse = {
 			discs
 		};
@@ -817,15 +732,7 @@ class UsersRoute implements Route<{}, api_response.UsersResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let entries = [] as UserEntry[];
-		if (query === "") {
-			entries = data.users.users.slice().sort(LexicalSort.increasing((entry) => entry.name));
-		} else {
-			entries = data.userUsernameSearchIndex.search(query).map((entry) => entry.value);
-		}
-		let users = entries
-			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupUser(entry.user_id));
+		let users = data.searchForUsers(query, offset, length, user_id);
 		let payload: api_response.UsersResponse = {
 			users
 		};
@@ -868,15 +775,7 @@ class PersonsRoute implements Route<{}, api_response.PersonsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let entries = [] as PersonEntry[];
-		if (query === "") {
-			entries = data.media.persons.slice().sort(LexicalSort.increasing((entry) => entry.name));
-		} else {
-			entries = data.personSearchIndex.search(query).map((entry) => entry.value);
-		}
-		let persons = entries
-			.slice(offset, offset + length)
-			.map((entry) => data.api_lookupPerson(entry.person_id, user_id));
+		let persons = data.searchForPersons(query, offset, length, user_id);
 		let payload: api_response.PersonsResponse = {
 			persons
 		};

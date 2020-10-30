@@ -10,7 +10,6 @@
 * Index video resolution and image sizes.
 * Split person into three routes.
 * Set titles based on page.
-* Make search function for each entity in data.
 * Export icons with 24px sizes.
 * Make client reconnect after going offline.
 * Move redundant data from base types to full types in API.

@@ -376,16 +376,6 @@ export const cueSearchIndex = SearchIndex.from(media.video.cues, (entry) => entr
 export const personSearchIndex = SearchIndex.from(media.persons, (entry) => [entry.name]);
 export const genreSearchIndex = SearchIndex.from(media.video.genres, (entry) => [entry.title]);
 
-export function searchForCues(query: string, user_id: string, offset: number, limit: number): Cue[] {
-	let entries = cueSearchIndex.search(query)
-		.sort(NumericSort.decreasing((value) => value.rank))
-		.slice(offset, offset + limit);
-	let entities = entries.map((entry) => {
-		return api_lookupCue(entry.value.cue_id, user_id);
-	});
-	return entities;
-}
-
 export function search(query: string, user_id: string, offset: number, limit: number): Entity[] {
 	let entries = [
 		...albumTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 9 })),
@@ -940,4 +930,190 @@ export function api_lookupUser(user_id: string): User {
 	return {
 		...user
 	};
+};
+
+
+
+
+
+export function searchForAlbums(query: string, offset: number, length: number, user_id: string): Album[] {
+	if (query === "") {
+		return media.audio.albums.slice()
+			.sort(LexicalSort.increasing((entry) => entry.title))
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupAlbum(entry.album_id, user_id));
+	} else {
+		return albumTitleSearchIndex.search(query)
+			.map((entry) => entry.value)
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupAlbum(entry.album_id, user_id));
+	}
+};
+
+export function searchForArtists(query: string, offset: number, length: number, user_id: string): Artist[] {
+	if (query === "") {
+		return media.audio.artists.slice()
+			.sort(LexicalSort.increasing((entry) => entry.title))
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupArtist(entry.artist_id, user_id));
+	} else {
+		return artistTitleSearchIndex.search(query)
+			.map((entry) => entry.value)
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupArtist(entry.artist_id, user_id));
+	}
+};
+
+export function searchForCues(query: string, offset: number, limit: number, user_id: string): (Cue & { media: Episode | Movie })[] {
+	return cueSearchIndex.search(query)
+		.sort(NumericSort.decreasing((value) => value.rank))
+		.slice(offset, offset + limit)
+		.map((entry) => {
+			return api_lookupCue(entry.value.cue_id, user_id);
+		})
+		.map((cue) => {
+			let entry = getSubtitleFromSubtitleId.lookup(cue.subtitle.subtitle_id);
+			try {
+				let episode = getEpisodeFromFileId.lookup(entry.video_file_id);
+				return {
+					...cue,
+					media: api_lookupEpisode(episode.episode_id, user_id)
+				}
+			} catch (error) {}
+			try {
+				let movie = getMoviePartFromFileId.lookup(entry.video_file_id);
+				return {
+					...cue,
+					media: api_lookupMovie(movie.movie_id, user_id)
+				}
+			} catch (error) {}
+		})
+		.filter(is.present);
+};
+
+export function searchForDiscs(query: string, offset: number, length: number, user_id: string): Disc[] {
+	return media.audio.discs
+		.sort(LexicalSort.increasing((entry) => entry.disc_id))
+		.slice(offset, offset + length)
+		.map((entry) => api_lookupDisc(entry.disc_id, user_id));
+};
+
+export function searchForEpisodes(query: string, offset: number, length: number, user_id: string): Episode[] {
+	if (query === "") {
+		return media.video.episodes.slice()
+			.sort(LexicalSort.increasing((entry) => entry.title))
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupEpisode(entry.episode_id, user_id));
+	} else {
+		return episodeTitleSearchIndex.search(query)
+			.map((entry) => entry.value)
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupEpisode(entry.episode_id, user_id));
+	}
+};
+
+export function searchForGenres(query: string, offset: number, length: number, user_id: string): Genre[] {
+	if (query === "") {
+		return media.video.genres.slice()
+			.sort(LexicalSort.increasing((entry) => entry.title))
+			.map((entry) => {
+				return api_lookupGenre(entry.video_genre_id, user_id);
+			});
+	} else {
+		return genreSearchIndex.search(query)
+			.map((entry) => entry.value)
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupGenre(entry.video_genre_id, user_id));
+	}
+};
+
+export function searchForMovies(query: string, offset: number, length: number, user_id: string): Movie[] {
+	if (query === "") {
+		return media.video.movies.slice()
+			.sort(LexicalSort.increasing((entry) => entry.title))
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupMovie(entry.movie_id, user_id));
+	} else {
+		return movieTitleSearchIndex.search(query)
+			.map((entry) => entry.value)
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupMovie(entry.movie_id, user_id));
+	}
+};
+
+export function searchForPersons(query: string, offset: number, length: number, user_id: string): Person[] {
+	if (query === "") {
+		return media.persons.slice()
+			.sort(LexicalSort.increasing((entry) => entry.name))
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupPerson(entry.person_id, user_id));
+	} else {
+		return personSearchIndex.search(query)
+			.map((entry) => entry.value)
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupPerson(entry.person_id, user_id));
+	}
+};
+
+export function searchForPlaylists(query: string, offset: number, length: number, user_id: string): Playlist[] {
+	if (query === "") {
+		return lists.audiolists.slice()
+			.sort(LexicalSort.increasing((entry) => entry.title))
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupPlaylist(entry.audiolist_id, user_id));
+	} else {
+		return playlistTitleSearchIndex.search(query)
+			.map((entry) => entry.value)
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupPlaylist(entry.audiolist_id, user_id));
+	}
+};
+
+export function searchForSeasons(query: string, offset: number, length: number, user_id: string): Season[] {
+	return media.video.seasons
+		.sort(LexicalSort.increasing((entry) => entry.season_id))
+		.slice(offset, offset + length)
+		.map((entry) => api_lookupSeason(entry.season_id, user_id));
+};
+
+export function searchForShows(query: string, offset: number, length: number, user_id: string): Show[] {
+	if (query === "") {
+		return media.video.shows.slice()
+			.sort(LexicalSort.increasing((entry) => entry.title))
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupShow(entry.show_id, user_id));
+	} else {
+		return showTitleSearchIndex.search(query)
+			.map((entry) => entry.value)
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupShow(entry.show_id, user_id));
+	}
+};
+
+export function searchForTracks(query: string, offset: number, length: number, user_id: string): Track[] {
+	if (query === "") {
+		return media.audio.tracks.slice()
+			.sort(LexicalSort.increasing((entry) => entry.title))
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupTrack(entry.track_id, user_id));
+	} else {
+		return trackTitleSearchIndex.search(query)
+			.map((entry) => entry.value)
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupTrack(entry.track_id, user_id));
+	}
+};
+
+export function searchForUsers(query: string, offset: number, length: number, user_id: string): User[] {
+	if (query === "") {
+		return users.users.slice()
+			.sort(LexicalSort.increasing((entry) => entry.name))
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupUser(entry.user_id));
+	} else {
+		return userUsernameSearchIndex.search(query)
+			.map((entry) => entry.value)
+			.slice(offset, offset + length)
+			.map((entry) => api_lookupUser(entry.user_id));
+	}
 };
