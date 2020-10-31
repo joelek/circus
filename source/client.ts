@@ -1009,25 +1009,37 @@ let modals = xml.element("div.modal-container")
 	.add(xml.element("div.login-modal")
 		.bind("data-hide", showLogin.addObserver(showLogin => !showLogin))
 		.add(xml.element("div.login-modal__form")
-			.add(xml.element("input.login-modal__username")
-				.bind2("value", username)
-				.set("type", "text")
-				.set("spellcheck", "false")
-				.set("placeholder", "Username...")
+			.add(xml.element("div")
+				.set("style", "position: relative;")
+				.add(xml.element("input.login-modal__username")
+					.bind2("value", username)
+					.set("type", "text")
+					.set("spellcheck", "false")
+					.set("placeholder", "Username...")
+				)
+				.add(Icon.makePerson()
+					.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+				)
 			)
-			.add(xml.element("input.login-modal__password")
-				.bind2("value", password)
-				.set("type", "password")
-				.set("spellcheck", "false")
-				.set("placeholder", "Password...")
-				.on("keyup", async (event) => {
-					if (event.key === "Enter") {
-						let token = await getNewToken(username.getState(), password.getState());
-						if (token != null) {
-							showLogin.updateState(false);
+			.add(xml.element("div")
+				.set("style", "position: relative;")
+				.add(xml.element("input.login-modal__password")
+					.bind2("value", password)
+					.set("type", "password")
+					.set("spellcheck", "false")
+					.set("placeholder", "Password...")
+					.on("keyup", async (event) => {
+						if (event.key === "Enter") {
+							let token = await getNewToken(username.getState(), password.getState());
+							if (token != null) {
+								showLogin.updateState(false);
+							}
 						}
-					}
-				})
+					})
+				)
+				.add(Icon.makeLock()
+					.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+				)
 			)
 		)
 		.add(xml.element("button")
@@ -1884,16 +1896,22 @@ let updateviewforuri = (uri: string): void => {
 		}));
 		mount.appendChild(xml.element("div.content")
 			.set("style", "display: grid; gap: 32px;")
-			.add(xml.element("input")
-				.set("type", "text")
-				.set("spellcheck", "false")
-				.set("placeholder", "Search for cues...")
-				.bind2("value", query)
-				.on("keyup", (event) => {
-					if (event.key === "Enter") {
-						navigate(`video/cues/${encodeURIComponent(query.getState())}/`);
-					}
-				})
+			.add(xml.element("div")
+				.set("style", "position: relative;")
+				.add(xml.element("input")
+					.set("type", "text")
+					.set("spellcheck", "false")
+					.set("placeholder", "Search for cues...")
+					.bind2("value", query)
+					.on("keyup", (event) => {
+						if (event.key === "Enter") {
+							navigate(`video/cues/${encodeURIComponent(query.getState())}/`);
+						}
+					})
+				)
+				.add(Icon.makeMagnifyingGlass()
+					.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+				)
 			)
 			.add(xml.element("div")
 				.set("style", "display: grid; gap: 16px;")
@@ -2024,17 +2042,23 @@ let updateviewforuri = (uri: string): void => {
 			}
 		}));
 		mount.appendChild(xml.element("div.content")
-			.set("style", "display: grid; gap: 32px;")
-			.add(xml.element("input")
-				.set("type", "text")
-				.set("spellcheck", "false")
-				.set("placeholder", "Search for content...")
-				.bind2("value", query)
-				.on("keyup", (event) => {
-					if (event.key === "Enter") {
-						navigate(`search/${encodeURIComponent(query.getState())}/`);
-					}
-				})
+			.set("style", "display: grid; gap: 64px;")
+			.add(xml.element("div")
+				.set("style", "position: relative;")
+				.add(xml.element("input")
+					.set("type", "text")
+					.set("spellcheck", "false")
+					.set("placeholder", "Search for content...")
+					.bind2("value", query)
+					.on("keyup", (event) => {
+						if (event.key === "Enter") {
+							navigate(`search/${encodeURIComponent(query.getState())}/`);
+						}
+					})
+				)
+				.add(Icon.makeMagnifyingGlass()
+					.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+				)
 			)
 			.add(xml.element("div")
 				.set("style", "display: grid; gap: 16px;")
