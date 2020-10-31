@@ -20,3 +20,5 @@
 * Create back and forward buttons for navigation.
 * Create and use router that remembers scroll position for page views.
 * Re-add support for cues.
+* Promote cues to entities.
+* Combine cue search and search into a single search.
