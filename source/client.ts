@@ -399,11 +399,11 @@ style.innerText = `
 
 	input {
 		background-color: rgb(47, 47, 47);
-		border-radius: 2px;
+		border-radius: 64px;
 		box-sizing: border-box;
 		color: rgb(255, 255, 255);
 		font-size: 16px;
-		padding: 8px;
+		padding: 8px 16px 8px 32px;
 		width: 100%;
 	}
 
