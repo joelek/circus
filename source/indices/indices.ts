@@ -1,112 +1,6 @@
 import * as is from "../is";
 import * as sorters from "./sorters";
 
-type Comparator<A> = (one: A, two: A) => number;
-
-export const CombinedSort = {
-	of<A>(...comparators: Comparator<A>[]): Comparator<A> {
-		return (one, two) => {
-			for (let comparator of comparators) {
-				let rank = comparator(one, two);
-				if (rank !== 0) {
-					return rank;
-				}
-			}
-			return 0;
-		};
-	}
-};
-
-export const LexicalSort = {
-	decreasing<A>(getter: (value: A) => string | null | undefined): Comparator<A> {
-		return (one, two) => {
-			let o = getter(one);
-			let t = getter(two);
-			if (is.absent(o)) {
-				if (is.absent(t)) {
-					return 0;
-				} else {
-					return -1;
-				}
-			}
-			if (is.absent(t)) {
-				if (is.absent(o)) {
-					return 0;
-				} else {
-					return 1;
-				}
-			}
-			return t.localeCompare(o);
-		};
-	},
-	increasing<A>(getter: (value: A) => string | null | undefined): Comparator<A> {
-		return (one, two) => {
-			let o = getter(one);
-			let t = getter(two);
-			if (is.absent(o)) {
-				if (is.absent(t)) {
-					return 0;
-				} else {
-					return 1;
-				}
-			}
-			if (is.absent(t)) {
-				if (is.absent(o)) {
-					return 0;
-				} else {
-					return -1;
-				}
-			}
-			return o.localeCompare(t);
-		};
-	}
-};
-
-export const NumericSort = {
-	decreasing<A>(getter: (value: A) => number | null | undefined): Comparator<A> {
-		return (one, two) => {
-			let o = getter(one);
-			let t = getter(two);
-			if (is.absent(o)) {
-				if (is.absent(t)) {
-					return 0;
-				} else {
-					return -1;
-				}
-			}
-			if (is.absent(t)) {
-				if (is.absent(o)) {
-					return 0;
-				} else {
-					return 1;
-				}
-			}
-			return t - o;
-		};
-	},
-	increasing<A>(getter: (value: A) => number | null | undefined): Comparator<A> {
-		return (one, two) => {
-			let o = getter(one);
-			let t = getter(two);
-			if (is.absent(o)) {
-				if (is.absent(t)) {
-					return 0;
-				} else {
-					return 1;
-				}
-			}
-			if (is.absent(t)) {
-				if (is.absent(o)) {
-					return 0;
-				} else {
-					return -1;
-				}
-			}
-			return o - t;
-		};
-	}
-};
-
 export class CollectionIndex<A> {
 	private map: Map<string, Set<A>>;
 	private getKey: (record: A) => string;
@@ -145,9 +39,9 @@ export class CollectionIndex<A> {
 		}
 	}
 
-	static from<A>(collection: Iterable<A>, getKey: (record: A) => string): CollectionIndex<A> {
+	static from<A>(records: Iterable<A>, getKey: (record: A) => string): CollectionIndex<A> {
 		let index = new CollectionIndex<A>(getKey);
-		for (let record of collection) {
+		for (let record of records) {
 			index.insert(record);
 		}
 		return index;
@@ -181,9 +75,9 @@ export class RecordIndex<A> {
 		this.map.delete(key);
 	}
 
-	static from<A>(collection: Iterable<A>, getKey: (record: A) => string): RecordIndex<A> {
+	static from<A>(records: Iterable<A>, getKey: (record: A) => string): RecordIndex<A> {
 		let index = new RecordIndex<A>(getKey);
-		for (let record of collection) {
+		for (let record of records) {
 			index.insert(record);
 		}
 		return index;
@@ -262,9 +156,9 @@ export class SearchIndex<A> {
 		}
 	}
 
-	static from<A>(collection: Iterable<A>, getFields: (record: A) => Array<string>): SearchIndex<A> {
+	static from<A>(records: Iterable<A>, getFields: (record: A) => Array<string>): SearchIndex<A> {
 		let searchIndex = new SearchIndex<A>(getFields);
-		for (let record of collection) {
+		for (let record of records) {
 			searchIndex.insert(record);
 		}
 		return searchIndex;
