@@ -11,7 +11,6 @@
 * Split person into three routes.
 * Set titles based on page.
 * Export icons with 24px sizes.
-* Make client reconnect after going offline.
 * Move redundant data from base types to full types in API.
 * Create and use layout components with standard spacing.
 * Re-add support for movie segments.

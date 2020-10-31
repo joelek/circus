@@ -401,12 +401,25 @@ export class ContextClient {
 		this.tsc.addEventListener("app", "SetToken", (message) => {
 			this.token.updateState(message.token);
 		});
+		this.isOnline.addObserver((isOnline) => {
+			if (!isOnline) {
+				this.context.updateState(undefined);
+				this.currentIndex.updateState(undefined);
+				this.playback.updateState(false);
+				this.progress.updateState(undefined);
+			}
+		});
+		observers.computed((isOnline, token) => {
+			if (isOnline) {
+				this.tsc.send("SetToken", {
+					token
+				});
+			}
+		}, this.isOnline, this.token);
 	}
 
 	authenticate(token?: string): void {
-		this.tsc.send("SetToken", {
-			token
-		});
+		this.token.updateState(token);
 	}
 
 	close(): void {
@@ -554,6 +567,10 @@ export class ContextClient {
 
 	playTrack(track: schema.objects.ContextTrack): void {
 		this.play(track, 0);
+	}
+
+	reconnect(): void {
+		this.tsc.reconnect();
 	}
 
 	resume(): void {

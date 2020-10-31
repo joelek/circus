@@ -39,17 +39,22 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	private factory: WebSocketFactory;
 	private socket: WebSocketLike;
 
+	private makeSocket(): WebSocketLike {
+		let socket = this.factory(this.url);
+		socket.addEventListener("close", this.onClose.bind(this));
+		socket.addEventListener("error", this.onError.bind(this));
+		socket.addEventListener("message", this.onMessage.bind(this));
+		socket.addEventListener("open", this.onOpen.bind(this));
+		return socket;
+	}
+
 	private onClose(event: WebSocketEventMap["close"]): void {
 		this.router.route("sys", "disconnect", {});
 	}
 
 	private onError(event: WebSocketEventMap["error"]): void {
 		setTimeout(() => {
-			this.socket = this.factory(this.url);
-			this.socket.addEventListener("close", this.onClose.bind(this));
-			this.socket.addEventListener("error", this.onError.bind(this));
-			this.socket.addEventListener("message", this.onMessage.bind(this));
-			this.socket.addEventListener("open", this.onOpen.bind(this));
+			this.socket = this.makeSocket();
 		}, this.nextConnectionAttemptDelay);
 		this.nextConnectionAttemptDelay = Math.round(this.nextConnectionAttemptDelay * this.nextConnectionAttemptDelayFactor);
 	}
@@ -77,11 +82,7 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 		this.serializer = new autoguard.serialization.MessageSerializer<A>(guards);
 		this.url = url;
 		this.factory = factory;
-		this.socket = factory(url);
-		this.socket.addEventListener("close", this.onClose.bind(this));
-		this.socket.addEventListener("error", this.onError.bind(this));
-		this.socket.addEventListener("message", this.onMessage.bind(this));
-		this.socket.addEventListener("open", this.onOpen.bind(this));
+		this.socket = this.makeSocket();
 	}
 
 	addEventListener<B extends keyof TypeSocketClientMessageMap<A>, C extends keyof TypeSocketClientMessageMap<A>[B]>(namespace: B, type: C, listener: stdlib.routing.MessageObserver<TypeSocketClientMessageMap<A>[B][C]>): void {
@@ -90,6 +91,12 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 
 	close(): void {
 		this.socket.close();
+	}
+
+	reconnect(): void {
+		if (this.socket.readyState === sockets.ReadyState.CLOSED) {
+			this.socket = this.makeSocket();
+		}
 	}
 
 	removeEventListener<B extends keyof TypeSocketClientMessageMap<A>, C extends keyof TypeSocketClientMessageMap<A>[B]>(namespace: B, type: C, listener: stdlib.routing.MessageObserver<TypeSocketClientMessageMap<A>[B][C]>): void {

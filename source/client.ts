@@ -39,6 +39,12 @@ function makeUrl(): string {
 
 let player = new client.ContextClient(makeUrl());
 
+window.addEventListener("focus", () => {
+	if (!player.isOnline.getState()) {
+		player.reconnect();
+	}
+});
+
 player.isOnline.addObserver((isOnline) => {
 	document.documentElement.setAttribute("data-online", `${isOnline}`);
 });
