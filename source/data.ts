@@ -2,10 +2,10 @@ import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as libdb from "./database";
 import * as passwords from "./passwords";
-import { CombinedSort, LexicalSort, NumericSort } from "./shared";
+import { CombinedSort, LexicalSort, NumericSort } from "./indices/sorters";
 import * as is from "./is";
 import { Album, AlbumBase, Artist, ArtistBase, Cue, CueBase, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Person, PersonBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, Show, ShowBase, Subtitle, SubtitleBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
-import { CollectionIndex, RecordIndex, SearchIndex } from "./indices";
+import { CollectionIndex, RecordIndex, SearchIndex } from "./indices/indices";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 

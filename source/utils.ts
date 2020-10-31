@@ -4,14 +4,6 @@ function join(...parameters: any): string {
 	}).join("");
 }
 
-function getSearchTerms(string: string): Array<string> {
-	let normalized = string;
-	normalized = normalized.toLowerCase();
-	normalized = normalized.normalize("NFC");
-	return Array.from(normalized.match(/(\p{L}+|\p{N}+)/gu) || [])
-		.filter((value) => value.length >= 3);
-}
-
 function formatSeasonEpisode(season: number, episode: number): string {
 	return "s" + ("00" + season).slice(-2) + "e" + ("00" + episode).slice(-2);
 }
@@ -34,7 +26,6 @@ type Index<A> = { [key: string]: A | undefined };
 
 export {
 	join,
-	getSearchTerms,
 	formatSeasonEpisode,
 	formatTimestamp,
 	Index

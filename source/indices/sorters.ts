@@ -1,14 +1,12 @@
-import * as is from "./is";
+import * as is from "../is";
 
-export type Deferred<A> = A | undefined;
-
-type Comparator<A> = (one: A, two: A) => number;
+type Ranker<A> = (one: A, two: A) => number;
 
 export const CombinedSort = {
-	of<A>(...comparators: Comparator<A>[]): Comparator<A> {
+	of<A>(...rankers: Ranker<A>[]): Ranker<A> {
 		return (one, two) => {
-			for (let comparator of comparators) {
-				let rank = comparator(one, two);
+			for (let ranker of rankers) {
+				let rank = ranker(one, two);
 				if (rank !== 0) {
 					return rank;
 				}
@@ -19,10 +17,10 @@ export const CombinedSort = {
 };
 
 export const LexicalSort = {
-	decreasing<A>(getter: (value: A) => string | null | undefined): Comparator<A> {
+	decreasing<A>(getField: (value: A) => string | null | undefined): Ranker<A> {
 		return (one, two) => {
-			let o = getter(one);
-			let t = getter(two);
+			let o = getField(one);
+			let t = getField(two);
 			if (is.absent(o)) {
 				if (is.absent(t)) {
 					return 0;
@@ -40,10 +38,10 @@ export const LexicalSort = {
 			return t.localeCompare(o);
 		};
 	},
-	increasing<A>(getter: (value: A) => string | null | undefined): Comparator<A> {
+	increasing<A>(getField: (value: A) => string | null | undefined): Ranker<A> {
 		return (one, two) => {
-			let o = getter(one);
-			let t = getter(two);
+			let o = getField(one);
+			let t = getField(two);
 			if (is.absent(o)) {
 				if (is.absent(t)) {
 					return 0;
@@ -64,10 +62,10 @@ export const LexicalSort = {
 };
 
 export const NumericSort = {
-	decreasing<A>(getter: (value: A) => number | null | undefined): Comparator<A> {
+	decreasing<A>(getField: (value: A) => number | null | undefined): Ranker<A> {
 		return (one, two) => {
-			let o = getter(one);
-			let t = getter(two);
+			let o = getField(one);
+			let t = getField(two);
 			if (is.absent(o)) {
 				if (is.absent(t)) {
 					return 0;
@@ -85,10 +83,10 @@ export const NumericSort = {
 			return t - o;
 		};
 	},
-	increasing<A>(getter: (value: A) => number | null | undefined): Comparator<A> {
+	increasing<A>(getField: (value: A) => number | null | undefined): Ranker<A> {
 		return (one, two) => {
-			let o = getter(one);
-			let t = getter(two);
+			let o = getField(one);
+			let t = getField(two);
 			if (is.absent(o)) {
 				if (is.absent(t)) {
 					return 0;
