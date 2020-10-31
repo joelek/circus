@@ -1,11 +1,11 @@
 import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as libdb from "./database";
-import * as utils from "./utils";
 import * as passwords from "./passwords";
 import { CombinedSort, LexicalSort, NumericSort } from "./shared";
 import * as is from "./is";
 import { Album, AlbumBase, Artist, ArtistBase, Cue, CueBase, Disc, DiscBase, Entity, Episode, EpisodeBase, Genre, GenreBase, Movie, MovieBase, Person, PersonBase, Playlist, PlaylistBase, Season, SeasonBase, Segment, Show, ShowBase, Subtitle, SubtitleBase, Track, TrackBase, User, UserBase } from "./api/schema/objects";
+import { CollectionIndex, RecordIndex, SearchIndex } from "./indices";
 
 libfs.mkdirSync("./private/db/", { recursive: true });
 
@@ -75,103 +75,11 @@ for (let subtitle of media.video.subtitle_contents) {
 	}
 }
 
-
-
-
-
-
-
-
-
-class RecordIndex<A> {
-	private map: Map<string, A>;
-
-	constructor() {
-		this.map = new Map<string, A>();
-	}
-
-	insert(id: string, record: A): void {
-		this.map.set(id, record);
-	}
-
-	lookup(id: string): A {
-		let record = this.map.get(id);
-		if (record == null) {
-			throw `Expected "${id}" to match a record!`;
-		}
-		return record;
-	}
-
-	remove(id: string): void {
-		this.map.delete(id);
-	}
-
-	static from<A extends { [key: string]: any }>(idField: keyof A, collection: Iterable<A>): RecordIndex<A> {
-		let index = new RecordIndex<A>();
-		for (let record of collection) {
-			index.insert(record[idField], record);
-		}
-		return index;
-	}
-}
-
-class CollectionIndex<A> {
-	private map: Map<string, Set<A>>;
-
-	constructor() {
-		this.map = new Map<string, Set<A>>();
-	}
-
-	insert(id: string, record: A): void {
-		let set = this.map.get(id);
-		if (!set) {
-			set = new Set<A>();
-			this.map.set(id, set);
-		}
-		set.add(record);
-	}
-
-	lookup(id: string): Array<A> {
-		let set = this.map.get(id);
-		if (set) {
-			return Array.from(set);
-		}
-		return new Array<A>();
-	}
-
-	remove(id: string, record: A): void {
-		let set = this.map.get(id);
-		if (set) {
-			set.delete(record);
-			if (set.size === 0) {
-				this.map.delete(id);
-			}
-		}
-	}
-
-	static from<A extends { [key: string]: any }>(idField: keyof A, collection: Iterable<A>): CollectionIndex<A> {
-		let index = new CollectionIndex<A>();
-		for (let record of collection) {
-			index.insert(record[idField], record);
-		}
-		return index;
-	}
-}
-
-
-
-
-
-
-
-
-
-
-const getShowPersonsFromShowId = CollectionIndex.from("show_id", media.video.show_persons);
-const getShowPersonsFromPersonId = CollectionIndex.from("person_id", media.video.show_persons);
-const getMoviePersonsFromMovieId = CollectionIndex.from("movie_id", media.video.movie_persons);
-const getMoviePersonsFromPersonId = CollectionIndex.from("person_id", media.video.movie_persons);
-const getPersonFromPersonId = RecordIndex.from("person_id", media.persons);
+const getShowPersonsFromShowId = CollectionIndex.from(media.video.show_persons, (record) => record.show_id);
+const getShowPersonsFromPersonId = CollectionIndex.from(media.video.show_persons, (record) => record.person_id);
+const getMoviePersonsFromMovieId = CollectionIndex.from(media.video.movie_persons, (record) => record.movie_id);
+const getMoviePersonsFromPersonId = CollectionIndex.from(media.video.movie_persons, (record) => record.person_id);
+const getPersonFromPersonId = RecordIndex.from(media.persons, (record) => record.person_id);
 
 export function getMoviesFromPersonId(person_id: string, user_id: string, offset: number, length: number): Movie[] {
 	return getMoviePersonsFromPersonId.lookup(person_id)
@@ -197,19 +105,19 @@ export function getShowsFromPersonId(person_id: string, user_id: string, offset:
 		});
 }
 
-export const getFileFromFileId = RecordIndex.from("file_id", media.files);
-const getMovieFromMovieId = RecordIndex.from("movie_id", media.video.movies);
-export const getEpisodeFromFileId = RecordIndex.from("file_id", media.video.episodes);
-export const getMoviePartFromFileId = RecordIndex.from("file_id", media.video.movie_parts);
-let getMoviePartsFromMovieIdIndex = CollectionIndex.from("movie_id", media.video.movie_parts);
-let getShowGenresFromShowId = CollectionIndex.from("show_id", media.video.show_genres);
-let getMovieGenresFromMovieId = CollectionIndex.from("movie_id", media.video.movie_genres);
-export const getMoviesFromVideoGenreIdIndex = CollectionIndex.from("video_genre_id", media.video.movie_genres);
-let getShowsFromVideoGenreIdIndex = CollectionIndex.from("video_genre_id", media.video.show_genres);
-let getVideoGenreFromVideoGenreId = RecordIndex.from("video_genre_id", media.video.genres);
-let getSeasonsFromShowIdIndex = CollectionIndex.from("show_id", media.video.seasons);
-let getEpisodesFromSeasonIdIndex = CollectionIndex.from("season_id", media.video.episodes);
-let getStreamsFromFileIdIndex = CollectionIndex.from("file_id", streams.streams);
+export const getFileFromFileId = RecordIndex.from(media.files, (record) => record.file_id);
+const getMovieFromMovieId = RecordIndex.from(media.video.movies, (record) => record.movie_id);
+export const getEpisodeFromFileId = RecordIndex.from(media.video.episodes, (record) => record.file_id);
+export const getMoviePartFromFileId = RecordIndex.from(media.video.movie_parts, (record) => record.file_id);
+let getMoviePartsFromMovieIdIndex = CollectionIndex.from(media.video.movie_parts, (record) => record.movie_id);
+let getShowGenresFromShowId = CollectionIndex.from(media.video.show_genres, (record) => record.show_id);
+let getMovieGenresFromMovieId = CollectionIndex.from(media.video.movie_genres, (record) => record.movie_id);
+export const getMoviesFromVideoGenreIdIndex = CollectionIndex.from(media.video.movie_genres, (record) => record.video_genre_id);
+let getShowsFromVideoGenreIdIndex = CollectionIndex.from(media.video.show_genres, (record) => record.video_genre_id);
+let getVideoGenreFromVideoGenreId = RecordIndex.from(media.video.genres, (record) => record.video_genre_id);
+let getSeasonsFromShowIdIndex = CollectionIndex.from(media.video.seasons, (record) => record.show_id);
+let getEpisodesFromSeasonIdIndex = CollectionIndex.from(media.video.episodes, (record) => record.season_id);
+let getStreamsFromFileIdIndex = CollectionIndex.from(streams.streams, (record) => record.file_id);
 
 export function getMoviesFromVideoGenreId(video_genre_id: string, user_id: string, offset: number, length: number): Movie[] {
 	return getMoviesFromVideoGenreIdIndex.lookup(video_genre_id)
@@ -241,28 +149,28 @@ export function getTokensFromUserId(user_id: string): Array<libdb.AuthToken> {
 	});
 }
 
-let albumArtistsIndex = CollectionIndex.from("album_id", media.audio.album_artists);
-export const getAlbumArtistsFromArtistId = CollectionIndex.from("artist_id", media.audio.album_artists);
-let trackArtistsIndex = CollectionIndex.from("track_id", media.audio.track_artists);
-let artistTracksIndex = CollectionIndex.from("artist_id", media.audio.track_artists);
-let fileSubtitlesIndex = CollectionIndex.from("video_file_id", media.video.subtitles);
-export const getDiscsFromAlbumId = CollectionIndex.from("album_id", media.audio.discs);
-export const getTracksFromDiscId = CollectionIndex.from("disc_id", media.audio.tracks);
-export const getAlbumFromAlbumId = RecordIndex.from("album_id", media.audio.albums);
-export const getPlaylistItemsFromPlaylistId = CollectionIndex.from("audiolist_id", lists.audiolist_items);
-export const getPlaylistsFromUserId = CollectionIndex.from("user_id", lists.audiolists);
-export const getTrackFromTrackId = RecordIndex.from("track_id", media.audio.tracks);
-export const getDiscFromDiscId = RecordIndex.from("disc_id", media.audio.discs);
-export const getUserFromUserId = RecordIndex.from("user_id", users.users);
-export const getUserFromUsername = RecordIndex.from("username", users.users);
-export const getPlaylistFromPlaylistId = RecordIndex.from("audiolist_id", lists.audiolists);
-export const getShowFromShowId = RecordIndex.from("show_id", media.video.shows);
-export const getArtistFromArtistId = RecordIndex.from("artist_id", media.audio.artists);
-export const getEpisodeFromEpisodeId = RecordIndex.from("episode_id", media.video.episodes);
-export const getSeasonFromSeasonId = RecordIndex.from("season_id", media.video.seasons);
-export const getSubtitleFromSubtitleId = RecordIndex.from("subtitle_id", media.video.subtitles);
-export const getCueFromCueId = RecordIndex.from("cue_id", media.video.cues);
-export const getCuesFromSubtitleId = CollectionIndex.from("subtitle_id", media.video.cues);
+let albumArtistsIndex = CollectionIndex.from(media.audio.album_artists, (record) => record.album_id);
+export const getAlbumArtistsFromArtistId = CollectionIndex.from(media.audio.album_artists, (record) => record.artist_id);
+let trackArtistsIndex = CollectionIndex.from(media.audio.track_artists, (record) => record.track_id);
+let artistTracksIndex = CollectionIndex.from(media.audio.track_artists, (record) => record.artist_id);
+let fileSubtitlesIndex = CollectionIndex.from(media.video.subtitles, (record) => record.video_file_id);
+export const getDiscsFromAlbumId = CollectionIndex.from(media.audio.discs, (record) => record.album_id);
+export const getTracksFromDiscId = CollectionIndex.from(media.audio.tracks, (record) => record.disc_id);
+export const getAlbumFromAlbumId = RecordIndex.from(media.audio.albums, (record) => record.album_id);
+export const getPlaylistItemsFromPlaylistId = CollectionIndex.from(lists.audiolist_items, (record) => record.audiolist_id);
+export const getPlaylistsFromUserId = CollectionIndex.from(lists.audiolists, (record) => record.user_id);
+export const getTrackFromTrackId = RecordIndex.from(media.audio.tracks, (record) => record.track_id);
+export const getDiscFromDiscId = RecordIndex.from(media.audio.discs, (record) => record.disc_id);
+export const getUserFromUserId = RecordIndex.from(users.users, (record) => record.user_id);
+export const getUserFromUsername = RecordIndex.from(users.users, (record) => record.username);
+export const getPlaylistFromPlaylistId = RecordIndex.from(lists.audiolists, (record) => record.audiolist_id);
+export const getShowFromShowId = RecordIndex.from(media.video.shows, (record) => record.show_id);
+export const getArtistFromArtistId = RecordIndex.from(media.audio.artists, (record) => record.artist_id);
+export const getEpisodeFromEpisodeId = RecordIndex.from(media.video.episodes, (record) => record.episode_id);
+export const getSeasonFromSeasonId = RecordIndex.from(media.video.seasons, (record) => record.season_id);
+export const getSubtitleFromSubtitleId = RecordIndex.from(media.video.subtitles, (record) => record.subtitle_id);
+export const getCueFromCueId = RecordIndex.from(media.video.cues, (record) => record.cue_id);
+export const getCuesFromSubtitleId = CollectionIndex.from(media.video.cues, (record) => record.subtitle_id);
 
 export function getArtistAppearances(artist_id: string, user_id: string): Album[] {
 	let track_artists = artistTracksIndex.lookup(artist_id);
@@ -303,75 +211,6 @@ export function getUserPlaylists(subject_user_id: string, user_id: string): Play
 		});
 };
 
-class SearchIndex<A> {
-	private map: Map<string, Set<A>>;
-
-	constructor() {
-		this.map = new Map<string, Set<A>>();
-	}
-
-	insert(key: string, value: A): void {
-		let set = this.map.get(key);
-		if (!set) {
-			set = new Set<A>();
-			this.map.set(key, set);
-		}
-		set.add(value);
-	}
-
-	lookup(key: string): Set<A> {
-		let set = this.map.get(key);
-		if (set) {
-			return new Set<A>(set);
-		}
-		return new Set<A>();
-	}
-
-	remove(key: string, value: A): void {
-		let set = this.map.get(key);
-		if (set) {
-			set.delete(value);
-			if (set.size === 0) {
-				this.map.delete(key);
-			}
-		}
-	}
-
-	search(query: string): Array<{ value: A, rank: number }> {
-		let terms = utils.getSearchTerms(query);
-		let sets = terms.map((term) => {
-			return this.map.get(term);
-		}).filter(is.present);
-		let map = new Map<A, number>();
-		for (let set of sets) {
-			for (let id of set) {
-				let rank = map.get(id) ?? (0 - terms.length);
-				map.set(id, rank + 2);
-			}
-		}
-		return Array.from(map.entries())
-			.filter((entry) => entry[1] >= 0)
-			.sort(NumericSort.increasing((entry) => entry[1]))
-			.map((entry) => ({
-				value: entry[0],
-				rank: entry[1]
-			}));
-	}
-
-	static from<A>(collection: Iterable<A>, getValues: (record: A) => string[]): SearchIndex<A> {
-		let searchIndex = new SearchIndex<A>();
-		for (let record of collection) {
-			for (let values of getValues(record)) {
-				let terms = utils.getSearchTerms(values);
-				for (let term of terms) {
-					searchIndex.insert(term, record);
-				}
-			}
-		}
-		return searchIndex;
-	}
-}
-
 export const artistTitleSearchIndex = SearchIndex.from(media.audio.artists, (entry) => [entry.title]);
 export const albumTitleSearchIndex = SearchIndex.from(media.audio.albums, (entry) => [entry.title]);
 export const trackTitleSearchIndex = SearchIndex.from(media.audio.tracks, (entry) => [entry.title]);
@@ -385,23 +224,23 @@ export const personSearchIndex = SearchIndex.from(media.persons, (entry) => [ent
 export const genreSearchIndex = SearchIndex.from(media.video.genres, (entry) => [entry.title]);
 
 export function search(query: string, user_id: string, offset: number, limit: number): Entity[] {
-	let entries = [
-		...albumTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 9 })),
-		...artistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 6 })),
-		...episodeTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 4 })),
-		...genreSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 2 })),
-		...movieTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 8 })),
-		...personSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 1 })),
-		...playlistTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 3 })),
-		...showTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 7 })),
-		...trackTitleSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 5 })),
-		...userUsernameSearchIndex.search(query).map((entry) => ({ ...entry, type_rank: 0 }))
+	let results = [
+		...albumTitleSearchIndex.lookup(query).map((result) => ({ ...result, type_rank: 9 })),
+		...artistTitleSearchIndex.lookup(query).map((result) => ({ ...result, type_rank: 6 })),
+		...episodeTitleSearchIndex.lookup(query).map((result) => ({ ...result, type_rank: 4 })),
+		...genreSearchIndex.lookup(query).map((result) => ({ ...result, type_rank: 2 })),
+		...movieTitleSearchIndex.lookup(query).map((result) => ({ ...result, type_rank: 8 })),
+		...personSearchIndex.lookup(query).map((result) => ({ ...result, type_rank: 1 })),
+		...playlistTitleSearchIndex.lookup(query).map((result) => ({ ...result, type_rank: 3 })),
+		...showTitleSearchIndex.lookup(query).map((result) => ({ ...result, type_rank: 7 })),
+		...trackTitleSearchIndex.lookup(query).map((result) => ({ ...result, type_rank: 5 })),
+		...userUsernameSearchIndex.lookup(query).map((result) => ({ ...result, type_rank: 0 }))
 	].sort(CombinedSort.of(
 		NumericSort.decreasing((value) => value.rank),
 		NumericSort.decreasing((value) => value.type_rank)
 	)).slice(offset, offset + limit);
-	let entities = entries.map((v) => {
-		let entry = v.value;
+	let entities = results.map((result) => {
+		let entry = result.record;
 		if (libdb.AlbumEntry.is(entry)) {
 			return api_lookupAlbum(entry.album_id, user_id);
 		} else if (libdb.ArtistEntry.is(entry)) {
@@ -444,16 +283,13 @@ export function getLatestStream(user_id: string, file_id: string): number | null
 
 export function addStream(user_id: string, file_id: string): void {
 	let timestamp_ms = Date.now();
-	streams.streams.push({
+	let stream = {
 		user_id,
 		file_id,
 		timestamp_ms
-	});
-	getStreamsFromFileIdIndex.insert(file_id, {
-		file_id,
-		user_id,
-		timestamp_ms
-	});
+	};
+	streams.streams.push(stream);
+	getStreamsFromFileIdIndex.insert(stream);
 	libfs.writeFileSync("./private/db/streams.json", JSON.stringify(streams, null, "\t"));
 }
 
@@ -472,11 +308,11 @@ export function addStream(user_id: string, file_id: string): void {
 
 
 
-export const getTokenFromTokenId = RecordIndex.from("selector", users.tokens);
+export const getTokenFromTokenId = RecordIndex.from(users.tokens, (record) => record.selector);
 
 export function createToken(token: libdb.AuthToken): void {
 	users.tokens.push(token);
-	getTokenFromTokenId.insert(token.selector, token);
+	getTokenFromTokenId.insert(token);
 	libfs.writeFileSync("./private/db/users.json", JSON.stringify(users, null, "\t"));
 }
 
@@ -489,7 +325,7 @@ export function updateToken(token: libdb.AuthToken): void {
 }
 
 export function deleteToken(token: libdb.AuthToken): void {
-	getTokenFromTokenId.remove(token.selector);
+	getTokenFromTokenId.remove(token);
 	// TODO: Fix linear complexity.
 	for (let i = 0; i < users.tokens.length; i++) {
 		if (users.tokens[i].selector === token.selector) {
@@ -951,8 +787,8 @@ export function searchForAlbums(query: string, offset: number, length: number, u
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupAlbum(entry.album_id, user_id));
 	} else {
-		return albumTitleSearchIndex.search(query)
-			.map((entry) => entry.value)
+		return albumTitleSearchIndex.lookup(query)
+			.map((entry) => entry.record)
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupAlbum(entry.album_id, user_id));
 	}
@@ -965,19 +801,19 @@ export function searchForArtists(query: string, offset: number, length: number, 
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupArtist(entry.artist_id, user_id));
 	} else {
-		return artistTitleSearchIndex.search(query)
-			.map((entry) => entry.value)
+		return artistTitleSearchIndex.lookup(query)
+			.map((entry) => entry.record)
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupArtist(entry.artist_id, user_id));
 	}
 };
 
 export function searchForCues(query: string, offset: number, limit: number, user_id: string): (Cue & { media: Episode | Movie })[] {
-	return cueSearchIndex.search(query)
+	return cueSearchIndex.lookup(query)
 		.sort(NumericSort.decreasing((value) => value.rank))
 		.slice(offset, offset + limit)
 		.map((entry) => {
-			return api_lookupCue(entry.value.cue_id, user_id);
+			return api_lookupCue(entry.record.cue_id, user_id);
 		})
 		.map((cue) => {
 			let entry = getSubtitleFromSubtitleId.lookup(cue.subtitle.subtitle_id);
@@ -1013,8 +849,8 @@ export function searchForEpisodes(query: string, offset: number, length: number,
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupEpisode(entry.episode_id, user_id));
 	} else {
-		return episodeTitleSearchIndex.search(query)
-			.map((entry) => entry.value)
+		return episodeTitleSearchIndex.lookup(query)
+			.map((entry) => entry.record)
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupEpisode(entry.episode_id, user_id));
 	}
@@ -1028,8 +864,8 @@ export function searchForGenres(query: string, offset: number, length: number, u
 				return api_lookupGenre(entry.video_genre_id, user_id);
 			});
 	} else {
-		return genreSearchIndex.search(query)
-			.map((entry) => entry.value)
+		return genreSearchIndex.lookup(query)
+			.map((entry) => entry.record)
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupGenre(entry.video_genre_id, user_id));
 	}
@@ -1042,8 +878,8 @@ export function searchForMovies(query: string, offset: number, length: number, u
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupMovie(entry.movie_id, user_id));
 	} else {
-		return movieTitleSearchIndex.search(query)
-			.map((entry) => entry.value)
+		return movieTitleSearchIndex.lookup(query)
+			.map((entry) => entry.record)
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupMovie(entry.movie_id, user_id));
 	}
@@ -1056,8 +892,8 @@ export function searchForPersons(query: string, offset: number, length: number, 
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupPerson(entry.person_id, user_id));
 	} else {
-		return personSearchIndex.search(query)
-			.map((entry) => entry.value)
+		return personSearchIndex.lookup(query)
+			.map((entry) => entry.record)
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupPerson(entry.person_id, user_id));
 	}
@@ -1070,8 +906,8 @@ export function searchForPlaylists(query: string, offset: number, length: number
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupPlaylist(entry.audiolist_id, user_id));
 	} else {
-		return playlistTitleSearchIndex.search(query)
-			.map((entry) => entry.value)
+		return playlistTitleSearchIndex.lookup(query)
+			.map((entry) => entry.record)
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupPlaylist(entry.audiolist_id, user_id));
 	}
@@ -1091,8 +927,8 @@ export function searchForShows(query: string, offset: number, length: number, us
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupShow(entry.show_id, user_id));
 	} else {
-		return showTitleSearchIndex.search(query)
-			.map((entry) => entry.value)
+		return showTitleSearchIndex.lookup(query)
+			.map((entry) => entry.record)
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupShow(entry.show_id, user_id));
 	}
@@ -1105,8 +941,8 @@ export function searchForTracks(query: string, offset: number, length: number, u
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupTrack(entry.track_id, user_id));
 	} else {
-		return trackTitleSearchIndex.search(query)
-			.map((entry) => entry.value)
+		return trackTitleSearchIndex.lookup(query)
+			.map((entry) => entry.record)
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupTrack(entry.track_id, user_id));
 	}
@@ -1119,8 +955,8 @@ export function searchForUsers(query: string, offset: number, length: number, us
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupUser(entry.user_id));
 	} else {
-		return userUsernameSearchIndex.search(query)
-			.map((entry) => entry.value)
+		return userUsernameSearchIndex.lookup(query)
+			.map((entry) => entry.record)
 			.slice(offset, offset + length)
 			.map((entry) => api_lookupUser(entry.user_id));
 	}
