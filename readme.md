@@ -22,3 +22,4 @@
 * Re-add support for cues.
 * Promote cues to entities.
 * Combine cue search and search into a single search.
+* Put languages in database.

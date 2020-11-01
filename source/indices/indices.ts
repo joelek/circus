@@ -82,6 +82,9 @@ export class RecordIndex<A> {
 
 	insert(record: A): void {
 		let key = this.getKey(record);
+		if (this.map.has(key)) {
+			this.remove(record);
+		}
 		this.map.set(key, record);
 		this.router.route("insert", record);
 	}

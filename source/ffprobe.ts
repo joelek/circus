@@ -10,42 +10,238 @@ export const VideoFrame = autoguard.Object.of<VideoFrame>({
 	"pkt_pts_time": autoguard.String
 });
 
-export type ShowFrames = {
+export type FramesResult = {
 	"frames": VideoFrame[]
 };
 
-export const ShowFrames = autoguard.Object.of<ShowFrames>({
+export const FramesResult = autoguard.Object.of<FramesResult>({
 	"frames": autoguard.Array.of(autoguard.Reference.of<VideoFrame>(() => VideoFrame))
 });
 
-export type Stream = {
+export type StreamCommon = {
+	"codec_name": string
+};
+
+export const StreamCommon = autoguard.Object.of<StreamCommon>({
+	"codec_name": autoguard.String
+});
+
+export type AudioStream = StreamCommon & {
+	"codec_type": "audio",
 	"start_time": string,
 	"duration": string
 };
 
-export const Stream = autoguard.Object.of<Stream>({
-	"start_time": autoguard.String,
-	"duration": autoguard.String
-});
+export const AudioStream = autoguard.Intersection.of(
+	autoguard.Reference.of<StreamCommon>(() => StreamCommon),
+	autoguard.Object.of<{
+		"codec_type": "audio",
+		"start_time": string,
+		"duration": string
+	}>({
+		"codec_type": autoguard.StringLiteral.of("audio"),
+		"start_time": autoguard.String,
+		"duration": autoguard.String
+	})
+);
 
-export type ShowStreams = {
+export type ImageStream = StreamCommon & {
+	"codec_type": "video",
+	"codec_time_base": "0/1",
+	"width": number,
+	"height": number
+};
+
+export const ImageStream = autoguard.Intersection.of(
+	autoguard.Reference.of<StreamCommon>(() => StreamCommon),
+	autoguard.Object.of<{
+		"codec_type": "video",
+		"codec_time_base": "0/1",
+		"width": number,
+		"height": number
+	}>({
+		"codec_type": autoguard.StringLiteral.of("video"),
+		"codec_time_base": autoguard.StringLiteral.of("0/1"),
+		"width": autoguard.Number,
+		"height": autoguard.Number
+	})
+);
+
+export type SubtitleStream = StreamCommon & {
+	"codec_type": "subtitle"
+};
+
+export const SubtitleStream = autoguard.Intersection.of(
+	autoguard.Reference.of<StreamCommon>(() => StreamCommon),
+	autoguard.Object.of<{
+		"codec_type": "subtitle"
+	}>({
+		"codec_type": autoguard.StringLiteral.of("subtitle")
+	})
+);
+
+export type VideoStream = StreamCommon & {
+	"codec_type": "video",
+	"start_time": string,
+	"duration": string,
+	"width": number,
+	"height": number
+};
+
+export const VideoStream = autoguard.Intersection.of(
+	autoguard.Reference.of<StreamCommon>(() => StreamCommon),
+	autoguard.Object.of<{
+		"codec_type": "video",
+		"start_time": string,
+		"duration": string,
+		"width": number,
+		"height": number
+	}>({
+		"codec_type": autoguard.StringLiteral.of("video"),
+		"start_time": autoguard.String,
+		"duration": autoguard.String,
+		"width": autoguard.Number,
+		"height": autoguard.Number
+	})
+);
+
+export type Stream = AudioStream | ImageStream | SubtitleStream | VideoStream;
+
+export const Stream = autoguard.Union.of(
+	autoguard.Reference.of<AudioStream>(() => AudioStream),
+	autoguard.Reference.of<ImageStream>(() => ImageStream),
+	autoguard.Reference.of<SubtitleStream>(() => SubtitleStream),
+	autoguard.Reference.of<VideoStream>(() => VideoStream)
+);
+
+export type StreamsResult = {
 	"streams": Stream[]
 };
 
-export const ShowStreams = autoguard.Object.of<ShowStreams>({
+export const StreamsResult = autoguard.Object.of<StreamsResult>({
 	"streams": autoguard.Array.of(autoguard.Reference.of<Stream>(() => Stream))
+});
+
+export type Format = {
+	"format_name": string,
+	"tags"?: {
+		"title"?: string,
+		"date"?: string,
+		"comment"?: string,
+		"show"?: string,
+		"episode_id"?: string,
+		"episode_sort"?: string,
+		"season_number"?: string,
+		"track"?: string,
+		"artist"?: string,
+		"album_artist"?: string,
+		"album"?: string,
+		"disc"?: string
+	}
+};
+
+export const Format = autoguard.Object.of<Format>({
+	"format_name": autoguard.String,
+	"tags": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Object.of<{
+			"title"?: string,
+			"date"?: string,
+			"comment"?: string,
+			"show"?: string,
+			"episode_id"?: string,
+			"episode_sort"?: string,
+			"season_number"?: string,
+			"track"?: string,
+			"artist"?: string,
+			"album_artist"?: string,
+			"album"?: string,
+			"disc"?: string
+		}>({
+			"title": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.String
+			),
+			"date": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.String
+			),
+			"comment": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.String
+			),
+			"show": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.String
+			),
+			"episode_id": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.String
+			),
+			"episode_sort": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.String
+			),
+			"season_number": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.String
+			),
+			"track": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.String
+			),
+			"artist": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.String
+			),
+			"album_artist": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.String
+			),
+			"album": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.String
+			),
+			"disc": autoguard.Union.of(
+				autoguard.Undefined,
+				autoguard.String
+			)
+		})
+	)
+});
+
+export type FormatResult = {
+	"format": Format
+};
+
+export const FormatResult = autoguard.Object.of<FormatResult>({
+	"format": autoguard.Reference.of<Format>(() => Format)
 });
 
 export type Autoguard = {
 	"VideoFrame": VideoFrame,
-	"ShowFrames": ShowFrames,
+	"FramesResult": FramesResult,
+	"StreamCommon": StreamCommon,
+	"AudioStream": AudioStream,
+	"ImageStream": ImageStream,
+	"SubtitleStream": SubtitleStream,
+	"VideoStream": VideoStream,
 	"Stream": Stream,
-	"ShowStreams": ShowStreams
+	"StreamsResult": StreamsResult,
+	"Format": Format,
+	"FormatResult": FormatResult
 };
 
 export const Autoguard = {
 	"VideoFrame": VideoFrame,
-	"ShowFrames": ShowFrames,
+	"FramesResult": FramesResult,
+	"StreamCommon": StreamCommon,
+	"AudioStream": AudioStream,
+	"ImageStream": ImageStream,
+	"SubtitleStream": SubtitleStream,
+	"VideoStream": VideoStream,
 	"Stream": Stream,
-	"ShowStreams": ShowStreams
+	"StreamsResult": StreamsResult,
+	"Format": Format,
+	"FormatResult": FormatResult
 };

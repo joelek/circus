@@ -1,0 +1,45 @@
+{
+	Directory: {
+		directory_id: string,
+		name: string,
+		parent_directory_id?: string
+	},
+
+	File: {
+		file_id: string,
+		name: string,
+		mime: string,
+		parent_directory_id?: string,
+		index_timestamp?: number
+	},
+
+	AudioStream: {
+		audio_stream_id: string,
+		file_id: string,
+		stream_index: number,
+		duration_ms: number
+	},
+
+	ImageStream: {
+		image_stream_id: string,
+		file_id: string,
+		stream_index: number,
+		width: number,
+		height: number
+	},
+
+	SubtitleStream: {
+		subtitle_stream_id: string,
+		file_id: string,
+		stream_index: number
+	},
+
+	VideoStream: {
+		video_stream_id: string,
+		file_id: string,
+		stream_index: number,
+		duration_ms: number,
+		width: number,
+		height: number
+	}
+}

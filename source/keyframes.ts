@@ -44,8 +44,8 @@ export async function getStreams(paths: Array<string>): Promise<Array<Segment>> 
 		});
 		ffprobe.on("exit", () => {
 			let string = Buffer.concat(chunks).toString();
-			let json = libffprobe.ShowStreams.as(JSON.parse(string));
-			let streams = json.streams.map((stream) => {
+			let json = libffprobe.StreamsResult.as(JSON.parse(string));
+			let streams = json.streams.filter((stream): stream is libffprobe.VideoStream => libffprobe.VideoStream.is(stream)).map((stream) => {
 				let offset_ms = Math.round(Number.parseFloat(stream.start_time) * 1000);
 				let duration_ms = Math.round(Number.parseFloat(stream.duration) * 1000);
 				return {
@@ -75,7 +75,7 @@ export async function getKeyframeOffsets(paths: Array<string>, streamIndex: numb
 		});
 		ffprobe.on("exit", () => {
 			let string = Buffer.concat(chunks).toString();
-			let json = libffprobe.ShowFrames.as(JSON.parse(string));
+			let json = libffprobe.FramesResult.as(JSON.parse(string));
 			let frames = json.frames.map((frame) => {
 				return Math.round(Number.parseFloat(frame.pkt_pts_time) * 1000);
 			});
