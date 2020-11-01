@@ -1,3 +1,4 @@
+import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
 import * as sorters from "./sorters";
 
@@ -46,20 +47,43 @@ export class CollectionIndex<A> {
 		}
 		return index;
 	}
+
+	static fromIndex<A>(records: RecordIndex<A>, getKey: (record: A) => string): CollectionIndex<A> {
+		let index = new CollectionIndex<A>(getKey);
+		records.on("insert", (record) => {
+			index.insert(record);
+		});
+		records.on("remove", (record) => {
+			index.remove(record);
+		})
+		return index;
+	}
+};
+
+type RecordIndexEventMap<A> = {
+	"insert": A,
+	"remove": A
 };
 
 export class RecordIndex<A> {
 	private map: Map<string, A>;
 	private getKey: (record: A) => string;
+	private router: stdlib.routing.MessageRouter<RecordIndexEventMap<A>>;
 
 	constructor(getKey: (record: A) => string) {
 		this.map = new Map<string, A>();
 		this.getKey = getKey;
+		this.router = new stdlib.routing.MessageRouter<RecordIndexEventMap<A>>();
+	}
+
+	[Symbol.iterator](): Iterator<A> {
+		return this.map.values();
 	}
 
 	insert(record: A): void {
 		let key = this.getKey(record);
 		this.map.set(key, record);
+		this.router.route("insert", record);
 	}
 
 	lookup(query: string): A {
@@ -70,9 +94,23 @@ export class RecordIndex<A> {
 		return record;
 	}
 
+	on<B extends keyof RecordIndexEventMap<A>>(type: B, listener: stdlib.routing.MessageObserver<RecordIndexEventMap<A>[B]>): void {
+		this.router.addObserver(type, listener);
+		if (type === "insert") {
+			for (let record of this.map.values()) {
+				listener(record);
+			}
+		}
+	}
+
+	off<B extends keyof RecordIndexEventMap<A>>(type: B, listener: stdlib.routing.MessageObserver<RecordIndexEventMap<A>[B]>): void {
+		this.router.addObserver(type, listener);
+	}
+
 	remove(record: A): void {
 		let key = this.getKey(record);
 		this.map.delete(key);
+		this.router.route("remove", record);
 	}
 
 	static from<A>(records: Iterable<A>, getKey: (record: A) => string): RecordIndex<A> {
@@ -162,5 +200,16 @@ export class SearchIndex<A> {
 			searchIndex.insert(record);
 		}
 		return searchIndex;
+	}
+
+	static fromIndex<A>(records: RecordIndex<A>, getFields: (record: A) => Array<string>): SearchIndex<A> {
+		let index = new SearchIndex<A>(getFields);
+		records.on("insert", (record) => {
+			index.insert(record);
+		});
+		records.on("remove", (record) => {
+			index.remove(record);
+		})
+		return index;
 	}
 };
