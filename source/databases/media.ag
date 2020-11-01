@@ -51,7 +51,7 @@
 	Album: {
 		album_id: string,
 		title: string,
-		year: number
+		year?: number
 	},
 
 	AlbumFile: {
@@ -87,5 +87,36 @@
 		track_id: string,
 		artist_id: string,
 		order: number
+	},
+
+	Show: {
+		show_id: string,
+		name: string,
+		summary?: string
+	},
+
+	ShowFile: {
+		show_id: string,
+		file_id: string
+	},
+
+	Season: {
+		season_id: string,
+		show_id: string,
+		number: number
+	},
+
+	Episode: {
+		episode_id: string,
+		season_id: string,
+		title: string,
+		number: number,
+		year?: number,
+		summary?: string
+	},
+
+	EpisodeFile: {
+		episode_id: string,
+		file_id: string
 	}
 }

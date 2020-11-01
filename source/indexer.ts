@@ -105,6 +105,27 @@ const track_files = loadIndex("track_files", databases.media.TrackFile, (record)
 const getTrackFiles = indices.CollectionIndex.fromIndex(track_files, (record) => record.file_id);
 const album_artists = loadIndex("album_artists", databases.media.AlbumArtist, (record) => [record.album_id, record.artist_id].join("\0"));
 const track_artists = loadIndex("track_artists", databases.media.TrackArtist, (record) => [record.track_id, record.artist_id].join("\0"));
+const shows = loadIndex("shows", databases.media.Show, (record) => record.show_id);
+const show_files = loadIndex("show_files", databases.media.ShowFile, (record) => [record.show_id, record.file_id].join("\0"));
+const getShowFiles = indices.CollectionIndex.fromIndex(show_files, (record) => record.file_id);
+const seasons = loadIndex("seasons", databases.media.Season, (record) => record.season_id);
+const getShowSeasons = indices.CollectionIndex.fromIndex(seasons, (record) => record.show_id);
+const episodes = loadIndex("episodes", databases.media.Episode, (record) => record.episode_id);
+const getSeasonEpisodes = indices.CollectionIndex.fromIndex(episodes, (record) => record.season_id);
+const episode_files = loadIndex("episode_files", databases.media.EpisodeFile, (record) => [record.episode_id, record.file_id].join("\0"));
+const getEpisodeFiles = indices.CollectionIndex.fromIndex(episode_files, (record) => record.file_id);
+
+shows.on("remove", (record) => {
+	for (let season of getShowSeasons.lookup(record.show_id)) {
+		seasons.remove(season);
+	}
+});
+
+seasons.on("remove", (record) => {
+	for (let episode of getSeasonEpisodes.lookup(record.season_id)) {
+		episodes.remove(episode);
+	}
+});
 
 albums.on("remove", (record) => {
 	for (let disc of getAlbumDiscs.lookup(record.album_id)) {
@@ -136,6 +157,12 @@ files.on("remove", (record) => {
 	}
 	for (let track_file of getTrackFiles.lookup(record.file_id)) {
 		track_files.remove(track_file);
+	}
+	for (let show_file of getShowFiles.lookup(record.file_id)) {
+		show_files.remove(show_file);
+	}
+	for (let episode_file of getEpisodeFiles.lookup(record.file_id)) {
+		episode_files.remove(episode_file);
 	}
 });
 
@@ -353,7 +380,7 @@ async function indexFile(file: File): Promise<void> {
 			let title = format.tags?.title;
 			let year = asInteger(format.tags?.date);
 			let comment = format.tags?.comment;
-			let show_title = format.tags?.show;
+			let show_name = format.tags?.show;
 			let episode_title = format.tags?.episode_id;
 			let episode_number = asInteger(format.tags?.episode_sort);
 			let season_number = asInteger(format.tags?.season_number);
@@ -362,7 +389,38 @@ async function indexFile(file: File): Promise<void> {
 			let album_artist_names = format.tags?.album_artist?.split(";").map((artist) => artist.trim()) ?? [];
 			let album_title = format.tags?.album;
 			let disc_number = asInteger(format.tags?.disc);
-			if (is.present(album_title) && is.present(year)) {
+			if (is.present(show_name)) {
+				let show_id = makeId(show_name);
+				shows.insert({
+					show_id: show_id,
+					name: show_name,
+					summary: undefined
+				});
+				if (is.present(season_number)) {
+					let season_id = makeId(show_id, `${season_number}`);
+					seasons.insert({
+						season_id: season_id,
+						show_id: show_id,
+						number: season_number
+					});
+					if (is.present(episode_title) && is.present(episode_number)) {
+						let episode_id = makeId(season_id, `${episode_number}`);
+						episodes.insert({
+							episode_id: episode_id,
+							season_id: season_id,
+							title: episode_title,
+							number: episode_number,
+							year: year,
+							summary: comment
+						});
+						episode_files.insert({
+							episode_id: episode_id,
+							file_id: file_id
+						});
+					}
+				}
+			}
+			if (is.present(album_title)) {
 				let album_id = makeId(album_title);
 				albums.insert({
 					album_id: album_id,
@@ -446,4 +504,9 @@ indexFiles().then(() => {
 	saveIndex("track_files", track_files);
 	saveIndex("album_artists", album_artists);
 	saveIndex("track_artists", track_artists);
+	saveIndex("shows", shows);
+	saveIndex("show_files", show_files);
+	saveIndex("seasons", seasons);
+	saveIndex("episodes", episodes);
+	saveIndex("episode_files", episode_files);
 });

@@ -112,13 +112,16 @@ export const Artist = autoguard.Object.of<Artist>({
 export type Album = {
 	"album_id": string,
 	"title": string,
-	"year": number
+	"year"?: number
 };
 
 export const Album = autoguard.Object.of<Album>({
 	"album_id": autoguard.String,
 	"title": autoguard.String,
-	"year": autoguard.Number
+	"year": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Number
+	)
 });
 
 export type AlbumFile = {
@@ -191,6 +194,77 @@ export const TrackArtist = autoguard.Object.of<TrackArtist>({
 	"order": autoguard.Number
 });
 
+export type Show = {
+	"show_id": string,
+	"name": string,
+	"summary"?: string
+};
+
+export const Show = autoguard.Object.of<Show>({
+	"show_id": autoguard.String,
+	"name": autoguard.String,
+	"summary": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.String
+	)
+});
+
+export type ShowFile = {
+	"show_id": string,
+	"file_id": string
+};
+
+export const ShowFile = autoguard.Object.of<ShowFile>({
+	"show_id": autoguard.String,
+	"file_id": autoguard.String
+});
+
+export type Season = {
+	"season_id": string,
+	"show_id": string,
+	"number": number
+};
+
+export const Season = autoguard.Object.of<Season>({
+	"season_id": autoguard.String,
+	"show_id": autoguard.String,
+	"number": autoguard.Number
+});
+
+export type Episode = {
+	"episode_id": string,
+	"season_id": string,
+	"title": string,
+	"number": number,
+	"year"?: number,
+	"summary"?: string
+};
+
+export const Episode = autoguard.Object.of<Episode>({
+	"episode_id": autoguard.String,
+	"season_id": autoguard.String,
+	"title": autoguard.String,
+	"number": autoguard.Number,
+	"year": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Number
+	),
+	"summary": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.String
+	)
+});
+
+export type EpisodeFile = {
+	"episode_id": string,
+	"file_id": string
+};
+
+export const EpisodeFile = autoguard.Object.of<EpisodeFile>({
+	"episode_id": autoguard.String,
+	"file_id": autoguard.String
+});
+
 export type Autoguard = {
 	"Directory": Directory,
 	"File": File,
@@ -205,7 +279,12 @@ export type Autoguard = {
 	"Track": Track,
 	"TrackFile": TrackFile,
 	"AlbumArtist": AlbumArtist,
-	"TrackArtist": TrackArtist
+	"TrackArtist": TrackArtist,
+	"Show": Show,
+	"ShowFile": ShowFile,
+	"Season": Season,
+	"Episode": Episode,
+	"EpisodeFile": EpisodeFile
 };
 
 export const Autoguard = {
@@ -222,5 +301,10 @@ export const Autoguard = {
 	"Track": Track,
 	"TrackFile": TrackFile,
 	"AlbumArtist": AlbumArtist,
-	"TrackArtist": TrackArtist
+	"TrackArtist": TrackArtist,
+	"Show": Show,
+	"ShowFile": ShowFile,
+	"Season": Season,
+	"Episode": Episode,
+	"EpisodeFile": EpisodeFile
 };
