@@ -41,5 +41,51 @@
 		duration_ms: number,
 		width: number,
 		height: number
+	},
+
+	Artist: {
+		artist_id: string,
+		name: string
+	},
+
+	Album: {
+		album_id: string,
+		title: string,
+		year: number
+	},
+
+	AlbumFile: {
+		album_id: string,
+		file_id: string
+	},
+
+	Disc: {
+		disc_id: string,
+		album_id: string,
+		number: number
+	},
+
+	Track: {
+		track_id: string,
+		disc_id: string,
+		title: string,
+		number: number
+	},
+
+	TrackFile: {
+		track_id: string,
+		file_id: string
+	},
+
+	AlbumArtist: {
+		album_id: string,
+		artist_id: string,
+		order: number
+	},
+
+	TrackArtist: {
+		track_id: string,
+		artist_id: string,
+		order: number
 	}
 }

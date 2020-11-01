@@ -99,13 +99,113 @@ export const VideoStream = autoguard.Object.of<VideoStream>({
 	"height": autoguard.Number
 });
 
+export type Artist = {
+	"artist_id": string,
+	"name": string
+};
+
+export const Artist = autoguard.Object.of<Artist>({
+	"artist_id": autoguard.String,
+	"name": autoguard.String
+});
+
+export type Album = {
+	"album_id": string,
+	"title": string,
+	"year": number
+};
+
+export const Album = autoguard.Object.of<Album>({
+	"album_id": autoguard.String,
+	"title": autoguard.String,
+	"year": autoguard.Number
+});
+
+export type AlbumFile = {
+	"album_id": string,
+	"file_id": string
+};
+
+export const AlbumFile = autoguard.Object.of<AlbumFile>({
+	"album_id": autoguard.String,
+	"file_id": autoguard.String
+});
+
+export type Disc = {
+	"disc_id": string,
+	"album_id": string,
+	"number": number
+};
+
+export const Disc = autoguard.Object.of<Disc>({
+	"disc_id": autoguard.String,
+	"album_id": autoguard.String,
+	"number": autoguard.Number
+});
+
+export type Track = {
+	"track_id": string,
+	"disc_id": string,
+	"title": string,
+	"number": number
+};
+
+export const Track = autoguard.Object.of<Track>({
+	"track_id": autoguard.String,
+	"disc_id": autoguard.String,
+	"title": autoguard.String,
+	"number": autoguard.Number
+});
+
+export type TrackFile = {
+	"track_id": string,
+	"file_id": string
+};
+
+export const TrackFile = autoguard.Object.of<TrackFile>({
+	"track_id": autoguard.String,
+	"file_id": autoguard.String
+});
+
+export type AlbumArtist = {
+	"album_id": string,
+	"artist_id": string,
+	"order": number
+};
+
+export const AlbumArtist = autoguard.Object.of<AlbumArtist>({
+	"album_id": autoguard.String,
+	"artist_id": autoguard.String,
+	"order": autoguard.Number
+});
+
+export type TrackArtist = {
+	"track_id": string,
+	"artist_id": string,
+	"order": number
+};
+
+export const TrackArtist = autoguard.Object.of<TrackArtist>({
+	"track_id": autoguard.String,
+	"artist_id": autoguard.String,
+	"order": autoguard.Number
+});
+
 export type Autoguard = {
 	"Directory": Directory,
 	"File": File,
 	"AudioStream": AudioStream,
 	"ImageStream": ImageStream,
 	"SubtitleStream": SubtitleStream,
-	"VideoStream": VideoStream
+	"VideoStream": VideoStream,
+	"Artist": Artist,
+	"Album": Album,
+	"AlbumFile": AlbumFile,
+	"Disc": Disc,
+	"Track": Track,
+	"TrackFile": TrackFile,
+	"AlbumArtist": AlbumArtist,
+	"TrackArtist": TrackArtist
 };
 
 export const Autoguard = {
@@ -114,5 +214,13 @@ export const Autoguard = {
 	"AudioStream": AudioStream,
 	"ImageStream": ImageStream,
 	"SubtitleStream": SubtitleStream,
-	"VideoStream": VideoStream
+	"VideoStream": VideoStream,
+	"Artist": Artist,
+	"Album": Album,
+	"AlbumFile": AlbumFile,
+	"Disc": Disc,
+	"Track": Track,
+	"TrackFile": TrackFile,
+	"AlbumArtist": AlbumArtist,
+	"TrackArtist": TrackArtist
 };

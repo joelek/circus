@@ -93,6 +93,30 @@ const subtitle_streams = loadIndex("subtitle_streams", databases.media.SubtitleS
 const getFileSubtitleStreams = indices.CollectionIndex.fromIndex(subtitle_streams, (record) => record.file_id);
 const video_streams = loadIndex("video_streams", databases.media.VideoStream, (record) => record.video_stream_id);
 const getFileVideoStreams = indices.CollectionIndex.fromIndex(video_streams, (record) => record.file_id);
+const artists = loadIndex("artists", databases.media.Artist, (record) => record.artist_id);
+const albums = loadIndex("albums", databases.media.Album, (record) => record.album_id);
+const album_files = loadIndex("album_files", databases.media.AlbumFile, (record) => [record.album_id, record.file_id].join("\0"));
+const getAlbumFiles = indices.CollectionIndex.fromIndex(album_files, (record) => record.file_id);
+const discs = loadIndex("discs", databases.media.Disc, (record) => record.disc_id);
+const getAlbumDiscs = indices.CollectionIndex.fromIndex(discs, (record) => record.album_id);
+const tracks = loadIndex("tracks", databases.media.Track, (record) => record.track_id);
+const getDiscTracks = indices.CollectionIndex.fromIndex(tracks, (record) => record.disc_id);
+const track_files = loadIndex("track_files", databases.media.TrackFile, (record) => [record.track_id, record.file_id].join("\0"));
+const getTrackFiles = indices.CollectionIndex.fromIndex(track_files, (record) => record.file_id);
+const album_artists = loadIndex("album_artists", databases.media.AlbumArtist, (record) => [record.album_id, record.artist_id].join("\0"));
+const track_artists = loadIndex("track_artists", databases.media.TrackArtist, (record) => [record.track_id, record.artist_id].join("\0"));
+
+albums.on("remove", (record) => {
+	for (let disc of getAlbumDiscs.lookup(record.album_id)) {
+		discs.remove(disc);
+	}
+});
+
+discs.on("remove", (record) => {
+	for (let track of getDiscTracks.lookup(record.disc_id)) {
+		tracks.remove(track);
+	}
+});
 
 files.on("remove", (record) => {
 	for (let audio_stream of getFileAudioStreams.lookup(record.file_id)) {
@@ -106,6 +130,12 @@ files.on("remove", (record) => {
 	}
 	for (let video_stream of getFileVideoStreams.lookup(record.file_id)) {
 		video_streams.remove(video_stream);
+	}
+	for (let album_file of getAlbumFiles.lookup(record.file_id)) {
+		album_files.remove(album_file);
+	}
+	for (let track_file of getTrackFiles.lookup(record.file_id)) {
+		track_files.remove(track_file);
 	}
 });
 
@@ -264,6 +294,7 @@ function getMime(format: ffprobe.Format, stream: ffprobe.Stream): string {
 
 async function indexFile(file: File): Promise<void> {
 	let path = getFilePath(file);
+	let file_id = file.file_id;
 	try {
 		if (file.name.endsWith(".json")) {
 			JSON.parse(libfs.readFileSync(path.join("/"), "utf-8"));
@@ -278,7 +309,7 @@ async function indexFile(file: File): Promise<void> {
 				if (ffprobe.AudioStream.is(stream)) {
 					audio_streams.insert({
 						audio_stream_id: stream_id,
-						file_id: file.file_id,
+						file_id: file_id,
 						stream_index: index,
 						duration_ms: Math.round(Number.parseFloat(stream.duration) * 1000)
 					});
@@ -288,7 +319,7 @@ async function indexFile(file: File): Promise<void> {
 				} else if (ffprobe.ImageStream.is(stream)) {
 					image_streams.insert({
 						image_stream_id: stream_id,
-						file_id: file.file_id,
+						file_id: file_id,
 						stream_index: index,
 						width: stream.width,
 						height: stream.height
@@ -299,7 +330,7 @@ async function indexFile(file: File): Promise<void> {
 				} else if (ffprobe.SubtitleStream.is(stream)) {
 					subtitle_streams.insert({
 						subtitle_stream_id: stream_id,
-						file_id: file.file_id,
+						file_id: file_id,
 						stream_index: index
 					});
 					if (file.mime === "application/octet-stream") {
@@ -308,7 +339,7 @@ async function indexFile(file: File): Promise<void> {
 				} else if (ffprobe.VideoStream.is(stream)) {
 					video_streams.insert({
 						video_stream_id: stream_id,
-						file_id: file.file_id,
+						file_id: file_id,
 						stream_index: index,
 						width: stream.width,
 						height: stream.height,
@@ -316,6 +347,71 @@ async function indexFile(file: File): Promise<void> {
 					});
 					if (file.mime === "application/octet-stream") {
 						file.mime = getMime(format, stream);
+					}
+				}
+			}
+			let title = format.tags?.title;
+			let year = asInteger(format.tags?.date);
+			let comment = format.tags?.comment;
+			let show_title = format.tags?.show;
+			let episode_title = format.tags?.episode_id;
+			let episode_number = asInteger(format.tags?.episode_sort);
+			let season_number = asInteger(format.tags?.season_number);
+			let track_number = asInteger(format.tags?.track);
+			let track_artist_names = format.tags?.artist?.split(";").map((artist) => artist.trim()) ?? [];
+			let album_artist_names = format.tags?.album_artist?.split(";").map((artist) => artist.trim()) ?? [];
+			let album_title = format.tags?.album;
+			let disc_number = asInteger(format.tags?.disc);
+			if (is.present(album_title) && is.present(year)) {
+				let album_id = makeId(album_title);
+				albums.insert({
+					album_id: album_id,
+					title: album_title,
+					year: year
+				});
+				for (let [index, album_artist_name] of album_artist_names.entries()) {
+					let artist_id = makeId(album_artist_name);
+					artists.insert({
+						artist_id: artist_id,
+						name: album_artist_name
+					});
+					album_artists.insert({
+						album_id: album_id,
+						artist_id: artist_id,
+						order: index
+					});
+				}
+				if (is.present(disc_number)) {
+					let disc_id = makeId(album_id, `${disc_number}`);
+					discs.insert({
+						disc_id: disc_id,
+						album_id: album_id,
+						number: disc_number
+					});
+					if (is.present(title) && is.present(track_number)) {
+						let track_id = makeId(disc_id, `${track_number}`);
+						tracks.insert({
+							track_id: track_id,
+							disc_id: disc_id,
+							title: title,
+							number: track_number
+						});
+						track_files.insert({
+							track_id: track_id,
+							file_id: file_id
+						});
+						for (let [index, track_artist_name] of track_artist_names.entries()) {
+							let artist_id = makeId(track_artist_name);
+							artists.insert({
+								artist_id: artist_id,
+								name: track_artist_name
+							});
+							track_artists.insert({
+								track_id: track_id,
+								artist_id: artist_id,
+								order: index
+							});
+						}
 					}
 				}
 			}
@@ -342,4 +438,12 @@ indexFiles().then(() => {
 	saveIndex("image_streams", image_streams);
 	saveIndex("subtitle_streams", subtitle_streams);
 	saveIndex("video_streams", video_streams);
+	saveIndex("artists", artists);
+	saveIndex("albums", albums);
+	saveIndex("album_files", album_files);
+	saveIndex("discs", discs);
+	saveIndex("tracks", tracks);
+	saveIndex("track_files", track_files);
+	saveIndex("album_artists", album_artists);
+	saveIndex("track_artists", track_artists);
 });
