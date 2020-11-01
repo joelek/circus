@@ -7,9 +7,32 @@ import * as indices from "./indices";
 import * as is from "./is";
 import * as databases from "./databases";
 import { Directory, File } from "./databases/media";
-import { Stream } from "./database";
 
-function makeId(components: Array<string>): string {
+function asInteger(string?: string): number | undefined {
+	if (is.present(string)) {
+		let number = Number.parseInt(string);
+		if (Number.isInteger(number)) {
+			return number;
+		}
+	}
+}
+
+function wordify(string: string): Array<string> {
+	return string
+		.toLowerCase()
+		.normalize("NFKD")
+		.replace(/[\|\/\\\_\-]/g, " ")
+		.replace(/[^a-z0-9 ]/g, "")
+		.trim()
+		.split(/[ ]+/g);
+}
+
+function makeId(...components: Array<string | undefined>): string {
+	components = components
+		.map((component) => wordify(component ?? ""))
+		.map((words) => {
+			return words.join(" ");
+		});
 	return libcrypto.createHash("sha256")
 		.update(components.join("\0"))
 		.digest("hex")
@@ -159,7 +182,7 @@ function visitDirectory(path: Array<string>, parent_directory_id?: string): void
 	for (let dirent of dirents) {
 		let name = dirent.name;
 		if (dirent.isDirectory()) {
-			let directory_id = makeId(is.present(parent_directory_id) ? [parent_directory_id, name] : [name]);
+			let directory_id = makeId(parent_directory_id, name);
 			try {
 				directories.lookup(directory_id);
 			} catch (error) {
@@ -171,7 +194,7 @@ function visitDirectory(path: Array<string>, parent_directory_id?: string): void
 			}
 			visitDirectory([...path, dirent.name], directory_id);
 		} else if (dirent.isFile()) {
-			let file_id = makeId(is.present(parent_directory_id) ? [parent_directory_id, name] : [name]);
+			let file_id = makeId(parent_directory_id, name);
 			try {
 				files.lookup(file_id);
 			} catch (error) {
@@ -251,7 +274,7 @@ async function indexFile(file: File): Promise<void> {
 			let streams_result = await getStreamsResult(path);
 			let streams = streams_result.streams;
 			for (let [index, stream] of streams.entries()) {
-				let stream_id = makeId([file.file_id, `${index}`]);
+				let stream_id = makeId(file.file_id, `${index}`);
 				if (ffprobe.AudioStream.is(stream)) {
 					audio_streams.insert({
 						audio_stream_id: stream_id,
