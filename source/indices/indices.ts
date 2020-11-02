@@ -21,8 +21,8 @@ export class CollectionIndex<A> {
 		set.add(record);
 	}
 
-	lookup(query: string | undefined): Array<A> {
-		let set = this.map.get(query);
+	lookup(key: string | undefined): Array<A> {
+		let set = this.map.get(key);
 		if (is.present(set)) {
 			return Array.from(set);
 		}
@@ -48,14 +48,20 @@ export class CollectionIndex<A> {
 		return index;
 	}
 
-	static fromIndex<A>(records: RecordIndex<A>, getKey: (record: A) => string | undefined): CollectionIndex<A> {
-		let index = new CollectionIndex<A>(getKey);
-		records.on("insert", (record) => {
+	static fromIndex<A, B>(parent: RecordIndex<A>, child: RecordIndex<B>, getParentKey: (record: A) => string | undefined, getChildKey: (record: B) => string | undefined): CollectionIndex<B> {
+		let index = new CollectionIndex<B>(getChildKey);
+		child.on("insert", (record) => {
 			index.insert(record);
 		});
-		records.on("remove", (record) => {
+		child.on("remove", (record) => {
 			index.remove(record);
-		})
+		});
+		parent.on("remove", (record) => {
+			let key = getParentKey(record);
+			for (let record of index.lookup(key)) {
+				child.remove(record);
+			}
+		});
 		return index;
 	}
 };
