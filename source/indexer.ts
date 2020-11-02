@@ -114,6 +114,9 @@ const episodes = loadIndex("episodes", databases.media.Episode, (record) => reco
 const getSeasonEpisodes = indices.CollectionIndex.fromIndex(seasons, episodes, (record) => record.season_id, (record) => record.season_id);
 const episode_files = loadIndex("episode_files", databases.media.EpisodeFile, (record) => [record.episode_id, record.file_id].join("\0"));
 const getEpisodeFiles = indices.CollectionIndex.fromIndex(files, episode_files, (record) => record.file_id, (record) => record.file_id);
+const movies = loadIndex("movies", databases.media.Movie, (record) => record.movie_id);
+const movie_files = loadIndex("movie_files", databases.media.MovieFile, (record) => [record.movie_id, record.file_id].join("\0"));
+const getMovieFiles = indices.CollectionIndex.fromIndex(files, movie_files, (record) => record.file_id, (record) => record.file_id);
 
 function getPath(entry: Directory | File): Array<string> {
 	let path = new Array<string>();
@@ -179,7 +182,7 @@ function visitDirectory(path: Array<string>, parent_directory_id?: string): void
 	for (let dirent of dirents) {
 		let name = dirent.name;
 		if (dirent.isDirectory()) {
-			let directory_id = makeId(parent_directory_id, name);
+			let directory_id = makeId("directory", parent_directory_id, name);
 			try {
 				directories.lookup(directory_id);
 			} catch (error) {
@@ -191,7 +194,7 @@ function visitDirectory(path: Array<string>, parent_directory_id?: string): void
 			}
 			visitDirectory([...path, dirent.name], directory_id);
 		} else if (dirent.isFile()) {
-			let file_id = makeId(parent_directory_id, name);
+			let file_id = makeId("file", parent_directory_id, name);
 			try {
 				files.lookup(file_id);
 			} catch (error) {
@@ -272,7 +275,7 @@ async function indexFile(file: File): Promise<void> {
 			let streams_result = await getStreamsResult(path);
 			let streams = streams_result.streams;
 			for (let [index, stream] of streams.entries()) {
-				let stream_id = makeId(file.file_id, `${index}`);
+				let stream_id = makeId("stream", file.file_id, `${index}`);
 				if (ffprobe.AudioStream.is(stream)) {
 					audio_streams.insert({
 						audio_stream_id: stream_id,
@@ -330,21 +333,21 @@ async function indexFile(file: File): Promise<void> {
 			let album_title = format.tags?.album;
 			let disc_number = asInteger(format.tags?.disc);
 			if (is.present(show_name)) {
-				let show_id = makeId(show_name);
+				let show_id = makeId("show", show_name);
 				shows.insert({
 					show_id: show_id,
 					name: show_name,
 					summary: undefined
 				});
 				if (is.present(season_number)) {
-					let season_id = makeId(show_id, `${season_number}`);
+					let season_id = makeId("season", show_id, `${season_number}`);
 					seasons.insert({
 						season_id: season_id,
 						show_id: show_id,
 						number: season_number
 					});
 					if (is.present(episode_title) && is.present(episode_number)) {
-						let episode_id = makeId(season_id, `${episode_number}`);
+						let episode_id = makeId("episode", season_id, `${episode_number}`);
 						episodes.insert({
 							episode_id: episode_id,
 							season_id: season_id,
@@ -359,16 +362,15 @@ async function indexFile(file: File): Promise<void> {
 						});
 					}
 				}
-			}
-			if (is.present(album_title)) {
-				let album_id = makeId(album_title);
+			} else if (is.present(album_title)) {
+				let album_id = makeId("album", album_title);
 				albums.insert({
 					album_id: album_id,
 					title: album_title,
 					year: year
 				});
 				for (let [index, album_artist_name] of album_artist_names.entries()) {
-					let artist_id = makeId(album_artist_name);
+					let artist_id = makeId("artist", album_artist_name);
 					artists.insert({
 						artist_id: artist_id,
 						name: album_artist_name
@@ -380,14 +382,14 @@ async function indexFile(file: File): Promise<void> {
 					});
 				}
 				if (is.present(disc_number)) {
-					let disc_id = makeId(album_id, `${disc_number}`);
+					let disc_id = makeId("disc", album_id, `${disc_number}`);
 					discs.insert({
 						disc_id: disc_id,
 						album_id: album_id,
 						number: disc_number
 					});
 					if (is.present(title) && is.present(track_number)) {
-						let track_id = makeId(disc_id, `${track_number}`);
+						let track_id = makeId("track", disc_id, `${track_number}`);
 						tracks.insert({
 							track_id: track_id,
 							disc_id: disc_id,
@@ -399,7 +401,7 @@ async function indexFile(file: File): Promise<void> {
 							file_id: file_id
 						});
 						for (let [index, track_artist_name] of track_artist_names.entries()) {
-							let artist_id = makeId(track_artist_name);
+							let artist_id = makeId("artist", track_artist_name);
 							artists.insert({
 								artist_id: artist_id,
 								name: track_artist_name
@@ -412,6 +414,18 @@ async function indexFile(file: File): Promise<void> {
 						}
 					}
 				}
+			} else if (is.present(title)) {
+				let movie_id = makeId("movie", title);
+				movies.insert({
+					movie_id: movie_id,
+					title: title,
+					year: year,
+					summary: comment
+				});
+				movie_files.insert({
+					movie_id: movie_id,
+					file_id: file_id
+				});
 			}
 		}
 	} catch (error) {
@@ -449,4 +463,6 @@ indexFiles().then(() => {
 	saveIndex("seasons", seasons);
 	saveIndex("episodes", episodes);
 	saveIndex("episode_files", episode_files);
+	saveIndex("movies", movies);
+	saveIndex("movie_files", movie_files);
 });

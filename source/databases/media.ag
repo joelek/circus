@@ -118,5 +118,17 @@
 	EpisodeFile: {
 		episode_id: string,
 		file_id: string
+	},
+
+	Movie: {
+		movie_id: string,
+		title: string,
+		year?: number,
+		summary?: string
+	},
+
+	MovieFile: {
+		movie_id: string,
+		file_id: string
 	}
 }

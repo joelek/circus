@@ -265,6 +265,36 @@ export const EpisodeFile = autoguard.Object.of<EpisodeFile>({
 	"file_id": autoguard.String
 });
 
+export type Movie = {
+	"movie_id": string,
+	"title": string,
+	"year"?: number,
+	"summary"?: string
+};
+
+export const Movie = autoguard.Object.of<Movie>({
+	"movie_id": autoguard.String,
+	"title": autoguard.String,
+	"year": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Number
+	),
+	"summary": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.String
+	)
+});
+
+export type MovieFile = {
+	"movie_id": string,
+	"file_id": string
+};
+
+export const MovieFile = autoguard.Object.of<MovieFile>({
+	"movie_id": autoguard.String,
+	"file_id": autoguard.String
+});
+
 export type Autoguard = {
 	"Directory": Directory,
 	"File": File,
@@ -284,7 +314,9 @@ export type Autoguard = {
 	"ShowFile": ShowFile,
 	"Season": Season,
 	"Episode": Episode,
-	"EpisodeFile": EpisodeFile
+	"EpisodeFile": EpisodeFile,
+	"Movie": Movie,
+	"MovieFile": MovieFile
 };
 
 export const Autoguard = {
@@ -306,5 +338,7 @@ export const Autoguard = {
 	"ShowFile": ShowFile,
 	"Season": Season,
 	"Episode": Episode,
-	"EpisodeFile": EpisodeFile
+	"EpisodeFile": EpisodeFile,
+	"Movie": Movie,
+	"MovieFile": MovieFile
 };
