@@ -62,7 +62,8 @@ export class CollectionIndex<A> {
 
 type RecordIndexEventMap<A> = {
 	"insert": A,
-	"remove": A
+	"remove": A,
+	"update": A
 };
 
 export class RecordIndex<A> {
@@ -83,16 +84,18 @@ export class RecordIndex<A> {
 	insert(record: A): void {
 		let key = this.getKey(record);
 		if (this.map.has(key)) {
-			this.remove(record);
+			this.map.set(key, record);
+			this.router.route("update", record);
+		} else {
+			this.map.set(key, record);
+			this.router.route("insert", record);
 		}
-		this.map.set(key, record);
-		this.router.route("insert", record);
 	}
 
-	lookup(query: string | undefined): A {
-		let record = this.map.get(query);
+	lookup(key: string | undefined): A {
+		let record = this.map.get(key);
 		if (is.absent(record)) {
-			throw `Expected "${query}" to match a record!`;
+			throw `Expected "${key}" to match a record!`;
 		}
 		return record;
 	}
@@ -112,8 +115,21 @@ export class RecordIndex<A> {
 
 	remove(record: A): void {
 		let key = this.getKey(record);
-		this.map.delete(key);
-		this.router.route("remove", record);
+		if (this.map.has(key)) {
+			this.map.delete(key);
+			this.router.route("remove", record);
+		}
+	}
+
+	update(record: A): void {
+		let key = this.getKey(record);
+		if (this.map.has(key)) {
+			this.map.set(key, record);
+			this.router.route("update", record);
+		} else {
+			this.map.set(key, record);
+			this.router.route("insert", record);
+		}
 	}
 
 	static from<A>(records: Iterable<A>, getKey: (record: A) => string | undefined): RecordIndex<A> {
