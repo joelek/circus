@@ -82,98 +82,38 @@ function saveIndex<A>(name: string, index: indices.RecordIndex<A>): void {
 }
 
 const directories = loadIndex("directories", databases.media.Directory, (record) => record.directory_id);
-const getDirectoryDirectories = indices.CollectionIndex.fromIndex(directories, (record) => record.parent_directory_id ?? "");
+const getDirectoryDirectories = indices.CollectionIndex.fromIndex(directories, directories, (record) => record.directory_id, (record) => record.parent_directory_id);
 const files = loadIndex("files", databases.media.File, (record) => record.file_id);
-const getDirectoryFiles = indices.CollectionIndex.fromIndex(files, (record) => record.parent_directory_id ?? "");
+const getDirectoryFiles = indices.CollectionIndex.fromIndex(directories, files, (record) => record.directory_id, (record) => record.parent_directory_id);
 const audio_streams = loadIndex("audio_streams", databases.media.AudioStream, (record) => record.audio_stream_id);
-const getFileAudioStreams = indices.CollectionIndex.fromIndex(audio_streams, (record) => record.file_id);
+const getFileAudioStreams = indices.CollectionIndex.fromIndex(files, audio_streams, (record) => record.file_id, (record) => record.file_id);
 const image_streams = loadIndex("image_streams", databases.media.ImageStream, (record) => record.image_stream_id);
-const getFileImageStreams = indices.CollectionIndex.fromIndex(image_streams, (record) => record.file_id);
+const getFileImageStreams = indices.CollectionIndex.fromIndex(files, image_streams, (record) => record.file_id, (record) => record.file_id);
 const subtitle_streams = loadIndex("subtitle_streams", databases.media.SubtitleStream, (record) => record.subtitle_stream_id);
-const getFileSubtitleStreams = indices.CollectionIndex.fromIndex(subtitle_streams, (record) => record.file_id);
+const getFileSubtitleStreams = indices.CollectionIndex.fromIndex(files, subtitle_streams, (record) => record.file_id, (record) => record.file_id);
 const video_streams = loadIndex("video_streams", databases.media.VideoStream, (record) => record.video_stream_id);
-const getFileVideoStreams = indices.CollectionIndex.fromIndex(video_streams, (record) => record.file_id);
+const getFileVideoStreams = indices.CollectionIndex.fromIndex(files, video_streams, (record) => record.file_id, (record) => record.file_id);
 const artists = loadIndex("artists", databases.media.Artist, (record) => record.artist_id);
 const albums = loadIndex("albums", databases.media.Album, (record) => record.album_id);
 const album_files = loadIndex("album_files", databases.media.AlbumFile, (record) => [record.album_id, record.file_id].join("\0"));
-const getAlbumFiles = indices.CollectionIndex.fromIndex(album_files, (record) => record.file_id);
+const getAlbumFiles = indices.CollectionIndex.fromIndex(files, album_files, (record) => record.file_id, (record) => record.file_id);
 const discs = loadIndex("discs", databases.media.Disc, (record) => record.disc_id);
-const getAlbumDiscs = indices.CollectionIndex.fromIndex(discs, (record) => record.album_id);
+const getAlbumDiscs = indices.CollectionIndex.fromIndex(albums, discs, (record) => record.album_id, (record) => record.album_id);
 const tracks = loadIndex("tracks", databases.media.Track, (record) => record.track_id);
-const getDiscTracks = indices.CollectionIndex.fromIndex(tracks, (record) => record.disc_id);
+const getDiscTracks = indices.CollectionIndex.fromIndex(discs, tracks, (record) => record.disc_id, (record) => record.disc_id);
 const track_files = loadIndex("track_files", databases.media.TrackFile, (record) => [record.track_id, record.file_id].join("\0"));
-const getTrackFiles = indices.CollectionIndex.fromIndex(track_files, (record) => record.file_id);
+const getTrackFiles = indices.CollectionIndex.fromIndex(files, track_files, (record) => record.file_id, (record) => record.file_id);
 const album_artists = loadIndex("album_artists", databases.media.AlbumArtist, (record) => [record.album_id, record.artist_id].join("\0"));
 const track_artists = loadIndex("track_artists", databases.media.TrackArtist, (record) => [record.track_id, record.artist_id].join("\0"));
 const shows = loadIndex("shows", databases.media.Show, (record) => record.show_id);
 const show_files = loadIndex("show_files", databases.media.ShowFile, (record) => [record.show_id, record.file_id].join("\0"));
-const getShowFiles = indices.CollectionIndex.fromIndex(show_files, (record) => record.file_id);
+const getShowFiles = indices.CollectionIndex.fromIndex(files, show_files, (record) => record.file_id, (record) => record.file_id);
 const seasons = loadIndex("seasons", databases.media.Season, (record) => record.season_id);
-const getShowSeasons = indices.CollectionIndex.fromIndex(seasons, (record) => record.show_id);
+const getShowSeasons = indices.CollectionIndex.fromIndex(shows, seasons, (record) => record.show_id, (record) => record.show_id);
 const episodes = loadIndex("episodes", databases.media.Episode, (record) => record.episode_id);
-const getSeasonEpisodes = indices.CollectionIndex.fromIndex(episodes, (record) => record.season_id);
+const getSeasonEpisodes = indices.CollectionIndex.fromIndex(seasons, episodes, (record) => record.season_id, (record) => record.season_id);
 const episode_files = loadIndex("episode_files", databases.media.EpisodeFile, (record) => [record.episode_id, record.file_id].join("\0"));
-const getEpisodeFiles = indices.CollectionIndex.fromIndex(episode_files, (record) => record.file_id);
-
-shows.on("remove", (record) => {
-	for (let season of getShowSeasons.lookup(record.show_id)) {
-		seasons.remove(season);
-	}
-});
-
-seasons.on("remove", (record) => {
-	for (let episode of getSeasonEpisodes.lookup(record.season_id)) {
-		episodes.remove(episode);
-	}
-});
-
-albums.on("remove", (record) => {
-	for (let disc of getAlbumDiscs.lookup(record.album_id)) {
-		discs.remove(disc);
-	}
-});
-
-discs.on("remove", (record) => {
-	for (let track of getDiscTracks.lookup(record.disc_id)) {
-		tracks.remove(track);
-	}
-});
-
-files.on("remove", (record) => {
-	for (let audio_stream of getFileAudioStreams.lookup(record.file_id)) {
-		audio_streams.remove(audio_stream);
-	}
-	for (let image_stream of getFileImageStreams.lookup(record.file_id)) {
-		image_streams.remove(image_stream);
-	}
-	for (let subtitle_stream of getFileSubtitleStreams.lookup(record.file_id)) {
-		subtitle_streams.remove(subtitle_stream);
-	}
-	for (let video_stream of getFileVideoStreams.lookup(record.file_id)) {
-		video_streams.remove(video_stream);
-	}
-	for (let album_file of getAlbumFiles.lookup(record.file_id)) {
-		album_files.remove(album_file);
-	}
-	for (let track_file of getTrackFiles.lookup(record.file_id)) {
-		track_files.remove(track_file);
-	}
-	for (let show_file of getShowFiles.lookup(record.file_id)) {
-		show_files.remove(show_file);
-	}
-	for (let episode_file of getEpisodeFiles.lookup(record.file_id)) {
-		episode_files.remove(episode_file);
-	}
-});
-
-directories.on("remove", (record) => {
-	for (let directory of getDirectoryDirectories.lookup(record.directory_id)) {
-		directories.remove(directory);
-	}
-	for (let file of getDirectoryFiles.lookup(record.directory_id)) {
-		files.remove(file);
-	}
-});
+const getEpisodeFiles = indices.CollectionIndex.fromIndex(files, episode_files, (record) => record.file_id, (record) => record.file_id);
 
 function getPath(entry: Directory | File): Array<string> {
 	let path = new Array<string>();
@@ -201,7 +141,7 @@ function checkFile(root: File): void {
 	if (libfs.existsSync(path)) {
 		let stats = libfs.statSync(path);
 		if (stats.isFile()) {
-			if (stats.mtimeMs === root.index_timestamp) {
+			if (stats.mtime.valueOf() === root.index_timestamp) {
 				return;
 			}
 		}
@@ -226,11 +166,11 @@ function checkDirectory(root: Directory): void {
 	directories.remove(root);
 }
 
-for (let directory of getDirectoryDirectories.lookup("")) {
+for (let directory of getDirectoryDirectories.lookup(undefined)) {
 	checkDirectory(directory);
 }
 
-for (let file of getDirectoryFiles.lookup("")) {
+for (let file of getDirectoryFiles.lookup(undefined)) {
 	checkFile(file);
 }
 
@@ -478,7 +418,7 @@ async function indexFile(file: File): Promise<void> {
 		console.log(`Indexing failed for "${path.join("/")}"!`);
 	}
 	let stats = libfs.statSync(path.join("/"));
-	file.index_timestamp = stats.mtimeMs;
+	file.index_timestamp = stats.mtime.valueOf();
 }
 
 async function indexFiles(): Promise<void> {
