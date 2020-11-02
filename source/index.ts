@@ -482,6 +482,7 @@ let visit_atom = (tag: MP4Tag, fds: FileDescriptor, path: string, maxlength: num
 		} else if (path === '.moov' && atom.kind === 'udta') {
 			visit_atom(tag, fds, `${path}.${atom.kind}`, atom.length);
 		} else if (path === '.moov.udta' && atom.kind === 'meta') {
+			// full atom version and flags
 			fds.offset += 4;
 			visit_atom(tag, fds, `${path}.${atom.kind}`, atom.length);
 		} else if (path === '.moov.udta.meta' && atom.kind === 'ilst') {
@@ -532,6 +533,12 @@ let visit_atom = (tag: MP4Tag, fds: FileDescriptor, path: string, maxlength: num
 			} else {
 				fds.offset += atom.length - 8;
 			}
+		} else if (path === '.moov.trak' && atom.kind === 'tkhd') {
+			let buffer = read_mp4_atom_body(fds, atom);
+			let duration = buffer.readUInt32BE(20);
+			let width = buffer.readUInt16BE(76);
+			let height = buffer.readUInt16BE(80);
+			console.log({duration, width, height});
 		} else {
 			fds.offset += atom.length - 8;
 		}
