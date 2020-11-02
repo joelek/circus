@@ -3,11 +3,11 @@ import * as is from "../is";
 import * as sorters from "./sorters";
 
 export class CollectionIndex<A> {
-	private map: Map<string, Set<A>>;
-	private getKey: (record: A) => string;
+	private map: Map<string | undefined, Set<A>>;
+	private getKey: (record: A) => string | undefined;
 
-	constructor(getKey: (record: A) => string) {
-		this.map = new Map<string, Set<A>>();
+	constructor(getKey: (record: A) => string | undefined) {
+		this.map = new Map<string | undefined, Set<A>>();
 		this.getKey = getKey;
 	}
 
@@ -21,7 +21,7 @@ export class CollectionIndex<A> {
 		set.add(record);
 	}
 
-	lookup(query: string): Array<A> {
+	lookup(query: string | undefined): Array<A> {
 		let set = this.map.get(query);
 		if (is.present(set)) {
 			return Array.from(set);
@@ -40,7 +40,7 @@ export class CollectionIndex<A> {
 		}
 	}
 
-	static from<A>(records: Iterable<A>, getKey: (record: A) => string): CollectionIndex<A> {
+	static from<A>(records: Iterable<A>, getKey: (record: A) => string | undefined): CollectionIndex<A> {
 		let index = new CollectionIndex<A>(getKey);
 		for (let record of records) {
 			index.insert(record);
@@ -48,7 +48,7 @@ export class CollectionIndex<A> {
 		return index;
 	}
 
-	static fromIndex<A>(records: RecordIndex<A>, getKey: (record: A) => string): CollectionIndex<A> {
+	static fromIndex<A>(records: RecordIndex<A>, getKey: (record: A) => string | undefined): CollectionIndex<A> {
 		let index = new CollectionIndex<A>(getKey);
 		records.on("insert", (record) => {
 			index.insert(record);
@@ -66,12 +66,12 @@ type RecordIndexEventMap<A> = {
 };
 
 export class RecordIndex<A> {
-	private map: Map<string, A>;
-	private getKey: (record: A) => string;
+	private map: Map<string | undefined, A>;
+	private getKey: (record: A) => string | undefined;
 	private router: stdlib.routing.MessageRouter<RecordIndexEventMap<A>>;
 
-	constructor(getKey: (record: A) => string) {
-		this.map = new Map<string, A>();
+	constructor(getKey: (record: A) => string | undefined) {
+		this.map = new Map<string | undefined, A>();
 		this.getKey = getKey;
 		this.router = new stdlib.routing.MessageRouter<RecordIndexEventMap<A>>();
 	}
@@ -89,7 +89,7 @@ export class RecordIndex<A> {
 		this.router.route("insert", record);
 	}
 
-	lookup(query: string): A {
+	lookup(query: string | undefined): A {
 		let record = this.map.get(query);
 		if (is.absent(record)) {
 			throw `Expected "${query}" to match a record!`;
@@ -116,7 +116,7 @@ export class RecordIndex<A> {
 		this.router.route("remove", record);
 	}
 
-	static from<A>(records: Iterable<A>, getKey: (record: A) => string): RecordIndex<A> {
+	static from<A>(records: Iterable<A>, getKey: (record: A) => string | undefined): RecordIndex<A> {
 		let index = new RecordIndex<A>(getKey);
 		for (let record of records) {
 			index.insert(record);
@@ -212,7 +212,7 @@ export class SearchIndex<A> {
 		});
 		records.on("remove", (record) => {
 			index.remove(record);
-		})
+		});
 		return index;
 	}
 };
