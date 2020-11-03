@@ -113,6 +113,7 @@ function readBody(reader: libreader.Reader): Body {
 		let cue = readCue(reader);
 		cues.push(cue);
 	}
+	cues = cues.sort((one, two) => two.start_ms - one.start_ms);
 	return {
 		cues
 	};

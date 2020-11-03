@@ -1,10 +1,9 @@
-import * as libcp from "child_process";
 import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as autoguard from "@joelek/ts-autoguard";
-import * as ffprobe from "./ffprobe";
 import * as indices from "./indices";
 import * as is from "./is";
+import * as probes from "./probes";
 import * as databases from "./databases";
 import { Directory, File } from "./databases/media";
 
@@ -212,257 +211,194 @@ function visitDirectory(path: Array<string>, parent_directory_id?: string): void
 
 visitDirectory(MEDIA_ROOT);
 
-async function runProcess<A>(name: string, options: Array<string>, guard: autoguard.serialization.MessageGuard<A>): Promise<A> {
-	return new Promise((resolve, reject) => {
-		let cp = libcp.spawn(name, options);
-		let chunks = new Array<Buffer>();
-		cp.stdout.on("data", (chunk) => {
-			chunks.push(chunk);
+function indexMetadata(file_id: string, probe: probes.schema.Probe): void {
+	let metadata = probe.metadata;
+	if (probes.schema.EpisodeMetadata.is(metadata)) {
+		let show_id = makeId("show", metadata.show.title);
+		shows.insert({
+			show_id: show_id,
+			name: metadata.show.title,
+			summary: metadata.show.summary
 		});
-		cp.on("exit", () => {
-			let string = Buffer.concat(chunks).toString();
-			let json = JSON.parse(string);
-			resolve(guard.as(json));
+		let season_id = makeId("season", show_id, `${metadata.season}`);
+		seasons.insert({
+			season_id: season_id,
+			show_id: show_id,
+			number: metadata.season
 		});
-	});
-}
-
-async function getFormatResult(path: Array<string>): Promise<ffprobe.FormatResult> {
-	return runProcess("ffprobe", [
-		"-hide_banner",
-		"-i", path.join("/"),
-		"-show_format",
-		"-of", "json"
-	], ffprobe.FormatResult);
-}
-
-async function getStreamsResult(path: Array<string>): Promise<ffprobe.StreamsResult> {
-	return runProcess("ffprobe", [
-		"-hide_banner",
-		"-i", path.join("/"),
-		"-show_streams",
-		"-of", "json"
-	], ffprobe.StreamsResult);
-}
-
-function getMime(format: ffprobe.Format, stream: ffprobe.Stream): string {
-	if (format.format_name.split(",").includes("mp4")) {
-		if (stream.codec_type === "video") {
-			return "video/mp4";
-		} else if (stream.codec_type === "audio") {
-			return "audio/mp4";
+		let episode_id = makeId("episode", season_id, `${metadata.episode}`);
+		episodes.insert({
+			episode_id: episode_id,
+			season_id: season_id,
+			title: metadata.title,
+			number: metadata.episode,
+			year: metadata.year,
+			summary: metadata.summary
+		});
+		episode_files.insert({
+			episode_id: episode_id,
+			file_id: file_id
+		});
+	} else if (probes.schema.MovieMetadata.is(metadata)) {
+		let movie_id = makeId("movie", metadata.title);
+		movies.insert({
+			movie_id: movie_id,
+			title: metadata.title,
+			year: metadata.year,
+			summary: metadata.summary
+		});
+		movie_files.insert({
+			movie_id: movie_id,
+			file_id: file_id
+		});
+	} else if (probes.schema.TrackMetadata.is(metadata)) {
+		let album_id = makeId("album", metadata.album.title);
+		albums.insert({
+			album_id: album_id,
+			title: metadata.album.title,
+			year: metadata.album.year
+		});
+		for (let [index, artist] of metadata.album.artists.entries()) {
+			let artist_id = makeId("artist", artist.title);
+			artists.insert({
+				artist_id: artist_id,
+				name: artist.title
+			});
+			album_artists.insert({
+				album_id: album_id,
+				artist_id: artist_id,
+				order: index
+			});
 		}
-	} else if (format.format_name === "image2") {
-		if (stream.codec_name === "mjpeg") {
-			return "image/jpeg";
+		let disc_id = makeId("disc", album_id, `${metadata.disc}`);
+		discs.insert({
+			disc_id: disc_id,
+			album_id: album_id,
+			number: metadata.disc
+		});
+		let track_id = makeId("track", disc_id, `${metadata.track}`);
+		tracks.insert({
+			track_id: track_id,
+			disc_id: disc_id,
+			title: metadata.title,
+			number: metadata.track
+		});
+		track_files.insert({
+			track_id: track_id,
+			file_id: file_id
+		});
+		for (let [index, artist] of metadata.artists.entries()) {
+			let artist_id = makeId("artist", artist.title);
+			artists.insert({
+				artist_id: artist_id,
+				name: artist.title
+			});
+			track_artists.insert({
+				track_id: track_id,
+				artist_id: artist_id,
+				order: index
+			});
 		}
-	} else if (format.format_name === "webvtt") {
-		return "text/vtt";
 	}
-	return "application/octet-stream";
 }
 
-async function indexFile(file: File): Promise<void> {
-	let path = getFilePath(file);
+function indexFile(file: File): void {
 	let file_id = file.file_id;
+	let path = getFilePath(file);
+	let fd = libfs.openSync(path.join("/"), "r");
 	try {
-		if (file.name.endsWith(".json")) {
-			JSON.parse(libfs.readFileSync(path.join("/"), "utf-8"));
+		let probe: probes.schema.Probe = {
+			streams: []
+		};
+		if (file.name.endsWith(".vtt")) {
+			probe = probes.vtt.probe(fd);
+			file.mime = "text/vtt";
+		} else if (file.name.endsWith(".json")) {
+			probe = probes.json.probe(fd);
 			file.mime = "application/json";
-		} else {
-			let format_result = await getFormatResult(path);
-			let format = format_result.format;
-			let streams_result = await getStreamsResult(path);
-			let streams = streams_result.streams;
-			for (let [index, stream] of streams.entries()) {
-				let stream_id = makeId("stream", file.file_id, `${index}`);
-				if (ffprobe.AudioStream.is(stream)) {
-					audio_streams.insert({
-						audio_stream_id: stream_id,
-						file_id: file_id,
-						stream_index: index,
-						duration_ms: Math.round(Number.parseFloat(stream.duration) * 1000)
-					});
-					if (file.mime === "application/octet-stream") {
-						file.mime = getMime(format, stream);
-					}
-				} else if (ffprobe.ImageStream.is(stream)) {
-					image_streams.insert({
-						image_stream_id: stream_id,
-						file_id: file_id,
-						stream_index: index,
-						width: stream.width,
-						height: stream.height
-					});
-					if (file.mime === "application/octet-stream") {
-						file.mime = getMime(format, stream);
-					}
-				} else if (ffprobe.SubtitleStream.is(stream)) {
-					subtitle_streams.insert({
-						subtitle_stream_id: stream_id,
-						file_id: file_id,
-						stream_index: index
-					});
-					if (file.mime === "application/octet-stream") {
-						file.mime = getMime(format, stream);
-					}
-				} else if (ffprobe.VideoStream.is(stream)) {
-					video_streams.insert({
-						video_stream_id: stream_id,
-						file_id: file_id,
-						stream_index: index,
-						width: stream.width,
-						height: stream.height,
-						duration_ms: Math.round(Number.parseFloat(stream.duration) * 1000)
-					});
-					if (file.mime === "application/octet-stream") {
-						file.mime = getMime(format, stream);
-					}
-				}
+		} else if (file.name.endsWith(".mp4")) {
+			probe = probes.mp4.probe(fd);
+			if (probe.streams.find((stream) => stream.type === "video")) {
+				file.mime = "video/mp4";
+			} else if (probe.streams.find((stream) => stream.type === "audio")) {
+				file.mime = "audio/mp4";
 			}
-			let title = format.tags?.title;
-			let year = asInteger(format.tags?.date);
-			let comment = format.tags?.comment;
-			let show_name = format.tags?.show;
-			let episode_title = format.tags?.episode_id;
-			let episode_number = asInteger(format.tags?.episode_sort);
-			let season_number = asInteger(format.tags?.season_number);
-			let track_number = asInteger(format.tags?.track);
-			let track_artist_names = format.tags?.artist?.split(";").map((artist) => artist.trim()) ?? [];
-			let album_artist_names = format.tags?.album_artist?.split(";").map((artist) => artist.trim()) ?? [];
-			let album_title = format.tags?.album;
-			let disc_number = asInteger(format.tags?.disc);
-			if (is.present(show_name)) {
-				let show_id = makeId("show", show_name);
-				shows.insert({
-					show_id: show_id,
-					name: show_name,
-					summary: undefined
+		} else if (file.name.endsWith(".jpg") || file.name.endsWith(".jpeg")) {
+			probe = probes.jpeg.probe(fd);
+			file.mime = "image/jpeg";
+		}
+		for (let [index, stream] of probe.streams.entries()) {
+			let stream_id = makeId("stream", file.file_id, `${index}`);
+			if (stream.type === "audio") {
+				audio_streams.insert({
+					audio_stream_id: stream_id,
+					file_id: file_id,
+					stream_index: index,
+					duration_ms: stream.duration_ms
 				});
-				if (is.present(season_number)) {
-					let season_id = makeId("season", show_id, `${season_number}`);
-					seasons.insert({
-						season_id: season_id,
-						show_id: show_id,
-						number: season_number
-					});
-					if (is.present(episode_title) && is.present(episode_number)) {
-						let episode_id = makeId("episode", season_id, `${episode_number}`);
-						episodes.insert({
-							episode_id: episode_id,
-							season_id: season_id,
-							title: episode_title,
-							number: episode_number,
-							year: year,
-							summary: comment
-						});
-						episode_files.insert({
-							episode_id: episode_id,
-							file_id: file_id
-						});
-					}
-				}
-			} else if (is.present(album_title)) {
-				let album_id = makeId("album", album_title);
-				albums.insert({
-					album_id: album_id,
-					title: album_title,
-					year: year
+			} else if (stream.type === "image") {
+				image_streams.insert({
+					image_stream_id: stream_id,
+					file_id: file_id,
+					stream_index: index,
+					width: stream.width,
+					height: stream.height
 				});
-				for (let [index, album_artist_name] of album_artist_names.entries()) {
-					let artist_id = makeId("artist", album_artist_name);
-					artists.insert({
-						artist_id: artist_id,
-						name: album_artist_name
-					});
-					album_artists.insert({
-						album_id: album_id,
-						artist_id: artist_id,
-						order: index
-					});
-				}
-				if (is.present(disc_number)) {
-					let disc_id = makeId("disc", album_id, `${disc_number}`);
-					discs.insert({
-						disc_id: disc_id,
-						album_id: album_id,
-						number: disc_number
-					});
-					if (is.present(title) && is.present(track_number)) {
-						let track_id = makeId("track", disc_id, `${track_number}`);
-						tracks.insert({
-							track_id: track_id,
-							disc_id: disc_id,
-							title: title,
-							number: track_number
-						});
-						track_files.insert({
-							track_id: track_id,
-							file_id: file_id
-						});
-						for (let [index, track_artist_name] of track_artist_names.entries()) {
-							let artist_id = makeId("artist", track_artist_name);
-							artists.insert({
-								artist_id: artist_id,
-								name: track_artist_name
-							});
-							track_artists.insert({
-								track_id: track_id,
-								artist_id: artist_id,
-								order: index
-							});
-						}
-					}
-				}
-			} else if (is.present(title)) {
-				let movie_id = makeId("movie", title);
-				movies.insert({
-					movie_id: movie_id,
-					title: title,
-					year: year,
-					summary: comment
+			} else if (stream.type === "subtitle") {
+				subtitle_streams.insert({
+					subtitle_stream_id: stream_id,
+					file_id: file_id,
+					stream_index: index,
+					duration_ms: stream.duration_ms
 				});
-				movie_files.insert({
-					movie_id: movie_id,
-					file_id: file_id
+			} else if (stream.type === "video") {
+				video_streams.insert({
+					video_stream_id: stream_id,
+					file_id: file_id,
+					stream_index: index,
+					width: stream.width,
+					height: stream.height,
+					duration_ms: stream.duration_ms
 				});
 			}
 		}
+		indexMetadata(file_id, probe);
 	} catch (error) {
 		console.log(`Indexing failed for "${path.join("/")}"!`);
 	}
+	libfs.closeSync(fd);
 	let stats = libfs.statSync(path.join("/"));
 	file.index_timestamp = stats.mtime.valueOf();
 }
 
-async function indexFiles(): Promise<void> {
+function indexFiles(): void {
 	for (let file of files) {
 		if (is.absent(file.index_timestamp)) {
-			await indexFile(file);
+			indexFile(file);
 		}
 	}
 }
 
-indexFiles().then(() => {
-	saveIndex("files", files);
-	saveIndex("directories", directories);
-	saveIndex("audio_streams", audio_streams);
-	saveIndex("image_streams", image_streams);
-	saveIndex("subtitle_streams", subtitle_streams);
-	saveIndex("video_streams", video_streams);
-	saveIndex("artists", artists);
-	saveIndex("albums", albums);
-	saveIndex("album_files", album_files);
-	saveIndex("discs", discs);
-	saveIndex("tracks", tracks);
-	saveIndex("track_files", track_files);
-	saveIndex("album_artists", album_artists);
-	saveIndex("track_artists", track_artists);
-	saveIndex("shows", shows);
-	saveIndex("show_files", show_files);
-	saveIndex("seasons", seasons);
-	saveIndex("episodes", episodes);
-	saveIndex("episode_files", episode_files);
-	saveIndex("movies", movies);
-	saveIndex("movie_files", movie_files);
-});
+indexFiles();
+
+saveIndex("files", files);
+saveIndex("directories", directories);
+saveIndex("audio_streams", audio_streams);
+saveIndex("image_streams", image_streams);
+saveIndex("subtitle_streams", subtitle_streams);
+saveIndex("video_streams", video_streams);
+saveIndex("artists", artists);
+saveIndex("albums", albums);
+saveIndex("album_files", album_files);
+saveIndex("discs", discs);
+saveIndex("tracks", tracks);
+saveIndex("track_files", track_files);
+saveIndex("album_artists", album_artists);
+saveIndex("track_artists", track_artists);
+saveIndex("shows", shows);
+saveIndex("show_files", show_files);
+saveIndex("seasons", seasons);
+saveIndex("episodes", episodes);
+saveIndex("episode_files", episode_files);
+saveIndex("movies", movies);
+saveIndex("movie_files", movie_files);

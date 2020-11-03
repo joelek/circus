@@ -72,13 +72,15 @@ export const ImageStream = autoguard.Object.of<ImageStream>({
 export type SubtitleStream = {
 	"subtitle_stream_id": string,
 	"file_id": string,
-	"stream_index": number
+	"stream_index": number,
+	"duration_ms": number
 };
 
 export const SubtitleStream = autoguard.Object.of<SubtitleStream>({
 	"subtitle_stream_id": autoguard.String,
 	"file_id": autoguard.String,
-	"stream_index": autoguard.Number
+	"stream_index": autoguard.Number,
+	"duration_ms": autoguard.Number
 });
 
 export type VideoStream = {

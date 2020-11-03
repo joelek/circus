@@ -1,0 +1,74 @@
+{
+	EpisodeMetadata: {
+		type: "episode",
+		title: string,
+		season: number,
+		episode: number,
+		year?: number,
+		summary?: string,
+		show: {
+			title: string,
+			summary?: string
+		}
+	},
+
+	MovieMetadata: {
+		type: "movie",
+		title: string,
+		year?: number,
+		summary?: string
+	},
+
+	TrackMetadata: {
+		type: "track",
+		title: string,
+		disc: number,
+		track: number,
+		album: {
+			title: string,
+			year?: number,
+			artists: {
+				title: string
+			}[]
+		},
+		artists: {
+			title: string
+		}[]
+	},
+
+	Metadata: EpisodeMetadata | MovieMetadata | TrackMetadata,
+
+	AudioStream: {
+		type: "audio",
+		duration_ms: number
+	},
+
+	ImageStream: {
+		type: "image",
+		width: number,
+		height: number
+	},
+
+	SubtitleStream: {
+		type: "subtitle",
+		duration_ms: number
+	},
+
+	UnknownStream: {
+		type: "unknown"
+	},
+
+	VideoStream: {
+		type: "video",
+		duration_ms: number,
+		width: number,
+		height: number
+	},
+
+	Stream: AudioStream | ImageStream | SubtitleStream | UnknownStream | VideoStream,
+
+	Probe: {
+		metadata?: Metadata,
+		streams: Stream[]
+	}
+}

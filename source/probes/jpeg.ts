@@ -1,39 +1,5 @@
-import * as libfs from "fs";
-
-namespace readers {
-	export class Binary {
-		private fd: number;
-		private offset: number;
-
-		private read(buffer: Buffer): Buffer {
-			let bytes = libfs.readSync(this.fd, buffer, 0, buffer.length, this.offset);
-			if (bytes !== buffer.length) {
-				throw `Expected to read ${buffer.length} bytes but read ${bytes}!`;
-			}
-			this.offset += bytes;
-			return buffer;
-		}
-
-		private skip(length: number): void {
-			this.offset += length;
-		}
-
-		constructor(path: Array<string>) {
-			this.fd = libfs.openSync(path.join("/"), "r");
-			this.offset = 0;
-		}
-
-		newContext<A>(context: (read: (buffer: Buffer) => Buffer, skip: (length: number) => void) => A): A {
-			let offset = this.offset;
-			try {
-				return context((buffer) => this.read(buffer), (length) => this.skip(length));
-			} catch (error) {
-				this.offset = offset;
-				throw error;
-			}
-		}
-	};
-}
+import * as readers from "./readers";
+import * as schema from "./schema";
 
 enum Markers {
 	START_OF_IMAGE = 0xFFD8,
@@ -139,12 +105,8 @@ function parseStartOfFrame0(data: Buffer): StartOfFrame0 {
 	};
 }
 
-type ProbeResult = {
-	width: number,
-	height: number
-};
-
-export function probe(reader: readers.Binary): ProbeResult {
+export function probe(fd: number): schema.Probe {
+	let reader = new readers.Binary(fd);
 	return reader.newContext((read, skip) => {
 		let marker = Buffer.alloc(2);
 		let length = Buffer.alloc(2);
@@ -164,10 +126,14 @@ export function probe(reader: readers.Binary): ProbeResult {
 			read(length);
 			if (marker.readUInt16BE() === Markers.START_OF_FRAME_0) {
 				let sof = parseStartOfFrame0(read(Buffer.alloc(length.readUInt16BE() - 2)));
-				return {
-					width: sof.width,
-					height: sof.height
+				let result: schema.Probe = {
+					streams: [{
+						type: "image",
+						width: sof.width,
+						height: sof.height
+					}]
 				};
+				return result;
 			} else {
 				skip(length.readUInt16BE() - 2);
 			}

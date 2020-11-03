@@ -31,7 +31,8 @@
 	SubtitleStream: {
 		subtitle_stream_id: string,
 		file_id: string,
-		stream_index: number
+		stream_index: number,
+		duration_ms: number
 	},
 
 	VideoStream: {
