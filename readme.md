@@ -23,3 +23,8 @@
 * Promote cues to entities.
 * Combine cue search and search into a single search.
 * Put languages in database.
+* Edit icons to look better in 12px.
+* Investigate error when launching chromecast.
+* Add adaptive limit to API that optimizes latency.
+* Add sentinel to carousels and support loading additional content.
+* Select indexing probe order by extension and store format.
