@@ -219,13 +219,13 @@ function indexMetadata(file_id: string, probe: probes.schema.Probe): void {
 			show_id: show_id,
 			name: metadata.show.title,
 			summary: metadata.show.summary
-		});
+		}, "combine");
 		let season_id = makeId("season", show_id, `${metadata.season}`);
 		seasons.insert({
 			season_id: season_id,
 			show_id: show_id,
 			number: metadata.season
-		});
+		}, "combine");
 		let episode_id = makeId("episode", season_id, `${metadata.episode}`);
 		episodes.insert({
 			episode_id: episode_id,
@@ -234,7 +234,7 @@ function indexMetadata(file_id: string, probe: probes.schema.Probe): void {
 			number: metadata.episode,
 			year: metadata.year,
 			summary: metadata.summary
-		});
+		}, "combine");
 		episode_files.insert({
 			episode_id: episode_id,
 			file_id: file_id
@@ -246,7 +246,7 @@ function indexMetadata(file_id: string, probe: probes.schema.Probe): void {
 			title: metadata.title,
 			year: metadata.year,
 			summary: metadata.summary
-		});
+		}, "combine");
 		movie_files.insert({
 			movie_id: movie_id,
 			file_id: file_id
@@ -257,32 +257,32 @@ function indexMetadata(file_id: string, probe: probes.schema.Probe): void {
 			album_id: album_id,
 			title: metadata.album.title,
 			year: metadata.album.year
-		});
+		}, "combine");
 		for (let [index, artist] of metadata.album.artists.entries()) {
 			let artist_id = makeId("artist", artist.title);
 			artists.insert({
 				artist_id: artist_id,
 				name: artist.title
-			});
+			}, "combine");
 			album_artists.insert({
 				album_id: album_id,
 				artist_id: artist_id,
 				order: index
-			});
+			}, "combine");
 		}
 		let disc_id = makeId("disc", album_id, `${metadata.disc}`);
 		discs.insert({
 			disc_id: disc_id,
 			album_id: album_id,
 			number: metadata.disc
-		});
+		}, "combine");
 		let track_id = makeId("track", disc_id, `${metadata.track}`);
 		tracks.insert({
 			track_id: track_id,
 			disc_id: disc_id,
 			title: metadata.title,
 			number: metadata.track
-		});
+		}, "combine");
 		track_files.insert({
 			track_id: track_id,
 			file_id: file_id
@@ -292,12 +292,12 @@ function indexMetadata(file_id: string, probe: probes.schema.Probe): void {
 			artists.insert({
 				artist_id: artist_id,
 				name: artist.title
-			});
+			}, "combine");
 			track_artists.insert({
 				track_id: track_id,
 				artist_id: artist_id,
 				order: index
-			});
+			}, "combine");
 		}
 	}
 }
