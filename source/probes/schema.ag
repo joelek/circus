@@ -8,7 +8,9 @@
 		summary?: string,
 		show: {
 			title: string,
-			summary?: string
+			summary?: string,
+			genres: string[],
+			actors: string[]
 		}
 	},
 
@@ -16,7 +18,9 @@
 		type: "movie",
 		title: string,
 		year?: number,
-		summary?: string
+		summary?: string,
+		genres: string[],
+		actors: string[]
 	},
 
 	TrackMetadata: {

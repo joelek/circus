@@ -208,7 +208,9 @@ export function probe(fd: number): schema.Probe {
 					summary: tags.comment,
 					show: {
 						title: tags.show,
-						summary: undefined
+						summary: undefined,
+						genres: [],
+						actors: []
 					}
 				};
 				result.metadata = metadata;
@@ -217,7 +219,9 @@ export function probe(fd: number): schema.Probe {
 					type: "movie",
 					title: tags.title,
 					year: tags.year,
-					summary: tags.comment
+					summary: tags.comment,
+					genres: [],
+					actors: []
 				};
 				result.metadata = metadata;
 			}

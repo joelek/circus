@@ -243,7 +243,31 @@ function indexMetadata(file_id: string, probe: probes.schema.Probe): void {
 		episode_files.insert({
 			episode_id: episode_id,
 			file_id: file_id
-		});
+		}, "combine");
+		for (let [index, actor] of metadata.show.actors.entries()) {
+			let person_id = makeId("person", actor);
+			persons.insert({
+				person_id: person_id,
+				name: actor
+			}, "combine");
+			show_persons.insert({
+				person_id: person_id,
+				show_id: show_id,
+				order: index
+			}, "combine");
+		}
+		for (let [index, genre] of metadata.show.genres.entries()) {
+			let genre_id = makeId("genre", genre);
+			genres.insert({
+				genre_id: genre_id,
+				name: genre
+			}, "combine");
+			show_genres.insert({
+				genre_id: genre_id,
+				show_id: show_id,
+				order: index
+			}, "combine");
+		}
 	} else if (probes.schema.MovieMetadata.is(metadata)) {
 		let movie_id = makeId("movie", metadata.title);
 		movies.insert({
@@ -255,7 +279,31 @@ function indexMetadata(file_id: string, probe: probes.schema.Probe): void {
 		movie_files.insert({
 			movie_id: movie_id,
 			file_id: file_id
-		});
+		}, "combine");
+		for (let [index, actor] of metadata.actors.entries()) {
+			let person_id = makeId("person", actor);
+			persons.insert({
+				person_id: person_id,
+				name: actor
+			}, "combine");
+			movie_persons.insert({
+				person_id: person_id,
+				movie_id: movie_id,
+				order: index
+			}, "combine");
+		}
+		for (let [index, genre] of metadata.genres.entries()) {
+			let genre_id = makeId("genre", genre);
+			genres.insert({
+				genre_id: genre_id,
+				name: genre
+			}, "combine");
+			movie_genres.insert({
+				genre_id: genre_id,
+				movie_id: movie_id,
+				order: index
+			}, "combine");
+		}
 	} else if (probes.schema.TrackMetadata.is(metadata)) {
 		let album_id = makeId("album", metadata.album.title);
 		albums.insert({
@@ -291,7 +339,7 @@ function indexMetadata(file_id: string, probe: probes.schema.Probe): void {
 		track_files.insert({
 			track_id: track_id,
 			file_id: file_id
-		});
+		}, "combine");
 		for (let [index, artist] of metadata.artists.entries()) {
 			let artist_id = makeId("artist", artist.title);
 			artists.insert({

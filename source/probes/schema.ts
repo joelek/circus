@@ -11,7 +11,9 @@ export type EpisodeMetadata = {
 	"summary"?: string,
 	"show": {
 		"title": string,
-		"summary"?: string
+		"summary"?: string,
+		"genres": string[],
+		"actors": string[]
 	}
 };
 
@@ -30,13 +32,17 @@ export const EpisodeMetadata = autoguard.Object.of<EpisodeMetadata>({
 	),
 	"show": autoguard.Object.of<{
 		"title": string,
-		"summary"?: string
+		"summary"?: string,
+		"genres": string[],
+		"actors": string[]
 	}>({
 		"title": autoguard.String,
 		"summary": autoguard.Union.of(
 			autoguard.Undefined,
 			autoguard.String
-		)
+		),
+		"genres": autoguard.Array.of(autoguard.String),
+		"actors": autoguard.Array.of(autoguard.String)
 	})
 });
 
@@ -44,7 +50,9 @@ export type MovieMetadata = {
 	"type": "movie",
 	"title": string,
 	"year"?: number,
-	"summary"?: string
+	"summary"?: string,
+	"genres": string[],
+	"actors": string[]
 };
 
 export const MovieMetadata = autoguard.Object.of<MovieMetadata>({
@@ -57,7 +65,9 @@ export const MovieMetadata = autoguard.Object.of<MovieMetadata>({
 	"summary": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.String
-	)
+	),
+	"genres": autoguard.Array.of(autoguard.String),
+	"actors": autoguard.Array.of(autoguard.String)
 });
 
 export type TrackMetadata = {
