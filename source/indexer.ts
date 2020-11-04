@@ -7,15 +7,6 @@ import * as probes from "./probes";
 import * as databases from "./databases";
 import { Directory, File } from "./databases/media";
 
-function asInteger(string?: string): number | undefined {
-	if (is.present(string)) {
-		let number = Number.parseInt(string);
-		if (Number.isInteger(number)) {
-			return number;
-		}
-	}
-}
-
 function wordify(string: string): Array<string> {
 	return string
 		.toLowerCase()
