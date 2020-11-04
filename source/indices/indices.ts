@@ -85,6 +85,32 @@ export class RecordIndex<A extends Record<string, any>> {
 	private getKey: (record: A) => string | undefined;
 	private router: stdlib.routing.MessageRouter<RecordIndexEventMap<A>>;
 
+	private insertOrUpdate(record: A, action: "combine" | "replace" = "replace"): void {
+		let key = this.getKey(record);
+		let existing = this.map.get(key);
+		if (is.present(existing)) {
+			if (action === "combine") {
+				for (let key in record) {
+					let value = record[key];
+					if (is.present(value)) {
+						existing[key] = record[key];
+					}
+				}
+			} else if (action === "replace") {
+				for (let key in existing) {
+					delete existing[key];
+				}
+				for (let key in record) {
+					existing[key] = record[key];
+				}
+			}
+			this.router.route("update", existing);
+		} else {
+			this.map.set(key, record);
+			this.router.route("insert", record);
+		}
+	}
+
 	constructor(getKey: (record: A) => string | undefined) {
 		this.map = new Map<string | undefined, A>();
 		this.getKey = getKey;
@@ -95,15 +121,8 @@ export class RecordIndex<A extends Record<string, any>> {
 		return this.map.values();
 	}
 
-	insert(record: A): void {
-		let key = this.getKey(record);
-		if (this.map.has(key)) {
-			this.map.set(key, record);
-			this.router.route("update", record);
-		} else {
-			this.map.set(key, record);
-			this.router.route("insert", record);
-		}
+	insert(record: A, action: "combine" | "replace" = "replace"): void {
+		this.insertOrUpdate(record, action);
 	}
 
 	lookup(key: string | undefined): A {
@@ -135,15 +154,8 @@ export class RecordIndex<A extends Record<string, any>> {
 		}
 	}
 
-	update(record: A): void {
-		let key = this.getKey(record);
-		if (this.map.has(key)) {
-			this.map.set(key, record);
-			this.router.route("update", record);
-		} else {
-			this.map.set(key, record);
-			this.router.route("insert", record);
-		}
+	update(record: A, action: "combine" | "replace" = "replace"): void {
+		this.insertOrUpdate(record, action);
 	}
 
 	static from<A>(records: Iterable<A>, getKey: (record: A) => string | undefined): RecordIndex<A> {
