@@ -464,13 +464,18 @@ function associateImages(): void {
 		}
 		let siblings = getSiblingFiles(file);
 		for (let sibling of siblings) {
-			let tracks = getTrackFiles.lookup(sibling.file_id)
+			let track_files = getTrackFiles.lookup(sibling.file_id)
 				.filter((movie_file) => movie_file.file_id !== file.file_id);
-			for (let track of tracks) {
-				track_files.insert({
-					track_id: track.track_id,
-					file_id: file.file_id
-				});
+			for (let track_file of track_files) {
+				try {
+					let track = tracks.lookup(track_file.track_id);
+					let disc = discs.lookup(track.disc_id);
+					let album = albums.lookup(disc.album_id);
+					album_files.insert({
+						album_id: album.album_id,
+						file_id: file.file_id
+					});
+				} catch (error) {}
 			}
 			let movies = getMovieFiles.lookup(sibling.file_id)
 				.filter((movie_file) => movie_file.file_id !== file.file_id);
@@ -480,13 +485,18 @@ function associateImages(): void {
 					file_id: file.file_id
 				});
 			}
-			let shows = getShowFiles.lookup(sibling.file_id)
+			let episode_files = getEpisodeFiles.lookup(sibling.file_id)
 				.filter((movie_file) => movie_file.file_id !== file.file_id);
-			for (let show of shows) {
-				show_files.insert({
-					show_id: show.show_id,
-					file_id: file.file_id
-				});
+			for (let episode_file of episode_files) {
+				try {
+					let episode = episodes.lookup(episode_file.episode_id);
+					let season = seasons.lookup(episode.season_id);
+					let show = shows.lookup(season.show_id);
+					show_files.insert({
+						show_id: show.show_id,
+						file_id: file.file_id
+					});
+				} catch (error) {}
 			}
 		}
 	}
@@ -507,11 +517,11 @@ function associateSubtitles(): void {
 					file_id: file.file_id
 				});
 			}
-			let shows = getShowFiles.lookup(sibling.file_id)
+			let episodes = getEpisodeFiles.lookup(sibling.file_id)
 				.filter((movie_file) => movie_file.file_id !== file.file_id);
-			for (let show of shows) {
-				show_files.insert({
-					show_id: show.show_id,
+			for (let episode of episodes) {
+				episode_files.insert({
+					episode_id: episode.episode_id,
 					file_id: file.file_id
 				});
 			}
