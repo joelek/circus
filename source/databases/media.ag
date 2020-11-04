@@ -131,5 +131,39 @@
 	MovieFile: {
 		movie_id: string,
 		file_id: string
+	},
+
+	Person: {
+		person_id: string,
+		name: string
+	},
+
+	MoviePerson: {
+		movie_id: string,
+		person_id: string,
+		order: number
+	},
+
+	ShowPerson: {
+		show_id: string,
+		person_id: string,
+		order: number
+	},
+
+	Genre: {
+		genre_id: string,
+		name: string
+	},
+
+	MovieGenre: {
+		movie_id: string,
+		genre_id: string,
+		order: number
+	},
+
+	ShowGenre: {
+		show_id: string,
+		genre_id: string,
+		order: number
 	}
 }

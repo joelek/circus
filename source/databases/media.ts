@@ -297,6 +297,74 @@ export const MovieFile = autoguard.Object.of<MovieFile>({
 	"file_id": autoguard.String
 });
 
+export type Person = {
+	"person_id": string,
+	"name": string
+};
+
+export const Person = autoguard.Object.of<Person>({
+	"person_id": autoguard.String,
+	"name": autoguard.String
+});
+
+export type MoviePerson = {
+	"movie_id": string,
+	"person_id": string,
+	"order": number
+};
+
+export const MoviePerson = autoguard.Object.of<MoviePerson>({
+	"movie_id": autoguard.String,
+	"person_id": autoguard.String,
+	"order": autoguard.Number
+});
+
+export type ShowPerson = {
+	"show_id": string,
+	"person_id": string,
+	"order": number
+};
+
+export const ShowPerson = autoguard.Object.of<ShowPerson>({
+	"show_id": autoguard.String,
+	"person_id": autoguard.String,
+	"order": autoguard.Number
+});
+
+export type Genre = {
+	"genre_id": string,
+	"name": string
+};
+
+export const Genre = autoguard.Object.of<Genre>({
+	"genre_id": autoguard.String,
+	"name": autoguard.String
+});
+
+export type MovieGenre = {
+	"movie_id": string,
+	"genre_id": string,
+	"order": number
+};
+
+export const MovieGenre = autoguard.Object.of<MovieGenre>({
+	"movie_id": autoguard.String,
+	"genre_id": autoguard.String,
+	"order": autoguard.Number
+});
+
+export type ShowGenre = {
+	"show_id": string,
+	"genre_id": string,
+	"order": number
+};
+
+export const ShowGenre = autoguard.Object.of<ShowGenre>({
+	"show_id": autoguard.String,
+	"genre_id": autoguard.String,
+	"order": autoguard.Number
+});
+
 export type Autoguard = {
 	"Directory": Directory,
 	"File": File,
@@ -318,7 +386,13 @@ export type Autoguard = {
 	"Episode": Episode,
 	"EpisodeFile": EpisodeFile,
 	"Movie": Movie,
-	"MovieFile": MovieFile
+	"MovieFile": MovieFile,
+	"Person": Person,
+	"MoviePerson": MoviePerson,
+	"ShowPerson": ShowPerson,
+	"Genre": Genre,
+	"MovieGenre": MovieGenre,
+	"ShowGenre": ShowGenre
 };
 
 export const Autoguard = {
@@ -342,5 +416,11 @@ export const Autoguard = {
 	"Episode": Episode,
 	"EpisodeFile": EpisodeFile,
 	"Movie": Movie,
-	"MovieFile": MovieFile
+	"MovieFile": MovieFile,
+	"Person": Person,
+	"MoviePerson": MoviePerson,
+	"ShowPerson": ShowPerson,
+	"Genre": Genre,
+	"MovieGenre": MovieGenre,
+	"ShowGenre": ShowGenre
 };

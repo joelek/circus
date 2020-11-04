@@ -107,6 +107,20 @@ const getEpisodeFiles = indices.CollectionIndex.fromIndex(files, episode_files, 
 const movies = loadIndex("movies", databases.media.Movie, (record) => record.movie_id);
 const movie_files = loadIndex("movie_files", databases.media.MovieFile, (record) => [record.movie_id, record.file_id].join("\0"));
 const getMovieFiles = indices.CollectionIndex.fromIndex(files, movie_files, (record) => record.file_id, (record) => record.file_id);
+const persons = loadIndex("persons", databases.media.Person, (record) => record.person_id);
+const movie_persons = loadIndex("movie_persons", databases.media.MoviePerson, (record) => [record.movie_id, record.person_id].join("\0"));
+const getMoviesFromPerson = indices.CollectionIndex.fromIndex(persons, movie_persons, (record) => record.person_id, (record) => record.person_id);
+const getPersonsFromMovie = indices.CollectionIndex.fromIndex(movies, movie_persons, (record) => record.movie_id, (record) => record.movie_id);
+const show_persons = loadIndex("show_persons", databases.media.ShowPerson, (record) => [record.show_id, record.person_id].join("\0"));
+const getShowsFromPerson = indices.CollectionIndex.fromIndex(persons, show_persons, (record) => record.person_id, (record) => record.person_id);
+const getPersonsFromShow = indices.CollectionIndex.fromIndex(shows, show_persons, (record) => record.show_id, (record) => record.show_id);
+const genres = loadIndex("genres", databases.media.Genre, (record) => record.genre_id);
+const movie_genres = loadIndex("movie_genres", databases.media.MovieGenre, (record) => [record.movie_id, record.genre_id].join("\0"));
+const getMoviesFromGenre = indices.CollectionIndex.fromIndex(genres, movie_genres, (record) => record.genre_id, (record) => record.genre_id);
+const getGenresFromMovie = indices.CollectionIndex.fromIndex(movies, movie_genres, (record) => record.movie_id, (record) => record.movie_id);
+const show_genres = loadIndex("show_genres", databases.media.ShowGenre, (record) => [record.show_id, record.genre_id].join("\0"));
+const getShowsFromGenre = indices.CollectionIndex.fromIndex(genres, show_genres, (record) => record.genre_id, (record) => record.genre_id);
+const getGenresFromShow = indices.CollectionIndex.fromIndex(shows, show_genres, (record) => record.show_id, (record) => record.show_id);
 
 function getPath(entry: Directory | File): Array<string> {
 	let path = new Array<string>();
@@ -393,3 +407,9 @@ saveIndex("episodes", episodes);
 saveIndex("episode_files", episode_files);
 saveIndex("movies", movies);
 saveIndex("movie_files", movie_files);
+saveIndex("persons", persons);
+saveIndex("movie_persons", movie_persons);
+saveIndex("show_persons", show_persons);
+saveIndex("genres", genres);
+saveIndex("movie_genres", movie_genres);
+saveIndex("show_genres", show_genres);
