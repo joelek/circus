@@ -500,6 +500,31 @@ for (let file of files) {
 	}
 }
 
+for (let file of files) {
+	if (file.mime !== "text/vtt") {
+		continue;
+	}
+	let siblings = getSiblingFiles(file);
+	for (let sibling of siblings) {
+		let movies = getMovieFiles.lookup(sibling.file_id)
+			.filter((movie_file) => movie_file.file_id !== file.file_id);
+		for (let movie of movies) {
+			movie_files.insert({
+				movie_id: movie.movie_id,
+				file_id: file.file_id
+			});
+		}
+		let shows = getShowFiles.lookup(sibling.file_id)
+			.filter((movie_file) => movie_file.file_id !== file.file_id);
+		for (let show of shows) {
+			show_files.insert({
+				show_id: show.show_id,
+				file_id: file.file_id
+			});
+		}
+	}
+}
+
 saveIndex("files", files);
 saveIndex("directories", directories);
 saveIndex("audio_streams", audio_streams);
