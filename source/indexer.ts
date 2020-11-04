@@ -173,14 +173,6 @@ function checkDirectory(root: Directory): void {
 	directories.remove(root);
 }
 
-for (let directory of getDirectoryDirectories.lookup(undefined)) {
-	checkDirectory(directory);
-}
-
-for (let file of getDirectoryFiles.lookup(undefined)) {
-	checkFile(file);
-}
-
 function visitDirectory(path: Array<string>, parent_directory_id?: string): void {
 	let dirents = libfs.readdirSync(path.join("/"), { withFileTypes: true });
 	for (let dirent of dirents) {
@@ -213,8 +205,6 @@ function visitDirectory(path: Array<string>, parent_directory_id?: string): void
 		}
 	}
 }
-
-visitDirectory(MEDIA_ROOT);
 
 function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): void {
 	let metadata = probe.metadata;
@@ -438,8 +428,6 @@ function indexFiles(): void {
 	}
 }
 
-indexFiles();
-
 function getSiblingFiles(subject: File): Array<File> {
 	let candidates_in_directory = getDirectoryFiles.lookup(subject.parent_directory_id)
 		.filter((file) => file.file_id !== subject.file_id)
@@ -455,75 +443,97 @@ function getSiblingFiles(subject: File): Array<File> {
 	}
 }
 
-for (let file of files) {
-	if (file.mime !== "application/json") {
-		continue;
-	}
-	let path = getFilePath(file);
-	let fd = libfs.openSync(path.join("/"), "r");
-	let probe = probes.json.probe(fd);
-	libfs.closeSync(fd);
-	let siblings = getSiblingFiles(file);
-	indexMetadata(probe, ...siblings.map((file) => file.file_id));
-}
-
-for (let file of files) {
-	if (!file.mime.startsWith("image/")) {
-		continue;
-	}
-	let siblings = getSiblingFiles(file);
-	for (let sibling of siblings) {
-		let tracks = getTrackFiles.lookup(sibling.file_id)
-			.filter((movie_file) => movie_file.file_id !== file.file_id);
-		for (let track of tracks) {
-			track_files.insert({
-				track_id: track.track_id,
-				file_id: file.file_id
-			});
+function associateMetadata(): void {
+	for (let file of files) {
+		if (file.mime !== "application/json") {
+			continue;
 		}
-		let movies = getMovieFiles.lookup(sibling.file_id)
-			.filter((movie_file) => movie_file.file_id !== file.file_id);
-		for (let movie of movies) {
-			movie_files.insert({
-				movie_id: movie.movie_id,
-				file_id: file.file_id
-			});
-		}
-		let shows = getShowFiles.lookup(sibling.file_id)
-			.filter((movie_file) => movie_file.file_id !== file.file_id);
-		for (let show of shows) {
-			show_files.insert({
-				show_id: show.show_id,
-				file_id: file.file_id
-			});
-		}
+		let path = getFilePath(file);
+		let fd = libfs.openSync(path.join("/"), "r");
+		let probe = probes.json.probe(fd);
+		libfs.closeSync(fd);
+		let siblings = getSiblingFiles(file);
+		indexMetadata(probe, ...siblings.map((file) => file.file_id));
 	}
 }
 
-for (let file of files) {
-	if (file.mime !== "text/vtt") {
-		continue;
-	}
-	let siblings = getSiblingFiles(file);
-	for (let sibling of siblings) {
-		let movies = getMovieFiles.lookup(sibling.file_id)
-			.filter((movie_file) => movie_file.file_id !== file.file_id);
-		for (let movie of movies) {
-			movie_files.insert({
-				movie_id: movie.movie_id,
-				file_id: file.file_id
-			});
+function associateImages(): void {
+	for (let file of files) {
+		if (!file.mime.startsWith("image/")) {
+			continue;
 		}
-		let shows = getShowFiles.lookup(sibling.file_id)
-			.filter((movie_file) => movie_file.file_id !== file.file_id);
-		for (let show of shows) {
-			show_files.insert({
-				show_id: show.show_id,
-				file_id: file.file_id
-			});
+		let siblings = getSiblingFiles(file);
+		for (let sibling of siblings) {
+			let tracks = getTrackFiles.lookup(sibling.file_id)
+				.filter((movie_file) => movie_file.file_id !== file.file_id);
+			for (let track of tracks) {
+				track_files.insert({
+					track_id: track.track_id,
+					file_id: file.file_id
+				});
+			}
+			let movies = getMovieFiles.lookup(sibling.file_id)
+				.filter((movie_file) => movie_file.file_id !== file.file_id);
+			for (let movie of movies) {
+				movie_files.insert({
+					movie_id: movie.movie_id,
+					file_id: file.file_id
+				});
+			}
+			let shows = getShowFiles.lookup(sibling.file_id)
+				.filter((movie_file) => movie_file.file_id !== file.file_id);
+			for (let show of shows) {
+				show_files.insert({
+					show_id: show.show_id,
+					file_id: file.file_id
+				});
+			}
 		}
 	}
 }
+
+function associateSubtitles(): void {
+	for (let file of files) {
+		if (file.mime !== "text/vtt") {
+			continue;
+		}
+		let siblings = getSiblingFiles(file);
+		for (let sibling of siblings) {
+			let movies = getMovieFiles.lookup(sibling.file_id)
+				.filter((movie_file) => movie_file.file_id !== file.file_id);
+			for (let movie of movies) {
+				movie_files.insert({
+					movie_id: movie.movie_id,
+					file_id: file.file_id
+				});
+			}
+			let shows = getShowFiles.lookup(sibling.file_id)
+				.filter((movie_file) => movie_file.file_id !== file.file_id);
+			for (let show of shows) {
+				show_files.insert({
+					show_id: show.show_id,
+					file_id: file.file_id
+				});
+			}
+		}
+	}
+}
+
+export function runIndexer(): void {
+	for (let directory of getDirectoryDirectories.lookup(undefined)) {
+		checkDirectory(directory);
+	}
+	for (let file of getDirectoryFiles.lookup(undefined)) {
+		checkFile(file);
+	}
+	visitDirectory(MEDIA_ROOT);
+	indexFiles();
+	associateMetadata();
+	associateImages();
+	associateSubtitles();
+}
+
+runIndexer();
 
 saveIndex("files", files);
 saveIndex("directories", directories);
