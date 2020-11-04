@@ -216,7 +216,7 @@ function visitDirectory(path: Array<string>, parent_directory_id?: string): void
 
 visitDirectory(MEDIA_ROOT);
 
-function indexMetadata(file_id: string, probe: probes.schema.Probe): void {
+function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): void {
 	let metadata = probe.metadata;
 	if (probes.schema.EpisodeMetadata.is(metadata)) {
 		let show_id = makeId("show", metadata.show.title);
@@ -240,10 +240,12 @@ function indexMetadata(file_id: string, probe: probes.schema.Probe): void {
 			year: metadata.year,
 			summary: metadata.summary
 		}, "combine");
-		episode_files.insert({
-			episode_id: episode_id,
-			file_id: file_id
-		}, "combine");
+		for (let file_id of file_ids) {
+			episode_files.insert({
+				episode_id: episode_id,
+				file_id: file_id
+			}, "combine");
+		}
 		for (let [index, actor] of metadata.show.actors.entries()) {
 			let person_id = makeId("person", actor);
 			persons.insert({
@@ -276,10 +278,12 @@ function indexMetadata(file_id: string, probe: probes.schema.Probe): void {
 			year: metadata.year,
 			summary: metadata.summary
 		}, "combine");
-		movie_files.insert({
-			movie_id: movie_id,
-			file_id: file_id
-		}, "combine");
+		for (let file_id of file_ids) {
+			movie_files.insert({
+				movie_id: movie_id,
+				file_id: file_id
+			}, "combine");
+		}
 		for (let [index, actor] of metadata.actors.entries()) {
 			let person_id = makeId("person", actor);
 			persons.insert({
@@ -336,10 +340,12 @@ function indexMetadata(file_id: string, probe: probes.schema.Probe): void {
 			title: metadata.title,
 			number: metadata.track
 		}, "combine");
-		track_files.insert({
-			track_id: track_id,
-			file_id: file_id
-		}, "combine");
+		for (let file_id of file_ids) {
+			track_files.insert({
+				track_id: track_id,
+				file_id: file_id
+			}, "combine");
+		}
 		for (let [index, artist] of metadata.artists.entries()) {
 			let artist_id = makeId("artist", artist.title);
 			artists.insert({
@@ -415,7 +421,7 @@ function indexFile(file: File): void {
 				});
 			}
 		}
-		indexMetadata(file_id, probe);
+		indexMetadata(probe, file_id);
 	} catch (error) {
 		console.log(`Indexing failed for "${path.join("/")}"!`);
 	}
@@ -433,6 +439,66 @@ function indexFiles(): void {
 }
 
 indexFiles();
+
+function getSiblingFiles(subject: File): Array<File> {
+	let candidates_in_directory = getDirectoryFiles.lookup(subject.parent_directory_id)
+		.filter((file) => file.file_id !== subject.file_id)
+		.filter((file) => file.mime.startsWith("audio/") || file.mime.startsWith("video/"))
+		.sort(indices.LexicalSort.increasing((file) => file.name));
+	let basename = subject.name.split(".")[0];
+	let candidates_sharing_basename = candidates_in_directory
+		.filter((file) => file.name.split(".")[0] === basename);
+	if (candidates_sharing_basename.length > 0) {
+		return candidates_sharing_basename;
+	} else {
+		return candidates_in_directory;
+	}
+}
+
+for (let file of files) {
+	if (file.mime !== "application/json") {
+		continue;
+	}
+	let path = getFilePath(file);
+	let fd = libfs.openSync(path.join("/"), "r");
+	let probe = probes.json.probe(fd);
+	libfs.closeSync(fd);
+	let siblings = getSiblingFiles(file);
+	indexMetadata(probe, ...siblings.map((file) => file.file_id));
+}
+
+for (let file of files) {
+	if (!file.mime.startsWith("image/")) {
+		continue;
+	}
+	let siblings = getSiblingFiles(file);
+	for (let sibling of siblings) {
+		let tracks = getTrackFiles.lookup(sibling.file_id)
+			.filter((movie_file) => movie_file.file_id !== file.file_id);
+		for (let track of tracks) {
+			track_files.insert({
+				track_id: track.track_id,
+				file_id: file.file_id
+			});
+		}
+		let movies = getMovieFiles.lookup(sibling.file_id)
+			.filter((movie_file) => movie_file.file_id !== file.file_id);
+		for (let movie of movies) {
+			movie_files.insert({
+				movie_id: movie.movie_id,
+				file_id: file.file_id
+			});
+		}
+		let shows = getShowFiles.lookup(sibling.file_id)
+			.filter((movie_file) => movie_file.file_id !== file.file_id);
+		for (let show of shows) {
+			show_files.insert({
+				show_id: show.show_id,
+				file_id: file.file_id
+			});
+		}
+	}
+}
 
 saveIndex("files", files);
 saveIndex("directories", directories);
