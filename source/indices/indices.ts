@@ -2,7 +2,7 @@ import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
 import * as sorters from "./sorters";
 
-export class CollectionIndex<A> {
+export class CollectionIndex<A extends Record<string, any>> {
 	private map: Map<string | undefined, Set<A>>;
 	private getKey: (record: A) => string | undefined;
 
@@ -80,7 +80,7 @@ type RecordIndexEventMap<A> = {
 	"update": A
 };
 
-export class RecordIndex<A> {
+export class RecordIndex<A extends Record<string, any>> {
 	private map: Map<string | undefined, A>;
 	private getKey: (record: A) => string | undefined;
 	private router: stdlib.routing.MessageRouter<RecordIndexEventMap<A>>;
@@ -168,7 +168,7 @@ export function getTokens(query: string): Array<string> {
 		.filter((value) => value.length >= 2);
 };
 
-export class SearchIndex<A> {
+export class SearchIndex<A extends Record<string, any>> {
 	private map: Map<string, Set<A>>;
 	private getFields: (record: A) => Array<string>;
 
