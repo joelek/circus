@@ -40,6 +40,11 @@ export class CollectionIndex<A> {
 		}
 	}
 
+	update(record: A): void {
+		this.remove(record);
+		this.insert(record);
+	}
+
 	static from<A>(records: Iterable<A>, getKey: (record: A) => string | undefined): CollectionIndex<A> {
 		let index = new CollectionIndex<A>(getKey);
 		for (let record of records) {
@@ -55,6 +60,9 @@ export class CollectionIndex<A> {
 		});
 		child.on("remove", (record) => {
 			index.remove(record);
+		});
+		child.on("update", (record) => {
+			index.update(record);
 		});
 		parent.on("remove", (record) => {
 			let key = getParentKey(record);
@@ -219,6 +227,11 @@ export class SearchIndex<A> {
 		}
 	}
 
+	update(record: A): void {
+		this.remove(record);
+		this.insert(record);
+	}
+
 	static from<A>(records: Iterable<A>, getFields: (record: A) => Array<string>): SearchIndex<A> {
 		let searchIndex = new SearchIndex<A>(getFields);
 		for (let record of records) {
@@ -234,6 +247,9 @@ export class SearchIndex<A> {
 		});
 		records.on("remove", (record) => {
 			index.remove(record);
+		});
+		records.on("update", (record) => {
+			index.update(record);
 		});
 		return index;
 	}
