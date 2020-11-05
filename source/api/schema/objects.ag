@@ -20,7 +20,7 @@
 	AlbumBase: {
 		album_id: string,
 		title: string,
-		year: number,
+		year?: number,
 		artists: ArtistBase[],
 		artwork?: ImageFile
 	},
@@ -106,8 +106,8 @@
 	MovieBase: {
 		movie_id: string,
 		title: string,
-		year: number,
-		summary: string,
+		year?: number,
+		summary?: string,
 		artwork?: ImageFile,
 		last_stream_date?: number,
 		genres: Genre[],
@@ -121,7 +121,7 @@
 	ShowBase: {
 		show_id: string,
 		title: string,
-		summary: string,
+		summary?: string,
 		artwork?: ImageFile,
 		genres: Genre[],
 		actors: Person[]
@@ -144,7 +144,7 @@
 	EpisodeBase: {
 		episode_id: string,
 		title: string,
-		summary: string,
+		summary?: string,
 		number: number,
 		season: SeasonBase,
 		year?: number,

@@ -45,7 +45,7 @@ export const Artist = autoguard.Intersection.of(
 export type AlbumBase = {
 	"album_id": string,
 	"title": string,
-	"year": number,
+	"year"?: number,
 	"artists": ArtistBase[],
 	"artwork"?: ImageFile
 };
@@ -53,7 +53,10 @@ export type AlbumBase = {
 export const AlbumBase = autoguard.Object.of<AlbumBase>({
 	"album_id": autoguard.String,
 	"title": autoguard.String,
-	"year": autoguard.Number,
+	"year": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Number
+	),
 	"artists": autoguard.Array.of(autoguard.Reference.of<ArtistBase>(() => ArtistBase)),
 	"artwork": autoguard.Union.of(
 		autoguard.Undefined,
@@ -243,8 +246,8 @@ export const Segment = autoguard.Intersection.of(
 export type MovieBase = {
 	"movie_id": string,
 	"title": string,
-	"year": number,
-	"summary": string,
+	"year"?: number,
+	"summary"?: string,
 	"artwork"?: ImageFile,
 	"last_stream_date"?: number,
 	"genres": Genre[],
@@ -254,8 +257,14 @@ export type MovieBase = {
 export const MovieBase = autoguard.Object.of<MovieBase>({
 	"movie_id": autoguard.String,
 	"title": autoguard.String,
-	"year": autoguard.Number,
-	"summary": autoguard.String,
+	"year": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.Number
+	),
+	"summary": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.String
+	),
 	"artwork": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.Reference.of<ImageFile>(() => ImageFile)
@@ -284,7 +293,7 @@ export const Movie = autoguard.Intersection.of(
 export type ShowBase = {
 	"show_id": string,
 	"title": string,
-	"summary": string,
+	"summary"?: string,
 	"artwork"?: ImageFile,
 	"genres": Genre[],
 	"actors": Person[]
@@ -293,7 +302,10 @@ export type ShowBase = {
 export const ShowBase = autoguard.Object.of<ShowBase>({
 	"show_id": autoguard.String,
 	"title": autoguard.String,
-	"summary": autoguard.String,
+	"summary": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.String
+	),
 	"artwork": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.Reference.of<ImageFile>(() => ImageFile)
@@ -343,7 +355,7 @@ export const Season = autoguard.Intersection.of(
 export type EpisodeBase = {
 	"episode_id": string,
 	"title": string,
-	"summary": string,
+	"summary"?: string,
 	"number": number,
 	"season": SeasonBase,
 	"year"?: number,
@@ -353,7 +365,10 @@ export type EpisodeBase = {
 export const EpisodeBase = autoguard.Object.of<EpisodeBase>({
 	"episode_id": autoguard.String,
 	"title": autoguard.String,
-	"summary": autoguard.String,
+	"summary": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.String
+	),
 	"number": autoguard.Number,
 	"season": autoguard.Reference.of<SeasonBase>(() => SeasonBase),
 	"year": autoguard.Union.of(

@@ -196,9 +196,9 @@ export class EntityCardFactory {
 		let subtitles = album.artists.map((artist) => this.entityTitleFactory.forArtist(artist));
 		let tags = [
 			"Album",
-			`${album.year}`,
+			is.present(album.year) ? `${album.year}` : undefined,
 			metadata.formatDuration(duration_ms)
-		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, playbackButton, titles, subtitles, tags);
 	}
 
@@ -220,7 +220,7 @@ export class EntityCardFactory {
 		let tags = [
 			"Artist",
 			metadata.formatDuration(duration_ms)
-		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, playbackButton, titles, subtitles, tags);
 	}
 
@@ -238,9 +238,9 @@ export class EntityCardFactory {
 		let subtitles = disc.album.artists.map((artist) => this.entityTitleFactory.forArtist(artist));
 		let tags = [
 			"Disc",
-			`${disc.album.year}`,
+			is.present(disc.album.year) ? `${disc.album.year}` : undefined,
 			metadata.formatDuration(duration_ms)
-		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, playbackButton, titles, subtitles, tags);
 	}
 
@@ -258,9 +258,9 @@ export class EntityCardFactory {
 		];
 		let tags = [
 			"Episode",
-			`${episode.year}`,
+			is.present(episode.year) ? `${episode.year}` : undefined,
 			metadata.formatDuration(duration_ms)
-		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		if (is.present(episode.last_stream_date)) {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("\u2713")));
 		}
@@ -276,7 +276,7 @@ export class EntityCardFactory {
 		let subtitles = [] as xnode.XElement[];
 		let tags = [
 			"Genre"
-		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, undefined, titles, subtitles, tags);
 	}
 
@@ -291,9 +291,9 @@ export class EntityCardFactory {
 		let subtitles = movie.genres.map((genre) => this.entityTitleFactory.forGenre(genre));
 		let tags = [
 			"Movie",
-			`${movie.year}`,
+			is.present(movie.year) ? `${movie.year}` : undefined,
 			metadata.formatDuration(duration_ms)
-		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		if (is.present(movie.last_stream_date)) {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("\u2713")));
 		}
@@ -309,7 +309,7 @@ export class EntityCardFactory {
 		let subtitles = [] as xnode.XElement[];
 		let tags = [
 			"Person"
-		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, undefined, titles, subtitles, tags);
 	}
 
@@ -329,7 +329,7 @@ export class EntityCardFactory {
 		let tags = [
 			"Playlist",
 			metadata.formatDuration(duration_ms)
-		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, playbackButton, titles, subtitles, tags, playlist.description);
 	}
 
@@ -348,7 +348,7 @@ export class EntityCardFactory {
 		let tags = [
 			"Season",
 			metadata.formatDuration(duration_ms)
-		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, playbackButton, titles, subtitles, tags);
 	}
 
@@ -368,7 +368,7 @@ export class EntityCardFactory {
 		let tags = [
 			"Show",
 			metadata.formatDuration(duration_ms)
-		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, playbackButton, titles, subtitles, tags, show.summary);
 	}
 
@@ -386,9 +386,9 @@ export class EntityCardFactory {
 		];
 		let tags = [
 			"Track",
-			`${track.disc.album.year}`,
+			is.present(track.disc.album.year) ? `${track.disc.album.year}` : undefined,
 			metadata.formatDuration(duration_ms)
-		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, playbackButton, titles, subtitles, tags);
 	}
 
@@ -403,7 +403,7 @@ export class EntityCardFactory {
 		];
 		let tags = [
 			"User"
-		].map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, undefined, titles, subtitles, tags);
 	}
 

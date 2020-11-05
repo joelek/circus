@@ -492,7 +492,7 @@ export function api_lookupEpisodeBase(episode_id: string, user_id: string, seaso
 	return {
 		episode_id: entry.episode_id,
 		title: entry.title,
-		summary: entry.summary ?? "",
+		summary: entry.summary ?? undefined,
 		number: entry.number,
 		season: is.present(season) ? season : api_lookupSeasonBase(entry.season_id, user_id),
 		year: entry.year ?? undefined,
@@ -549,7 +549,7 @@ export function api_lookupMovieBase(movie_id: string, user_id: string): MovieBas
 		movie_id: entry.movie_id,
 		title: entry.title,
 		year: entry.year,
-		summary: entry.summary ?? "",
+		summary: entry.summary ?? undefined,
 		artwork: is.absent(entry.poster_file_id) ? undefined : {
 			file_id: entry.poster_file_id,
 			mime: "image/jpeg",
@@ -671,7 +671,7 @@ export function api_lookupShowBase(show_id: string, user_id: string): ShowBase {
 	return {
 		show_id: entry.show_id,
 		title: entry.title,
-		summary: entry.summary ?? "",
+		summary: entry.summary,
 		artwork: is.absent(entry.poster_file_id) ? undefined : {
 			file_id: entry.poster_file_id,
 			mime: "image/jpeg",
