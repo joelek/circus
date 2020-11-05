@@ -28,3 +28,4 @@
 * Add adaptive limit to API that optimizes latency.
 * Add sentinel to carousels and support loading additional content.
 * Select indexing probe order by extension and store format.
+* Add appears on playlist to track view.
