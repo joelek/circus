@@ -75,6 +75,10 @@ export class CollectionIndex<A extends Record<string, any>> {
 };
 
 type RecordIndexEventMap<A> = {
+	"*": {
+		action: "insert" | "remove" | "update"
+		record: A
+	},
 	"insert": A,
 	"remove": A,
 	"update": A
@@ -105,9 +109,11 @@ export class RecordIndex<A extends Record<string, any>> {
 				}
 			}
 			this.router.route("update", existing);
+			this.router.route("*", { action: "update", record: existing });
 		} else {
 			this.map.set(key, record);
 			this.router.route("insert", record);
+			this.router.route("*", { action: "insert", record: record });
 		}
 	}
 
@@ -141,7 +147,7 @@ export class RecordIndex<A extends Record<string, any>> {
 		this.router.addObserver(type, listener);
 		if (type === "insert") {
 			for (let record of this.map.values()) {
-				listener(record);
+				(listener as stdlib.routing.MessageObserver<RecordIndexEventMap<A>["insert"]>)(record);
 			}
 		}
 	}
@@ -155,6 +161,7 @@ export class RecordIndex<A extends Record<string, any>> {
 		if (this.map.has(key)) {
 			this.map.delete(key);
 			this.router.route("remove", record);
+			this.router.route("*", { action: "remove", record: record });
 		}
 	}
 
