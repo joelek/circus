@@ -72,41 +72,50 @@ function saveIndex<A>(name: string, index: indices.RecordIndex<A>): void {
 }
 
 const directories = loadIndex("directories", databases.media.Directory, (record) => record.directory_id);
-const getDirectoryDirectories = indices.CollectionIndex.fromIndex(directories, directories, (record) => record.directory_id, (record) => record.parent_directory_id);
+const getDirectoriesFromDirectory = indices.CollectionIndex.fromIndex(directories, directories, (record) => record.directory_id, (record) => record.parent_directory_id);
 const files = loadIndex("files", databases.media.File, (record) => record.file_id);
-const getDirectoryFiles = indices.CollectionIndex.fromIndex(directories, files, (record) => record.directory_id, (record) => record.parent_directory_id);
+const getFilesFromDirectory = indices.CollectionIndex.fromIndex(directories, files, (record) => record.directory_id, (record) => record.parent_directory_id);
 const audio_streams = loadIndex("audio_streams", databases.media.AudioStream, (record) => record.audio_stream_id);
-const getFileAudioStreams = indices.CollectionIndex.fromIndex(files, audio_streams, (record) => record.file_id, (record) => record.file_id);
+const getAudioStreamsFromFile = indices.CollectionIndex.fromIndex(files, audio_streams, (record) => record.file_id, (record) => record.file_id);
 const image_streams = loadIndex("image_streams", databases.media.ImageStream, (record) => record.image_stream_id);
-const getFileImageStreams = indices.CollectionIndex.fromIndex(files, image_streams, (record) => record.file_id, (record) => record.file_id);
+const getImageStreamsFromFile = indices.CollectionIndex.fromIndex(files, image_streams, (record) => record.file_id, (record) => record.file_id);
 const subtitle_streams = loadIndex("subtitle_streams", databases.media.SubtitleStream, (record) => record.subtitle_stream_id);
-const getFileSubtitleStreams = indices.CollectionIndex.fromIndex(files, subtitle_streams, (record) => record.file_id, (record) => record.file_id);
+const getSubtitleStreamsFromFile = indices.CollectionIndex.fromIndex(files, subtitle_streams, (record) => record.file_id, (record) => record.file_id);
 const video_streams = loadIndex("video_streams", databases.media.VideoStream, (record) => record.video_stream_id);
-const getFileVideoStreams = indices.CollectionIndex.fromIndex(files, video_streams, (record) => record.file_id, (record) => record.file_id);
+const getVideoStreamsFromFile = indices.CollectionIndex.fromIndex(files, video_streams, (record) => record.file_id, (record) => record.file_id);
 const artists = loadIndex("artists", databases.media.Artist, (record) => record.artist_id);
 const albums = loadIndex("albums", databases.media.Album, (record) => record.album_id);
 const album_files = loadIndex("album_files", databases.media.AlbumFile, (record) => [record.album_id, record.file_id].join("\0"));
-const getAlbumFiles = indices.CollectionIndex.fromIndex(files, album_files, (record) => record.file_id, (record) => record.file_id);
+const getFilesFromAlbum = indices.CollectionIndex.fromIndex(files, album_files, (record) => record.file_id, (record) => record.file_id);
+const getAlbumsFromFile = indices.CollectionIndex.fromIndex(albums, album_files, (record) => record.album_id, (record) => record.album_id);
 const discs = loadIndex("discs", databases.media.Disc, (record) => record.disc_id);
-const getAlbumDiscs = indices.CollectionIndex.fromIndex(albums, discs, (record) => record.album_id, (record) => record.album_id);
+const getDiscsFromAlbum = indices.CollectionIndex.fromIndex(albums, discs, (record) => record.album_id, (record) => record.album_id);
 const tracks = loadIndex("tracks", databases.media.Track, (record) => record.track_id);
-const getDiscTracks = indices.CollectionIndex.fromIndex(discs, tracks, (record) => record.disc_id, (record) => record.disc_id);
+const getTracksFromDisc = indices.CollectionIndex.fromIndex(discs, tracks, (record) => record.disc_id, (record) => record.disc_id);
 const track_files = loadIndex("track_files", databases.media.TrackFile, (record) => [record.track_id, record.file_id].join("\0"));
-const getTrackFiles = indices.CollectionIndex.fromIndex(files, track_files, (record) => record.file_id, (record) => record.file_id);
+const getTracksFromFile = indices.CollectionIndex.fromIndex(files, track_files, (record) => record.file_id, (record) => record.file_id);
+const getFilesFromTrack = indices.CollectionIndex.fromIndex(tracks, track_files, (record) => record.track_id, (record) => record.track_id);
 const album_artists = loadIndex("album_artists", databases.media.AlbumArtist, (record) => [record.album_id, record.artist_id].join("\0"));
+const getArtistsFromAlbum = indices.CollectionIndex.fromIndex(albums, album_artists, (record) => record.album_id, (record) => record.album_id);
+const getAlbumsFromArtist = indices.CollectionIndex.fromIndex(artists, album_artists, (record) => record.artist_id, (record) => record.artist_id);
 const track_artists = loadIndex("track_artists", databases.media.TrackArtist, (record) => [record.track_id, record.artist_id].join("\0"));
+const getArtistsFromTrack = indices.CollectionIndex.fromIndex(tracks, track_artists, (record) => record.track_id, (record) => record.track_id);
+const getTrackFromArtist = indices.CollectionIndex.fromIndex(artists, track_artists, (record) => record.artist_id, (record) => record.artist_id);
 const shows = loadIndex("shows", databases.media.Show, (record) => record.show_id);
 const show_files = loadIndex("show_files", databases.media.ShowFile, (record) => [record.show_id, record.file_id].join("\0"));
-const getShowFiles = indices.CollectionIndex.fromIndex(files, show_files, (record) => record.file_id, (record) => record.file_id);
+const getShowsFromFile = indices.CollectionIndex.fromIndex(files, show_files, (record) => record.file_id, (record) => record.file_id);
+const getFilesFromShow = indices.CollectionIndex.fromIndex(shows, show_files, (record) => record.show_id, (record) => record.show_id);
 const seasons = loadIndex("seasons", databases.media.Season, (record) => record.season_id);
-const getShowSeasons = indices.CollectionIndex.fromIndex(shows, seasons, (record) => record.show_id, (record) => record.show_id);
+const getSeasonsFromShow = indices.CollectionIndex.fromIndex(shows, seasons, (record) => record.show_id, (record) => record.show_id);
 const episodes = loadIndex("episodes", databases.media.Episode, (record) => record.episode_id);
-const getSeasonEpisodes = indices.CollectionIndex.fromIndex(seasons, episodes, (record) => record.season_id, (record) => record.season_id);
+const getEpisodesFromSeason = indices.CollectionIndex.fromIndex(seasons, episodes, (record) => record.season_id, (record) => record.season_id);
 const episode_files = loadIndex("episode_files", databases.media.EpisodeFile, (record) => [record.episode_id, record.file_id].join("\0"));
-const getEpisodeFiles = indices.CollectionIndex.fromIndex(files, episode_files, (record) => record.file_id, (record) => record.file_id);
+const getEpisodesFromFile = indices.CollectionIndex.fromIndex(files, episode_files, (record) => record.file_id, (record) => record.file_id);
+const getFilesFromEpisode = indices.CollectionIndex.fromIndex(episodes, episode_files, (record) => record.episode_id, (record) => record.episode_id);
 const movies = loadIndex("movies", databases.media.Movie, (record) => record.movie_id);
 const movie_files = loadIndex("movie_files", databases.media.MovieFile, (record) => [record.movie_id, record.file_id].join("\0"));
-const getMovieFiles = indices.CollectionIndex.fromIndex(files, movie_files, (record) => record.file_id, (record) => record.file_id);
+const getMoviesFromFile = indices.CollectionIndex.fromIndex(files, movie_files, (record) => record.file_id, (record) => record.file_id);
+const getFilesFromMovie = indices.CollectionIndex.fromIndex(movies, movie_files, (record) => record.movie_id, (record) => record.movie_id);
 const persons = loadIndex("persons", databases.media.Person, (record) => record.person_id);
 const movie_persons = loadIndex("movie_persons", databases.media.MoviePerson, (record) => [record.movie_id, record.person_id].join("\0"));
 const getMoviesFromPerson = indices.CollectionIndex.fromIndex(persons, movie_persons, (record) => record.person_id, (record) => record.person_id);
@@ -161,10 +170,10 @@ function checkDirectory(root: Directory): void {
 	if (libfs.existsSync(path)) {
 		let stats = libfs.statSync(path);
 		if (stats.isDirectory()) {
-			for (let directory of getDirectoryDirectories.lookup(root.directory_id)) {
+			for (let directory of getDirectoriesFromDirectory.lookup(root.directory_id)) {
 				checkDirectory(directory);
 			}
-			for (let file of getDirectoryFiles.lookup(root.directory_id)) {
+			for (let file of getFilesFromDirectory.lookup(root.directory_id)) {
 				checkFile(file);
 			}
 			return;
@@ -429,7 +438,7 @@ function indexFiles(): void {
 }
 
 function getSiblingFiles(subject: File): Array<File> {
-	let candidates_in_directory = getDirectoryFiles.lookup(subject.parent_directory_id)
+	let candidates_in_directory = getFilesFromDirectory.lookup(subject.parent_directory_id)
 		.filter((file) => file.file_id !== subject.file_id)
 		.filter((file) => file.mime.startsWith("audio/") || file.mime.startsWith("video/"))
 		.sort(indices.LexicalSort.increasing((file) => file.name));
@@ -464,7 +473,7 @@ function associateImages(): void {
 		}
 		let siblings = getSiblingFiles(file);
 		for (let sibling of siblings) {
-			let track_files = getTrackFiles.lookup(sibling.file_id)
+			let track_files = getTracksFromFile.lookup(sibling.file_id)
 				.filter((movie_file) => movie_file.file_id !== file.file_id);
 			for (let track_file of track_files) {
 				try {
@@ -477,7 +486,7 @@ function associateImages(): void {
 					});
 				} catch (error) {}
 			}
-			let movies = getMovieFiles.lookup(sibling.file_id)
+			let movies = getMoviesFromFile.lookup(sibling.file_id)
 				.filter((movie_file) => movie_file.file_id !== file.file_id);
 			for (let movie of movies) {
 				movie_files.insert({
@@ -485,7 +494,7 @@ function associateImages(): void {
 					file_id: file.file_id
 				});
 			}
-			let episode_files = getEpisodeFiles.lookup(sibling.file_id)
+			let episode_files = getEpisodesFromFile.lookup(sibling.file_id)
 				.filter((movie_file) => movie_file.file_id !== file.file_id);
 			for (let episode_file of episode_files) {
 				try {
@@ -509,7 +518,7 @@ function associateSubtitles(): void {
 		}
 		let siblings = getSiblingFiles(file);
 		for (let sibling of siblings) {
-			let movies = getMovieFiles.lookup(sibling.file_id)
+			let movies = getMoviesFromFile.lookup(sibling.file_id)
 				.filter((movie_file) => movie_file.file_id !== file.file_id);
 			for (let movie of movies) {
 				movie_files.insert({
@@ -517,7 +526,7 @@ function associateSubtitles(): void {
 					file_id: file.file_id
 				});
 			}
-			let episodes = getEpisodeFiles.lookup(sibling.file_id)
+			let episodes = getEpisodesFromFile.lookup(sibling.file_id)
 				.filter((movie_file) => movie_file.file_id !== file.file_id);
 			for (let episode of episodes) {
 				episode_files.insert({
@@ -530,10 +539,10 @@ function associateSubtitles(): void {
 }
 
 export function runIndexer(): void {
-	for (let directory of getDirectoryDirectories.lookup(undefined)) {
+	for (let directory of getDirectoriesFromDirectory.lookup(undefined)) {
 		checkDirectory(directory);
 	}
-	for (let file of getDirectoryFiles.lookup(undefined)) {
+	for (let file of getFilesFromDirectory.lookup(undefined)) {
 		checkFile(file);
 	}
 	visitDirectory(MEDIA_ROOT);
