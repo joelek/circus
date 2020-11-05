@@ -42,37 +42,8 @@
 
 	Metadata: EpisodeMetadata | MovieMetadata | TrackMetadata,
 
-	AudioStream: {
-		type: "audio",
-		duration_ms: number
-	},
-
-	ImageStream: {
-		type: "image",
-		width: number,
-		height: number
-	},
-
-	SubtitleStream: {
-		type: "subtitle",
-		duration_ms: number
-	},
-
-	UnknownStream: {
-		type: "unknown"
-	},
-
-	VideoStream: {
-		type: "video",
-		duration_ms: number,
-		width: number,
-		height: number
-	},
-
-	Stream: AudioStream | ImageStream | SubtitleStream | UnknownStream | VideoStream,
-
 	Probe: {
 		metadata?: Metadata,
-		streams: Stream[]
+		resources: ../databases/media/Resource[]
 	}
 }

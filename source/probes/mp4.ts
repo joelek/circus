@@ -115,7 +115,7 @@ export function probe(fd: number): schema.Probe {
 	let buffer = mvhd.readBody();
 	let ts = buffer.readUInt32BE(12);
 	let result: schema.Probe = {
-		streams: moov.getChildren("trak").map((trak) => {
+		resources: moov.getChildren("trak").map((trak) => {
 			let tkhd = trak.getChild("tkhd");
 			let buffer = tkhd.readBody();
 			let duration_ts = buffer.readUInt32BE(20);
@@ -123,24 +123,21 @@ export function probe(fd: number): schema.Probe {
 			let height = buffer.readUInt16BE(80);
 			let duration_ms = Math.ceil(duration_ts / ts * 1000);
 			if (duration_ms > 0 && width > 0 && height > 0) {
-				let stream: schema.VideoStream = {
+				return {
 					type: "video",
 					duration_ms,
 					width,
 					height
 				};
-				return stream;
 			} else if (duration_ms > 0) {
-				let stream: schema.AudioStream = {
+				return {
 					type: "audio",
 					duration_ms
 				};
-				return stream;
 			} else {
-				let stream: schema.UnknownStream = {
-					type: "unknown"
+				return {
+					type: "data"
 				};
-				return stream
 			}
 		})
 	};
@@ -197,7 +194,7 @@ export function probe(fd: number): schema.Probe {
 			let buffer = ilst.getChild("disk").getChild("data").readBody();
 			tags.disc_number = buffer.readUInt32BE(8);
 		} catch (error) {}
-		if (result.streams.find((stream) => stream.type === "video")) {
+		if (result.resources.find((resource) => resource.type === "video")) {
 			if (is.present(tags.episode) && is.present(tags.season_number) && is.present(tags.episode_number) && is.present(tags.show)) {
 				let metadata: schema.EpisodeMetadata = {
 					type: "episode",
@@ -225,7 +222,7 @@ export function probe(fd: number): schema.Probe {
 				};
 				result.metadata = metadata;
 			}
-		} else if (result.streams.find((stream) => stream.type === "audio")) {
+		} else if (result.resources.find((resource) => resource.type === "audio")) {
 			if (is.present(tags.title) && is.present(tags.disc_number) && is.present(tags.track_number) && is.present(tags.album)) {
 				let metadata: schema.TrackMetadata = {
 					type: "track",

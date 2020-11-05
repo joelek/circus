@@ -8,41 +8,72 @@
 	File: {
 		file_id: string,
 		name: string,
-		mime: string,
+		format?: "mp4" | "jpeg" | "vtt" | "json",
 		parent_directory_id?: string,
 		index_timestamp?: number
 	},
 
-	AudioStream: {
-		audio_stream_id: string,
-		file_id: string,
-		stream_index: number,
+	AudioResource: {
+		type: "audio",
 		duration_ms: number
 	},
 
-	ImageStream: {
-		image_stream_id: string,
-		file_id: string,
-		stream_index: number,
+	DataResource: {
+		type: "data"
+	},
+
+	ImageResource: {
+		type: "image",
 		width: number,
 		height: number
 	},
 
-	SubtitleStream: {
-		subtitle_stream_id: string,
-		file_id: string,
-		stream_index: number,
-		duration_ms: number
+	SubtitleResource: {
+		type: "subtitle",
+		duration_ms: number,
+		language?: string
 	},
 
-	VideoStream: {
-		video_stream_id: string,
-		file_id: string,
-		stream_index: number,
+	VideoResource: {
+		type: "video",
 		duration_ms: number,
 		width: number,
 		height: number
 	},
+
+	Resource: AudioResource | DataResource | ImageResource | SubtitleResource | VideoResource,
+
+	FileAudioResource: AudioResource & {
+		resource_id: string,
+		file_id: string,
+		index: number
+	},
+
+	FileDataResource: DataResource & {
+		resource_id: string,
+		file_id: string,
+		index: number
+	},
+
+	FileImageResource: ImageResource & {
+		resource_id: string,
+		file_id: string,
+		index: number
+	},
+
+	FileSubtitleResource: SubtitleResource & {
+		resource_id: string,
+		file_id: string,
+		index: number
+	},
+
+	FileVideoResource: VideoResource & {
+		resource_id: string,
+		file_id: string,
+		index: number
+	},
+
+	FileResource: FileAudioResource | FileDataResource | FileImageResource | FileSubtitleResource | FileVideoResource,
 
 	Artist: {
 		artist_id: string,
@@ -169,7 +200,7 @@
 
 	Cue: {
 		cue_id: string,
-		subtitle_stream_id: string,
+		resource_id: string,
 		start_ms: number,
 		duration_ms: number,
 		lines: string[]

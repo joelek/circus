@@ -3,7 +3,7 @@ import * as schema from "./schema";
 
 export function probe(fd: number): schema.Probe {
 	let result: schema.Probe = {
-		streams: []
+		resources: []
 	};
 	let buffer = libfs.readFileSync(fd);
 	let json = JSON.parse(buffer.toString());

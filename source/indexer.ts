@@ -76,14 +76,8 @@ export const directories = loadIndex("directories", databases.media.Directory, (
 export const getDirectoriesFromDirectory = indices.CollectionIndex.fromIndex(directories, directories, (record) => record.directory_id, (record) => record.parent_directory_id);
 export const files = loadIndex("files", databases.media.File, (record) => record.file_id);
 export const getFilesFromDirectory = indices.CollectionIndex.fromIndex(directories, files, (record) => record.directory_id, (record) => record.parent_directory_id);
-export const audio_streams = loadIndex("audio_streams", databases.media.AudioStream, (record) => record.audio_stream_id);
-export const getAudioStreamsFromFile = indices.CollectionIndex.fromIndex(files, audio_streams, (record) => record.file_id, (record) => record.file_id);
-export const image_streams = loadIndex("image_streams", databases.media.ImageStream, (record) => record.image_stream_id);
-export const getImageStreamsFromFile = indices.CollectionIndex.fromIndex(files, image_streams, (record) => record.file_id, (record) => record.file_id);
-export const subtitle_streams = loadIndex("subtitle_streams", databases.media.SubtitleStream, (record) => record.subtitle_stream_id);
-export const getSubtitleStreamsFromFile = indices.CollectionIndex.fromIndex(files, subtitle_streams, (record) => record.file_id, (record) => record.file_id);
-export const video_streams = loadIndex("video_streams", databases.media.VideoStream, (record) => record.video_stream_id);
-export const getVideoStreamsFromFile = indices.CollectionIndex.fromIndex(files, video_streams, (record) => record.file_id, (record) => record.file_id);
+export const resources = loadIndex("resources", databases.media.FileResource, (record) => record.resource_id);
+export const getResourcesFromFile = indices.CollectionIndex.fromIndex(files, resources, (record) => record.file_id, (record) => record.file_id);
 export const artists = loadIndex("artists", databases.media.Artist, (record) => record.artist_id);
 export const albums = loadIndex("albums", databases.media.Album, (record) => record.album_id);
 export const album_files = loadIndex("album_files", databases.media.AlbumFile, (record) => [record.album_id, record.file_id].join("\0"));
@@ -132,7 +126,7 @@ export const show_genres = loadIndex("show_genres", databases.media.ShowGenre, (
 export const getShowsFromGenre = indices.CollectionIndex.fromIndex(genres, show_genres, (record) => record.genre_id, (record) => record.genre_id);
 export const getGenresFromShow = indices.CollectionIndex.fromIndex(shows, show_genres, (record) => record.show_id, (record) => record.show_id);
 export const cues = loadIndex("cues", databases.media.Cue, (record) => record.cue_id);
-export const getCuesFromSubtitleStream = indices.CollectionIndex.fromIndex(subtitle_streams, cues, (record) => record.subtitle_stream_id, (record) => record.subtitle_stream_id);
+export const getCuesFromResource = indices.CollectionIndex.fromIndex(resources, cues, (record) => record.resource_id, (record) => record.resource_id);
 export const users = loadIndex("users", databases.media.User, (record) => record.user_id);
 export const tokens = loadIndex("tokens", databases.media.Token, (record) => record.token_id);
 export const getTokensFromUser = indices.CollectionIndex.fromIndex(users, tokens, (record) => record.user_id, (record) => record.user_id);
@@ -258,11 +252,9 @@ function visitDirectory(path: Array<string>, parent_directory_id?: string): void
 			try {
 				files.lookup(file_id);
 			} catch (error) {
-				let mime = "application/octet-stream";
 				files.insert({
 					file_id,
 					name,
-					mime,
 					parent_directory_id
 				});
 			}
@@ -421,59 +413,29 @@ function indexFile(file: File): void {
 	let fd = libfs.openSync(path.join("/"), "r");
 	try {
 		let probe: probes.schema.Probe = {
-			streams: []
+			resources: []
 		};
 		if (file.name.endsWith(".vtt")) {
 			probe = probes.vtt.probe(fd);
-			file.mime = "text/vtt";
+			file.format = "vtt";
 		} else if (file.name.endsWith(".json")) {
 			probe = probes.json.probe(fd);
-			file.mime = "application/json";
+			file.format = "json";
 		} else if (file.name.endsWith(".mp4")) {
 			probe = probes.mp4.probe(fd);
-			if (probe.streams.find((stream) => stream.type === "video")) {
-				file.mime = "video/mp4";
-			} else if (probe.streams.find((stream) => stream.type === "audio")) {
-				file.mime = "audio/mp4";
-			}
+			file.format = "mp4";
 		} else if (file.name.endsWith(".jpg") || file.name.endsWith(".jpeg")) {
 			probe = probes.jpeg.probe(fd);
-			file.mime = "image/jpeg";
+			file.format = "jpeg";
 		}
-		for (let [index, stream] of probe.streams.entries()) {
-			let stream_id = makeId("stream", file.file_id, `${index}`);
-			if (stream.type === "audio") {
-				audio_streams.insert({
-					audio_stream_id: stream_id,
-					file_id: file_id,
-					stream_index: index,
-					duration_ms: stream.duration_ms
-				});
-			} else if (stream.type === "image") {
-				image_streams.insert({
-					image_stream_id: stream_id,
-					file_id: file_id,
-					stream_index: index,
-					width: stream.width,
-					height: stream.height
-				});
-			} else if (stream.type === "subtitle") {
-				subtitle_streams.insert({
-					subtitle_stream_id: stream_id,
-					file_id: file_id,
-					stream_index: index,
-					duration_ms: stream.duration_ms
-				});
-			} else if (stream.type === "video") {
-				video_streams.insert({
-					video_stream_id: stream_id,
-					file_id: file_id,
-					stream_index: index,
-					width: stream.width,
-					height: stream.height,
-					duration_ms: stream.duration_ms
-				});
-			}
+		for (let [index, resource] of probe.resources.entries()) {
+			let resource_id = makeId("resource", file.file_id, `${index}`);
+			resources.insert({
+				resource_id: resource_id,
+				file_id: file_id,
+				index: index,
+				...resource,
+			});
 		}
 		indexMetadata(probe, file_id);
 	} catch (error) {
@@ -495,7 +457,7 @@ function indexFiles(): void {
 function getSiblingFiles(subject: File): Array<File> {
 	let candidates_in_directory = getFilesFromDirectory.lookup(subject.parent_directory_id)
 		.filter((file) => file.file_id !== subject.file_id)
-		.filter((file) => file.mime.startsWith("audio/") || file.mime.startsWith("video/"))
+		.filter((file) => file.format === "mp4")
 		.sort(indices.LexicalSort.increasing((file) => file.name));
 	let basename = subject.name.split(".")[0];
 	let candidates_sharing_basename = candidates_in_directory
@@ -509,7 +471,7 @@ function getSiblingFiles(subject: File): Array<File> {
 
 function associateMetadata(): void {
 	for (let file of files) {
-		if (file.mime !== "application/json") {
+		if (file.format !== "json") {
 			continue;
 		}
 		let path = getFilePath(file);
@@ -523,7 +485,7 @@ function associateMetadata(): void {
 
 function associateImages(): void {
 	for (let file of files) {
-		if (!file.mime.startsWith("image/")) {
+		if (file.format !== "jpeg") {
 			continue;
 		}
 		let siblings = getSiblingFiles(file);
@@ -568,7 +530,7 @@ function associateImages(): void {
 
 function associateSubtitles(): void {
 	for (let file of files) {
-		if (file.mime !== "text/vtt") {
+		if (file.format !== "vtt") {
 			continue;
 		}
 		let siblings = getSiblingFiles(file);
@@ -611,10 +573,7 @@ runIndexer();
 
 saveIndex("files", files);
 saveIndex("directories", directories);
-saveIndex("audio_streams", audio_streams);
-saveIndex("image_streams", image_streams);
-saveIndex("subtitle_streams", subtitle_streams);
-saveIndex("video_streams", video_streams);
+saveIndex("resources", resources);
 saveIndex("artists", artists);
 saveIndex("albums", albums);
 saveIndex("album_files", album_files);

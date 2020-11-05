@@ -127,7 +127,7 @@ export function probe(fd: number): schema.Probe {
 			if (marker.readUInt16BE() === Markers.START_OF_FRAME_0) {
 				let sof = parseStartOfFrame0(read(Buffer.alloc(length.readUInt16BE() - 2)));
 				let result: schema.Probe = {
-					streams: [{
+					resources: [{
 						type: "image",
 						width: sof.width,
 						height: sof.height
