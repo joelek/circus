@@ -44,11 +44,11 @@
 		title: string,
 		disc: DiscBase,
 		artists: ArtistBase[],
-		number: number,
-		last_stream_date?: number
+		number: number
 	},
 
 	Track: TrackBase & {
+		last_stream_date?: number,
 		segment: {
 			file: AudioFile
 		}
@@ -109,12 +109,12 @@
 		year?: number,
 		summary?: string,
 		artwork?: ImageFile,
-		last_stream_date?: number,
 		genres: Genre[],
 		actors: Person[]
 	},
 
 	Movie: MovieBase & {
+		last_stream_date?: number,
 		segment: Segment
 	},
 
@@ -147,11 +147,11 @@
 		summary?: string,
 		number: number,
 		season: SeasonBase,
-		year?: number,
-		last_stream_date?: number
+		year?: number
 	},
 
 	Episode: EpisodeBase & {
+		last_stream_date?: number,
 		segment: Segment
 	},
 

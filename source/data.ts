@@ -495,8 +495,7 @@ export function api_lookupEpisodeBase(episode_id: string, user_id: string, seaso
 		summary: entry.summary ?? undefined,
 		number: entry.number,
 		season: is.present(season) ? season : api_lookupSeasonBase(entry.season_id, user_id),
-		year: entry.year ?? undefined,
-		last_stream_date: is.present(user_id) ? getLatestStream(user_id, entry.file_id) ?? undefined : undefined,
+		year: entry.year ?? undefined
 	};
 };
 
@@ -523,6 +522,7 @@ export function api_lookupEpisode(episode_id: string, user_id: string, season?: 
 	};
 	return {
 		...episode,
+		last_stream_date: is.present(user_id) ? getLatestStream(user_id, entry.file_id) ?? undefined : undefined,
 		segment
 	};
 };
@@ -556,7 +556,6 @@ export function api_lookupMovieBase(movie_id: string, user_id: string): MovieBas
 			height: 720,
 			width: 1080
 		},
-		last_stream_date: is.present(user_id) ? getLatestStream(user_id, parts[0].file_id) ?? undefined : undefined,
 		genres: getMovieGenresFromMovieId.lookup(movie_id)
 			.sort(NumericSort.increasing((entry) => entry.order))
 			.map((movie_genre) => {
@@ -598,6 +597,7 @@ export function api_lookupMovie(movie_id: string, user_id: string): Movie {
 	};
 	return {
 		...movie,
+		last_stream_date: is.present(user_id) ? getLatestStream(user_id, parts[0].file_id) ?? undefined : undefined,
 		segment
 	};
 };
@@ -740,8 +740,7 @@ export function api_lookupTrackBase(track_id: string, user_id: string, disc?: Di
 			.map((entry) => {
 				return getArtistFromArtistId.lookup(entry.artist_id);
 			}),
-		number: entry.number,
-		last_stream_date: undefined
+		number: entry.number
 	};
 };
 
@@ -750,6 +749,7 @@ export function api_lookupTrack(track_id: string, user_id: string, disc?: DiscBa
 	let track = api_lookupTrackBase(track_id, user_id, disc);
 	return {
 		...track,
+		last_stream_date: undefined,
 		segment: {
 			file: {
 				file_id: entry.file_id,
