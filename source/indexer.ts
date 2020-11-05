@@ -174,6 +174,18 @@ if (users.length() === 0) {
 	});
 }
 
+const album_search = indices.SearchIndex.fromIndex(albums, (entry) => [entry.title]);
+const artist_search = indices.SearchIndex.fromIndex(artists, (entry) => [entry.name]);
+const cue_search = indices.SearchIndex.fromIndex(cues, (entry) => entry.lines);
+const episode_search = indices.SearchIndex.fromIndex(episodes, (entry) => [entry.title]);
+const genre_search = indices.SearchIndex.fromIndex(genres, (entry) => [entry.name]);
+const movie_search = indices.SearchIndex.fromIndex(movies, (entry) => [entry.title]);
+const person_search = indices.SearchIndex.fromIndex(persons, (entry) => [entry.name]);
+const playlist_search = indices.SearchIndex.fromIndex(playlists, (entry) => [entry.title]);
+const shows_search = indices.SearchIndex.fromIndex(shows, (entry) => [entry.name]);
+const track_search = indices.SearchIndex.fromIndex(tracks, (entry) => [entry.title]);
+const user_search = indices.SearchIndex.fromIndex(users, (entry) => [entry.name, entry.username]);
+
 function getPath(entry: Directory | File): Array<string> {
 	let path = new Array<string>();
 	while (true) {
