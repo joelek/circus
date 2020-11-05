@@ -430,7 +430,7 @@ function indexFile(file: File): void {
 			if (is.present(subtitle_resource)) {
 				subtitle_files.insert({
 					file_id: file_id,
-					format: "vtt",
+					mime: "text/vtt",
 					...subtitle_resource
 				});
 			}
@@ -441,7 +441,7 @@ function indexFile(file: File): void {
 			if (is.present(metadata_resource)) {
 				metadata_files.insert({
 					file_id: file_id,
-					format: "json",
+					mime: "application/json",
 					...metadata_resource
 				});
 			}
@@ -454,13 +454,13 @@ function indexFile(file: File): void {
 			if (is.present(video_resource)) {
 				video_files.insert({
 					file_id: file_id,
-					format: "mp4",
+					mime: "video/mp4",
 					...video_resource
 				});
 			} else if (is.present(audio_resource)) {
 				audio_files.insert({
 					file_id: file_id,
-					format: "mp4",
+					mime: "audio/mp4",
 					...audio_resource
 				});
 			}
@@ -471,7 +471,7 @@ function indexFile(file: File): void {
 			if (is.present(image_resource)) {
 				image_files.insert({
 					file_id: file_id,
-					format: "jpeg",
+					mime: "image/jpeg",
 					...image_resource
 				});
 			}

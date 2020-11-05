@@ -39,50 +39,50 @@ export const File = autoguard.Object.of<File>({
 
 export type AudioFile = {
 	"file_id": string,
-	"format": "mp4",
+	"mime": "audio/mp4",
 	"duration_ms": number
 };
 
 export const AudioFile = autoguard.Object.of<AudioFile>({
 	"file_id": autoguard.String,
-	"format": autoguard.StringLiteral.of("mp4"),
+	"mime": autoguard.StringLiteral.of("audio/mp4"),
 	"duration_ms": autoguard.Number
 });
 
 export type ImageFile = {
 	"file_id": string,
-	"format": "jpeg",
+	"mime": "image/jpeg",
 	"width": number,
 	"height": number
 };
 
 export const ImageFile = autoguard.Object.of<ImageFile>({
 	"file_id": autoguard.String,
-	"format": autoguard.StringLiteral.of("jpeg"),
+	"mime": autoguard.StringLiteral.of("image/jpeg"),
 	"width": autoguard.Number,
 	"height": autoguard.Number
 });
 
 export type MetadataFile = {
 	"file_id": string,
-	"format": "json"
+	"mime": "application/json"
 };
 
 export const MetadataFile = autoguard.Object.of<MetadataFile>({
 	"file_id": autoguard.String,
-	"format": autoguard.StringLiteral.of("json")
+	"mime": autoguard.StringLiteral.of("application/json")
 });
 
 export type SubtitleFile = {
 	"file_id": string,
-	"format": "vtt",
+	"mime": "text/vtt",
 	"duration_ms": number,
 	"language"?: string
 };
 
 export const SubtitleFile = autoguard.Object.of<SubtitleFile>({
 	"file_id": autoguard.String,
-	"format": autoguard.StringLiteral.of("vtt"),
+	"mime": autoguard.StringLiteral.of("text/vtt"),
 	"duration_ms": autoguard.Number,
 	"language": autoguard.Union.of(
 		autoguard.Undefined,
@@ -92,7 +92,7 @@ export const SubtitleFile = autoguard.Object.of<SubtitleFile>({
 
 export type VideoFile = {
 	"file_id": string,
-	"format": "mp4",
+	"mime": "video/mp4",
 	"duration_ms": number,
 	"width": number,
 	"height": number
@@ -100,7 +100,7 @@ export type VideoFile = {
 
 export const VideoFile = autoguard.Object.of<VideoFile>({
 	"file_id": autoguard.String,
-	"format": autoguard.StringLiteral.of("mp4"),
+	"mime": autoguard.StringLiteral.of("video/mp4"),
 	"duration_ms": autoguard.Number,
 	"width": autoguard.Number,
 	"height": autoguard.Number
