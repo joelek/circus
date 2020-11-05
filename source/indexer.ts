@@ -1,10 +1,11 @@
 import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as autoguard from "@joelek/ts-autoguard";
+import * as databases from "./databases";
 import * as indices from "./indices";
 import * as is from "./is";
+import * as passwords from "./passwords";
 import * as probes from "./probes";
-import * as databases from "./databases";
 import { Directory, File } from "./databases/media";
 
 function wordify(string: string): Array<string> {
@@ -130,6 +131,28 @@ const getGenresFromMovie = indices.CollectionIndex.fromIndex(movies, movie_genre
 const show_genres = loadIndex("show_genres", databases.media.ShowGenre, (record) => [record.show_id, record.genre_id].join("\0"));
 const getShowsFromGenre = indices.CollectionIndex.fromIndex(genres, show_genres, (record) => record.genre_id, (record) => record.genre_id);
 const getGenresFromShow = indices.CollectionIndex.fromIndex(shows, show_genres, (record) => record.show_id, (record) => record.show_id);
+const cues = loadIndex("cues", databases.media.Cue, (record) => record.cue_id);
+const getCuesFromSubtitleStream = indices.CollectionIndex.fromIndex(subtitle_streams, cues, (record) => record.subtitle_stream_id, (record) => record.subtitle_stream_id);
+const users = loadIndex("users", databases.media.User, (record) => record.user_id);
+const tokens = loadIndex("tokens", databases.media.Token, (record) => record.token_id);
+const getTokensFromUser = indices.CollectionIndex.fromIndex(users, tokens, (record) => record.user_id, (record) => record.user_id);
+const streams = loadIndex("streams", databases.media.Stream, (record) => record.stream_id);
+const getStreamsFromUser = indices.CollectionIndex.fromIndex(users, streams, (record) => record.user_id, (record) => record.user_id);
+const getStreamsFromFile = indices.CollectionIndex.fromIndex(files, streams, (record) => record.file_id, (record) => record.file_id);
+const playlists = loadIndex("playlists", databases.media.Playlist, (record) => record.playlist_id);
+const getPlaylistsFromUser = indices.CollectionIndex.fromIndex(users, playlists, (record) => record.user_id, (record) => record.user_id);
+const playlist_items = loadIndex("playlist_items", databases.media.PlaylistItem, (record) => record.playlist_item_id);
+const getPlaylistsItemsFromPlaylist = indices.CollectionIndex.fromIndex(playlists, playlist_items, (record) => record.playlist_id, (record) => record.playlist_id);
+const getPlaylistItemsFromTrack = indices.CollectionIndex.fromIndex(tracks, playlist_items, (record) => record.track_id, (record) => record.track_id);
+
+if (users.length() === 0) {
+	users.insert({
+		user_id: makeId("user", libcrypto.randomBytes(16).toString("hex")),
+		name: "Test User",
+		username: "test",
+		password: passwords.generate("test")
+	});
+}
 
 function getPath(entry: Directory | File): Array<string> {
 	let path = new Array<string>();
@@ -581,3 +604,9 @@ saveIndex("show_persons", show_persons);
 saveIndex("genres", genres);
 saveIndex("movie_genres", movie_genres);
 saveIndex("show_genres", show_genres);
+saveIndex("cues", cues);
+saveIndex("playlists", playlists);
+saveIndex("playlist_items", playlist_items);
+saveIndex("users", users);
+saveIndex("tokens", tokens);
+saveIndex("streams", streams);

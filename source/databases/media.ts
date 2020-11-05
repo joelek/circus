@@ -365,6 +365,92 @@ export const ShowGenre = autoguard.Object.of<ShowGenre>({
 	"order": autoguard.Number
 });
 
+export type Cue = {
+	"cue_id": string,
+	"subtitle_stream_id": string,
+	"start_ms": number,
+	"duration_ms": number,
+	"lines": string[]
+};
+
+export const Cue = autoguard.Object.of<Cue>({
+	"cue_id": autoguard.String,
+	"subtitle_stream_id": autoguard.String,
+	"start_ms": autoguard.Number,
+	"duration_ms": autoguard.Number,
+	"lines": autoguard.Array.of(autoguard.String)
+});
+
+export type User = {
+	"user_id": string,
+	"name": string,
+	"username": string,
+	"password": string
+};
+
+export const User = autoguard.Object.of<User>({
+	"user_id": autoguard.String,
+	"name": autoguard.String,
+	"username": autoguard.String,
+	"password": autoguard.String
+});
+
+export type Token = {
+	"token_id": string,
+	"user_id": string,
+	"validator": string,
+	"expires_ms": number
+};
+
+export const Token = autoguard.Object.of<Token>({
+	"token_id": autoguard.String,
+	"user_id": autoguard.String,
+	"validator": autoguard.String,
+	"expires_ms": autoguard.Number
+});
+
+export type Stream = {
+	"stream_id": string,
+	"user_id": string,
+	"file_id": string,
+	"timestamp_ms": number
+};
+
+export const Stream = autoguard.Object.of<Stream>({
+	"stream_id": autoguard.String,
+	"user_id": autoguard.String,
+	"file_id": autoguard.String,
+	"timestamp_ms": autoguard.Number
+});
+
+export type Playlist = {
+	"playlist_id": string,
+	"title": string,
+	"description": string,
+	"user_id": string
+};
+
+export const Playlist = autoguard.Object.of<Playlist>({
+	"playlist_id": autoguard.String,
+	"title": autoguard.String,
+	"description": autoguard.String,
+	"user_id": autoguard.String
+});
+
+export type PlaylistItem = {
+	"playlist_item_id": string,
+	"playlist_id": string,
+	"track_id": string,
+	"number": number
+};
+
+export const PlaylistItem = autoguard.Object.of<PlaylistItem>({
+	"playlist_item_id": autoguard.String,
+	"playlist_id": autoguard.String,
+	"track_id": autoguard.String,
+	"number": autoguard.Number
+});
+
 export type Autoguard = {
 	"Directory": Directory,
 	"File": File,
@@ -392,7 +478,13 @@ export type Autoguard = {
 	"ShowPerson": ShowPerson,
 	"Genre": Genre,
 	"MovieGenre": MovieGenre,
-	"ShowGenre": ShowGenre
+	"ShowGenre": ShowGenre,
+	"Cue": Cue,
+	"User": User,
+	"Token": Token,
+	"Stream": Stream,
+	"Playlist": Playlist,
+	"PlaylistItem": PlaylistItem
 };
 
 export const Autoguard = {
@@ -422,5 +514,11 @@ export const Autoguard = {
 	"ShowPerson": ShowPerson,
 	"Genre": Genre,
 	"MovieGenre": MovieGenre,
-	"ShowGenre": ShowGenre
+	"ShowGenre": ShowGenre,
+	"Cue": Cue,
+	"User": User,
+	"Token": Token,
+	"Stream": Stream,
+	"Playlist": Playlist,
+	"PlaylistItem": PlaylistItem
 };

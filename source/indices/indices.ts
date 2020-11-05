@@ -125,6 +125,10 @@ export class RecordIndex<A extends Record<string, any>> {
 		this.insertOrUpdate(record, action);
 	}
 
+	length(): number {
+		return this.map.size;
+	}
+
 	lookup(key: string | undefined): A {
 		let record = this.map.get(key);
 		if (is.absent(record)) {
