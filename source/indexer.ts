@@ -145,6 +145,26 @@ const playlist_items = loadIndex("playlist_items", databases.media.PlaylistItem,
 const getPlaylistsItemsFromPlaylist = indices.CollectionIndex.fromIndex(playlists, playlist_items, (record) => record.playlist_id, (record) => record.playlist_id);
 const getPlaylistItemsFromTrack = indices.CollectionIndex.fromIndex(tracks, playlist_items, (record) => record.track_id, (record) => record.track_id);
 
+users.on("*", () => {
+	saveIndex("users", users);
+});
+
+tokens.on("*", () => {
+	saveIndex("tokens", tokens);
+});
+
+streams.on("*", () => {
+	saveIndex("streams", streams);
+});
+
+playlists.on("*", () => {
+	saveIndex("playlists", playlists);
+});
+
+playlist_items.on("*", () => {
+	saveIndex("playlist_items", playlist_items);
+});
+
 if (users.length() === 0) {
 	users.insert({
 		user_id: makeId("user", libcrypto.randomBytes(16).toString("hex")),
@@ -605,8 +625,3 @@ saveIndex("genres", genres);
 saveIndex("movie_genres", movie_genres);
 saveIndex("show_genres", show_genres);
 saveIndex("cues", cues);
-saveIndex("playlists", playlists);
-saveIndex("playlist_items", playlist_items);
-saveIndex("users", users);
-saveIndex("tokens", tokens);
-saveIndex("streams", streams);
