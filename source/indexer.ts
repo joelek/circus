@@ -76,8 +76,16 @@ export const directories = loadIndex("directories", databases.media.Directory, (
 export const getDirectoriesFromDirectory = indices.CollectionIndex.fromIndex(directories, directories, (record) => record.directory_id, (record) => record.parent_directory_id);
 export const files = loadIndex("files", databases.media.File, (record) => record.file_id);
 export const getFilesFromDirectory = indices.CollectionIndex.fromIndex(directories, files, (record) => record.directory_id, (record) => record.parent_directory_id);
-export const resources = loadIndex("resources", databases.media.FileResource, (record) => record.resource_id);
-export const getResourcesFromFile = indices.CollectionIndex.fromIndex(files, resources, (record) => record.file_id, (record) => record.file_id);
+export const audio_files = loadIndex("audio_files", databases.media.AudioFile, (record) => record.file_id);
+export const getAudioFiles = indices.CollectionIndex.fromIndex(files, audio_files, (record) => record.file_id, (record) => record.file_id);
+export const image_files = loadIndex("image_files", databases.media.ImageFile, (record) => record.file_id);
+export const getImageFilesFromFile = indices.CollectionIndex.fromIndex(files, image_files, (record) => record.file_id, (record) => record.file_id);
+export const metadata_files = loadIndex("metadata_files", databases.media.MetadataFile, (record) => record.file_id);
+export const getMetadataFilesFromFile = indices.CollectionIndex.fromIndex(files, metadata_files, (record) => record.file_id, (record) => record.file_id);
+export const subtitle_files = loadIndex("subtitle_files", databases.media.SubtitleFile, (record) => record.file_id);
+export const getSubtitleFilesFromFile = indices.CollectionIndex.fromIndex(files, subtitle_files, (record) => record.file_id, (record) => record.file_id);
+export const video_files = loadIndex("video_files", databases.media.VideoFile, (record) => record.file_id);
+export const getVideoFilesFromFile = indices.CollectionIndex.fromIndex(files, video_files, (record) => record.file_id, (record) => record.file_id);
 export const artists = loadIndex("artists", databases.media.Artist, (record) => record.artist_id);
 export const albums = loadIndex("albums", databases.media.Album, (record) => record.album_id);
 export const album_files = loadIndex("album_files", databases.media.AlbumFile, (record) => [record.album_id, record.file_id].join("\0"));
@@ -126,7 +134,7 @@ export const show_genres = loadIndex("show_genres", databases.media.ShowGenre, (
 export const getShowsFromGenre = indices.CollectionIndex.fromIndex(genres, show_genres, (record) => record.genre_id, (record) => record.genre_id);
 export const getGenresFromShow = indices.CollectionIndex.fromIndex(shows, show_genres, (record) => record.show_id, (record) => record.show_id);
 export const cues = loadIndex("cues", databases.media.Cue, (record) => record.cue_id);
-export const getCuesFromResource = indices.CollectionIndex.fromIndex(resources, cues, (record) => record.resource_id, (record) => record.resource_id);
+export const getCuesFromFile = indices.CollectionIndex.fromIndex(files, cues, (record) => record.file_id, (record) => record.file_id);
 export const users = loadIndex("users", databases.media.User, (record) => record.user_id);
 export const tokens = loadIndex("tokens", databases.media.Token, (record) => record.token_id);
 export const getTokensFromUser = indices.CollectionIndex.fromIndex(users, tokens, (record) => record.user_id, (record) => record.user_id);
@@ -417,25 +425,56 @@ function indexFile(file: File): void {
 		};
 		if (file.name.endsWith(".vtt")) {
 			probe = probes.vtt.probe(fd);
-			file.format = "vtt";
+			let subtitle_resources = probe.resources.filter((resource): resource is probes.schema.SubtitleResource => resource.type === "subtitle");
+			let subtitle_resource = subtitle_resources.shift();
+			if (is.present(subtitle_resource)) {
+				subtitle_files.insert({
+					file_id: file_id,
+					format: "vtt",
+					...subtitle_resource
+				});
+			}
 		} else if (file.name.endsWith(".json")) {
 			probe = probes.json.probe(fd);
-			file.format = "json";
+			let metadata_resources = probe.resources.filter((resource): resource is probes.schema.MetadataResource => resource.type === "metadata");
+			let metadata_resource = metadata_resources.shift();
+			if (is.present(metadata_resource)) {
+				metadata_files.insert({
+					file_id: file_id,
+					format: "json",
+					...metadata_resource
+				});
+			}
 		} else if (file.name.endsWith(".mp4")) {
 			probe = probes.mp4.probe(fd);
-			file.format = "mp4";
+			let audio_resources = probe.resources.filter((resource): resource is probes.schema.AudioResource => resource.type === "audio");
+			let video_resources = probe.resources.filter((resource): resource is probes.schema.VideoResource => resource.type === "video");
+			let audio_resource = audio_resources.shift();
+			let video_resource = video_resources.shift();
+			if (is.present(video_resource)) {
+				video_files.insert({
+					file_id: file_id,
+					format: "mp4",
+					...video_resource
+				});
+			} else if (is.present(audio_resource)) {
+				audio_files.insert({
+					file_id: file_id,
+					format: "mp4",
+					...audio_resource
+				});
+			}
 		} else if (file.name.endsWith(".jpg") || file.name.endsWith(".jpeg")) {
 			probe = probes.jpeg.probe(fd);
-			file.format = "jpeg";
-		}
-		for (let [index, resource] of probe.resources.entries()) {
-			let resource_id = makeId("resource", file.file_id, `${index}`);
-			resources.insert({
-				resource_id: resource_id,
-				file_id: file_id,
-				index: index,
-				...resource,
-			});
+			let image_resources = probe.resources.filter((resource): resource is probes.schema.ImageResource => resource.type === "image");
+			let image_resource = image_resources.shift();
+			if (is.present(image_resource)) {
+				image_files.insert({
+					file_id: file_id,
+					format: "jpeg",
+					...image_resource
+				});
+			}
 		}
 		indexMetadata(probe, file_id);
 	} catch (error) {
@@ -457,7 +496,6 @@ function indexFiles(): void {
 function getSiblingFiles(subject: File): Array<File> {
 	let candidates_in_directory = getFilesFromDirectory.lookup(subject.parent_directory_id)
 		.filter((file) => file.file_id !== subject.file_id)
-		.filter((file) => file.format === "mp4")
 		.sort(indices.LexicalSort.increasing((file) => file.name));
 	let basename = subject.name.split(".")[0];
 	let candidates_sharing_basename = candidates_in_directory
@@ -470,10 +508,8 @@ function getSiblingFiles(subject: File): Array<File> {
 }
 
 function associateMetadata(): void {
-	for (let file of files) {
-		if (file.format !== "json") {
-			continue;
-		}
+	for (let metadata_file of metadata_files) {
+		let file = files.lookup(metadata_file.file_id);
 		let path = getFilePath(file);
 		let fd = libfs.openSync(path.join("/"), "r");
 		let probe = probes.json.probe(fd);
@@ -484,14 +520,12 @@ function associateMetadata(): void {
 }
 
 function associateImages(): void {
-	for (let file of files) {
-		if (file.format !== "jpeg") {
-			continue;
-		}
+	for (let image_file of image_files) {
+		let file = files.lookup(image_file.file_id);
 		let siblings = getSiblingFiles(file);
 		for (let sibling of siblings) {
 			let track_files = getTracksFromFile.lookup(sibling.file_id)
-				.filter((movie_file) => movie_file.file_id !== file.file_id);
+				.filter((movie_file) => movie_file.file_id !== image_file.file_id);
 			for (let track_file of track_files) {
 				try {
 					let track = tracks.lookup(track_file.track_id);
@@ -499,20 +533,20 @@ function associateImages(): void {
 					let album = albums.lookup(disc.album_id);
 					album_files.insert({
 						album_id: album.album_id,
-						file_id: file.file_id
+						file_id: image_file.file_id
 					});
 				} catch (error) {}
 			}
 			let movies = getMoviesFromFile.lookup(sibling.file_id)
-				.filter((movie_file) => movie_file.file_id !== file.file_id);
+				.filter((movie_file) => movie_file.file_id !== image_file.file_id);
 			for (let movie of movies) {
 				movie_files.insert({
 					movie_id: movie.movie_id,
-					file_id: file.file_id
+					file_id: image_file.file_id
 				});
 			}
 			let episode_files = getEpisodesFromFile.lookup(sibling.file_id)
-				.filter((movie_file) => movie_file.file_id !== file.file_id);
+				.filter((movie_file) => movie_file.file_id !== image_file.file_id);
 			for (let episode_file of episode_files) {
 				try {
 					let episode = episodes.lookup(episode_file.episode_id);
@@ -520,7 +554,7 @@ function associateImages(): void {
 					let show = shows.lookup(season.show_id);
 					show_files.insert({
 						show_id: show.show_id,
-						file_id: file.file_id
+						file_id: image_file.file_id
 					});
 				} catch (error) {}
 			}
@@ -529,26 +563,24 @@ function associateImages(): void {
 }
 
 function associateSubtitles(): void {
-	for (let file of files) {
-		if (file.format !== "vtt") {
-			continue;
-		}
+	for (let subtitle_file of subtitle_files) {
+		let file = files.lookup(subtitle_file.file_id);
 		let siblings = getSiblingFiles(file);
 		for (let sibling of siblings) {
 			let movies = getMoviesFromFile.lookup(sibling.file_id)
-				.filter((movie_file) => movie_file.file_id !== file.file_id);
+				.filter((movie_file) => movie_file.file_id !== subtitle_file.file_id);
 			for (let movie of movies) {
 				movie_files.insert({
 					movie_id: movie.movie_id,
-					file_id: file.file_id
+					file_id: subtitle_file.file_id
 				});
 			}
 			let episodes = getEpisodesFromFile.lookup(sibling.file_id)
-				.filter((movie_file) => movie_file.file_id !== file.file_id);
+				.filter((movie_file) => movie_file.file_id !== subtitle_file.file_id);
 			for (let episode of episodes) {
 				episode_files.insert({
 					episode_id: episode.episode_id,
-					file_id: file.file_id
+					file_id: subtitle_file.file_id
 				});
 			}
 		}
@@ -573,7 +605,11 @@ runIndexer();
 
 saveIndex("files", files);
 saveIndex("directories", directories);
-saveIndex("resources", resources);
+saveIndex("audio_files", audio_files);
+saveIndex("image_files", image_files);
+saveIndex("metadata_files", metadata_files);
+saveIndex("subtitle_files", subtitle_files);
+saveIndex("video_files", video_files);
 saveIndex("artists", artists);
 saveIndex("albums", albums);
 saveIndex("album_files", album_files);

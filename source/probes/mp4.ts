@@ -136,7 +136,7 @@ export function probe(fd: number): schema.Probe {
 				};
 			} else {
 				return {
-					type: "data"
+					type: "metadata"
 				};
 			}
 		})

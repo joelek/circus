@@ -20,7 +20,6 @@ export const Directory = autoguard.Object.of<Directory>({
 export type File = {
 	"file_id": string,
 	"name": string,
-	"format"?: "mp4" | "jpeg" | "vtt" | "json",
 	"parent_directory_id"?: string,
 	"index_timestamp"?: number
 };
@@ -28,15 +27,6 @@ export type File = {
 export const File = autoguard.Object.of<File>({
 	"file_id": autoguard.String,
 	"name": autoguard.String,
-	"format": autoguard.Union.of(
-		autoguard.Undefined,
-		autoguard.Union.of(
-			autoguard.StringLiteral.of("mp4"),
-			autoguard.StringLiteral.of("jpeg"),
-			autoguard.StringLiteral.of("vtt"),
-			autoguard.StringLiteral.of("json")
-		)
-	),
 	"parent_directory_id": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.String
@@ -47,44 +37,52 @@ export const File = autoguard.Object.of<File>({
 	)
 });
 
-export type AudioResource = {
-	"type": "audio",
+export type AudioFile = {
+	"file_id": string,
+	"format": "mp4",
 	"duration_ms": number
 };
 
-export const AudioResource = autoguard.Object.of<AudioResource>({
-	"type": autoguard.StringLiteral.of("audio"),
+export const AudioFile = autoguard.Object.of<AudioFile>({
+	"file_id": autoguard.String,
+	"format": autoguard.StringLiteral.of("mp4"),
 	"duration_ms": autoguard.Number
 });
 
-export type DataResource = {
-	"type": "data"
-};
-
-export const DataResource = autoguard.Object.of<DataResource>({
-	"type": autoguard.StringLiteral.of("data")
-});
-
-export type ImageResource = {
-	"type": "image",
+export type ImageFile = {
+	"file_id": string,
+	"format": "jpeg",
 	"width": number,
 	"height": number
 };
 
-export const ImageResource = autoguard.Object.of<ImageResource>({
-	"type": autoguard.StringLiteral.of("image"),
+export const ImageFile = autoguard.Object.of<ImageFile>({
+	"file_id": autoguard.String,
+	"format": autoguard.StringLiteral.of("jpeg"),
 	"width": autoguard.Number,
 	"height": autoguard.Number
 });
 
-export type SubtitleResource = {
-	"type": "subtitle",
+export type MetadataFile = {
+	"file_id": string,
+	"format": "json"
+};
+
+export const MetadataFile = autoguard.Object.of<MetadataFile>({
+	"file_id": autoguard.String,
+	"format": autoguard.StringLiteral.of("json")
+});
+
+export type SubtitleFile = {
+	"file_id": string,
+	"format": "vtt",
 	"duration_ms": number,
 	"language"?: string
 };
 
-export const SubtitleResource = autoguard.Object.of<SubtitleResource>({
-	"type": autoguard.StringLiteral.of("subtitle"),
+export const SubtitleFile = autoguard.Object.of<SubtitleFile>({
+	"file_id": autoguard.String,
+	"format": autoguard.StringLiteral.of("vtt"),
 	"duration_ms": autoguard.Number,
 	"language": autoguard.Union.of(
 		autoguard.Undefined,
@@ -92,134 +90,21 @@ export const SubtitleResource = autoguard.Object.of<SubtitleResource>({
 	)
 });
 
-export type VideoResource = {
-	"type": "video",
+export type VideoFile = {
+	"file_id": string,
+	"format": "mp4",
 	"duration_ms": number,
 	"width": number,
 	"height": number
 };
 
-export const VideoResource = autoguard.Object.of<VideoResource>({
-	"type": autoguard.StringLiteral.of("video"),
+export const VideoFile = autoguard.Object.of<VideoFile>({
+	"file_id": autoguard.String,
+	"format": autoguard.StringLiteral.of("mp4"),
 	"duration_ms": autoguard.Number,
 	"width": autoguard.Number,
 	"height": autoguard.Number
 });
-
-export type Resource = AudioResource | DataResource | ImageResource | SubtitleResource | VideoResource;
-
-export const Resource = autoguard.Union.of(
-	autoguard.Reference.of<AudioResource>(() => AudioResource),
-	autoguard.Reference.of<DataResource>(() => DataResource),
-	autoguard.Reference.of<ImageResource>(() => ImageResource),
-	autoguard.Reference.of<SubtitleResource>(() => SubtitleResource),
-	autoguard.Reference.of<VideoResource>(() => VideoResource)
-);
-
-export type FileAudioResource = AudioResource & {
-	"resource_id": string,
-	"file_id": string,
-	"index": number
-};
-
-export const FileAudioResource = autoguard.Intersection.of(
-	autoguard.Reference.of<AudioResource>(() => AudioResource),
-	autoguard.Object.of<{
-		"resource_id": string,
-		"file_id": string,
-		"index": number
-	}>({
-		"resource_id": autoguard.String,
-		"file_id": autoguard.String,
-		"index": autoguard.Number
-	})
-);
-
-export type FileDataResource = DataResource & {
-	"resource_id": string,
-	"file_id": string,
-	"index": number
-};
-
-export const FileDataResource = autoguard.Intersection.of(
-	autoguard.Reference.of<DataResource>(() => DataResource),
-	autoguard.Object.of<{
-		"resource_id": string,
-		"file_id": string,
-		"index": number
-	}>({
-		"resource_id": autoguard.String,
-		"file_id": autoguard.String,
-		"index": autoguard.Number
-	})
-);
-
-export type FileImageResource = ImageResource & {
-	"resource_id": string,
-	"file_id": string,
-	"index": number
-};
-
-export const FileImageResource = autoguard.Intersection.of(
-	autoguard.Reference.of<ImageResource>(() => ImageResource),
-	autoguard.Object.of<{
-		"resource_id": string,
-		"file_id": string,
-		"index": number
-	}>({
-		"resource_id": autoguard.String,
-		"file_id": autoguard.String,
-		"index": autoguard.Number
-	})
-);
-
-export type FileSubtitleResource = SubtitleResource & {
-	"resource_id": string,
-	"file_id": string,
-	"index": number
-};
-
-export const FileSubtitleResource = autoguard.Intersection.of(
-	autoguard.Reference.of<SubtitleResource>(() => SubtitleResource),
-	autoguard.Object.of<{
-		"resource_id": string,
-		"file_id": string,
-		"index": number
-	}>({
-		"resource_id": autoguard.String,
-		"file_id": autoguard.String,
-		"index": autoguard.Number
-	})
-);
-
-export type FileVideoResource = VideoResource & {
-	"resource_id": string,
-	"file_id": string,
-	"index": number
-};
-
-export const FileVideoResource = autoguard.Intersection.of(
-	autoguard.Reference.of<VideoResource>(() => VideoResource),
-	autoguard.Object.of<{
-		"resource_id": string,
-		"file_id": string,
-		"index": number
-	}>({
-		"resource_id": autoguard.String,
-		"file_id": autoguard.String,
-		"index": autoguard.Number
-	})
-);
-
-export type FileResource = FileAudioResource | FileDataResource | FileImageResource | FileSubtitleResource | FileVideoResource;
-
-export const FileResource = autoguard.Union.of(
-	autoguard.Reference.of<FileAudioResource>(() => FileAudioResource),
-	autoguard.Reference.of<FileDataResource>(() => FileDataResource),
-	autoguard.Reference.of<FileImageResource>(() => FileImageResource),
-	autoguard.Reference.of<FileSubtitleResource>(() => FileSubtitleResource),
-	autoguard.Reference.of<FileVideoResource>(() => FileVideoResource)
-);
 
 export type Artist = {
 	"artist_id": string,
@@ -487,7 +372,7 @@ export const ShowGenre = autoguard.Object.of<ShowGenre>({
 
 export type Cue = {
 	"cue_id": string,
-	"resource_id": string,
+	"file_id": string,
 	"start_ms": number,
 	"duration_ms": number,
 	"lines": string[]
@@ -495,7 +380,7 @@ export type Cue = {
 
 export const Cue = autoguard.Object.of<Cue>({
 	"cue_id": autoguard.String,
-	"resource_id": autoguard.String,
+	"file_id": autoguard.String,
 	"start_ms": autoguard.Number,
 	"duration_ms": autoguard.Number,
 	"lines": autoguard.Array.of(autoguard.String)
@@ -574,18 +459,11 @@ export const PlaylistItem = autoguard.Object.of<PlaylistItem>({
 export type Autoguard = {
 	"Directory": Directory,
 	"File": File,
-	"AudioResource": AudioResource,
-	"DataResource": DataResource,
-	"ImageResource": ImageResource,
-	"SubtitleResource": SubtitleResource,
-	"VideoResource": VideoResource,
-	"Resource": Resource,
-	"FileAudioResource": FileAudioResource,
-	"FileDataResource": FileDataResource,
-	"FileImageResource": FileImageResource,
-	"FileSubtitleResource": FileSubtitleResource,
-	"FileVideoResource": FileVideoResource,
-	"FileResource": FileResource,
+	"AudioFile": AudioFile,
+	"ImageFile": ImageFile,
+	"MetadataFile": MetadataFile,
+	"SubtitleFile": SubtitleFile,
+	"VideoFile": VideoFile,
 	"Artist": Artist,
 	"Album": Album,
 	"AlbumFile": AlbumFile,
@@ -618,18 +496,11 @@ export type Autoguard = {
 export const Autoguard = {
 	"Directory": Directory,
 	"File": File,
-	"AudioResource": AudioResource,
-	"DataResource": DataResource,
-	"ImageResource": ImageResource,
-	"SubtitleResource": SubtitleResource,
-	"VideoResource": VideoResource,
-	"Resource": Resource,
-	"FileAudioResource": FileAudioResource,
-	"FileDataResource": FileDataResource,
-	"FileImageResource": FileImageResource,
-	"FileSubtitleResource": FileSubtitleResource,
-	"FileVideoResource": FileVideoResource,
-	"FileResource": FileResource,
+	"AudioFile": AudioFile,
+	"ImageFile": ImageFile,
+	"MetadataFile": MetadataFile,
+	"SubtitleFile": SubtitleFile,
+	"VideoFile": VideoFile,
 	"Artist": Artist,
 	"Album": Album,
 	"AlbumFile": AlbumFile,

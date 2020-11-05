@@ -3,7 +3,11 @@ import * as schema from "./schema";
 
 export function probe(fd: number): schema.Probe {
 	let result: schema.Probe = {
-		resources: []
+		resources: [
+			{
+				type: "metadata"
+			}
+		]
 	};
 	let buffer = libfs.readFileSync(fd);
 	let json = JSON.parse(buffer.toString());
