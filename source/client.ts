@@ -124,13 +124,11 @@ player.currentEntry.addObserver((currentEntry) => {
 			mediaPlayerSubtitle.updateState("");
 			session.setMetadata({
 				title: movie.title,
-				artwork: is.absent(movie.artwork) ? undefined : [
-					{
-						src: `/files/${movie.artwork.file_id}/?token=${token}`,
-						sizes: `${movie.artwork.width}x${movie.artwork.height}`,
-						type: movie.artwork.mime
-					}
-				]
+				artwork: movie.artwork.map((image) => ({
+					src: `/files/${image.file_id}/?token=${token}`,
+					sizes: `${image.width}x${image.height}`,
+					type: image.mime
+				}))
 			});
 		} else if (Track.is(currentEntry)) {
 			let track = currentEntry;
@@ -142,13 +140,11 @@ player.currentEntry.addObserver((currentEntry) => {
 				title: track.title,
 				artist: track.artists.map((artist) => artist.title).join(" \u00b7 "),
 				album: album.title,
-				artwork: is.absent(album.artwork) ? undefined : [
-					{
-						src: `/files/${album.artwork.file_id}/?token=${token}`,
-						sizes: `${album.artwork.width}x${album.artwork.height}`,
-						type: album.artwork.mime
-					}
-				]
+				artwork: album.artwork.map((image) => ({
+					src: `/files/${image.file_id}/?token=${token}`,
+					sizes: `${image.width}x${image.height}`,
+					type: image.mime
+				}))
 			});
 		} else {
 			throw `Expected code to be unreachable!`;
@@ -167,7 +163,7 @@ player.currentEntry.addObserver((currentEntry) => {
 			lastVideo.src = ``;
 			return;
 		} else {
-			lastVideo.src = `/files/${lastLocalEntry.segment.file.file_id}/?token=${token}`;
+			lastVideo.src = `/files/${lastLocalEntry.media.file_id}/?token=${token}`;
 		}
 	};
 	player.lastLocalEntry.addObserver(computer);
@@ -182,17 +178,17 @@ player.currentEntry.addObserver((currentEntry) => {
 			currentVideo.src = ``;
 			return;
 		} else {
-			currentVideo.src = `/files/${currentLocalEntry.segment.file.file_id}/?token=${token}`;
+			currentVideo.src = `/files/${currentLocalEntry.media.file_id}/?token=${token}`;
 		}
 		while (currentVideo.lastChild != null) {
 			currentVideo.removeChild(currentVideo.lastChild);
 		}
 		if (Movie.is(currentLocalEntry) || Episode.is(currentLocalEntry)) {
-			let subtitles = currentLocalEntry.segment.subtitles;
-			let defaultSubtitle = subtitles.find((subtitle) => subtitle.language === "swe") ?? subtitles.find((subtitle) => subtitle.language === "eng");
+			let subtitles = currentLocalEntry.subtitles;
+			let defaultSubtitle = subtitles.find((subtitle) => subtitle.language === "swe") ?? subtitles.find((subtitle) => subtitle.language === "eng") ?? subtitles.find((subtitle) => true);
 			for (let subtitle of subtitles) {
 				let element = document.createElement("track");
-				element.src = `/files/${subtitle.file.file_id}/?token=${token}`;
+				element.src = `/files/${subtitle.file_id}/?token=${token}`;
 				if (is.present(subtitle.language)) {
 					let language = languages.db[subtitle.language];
 					if (is.present(language)) {
@@ -200,9 +196,9 @@ player.currentEntry.addObserver((currentEntry) => {
 						element.srclang = language.iso639_1;
 						element.kind = "subtitles";
 					}
-					if (subtitle === defaultSubtitle) {
-						element.setAttribute("default", "");
-					}
+				}
+				if (subtitle === defaultSubtitle) {
+					element.setAttribute("default", "");
 				}
 				currentVideo.appendChild(element);
 			}
@@ -219,7 +215,7 @@ player.currentEntry.addObserver((currentEntry) => {
 			lastVideo.src = ``;
 			return;
 		} else {
-			lastVideo.src = `/files/${nextLocalEntry.segment.file.file_id}/?token=${token}`;
+			lastVideo.src = `/files/${nextLocalEntry.media.file_id}/?token=${token}`;
 		}
 	};
 	player.nextLocalEntry.addObserver(computer);
@@ -2010,31 +2006,6 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 		.render());
-	} else if ((parts = /^tokens[/]/.exec(uri)) !== null) {
-		req<api_response.TokensRequest, api_response.TokensResponse>(`/api/tokens/?token=${token}`, {}, (status, response) => {
-			function renderAccessToken(token: AuthToken): xml.XElement {
-				let duration_ms = token.expires_ms - Date.now();
-				return xml.element("div.access-token")
-					.add(xml.element("div.access-token__title")
-						.add(xml.text((token.selector.match(/.{1,2}/g) || []).join(":")))
-					)
-					.add(xml.element("div.access-token__subtitle")
-						.add(xml.text(`Expires in ${format_duration(duration_ms)}.`))
-					);
-			}
-			mount.appendChild(xml.element("div.content")
-				.add(xml.element("div.playlist")
-					.add(xml.element("div.playlist__header")
-						.add(renderTextHeader(xml.text("Tokens")))
-					)
-					.add(xml.element("div.playlist__content")
-						.add(...response.tokens.map((token) => {
-							return renderAccessToken(token);
-						}))
-					)
-				)
-				.render());
-		});
 	} else if ((parts = /^search[/]([^/]*)/.exec(uri)) !== null) {
 		let query = new ObservableClass(decodeURIComponent(parts[1]));
 		let offset = 0;

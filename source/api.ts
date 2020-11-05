@@ -2,8 +2,8 @@ import * as liburl from "url";
 import * as libhttp from "http";
 import * as libauth from "./auth";
 import * as auth from "./auth";
-import * as api_response from "./api_response";
-import * as data from "./data";
+import * as response from "./api_response";
+import * as handler from "./api/handler";
 import * as is from "./is";
 
 function getParameter(url: liburl.UrlWithParsedQuery, key: string): string[] {
@@ -48,19 +48,19 @@ function getUserId(request: libhttp.IncomingMessage): string {
 	return auth.getUserId(url.query.token as string);
 }
 
-interface Route<T extends api_response.ApiRequest, U extends api_response.ApiResponse> {
+interface Route<T extends response.ApiRequest, U extends response.ApiResponse> {
 	handlesRequest(request: libhttp.IncomingMessage): boolean;
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void;
 }
 
 class Router {
-	private routes: Array<Route<api_response.ApiRequest, api_response.ApiResponse>>;
+	private routes: Array<Route<response.ApiRequest, response.ApiResponse>>;
 
 	constructor() {
-		this.routes = new Array<Route<api_response.ApiRequest, api_response.ApiResponse>>();
+		this.routes = new Array<Route<response.ApiRequest, response.ApiResponse>>();
 	}
 
-	registerRoute(route: Route<api_response.ApiRequest, api_response.ApiResponse>): this {
+	registerRoute(route: Route<response.ApiRequest, response.ApiResponse>): this {
 		this.routes.push(route);
 		return this;
 	}
@@ -76,14 +76,14 @@ class Router {
 	}
 }
 
-class ArtistRoute implements Route<{}, api_response.ArtistResponse> {
+class ArtistRoute implements Route<{}, response.ArtistResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]audio[/]artists[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let artist_id = parts[1];
-		let artist = data.api_lookupArtist(artist_id, user_id);
-		let appearances = data.getArtistAppearances(artist_id, user_id);
-		let payload: api_response.ArtistResponse = {
+		let artist = handler.lookupArtist(artist_id, user_id);
+		let appearances = handler.getArtistAppearances(artist_id, user_id);
+		let payload: response.ArtistResponse = {
 			artist,
 			appearances
 		};
@@ -96,7 +96,7 @@ class ArtistRoute implements Route<{}, api_response.ArtistResponse> {
 	}
 }
 
-class ArtistsRoute implements Route<{}, api_response.ArtistsResponse> {
+class ArtistsRoute implements Route<{}, response.ArtistsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]audio[/]artists[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -104,8 +104,8 @@ class ArtistsRoute implements Route<{}, api_response.ArtistsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let artists = data.searchForArtists(query, offset, length, user_id);
-		let payload: api_response.ArtistsResponse = {
+		let artists = handler.searchForArtists(query, offset, length, user_id);
+		let payload: response.ArtistsResponse = {
 			artists
 		};
 		response.writeHead(200);
@@ -117,13 +117,13 @@ class ArtistsRoute implements Route<{}, api_response.ArtistsResponse> {
 	}
 }
 
-class AlbumRoute implements Route<{}, api_response.AlbumResponse> {
+class AlbumRoute implements Route<{}, response.AlbumResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]audio[/]albums[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let album_id = parts[1];
-		let album = data.api_lookupAlbum(album_id, user_id);
-		let payload: api_response.AlbumResponse = {
+		let album = handler.lookupAlbum(album_id, user_id);
+		let payload: response.AlbumResponse = {
 			album
 		};
 		response.writeHead(200);
@@ -135,7 +135,7 @@ class AlbumRoute implements Route<{}, api_response.AlbumResponse> {
 	}
 }
 
-class AlbumsRoute implements Route<{}, api_response.AlbumsResponse> {
+class AlbumsRoute implements Route<{}, response.AlbumsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]audio[/]albums[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -143,8 +143,8 @@ class AlbumsRoute implements Route<{}, api_response.AlbumsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let albums = data.searchForAlbums(query, offset, length, user_id);
-		let payload: api_response.AlbumsResponse = {
+		let albums = handler.searchForAlbums(query, offset, length, user_id);
+		let payload: response.AlbumsResponse = {
 			albums
 		};
 		response.writeHead(200);
@@ -156,13 +156,13 @@ class AlbumsRoute implements Route<{}, api_response.AlbumsResponse> {
 	}
 }
 
-class EpisodeRoute implements Route<api_response.ApiRequest, api_response.EpisodeResponse> {
+class EpisodeRoute implements Route<response.ApiRequest, response.EpisodeResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]episodes[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let episode_id = parts[1];
-		let episode = data.api_lookupEpisode(episode_id, user_id);
-		let payload: api_response.EpisodeResponse = {
+		let episode = handler.lookupEpisode(episode_id, user_id);
+		let payload: response.EpisodeResponse = {
 			episode
 		};
 		response.writeHead(200);
@@ -174,7 +174,7 @@ class EpisodeRoute implements Route<api_response.ApiRequest, api_response.Episod
 	}
 }
 
-class EpisodesRoute implements Route<{}, api_response.EpisodesResponse> {
+class EpisodesRoute implements Route<{}, response.EpisodesResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]episodes[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -182,8 +182,8 @@ class EpisodesRoute implements Route<{}, api_response.EpisodesResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let episodes = data.searchForEpisodes(query, offset, length, user_id);
-		let payload: api_response.EpisodesResponse = {
+		let episodes = handler.searchForEpisodes(query, offset, length, user_id);
+		let payload: response.EpisodesResponse = {
 			episodes
 		};
 		response.writeHead(200);
@@ -195,13 +195,13 @@ class EpisodesRoute implements Route<{}, api_response.EpisodesResponse> {
 	}
 }
 
-class ShowRoute implements Route<{}, api_response.ShowResponse> {
+class ShowRoute implements Route<{}, response.ShowResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]shows[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let show_id = parts[1];
-		let show = data.api_lookupShow(show_id, user_id);
-		let payload: api_response.ShowResponse = {
+		let show = handler.lookupShow(show_id, user_id);
+		let payload: response.ShowResponse = {
 			show
 		};
 		response.writeHead(200);
@@ -213,7 +213,7 @@ class ShowRoute implements Route<{}, api_response.ShowResponse> {
 	}
 }
 
-class ShowsRoute implements Route<{}, api_response.ShowsResponse> {
+class ShowsRoute implements Route<{}, response.ShowsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]shows[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -221,8 +221,8 @@ class ShowsRoute implements Route<{}, api_response.ShowsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let shows = data.searchForShows(query, offset, length, user_id);
-		let payload: api_response.ShowsResponse = {
+		let shows = handler.searchForShows(query, offset, length, user_id);
+		let payload: response.ShowsResponse = {
 			shows
 		};
 		response.writeHead(200);
@@ -234,7 +234,7 @@ class ShowsRoute implements Route<{}, api_response.ShowsResponse> {
 	}
 }
 
-class AuthWithTokenRoute implements Route<api_response.ApiRequest, api_response.AuthWithTokenReponse> {
+class AuthWithTokenRoute implements Route<response.ApiRequest, response.AuthWithTokenReponse> {
 	constructor() {
 
 	}
@@ -248,7 +248,7 @@ class AuthWithTokenRoute implements Route<api_response.ApiRequest, api_response.
 			throw new Error();
 		}
 		let chunk = parts[1];
-		let payload: api_response.AuthWithTokenReponse = {};
+		let payload: response.AuthWithTokenReponse = {};
 		try {
 			libauth.getUserId(chunk);
 			response.writeHead(200);
@@ -263,7 +263,7 @@ class AuthWithTokenRoute implements Route<api_response.ApiRequest, api_response.
 	}
 }
 
-class AuthRoute implements Route<api_response.AuthRequest, api_response.AuthResponse> {
+class AuthRoute implements Route<response.AuthRequest, response.AuthResponse> {
 	constructor() {
 
 	}
@@ -287,11 +287,11 @@ class AuthRoute implements Route<api_response.AuthRequest, api_response.AuthResp
 				if (json.password == null || json.password.constructor !== String) {
 					throw new Error();
 				}
-				let body = json as api_response.AuthRequest;
+				let body = json as response.AuthRequest;
 				let username = body.username;
 				let password = body.password;
 				let token = libauth.createToken(username, password);
-				let payload: api_response.AuthResponse = {
+				let payload: response.AuthResponse = {
 					token
 				};
 				response.writeHead(200);
@@ -329,7 +329,7 @@ class AuthRoute implements Route<api_response.AuthRequest, api_response.AuthResp
 
 
 
-class MovieMovieSuggestionsRoute implements Route<{}, api_response.MovieMovieSuggestionsResponse> {
+class MovieMovieSuggestionsRoute implements Route<{}, response.MovieMovieSuggestionsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]movies[/]([0-9a-f]{32})[/]suggestions[/]movies[/]/.exec(request.url ?? "/") as RegExpExecArray;
@@ -337,8 +337,8 @@ class MovieMovieSuggestionsRoute implements Route<{}, api_response.MovieMovieSug
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
 		let movie_id = parts[1];
-		let movies = data.getMovieSuggestions(movie_id, offset, length, user_id);
-		let payload: api_response.MovieMovieSuggestionsResponse = {
+		let movies = handler.getMovieSuggestions(movie_id, offset, length, user_id);
+		let payload: response.MovieMovieSuggestionsResponse = {
 			movies
 		};
 		response.writeHead(200);
@@ -354,13 +354,13 @@ class MovieMovieSuggestionsRoute implements Route<{}, api_response.MovieMovieSug
 
 
 
-class MovieRoute implements Route<{}, api_response.MovieResponse> {
+class MovieRoute implements Route<{}, response.MovieResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]movies[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let movie_id = parts[1];
-		let movie = data.api_lookupMovie(movie_id, user_id);
-		let payload: api_response.MovieResponse = {
+		let movie = handler.lookupMovie(movie_id, user_id);
+		let payload: response.MovieResponse = {
 			movie
 		};
 		response.writeHead(200);
@@ -372,7 +372,7 @@ class MovieRoute implements Route<{}, api_response.MovieResponse> {
 	}
 }
 
-class MoviesRoute implements Route<{}, api_response.MoviesResponse> {
+class MoviesRoute implements Route<{}, response.MoviesResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]movies[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -380,8 +380,8 @@ class MoviesRoute implements Route<{}, api_response.MoviesResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let movies = data.searchForMovies(query, offset, length, user_id);
-		let payload: api_response.MoviesResponse = {
+		let movies = handler.searchForMovies(query, offset, length, user_id);
+		let payload: response.MoviesResponse = {
 			movies
 		};
 		response.writeHead(200);
@@ -393,13 +393,13 @@ class MoviesRoute implements Route<{}, api_response.MoviesResponse> {
 	}
 }
 
-class PlaylistRoute implements Route<{}, api_response.PlaylistResponse> {
+class PlaylistRoute implements Route<{}, response.PlaylistResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let playlist_id = parts[1];
-		let playlist = data.api_lookupPlaylist(playlist_id, user_id);
-		let payload: api_response.PlaylistResponse = {
+		let playlist = handler.lookupPlaylist(playlist_id, user_id);
+		let payload: response.PlaylistResponse = {
 			playlist
 		};
 		response.writeHead(200);
@@ -411,7 +411,7 @@ class PlaylistRoute implements Route<{}, api_response.PlaylistResponse> {
 	}
 }
 
-class PlaylistsRoute implements Route<{}, api_response.PlaylistsResponse> {
+class PlaylistsRoute implements Route<{}, response.PlaylistsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]audio[/]playlists[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -419,8 +419,8 @@ class PlaylistsRoute implements Route<{}, api_response.PlaylistsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let playlists = data.searchForPlaylists(query, offset, length, user_id);
-		let payload: api_response.PlaylistsResponse = {
+		let playlists = handler.searchForPlaylists(query, offset, length, user_id);
+		let payload: response.PlaylistsResponse = {
 			playlists
 		};
 		response.writeHead(200);
@@ -444,7 +444,7 @@ class PlaylistsRoute implements Route<{}, api_response.PlaylistsResponse> {
 
 
 
-class CuesRoute implements Route<{}, api_response.CuesResponse> {
+class CuesRoute implements Route<{}, response.CuesResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]cues[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -452,8 +452,8 @@ class CuesRoute implements Route<{}, api_response.CuesResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let cues = data.searchForCues(query, offset, length, user_id);
-		let payload: api_response.CuesResponse = {
+		let cues = handler.searchForCues(query, offset, length, user_id);
+		let payload: response.CuesResponse = {
 			cues
 		};
 		response.writeHead(200);
@@ -465,7 +465,7 @@ class CuesRoute implements Route<{}, api_response.CuesResponse> {
 	}
 }
 
-class GenresRoute implements Route<{}, api_response.GenresResponse> {
+class GenresRoute implements Route<{}, response.GenresResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]genres[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -473,8 +473,8 @@ class GenresRoute implements Route<{}, api_response.GenresResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let genres = data.searchForGenres(query, offset, length, user_id);
-		let payload: api_response.GenresResponse = {
+		let genres = handler.searchForGenres(query, offset, length, user_id);
+		let payload: response.GenresResponse = {
 			genres
 		};
 		response.writeHead(200);
@@ -486,7 +486,7 @@ class GenresRoute implements Route<{}, api_response.GenresResponse> {
 	}
 }
 
-class GenreShowsRoute implements Route<{}, api_response.GenreShowsResponse> {
+class GenreShowsRoute implements Route<{}, response.GenreShowsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]shows[/]/.exec(request.url ?? "/") as RegExpExecArray;
@@ -494,8 +494,8 @@ class GenreShowsRoute implements Route<{}, api_response.GenreShowsResponse> {
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
 		let genre_id = parts[1];
-		let shows = data.getShowsFromVideoGenreId(genre_id, user_id, offset, length);
-		let payload: api_response.GenreShowsResponse = {
+		let shows = handler.getShowsFromGenre(genre_id, user_id, offset, length);
+		let payload: response.GenreShowsResponse = {
 			shows
 		};
 		response.writeHead(200);
@@ -507,7 +507,7 @@ class GenreShowsRoute implements Route<{}, api_response.GenreShowsResponse> {
 	}
 }
 
-class GenreMoviesRoute implements Route<{}, api_response.GenreMoviesResponse> {
+class GenreMoviesRoute implements Route<{}, response.GenreMoviesResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]movies[/]/.exec(request.url ?? "/") as RegExpExecArray;
@@ -515,8 +515,8 @@ class GenreMoviesRoute implements Route<{}, api_response.GenreMoviesResponse> {
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
 		let genre_id = parts[1];
-		let movies = data.getMoviesFromVideoGenreId(genre_id, user_id, offset, length);
-		let payload: api_response.GenreMoviesResponse = {
+		let movies = handler.getMoviesFromGenre(genre_id, user_id, offset, length);
+		let payload: response.GenreMoviesResponse = {
 			movies
 		};
 		response.writeHead(200);
@@ -528,13 +528,13 @@ class GenreMoviesRoute implements Route<{}, api_response.GenreMoviesResponse> {
 	}
 }
 
-class GenreRoute implements Route<{}, api_response.GenreResponse> {
+class GenreRoute implements Route<{}, response.GenreResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let genre_id = parts[1];
-		let genre = data.api_lookupGenre(genre_id, user_id);
-		let payload: api_response.GenreResponse = {
+		let genre = handler.lookupGenre(genre_id, user_id);
+		let payload: response.GenreResponse = {
 			genre
 		};
 		response.writeHead(200);
@@ -546,7 +546,7 @@ class GenreRoute implements Route<{}, api_response.GenreResponse> {
 	}
 }
 
-class SearchRoute implements Route<{}, api_response.SearchResponse> {
+class SearchRoute implements Route<{}, response.SearchResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]search[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -554,8 +554,8 @@ class SearchRoute implements Route<{}, api_response.SearchResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let entities = data.search(query, user_id, offset, length);
-		let payload: api_response.SearchResponse = {
+		let entities = handler.searchForEntities(query, user_id, offset, length);
+		let payload: response.SearchResponse = {
 			entities
 		};
 		response.writeHead(200);
@@ -567,29 +567,13 @@ class SearchRoute implements Route<{}, api_response.SearchResponse> {
 	}
 }
 
-class TokensRoute implements Route<api_response.TokensRequest, api_response.TokensResponse> {
-	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
-		let user_id = getUserId(request);
-		let tokens = data.getTokensFromUserId(user_id);
-		let payload: api_response.TokensResponse = {
-			tokens
-		};
-		response.writeHead(200);
-		response.end(JSON.stringify(payload));
-	}
-
-	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === "POST" && /^[/]api[/]tokens[/]/.test(request.url || "/");
-	}
-}
-
-class TrackRoute implements Route<{}, api_response.TrackResponse> {
+class TrackRoute implements Route<{}, response.TrackResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]audio[/]tracks[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let track_id = parts[1];
-		let track = data.api_lookupTrack(track_id, user_id);
-		let payload: api_response.TrackResponse = {
+		let track = handler.lookupTrack(track_id, user_id);
+		let payload: response.TrackResponse = {
 			track
 		};
 		response.writeHead(200);
@@ -601,7 +585,7 @@ class TrackRoute implements Route<{}, api_response.TrackResponse> {
 	}
 }
 
-class TracksRoute implements Route<{}, api_response.TracksResponse> {
+class TracksRoute implements Route<{}, response.TracksResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]audio[/]tracks[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -609,8 +593,8 @@ class TracksRoute implements Route<{}, api_response.TracksResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let tracks = data.searchForTracks(query, offset, length, user_id);
-		let payload: api_response.TracksResponse = {
+		let tracks = handler.searchForTracks(query, offset, length, user_id);
+		let payload: response.TracksResponse = {
 			tracks
 		};
 		response.writeHead(200);
@@ -622,13 +606,13 @@ class TracksRoute implements Route<{}, api_response.TracksResponse> {
 	}
 }
 
-class SeasonRoute implements Route<{}, api_response.SeasonResponse> {
+class SeasonRoute implements Route<{}, response.SeasonResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]seasons[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let season_id = parts[1];
-		let season = data.api_lookupSeason(season_id, user_id);
-		let payload: api_response.SeasonResponse = {
+		let season = handler.lookupSeason(season_id, user_id);
+		let payload: response.SeasonResponse = {
 			season
 		};
 		response.writeHead(200);
@@ -640,7 +624,7 @@ class SeasonRoute implements Route<{}, api_response.SeasonResponse> {
 	}
 }
 
-class SeasonsRoute implements Route<{}, api_response.SeasonsResponse> {
+class SeasonsRoute implements Route<{}, response.SeasonsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]video[/]seasons[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -648,8 +632,8 @@ class SeasonsRoute implements Route<{}, api_response.SeasonsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let seasons = data.searchForSeasons(query, offset, length, user_id);
-		let payload: api_response.SeasonsResponse = {
+		let seasons = handler.searchForSeasons(query, offset, length, user_id);
+		let payload: response.SeasonsResponse = {
 			seasons
 		};
 		response.writeHead(200);
@@ -661,13 +645,13 @@ class SeasonsRoute implements Route<{}, api_response.SeasonsResponse> {
 	}
 }
 
-class DiscRoute implements Route<{}, api_response.DiscResponse> {
+class DiscRoute implements Route<{}, response.DiscResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]audio[/]discs[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let season_id = parts[1];
-		let disc = data.api_lookupDisc(season_id, user_id);
-		let payload: api_response.DiscResponse = {
+		let disc = handler.lookupDisc(season_id, user_id);
+		let payload: response.DiscResponse = {
 			disc
 		};
 		response.writeHead(200);
@@ -679,7 +663,7 @@ class DiscRoute implements Route<{}, api_response.DiscResponse> {
 	}
 }
 
-class DiscsRoute implements Route<{}, api_response.SeasonsResponse> {
+class DiscsRoute implements Route<{}, response.SeasonsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]audio[/]discs[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -687,8 +671,8 @@ class DiscsRoute implements Route<{}, api_response.SeasonsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let discs = data.searchForDiscs(query, offset, length, user_id);
-		let payload: api_response.DiscsResponse = {
+		let discs = handler.searchForDiscs(query, offset, length, user_id);
+		let payload: response.DiscsResponse = {
 			discs
 		};
 		response.writeHead(200);
@@ -700,13 +684,13 @@ class DiscsRoute implements Route<{}, api_response.SeasonsResponse> {
 	}
 }
 
-class UserRoute implements Route<{}, api_response.UserResponse> {
+class UserRoute implements Route<{}, response.UserResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]users[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
-		let user = data.api_lookupUser(parts[1]);
-		let playlists = data.getUserPlaylists(user.user_id, user_id);
-		let payload: api_response.UserResponse = {
+		let user = handler.lookupUser(parts[1]);
+		let playlists = handler.getUserPlaylists(user.user_id, user_id);
+		let payload: response.UserResponse = {
 			user,
 			playlists
 		};
@@ -719,7 +703,7 @@ class UserRoute implements Route<{}, api_response.UserResponse> {
 	}
 }
 
-class UsersRoute implements Route<{}, api_response.UsersResponse> {
+class UsersRoute implements Route<{}, response.UsersResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]users[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -727,8 +711,8 @@ class UsersRoute implements Route<{}, api_response.UsersResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let users = data.searchForUsers(query, offset, length, user_id);
-		let payload: api_response.UsersResponse = {
+		let users = handler.searchForUsers(query, offset, length, user_id);
+		let payload: response.UsersResponse = {
 			users
 		};
 		response.writeHead(200);
@@ -740,15 +724,15 @@ class UsersRoute implements Route<{}, api_response.UsersResponse> {
 	}
 }
 
-class PersonRoute implements Route<{}, api_response.PersonResponse> {
+class PersonRoute implements Route<{}, response.PersonResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]persons[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let person_id = parts[1];
-		let person = data.api_lookupPerson(person_id, user_id);
-		let shows = data.getShowsFromPersonId(person_id, user_id, 0, 24);
-		let movies = data.getMoviesFromPersonId(person_id, user_id, 0, 24);
-		let payload: api_response.PersonResponse = {
+		let person = handler.lookupPerson(person_id, user_id);
+		let shows = handler.getShowsFromPerson(person_id, user_id, 0, 24);
+		let movies = handler.getMoviesFromPerson(person_id, user_id, 0, 24);
+		let payload: response.PersonResponse = {
 			person,
 			shows,
 			movies
@@ -762,7 +746,7 @@ class PersonRoute implements Route<{}, api_response.PersonResponse> {
 	}
 }
 
-class PersonsRoute implements Route<{}, api_response.PersonsResponse> {
+class PersonsRoute implements Route<{}, response.PersonsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
 		let parts = /^[/]api[/]persons[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
@@ -770,8 +754,8 @@ class PersonsRoute implements Route<{}, api_response.PersonsResponse> {
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let persons = data.searchForPersons(query, offset, length, user_id);
-		let payload: api_response.PersonsResponse = {
+		let persons = handler.searchForPersons(query, offset, length, user_id);
+		let payload: response.PersonsResponse = {
 			persons
 		};
 		response.writeHead(200);
@@ -809,14 +793,12 @@ let router = new Router()
 	.registerRoute(new DiscsRoute())
 	.registerRoute(new UserRoute())
 	.registerRoute(new UsersRoute())
-
 	.registerRoute(new CuesRoute())
 	.registerRoute(new GenreShowsRoute())
 	.registerRoute(new GenreMoviesRoute())
 	.registerRoute(new GenreRoute())
 	.registerRoute(new GenresRoute())
-	.registerRoute(new SearchRoute())
-	.registerRoute(new TokensRoute());
+	.registerRoute(new SearchRoute());
 
 let handleRequest = (request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	try {

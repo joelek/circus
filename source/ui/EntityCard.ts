@@ -185,11 +185,11 @@ export class EntityCardFactory {
 		let duration_ms = 0;
 		for (let disc of album.discs) {
 			for (let track of disc.tracks) {
-				duration_ms += track.segment.file.duration_ms;
+				duration_ms += track.media.duration_ms;
 			}
 		}
 		let link = this.entityLinkFactory.forAlbum(album);
-		let image = this.ImageBox.forSquare(is.absent(album.artwork) ? undefined : `/files/${album.artwork.file_id}/`);
+		let image = this.ImageBox.forSquare(album.artwork.map((image) => `/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forAlbum(album)
 		];
@@ -207,7 +207,7 @@ export class EntityCardFactory {
 		for (let album of artist.albums) {
 			for (let disc of album.discs) {
 				for (let track of disc.tracks) {
-					duration_ms += track.segment.file.duration_ms;
+					duration_ms += track.media.duration_ms;
 				}
 			}
 		}
@@ -227,10 +227,10 @@ export class EntityCardFactory {
 	forDisc(disc: api.Disc, playbackButton: xnode.XElement = this.PlaybackButton.forDisc(disc)): xnode.XElement {
 		let duration_ms = 0;
 		for (let track of disc.tracks) {
-			duration_ms += track.segment.file.duration_ms;
+			duration_ms += track.media.duration_ms;
 		}
 		let link = this.entityLinkFactory.forDisc(disc);
-		let image = this.ImageBox.forSquare(is.absent(disc.album.artwork) ? undefined : `/files/${disc.album.artwork.file_id}/`);
+		let image = this.ImageBox.forSquare(disc.album.artwork.map((image) => `/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forAlbum(disc.album),
 			this.entityTitleFactory.forDisc(disc)
@@ -246,9 +246,9 @@ export class EntityCardFactory {
 
 	forEpisode(episode: api.Episode, playbackButton: xnode.XElement = this.PlaybackButton.forEpisode(episode)): xnode.XElement {
 		let duration_ms = 0;
-		duration_ms += episode.segment.file.duration_ms;
+		duration_ms += episode.media.duration_ms;
 		let link = this.entityLinkFactory.forEpisode(episode);
-		let image = this.ImageBox.forVideo(`/media/stills/${episode.segment.file.file_id}/`);
+		let image = this.ImageBox.forVideo(`/media/stills/${episode.media.file_id}/`);
 		let titles = [
 			this.entityTitleFactory.forEpisode(episode)
 		];
@@ -282,9 +282,9 @@ export class EntityCardFactory {
 
 	forMovie(movie: api.Movie, playbackButton: xnode.XElement = this.PlaybackButton.forMovie(movie)): xnode.XElement {
 		let duration_ms = 0;
-		duration_ms += movie.segment.file.duration_ms;
+		duration_ms += movie.media.duration_ms;
 		let link = this.entityLinkFactory.forMovie(movie);
-		let image = this.ImageBox.forPoster(is.absent(movie.artwork) ? undefined : `/files/${movie.artwork.file_id}/`);
+		let image = this.ImageBox.forPoster(movie.artwork.map((image) => `/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forMovie(movie)
 		];
@@ -316,7 +316,7 @@ export class EntityCardFactory {
 	forPlaylist(playlist: api.Playlist, playbackButton: xnode.XElement = this.PlaybackButton.forPlaylist(playlist)): xnode.XElement {
 		let duration_ms = 0;
 		for (let item of playlist.items) {
-			duration_ms += item.track.segment.file.duration_ms;
+			duration_ms += item.track.media.duration_ms;
 		}
 		let link = this.entityLinkFactory.forPlaylist(playlist);
 		let image = this.ImageBox.forSquare();
@@ -336,10 +336,10 @@ export class EntityCardFactory {
 	forSeason(season: api.Season, playbackButton: xnode.XElement = this.PlaybackButton.forSeason(season)): xnode.XElement {
 		let duration_ms = 0;
 		for (let episode of season.episodes) {
-			duration_ms += episode.segment.file.duration_ms;
+			duration_ms += episode.media.duration_ms;
 		}
 		let link = this.entityLinkFactory.forSeason(season);
-		let image = this.ImageBox.forPoster(is.absent(season.show.artwork) ? undefined : `/files/${season.show.artwork.file_id}/`);
+		let image = this.ImageBox.forPoster(season.show.artwork.map((image) => `/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forShow(season.show),
 			this.entityTitleFactory.forSeason(season)
@@ -356,11 +356,11 @@ export class EntityCardFactory {
 		let duration_ms = 0;
 		for (let season of show.seasons) {
 			for (let episode of season.episodes) {
-				duration_ms += episode.segment.file.duration_ms;
+				duration_ms += episode.media.duration_ms;
 			}
 		}
 		let link = this.entityLinkFactory.forShow(show);
-		let image = this.ImageBox.forPoster(is.absent(show.artwork) ? undefined : `/files/${show.artwork.file_id}/`);
+		let image = this.ImageBox.forPoster(show.artwork.map((image) => `/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forShow(show)
 		];
@@ -374,9 +374,9 @@ export class EntityCardFactory {
 
 	forTrack(track: api.Track, playbackButton: xnode.XElement = this.PlaybackButton.forTrack(track)): xnode.XElement {
 		let duration_ms = 0;
-		duration_ms += track.segment.file.duration_ms;
+		duration_ms += track.media.duration_ms;
 		let link = this.entityLinkFactory.forTrack(track);
-		let image = this.ImageBox.forSquare(is.absent(track.disc.album.artwork) ? undefined : `/files/${track.disc.album.artwork.file_id}/`);
+		let image = this.ImageBox.forSquare(track.disc.album.artwork.map((image) => `/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forTrack(track)
 		];

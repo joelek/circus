@@ -1,3 +1,4 @@
+import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as libhttp from "http";
 import * as libhttps from "https";
@@ -5,7 +6,7 @@ import * as libpath from "path";
 import * as liburl from "url";
 import * as api from "./api";
 import * as auth from "./auth";
-import * as data from "./data";
+import * as indexer from "./indexer";
 import * as subsearch from "./subsearch";
 import * as context from "./context";
 import * as chromecasts from "./chromecast/chromecasts";
@@ -22,9 +23,15 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 		response.writeHead(401, {});
 		return response.end();
 	}
-	let file = data.getFileFromFileId.lookup(file_id);
-	let path = file.path;
-	let mime = file.mime;
+	let file = indexer.files.lookup(file_id);
+	let path = indexer.getPath(file);
+	let mime = "application/octet-stream";
+	try {
+		mime = indexer.audio_files.lookup(file.file_id).mime;
+	} catch (error) {}
+	try {
+		mime = indexer.video_files.lookup(file.file_id).mime;
+	} catch (error) {}
 	let filename = path.join(libpath.sep);
 	let fd = libfs.openSync(filename, 'r');
 	let size = libfs.fstatSync(fd).size;
@@ -57,7 +64,13 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 		});
 		s.addListener("close", () => {
 			if (offset + s.bytesRead === size) {
-				data.addStream(user_id, file_id);
+				let timestamp_ms = Date.now();
+				indexer.streams.insert({
+					stream_id: libcrypto.randomBytes(16).toString("hex"),
+					user_id,
+					file_id,
+					timestamp_ms
+				});
 			}
 		});
 		s.on('open', function () {
@@ -117,7 +130,7 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 	if (/^[/]media[/]/.test(path)) {
 		if ((parts = /^[/]media[/]stills[/]([0-9a-f]{32})[/]/.exec(path)) != null) {
 			let file_id = parts[1];
-			let file = data.getFileFromFileId.lookup(file_id);
+			let file = indexer.files.lookup(file_id);
 			let filename = [".", "private", "stills", file.file_id];
 			if (libfs.existsSync(filename.join("/"))) {
 				let stream = libfs.createReadStream(filename.join("/"));
@@ -137,7 +150,7 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 		}
 		if ((parts = /^[/]media[/]gifs[/]([0-9a-f]{32})[/]/.exec(path)) != null) {
 			let cue_id = parts[1];
-			let cue = data.getCueFromCueId.lookup(cue_id);
+			let cue = indexer.cues.lookup(cue_id);
 			let filename = [".", "private", "memes", cue.cue_id];
 			if (libfs.existsSync(filename.join("/"))) {
 				let stream = libfs.createReadStream(filename.join("/"));

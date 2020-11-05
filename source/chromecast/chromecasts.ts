@@ -33,46 +33,44 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 		let season = episode.season;
 		let show = season.show;
 		return {
-			contentId: `${MEDIA_SERVER}/files/${item.segment.file.file_id}/?token=${token}`,
-			contentType: episode.segment.file.mime,
+			contentId: `${MEDIA_SERVER}/files/${item.media.file_id}/?token=${token}`,
+			contentType: episode.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
 				metadataType: 0,
 				title: episode.title,
 				subtitle: show.title
 			},
-			tracks: episode.segment.subtitles.map((subtitle, subtitleIndex) => ({
+			tracks: episode.subtitles.map((subtitle, subtitleIndex) => ({
 				...getLanguage(subtitle.language),
 				trackId: subtitleIndex,
 				type: "TEXT",
 				trackType: "TEXT",
-				trackContentId: `${MEDIA_SERVER}/files/${subtitle.file.file_id}/?token=${token}`,
-				trackContentType: subtitle.file.mime,
+				trackContentId: `${MEDIA_SERVER}/files/${subtitle.file_id}/?token=${token}`,
+				trackContentType: subtitle.mime,
 				subtype: "SUBTITLES"
 			}))
 		};
 	} else if (Movie.is(item)) {
 		let movie = item;
 		return {
-			contentId: `${MEDIA_SERVER}/files/${item.segment.file.file_id}/?token=${token}`,
-			contentType: movie.segment.file.mime,
+			contentId: `${MEDIA_SERVER}/files/${item.media.file_id}/?token=${token}`,
+			contentType: movie.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
 				metadataType: 0,
 				title: movie.title,
-				images: is.absent(movie.artwork) ? undefined : [
-					{
-						url: `${MEDIA_SERVER}/files/${movie.artwork.file_id}/?token=${token}`
-					}
-				]
+				images: movie.artwork.map((image) => ({
+					url: `${MEDIA_SERVER}/files/${image.file_id}/?token=${token}`
+				}))
 			},
-			tracks: movie.segment.subtitles.map((subtitle, subtitleIndex) => ({
+			tracks: movie.subtitles.map((subtitle, subtitleIndex) => ({
 				...getLanguage(subtitle.language),
 				trackId: subtitleIndex,
 				type: "TEXT",
 				trackType: "TEXT",
-				trackContentId: `${MEDIA_SERVER}/files/${subtitle.file.file_id}/?token=${token}`,
-				trackContentType: subtitle.file.mime,
+				trackContentId: `${MEDIA_SERVER}/files/${subtitle.file_id}/?token=${token}`,
+				trackContentType: subtitle.mime,
 				subtype: "SUBTITLES"
 			}))
 		};
@@ -81,18 +79,16 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 		let disc = track.disc;
 		let album = disc.album;
 		return {
-			contentId: `${MEDIA_SERVER}/files/${item.segment.file.file_id}/?token=${token}`,
-			contentType: item.segment.file.mime,
+			contentId: `${MEDIA_SERVER}/files/${item.media.file_id}/?token=${token}`,
+			contentType: item.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
 				metadataType: 0,
 				title: track.title,
 				subtitle: track.artists.map((artist) => artist.title).join(" \u00b7 "),
-				images: is.absent(album.artwork) ? undefined : [
-					{
-						url: `${MEDIA_SERVER}/files/${album.artwork.file_id}/?token=${token}`
-					}
-				]
+				images: album.artwork.map((image) => ({
+					url: `${MEDIA_SERVER}/files/${image.file_id}/?token=${token}`
+				}))
 			}
 		};
 	} else {
@@ -551,6 +547,10 @@ class ChromecastPlayer {
 								});
 								if (is.present(jpn)) {
 									activeTrackIds = [ jpn.trackId ];
+								} else {
+									if (media.tracks.length > 0) {
+										activeTrackIds = [ 0 ];
+									}
 								}
 							}
 						}

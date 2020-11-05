@@ -1,11 +1,11 @@
 import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as autoguard from "@joelek/ts-autoguard";
-import * as databases from "./databases";
-import * as indices from "./indices";
+import * as databases from "./databases/";
+import * as indices from "./indices/";
 import * as is from "./is";
 import * as passwords from "./passwords";
-import * as probes from "./probes";
+import * as probes from "./probes/";
 import { Directory, File } from "./databases/media";
 
 function wordify(string: string): Array<string> {
@@ -86,11 +86,14 @@ export const subtitle_files = loadIndex("subtitle_files", databases.media.Subtit
 export const getSubtitleFilesFromFile = indices.CollectionIndex.fromIndex(files, subtitle_files, (record) => record.file_id, (record) => record.file_id);
 export const video_files = loadIndex("video_files", databases.media.VideoFile, (record) => record.file_id);
 export const getVideoFilesFromFile = indices.CollectionIndex.fromIndex(files, video_files, (record) => record.file_id, (record) => record.file_id);
+export const video_subtitles = loadIndex("video_subtitles", databases.media.VideoSubtitle, (record) => [record.video_file_id, record.subtitle_file_id].join("\0"));
+export const getSubtitleFilesFromVideoFile = indices.CollectionIndex.fromIndex(video_files, video_subtitles, (record) => record.file_id, (record) => record.video_file_id);
+export const getVideoFilesFromSubtitleFile = indices.CollectionIndex.fromIndex(subtitle_files, video_subtitles, (record) => record.file_id, (record) => record.subtitle_file_id);
 export const artists = loadIndex("artists", databases.media.Artist, (record) => record.artist_id);
 export const albums = loadIndex("albums", databases.media.Album, (record) => record.album_id);
 export const album_files = loadIndex("album_files", databases.media.AlbumFile, (record) => [record.album_id, record.file_id].join("\0"));
-export const getFilesFromAlbum = indices.CollectionIndex.fromIndex(files, album_files, (record) => record.file_id, (record) => record.file_id);
-export const getAlbumsFromFile = indices.CollectionIndex.fromIndex(albums, album_files, (record) => record.album_id, (record) => record.album_id);
+export const getAlbumsFromFile = indices.CollectionIndex.fromIndex(files, album_files, (record) => record.file_id, (record) => record.file_id);
+export const getFilesFromAlbum = indices.CollectionIndex.fromIndex(albums, album_files, (record) => record.album_id, (record) => record.album_id);
 export const discs = loadIndex("discs", databases.media.Disc, (record) => record.disc_id);
 export const getDiscsFromAlbum = indices.CollectionIndex.fromIndex(albums, discs, (record) => record.album_id, (record) => record.album_id);
 export const tracks = loadIndex("tracks", databases.media.Track, (record) => record.track_id);
@@ -103,7 +106,7 @@ export const getArtistsFromAlbum = indices.CollectionIndex.fromIndex(albums, alb
 export const getAlbumsFromArtist = indices.CollectionIndex.fromIndex(artists, album_artists, (record) => record.artist_id, (record) => record.artist_id);
 export const track_artists = loadIndex("track_artists", databases.media.TrackArtist, (record) => [record.track_id, record.artist_id].join("\0"));
 export const getArtistsFromTrack = indices.CollectionIndex.fromIndex(tracks, track_artists, (record) => record.track_id, (record) => record.track_id);
-export const getTrackFromArtist = indices.CollectionIndex.fromIndex(artists, track_artists, (record) => record.artist_id, (record) => record.artist_id);
+export const getTracksFromArtist = indices.CollectionIndex.fromIndex(artists, track_artists, (record) => record.artist_id, (record) => record.artist_id);
 export const shows = loadIndex("shows", databases.media.Show, (record) => record.show_id);
 export const show_files = loadIndex("show_files", databases.media.ShowFile, (record) => [record.show_id, record.file_id].join("\0"));
 export const getShowsFromFile = indices.CollectionIndex.fromIndex(files, show_files, (record) => record.file_id, (record) => record.file_id);
@@ -133,9 +136,11 @@ export const getGenresFromMovie = indices.CollectionIndex.fromIndex(movies, movi
 export const show_genres = loadIndex("show_genres", databases.media.ShowGenre, (record) => [record.show_id, record.genre_id].join("\0"));
 export const getShowsFromGenre = indices.CollectionIndex.fromIndex(genres, show_genres, (record) => record.genre_id, (record) => record.genre_id);
 export const getGenresFromShow = indices.CollectionIndex.fromIndex(shows, show_genres, (record) => record.show_id, (record) => record.show_id);
+export const subtitles = loadIndex("subtitles", databases.media.Subtitle, (record) => record.subtitle_id);
 export const cues = loadIndex("cues", databases.media.Cue, (record) => record.cue_id);
-export const getCuesFromFile = indices.CollectionIndex.fromIndex(files, cues, (record) => record.file_id, (record) => record.file_id);
+export const getCuesFromSubtitle = indices.CollectionIndex.fromIndex(subtitles, cues, (record) => record.subtitle_id, (record) => record.subtitle_id);
 export const users = loadIndex("users", databases.media.User, (record) => record.user_id);
+export const getUsersFromUsername = indices.CollectionIndex.fromIndex(users, users, (record) => record.user_id, (record) => record.username);
 export const tokens = loadIndex("tokens", databases.media.Token, (record) => record.token_id);
 export const getTokensFromUser = indices.CollectionIndex.fromIndex(users, tokens, (record) => record.user_id, (record) => record.user_id);
 export const streams = loadIndex("streams", databases.media.Stream, (record) => record.stream_id);
@@ -188,7 +193,7 @@ export const shows_search = indices.SearchIndex.fromIndex(shows, (entry) => [ent
 export const track_search = indices.SearchIndex.fromIndex(tracks, (entry) => [entry.title]);
 export const user_search = indices.SearchIndex.fromIndex(users, (entry) => [entry.name, entry.username]);
 
-function getPath(entry: Directory | File): Array<string> {
+export function getPath(entry: Directory | File): Array<string> {
 	let path = new Array<string>();
 	while (true) {
 		path.unshift(entry.name);
@@ -199,7 +204,7 @@ function getPath(entry: Directory | File): Array<string> {
 		entry = directories.lookup(parent_directory_id);
 	}
 	return [...MEDIA_ROOT, ...path];
-}
+};
 
 function getDirectoryPath(directory: Directory): Array<string> {
 	return getPath(directory);
@@ -495,8 +500,18 @@ function indexFiles(): void {
 
 function getSiblingFiles(subject: File): Array<File> {
 	let candidates_in_directory = getFilesFromDirectory.lookup(subject.parent_directory_id)
-		.filter((file) => file.file_id !== subject.file_id)
-		.sort(indices.LexicalSort.increasing((file) => file.name));
+		.sort(indices.LexicalSort.increasing((file) => file.name))
+		.map((file) => {
+			try {
+				audio_files.lookup(file.file_id);
+				return file;
+			} catch (error) {}
+			try {
+				video_files.lookup(file.file_id);
+				return file;
+			} catch (error) {}
+		})
+		.filter(is.present);
 	let basename = subject.name.split(".")[0];
 	let candidates_sharing_basename = candidates_in_directory
 		.filter((file) => file.name.split(".")[0] === basename);
@@ -525,7 +540,7 @@ function associateImages(): void {
 		let siblings = getSiblingFiles(file);
 		for (let sibling of siblings) {
 			let track_files = getTracksFromFile.lookup(sibling.file_id)
-				.filter((movie_file) => movie_file.file_id !== image_file.file_id);
+				.filter((track_file) => track_file.file_id !== image_file.file_id);
 			for (let track_file of track_files) {
 				try {
 					let track = tracks.lookup(track_file.track_id);
@@ -546,7 +561,7 @@ function associateImages(): void {
 				});
 			}
 			let episode_files = getEpisodesFromFile.lookup(sibling.file_id)
-				.filter((movie_file) => movie_file.file_id !== image_file.file_id);
+				.filter((episode_file) => episode_file.file_id !== image_file.file_id);
 			for (let episode_file of episode_files) {
 				try {
 					let episode = episodes.lookup(episode_file.episode_id);
@@ -565,24 +580,14 @@ function associateImages(): void {
 function associateSubtitles(): void {
 	for (let subtitle_file of subtitle_files) {
 		let file = files.lookup(subtitle_file.file_id);
-		let siblings = getSiblingFiles(file);
+		let basename = file.name.split(".")[0];
+		let siblings = getSiblingFiles(file)
+			.filter((file) => file.name.split(".")[0] === basename);
 		for (let sibling of siblings) {
-			let movies = getMoviesFromFile.lookup(sibling.file_id)
-				.filter((movie_file) => movie_file.file_id !== subtitle_file.file_id);
-			for (let movie of movies) {
-				movie_files.insert({
-					movie_id: movie.movie_id,
-					file_id: subtitle_file.file_id
-				});
-			}
-			let episodes = getEpisodesFromFile.lookup(sibling.file_id)
-				.filter((movie_file) => movie_file.file_id !== subtitle_file.file_id);
-			for (let episode of episodes) {
-				episode_files.insert({
-					episode_id: episode.episode_id,
-					file_id: subtitle_file.file_id
-				});
-			}
+			video_subtitles.insert({
+				video_file_id: sibling.file_id,
+				subtitle_file_id: file.file_id
+			});
 		}
 	}
 }
@@ -599,6 +604,11 @@ export function runIndexer(): void {
 	associateMetadata();
 	associateImages();
 	associateSubtitles();
+	for (let token of tokens) {
+		if (token.expires_ms <= Date.now()) {
+			tokens.remove(token);
+		}
+	}
 };
 
 runIndexer();
@@ -610,6 +620,7 @@ saveIndex("image_files", image_files);
 saveIndex("metadata_files", metadata_files);
 saveIndex("subtitle_files", subtitle_files);
 saveIndex("video_files", video_files);
+saveIndex("video_subtitles", video_subtitles);
 saveIndex("artists", artists);
 saveIndex("albums", albums);
 saveIndex("album_files", album_files);
@@ -631,4 +642,5 @@ saveIndex("show_persons", show_persons);
 saveIndex("genres", genres);
 saveIndex("movie_genres", movie_genres);
 saveIndex("show_genres", show_genres);
+saveIndex("subtitles", subtitles);
 saveIndex("cues", cues);

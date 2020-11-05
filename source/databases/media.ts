@@ -106,6 +106,16 @@ export const VideoFile = autoguard.Object.of<VideoFile>({
 	"height": autoguard.Number
 });
 
+export type VideoSubtitle = {
+	"video_file_id": string,
+	"subtitle_file_id": string
+};
+
+export const VideoSubtitle = autoguard.Object.of<VideoSubtitle>({
+	"video_file_id": autoguard.String,
+	"subtitle_file_id": autoguard.String
+});
+
 export type Artist = {
 	"artist_id": string,
 	"name": string
@@ -370,9 +380,19 @@ export const ShowGenre = autoguard.Object.of<ShowGenre>({
 	"order": autoguard.Number
 });
 
+export type Subtitle = {
+	"subtitle_id": string,
+	"file_id": string
+};
+
+export const Subtitle = autoguard.Object.of<Subtitle>({
+	"subtitle_id": autoguard.String,
+	"file_id": autoguard.String
+});
+
 export type Cue = {
 	"cue_id": string,
-	"file_id": string,
+	"subtitle_id": string,
 	"start_ms": number,
 	"duration_ms": number,
 	"lines": string[]
@@ -380,7 +400,7 @@ export type Cue = {
 
 export const Cue = autoguard.Object.of<Cue>({
 	"cue_id": autoguard.String,
-	"file_id": autoguard.String,
+	"subtitle_id": autoguard.String,
 	"start_ms": autoguard.Number,
 	"duration_ms": autoguard.Number,
 	"lines": autoguard.Array.of(autoguard.String)
@@ -403,14 +423,14 @@ export const User = autoguard.Object.of<User>({
 export type Token = {
 	"token_id": string,
 	"user_id": string,
-	"validator": string,
+	"hash": string,
 	"expires_ms": number
 };
 
 export const Token = autoguard.Object.of<Token>({
 	"token_id": autoguard.String,
 	"user_id": autoguard.String,
-	"validator": autoguard.String,
+	"hash": autoguard.String,
 	"expires_ms": autoguard.Number
 });
 
@@ -464,6 +484,7 @@ export type Autoguard = {
 	"MetadataFile": MetadataFile,
 	"SubtitleFile": SubtitleFile,
 	"VideoFile": VideoFile,
+	"VideoSubtitle": VideoSubtitle,
 	"Artist": Artist,
 	"Album": Album,
 	"AlbumFile": AlbumFile,
@@ -485,6 +506,7 @@ export type Autoguard = {
 	"Genre": Genre,
 	"MovieGenre": MovieGenre,
 	"ShowGenre": ShowGenre,
+	"Subtitle": Subtitle,
 	"Cue": Cue,
 	"User": User,
 	"Token": Token,
@@ -501,6 +523,7 @@ export const Autoguard = {
 	"MetadataFile": MetadataFile,
 	"SubtitleFile": SubtitleFile,
 	"VideoFile": VideoFile,
+	"VideoSubtitle": VideoSubtitle,
 	"Artist": Artist,
 	"Album": Album,
 	"AlbumFile": AlbumFile,
@@ -522,6 +545,7 @@ export const Autoguard = {
 	"Genre": Genre,
 	"MovieGenre": MovieGenre,
 	"ShowGenre": ShowGenre,
+	"Subtitle": Subtitle,
 	"Cue": Cue,
 	"User": User,
 	"Token": Token,

@@ -22,7 +22,7 @@
 		title: string,
 		year?: number,
 		artists: ArtistBase[],
-		artwork?: ImageFile
+		artwork: ../../databases/media/ImageFile[]
 	},
 
 	Album: AlbumBase & {
@@ -49,9 +49,7 @@
 
 	Track: TrackBase & {
 		last_stream_date?: number,
-		segment: {
-			file: AudioFile
-		}
+		media: ../../databases/media/AudioFile
 	},
 
 	UserBase: {
@@ -94,35 +92,27 @@
 
 	},
 
-	SegmentBase: {
-		file: VideoFile,
-		subtitles: Subtitle[]
-	},
-
-	Segment: SegmentBase & {
-
-	},
-
 	MovieBase: {
 		movie_id: string,
 		title: string,
 		year?: number,
 		summary?: string,
-		artwork?: ImageFile,
+		artwork: ../../databases/media/ImageFile[],
 		genres: Genre[],
 		actors: Person[]
 	},
 
 	Movie: MovieBase & {
 		last_stream_date?: number,
-		segment: Segment
+		media: ../../databases/media/VideoFile,
+		subtitles: ../../databases/media/SubtitleFile[]
 	},
 
 	ShowBase: {
 		show_id: string,
 		title: string,
 		summary?: string,
-		artwork?: ImageFile,
+		artwork: ../../databases/media/ImageFile[],
 		genres: Genre[],
 		actors: Person[]
 	},
@@ -152,13 +142,13 @@
 
 	Episode: EpisodeBase & {
 		last_stream_date?: number,
-		segment: Segment
+		media: ../../databases/media/VideoFile,
+		subtitles: ../../databases/media/SubtitleFile[]
 	},
 
 	SubtitleBase: {
 		subtitle_id: string,
-		file: SubtitleFile,
-		language?: string
+		subtitle: ../../databases/media/SubtitleFile
 	},
 
 	Subtitle: SubtitleBase & {
@@ -177,29 +167,5 @@
 
 	},
 
-	Entity: Album | Artist | Disc | Episode | Genre | Movie | Person | Playlist | Season | Show | Track | User,
-
-	File: {
-		file_id: string,
-		mime: string
-	},
-
-	AudioFile: File & {
-		duration_ms: number
-	},
-
-	ImageFile: File & {
-		height: number,
-		width: number
-	},
-
-	SubtitleFile: File & {
-
-	},
-
-	VideoFile: File & {
-		duration_ms: number,
-		height: number,
-		width: number
-	}
+	Entity: Album | Artist | Disc | Episode | Genre | Movie | Person | Playlist | Season | Show | Track | User
 }

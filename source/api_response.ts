@@ -159,14 +159,6 @@ interface AuthResponse extends ApiResponse {
 	token: string
 }
 
-interface TokensRequest extends ApiRequest {
-
-}
-
-interface TokensResponse extends ApiResponse {
-	tokens: Array<libdb.AuthToken>
-}
-
 export {
 	AlbumResponse,
 	AlbumsResponse,
@@ -203,7 +195,5 @@ export {
 	ApiResponse,
 	AuthWithTokenReponse,
 	AuthRequest,
-	AuthResponse,
-	TokensRequest,
-	TokensResponse
+	AuthResponse
 };

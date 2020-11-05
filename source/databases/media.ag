@@ -45,6 +45,11 @@
 		height: number
 	},
 
+	VideoSubtitle: {
+		video_file_id: string,
+		subtitle_file_id: string
+	},
+
 	Artist: {
 		artist_id: string,
 		name: string
@@ -168,9 +173,14 @@
 		order: number
 	},
 
+	Subtitle: {
+		subtitle_id: string,
+		file_id: string
+	},
+
 	Cue: {
 		cue_id: string,
-		file_id: string,
+		subtitle_id: string,
 		start_ms: number,
 		duration_ms: number,
 		lines: string[]
@@ -186,7 +196,7 @@
 	Token: {
 		token_id: string,
 		user_id: string,
-		validator: string,
+		hash: string,
 		expires_ms: number
 	},
 
