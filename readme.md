@@ -29,3 +29,7 @@
 * Add sentinel to carousels and support loading additional content.
 * Select indexing probe order by extension and store format.
 * Add appears on playlist to track view.
+* Make playlist row items square with aspect preservation.
+* Circumvent initial playblack user gesture block.
+* Change streams to episode_id or movie_id.
+* Change file server to file/resource.
