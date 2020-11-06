@@ -1462,30 +1462,35 @@ let updateviewforuri = (uri: string): void => {
 			.render()
 		);
 	} else if ((parts = /^persons[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		req<{}, api_response.PersonResponse>(`/api/persons/${parts[1]}/?token=${token}`, {}, (_, response) => {
+		let person_id = parts[1];
+		req<{}, api_response.PersonResponse>(`/api/persons/${person_id}/?token=${token}`, {}, (_, response) => {
 			let person = response.person;
-			let shows = response.shows;
-			let movies = response.movies;
-			mount.appendChild(xml.element("div.content")
-				.set("style", "display: grid; gap: 64px;")
-				.add(renderTextHeader(xml.text(person.name)))
-				.add(xml.element("div")
-					.set("style", "display: grid; gap: 24px;")
-					.set("data-hide", `${shows.length === 0}`)
-					.add(renderTextHeader(xml.text("Shows")))
-					.add(Grid.make()
-						.add(...shows.map((show) => EntityCard.forShow(show)))
-					)
-				)
-				.add(xml.element("div")
-					.set("style", "display: grid; gap: 24px;")
-					.set("data-hide", `${movies.length === 0}`)
-					.add(renderTextHeader(xml.text("Movies")))
-					.add(Grid.make()
-						.add(...movies.map((movie) => EntityCard.forMovie(movie)))
-					)
-				)
-				.render());
+			req<{}, api_response.PersonShowsResponse>(`/api/persons/${person_id}/shows/?token=${token}`, {}, (_, response) => {
+				let shows = response.shows;
+				req<{}, api_response.PersonMoviesResponse>(`/api/persons/${person_id}/movies/?token=${token}`, {}, (_, response) => {
+					let movies = response.movies;
+					mount.appendChild(xml.element("div.content")
+						.set("style", "display: grid; gap: 64px;")
+						.add(renderTextHeader(xml.text(person.name)))
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.set("data-hide", `${shows.length === 0}`)
+							.add(renderTextHeader(xml.text("Shows")))
+							.add(Grid.make()
+								.add(...shows.map((show) => EntityCard.forShow(show)))
+							)
+						)
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.set("data-hide", `${movies.length === 0}`)
+							.add(renderTextHeader(xml.text("Movies")))
+							.add(Grid.make()
+								.add(...movies.map((movie) => EntityCard.forMovie(movie)))
+							)
+						)
+						.render());
+				});
+			});
 		});
 	} else if ((parts = /^persons[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = parts[1];

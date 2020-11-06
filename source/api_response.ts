@@ -62,8 +62,14 @@ type MoviesResponse = {
 };
 
 type PersonResponse = {
-	person: objects.Person,
-	shows: objects.Show[],
+	person: objects.Person
+};
+
+type PersonShowsResponse = {
+	shows: objects.Show[]
+};
+
+type PersonMoviesResponse = {
 	movies: objects.Movie[]
 };
 
@@ -178,6 +184,8 @@ export {
 	MovieMovieSuggestionsResponse,
 	MovieResponse,
 	MoviesResponse,
+	PersonShowsResponse,
+	PersonMoviesResponse,
 	PersonResponse,
 	PersonsResponse,
 	PlaylistResponse,

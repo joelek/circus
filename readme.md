@@ -4,7 +4,6 @@
 
 * Create typed REST API.
 * Add playlisting functionality for audio content.
-* Separate person shows and movies into separate requests.
 * Set document title based on page.
 * Export icons with 24px sizes.
 * Move redundant data from base types to full types in API.
