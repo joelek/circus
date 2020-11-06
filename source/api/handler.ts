@@ -9,10 +9,6 @@ export function lookupAlbumBase(album_id: string, user_id: string): schema.objec
 	return {
 		album_id: album.album_id,
 		title: album.title,
-		year: album.year,
-		artists: database.getArtistsFromAlbum.lookup(album_id)
-			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupArtistBase(record.artist_id, user_id)),
 		artwork: database.getFilesFromAlbum.lookup(album_id)
 			.map((record) => {
 				try {
@@ -24,9 +20,14 @@ export function lookupAlbumBase(album_id: string, user_id: string): schema.objec
 };
 
 export function lookupAlbum(album_id: string, user_id: string): schema.objects.Album {
+	let record = database.albums.lookup(album_id);
 	let album = lookupAlbumBase(album_id, user_id);
 	return {
 		...album,
+		artists: database.getArtistsFromAlbum.lookup(album_id)
+			.sort(jsondb.NumericSort.increasing((record) => record.order))
+			.map((record) => lookupArtistBase(record.artist_id, user_id)),
+		year: record.year,
 		discs: database.getDiscsFromAlbum.lookup(album_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
 			.map((record) => lookupDisc(record.disc_id, user_id, album))
@@ -94,15 +95,14 @@ export function lookupEpisodeBase(episode_id: string, user_id: string, season?: 
 	return {
 		episode_id: episode.episode_id,
 		title: episode.title,
-		summary: episode.summary,
 		number: episode.number,
-		season: is.present(season) ? season : lookupSeasonBase(episode.season_id, user_id),
-		year: episode.year
+		season: is.present(season) ? season : lookupSeasonBase(episode.season_id, user_id)
 	};
 };
 
 export function lookupEpisode(episode_id: string, user_id: string, season?: schema.objects.SeasonBase): schema.objects.Episode {
 	let episode = lookupEpisodeBase(episode_id, user_id, season);
+	let record = database.episodes.lookup(episode_id);
 	let files = database.getFilesFromEpisode.lookup(episode_id)
 		.map((record) => {
 			try {
@@ -122,6 +122,8 @@ export function lookupEpisode(episode_id: string, user_id: string, season?: sche
 		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
 	return {
 		...episode,
+		year: record.year,
+		summary: record.summary,
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media,
 		subtitles: subtitles
@@ -148,26 +150,19 @@ export function lookupMovieBase(movie_id: string, user_id: string): schema.objec
 	return {
 		movie_id: movie.movie_id,
 		title: movie.title,
-		year: movie.year,
-		summary: movie.summary,
 		artwork: database.getFilesFromMovie.lookup(movie_id)
 			.map((record) => {
 				try {
 					return database.image_files.lookup(record.file_id);
 				} catch (error) {}
 			})
-			.filter(is.present),
-		genres: database.getGenresFromMovie.lookup(movie_id)
-			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupGenreBase(record.genre_id, user_id)),
-		actors: database.getPersonsFromMovie.lookup(movie_id)
-			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupPerson(record.person_id, user_id))
+			.filter(is.present)
 	};
 };
 
 export function lookupMovie(movie_id: string, user_id: string): schema.objects.Movie {
 	let movie = lookupMovieBase(movie_id, user_id);
+	let record = database.movies.lookup(movie_id);
 	let files = database.getFilesFromMovie.lookup(movie_id)
 		.map((record) => {
 			try {
@@ -187,6 +182,14 @@ export function lookupMovie(movie_id: string, user_id: string): schema.objects.M
 		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
 	return {
 		...movie,
+		year: record.year,
+		summary: record.summary,
+		genres: database.getGenresFromMovie.lookup(movie_id)
+			.sort(jsondb.NumericSort.increasing((record) => record.order))
+			.map((record) => lookupGenreBase(record.genre_id, user_id)),
+		actors: database.getPersonsFromMovie.lookup(movie_id)
+			.sort(jsondb.NumericSort.increasing((record) => record.order))
+			.map((record) => lookupPerson(record.person_id, user_id)),
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media,
 		subtitles: subtitles
@@ -258,7 +261,6 @@ export function lookupShowBase(show_id: string, user_id: string): schema.objects
 	return {
 		show_id: show.show_id,
 		title: show.name,
-		summary: show.summary,
 		artwork: database.getFilesFromShow.lookup(show_id)
 			.map((record) => {
 				try {
@@ -266,20 +268,22 @@ export function lookupShowBase(show_id: string, user_id: string): schema.objects
 				} catch (error) {}
 			})
 			.filter(is.present)
-			.slice(0, 1),
-		genres: database.getGenresFromShow.lookup(show_id)
-			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupGenreBase(record.genre_id, user_id)),
-		actors: database.getPersonsFromShow.lookup(show_id)
-			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupPersonBase(record.person_id, user_id))
+			.slice(0, 1)
 	};
 };
 
 export function lookupShow(show_id: string, user_id: string): schema.objects.Show {
 	let show = lookupShowBase(show_id, user_id);
+	let record = database.shows.lookup(show_id);
 	return {
 		...show,
+		summary: record.summary,
+		genres: database.getGenresFromShow.lookup(show_id)
+			.sort(jsondb.NumericSort.increasing((record) => record.order))
+			.map((record) => lookupGenreBase(record.genre_id, user_id)),
+		actors: database.getPersonsFromShow.lookup(show_id)
+			.sort(jsondb.NumericSort.increasing((record) => record.order))
+			.map((record) => lookupPersonBase(record.person_id, user_id)),
 		seasons: database.getSeasonsFromShow.lookup(show_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
 			.map((record) => lookupSeason(record.season_id, user_id, show))
@@ -310,9 +314,6 @@ export function lookupTrackBase(track_id: string, user_id: string, disc?: schema
 		track_id: track.track_id,
 		title: track.title,
 		disc: is.present(disc) ? disc : lookupDiscBase(track.disc_id, user_id),
-		artists: database.getArtistsFromTrack.lookup(track_id)
-			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupArtistBase(record.artist_id, user_id)),
 		number: track.number
 	};
 };
@@ -335,6 +336,9 @@ export function lookupTrack(track_id: string, user_id: string, disc?: schema.obj
 		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
 	return {
 		...track,
+		artists: database.getArtistsFromTrack.lookup(track_id)
+			.sort(jsondb.NumericSort.increasing((record) => record.order))
+			.map((record) => lookupArtistBase(record.artist_id, user_id)),
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media
 	};

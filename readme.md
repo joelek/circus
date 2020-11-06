@@ -6,7 +6,6 @@
 * Add playlisting functionality for audio content.
 * Set document title based on page.
 * Export icons with 24px sizes.
-* Move redundant data from base types to full types in API.
 * Create and use layout components with standard spacing.
 * Create modal media player.
 * Make artist view more interesting.

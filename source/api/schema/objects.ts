@@ -49,32 +49,34 @@ export const Artist = autoguard.Intersection.of(
 export type AlbumBase = {
 	"album_id": string,
 	"title": string,
-	"year"?: number,
-	"artists": ArtistBase[],
 	"artwork": ImageFile[]
 };
 
 export const AlbumBase = autoguard.Object.of<AlbumBase>({
 	"album_id": autoguard.String,
 	"title": autoguard.String,
-	"year": autoguard.Union.of(
-		autoguard.Undefined,
-		autoguard.Number
-	),
-	"artists": autoguard.Array.of(autoguard.Reference.of<ArtistBase>(() => ArtistBase)),
 	"artwork": autoguard.Array.of(autoguard.Reference.of<ImageFile>(() => ImageFile))
 });
 
 export type Album = AlbumBase & {
-	"discs": Disc[]
+	"artists": ArtistBase[],
+	"discs": Disc[],
+	"year"?: number
 };
 
 export const Album = autoguard.Intersection.of(
 	autoguard.Reference.of<AlbumBase>(() => AlbumBase),
 	autoguard.Object.of<{
-		"discs": Disc[]
+		"artists": ArtistBase[],
+		"discs": Disc[],
+		"year"?: number
 	}>({
-		"discs": autoguard.Array.of(autoguard.Reference.of<Disc>(() => Disc))
+		"artists": autoguard.Array.of(autoguard.Reference.of<ArtistBase>(() => ArtistBase)),
+		"discs": autoguard.Array.of(autoguard.Reference.of<Disc>(() => Disc)),
+		"year": autoguard.Union.of(
+			autoguard.Undefined,
+			autoguard.Number
+		)
 	})
 );
 
@@ -107,7 +109,6 @@ export type TrackBase = {
 	"track_id": string,
 	"title": string,
 	"disc": DiscBase,
-	"artists": ArtistBase[],
 	"number": number
 };
 
@@ -115,11 +116,11 @@ export const TrackBase = autoguard.Object.of<TrackBase>({
 	"track_id": autoguard.String,
 	"title": autoguard.String,
 	"disc": autoguard.Reference.of<DiscBase>(() => DiscBase),
-	"artists": autoguard.Array.of(autoguard.Reference.of<ArtistBase>(() => ArtistBase)),
 	"number": autoguard.Number
 });
 
 export type Track = TrackBase & {
+	"artists": ArtistBase[],
 	"last_stream_date"?: number,
 	"media": AudioFile
 };
@@ -127,9 +128,11 @@ export type Track = TrackBase & {
 export const Track = autoguard.Intersection.of(
 	autoguard.Reference.of<TrackBase>(() => TrackBase),
 	autoguard.Object.of<{
+		"artists": ArtistBase[],
 		"last_stream_date"?: number,
 		"media": AudioFile
 	}>({
+		"artists": autoguard.Array.of(autoguard.Reference.of<ArtistBase>(() => ArtistBase)),
 		"last_stream_date": autoguard.Union.of(
 			autoguard.Undefined,
 			autoguard.Number
@@ -223,30 +226,20 @@ export const Genre = autoguard.Intersection.of(
 export type MovieBase = {
 	"movie_id": string,
 	"title": string,
-	"year"?: number,
-	"summary"?: string,
-	"artwork": ImageFile[],
-	"genres": Genre[],
-	"actors": Person[]
+	"artwork": ImageFile[]
 };
 
 export const MovieBase = autoguard.Object.of<MovieBase>({
 	"movie_id": autoguard.String,
 	"title": autoguard.String,
-	"year": autoguard.Union.of(
-		autoguard.Undefined,
-		autoguard.Number
-	),
-	"summary": autoguard.Union.of(
-		autoguard.Undefined,
-		autoguard.String
-	),
-	"artwork": autoguard.Array.of(autoguard.Reference.of<ImageFile>(() => ImageFile)),
-	"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre)),
-	"actors": autoguard.Array.of(autoguard.Reference.of<Person>(() => Person))
+	"artwork": autoguard.Array.of(autoguard.Reference.of<ImageFile>(() => ImageFile))
 });
 
 export type Movie = MovieBase & {
+	"year"?: number,
+	"summary"?: string,
+	"genres": Genre[],
+	"actors": Person[],
 	"last_stream_date"?: number,
 	"media": VideoFile,
 	"subtitles": SubtitleFile[]
@@ -255,10 +248,24 @@ export type Movie = MovieBase & {
 export const Movie = autoguard.Intersection.of(
 	autoguard.Reference.of<MovieBase>(() => MovieBase),
 	autoguard.Object.of<{
+		"year"?: number,
+		"summary"?: string,
+		"genres": Genre[],
+		"actors": Person[],
 		"last_stream_date"?: number,
 		"media": VideoFile,
 		"subtitles": SubtitleFile[]
 	}>({
+		"year": autoguard.Union.of(
+			autoguard.Undefined,
+			autoguard.Number
+		),
+		"summary": autoguard.Union.of(
+			autoguard.Undefined,
+			autoguard.String
+		),
+		"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre)),
+		"actors": autoguard.Array.of(autoguard.Reference.of<Person>(() => Person)),
 		"last_stream_date": autoguard.Union.of(
 			autoguard.Undefined,
 			autoguard.Number
@@ -271,33 +278,36 @@ export const Movie = autoguard.Intersection.of(
 export type ShowBase = {
 	"show_id": string,
 	"title": string,
-	"summary"?: string,
-	"artwork": ImageFile[],
-	"genres": Genre[],
-	"actors": Person[]
+	"artwork": ImageFile[]
 };
 
 export const ShowBase = autoguard.Object.of<ShowBase>({
 	"show_id": autoguard.String,
 	"title": autoguard.String,
-	"summary": autoguard.Union.of(
-		autoguard.Undefined,
-		autoguard.String
-	),
-	"artwork": autoguard.Array.of(autoguard.Reference.of<ImageFile>(() => ImageFile)),
-	"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre)),
-	"actors": autoguard.Array.of(autoguard.Reference.of<Person>(() => Person))
+	"artwork": autoguard.Array.of(autoguard.Reference.of<ImageFile>(() => ImageFile))
 });
 
 export type Show = ShowBase & {
+	"summary"?: string,
+	"genres": Genre[],
+	"actors": Person[],
 	"seasons": Season[]
 };
 
 export const Show = autoguard.Intersection.of(
 	autoguard.Reference.of<ShowBase>(() => ShowBase),
 	autoguard.Object.of<{
+		"summary"?: string,
+		"genres": Genre[],
+		"actors": Person[],
 		"seasons": Season[]
 	}>({
+		"summary": autoguard.Union.of(
+			autoguard.Undefined,
+			autoguard.String
+		),
+		"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre)),
+		"actors": autoguard.Array.of(autoguard.Reference.of<Person>(() => Person)),
 		"seasons": autoguard.Array.of(autoguard.Reference.of<Season>(() => Season))
 	})
 );
@@ -330,28 +340,20 @@ export const Season = autoguard.Intersection.of(
 export type EpisodeBase = {
 	"episode_id": string,
 	"title": string,
-	"summary"?: string,
 	"number": number,
-	"season": SeasonBase,
-	"year"?: number
+	"season": SeasonBase
 };
 
 export const EpisodeBase = autoguard.Object.of<EpisodeBase>({
 	"episode_id": autoguard.String,
 	"title": autoguard.String,
-	"summary": autoguard.Union.of(
-		autoguard.Undefined,
-		autoguard.String
-	),
 	"number": autoguard.Number,
-	"season": autoguard.Reference.of<SeasonBase>(() => SeasonBase),
-	"year": autoguard.Union.of(
-		autoguard.Undefined,
-		autoguard.Number
-	)
+	"season": autoguard.Reference.of<SeasonBase>(() => SeasonBase)
 });
 
 export type Episode = EpisodeBase & {
+	"year"?: number,
+	"summary"?: string,
 	"last_stream_date"?: number,
 	"media": VideoFile,
 	"subtitles": SubtitleFile[]
@@ -360,10 +362,20 @@ export type Episode = EpisodeBase & {
 export const Episode = autoguard.Intersection.of(
 	autoguard.Reference.of<EpisodeBase>(() => EpisodeBase),
 	autoguard.Object.of<{
+		"year"?: number,
+		"summary"?: string,
 		"last_stream_date"?: number,
 		"media": VideoFile,
 		"subtitles": SubtitleFile[]
 	}>({
+		"year": autoguard.Union.of(
+			autoguard.Undefined,
+			autoguard.Number
+		),
+		"summary": autoguard.Union.of(
+			autoguard.Undefined,
+			autoguard.String
+		),
 		"last_stream_date": autoguard.Union.of(
 			autoguard.Undefined,
 			autoguard.Number

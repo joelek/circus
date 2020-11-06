@@ -157,10 +157,11 @@ export class EntityRowFactory {
 		let link = this.entityLinkFactory.forDisc(disc);
 		let image = this.ImageBox.forSquare(disc.album.artwork.map((image) => `/files/${image.file_id}/`).shift());
 		let titles = [
-			this.entityTitleFactory.forAlbum(disc.album),
 			this.entityTitleFactory.forDisc(disc)
 		];
-		let subtitles = disc.album.artists.map((artist) => this.entityTitleFactory.forArtist(artist));
+		let subtitles = [
+			this.entityTitleFactory.forAlbum(disc.album)
+		]
 		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
@@ -223,10 +224,11 @@ export class EntityRowFactory {
 		let link = this.entityLinkFactory.forSeason(season);
 		let image = this.ImageBox.forSquare(season.show.artwork.map((image) => `/files/${image.file_id}/`).shift());
 		let titles = [
-			this.entityTitleFactory.forShow(season.show),
 			this.entityTitleFactory.forSeason(season)
 		];
-		let subtitles = season.show.genres.map((genre) => this.entityTitleFactory.forGenre(genre));
+		let subtitles = [
+			this.entityTitleFactory.forShow(season.show)
+		];
 		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 

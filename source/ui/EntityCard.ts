@@ -232,13 +232,13 @@ export class EntityCardFactory {
 		let link = this.entityLinkFactory.forDisc(disc);
 		let image = this.ImageBox.forSquare(disc.album.artwork.map((image) => `/files/${image.file_id}/`).shift());
 		let titles = [
-			this.entityTitleFactory.forAlbum(disc.album),
 			this.entityTitleFactory.forDisc(disc)
 		];
-		let subtitles = disc.album.artists.map((artist) => this.entityTitleFactory.forArtist(artist));
+		let subtitles = [
+			this.entityTitleFactory.forAlbum(disc.album)
+		];
 		let tags = [
 			"Disc",
-			is.present(disc.album.year) ? `${disc.album.year}` : undefined,
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, playbackButton, titles, subtitles, tags);
@@ -347,10 +347,11 @@ export class EntityCardFactory {
 		let link = this.entityLinkFactory.forSeason(season);
 		let image = this.ImageBox.forPoster(season.show.artwork.map((image) => `/files/${image.file_id}/`).shift());
 		let titles = [
-			this.entityTitleFactory.forShow(season.show),
 			this.entityTitleFactory.forSeason(season)
 		];
-		let subtitles = season.show.genres.map((genre) => this.entityTitleFactory.forGenre(genre));
+		let subtitles = [
+			this.entityTitleFactory.forShow(season.show)
+		];
 		let tags = [
 			"Season",
 			metadata.formatDuration(duration_ms)
@@ -392,7 +393,6 @@ export class EntityCardFactory {
 		];
 		let tags = [
 			"Track",
-			is.present(track.disc.album.year) ? `${track.disc.album.year}` : undefined,
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, playbackButton, titles, subtitles, tags);

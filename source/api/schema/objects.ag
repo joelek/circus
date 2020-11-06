@@ -20,13 +20,13 @@
 	AlbumBase: {
 		album_id: string,
 		title: string,
-		year?: number,
-		artists: ArtistBase[],
 		artwork: ../../databases/media/ImageFile[]
 	},
 
 	Album: AlbumBase & {
-		discs: Disc[]
+		artists: ArtistBase[],
+		discs: Disc[],
+		year?: number
 	},
 
 	DiscBase: {
@@ -43,11 +43,11 @@
 		track_id: string,
 		title: string,
 		disc: DiscBase,
-		artists: ArtistBase[],
 		number: number
 	},
 
 	Track: TrackBase & {
+		artists: ArtistBase[],
 		last_stream_date?: number,
 		media: ../../databases/media/AudioFile
 	},
@@ -95,14 +95,14 @@
 	MovieBase: {
 		movie_id: string,
 		title: string,
-		year?: number,
-		summary?: string,
-		artwork: ../../databases/media/ImageFile[],
-		genres: Genre[],
-		actors: Person[]
+		artwork: ../../databases/media/ImageFile[]
 	},
 
 	Movie: MovieBase & {
+		year?: number,
+		summary?: string,
+		genres: Genre[],
+		actors: Person[],
 		last_stream_date?: number,
 		media: ../../databases/media/VideoFile,
 		subtitles: ../../databases/media/SubtitleFile[]
@@ -111,13 +111,13 @@
 	ShowBase: {
 		show_id: string,
 		title: string,
-		summary?: string,
-		artwork: ../../databases/media/ImageFile[],
-		genres: Genre[],
-		actors: Person[]
+		artwork: ../../databases/media/ImageFile[]
 	},
 
 	Show: ShowBase & {
+		summary?: string,
+		genres: Genre[],
+		actors: Person[],
 		seasons: Season[]
 	},
 
@@ -134,13 +134,13 @@
 	EpisodeBase: {
 		episode_id: string,
 		title: string,
-		summary?: string,
 		number: number,
-		season: SeasonBase,
-		year?: number
+		season: SeasonBase
 	},
 
 	Episode: EpisodeBase & {
+		year?: number,
+		summary?: string,
 		last_stream_date?: number,
 		media: ../../databases/media/VideoFile,
 		subtitles: ../../databases/media/SubtitleFile[]
