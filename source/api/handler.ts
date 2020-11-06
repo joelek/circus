@@ -117,9 +117,12 @@ export function lookupEpisode(episode_id: string, user_id: string, season?: sche
 	}
 	let subtitles = database.getSubtitleFilesFromVideoFile.lookup(media.file_id)
 		.map((record) => database.subtitle_files.lookup(record.subtitle_file_id));
+	let streams = database.getStreamsFromFile.lookup(media.file_id)
+		.filter((stream) => stream.user_id === user_id)
+		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
 	return {
 		...episode,
-		last_stream_date: undefined,
+		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media,
 		subtitles: subtitles
 	};
@@ -179,9 +182,12 @@ export function lookupMovie(movie_id: string, user_id: string): schema.objects.M
 	}
 	let subtitles = database.getSubtitleFilesFromVideoFile.lookup(media.file_id)
 		.map((record) => database.subtitle_files.lookup(record.subtitle_file_id));
+	let streams = database.getStreamsFromFile.lookup(media.file_id)
+		.filter((stream) => stream.user_id === user_id)
+		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
 	return {
 		...movie,
-		last_stream_date: undefined,
+		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media,
 		subtitles: subtitles
 	};
@@ -324,9 +330,12 @@ export function lookupTrack(track_id: string, user_id: string, disc?: schema.obj
 	if (is.absent(media)) {
 		throw `Expected a valid audio file!`;
 	}
+	let streams = database.getStreamsFromFile.lookup(media.file_id)
+		.filter((stream) => stream.user_id === user_id)
+		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
 	return {
 		...track,
-		last_stream_date: undefined,
+		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media
 	};
 };
