@@ -3,17 +3,12 @@
 ## Ideas
 
 * Create new typed REST API that re-uses the context entities.
-* Rewrite the indexer to support delta updates.
-* Add support for mutiple media sources.
 * Add playlisting functionality for audio content.
-* Add files and directories into database.
-* Index video resolution and image sizes.
 * Split person into three routes.
 * Set titles based on page.
 * Export icons with 24px sizes.
 * Move redundant data from base types to full types in API.
 * Create and use layout components with standard spacing.
-* Re-add support for movie segments.
 * Create modal media player.
 * Make artist view more interesting
 * Make start view a combined search and nav view.
@@ -27,9 +22,9 @@
 * Investigate error when launching chromecast.
 * Add adaptive limit to API that optimizes latency.
 * Add sentinel to carousels and support loading additional content.
-* Select indexing probe order by extension and store format.
 * Add appears on playlist to track view.
-* Make playlist row items square with aspect preservation.
+* Make entity row items square with aspect preservation.
 * Circumvent initial playblack user gesture block.
 * Change streams to episode_id or movie_id.
-* Change file server to file/resource.
+* Add language parsing to subtitles.
+* Make media player use entity row.
