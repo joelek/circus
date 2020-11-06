@@ -1,3 +1,4 @@
+import * as autoguard from "@joelek/ts-autoguard";
 import * as libfs from "fs";
 import * as is from "../is";
 import * as vtt from "../vtt";
@@ -11,9 +12,15 @@ export function probe(fd: number): schema.Probe {
 	let track = vtt.decode(buffer.toString());
 	let cue = track.body.cues.pop();
 	let duration_ms = is.present(cue) ? cue.start_ms + cue.duration_ms : 0;
+	let language: string | undefined;
+	try {
+		let json = JSON.parse(track.head.metadata);
+		language = autoguard.guards.String.as(json.language);
+	} catch (error) {}
 	result.resources.push({
 		type: "subtitle",
-		duration_ms
+		duration_ms,
+		language
 	});
 	return result;
 };

@@ -27,6 +27,5 @@
 * Make entity row items square with aspect preservation.
 * Circumvent initial playblack user gesture block.
 * Change streams to episode_id or movie_id.
-* Add language parsing to subtitles.
 * Make media player use entity row.
 * Add account creation tokens that are displayed on server start up.
