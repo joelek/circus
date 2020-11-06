@@ -37,11 +37,11 @@ function deleteTree(root: string): void {
 	}
 }
 
-function generateStill(target: string[], file: dbschema.File): Promise<void> {
-	return new Promise(async (resolve, reject) => {
-		let path = indexer.getPath(file);
-		let offsets = await keyframes.getKeyframeOffsets(path, 0);
-		let offset = offsets[Math.floor(offsets.length / 2)];
+async function generateStill(target: string[], file: dbschema.File): Promise<void> {
+	let path = indexer.getPath(file);
+	let offsets = await keyframes.getKeyframeOffsets(path, 0);
+	let offset = offsets[Math.floor(offsets.length / 2)];
+	return new Promise( (resolve, reject) => {
 		createWorkingDirectory((wd, id) => {
 			let still = [...wd, "still.jpeg"];
 			let cp = libcp.spawn("ffmpeg", [
@@ -132,7 +132,9 @@ async function processQueue(): Promise<void> {
 	if (is.absent(job)) {
 		return;
 	}
-	await generateStill(job.target, job.file);
+	try {
+		await generateStill(job.target, job.file);
+	} catch (error) {}
 	setTimeout(processQueue, 10 * 1000);
 }
 

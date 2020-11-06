@@ -75,11 +75,16 @@ export async function getKeyframeOffsets(paths: Array<string>, streamIndex: numb
 		});
 		ffprobe.on("exit", () => {
 			let string = Buffer.concat(chunks).toString();
-			let json = libffprobe.FramesResult.as(JSON.parse(string));
-			let frames = json.frames.map((frame) => {
-				return Math.round(Number.parseFloat(frame.pkt_pts_time) * 1000);
-			});
-			resolve(frames);
+			try {
+				let json = libffprobe.FramesResult.as(JSON.parse(string));
+				let frames = json.frames.map((frame) => {
+					return Math.round(Number.parseFloat(frame.pkt_pts_time) * 1000);
+				});
+				resolve(frames);
+			} catch (error) {
+				console.log(`Keyframes failed for ${paths.join("/")}!`);
+				reject(error);
+			}
 		})
 	});
 }
