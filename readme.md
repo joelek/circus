@@ -29,6 +29,5 @@
 * Change streams to episode_id or movie_id.
 * Add language parsing to subtitles.
 * Make media player use entity row.
-* Add HD-mark to 1080P sources.
 * Re-add last stream date.
 * Add account creation tokens that are displayed on server start up.

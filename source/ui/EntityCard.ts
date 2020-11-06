@@ -261,6 +261,9 @@ export class EntityCardFactory {
 			is.present(episode.year) ? `${episode.year}` : undefined,
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		if (episode.media.height >= 720) {
+			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("HD")));
+		}
 		if (is.present(episode.last_stream_date)) {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("\u2713")));
 		}
@@ -294,6 +297,9 @@ export class EntityCardFactory {
 			is.present(movie.year) ? `${movie.year}` : undefined,
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		if (movie.media.height >= 720) {
+			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("HD")));
+		}
 		if (is.present(movie.last_stream_date)) {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("\u2713")));
 		}
