@@ -1,4 +1,3 @@
-import * as libdb from "./database";
 import * as objects from "./api/schema/objects";
 
 type AlbumResponse = {

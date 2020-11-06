@@ -2,7 +2,6 @@ import * as libfs from "fs";
 import * as libcp from "child_process";
 import * as libcrypto from "crypto";
 import * as indexer from "./indexer";
-import * as database from "./database";
 import * as is from "./is";
 import * as utils from "./utils";
 import * as keyframes from "./keyframes";
@@ -69,7 +68,7 @@ function generateStill(target: string[], file: dbschema.File): Promise<void> {
 	});
 }
 
-function generateMeme(target: string[], cue: database.CueEntry, cb: { (): void }): void {
+function generateMeme(target: string[], cue: dbschema.Cue, cb: { (): void }): void {
 	let subtitle = indexer.subtitles.lookup(cue.subtitle_id);
 	let file_subtitle = indexer.files.lookup(subtitle.file_id);
 	const file_media = getMediaFile(subtitle);

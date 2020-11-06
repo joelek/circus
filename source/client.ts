@@ -1,6 +1,5 @@
 import * as api_response from "./api_response";
 import * as languages from "./languages";
-import { AuthToken } from "./database";
 import * as session from "./browserMediaSession";
 import { ArrayObservable, computed, ObservableClass } from "./simpleobs";
 import * as client from "./context/client";
