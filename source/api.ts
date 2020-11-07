@@ -314,6 +314,7 @@ class AuthRoute implements Route<response.AuthRequest, response.AuthResponse> {
 				response.writeHead(200);
 				response.end(JSON.stringify(payload));
 			} catch (error) {
+				console.log(error);
 				response.writeHead(400);
 				response.end(JSON.stringify({ error: error.message }));
 			}

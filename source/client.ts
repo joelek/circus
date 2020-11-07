@@ -8,6 +8,7 @@ import {  ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
 import { Album, Artist, Cue, Disc, Entity, Episode, Movie, Person, Playlist, Season, Show, Track, User } from "./api/schema/objects";
 import * as xml from "./xnode";
 import { formatDuration as format_duration } from "./ui/metadata";
+import * as apischema from "./api/schema/";
 
 import { EntityTitleFactory } from "./ui/EntityTitleFactory";
 import { GridFactory } from "./ui/Grid";
@@ -18,6 +19,7 @@ import { EntityLinkFactory } from "./ui/EntityLink";
 import { EntityCardFactory } from "./ui/EntityCard";
 import { EntityRowFactory } from "./ui/EntityRow";
 import { PlaybackButtonFactory } from "./ui/PlaybackButton";
+import { schema } from "./probes";
 
 
 
@@ -866,17 +868,17 @@ showDevices);
 
 let token: string | undefined;
 tokenobs.addObserver((token2) => {
+	if (is.present(token2)) {
+		localStorage.setItem("token", token2);
+	} else {
+		localStorage.removeItem("token");
+	}
 	token = token2;
 	player.authenticate(token);
 });
 async function getToken(): Promise<string | undefined> {
 	return new Promise((resolve, reject) => {
 		req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?token=${token}`, {}, (status, response) => {
-			let valid_token = (status >= 200 && status < 300);
-			if (!valid_token) {
-				localStorage.removeItem("token");
-				token = undefined;
-			}
 			tokenobs.updateState(token);
 			resolve(token);
 		});
@@ -887,15 +889,7 @@ getToken().catch(() => {});
 async function getNewToken(username: string, password: string): Promise<string | undefined> {
 	return new Promise((resolve, reject) => {
 		req<api_response.AuthRequest, api_response.AuthResponse>(`/api/auth/`, { username, password }, (status, response) => {
-			let valid_token = (status >= 200 && status < 300);
-			if (!valid_token) {
-				localStorage.removeItem("token");
-				token = undefined;
-			} else {
-				token = response.token;
-				localStorage.setItem("token", token);
-			}
-			tokenobs.updateState(token);
+			tokenobs.updateState(response.token);
 			resolve(token);
 		});
 	});
@@ -951,10 +945,10 @@ let devicelist = new ArrayObservable<Device & {
 let username = new ObservableClass("");
 let password = new ObservableClass("");
 let canLogin = computed((username, password) => {
-	if (username.trim() === "") {
+	if (username === "") {
 		return false;
 	}
-	if (password.trim() === "") {
+	if (password === "") {
 		return false;
 	}
 	return true;
@@ -962,24 +956,24 @@ let canLogin = computed((username, password) => {
 let repeat_password = new ObservableClass("");
 let display_name = new ObservableClass("");
 let registration_key = new ObservableClass("");
-let loginError = new ObservableClass("");
+let loginErrors = new ArrayObservable(new Array<string>());
 let canRegister = computed((username, password, repeat_password, display_name, registration_key) => {
-	if (username.trim() === "") {
+	if (username === "") {
 		return false;
 	}
-	if (password.trim() === "") {
+	if (password === "") {
 		return false;
 	}
-	if (repeat_password.trim() === "") {
+	if (repeat_password === "") {
 		return false;
 	}
-	if (display_name.trim() === "") {
+	if (display_name === "") {
 		return false;
 	}
-	if (registration_key.trim() === "") {
+	if (registration_key === "") {
 		return false;
 	}
-	if (password.trim() !== repeat_password.trim()) {
+	if (password !== repeat_password) {
 		return false;
 	}
 	return true;
@@ -1046,8 +1040,9 @@ let modals = xml.element("div.modal-container")
 				)
 			)
 			.add(xml.element("div")
-				.bind("data-hide", loginError.addObserver((loginError) => loginError === ""))
-				.add(renderTextParagraph(xml.text(loginError)))
+				.set("style", "display: grid; gap: 16px;")
+				.bind("data-hide", loginErrors.compute((loginErrors) => loginErrors.length === 0))
+				.repeat(loginErrors, (loginError) => renderTextParagraph(xml.text(loginError)))
 			)
 			.add(xml.element("div")
 				.set("style", "display: grid; gap: 16px;")
@@ -1056,12 +1051,12 @@ let modals = xml.element("div.modal-container")
 					.add(xml.text("Login"))
 					.on("click", async () => {
 						if (canLogin.getState()) {
-							loginError.updateState("");
+							loginErrors.update([]);
 							let token = await getNewToken(username.getState(), password.getState());
 							if (is.present(token)) {
-								loginError.updateState("");
+								loginErrors.update([]);
 							} else {
-								loginError.updateState("The login was unsuccessful! Please check your credentials and try again.");
+								loginErrors.update(["The login was unsuccessful! Please check your credentials and try again."]);
 							}
 						}
 					})
@@ -1142,8 +1137,9 @@ let modals = xml.element("div.modal-container")
 				)
 			)
 			.add(xml.element("div")
-				.bind("data-hide", loginError.addObserver((loginError) => loginError === ""))
-				.add(renderTextParagraph(xml.text(loginError)))
+				.set("style", "display: grid; gap: 16px;")
+				.bind("data-hide", loginErrors.compute((loginErrors) => loginErrors.length === 0))
+				.repeat(loginErrors, (loginError) => renderTextParagraph(xml.text(loginError)))
 			)
 			.add(xml.element("div")
 				.set("style", "display: grid; gap: 16px;")
@@ -1152,7 +1148,20 @@ let modals = xml.element("div.modal-container")
 					.add(xml.text("Register"))
 					.on("click", async () => {
 						if (canRegister.getState()) {
-							// CONNECT TO API
+							loginErrors.update([]);
+							req<apischema.messages.RegisterRequest, apischema.messages.RegisterResponse | apischema.messages.ErrorMessage>(`/api/register/`, {
+								username: username.getState(),
+								password: password.getState(),
+								name: display_name.getState(),
+								key_id: registration_key.getState()
+							}, (_, response) => {
+								if (apischema.messages.ErrorMessage.is(response)) {
+									loginErrors.update(response.errors);
+								} else {
+									loginErrors.update([]);
+									tokenobs.updateState(response.token);
+								}
+							});
 						}
 					})
 				)
@@ -1161,12 +1170,12 @@ let modals = xml.element("div.modal-container")
 					.add(xml.text("Login"))
 					.on("click", async () => {
 						if (canLogin.getState()) {
-							loginError.updateState("");
+							loginErrors.update([]);
 							let token = await getNewToken(username.getState(), password.getState());
 							if (is.present(token)) {
-								loginError.updateState("");
+								loginErrors.update([]);
 							} else {
-								loginError.updateState("The login was unsuccessful! Please check your credentials and try again.");
+								loginErrors.update(["The login was unsuccessful! Please check your credentials and try again."]);
 							}
 						}
 					})

@@ -33,7 +33,11 @@ export function createUser(request: schema.messages.RegisterRequest): schema.mes
 		name,
 		password: passwords.generate(password)
 	});
-	database.keys.lookup(key_id).user_id = user_id;
+	let key = database.keys.lookup(key_id);
+	database.keys.update({
+		...key,
+		user_id
+	});
 	let token = auth.createToken(username, password);
 	return {
 		token
