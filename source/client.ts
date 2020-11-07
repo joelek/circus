@@ -879,7 +879,7 @@ tokenobs.addObserver((token2) => {
 async function getToken(): Promise<string | undefined> {
 	return new Promise((resolve, reject) => {
 		req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?token=${token}`, {}, (status, response) => {
-			tokenobs.updateState(token);
+			tokenobs.updateState(response.token);
 			resolve(token);
 		});
 	});

@@ -269,10 +269,11 @@ class AuthWithTokenRoute implements Route<response.ApiRequest, response.AuthWith
 		try {
 			libauth.getUserId(chunk);
 			response.writeHead(200);
+			payload.token = chunk;
 			return response.end(JSON.stringify(payload));
 		} catch (error) {}
 		response.writeHead(401);
-		return response.end(JSON.stringify(payload));
+		return response.end(JSON.stringify({}));
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {

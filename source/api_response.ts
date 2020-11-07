@@ -152,7 +152,7 @@ interface ApiResponse {
 };
 
 interface AuthWithTokenReponse extends ApiResponse {
-
+	token?: string
 }
 
 interface AuthRequest extends ApiRequest {
