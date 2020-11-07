@@ -262,6 +262,6 @@ if (full_chain && certificate_key) {
 	chromecasts.observe(false);
 }
 
-for (let key of indexer.keys) {
+for (let key of indexer.getKeysFromUser.lookup(undefined)) {
 	console.log(`Registration key available: ${key.key_id}`);
 }
