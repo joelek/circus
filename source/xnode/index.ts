@@ -130,7 +130,7 @@ export class XElement implements XNode<globalThis.Element> {
 				element.setAttribute(key, `${value}`);
 			});
 			if (this.tag === "input" && key === "value") {
-				element.addEventListener("change", () => {
+				element.addEventListener("input", () => {
 					observable.updateState((element as any).value);
 				});
 			}

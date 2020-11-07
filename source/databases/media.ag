@@ -193,6 +193,11 @@
 		password: string
 	},
 
+	Key: {
+		key_id: string,
+		user_id?: string
+	},
+
 	Token: {
 		token_id: string,
 		user_id: string,

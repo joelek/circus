@@ -141,6 +141,8 @@ export const cues = loadIndex("cues", databases.media.Cue, (record) => record.cu
 export const getCuesFromSubtitle = indices.CollectionIndex.fromIndex(subtitles, cues, (record) => record.subtitle_id, (record) => record.subtitle_id);
 export const users = loadIndex("users", databases.media.User, (record) => record.user_id);
 export const getUsersFromUsername = indices.CollectionIndex.fromIndex(users, users, (record) => record.user_id, (record) => record.username);
+export const keys = loadIndex("keys", databases.media.Key, (record) => record.key_id);
+export const getKeysFromUser = indices.CollectionIndex.fromIndex(users, keys, (record) => record.user_id, (record) => record.user_id);
 export const tokens = loadIndex("tokens", databases.media.Token, (record) => record.token_id);
 export const getTokensFromUser = indices.CollectionIndex.fromIndex(users, tokens, (record) => record.user_id, (record) => record.user_id);
 export const streams = loadIndex("streams", databases.media.Stream, (record) => record.stream_id);
@@ -154,6 +156,10 @@ export const getPlaylistItemsFromTrack = indices.CollectionIndex.fromIndex(track
 
 users.on("*", () => {
 	saveIndex("users", users);
+});
+
+keys.on("*", () => {
+	saveIndex("keys", keys);
 });
 
 tokens.on("*", () => {
@@ -173,12 +179,14 @@ playlist_items.on("*", () => {
 });
 
 if (users.length() === 0) {
-	users.insert({
-		user_id: makeId("user", libcrypto.randomBytes(16).toString("hex")),
-		name: "Test User",
-		username: "test",
-		password: passwords.generate("test")
-	});
+	if (keys.length() === 0) {
+		keys.insert({
+			key_id: makeId("key", libcrypto.randomBytes(16).toString("hex"))
+		});
+	}
+	for (let key of keys) {
+		console.log(`Registration key available: ${key.key_id}`);
+	}
 }
 
 export const album_search = indices.SearchIndex.fromIndex(albums, (entry) => [entry.title]);

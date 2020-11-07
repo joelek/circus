@@ -420,6 +420,19 @@ export const User = autoguard.Object.of<User>({
 	"password": autoguard.String
 });
 
+export type Key = {
+	"key_id": string,
+	"user_id"?: string
+};
+
+export const Key = autoguard.Object.of<Key>({
+	"key_id": autoguard.String,
+	"user_id": autoguard.Union.of(
+		autoguard.Undefined,
+		autoguard.String
+	)
+});
+
 export type Token = {
 	"token_id": string,
 	"user_id": string,
@@ -509,6 +522,7 @@ export type Autoguard = {
 	"Subtitle": Subtitle,
 	"Cue": Cue,
 	"User": User,
+	"Key": Key,
 	"Token": Token,
 	"Stream": Stream,
 	"Playlist": Playlist,
@@ -548,6 +562,7 @@ export const Autoguard = {
 	"Subtitle": Subtitle,
 	"Cue": Cue,
 	"User": User,
+	"Key": Key,
 	"Token": Token,
 	"Stream": Stream,
 	"Playlist": Playlist,

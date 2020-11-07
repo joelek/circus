@@ -22,8 +22,5 @@
 * Add sentinel to carousels and support loading additional content.
 * Move sentinel to grid.
 * Add appears on playlist to track view.
-* Make entity row items square with aspect preservation.
-* Circumvent initial playblack user gesture block.
 * Change streams to episode_id or movie_id.
-* Make media player use entity row.
-* Add account creation tokens that are displayed on server start up.
+* Create styled chromecast app.

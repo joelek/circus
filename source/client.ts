@@ -379,7 +379,7 @@ style.innerText = `
 		cursor: pointer;
 		font-size: 16px;
 		padding: 8px 16px;
-		transition: transform 0.125s;
+		transition: background-color 0.125s, color 0.125s;
 	}
 
 	button[data-enabled="false"] {
@@ -390,7 +390,8 @@ style.innerText = `
 
 	@media (hover: hover) and (pointer: fine) {
 		button:not([data-enabled="false"]):hover {
-			transform: scale(1.25);
+			background-color: rgb(255, 255, 255);
+			color: rgb(31, 31, 31);
 		}
 
 		button:active {
@@ -554,21 +555,9 @@ style.innerText = `
 
 
 
-	.login-modal {
-		box-sizing: border-box;
-		display: grid;
-		gap: 16px;
-		grid-auto-rows: min-content;
-		height: 100%;
-		margin: 0px auto;
-		max-width: 320px;
-		padding: 32px;
-		width: 100%;
-	}
-
 	.login-modal__form {
 		display: grid;
-		gap: 8px;
+		gap: 16px;
 	}
 
 
@@ -822,23 +811,6 @@ style.innerText = `
 
 
 
-
-	.login-modal {
-		box-sizing: border-box;
-		display: grid;
-		gap: 16px;
-		grid-auto-rows: min-content;
-		height: 100%;
-		margin: 0px auto;
-		max-width: 320px;
-		padding: 32px;
-		width: 100%;
-	}
-
-	.login-modal__form {
-		display: grid;
-		gap: 8px;
-	}
 `;
 document.head.appendChild(style);
 
@@ -875,18 +847,22 @@ const showVideo = new ObservableClass(false);
 	player.isDeviceLocal.addObserver(computer);
 	player.isCurrentEntryVideo.addObserver(computer);
 }
-const showLogin = computed((tokenobs) => {
-	return is.absent(tokenobs);
-}, tokenobs);
-const showModal = new ObservableClass(false);
-{
-	let computer = () => {
-		showModal.updateState(showLogin.getState() || showDevices.getState());
-	};
-	showLogin.addObserver(computer);
-	showDevices.addObserver(computer);
-}
-
+const showRegister = new ObservableClass(false);
+const showModal = computed((token, showRegister, showDevices) => {
+	if (is.absent(token)) {
+		if (showRegister) {
+			return "register"
+		} else {
+			return "login"
+		}
+	}
+	if (showDevices) {
+		return "devices"
+	}
+},
+tokenobs,
+showRegister,
+showDevices);
 
 let token: string | undefined;
 tokenobs.addObserver((token2) => {
@@ -974,12 +950,44 @@ let devicelist = new ArrayObservable<Device & {
 
 let username = new ObservableClass("");
 let password = new ObservableClass("");
-
-// TODO: observer for modal content
+let canLogin = computed((username, password) => {
+	if (username.trim() === "") {
+		return false;
+	}
+	if (password.trim() === "") {
+		return false;
+	}
+	return true;
+}, username, password);
+let repeat_password = new ObservableClass("");
+let display_name = new ObservableClass("");
+let registration_key = new ObservableClass("");
+let loginError = new ObservableClass("");
+let canRegister = computed((username, password, repeat_password, display_name, registration_key) => {
+	if (username.trim() === "") {
+		return false;
+	}
+	if (password.trim() === "") {
+		return false;
+	}
+	if (repeat_password.trim() === "") {
+		return false;
+	}
+	if (display_name.trim() === "") {
+		return false;
+	}
+	if (registration_key.trim() === "") {
+		return false;
+	}
+	if (password.trim() !== repeat_password.trim()) {
+		return false;
+	}
+	return true;
+}, username, password, repeat_password, display_name, registration_key);
 let modals = xml.element("div.modal-container")
-	.bind("data-hide", showModal.addObserver(a => !a))
+	.bind("data-hide", showModal.addObserver(is.absent))
 	.add(xml.element("div.device-selector")
-		.bind("data-hide", showDevices.addObserver(a => !a))
+		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "devices"))
 		.add(xml.element("div.content")
 			.add(xml.element("div.device-selector__devices")
 				.repeat(devicelist, (device) => xml.element("div.device-selector__device")
@@ -1008,49 +1016,162 @@ let modals = xml.element("div.modal-container")
 		)
 	)
 	.add(xml.element("div.login-modal")
-		.bind("data-hide", showLogin.addObserver(showLogin => !showLogin))
-		.add(xml.element("div.login-modal__form")
+		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "login"))
+		.add(xml.element("div.content")
 			.add(xml.element("div")
-				.set("style", "position: relative;")
-				.add(xml.element("input.login-modal__username")
-					.bind2("value", username)
-					.set("type", "text")
-					.set("spellcheck", "false")
-					.set("placeholder", "Username...")
+				.set("style", "display: grid; gap: 16px;")
+				.add(xml.element("div")
+					.set("style", "position: relative;")
+					.add(xml.element("input.login-modal__username")
+						.bind2("value", username)
+						.set("type", "text")
+						.set("spellcheck", "false")
+						.set("placeholder", "Username")
+					)
+					.add(Icon.makePerson()
+						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+					)
 				)
-				.add(Icon.makePerson()
-					.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+				.add(xml.element("div")
+					.set("style", "position: relative;")
+					.add(xml.element("input.login-modal__password")
+						.bind2("value", password)
+						.set("type", "password")
+						.set("spellcheck", "false")
+						.set("placeholder", "Password")
+					)
+					.add(Icon.makeLock()
+						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+					)
 				)
 			)
 			.add(xml.element("div")
-				.set("style", "position: relative;")
-				.add(xml.element("input.login-modal__password")
-					.bind2("value", password)
-					.set("type", "password")
-					.set("spellcheck", "false")
-					.set("placeholder", "Password...")
-					.on("keyup", async (event) => {
-						if (event.key === "Enter") {
+				.bind("data-hide", loginError.addObserver((loginError) => loginError === ""))
+				.add(renderTextParagraph(xml.text(loginError)))
+			)
+			.add(xml.element("div")
+				.set("style", "display: grid; gap: 16px;")
+				.add(xml.element("button")
+					.bind2("data-enabled", computed((canLogin) => "" + canLogin, canLogin))
+					.add(xml.text("Login"))
+					.on("click", async () => {
+						if (canLogin.getState()) {
+							loginError.updateState("");
 							let token = await getNewToken(username.getState(), password.getState());
-							if (token != null) {
-								showLogin.updateState(false);
+							if (is.present(token)) {
+								loginError.updateState("");
+							} else {
+								loginError.updateState("The login was unsuccessful! Please check your credentials and try again.");
 							}
 						}
 					})
 				)
-				.add(Icon.makeLock()
-					.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+				.add(xml.element("button")
+					.add(xml.text("Register"))
+					.on("click", () => {
+						showRegister.updateState(true);
+					})
 				)
 			)
 		)
-		.add(xml.element("button")
-			.add(xml.text("Login"))
-			.on("click", async () => {
-				let token = await getNewToken(username.getState(), password.getState());
-				if (token != null) {
-					showLogin.updateState(false);
-				}
-			})
+	)
+	.add(xml.element("div.register-modal")
+		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "register"))
+		.add(xml.element("div.content")
+			.add(xml.element("div")
+				.set("style", "display: grid; gap: 16px;")
+				.add(xml.element("div")
+					.set("style", "position: relative;")
+					.add(xml.element("input.login-modal__username")
+						.bind2("value", username)
+						.set("type", "text")
+						.set("spellcheck", "false")
+						.set("placeholder", "Username")
+					)
+					.add(Icon.makePerson()
+						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+					)
+				)
+				.add(xml.element("div")
+					.set("style", "position: relative;")
+					.add(xml.element("input.login-modal__password")
+						.bind2("value", password)
+						.set("type", "password")
+						.set("spellcheck", "false")
+						.set("placeholder", "Password")
+					)
+					.add(Icon.makeLock()
+						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+					)
+				)
+				.add(xml.element("div")
+					.set("style", "position: relative;")
+					.add(xml.element("input.login-modal__password")
+						.bind2("value", repeat_password)
+						.set("type", "password")
+						.set("spellcheck", "false")
+						.set("placeholder", "Repeat password")
+					)
+					.add(Icon.makeLock()
+						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+					)
+				)
+				.add(xml.element("div")
+					.set("style", "position: relative;")
+					.add(xml.element("input.login-modal__name")
+						.bind2("value", display_name)
+						.set("type", "text")
+						.set("spellcheck", "false")
+						.set("placeholder", "Display name")
+					)
+					.add(Icon.makePerson()
+						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+					)
+				)
+				.add(xml.element("div")
+					.set("style", "position: relative;")
+					.add(xml.element("input.login-modal__key")
+						.bind2("value", registration_key)
+						.set("type", "text")
+						.set("spellcheck", "false")
+						.set("placeholder", "Registration key")
+					)
+					.add(Icon.makeLock()
+						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+					)
+				)
+			)
+			.add(xml.element("div")
+				.bind("data-hide", loginError.addObserver((loginError) => loginError === ""))
+				.add(renderTextParagraph(xml.text(loginError)))
+			)
+			.add(xml.element("div")
+				.set("style", "display: grid; gap: 16px;")
+				.add(xml.element("button")
+					.bind2("data-enabled", computed((canRegister) => "" + canRegister, canRegister))
+					.add(xml.text("Register"))
+					.on("click", async () => {
+						if (canRegister.getState()) {
+
+						}
+					})
+				)
+				.add(xml.element("button")
+					.bind2("data-enabled", computed((canLogin) => "" + canLogin, canLogin))
+					.add(xml.text("Login"))
+					.on("click", async () => {
+						if (canLogin.getState()) {
+							loginError.updateState("");
+							let token = await getNewToken(username.getState(), password.getState());
+							if (is.present(token)) {
+								loginError.updateState("");
+							} else {
+								loginError.updateState("The login was unsuccessful! Please check your credentials and try again.");
+							}
+						}
+					})
+				)
+			)
 		)
 	);
 
@@ -1917,7 +2038,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("input")
 					.set("type", "text")
 					.set("spellcheck", "false")
-					.set("placeholder", "Search for cues...")
+					.set("placeholder", "Search query")
 					.bind2("value", query)
 					.on("keyup", (event) => {
 						if (event.key === "Enter") {
@@ -2039,7 +2160,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("input")
 					.set("type", "text")
 					.set("spellcheck", "false")
-					.set("placeholder", "Search for content...")
+					.set("placeholder", "Search query")
 					.bind2("value", query)
 					.on("keyup", (event) => {
 						if (event.key === "Enter") {
