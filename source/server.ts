@@ -261,3 +261,7 @@ if (full_chain && certificate_key) {
 	server.keepAliveTimeout = 60 * 1000;
 	chromecasts.observe(false);
 }
+
+for (let key of indexer.keys) {
+	console.log(`Registration key available: ${key.key_id}`);
+}

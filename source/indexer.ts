@@ -4,7 +4,6 @@ import * as autoguard from "@joelek/ts-autoguard";
 import * as databases from "./databases/";
 import * as indices from "./indices/";
 import * as is from "./is";
-import * as passwords from "./passwords";
 import * as probes from "./probes/";
 import { Directory, File } from "./databases/media";
 
@@ -56,7 +55,7 @@ function loadIndex<A>(name: string, guard: autoguard.serialization.MessageGuard<
 		`${name}.json`
 	].join("/");
 	if (!libfs.existsSync(path)) {
-		libfs.writeFileSync(path, JSON.stringify([], null, "\t"));
+		libfs.writeFileSync(path, JSON.stringify([], null, "\t") + "\n");
 	}
 	let json = JSON.parse(libfs.readFileSync(path, "utf-8"));
 	let records = autoguard.guards.Array.of(guard).as(json);
@@ -69,7 +68,7 @@ function saveIndex<A>(name: string, index: indices.RecordIndex<A>): void {
 		...TABLES_ROOT,
 		`${name}.json`
 	].join("/");
-	libfs.writeFileSync(path, JSON.stringify(records, null, "\t"));
+	libfs.writeFileSync(path, JSON.stringify(records, null, "\t") + "\n");
 }
 
 export const directories = loadIndex("directories", databases.media.Directory, (record) => record.directory_id);
@@ -183,9 +182,6 @@ if (users.length() === 0) {
 		keys.insert({
 			key_id: makeId("key", libcrypto.randomBytes(16).toString("hex"))
 		});
-	}
-	for (let key of keys) {
-		console.log(`Registration key available: ${key.key_id}`);
 	}
 }
 
