@@ -4,7 +4,24 @@ import * as libauth from "./auth";
 import * as auth from "./auth";
 import * as response from "./api_response";
 import * as handler from "./api/handler";
+import * as schema from "./api/schema/";
 import * as is from "./is";
+
+function readBody(request: libhttp.IncomingMessage): Promise<Buffer> {
+	return new Promise((resolve, reject) => {
+		let chunks = new Array<Buffer>();
+		request.on("data", (chunk) => {
+			chunks.push(chunk);
+		});
+		request.on("end", () => {
+			let buffer = Buffer.concat(chunks);
+			resolve(buffer);
+		});
+		request.on("error", (error) => {
+			reject(error);
+		});
+	});
+}
 
 function getParameter(url: liburl.UrlWithParsedQuery, key: string): string[] {
 	let values = url.query[key] ?? [];
@@ -308,6 +325,25 @@ class AuthRoute implements Route<response.AuthRequest, response.AuthResponse> {
 	}
 }
 
+class RegisterRoute implements Route<{}, {}> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		readBody(request).then((buffer) => {
+			let body = schema.messages.RegisterRequest.as(JSON.parse(buffer.toString()));
+			this.handleAsyncRequest(body).then((body) => {
+				response.writeHead(200);
+				response.end(JSON.stringify(body));
+			});
+		});
+	}
+
+	async handleAsyncRequest(body: schema.messages.RegisterRequest): Promise<schema.messages.RegisterResponse | schema.messages.ErrorMessage> {
+		return handler.createUser(body);
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]register[/]/.test(request.url ?? "/");
+	}
+}
 
 
 
@@ -808,6 +844,7 @@ class PersonsRoute implements Route<{}, response.PersonsResponse> {
 let router = new Router()
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
+	.registerRoute(new RegisterRoute())
 	.registerRoute(new MovieMovieSuggestionsRoute())
 	.registerRoute(new MovieRoute())
 	.registerRoute(new MoviesRoute())

@@ -1,0 +1,16 @@
+{
+	ErrorMessage: {
+		errors: string[]
+	},
+
+	RegisterRequest: {
+		username: string,
+		password: string,
+		name: string,
+		key_id: string
+	},
+
+	RegisterResponse: {
+		token: string
+	}
+}

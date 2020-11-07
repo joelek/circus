@@ -1,8 +1,44 @@
+import * as libcrypto from "crypto";
+import * as auth from "../auth";
+import * as passwords from "../passwords";
 import * as database from "../indexer";
 import * as jsondb from "../indices/";
 import * as is from "../is";
 import * as schema from "./schema/";
 import * as records from "../databases/media";
+
+export function createUser(request: schema.messages.RegisterRequest): schema.messages.RegisterResponse | schema.messages.ErrorMessage {
+	let { username, password, name, key_id } = { ...request };
+	let errors = new Array<string>();
+	if (database.getUsersFromUsername.lookup(username).length > 0) {
+		errors.push(`The requested username is not available.`);
+	}
+	try {
+		let key = database.keys.lookup(key_id);
+		if (is.present(key.user_id)) {
+			errors.push(`The registration key has already been used.`);
+		}
+	} catch (error) {
+		errors.push(`The registration key is not valid.`);
+	}
+	if (errors.length > 0) {
+		return {
+			errors
+		};
+	}
+	let user_id = libcrypto.randomBytes(16).toString("hex");
+	database.users.insert({
+		user_id,
+		username,
+		name,
+		password: passwords.generate(password)
+	});
+	database.keys.lookup(key_id).user_id = user_id;
+	let token = auth.createToken(username, password);
+	return {
+		token
+	};
+};
 
 export function lookupAlbumBase(album_id: string, user_id: string): schema.objects.AlbumBase {
 	let album = database.albums.lookup(album_id);

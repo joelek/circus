@@ -1152,7 +1152,7 @@ let modals = xml.element("div.modal-container")
 					.add(xml.text("Register"))
 					.on("click", async () => {
 						if (canRegister.getState()) {
-
+							// CONNECT TO API
 						}
 					})
 				)
