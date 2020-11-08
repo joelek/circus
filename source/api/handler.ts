@@ -417,7 +417,15 @@ export function searchForAlbums(query: string, offset: number, length: number, u
 export function searchForArtists(query: string, offset: number, length: number, user_id: string): schema.objects.Artist[] {
 	if (query === "") {
 		return Array.from(database.artists)
-			.sort(jsondb.LexicalSort.increasing((record) => record.name))
+			.map((artist) => ({
+				artist,
+				albums: database.getAlbumsFromArtist.lookup(artist.artist_id)
+			}))
+			.sort(jsondb.CombinedSort.of(
+				jsondb.CustomSort.increasing((entry) => entry.albums.length === 0),
+				jsondb.LexicalSort.increasing((entry) => entry.artist.name)
+			))
+			.map((entry) => entry.artist)
 			.slice(offset, offset + length)
 			.map((record) => lookupArtist(record.artist_id, user_id));
 	} else {
