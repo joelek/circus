@@ -4,5 +4,6 @@ export { CollectionIndex } from "./indices";
 export { RecordIndex } from "./indices";
 export { SearchIndex } from "./indices";
 export { CombinedSort } from "./sorters";
+export { CustomSort } from "./sorters";
 export { LexicalSort } from "./sorters";
 export { NumericSort } from "./sorters";
