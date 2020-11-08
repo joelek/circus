@@ -33,10 +33,8 @@ const CSS = `
 
 	}
 
-	.entity-card__whitespace {
-		font-size: 16px;
-		line-height: 0;
-		overflow: hidden;
+	.entity-card__pusher {
+
 	}
 
 	.entity-card__metadata {
@@ -111,8 +109,9 @@ export class EntityCardFactory {
 				)
 			)
 			.add(xnode.element("div.entity-card__content")
-				.add(xnode.element("div.entity-card__whitespace")
-					.add(xnode.text(".".repeat(1000)))
+				.add(xnode.element("svg.entity-card__pusher")
+					.set("width", "9999px")
+					.set("height", "0px")
 				)
 				.add(xnode.element("div.entity-card__metadata")
 					.add(xnode.element("div.entity-card__titles")
