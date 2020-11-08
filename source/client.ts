@@ -1404,11 +1404,40 @@ let updateviewforuri = (uri: string): void => {
 	let parts: RegExpExecArray | null;
 	if (false) {
 	} else if ((parts = /^audio[/]tracks[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+		let track_id = parts[1];
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let playlists = new ArrayObservable<Playlist>([]);
+		setScrollObserver(() => new Promise((resolve, reject) => {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				req<{}, api_response.TrackPlaylistsResponse>(`/api/audio/tracks/${track_id}/playlists/?offset=${offset}&token=${token}`, {}, (_, response) => {
+					for (let playlist of response.playlists) {
+						playlists.append(playlist);
+					}
+					offset += response.playlists.length;
+					if (response.playlists.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
+					resolve();
+				});
+			}
+		}));
 		req<{}, api_response.TrackResponse>(`/api/audio/tracks/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let track = response.track;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forTrack(track))
+				)
+				.add(xml.element("div.content")
+					.set("style", "display: grid; gap: 24px;")
+					.add(renderTextHeader(xml.text("Appearances")))
+					.bind("data-hide", playlists.compute((playlists) => playlists.length === 0))
+					.add(Grid.make()
+						.repeat(playlists, (playlist) => EntityCard.forPlaylist(playlist))
+					)
 				)
 				.render()
 			);

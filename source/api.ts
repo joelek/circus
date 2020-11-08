@@ -605,6 +605,27 @@ class SearchRoute implements Route<{}, response.SearchResponse> {
 	}
 }
 
+class TrackPlaylistsRoute implements Route<{}, response.TrackPlaylistsResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let user_id = getUserId(request);
+		let parts = /^[/]api[/]audio[/]tracks[/]([0-9a-f]{32})[/]playlists[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let track_id = decodeURIComponent(parts[1]);
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let playlists = handler.getPlaylistAppearances(track_id, offset, length, user_id);
+		let payload: response.TrackPlaylistsResponse = {
+			playlists: playlists
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]audio[/]tracks[/]([0-9a-f]{32})[/]playlists[/]/.test(request.url ?? "/");
+	}
+}
+
 class TrackRoute implements Route<{}, response.TrackResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
@@ -864,6 +885,7 @@ let router = new Router()
 	.registerRoute(new PersonsRoute())
 	.registerRoute(new PlaylistRoute())
 	.registerRoute(new PlaylistsRoute())
+	.registerRoute(new TrackPlaylistsRoute())
 	.registerRoute(new TrackRoute())
 	.registerRoute(new TracksRoute())
 	.registerRoute(new SeasonRoute())

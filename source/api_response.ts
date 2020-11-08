@@ -101,6 +101,10 @@ type ShowsResponse = {
 	shows: objects.Show[]
 };
 
+type TrackPlaylistsResponse = {
+	playlists: objects.Playlist[]
+};
+
 type TrackResponse = {
 	track: objects.Track
 };
@@ -190,6 +194,7 @@ export {
 	PersonsResponse,
 	PlaylistResponse,
 	PlaylistsResponse,
+	TrackPlaylistsResponse,
 	TrackResponse,
 	TracksResponse,
 	UserResponse,

@@ -655,6 +655,18 @@ export function getArtistAppearances(artist_id: string, user_id: string): schema
 		});
 };
 
+export function getPlaylistAppearances(track_id: string, offset: number, length: number, user_id: string): schema.objects.Playlist[] {
+	let playlist_ids = new Set<string>();
+	for (let playlist_item of database.getPlaylistItemsFromTrack.lookup(track_id)) {
+		playlist_ids.add(playlist_item.playlist_id);
+	}
+	return Array.from(playlist_ids)
+		.map((playlist_id) => database.playlists.lookup(playlist_id))
+		.sort(jsondb.LexicalSort.increasing((playlist) => playlist.title))
+		.slice(offset, offset + length)
+		.map((playlist) => lookupPlaylist(playlist.playlist_id, user_id));
+};
+
 export function getMovieSuggestions(movie_id: string, offset: number, length: number, user_id: string): schema.objects.Movie[] {
 	let genres = database.getGenresFromMovie.lookup(movie_id);
 	let map = new Map<string, number>();
