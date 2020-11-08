@@ -10,6 +10,7 @@ type AlbumsResponse = {
 
 type ArtistResponse = {
 	artist: objects.Artist,
+	tracks: objects.Track[],
 	appearances: objects.Album[]
 };
 

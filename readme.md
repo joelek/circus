@@ -8,7 +8,6 @@
 * Export icons with 24px sizes.
 * Create and use layout components with standard spacing.
 * Create modal media player.
-* Make artist view more interesting.
 * Make start view a combined search and nav view.
 * Create back and forward buttons for navigation.
 * Create and use router that caches entity pages.

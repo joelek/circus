@@ -1735,10 +1735,21 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let artist = response.artist;
+			let tracks = response.tracks;
 			let appearances = response.appearances;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forArtist(artist))
+				)
+				.add(tracks.length === 0 ? undefined : xml.element("div.content")
+					.set("style", "display: grid; gap: 24px;")
+					.add(renderTextHeader(xml.text("Popular tracks")))
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 16px;")
+						.add(...tracks.map((track) => {
+							return EntityRow.forTrack(track);
+						}))
+					)
 				)
 				.add(artist.albums.length === 0 ? undefined : xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
