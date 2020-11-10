@@ -1,5 +1,5 @@
 import * as libcrypto from "crypto";
-import * as indexer from "./indexer";
+import * as indexer from "../database/indexer";
 import * as passwords from "./passwords";
 
 function generate_token(user_id: string): string {

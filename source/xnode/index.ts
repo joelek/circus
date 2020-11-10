@@ -1,5 +1,5 @@
 import * as is from "../is";
-import { ObservableClass, Observable, ArrayObservable } from "../simpleobs";
+import { ObservableClass, Observable, ArrayObservable } from "../observers/";
 
 export interface XNode<A extends globalThis.Node> {
 	render(): A;

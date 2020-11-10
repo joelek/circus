@@ -1,11 +1,11 @@
 import * as libcrypto from "crypto";
-import * as auth from "../auth";
-import * as passwords from "../passwords";
-import * as database from "../indexer";
-import * as jsondb from "../indices/";
+import * as auth from "../server/auth";
+import * as passwords from "../server/passwords";
+import * as database from "../database/indexer";
+import * as jsondb from "../jsondb";
 import * as is from "../is";
 import * as schema from "./schema/";
-import * as records from "../databases/media";
+import * as records from "../database/schema";
 
 export function createUser(request: schema.messages.RegisterRequest): schema.messages.RegisterResponse | schema.messages.ErrorMessage {
 	let { username, password, name, key_id } = { ...request };

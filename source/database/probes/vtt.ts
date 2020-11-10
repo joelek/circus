@@ -1,7 +1,7 @@
 import * as autoguard from "@joelek/ts-autoguard";
 import * as libfs from "fs";
-import * as is from "../is";
-import * as vtt from "../vtt";
+import * as is from "../../is";
+import * as vtt from "../vtt/vtt";
 import * as schema from "./schema";
 
 export function probe(fd: number): schema.Probe {

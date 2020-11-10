@@ -1,11 +1,11 @@
 import * as liburl from "url";
 import * as libhttp from "http";
-import * as libauth from "./auth";
-import * as auth from "./auth";
+import * as libauth from "../server/auth";
+import * as auth from "../server/auth";
 import * as response from "./api_response";
-import * as handler from "./api/handler";
-import * as schema from "./api/schema/";
-import * as is from "./is";
+import * as handler from "./handler";
+import * as schema from "./schema";
+import * as is from "../is";
 
 function readBody(request: libhttp.IncomingMessage): Promise<Buffer> {
 	return new Promise((resolve, reject) => {

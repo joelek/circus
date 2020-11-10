@@ -1,25 +1,25 @@
-import * as api_response from "./api_response";
-import * as languages from "./languages";
+import * as api_response from "../api/api_response";
+import * as languages from "../languages";
 import * as session from "./browserMediaSession";
-import { ArrayObservable, computed, ObservableClass } from "./simpleobs";
-import * as client from "./context/client";
-import * as is from "./is";
-import {  ContextAlbum, ContextArtist, Device } from "./context/schema/objects";
-import { Album, Artist, Cue, Disc, Entity, Episode, Movie, Person, Playlist, Season, Show, Track, User } from "./api/schema/objects";
-import * as xml from "./xnode";
-import { formatDuration as format_duration } from "./ui/metadata";
-import * as apischema from "./api/schema/";
+import { ArrayObservable, computed, ObservableClass } from "../observers";
+import * as client from "../player/client";
+import * as is from "../is";
+import {  ContextAlbum, ContextArtist, Device } from "../player/schema/objects";
+import { Album, Artist, Cue, Disc, Entity, Episode, Movie, Person, Playlist, Season, Show, Track, User } from "../api/schema/objects";
+import * as xml from "../xnode";
+import { formatDuration as format_duration } from "../ui/metadata";
+import * as apischema from "../api/schema";
 
-import { EntityTitleFactory } from "./ui/EntityTitleFactory";
-import { GridFactory } from "./ui/Grid";
-import { CarouselFactory } from "./ui/CarouselFactory";
-import { IconFactory } from "./ui/Icon";
-import { ImageBoxFactory } from "./ui/ImageBox";
-import { EntityLinkFactory } from "./ui/EntityLink";
-import { EntityCardFactory } from "./ui/EntityCard";
-import { EntityRowFactory } from "./ui/EntityRow";
-import { PlaybackButtonFactory } from "./ui/PlaybackButton";
-import { schema } from "./probes";
+import { EntityTitleFactory } from "../ui/EntityTitleFactory";
+import { GridFactory } from "../ui/Grid";
+import { CarouselFactory } from "../ui/CarouselFactory";
+import { IconFactory } from "../ui/Icon";
+import { ImageBoxFactory } from "../ui/ImageBox";
+import { EntityLinkFactory } from "../ui/EntityLink";
+import { EntityCardFactory } from "../ui/EntityCard";
+import { EntityRowFactory } from "../ui/EntityRow";
+import { PlaybackButtonFactory } from "../ui/PlaybackButton";
+import { schema } from "../database/probes";
 
 
 

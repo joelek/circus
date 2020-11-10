@@ -1,11 +1,11 @@
 import * as libfs from "fs";
 import * as libcp from "child_process";
 import * as libcrypto from "crypto";
-import * as indexer from "./indexer";
-import * as is from "./is";
-import * as utils from "./utils";
+import * as indexer from "../database/indexer";
+import * as is from "../is";
+import * as utils from "../utils";
 import * as keyframes from "./keyframes";
-import * as dbschema from "./databases/media"
+import * as dbschema from "../database/schema"
 
 function getMediaFile(subtitle: dbschema.Subtitle): dbschema.File {
 	let video_files = indexer.getVideoFilesFromSubtitleFile.lookup(subtitle.file_id);

@@ -1,8 +1,8 @@
 import * as libhttp from "http";
 import * as liburl from "url";
-import * as auth from "../auth";
+import * as auth from "../server/auth";
 import * as is from "../is";
-import * as observers from "../simpleobs";
+import * as observers from "../observers/";
 import * as schema from "./schema";
 import * as typesockets from "../typesockets";
 

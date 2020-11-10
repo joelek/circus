@@ -20,6 +20,5 @@
 * Add adaptive limit to API that optimizes latency.
 * Add sentinel to carousels and support loading additional content.
 * Move sentinel to grid.
-* Change streams to episode_id or movie_id.
 * Create styled chromecast app.
-* Create playlist art.
+* Run indexer at regular intervals.

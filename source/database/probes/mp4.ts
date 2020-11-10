@@ -1,5 +1,5 @@
 import * as libfs from "fs";
-import * as is from "../is";
+import * as is from "../../is";
 import * as schema from "./schema";
 
 type Scope = {

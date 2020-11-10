@@ -49,7 +49,7 @@ const CSS = `
 
 	.entity-card__title {
 		color: ${theme.TEXT_0};
-		font-size: 16px;
+		font-size: 20px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;

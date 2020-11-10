@@ -1,4 +1,4 @@
-import * as observables from "../simpleobs";
+import * as observables from "../observers/";
 import * as xnode from "../xnode";
 import * as theme from "./theme";
 import * as is from "../is";

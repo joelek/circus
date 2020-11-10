@@ -1,4 +1,4 @@
-import * as objects from "./api/schema/objects";
+import * as objects from "./schema/objects";
 
 type AlbumResponse = {
 	album: objects.Album

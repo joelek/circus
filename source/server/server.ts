@@ -4,12 +4,12 @@ import * as libhttp from "http";
 import * as libhttps from "https";
 import * as libpath from "path";
 import * as liburl from "url";
-import * as api from "./api";
+import * as api from "../api/api";
 import * as auth from "./auth";
-import * as indexer from "./indexer";
+import * as indexer from "../database/indexer";
 import * as subsearch from "./subsearch";
-import * as context from "./context";
-import * as chromecasts from "./chromecast/chromecasts";
+import * as context from "../player";
+import * as chromecasts from "../chromecast/chromecasts";
 
 let send_data = (file_id: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	if (request.url === undefined) {

@@ -20,7 +20,7 @@
 	AlbumBase: {
 		album_id: string,
 		title: string,
-		artwork: ../../databases/media/ImageFile[]
+		artwork: ../../database/schema/ImageFile[]
 	},
 
 	Album: AlbumBase & {
@@ -49,7 +49,7 @@
 	Track: TrackBase & {
 		artists: ArtistBase[],
 		last_stream_date?: number,
-		media: ../../databases/media/AudioFile
+		media: ../../database/schema/AudioFile
 	},
 
 	UserBase: {
@@ -95,7 +95,7 @@
 	MovieBase: {
 		movie_id: string,
 		title: string,
-		artwork: ../../databases/media/ImageFile[]
+		artwork: ../../database/schema/ImageFile[]
 	},
 
 	Movie: MovieBase & {
@@ -104,14 +104,14 @@
 		genres: Genre[],
 		actors: Person[],
 		last_stream_date?: number,
-		media: ../../databases/media/VideoFile,
-		subtitles: ../../databases/media/SubtitleFile[]
+		media: ../../database/schema/VideoFile,
+		subtitles: ../../database/schema/SubtitleFile[]
 	},
 
 	ShowBase: {
 		show_id: string,
 		title: string,
-		artwork: ../../databases/media/ImageFile[]
+		artwork: ../../database/schema/ImageFile[]
 	},
 
 	Show: ShowBase & {
@@ -142,13 +142,13 @@
 		year?: number,
 		summary?: string,
 		last_stream_date?: number,
-		media: ../../databases/media/VideoFile,
-		subtitles: ../../databases/media/SubtitleFile[]
+		media: ../../database/schema/VideoFile,
+		subtitles: ../../database/schema/SubtitleFile[]
 	},
 
 	SubtitleBase: {
 		subtitle_id: string,
-		subtitle: ../../databases/media/SubtitleFile
+		subtitle: ../../database/schema/SubtitleFile
 	},
 
 	Subtitle: SubtitleBase & {

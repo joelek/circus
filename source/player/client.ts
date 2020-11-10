@@ -1,5 +1,5 @@
 import * as is from "../is";
-import * as observers from "../simpleobs";
+import * as observers from "../observers/";
 import * as schema from "./schema";
 import * as typesockets from "../typesockets/client";
 
