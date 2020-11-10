@@ -454,6 +454,17 @@ function indexFile(file: File): void {
 					...metadata_resource
 				});
 			}
+		} else if (file.name.endsWith(".mp3")) {
+			probe = probes.mp3.probe(fd);
+			let audio_resources = probe.resources.filter((resource): resource is probes.schema.AudioResource => resource.type === "audio");
+			let audio_resource = audio_resources.shift();
+			if (is.present(audio_resource)) {
+				audio_files.insert({
+					file_id: file_id,
+					mime: "audio/mp3",
+					...audio_resource
+				});
+			}
 		} else if (file.name.endsWith(".mp4")) {
 			probe = probes.mp4.probe(fd);
 			let audio_resources = probe.resources.filter((resource): resource is probes.schema.AudioResource => resource.type === "audio");

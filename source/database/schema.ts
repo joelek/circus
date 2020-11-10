@@ -39,13 +39,16 @@ export const File = autoguard.Object.of<File>({
 
 export type AudioFile = {
 	"file_id": string,
-	"mime": "audio/mp4",
+	"mime": "audio/mp4" | "audio/mp3",
 	"duration_ms": number
 };
 
 export const AudioFile = autoguard.Object.of<AudioFile>({
 	"file_id": autoguard.String,
-	"mime": autoguard.StringLiteral.of("audio/mp4"),
+	"mime": autoguard.Union.of(
+		autoguard.StringLiteral.of("audio/mp4"),
+		autoguard.StringLiteral.of("audio/mp3")
+	),
 	"duration_ms": autoguard.Number
 });
 
