@@ -27,6 +27,10 @@ const CSS = `
 		transform: translate(-50%, -50%);
 	}
 
+	.entity-row__content {
+
+	}
+
 	.entity-row__metadata {
 		display: grid;
 		gap: 16px;
@@ -69,9 +73,6 @@ export class EntityRowFactory {
 				)
 			)
 			.add(xnode.element("div.entity-row__content")
-				.add(xnode.element("div.entity-row__whitespace")
-					.add(xnode.text(".".repeat(1000)))
-				)
 				.add(xnode.element("div.entity-row__metadata")
 					.add(xnode.element("div.entity-row__titles")
 						.add(titles.length === 0 ? undefined : xnode.element("div.entity-row__title")

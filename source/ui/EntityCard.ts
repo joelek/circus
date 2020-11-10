@@ -34,7 +34,7 @@ const CSS = `
 	}
 
 	.entity-card__pusher {
-
+		width: 100vw;
 	}
 
 	.entity-card__metadata {
@@ -109,10 +109,7 @@ export class EntityCardFactory {
 				)
 			)
 			.add(xnode.element("div.entity-card__content")
-				.add(xnode.element("svg.entity-card__pusher")
-					.set("width", "9999px")
-					.set("height", "0px")
-				)
+				.add(xnode.element("div.entity-card__pusher"))
 				.add(xnode.element("div.entity-card__metadata")
 					.add(xnode.element("div.entity-card__titles")
 						.add(titles.length === 0 ? undefined : xnode.element("div.entity-card__title")
