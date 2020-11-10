@@ -597,6 +597,7 @@ function associateSubtitles(): void {
 }
 
 export function runIndexer(): void {
+	console.log(`Running indexer...`);
 	for (let directory of getDirectoriesFromDirectory.lookup(undefined)) {
 		checkDirectory(directory);
 	}

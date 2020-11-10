@@ -10,6 +10,7 @@ import * as indexer from "../database/indexer";
 import * as subsearch from "./subsearch";
 import * as context from "../player";
 import * as chromecasts from "../chromecast/chromecasts";
+import * as is from "../is";
 
 let send_data = (file_id: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	if (request.url === undefined) {
@@ -100,6 +101,18 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 
 const contextServer = new context.server.ContextServer();
 
+let indexTimer: NodeJS.Timeout | undefined;
+
+function setupIndexTimer(): void {
+	if (is.present(indexTimer)) {
+		clearTimeout(indexTimer);
+	}
+	indexTimer = setTimeout(() => {
+		indexTimer = undefined;
+		indexer.runIndexer();
+	}, 10 * 60 * 1000);
+}
+
 function requestHandler(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 	let host = request.headers["host"] || "";
 	let method = request.method || "";
@@ -111,6 +124,7 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 	response.on("finish", () => {
 		let duration_ms = Date.now() - startMs;
 		process.stderr.write(`${response.statusCode} ${method}:${path} (${duration_ms} ms)\n`);
+		setupIndexTimer();
 	});
 	if (false && /^[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+(:[0-9]+)?$/.test(host)) {
 		response.writeHead(400);

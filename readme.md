@@ -21,4 +21,3 @@
 * Add sentinel to carousels and support loading additional content.
 * Move sentinel to grid.
 * Create styled chromecast app.
-* Run indexer at regular intervals.
