@@ -17,7 +17,6 @@
 * Put languages in database.
 * Edit icons to look better in 12px.
 * Investigate error when launching chromecast.
-* Add adaptive limit to API that optimizes latency.
 * Add sentinel to carousels and support loading additional content.
 * Move sentinel to grid.
 * Create styled chromecast app.
