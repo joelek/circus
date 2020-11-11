@@ -79,6 +79,20 @@ function parseID3v2Header(reader: readers.Binary): Tags {
 	});
 }
 
+enum Version {
+	V2_5,
+	RESERVED,
+	V2,
+	V1
+};
+
+enum Layer {
+	RESERVED,
+	LAYER_3,
+	LAYER_2,
+	LAYER_1
+};
+
 const KILOBITS_PER_SECOND = [
 	0,
 	32,
@@ -98,13 +112,20 @@ const KILOBITS_PER_SECOND = [
 	0
 ];
 
+const SAMPLES_PER_SECOND = [
+	44100,
+	48000,
+	32000,
+	0
+];
+
 function parseXingHeader(reader: readers.Binary): number {
 	return reader.newContext((read, skip) => {
 		let buffer = Buffer.alloc(4);
 		read(buffer);
 		let sync = ((buffer[0] & 0xFF) << 3) | ((buffer[1] & 0xE0) >> 5);
-		let version = ((buffer[1] & 0x18) >> 3);
-		let layer = ((buffer[1] & 0x06) >> 1);
+		let version = ((buffer[1] & 0x18) >> 3) as Version;
+		let layer = ((buffer[1] & 0x06) >> 1) as Layer;
 		let skip_crc = ((buffer[1] & 0x01) >> 0);
 		let bitrate = ((buffer[2] & 0xF0) >> 4);
 		let sample_rate = ((buffer[2] & 0x0C) >> 2);
@@ -115,39 +136,37 @@ function parseXingHeader(reader: readers.Binary): number {
 		let copyrighted = ((buffer[3] & 0x08) >> 3);
 		let original = ((buffer[3] & 0x04) >> 2);
 		let emphasis = ((buffer[3] & 0x03) >> 0);
-		if (sync === 0x07FF && version === 3 && layer === 1) {
+		if (sync === 0x07FF && version === Version.V1 && layer === Layer.LAYER_3) {
 			let samples_per_frame = 1152;
-			if (sample_rate === 0) {
-				let slots = Math.floor(samples_per_frame * KILOBITS_PER_SECOND[bitrate] * 1000 / 8 / 44100);
-				if (padded) {
-					slots += 1;
+			let slots = Math.floor(samples_per_frame * KILOBITS_PER_SECOND[bitrate] * 1000 / 8 / SAMPLES_PER_SECOND[sample_rate]);
+			if (padded) {
+				slots += 1;
+			}
+			let bytes = slots * 1;
+			let body = Buffer.alloc(bytes - 4);
+			read(body);
+			let zeroes = body.slice(0, 0 + 32);
+			let xing = body.slice(32, 32 + 4);
+			if (xing.toString("binary") === "Xing" || xing.toString() === "Info") {
+				let flags = body.slice(36, 36 + 4);
+				let has_quality = ((flags[3] & 0x08) >> 3);
+				let has_toc = ((flags[3] & 0x04) >> 2);
+				let has_bytes = ((flags[3] & 0x02) >> 1);
+				let has_frames = ((flags[3] & 0x01) >> 0);
+				let offset = 40;
+				if (has_frames) {
+					let num_frames = body.readUInt32BE(offset); offset += 4;
+					let duration_ms = Math.ceil((num_frames * samples_per_frame / SAMPLES_PER_SECOND[sample_rate]) * 1000);
+					return duration_ms;
 				}
-				let bytes = slots * 1;
-				let body = Buffer.alloc(bytes - 4);
-				read(body);
-				let zeroes = body.slice(0, 0 + 32);
-				let xing = body.slice(32, 32 + 4);
-				if (xing.toString("binary") === "Xing" || xing.toString() === "Info") {
-					let flags = body.slice(36, 36 + 4);
-					let has_quality = ((flags[3] & 0x08) >> 3);
-					let has_toc = ((flags[3] & 0x04) >> 2);
-					let has_bytes = ((flags[3] & 0x02) >> 1);
-					let has_frames = ((flags[3] & 0x01) >> 0);
-					let offset = 40;
-					if (has_frames) {
-						let num_frames = body.readUInt32BE(offset); offset += 4;
-						let duration_ms = Math.ceil((num_frames * samples_per_frame / 44100) * 1000);
-						return duration_ms;
-					}
-					if (has_bytes) {
-						let num_bytes = body.readUInt32BE(offset); offset += 4;
-					}
-					if (has_toc) {
-						offset += 100;
-					}
-					if (has_quality) {
-						let quality = body.readUInt32BE(offset); offset += 4;
-					}
+				if (has_bytes) {
+					let num_bytes = body.readUInt32BE(offset); offset += 4;
+				}
+				if (has_toc) {
+					offset += 100;
+				}
+				if (has_quality) {
+					let quality = body.readUInt32BE(offset); offset += 4;
 				}
 			}
 		}
