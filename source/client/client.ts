@@ -32,7 +32,7 @@ import { schema } from "../database/probes";
 
 
 function makeUrl(): string {
-	let path = `/sockets/context/?type=browser&name=Browser`;
+	let path = `/sockets/context/?type=browser&name=Orbit`;
 	let protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 	let host = window.location.host;
 	return `${protocol}//${host}${path}`;
@@ -487,6 +487,9 @@ style.innerText = `
 		padding: 32px;
 	}
 
+	.content--narrow {
+		max-width: 480px;
+	}
 
 
 
@@ -557,6 +560,11 @@ style.innerText = `
 
 
 
+	.login-modal {
+		display: grid;
+		gap: 64px;
+	}
+
 	.login-modal__form {
 		display: grid;
 		gap: 16px;
@@ -587,7 +595,8 @@ style.innerText = `
 
 
 	.device-selector {
-
+		display: grid;
+		gap: 64px;
 	}
 
 	.device-selector__devices {
@@ -849,21 +858,15 @@ const showVideo = new ObservableClass(false);
 	player.isDeviceLocal.addObserver(computer);
 	player.isCurrentEntryVideo.addObserver(computer);
 }
-const showRegister = new ObservableClass(false);
-const showModal = computed((token, showRegister, showDevices) => {
+const showModal = computed((token, showDevices) => {
 	if (is.absent(token)) {
-		if (showRegister) {
-			return "register"
-		} else {
-			return "login"
-		}
+		return "login"
 	}
 	if (showDevices) {
 		return "devices"
 	}
 },
 tokenobs,
-showRegister,
 showDevices);
 
 let token: string | undefined;
@@ -901,6 +904,7 @@ let mountwrapper = document.createElement('div');
 let appcontainer = xml.element("div.app")
 	.render();
 document.body.appendChild(appcontainer);
+
 
 let appheader = xml.element("div.app__header")
 	.add(xml.element("div.content")
@@ -978,207 +982,166 @@ let canRegister = computed((username, password, repeat_password, display_name, r
 	}
 	return true;
 }, username, password, repeat_password, display_name, registration_key);
+async function doLogin(): Promise<void> {
+	if (canLogin.getState()) {
+		loginErrors.update([]);
+		let token = await getNewToken(username.getState(), password.getState());
+		if (is.present(token)) {
+			loginErrors.update([]);
+		} else {
+			loginErrors.update(["The login was unsuccessful! Please check your credentials and try again."]);
+		}
+	}
+}
+async function doRegister(): Promise<void> {
+	if (canRegister.getState()) {
+		loginErrors.update([]);
+		req<apischema.messages.RegisterRequest, apischema.messages.RegisterResponse | apischema.messages.ErrorMessage>(`/api/register/`, {
+			username: username.getState(),
+			password: password.getState(),
+			name: display_name.getState(),
+			key_id: registration_key.getState()
+		}, (_, response) => {
+			if (apischema.messages.ErrorMessage.is(response)) {
+				loginErrors.update(response.errors);
+			} else {
+				loginErrors.update([]);
+				tokenobs.updateState(response.token);
+			}
+		});
+	}
+}
 let modals = xml.element("div.modal-container")
 	.bind("data-hide", showModal.addObserver(is.absent))
-	.add(xml.element("div.device-selector")
+	.add(xml.element("div")
 		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "devices"))
-		.add(xml.element("div.content")
-			.add(xml.element("div.device-selector__devices")
-				.repeat(devicelist, (device) => xml.element("div.device-selector__device")
-					.add(makeButton()
-						.set("data-active", "" + device.active)
-						.add(Icon.makeBroadcast())
-					)
-					.add(xml.element("div.device-selector__device-info")
-						.add(xml.element("div.device-selector__device-name")
-							.add(xml.text(device.name))
+		.add(xml.element("div.content.content--narrow")
+			.add(xml.element("div.device-selector")
+				.add(xml.element("div.device-selector__devices")
+					.repeat(devicelist, (device) => xml.element("div.device-selector__device")
+						.add(makeButton()
+							.set("data-active", "" + device.active)
+							.add(Icon.makeBroadcast())
 						)
-						.add(xml.element("div.device-selector__device-type")
-							.add(xml.text(device.local ? "local" : "remote"))
+						.add(xml.element("div.device-selector__device-info")
+							.add(xml.element("div.device-selector__device-name")
+								.add(xml.text(device.name))
+							)
+							.add(xml.element("div.device-selector__device-type")
+								.add(xml.text(device.local ? "Local device" : "Remote device"))
+							)
 						)
-					)
-					.on("click", () => {
-						player.transfer({
-							id: device.id,
-							type: device.type,
-							name: device.name
-						});
-						showDevices.updateState(false);
-					})
-				)
-			)
-		)
-	)
-	.add(xml.element("div.login-modal")
-		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "login"))
-		.add(xml.element("div.content")
-			.add(xml.element("div")
-				.set("style", "display: grid; gap: 16px;")
-				.add(xml.element("div")
-					.set("style", "position: relative;")
-					.add(xml.element("input.login-modal__username")
-						.bind2("value", username)
-						.set("type", "text")
-						.set("spellcheck", "false")
-						.set("placeholder", "Username")
-					)
-					.add(Icon.makePerson()
-						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
-					)
-				)
-				.add(xml.element("div")
-					.set("style", "position: relative;")
-					.add(xml.element("input.login-modal__password")
-						.bind2("value", password)
-						.set("type", "password")
-						.set("spellcheck", "false")
-						.set("placeholder", "Password")
-					)
-					.add(Icon.makeLock()
-						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
-					)
-				)
-			)
-			.add(xml.element("div")
-				.set("style", "display: grid; gap: 16px;")
-				.bind("data-hide", loginErrors.compute((loginErrors) => loginErrors.length === 0))
-				.repeat(loginErrors, (loginError) => renderTextParagraph(xml.text(loginError)))
-			)
-			.add(xml.element("div")
-				.set("style", "display: grid; gap: 16px;")
-				.add(xml.element("button")
-					.bind2("data-enabled", computed((canLogin) => "" + canLogin, canLogin))
-					.add(xml.text("Login"))
-					.on("click", async () => {
-						if (canLogin.getState()) {
-							loginErrors.update([]);
-							let token = await getNewToken(username.getState(), password.getState());
-							if (is.present(token)) {
-								loginErrors.update([]);
-							} else {
-								loginErrors.update(["The login was unsuccessful! Please check your credentials and try again."]);
-							}
-						}
-					})
-				)
-				.add(xml.element("button")
-					.add(xml.text("Register"))
-					.on("click", () => {
-						showRegister.updateState(true);
-					})
-				)
-			)
-		)
-	)
-	.add(xml.element("div.register-modal")
-		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "register"))
-		.add(xml.element("div.content")
-			.add(xml.element("div")
-				.set("style", "display: grid; gap: 16px;")
-				.add(xml.element("div")
-					.set("style", "position: relative;")
-					.add(xml.element("input.login-modal__username")
-						.bind2("value", username)
-						.set("type", "text")
-						.set("spellcheck", "false")
-						.set("placeholder", "Username")
-					)
-					.add(Icon.makePerson()
-						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
-					)
-				)
-				.add(xml.element("div")
-					.set("style", "position: relative;")
-					.add(xml.element("input.login-modal__password")
-						.bind2("value", password)
-						.set("type", "password")
-						.set("spellcheck", "false")
-						.set("placeholder", "Password")
-					)
-					.add(Icon.makeLock()
-						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
-					)
-				)
-				.add(xml.element("div")
-					.set("style", "position: relative;")
-					.add(xml.element("input.login-modal__password")
-						.bind2("value", repeat_password)
-						.set("type", "password")
-						.set("spellcheck", "false")
-						.set("placeholder", "Repeat password")
-					)
-					.add(Icon.makeLock()
-						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
-					)
-				)
-				.add(xml.element("div")
-					.set("style", "position: relative;")
-					.add(xml.element("input.login-modal__name")
-						.bind2("value", display_name)
-						.set("type", "text")
-						.set("spellcheck", "false")
-						.set("placeholder", "Display name")
-					)
-					.add(Icon.makePerson()
-						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
-					)
-				)
-				.add(xml.element("div")
-					.set("style", "position: relative;")
-					.add(xml.element("input.login-modal__key")
-						.bind2("value", registration_key)
-						.set("type", "text")
-						.set("spellcheck", "false")
-						.set("placeholder", "Registration key")
-					)
-					.add(Icon.makeLock()
-						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
-					)
-				)
-			)
-			.add(xml.element("div")
-				.set("style", "display: grid; gap: 16px;")
-				.bind("data-hide", loginErrors.compute((loginErrors) => loginErrors.length === 0))
-				.repeat(loginErrors, (loginError) => renderTextParagraph(xml.text(loginError)))
-			)
-			.add(xml.element("div")
-				.set("style", "display: grid; gap: 16px;")
-				.add(xml.element("button")
-					.bind2("data-enabled", computed((canRegister) => "" + canRegister, canRegister))
-					.add(xml.text("Register"))
-					.on("click", async () => {
-						if (canRegister.getState()) {
-							loginErrors.update([]);
-							req<apischema.messages.RegisterRequest, apischema.messages.RegisterResponse | apischema.messages.ErrorMessage>(`/api/register/`, {
-								username: username.getState(),
-								password: password.getState(),
-								name: display_name.getState(),
-								key_id: registration_key.getState()
-							}, (_, response) => {
-								if (apischema.messages.ErrorMessage.is(response)) {
-									loginErrors.update(response.errors);
-								} else {
-									loginErrors.update([]);
-									tokenobs.updateState(response.token);
-								}
+						.on("click", () => {
+							player.transfer({
+								id: device.id,
+								type: device.type,
+								name: device.name
 							});
-						}
-					})
+							showDevices.updateState(false);
+						})
+					)
 				)
-				.add(xml.element("button")
-					.bind2("data-enabled", computed((canLogin) => "" + canLogin, canLogin))
-					.add(xml.text("Login"))
-					.on("click", async () => {
-						if (canLogin.getState()) {
-							loginErrors.update([]);
-							let token = await getNewToken(username.getState(), password.getState());
-							if (is.present(token)) {
-								loginErrors.update([]);
-							} else {
-								loginErrors.update(["The login was unsuccessful! Please check your credentials and try again."]);
-							}
-						}
-					})
+			)
+		)
+	)
+	.add(xml.element("div")
+		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "login"))
+		.add(xml.element("div.content.content--narrow")
+			.add(xml.element("div.login-modal")
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 16px;")
+					.add(xml.element("div")
+						.set("style", "position: relative;")
+						.add(xml.element("input.login-modal__username")
+							.bind2("value", username)
+							.set("type", "text")
+							.set("spellcheck", "false")
+							.set("placeholder", "Username")
+						)
+						.add(Icon.makePerson()
+							.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+						)
+					)
+					.add(xml.element("div")
+						.set("style", "position: relative;")
+						.add(xml.element("input.login-modal__password")
+							.bind2("value", password)
+							.set("type", "password")
+							.set("spellcheck", "false")
+							.set("placeholder", "Password")
+							.on("keyup", async (event) => {
+								if (event.code === "Enter") {
+									await doLogin();
+								}
+							})
+						)
+						.add(Icon.makeLock()
+							.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+						)
+					)
+					.add(xml.element("div")
+						.set("style", "position: relative;")
+						.add(xml.element("input.login-modal__password")
+							.bind2("value", repeat_password)
+							.set("type", "password")
+							.set("spellcheck", "false")
+							.set("placeholder", "Repeat password")
+						)
+						.add(Icon.makeLock()
+							.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+						)
+					)
+					.add(xml.element("div")
+						.set("style", "position: relative;")
+						.add(xml.element("input.login-modal__name")
+							.bind2("value", display_name)
+							.set("type", "text")
+							.set("spellcheck", "false")
+							.set("placeholder", "Display name")
+						)
+						.add(Icon.makePerson()
+							.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+						)
+					)
+					.add(xml.element("div")
+						.set("style", "position: relative;")
+						.add(xml.element("input.login-modal__key")
+							.bind2("value", registration_key)
+							.set("type", "text")
+							.set("spellcheck", "false")
+							.set("placeholder", "Registration key")
+							.on("keyup", async (event) => {
+								if (event.code === "Enter") {
+									await doRegister();
+								}
+							})
+						)
+						.add(Icon.makeLock()
+							.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+						)
+					)
+				)
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 16px;")
+					.bind("data-hide", loginErrors.compute((loginErrors) => loginErrors.length === 0))
+					.repeat(loginErrors, (loginError) => renderTextParagraph(xml.text(loginError)))
+				)
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 16px;")
+					.add(xml.element("button")
+						.bind2("data-enabled", computed((canRegister) => "" + canRegister, canRegister))
+						.add(xml.text("Register"))
+						.on("click", async () => {
+							await doRegister();
+						})
+					)
+					.add(xml.element("button")
+						.bind2("data-enabled", computed((canLogin) => "" + canLogin, canLogin))
+						.add(xml.text("Login"))
+						.on("click", async () => {
+							await doLogin();
+						})
+					)
 				)
 			)
 		)
