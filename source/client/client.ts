@@ -46,6 +46,17 @@ window.addEventListener("focus", () => {
 	}
 });
 
+window.addEventListener("keydown", (event) => {
+	if (event.code === "Space") {
+		if (event.target instanceof HTMLInputElement) {
+			return;
+		}
+		event.preventDefault();
+		event.stopPropagation();
+		player.toggle();
+	}
+});
+
 player.isOnline.addObserver((isOnline) => {
 	document.documentElement.setAttribute("data-online", `${isOnline}`);
 });
