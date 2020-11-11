@@ -2064,7 +2064,7 @@ let updateviewforuri = (uri: string): void => {
 					.set("placeholder", "Search query")
 					.bind2("value", query)
 					.on("keyup", (event) => {
-						if (event.key === "Enter") {
+						if (event.code === "Enter") {
 							navigate(`video/cues/${encodeURIComponent(query.getState())}/`);
 						}
 					})
@@ -2186,7 +2186,7 @@ let updateviewforuri = (uri: string): void => {
 					.set("placeholder", "Search query")
 					.bind2("value", query)
 					.on("keyup", (event) => {
-						if (event.key === "Enter") {
+						if (event.code === "Enter") {
 							navigate(`search/${encodeURIComponent(query.getState())}/`);
 						}
 					})
