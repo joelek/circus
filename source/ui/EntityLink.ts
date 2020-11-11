@@ -1,21 +1,28 @@
 import * as api from "../api/schema/objects";
+import * as observers from "../observers";
 import * as xnode from "../xnode";
 
 const CSS = ``;
 
 export class EntityLinkFactory {
 	private navigator: (url: string) => void;
+	private contextMenuEntity: observers.ObservableClass<api.EntityBase | undefined>;
 
-	private make(url: string): xnode.XElement {
+	private make(url: string, entity?: api.EntityBase): xnode.XElement {
 		return xnode.element("a")
 			.set("href", url)
 			.on("click", () => {
 				this.navigator(url);
+			})
+			.on("contextmenu", () => {
+				this.contextMenuEntity.updateState(undefined);
+				this.contextMenuEntity.updateState(entity);
 			});
 	}
 
-	constructor(navigator: (url: string) => void) {
+	constructor(navigator: (url: string) => void, contextMenuEntity: observers.ObservableClass<api.EntityBase | undefined>) {
 		this.navigator = navigator;
+		this.contextMenuEntity = contextMenuEntity;
 	}
 
 	forAlbum(album: api.AlbumBase): xnode.XElement {
@@ -99,7 +106,7 @@ export class EntityLinkFactory {
 	}
 
 	forTrack(track: api.TrackBase): xnode.XElement {
-		return this.make(`audio/tracks/${track.track_id}/`);
+		return this.make(`audio/tracks/${track.track_id}/`, track);
 	}
 
 	forTracks(): xnode.XElement {

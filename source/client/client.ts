@@ -244,6 +244,32 @@ player.currentEntry.addObserver((currentEntry) => {
 
 
 const tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
+const contextMenuEntity = new ObservableClass(undefined as apischema.objects.EntityBase | undefined);
+const showContextMenu = new ObservableClass(false);
+const contextMenuItems = new ArrayObservable(new Array<xml.XElement>());
+const playlists = new ArrayObservable(new Array<Playlist>());
+contextMenuEntity.addObserver((contextMenuEntity) => {
+	if (apischema.objects.TrackBase.is(contextMenuEntity)) {
+		contextMenuItems.update([
+			xml.element("div")
+				.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr min-content;")
+				.add(renderTextHeader(xml.text("Add to playlist")))
+				.add(makeButton()
+					.on("click", () => {
+						showContextMenu.updateState(false);
+					})
+					.add(Icon.makeCross())
+				),
+			xml.element("div")
+				.set("style", "display: grid; gap: 16px;")
+				.bind("data-hide", playlists.compute((playlists) => playlists.length === 0))
+				.repeat(playlists, (playlist) => EntityRow.forPlaylist(playlist))
+		]);
+		showContextMenu.updateState(true);
+	} else {
+		showContextMenu.updateState(false);
+	}
+});
 
 const carouselFactory = new CarouselFactory();
 document.head.appendChild(CarouselFactory.makeStyle().render())
@@ -260,7 +286,7 @@ document.head.appendChild(PlaybackButtonFactory.makeStyle().render())
 const ImageBox = new ImageBoxFactory(tokenobs);
 document.head.appendChild(ImageBoxFactory.makeStyle().render())
 
-const EntityLink = new EntityLinkFactory(navigate);
+const EntityLink = new EntityLinkFactory(navigate, contextMenuEntity);
 document.head.appendChild(EntityLinkFactory.makeStyle().render())
 
 const entityTitleFactory = new EntityTitleFactory(EntityLink);
@@ -823,16 +849,6 @@ style.innerText = `
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-
-
-
-
-
-
-
-
-
-
 `;
 document.head.appendChild(style);
 
@@ -869,15 +885,19 @@ const showVideo = new ObservableClass(false);
 	player.isDeviceLocal.addObserver(computer);
 	player.isCurrentEntryVideo.addObserver(computer);
 }
-const showModal = computed((token, showDevices) => {
+const showModal = computed((token, showContextMenu, showDevices) => {
 	if (is.absent(token)) {
-		return "login"
+		return "login";
+	}
+	if (showContextMenu) {
+		return "context";
 	}
 	if (showDevices) {
-		return "devices"
+		return "devices";
 	}
 },
 tokenobs,
+showContextMenu,
 showDevices);
 
 let token: string | undefined;
@@ -1156,10 +1176,13 @@ let modals = xml.element("div.modal-container")
 				)
 			)
 		)
+	)
+	.add(xml.element("div")
+		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "context"))
+		.add(xml.element("div.content.content--narrow")
+			.repeat(contextMenuItems, (contextMenuItem) => contextMenuItem)
+		)
 	);
-
-
-
 
 mountwrapper.appendChild(modals.render());
 let scroll_container = xml.element("div.scroll-container")
