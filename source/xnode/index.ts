@@ -77,15 +77,17 @@ export class XElement implements XNode<globalThis.Element> {
 		return this;
 	}
 
-	on<A extends keyof HTMLElementEventMap>(kind: A, listener: Listener<A>): this {
+	on<A extends keyof HTMLElementEventMap>(kind: A, listener: Listener<A>, override = true): this {
 		let listeners = this.listeners.get(kind) as Array<Listener<A>> | undefined;
 		if (listeners == null) {
 			listeners = new Array<Listener<A>>();
 			this.listeners.set(kind, listeners as any);
 		}
 		listeners.push((event) => {
-			event.preventDefault();
-			event.stopPropagation();
+			if (override) {
+				event.preventDefault();
+				event.stopPropagation();
+			}
 			listener(event);
 		});
 		return this;
