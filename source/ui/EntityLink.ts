@@ -1,4 +1,5 @@
 import * as api from "../api/schema/objects";
+import * as is from "../is";
 import * as observers from "../observers";
 import * as xnode from "../xnode";
 
@@ -9,15 +10,33 @@ export class EntityLinkFactory {
 	private contextMenuEntity: observers.ObservableClass<api.EntityBase | undefined>;
 
 	private make(url: string, entity?: api.EntityBase): xnode.XElement {
+		let onclick = () => {
+			this.navigator(url);
+		};
+		let oncontextmenu = () => {
+			this.contextMenuEntity.updateState(undefined);
+			this.contextMenuEntity.updateState(entity);
+		};
+		let timer: number | undefined;
 		return xnode.element("a")
 			.set("href", url)
-			.on("click", () => {
-				this.navigator(url);
-			})
-			.on("contextmenu", () => {
-				this.contextMenuEntity.updateState(undefined);
-				this.contextMenuEntity.updateState(entity);
-			});
+			.on("click", onclick)
+			.on("contextmenu", oncontextmenu)
+			.on("touchstart", () => {
+				timer = window.setTimeout(() => {
+					window.clearTimeout(timer); timer = undefined;
+					oncontextmenu();
+				}, 500);
+			}, false)
+			.on("touchcancel", () => {
+				window.clearTimeout(timer); timer = undefined;
+			}, false)
+			.on("touchmove", () => {
+				window.clearTimeout(timer); timer = undefined;
+			}, false)
+			.on("touchend", () => {
+				window.clearTimeout(timer); timer = undefined;
+			}, false);
 	}
 
 	constructor(navigator: (url: string) => void, contextMenuEntity: observers.ObservableClass<api.EntityBase | undefined>) {
