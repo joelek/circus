@@ -347,6 +347,16 @@ style.innerText = `
 		line-height: 1;
 		outline: none;
 		padding: 0px;
+		user-select: none;
+			-webkit-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			-o-user-select: none;
+		touch-callout: none;
+			-webkit-touch-callout: none;
+			-moz-touch-callout: none;
+			-ms-touch-callout: none;
+			-o-touch-callout: none;
 	}
 
 	a,
@@ -403,7 +413,6 @@ style.innerText = `
 		color: rgb(255, 255, 255);
 		font-family: "Nunito", sans-serif;
 		overflow: hidden;
-		user-select: none;
 	}
 
 	body ::selection {
