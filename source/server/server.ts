@@ -31,6 +31,15 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 		mime = indexer.audio_files.lookup(file.file_id).mime;
 	} catch (error) {}
 	try {
+		mime = indexer.image_files.lookup(file.file_id).mime;
+	} catch (error) {}
+	try {
+		mime = indexer.metadata_files.lookup(file.file_id).mime;
+	} catch (error) {}
+	try {
+		mime = indexer.subtitle_files.lookup(file.file_id).mime;
+	} catch (error) {}
+	try {
 		mime = indexer.video_files.lookup(file.file_id).mime;
 	} catch (error) {}
 	let filename = path.join(libpath.sep);
@@ -201,7 +210,7 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 	}
 	if (path === "/manifest.json") {
 		response.writeHead(200, {
-			"Content-Type": "application/json; charset=utf-8"
+			"Content-Type": "application/json"
 		});
 		return response.end(JSON.stringify({
 			"name": "Orbit",
