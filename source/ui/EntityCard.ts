@@ -102,6 +102,15 @@ const CSS = `
 	}
 `;
 
+function isHighDefinition(width: number, height: number): boolean {
+	let is_ultrawide = width * 9 > 16 * height;
+	if (is_ultrawide) {
+		return width >= 1280;
+	} else {
+		return height >= 720;
+	}
+}
+
 export class EntityCardFactory {
 	private entityTitleFactory: EntityTitleFactory;
 	private entityLinkFactory: EntityLinkFactory;
@@ -265,7 +274,7 @@ export class EntityCardFactory {
 			is.present(episode.year) ? `${episode.year}` : undefined,
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		if (episode.media.height >= 720) {
+		if (isHighDefinition(episode.media.width, episode.media.height)) {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("HD")));
 		}
 		if (is.present(episode.last_stream_date)) {
@@ -301,7 +310,7 @@ export class EntityCardFactory {
 			is.present(movie.year) ? `${movie.year}` : undefined,
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		if (movie.media.height >= 720) {
+		if (isHighDefinition(movie.media.width, movie.media.height)) {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("HD")));
 		}
 		if (is.present(movie.last_stream_date)) {
