@@ -92,6 +92,14 @@ const CSS = `
 		line-height: 1.25;
 		word-break: break-word;
 	}
+
+	.entity-card__description--clamp {
+		display: -webkit-box;
+		max-height: 100px;
+		overflow: hidden;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 5;
+	}
 `;
 
 export class EntityCardFactory {
@@ -122,7 +130,7 @@ export class EntityCardFactory {
 					.add(tags.length === 0 ? undefined : xnode.element("div.entity-card__tags")
 						.add(...tags)
 					)
-					.add(is.absent(description) ? undefined : xnode.element("div.entity-card__description")
+					.add(is.absent(description) ? undefined : xnode.element("div.entity-card__description.entity-card__description--clamp")
 						.add(xnode.text(description))
 					)
 				)
