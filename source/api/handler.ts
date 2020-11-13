@@ -665,16 +665,10 @@ export function getArtistAppearances(artist_id: string, user_id: string): schema
 
 export function getArtistTracks(artist_id: string, offset: number, length: number, user_id: string): schema.objects.Track[] {
 	let track_ids = new Map<string, number>();
-	for (let album of database.getAlbumsFromArtist.lookup(artist_id)) {
-		for (let disc of database.getDiscsFromAlbum.lookup(album.album_id)) {
-			for (let track of database.getTracksFromDisc.lookup(disc.disc_id)) {
-				for (let file of database.getFilesFromTrack.lookup(track.track_id)) {
-					let streams = database.getStreamsFromFile.lookup(file.file_id);
-					if (streams.length > 0) {
-						track_ids.set(track.track_id, streams.length);
-					}
-				}
-			}
+	for (let track_artist of database.getTracksFromArtist.lookup(artist_id)) {
+		for (let file of database.getFilesFromTrack.lookup(track_artist.track_id)) {
+			let streams = database.getStreamsFromFile.lookup(file.file_id);
+			track_ids.set(track_artist.track_id, streams.length);
 		}
 	}
 	return Array.from(track_ids.entries())

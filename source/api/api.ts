@@ -99,7 +99,7 @@ class ArtistRoute implements Route<{}, response.ArtistResponse> {
 		let parts = /^[/]api[/]audio[/]artists[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let artist_id = parts[1];
 		let artist = handler.lookupArtist(artist_id, user_id);
-		let tracks = handler.getArtistTracks(artist_id, 0, 5, user_id);
+		let tracks = handler.getArtistTracks(artist_id, 0, 3, user_id);
 		let appearances = handler.getArtistAppearances(artist_id, user_id);
 		let payload: response.ArtistResponse = {
 			artist,
