@@ -42,6 +42,7 @@ export class XElement implements XNode<globalThis.Element> {
 	private listeners: Map<keyof HTMLElementEventMap, Array<Listener<keyof HTMLElementEventMap>>>;
 	private array?: ArrayObservable<any>;
 	private renderer?: Renderer<any>;
+	private element: globalThis.Element | undefined;
 
 	constructor(selector: string) {
 		let parts = selector.split(".");
@@ -93,9 +94,16 @@ export class XElement implements XNode<globalThis.Element> {
 		return this;
 	}
 
+	ref(): globalThis.Element {
+		if (is.absent(this.element)) {
+			throw `Expected element to be rendered!`;
+		}
+		return this.element;
+	}
+
 	render(): globalThis.Element {
 		let ns = ["svg", "path"].indexOf(this.tag) >= 0 ? "http://www.w3.org/2000/svg" : "http://www.w3.org/1999/xhtml";
-		let element = document.createElementNS(ns, this.tag);
+		let element = this.element = document.createElementNS(ns, this.tag);
 		element.setAttribute = (() => {
 			let setAttribute = element.setAttribute.bind(element);
 			return (key: string, value: string) => {

@@ -20,7 +20,6 @@
 * Add sentinel to carousels and support loading additional content.
 * Move sentinel to grid.
 * Create styled chromecast app.
-* Fix carousel card width.
 * Add offline functionality with service workers.
 * Improve stream detection algorithm.
 * Index generated images.

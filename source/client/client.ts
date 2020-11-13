@@ -271,14 +271,14 @@ contextMenuEntity.addObserver((contextMenuEntity) => {
 	}
 });
 
-const carouselFactory = new CarouselFactory();
-document.head.appendChild(CarouselFactory.makeStyle().render())
-
 const Grid = new GridFactory();
 document.head.appendChild(GridFactory.makeStyle().render())
 
 const Icon = new IconFactory();
 document.head.appendChild(IconFactory.makeStyle().render())
+
+const carouselFactory = new CarouselFactory(Icon);
+document.head.appendChild(CarouselFactory.makeStyle().render())
 
 const PlaybackButton = new PlaybackButtonFactory(player, Icon);
 document.head.appendChild(PlaybackButtonFactory.makeStyle().render())
@@ -1918,8 +1918,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(...show.seasons.map((season, seasonIndex) => xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
 						.add(renderTextHeader(xml.text(`Season ${season.number}`)))
-						.add(carouselFactory.make()
-							.add(...season.episodes.map((episode, episodeIndex) => EntityCard.forEpisode(episode, PlaybackButton.forShow(show, seasonIndex, episodeIndex))))
+						.add(carouselFactory.make(...season.episodes.map((episode, episodeIndex) => EntityCard.forEpisode(episode, PlaybackButton.forShow(show, seasonIndex, episodeIndex))))
 						)
 					)
 				)
