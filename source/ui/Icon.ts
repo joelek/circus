@@ -17,6 +17,16 @@ export class IconFactory {
 			);
 	}
 
+	makeChevron(): xnode.XElement {
+		return xnode.element("svg")
+			.set("width", "12px")
+			.set("height", "12px")
+			.set("viewBox", "0 0 24 24")
+			.add(xnode.element("path")
+				.set("d", "M8.414,24c-0.256,0-0.512-0.098-0.707-0.293l-1.414-1.414c-0.391-0.391-0.391-1.023,0-1.414L15.172,12L6.293,3.121c-0.391-0.391-0.391-1.023,0-1.414l1.414-1.414C7.902,0.098,8.158,0,8.414,0s0.512,0.098,0.707,0.293l11,11c0.391,0.391,0.391,1.023,0,1.414l-11,11C8.926,23.902,8.67,24,8.414,24z")
+			);
+	}
+
 	makeCross(): xnode.XElement {
 		return xnode.element("svg")
 			.set("width", "12px")
