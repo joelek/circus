@@ -224,6 +224,6 @@
 		playlist_id: string,
 		track_id: string,
 		number: number,
-		added_ms: string
+		added_ms: number
 	}
 }
