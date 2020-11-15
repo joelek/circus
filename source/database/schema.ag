@@ -223,6 +223,7 @@
 		playlist_item_id: string,
 		playlist_id: string,
 		track_id: string,
-		number: number
+		number: number,
+		added_ms: string
 	}
 }

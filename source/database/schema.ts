@@ -482,14 +482,16 @@ export type PlaylistItem = {
 	"playlist_item_id": string,
 	"playlist_id": string,
 	"track_id": string,
-	"number": number
+	"number": number,
+	"added_ms": string
 };
 
 export const PlaylistItem = autoguard.Object.of<PlaylistItem>({
 	"playlist_item_id": autoguard.String,
 	"playlist_id": autoguard.String,
 	"track_id": autoguard.String,
-	"number": autoguard.Number
+	"number": autoguard.Number,
+	"added_ms": autoguard.String
 });
 
 export type Autoguard = {

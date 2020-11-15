@@ -1,0 +1,62 @@
+{
+	SetToken: {
+		token?: string
+	},
+
+	ErrorMessage: {
+		errors: string[]
+	},
+
+	CreatePlaylistRequest: {
+		title: string,
+		description: string
+	},
+
+	CreatePlaylistResponse: {
+		playlist: ../../database/schema/Playlist
+	},
+
+	DeletePlaylistRequest: {
+		playlist_id: string
+	},
+
+	DeletePlaylistResponse: {
+		playlist_id: string
+	},
+
+	UpdatePlaylistRequest: {
+		playlist_id: string,
+		title: string,
+		description: string
+	},
+
+	UpdatePlaylistResponse: {
+		playlist: ../../database/schema/Playlist
+	},
+
+	CreatePlaylistItemRequest: {
+		playlist_id: string,
+		track_id: string
+	},
+
+	CreatePlaylistItemResponse: {
+		playlist_item: ../../database/schema/PlaylistItem
+	},
+
+	DeletePlaylistItemRequest: {
+		playlist_item_id: string
+	},
+
+	DeletePlaylistItemResponse: {
+		playlist_item_id: string
+	},
+
+	UpdatePlaylistItemRequest: {
+		playlist_item_id: string,
+		number: number
+	},
+
+	UpdatePlaylistItemResponse: {
+		playlist_item: ../../database/schema/PlaylistItem
+	}
+}

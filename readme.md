@@ -23,3 +23,4 @@
 * Add offline functionality with service workers.
 * Improve stream detection algorithm.
 * Index generated images.
+* Limit length of user-generated content.
