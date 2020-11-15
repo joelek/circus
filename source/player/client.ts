@@ -1,6 +1,6 @@
 import * as is from "../is";
 import * as observers from "../observers/";
-import * as schema from "./schema";
+import * as schema from "./schema/";
 import * as typesockets from "../typesockets/client";
 
 export class ContextClient {
@@ -372,11 +372,6 @@ export class ContextClient {
 			this.flattenedContext.addObserver(computer);
 			this.nextIndex.addObserver(computer);
 		}
-		this.token.addObserver((token) => {
-			this.tsc.send("SetToken", {
-				token
-			});
-		});
 		this.tsc.addEventListener("app", "SetLocalDevice", (message) => {
 			this.localDevice.updateState(message.device);
 		});

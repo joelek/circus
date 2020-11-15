@@ -3,8 +3,8 @@ import * as liburl from "url";
 import * as auth from "../server/auth";
 import * as is from "../is";
 import * as observers from "../observers/";
-import * as schema from "./schema";
-import * as typesockets from "../typesockets";
+import * as schema from "./schema/";
+import * as typesockets from "../typesockets/";
 
 function getQuery(url: liburl.UrlWithParsedQuery, key: string): Array<string> {
 	let values = url.query[key] ?? [];
