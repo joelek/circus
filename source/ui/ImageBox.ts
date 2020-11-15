@@ -36,7 +36,7 @@ const CSS = `
 
 	[data-opaque] {
 		opacity: 0;
-		transition: opacity 0.250s;
+		transition: opacity 1.000s;
 	}
 
 	[data-opaque="true"] {
