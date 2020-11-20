@@ -25,3 +25,4 @@
 * Index generated images.
 * Move authentication to typesockets.
 * Use intersection observer in carousel.
+* Add close to device modal.
