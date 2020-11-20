@@ -161,17 +161,6 @@ export class XElement implements XNode<globalThis.Element> {
 					if (is.present(child)) {
 						element.removeChild(child);
 					}
-				},
-				onupdate: (state) => {
-					if (this.renderer) {
-						while (is.present(element.lastChild)) {
-							element.lastChild.remove();
-						}
-						for (let v of state) {
-							let child = this.renderer(v);
-							element.appendChild(child.render());
-						}
-					}
 				}
 			});
 		}

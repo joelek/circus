@@ -53,7 +53,6 @@ export function computed<A extends TupleOf<any>, B>(computer: (...values: TupleO
 export interface ArrayObserver<A> {
 	onappend?(state: A): void,
 	onsplice?(state: A, index: number): void,
-	onupdate?(state: Array<A>): void
 }
 
 export class ArrayObservable<A> {
@@ -67,14 +66,19 @@ export class ArrayObservable<A> {
 
 	addObserver(observer: ArrayObserver<A>): void {
 		this.observers.push(observer);
-		observer.onupdate?.(this.state);
+		for (let value of this.state) {
+			observer.onappend?.(value);
+		}
 	}
 
 	compute<B>(observer: Observer<Array<A>, B>): Observable<B> {
 		let observable = new ObservableClass<B>(observer(this.state));
 		this.observers.push({
-			onupdate(state) {
-				observable.updateState(observer(state));
+			onappend: (state) => {
+				observable.updateState(observer(this.state));
+			},
+			onsplice: (state, index) => {
+				observable.updateState(observer(this.state));
 			}
 		});
 		return observable.addObserver.bind(observable);
@@ -88,7 +92,6 @@ export class ArrayObservable<A> {
 		this.state.push(state);
 		for (let observer of this.observers) {
 			observer.onappend?.(state);
-			observer.onupdate?.(this.state);
 		}
 	}
 
@@ -100,7 +103,6 @@ export class ArrayObservable<A> {
 		this.state.splice(index, 1);
 		for (let observer of this.observers) {
 			observer.onsplice?.(state, index);
-			observer.onupdate?.(this.state);
 		}
 	}
 

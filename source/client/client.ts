@@ -922,8 +922,13 @@ let req = <T extends api_response.ApiRequest, U extends api_response.ApiResponse
 
 const showDevices = new ObservableClass(false);
 player.devices.addObserver({
-	onupdate: (devices) => {
-		if (devices.length < 2) {
+	onappend: () => {
+		if (player.devices.getState().length < 2) {
+			showDevices.updateState(false);
+		}
+	},
+	onsplice: () => {
+		if (player.devices.getState().length < 2) {
 			showDevices.updateState(false);
 		}
 	}
@@ -1025,7 +1030,8 @@ let devicelist = new ArrayObservable<Device & {
 		}));
 	};
 	player.devices.addObserver({
-		onupdate: computer
+		onappend: computer,
+		onsplice: computer
 	});
 	player.device.addObserver(computer);
 	player.localDevice.addObserver(computer);
