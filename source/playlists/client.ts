@@ -142,6 +142,10 @@ export class PlaylistsClient {
 		return this.online.getState();
 	}
 
+	getPermissions(request: messages.PermissionsRequest): Promise<messages.PermissionsResponse> {
+		return this.tsc.request("PermissionsRequest", "PermissionsResponse", request);
+	}
+
 	createPlaylist(request: messages.CreatePlaylistRequest): Promise<messages.CreatePlaylistResponse> {
 		return this.tsc.request("CreatePlaylistRequest", "CreatePlaylistResponse", request);
 	}

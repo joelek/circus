@@ -3,6 +3,16 @@
 		token?: string
 	},
 
+	PermissionsRequest: {
+		playlist: {
+			playlist_id: string
+		}
+	},
+
+	PermissionsResponse: {
+		permissions: "read" | "write"
+	},
+
 	CreatePlaylistRequest: {
 		playlist: {
 			title: string,

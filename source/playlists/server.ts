@@ -69,6 +69,22 @@ export class PlaylistsServer {
 				}
 			}
 		});
+		this.tss.addEventListener("app", "PermissionsRequest", (message) => {
+			let token = this.tokens.get(message.connection_id);
+			if (is.present(token)) {
+				let user_id = auth.getUserId(token);
+				let playlist = database.playlists.lookup(message.data.playlist.playlist_id);
+				if (playlist.user_id === user_id) {
+					this.tss.respond(message, "PermissionsResponse", {
+						permissions: "write"
+					});
+				} else {
+					this.tss.respond(message, "PermissionsResponse", {
+						permissions: "read"
+					});
+				}
+			}
+		});
 		this.tss.addEventListener("app", "CreatePlaylistRequest", (message) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
@@ -150,7 +166,10 @@ export class PlaylistsServer {
 				if (errors.length > 0) {
 					return;
 				}
-				database.playlists.update(playlist, "combine");
+				database.playlists.update({
+					...playlist,
+					...message.data.playlist
+				}, "combine");
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("UpdatePlaylist", Array.from(session.connections), {
 					playlist: api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
@@ -265,7 +284,10 @@ export class PlaylistsServer {
 					}
 				}
 				playlist_item.number = number;
-				database.playlist_items.update(playlist_item, "combine");
+				database.playlist_items.update({
+					...playlist_item,
+					...message.data.playlist_item
+				}, "combine");
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("UpdatePlaylistItem", Array.from(session.connections), {
 					playlist_item: api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)

@@ -1907,17 +1907,102 @@ let updateviewforuri = (uri: string): void => {
 			.render()
 		);
 	} else if ((parts = /^audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.PlaylistResponse>(`/api/audio/playlists/${parts[1]}/?token=${token}`, {}, (status, response) => {
+		let playlist_id = parts[1];
+		req<api_response.ApiRequest, api_response.PlaylistResponse>(`/api/audio/playlists/${playlist_id}/?token=${token}`, {}, async (status, response) => {
 			let playlist = response.playlist;
+			let canEdit = (await playlists.getPermissions({
+				playlist: {
+					playlist_id
+				}
+			})).permissions === "write";
+			let title = new ObservableClass(playlist.title);
+			let description = new ObservableClass(playlist.description);
+			let canModify = computed((title) => {
+				if (title === "") {
+					return false;
+				}
+				return true;
+			}, title);
+			let doUpdate = async () => {
+				if (canModify.getState()) {
+					let response = await playlists.updatePlaylist({
+						playlist: {
+							playlist_id: playlist_id,
+							title: title.getState(),
+							description: description.getState()
+						}
+					});
+					if (response.errors.length > 0) {
+						return;
+					}
+					navigate(uri);
+				}
+			};
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forPlaylist(playlist))
+				)
+				.add(xml.element("div.content.content--compact")
+					.set("style", "display: grid; gap: 16px;")
+					.set("data-hidden", `${!canEdit}`)
+					.add(xml.element("div")
+						.set("style", "position: relative;")
+						.add(xml.element("input")
+							.bind2("value", title)
+							.set("type", "text")
+							.set("spellcheck", "false")
+							.set("placeholder", "Playlist title")
+						)
+						.add(Icon.makeStar()
+							.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+						)
+					)
+					.add(xml.element("div")
+						.set("style", "position: relative;")
+						.add(xml.element("input")
+							.bind2("value", description)
+							.set("type", "text")
+							.set("spellcheck", "false")
+							.set("placeholder", "Playlist description")
+						)
+						.add(Icon.makeStar()
+							.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+						)
+					)
+					.add(xml.element("button")
+						.bind2("data-enabled", computed((canUpdate) => "" + canUpdate, canModify))
+						.add(xml.text("Update playlist"))
+						.on("click", async () => {
+							await doUpdate();
+						})
+					)
 				)
 				.add(playlist.items.length === 0 ? undefined : xml.element("div.content")
 					.set("style", "display: grid; gap: 16px;")
 					.add(...playlist.items.map((item, itemIndex) => {
 						return EntityRow.forTrack(item.track, PlaybackButton.forPlaylist(playlist, itemIndex));
 					}))
+				)
+				.add(xml.element("div.content.content--compact")
+					.set("style", "display: grid; gap: 16px;")
+					.set("data-hidden", `${!canEdit}`)
+					.add(xml.element("button")
+						.bind2("data-enabled", computed((canUpdate) => "" + canUpdate, canModify))
+						.add(xml.text("Delete playlist"))
+						.on("click", async () => {
+							if (canModify.getState()) {
+								let response = await playlists.deletePlaylist({
+									playlist: {
+										playlist_id
+									}
+								});
+								if (response.errors.length > 0) {
+									return;
+								}
+								navigate("");
+							}
+						})
+					)
 				)
 				.render());
 		});

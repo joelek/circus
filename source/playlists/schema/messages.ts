@@ -15,6 +15,31 @@ export const SetToken = autoguard.Object.of<SetToken>({
 	)
 });
 
+export type PermissionsRequest = {
+	"playlist": {
+		"playlist_id": string
+	}
+};
+
+export const PermissionsRequest = autoguard.Object.of<PermissionsRequest>({
+	"playlist": autoguard.Object.of<{
+		"playlist_id": string
+	}>({
+		"playlist_id": autoguard.String
+	})
+});
+
+export type PermissionsResponse = {
+	"permissions": "read" | "write"
+};
+
+export const PermissionsResponse = autoguard.Object.of<PermissionsResponse>({
+	"permissions": autoguard.Union.of(
+		autoguard.StringLiteral.of("read"),
+		autoguard.StringLiteral.of("write")
+	)
+});
+
 export type CreatePlaylistRequest = {
 	"playlist": {
 		"title": string,
@@ -216,6 +241,8 @@ export const UpdatePlaylistItem = autoguard.Object.of<UpdatePlaylistItem>({
 
 export type Autoguard = {
 	"SetToken": SetToken,
+	"PermissionsRequest": PermissionsRequest,
+	"PermissionsResponse": PermissionsResponse,
 	"CreatePlaylistRequest": CreatePlaylistRequest,
 	"CreatePlaylistResponse": CreatePlaylistResponse,
 	"CreatePlaylist": CreatePlaylist,
@@ -238,6 +265,8 @@ export type Autoguard = {
 
 export const Autoguard = {
 	"SetToken": SetToken,
+	"PermissionsRequest": PermissionsRequest,
+	"PermissionsResponse": PermissionsResponse,
 	"CreatePlaylistRequest": CreatePlaylistRequest,
 	"CreatePlaylistResponse": CreatePlaylistResponse,
 	"CreatePlaylist": CreatePlaylist,
