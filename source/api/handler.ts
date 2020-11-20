@@ -21,6 +21,12 @@ export function createUser(request: schema.messages.RegisterRequest): schema.mes
 	} catch (error) {
 		errors.push(`The registration key is not valid.`);
 	}
+	if (Buffer.from(username).length >= 256) {
+		errors.push(`The username is too long!`);
+	}
+	if (Buffer.from(name).length >= 256) {
+		errors.push(`The name is too long!`);
+	}
 	if (errors.length > 0) {
 		return {
 			errors
