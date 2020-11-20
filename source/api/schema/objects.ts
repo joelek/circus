@@ -188,12 +188,14 @@ export const Playlist = autoguard.Intersection.of(
 );
 
 export type PlaylistItemBase = {
+	"playlist_item_id": string,
 	"number": number,
 	"playlist": PlaylistBase,
 	"track": Track
 };
 
 export const PlaylistItemBase = autoguard.Object.of<PlaylistItemBase>({
+	"playlist_item_id": autoguard.String,
 	"number": autoguard.Number,
 	"playlist": autoguard.Reference.of<PlaylistBase>(() => PlaylistBase),
 	"track": autoguard.Reference.of<Track>(() => Track)

@@ -258,12 +258,12 @@ export function lookupPerson(person_id: string, user_id: string): schema.objects
 };
 
 export function lookupPlaylistBase(playlist_id: string, user_id: string, user?: schema.objects.UserBase): schema.objects.PlaylistBase {
-	let playlists = database.playlists.lookup(playlist_id);
+	let playlist = database.playlists.lookup(playlist_id);
 	return {
-		playlist_id: playlists.playlist_id,
-		title: playlists.title,
-		description: playlists.description,
-		user: is.present(user) ? user : lookupUserBase(playlists.user_id)
+		playlist_id: playlist.playlist_id,
+		title: playlist.title,
+		description: playlist.description,
+		user: is.present(user) ? user : lookupUserBase(playlist.user_id)
 	};
 };
 
@@ -273,13 +273,24 @@ export function lookupPlaylist(playlist_id: string, user_id: string, user?: sche
 		...playlist,
 		items: database.getPlaylistsItemsFromPlaylist.lookup(playlist_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
-			.map((record) => {
-				return {
-					playlist,
-					number: record.number,
-					track: lookupTrack(record.track_id, user_id)
-				};
-			})
+			.map((record) => lookupPlaylistItem(record.playlist_item_id, user_id, playlist))
+	};
+};
+
+export function lookupPlaylistItemBase(playlist_item_id: string, user_id: string, playlist?: schema.objects.PlaylistBase): schema.objects.PlaylistItemBase {
+	let playlist_item = database.playlist_items.lookup(playlist_item_id);
+	return {
+		playlist_item_id: playlist_item.playlist_item_id,
+		number: playlist_item.number,
+		playlist: is.present(playlist) ? playlist : lookupPlaylistBase(playlist_item.playlist_id, user_id),
+		track: lookupTrack(playlist_item.track_id, user_id)
+	};
+};
+
+export function lookupPlaylistItem(playlist_item_id: string, user_id: string, playlist?: schema.objects.PlaylistBase): schema.objects.PlaylistItem {
+	let playlist_item = lookupPlaylistItemBase(playlist_item_id, user_id, playlist);
+	return {
+		...playlist_item
 	};
 };
 

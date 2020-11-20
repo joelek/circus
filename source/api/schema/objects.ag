@@ -74,6 +74,7 @@
 	},
 
 	PlaylistItemBase: {
+		playlist_item_id: string,
 		number: number,
 		playlist: PlaylistBase,
 		track: Track
