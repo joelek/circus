@@ -910,6 +910,8 @@ style.innerText = `
 `;
 document.head.appendChild(style);
 
+const makeButton = () => xml.element("div.icon-button");
+
 interface ReqCallback<T extends api_response.ApiResponse> {
 	(status: number, value: T): void;
 }
@@ -1113,6 +1115,16 @@ let modals = xml.element("div.modal-container")
 		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "devices"))
 		.add(xml.element("div.content.content--narrow")
 			.add(xml.element("div.device-selector")
+				.add(xml.element("div")
+					.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr min-content;")
+					.add(renderTextHeader(xml.text("Select playback device")))
+					.add(makeButton()
+						.on("click", () => {
+							showDevices.updateState(false);
+						})
+						.add(Icon.makeCross())
+					)
+				)
 				.add(xml.element("div.device-selector__devices")
 					.repeat(devicelist, (device) => xml.element("div.device-selector__device")
 						.add(makeButton()
@@ -1304,8 +1316,6 @@ let mpw = xml.element("div.app__navigation")
 		)
 	)
 	.render();
-
-const makeButton = () => xml.element("div.icon-button");
 
 let mp = xml.element("div.content")
 	.set("style", "padding: 16px;")
