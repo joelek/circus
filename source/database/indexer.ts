@@ -153,29 +153,77 @@ export const playlist_items = loadIndex("playlist_items", schema.PlaylistItem, (
 export const getPlaylistsItemsFromPlaylist = indices.CollectionIndex.fromIndex(playlists, playlist_items, (record) => record.playlist_id, (record) => record.playlist_id);
 export const getPlaylistItemsFromTrack = indices.CollectionIndex.fromIndex(tracks, playlist_items, (record) => record.track_id, (record) => record.track_id);
 
-users.on("*", () => {
-	saveIndex("users", users);
-});
+{
+	let timer: NodeJS.Timeout | undefined;
+	users.on("*", () => {
+		if (is.present(timer)) {
+			clearTimeout(timer);
+		}
+		timer = setTimeout(() => {
+			saveIndex("users", users);
+		}, 10 * 1000);
+	});
+}
 
-keys.on("*", () => {
-	saveIndex("keys", keys);
-});
+{
+	let timer: NodeJS.Timeout | undefined;
+	keys.on("*", () => {
+		if (is.present(timer)) {
+			clearTimeout(timer);
+		}
+		timer = setTimeout(() => {
+			saveIndex("keys", keys);
+		}, 10 * 1000);
+	});
+}
 
-tokens.on("*", () => {
-	saveIndex("tokens", tokens);
-});
+{
+	let timer: NodeJS.Timeout | undefined;
+	tokens.on("*", () => {
+		if (is.present(timer)) {
+			clearTimeout(timer);
+		}
+		timer = setTimeout(() => {
+			saveIndex("tokens", tokens);
+		}, 10 * 1000);
+	});
+}
 
-streams.on("*", () => {
-	saveIndex("streams", streams);
-});
+{
+	let timer: NodeJS.Timeout | undefined;
+	streams.on("*", () => {
+		if (is.present(timer)) {
+			clearTimeout(timer);
+		}
+		timer = setTimeout(() => {
+			saveIndex("streams", streams);
+		}, 10 * 1000);
+	});
+}
 
-playlists.on("*", () => {
-	saveIndex("playlists", playlists);
-});
+{
+	let timer: NodeJS.Timeout | undefined;
+	playlists.on("*", () => {
+		if (is.present(timer)) {
+			clearTimeout(timer);
+		}
+		timer = setTimeout(() => {
+			saveIndex("playlists", playlists);
+		}, 10 * 1000);
+	});
+}
 
-playlist_items.on("*", () => {
-	saveIndex("playlist_items", playlist_items);
-});
+{
+	let timer: NodeJS.Timeout | undefined;
+	playlist_items.on("*", () => {
+		if (is.present(timer)) {
+			clearTimeout(timer);
+		}
+		timer = setTimeout(() => {
+			saveIndex("playlist_items", playlist_items);
+		}, 10 * 1000);
+	});
+}
 
 if (users.length() === 0) {
 	if (keys.length() === 0) {
