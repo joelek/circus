@@ -258,6 +258,36 @@ const showContextMenu = new ObservableClass(false);
 const contextMenuItems = new ArrayObservable(new Array<xml.XElement>());
 contextMenuEntity.addObserver((contextMenuEntity) => {
 	if (apischema.objects.TrackBase.is(contextMenuEntity)) {
+		let title = new ObservableClass("");
+		let canCreate = computed((title) => {
+			if (title === "") {
+				return false;
+			}
+			return true;
+		}, title);
+		let doCreate = async () => {
+			if (canCreate.getState()) {
+				let playlist = await playlists.createPlaylist({
+					playlist: {
+						title: title.getState(),
+						description:  ""
+					}
+				});
+				if (playlist.errors.length > 0) {
+					return;
+				}
+				let playlist_item = await playlists.createPlaylistItem({
+					playlist_item: {
+						playlist_id: playlist.playlist_id,
+						track_id: contextMenuEntity.track_id
+					}
+				});
+				if (playlist_item.errors.length > 0) {
+					return;
+				}
+				showContextMenu.updateState(false);
+			}
+		};
 		contextMenuItems.update([
 			xml.element("div")
 				.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr min-content;")
@@ -269,30 +299,31 @@ contextMenuEntity.addObserver((contextMenuEntity) => {
 					.add(Icon.makeCross())
 				),
 			xml.element("div")
-				.set("style", "align-items: center; cursor: pointer; display: grid; fill: rgb(255, 255, 255); gap: 16px; grid-template-columns: min-content 1fr;")
-				.on("click", async () => {
-					let playlist = await playlists.createPlaylist({
-						playlist: {
-							title: "New playlist",
-							description: "A recently created playlist."
-						}
-					});
-					if (playlist.errors.length > 0) {
-						return;
-					}
-					let playlist_item = await playlists.createPlaylistItem({
-						playlist_item: {
-							playlist_id: playlist.playlist_id,
-							track_id: contextMenuEntity.track_id
-						}
-					});
-					if (playlist_item.errors.length > 0) {
-						return;
-					}
-					showContextMenu.updateState(false);
-				})
-				.add(Icon.makePlus())
-				.add(renderTextHeader(xml.text("New playlist"))),
+				.set("style", "display: grid; gap: 16px;")
+				.add(xml.element("div")
+					.set("style", "position: relative;")
+					.add(xml.element("input")
+						.bind2("value", title)
+						.set("type", "text")
+						.set("spellcheck", "false")
+						.set("placeholder", "Playlist title")
+						.on("keyup", async (event) => {
+							if (event.code === "Enter") {
+								await doCreate();
+							}
+						})
+					)
+					.add(Icon.makeStar()
+						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+					)
+				)
+				.add(xml.element("button")
+					.bind2("data-enabled", computed((canCreate) => "" + canCreate, canCreate))
+					.add(xml.text("New playlist"))
+					.on("click", async () => {
+						await doCreate();
+					})
+				),
 			xml.element("div")
 				.set("style", "display: grid; gap: 16px;")
 				.bind("data-hide", playlists.playlists.compute((playlists) => playlists.length === 0))
