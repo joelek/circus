@@ -186,7 +186,8 @@ export type SearchResult<A> = {
 export function getTokens(query: string): Array<string> {
 	let normalized = query;
 	normalized = normalized.toLowerCase();
-	normalized = normalized.normalize("NFC");
+	normalized = normalized.normalize("NFKD");
+	normalized = normalized.replace(/[\p{M}]/gu, "");
 	return Array.from(normalized.match(/(\p{L}+|\p{N}+)/gu) ?? [])
 		.filter((value) => value.length >= 2);
 };

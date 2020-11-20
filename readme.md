@@ -26,4 +26,3 @@
 * Move authentication to typesockets.
 * Use intersection observer in carousel.
 * Support multiple active devices.
-* Fix brüno search.
