@@ -791,7 +791,7 @@ style.innerText = `
 		cursor: pointer;
 		fill: rgb(31, 31, 31);
 		padding: 8px;
-		transition: transform 0.125s;
+		transition: background-color 0.125s, transform 0.125s;
 	}
 
 	.icon-button[data-enabled="false"] {
