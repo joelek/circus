@@ -40,9 +40,10 @@ export class XElement implements XNode<globalThis.Element> {
 	private bound: Map<string, Observable<any>>;
 	private bound2: Map<string, ObservableClass<string>>;
 	private listeners: Map<keyof HTMLElementEventMap, Array<Listener<keyof HTMLElementEventMap>>>;
+	private resolve: (element: globalThis.Element) => void;
+	private element: Promise<globalThis.Element>;
 	private array?: ArrayObservable<any>;
 	private renderer?: Renderer<any>;
-	private element: globalThis.Element | undefined;
 
 	constructor(selector: string) {
 		let parts = selector.split(".");
@@ -52,6 +53,10 @@ export class XElement implements XNode<globalThis.Element> {
 		this.bound = new Map<string, Observable<any>>();
 		this.bound2 = new Map<string, ObservableClass<string>>();
 		this.listeners = new Map<keyof HTMLElementEventMap, Array<Listener<keyof HTMLElementEventMap>>>();
+		this.resolve = () => {};
+		this.element = new Promise((resolve, reject) => {
+			this.resolve = resolve;
+		});
 		let classes = parts.slice(1).join(" ");
 		if (classes !== "") {
 			this.attributes.set("class", classes);
@@ -94,7 +99,7 @@ export class XElement implements XNode<globalThis.Element> {
 		return this;
 	}
 
-	ref(): globalThis.Element {
+	ref(): Promise<globalThis.Element> {
 		if (is.absent(this.element)) {
 			throw `Expected element to be rendered!`;
 		}
@@ -103,7 +108,7 @@ export class XElement implements XNode<globalThis.Element> {
 
 	render(): globalThis.Element {
 		let ns = ["svg", "path"].indexOf(this.tag) >= 0 ? "http://www.w3.org/2000/svg" : "http://www.w3.org/1999/xhtml";
-		let element = this.element = document.createElementNS(ns, this.tag);
+		let element = document.createElementNS(ns, this.tag);
 		element.setAttribute = (() => {
 			let setAttribute = element.setAttribute.bind(element);
 			return (key: string, value: string) => {
@@ -164,6 +169,7 @@ export class XElement implements XNode<globalThis.Element> {
 				}
 			});
 		}
+		this.resolve(element);
 		return element;
 	}
 

@@ -55,20 +55,28 @@ export class CarouselFactory {
 			return activeIndex < children.length - 1;
 		}, activeIndex);
 		let contentElement = xnode.element("div.carousel__content");
+		contentElement.ref().then(async (contentElement) => {
+			let observer = new IntersectionObserver(async (entries) => {
+				for (let entry of entries) {
+					for (let [index, child] of children.entries()) {
+						let ref = await child.ref();
+						if (entry.target === ref && entry.isIntersecting) {
+							activeIndex.updateState(index);
+							return;
+						}
+					}
+				}
+			}, {
+				root: contentElement
+			});
+			for (let child of children) {
+				let ref = await child.ref();
+				observer.observe(ref);
+			}
+		});
 		return xnode.element("div.carousel")
 			.add(contentElement
 				.add(...children)
-				.on("scroll", () => {
-					let content = contentElement.ref() as HTMLElement;
-					let index = 0;
-					for (let child of children) {
-						let ref = child.ref() as HTMLElement;
-						if (ref.offsetLeft - content.offsetLeft < content.scrollLeft) {
-							index += 1;
-						}
-					}
-					activeIndex.updateState(index);
-				})
 			)
 			.add(xnode.element("div.carousel__controls")
 				.add(xnode.element("div.icon-button")
@@ -76,11 +84,11 @@ export class CarouselFactory {
 					.add(this.iconFactory.makeChevron()
 						.set("style", "transform: scale(-1.0, 1.0);")
 					)
-					.on("click", () => {
+					.on("click", async () => {
 						if (canScrollLast.getState()) {
-							let content = contentElement.ref() as HTMLElement;
+							let content = await contentElement.ref() as HTMLElement;
 							let child = children[activeIndex.getState() - 1];
-							let ref = child.ref() as HTMLElement;
+							let ref = await child.ref() as HTMLElement;
 							content.scrollTo({ left: ref.offsetLeft - content.offsetLeft, behavior: "smooth" });
 						}
 					})
@@ -88,11 +96,11 @@ export class CarouselFactory {
 				.add(xnode.element("div.icon-button")
 					.bind("data-enabled", canScrollNext.addObserver((canScrollNext) => `${canScrollNext}`))
 					.add(this.iconFactory.makeChevron())
-					.on("click", () => {
+					.on("click", async () => {
 						if (canScrollNext.getState()) {
-							let content = contentElement.ref() as HTMLElement;
+							let content = await contentElement.ref() as HTMLElement;
 							let child = children[activeIndex.getState() + 1];
-							let ref = child.ref() as HTMLElement;
+							let ref = await child.ref() as HTMLElement;
 							content.scrollTo({ left: ref.offsetLeft - content.offsetLeft, behavior: "smooth" });
 						}
 					})
