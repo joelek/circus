@@ -30,7 +30,7 @@ export interface Listener<A extends keyof HTMLElementEventMap> {
 }
 
 export interface Renderer<A> {
-	(state: A): XElement | undefined;
+	(state: A): XElement;
 }
 
 export class XElement implements XNode<globalThis.Element> {
@@ -150,20 +150,30 @@ export class XElement implements XNode<globalThis.Element> {
 		}
 		if (this.array) {
 			this.array.addObserver({
+				onappend: (state) => {
+					if (this.renderer) {
+						let child = this.renderer(state);
+						element.appendChild(child.render());
+					}
+				},
+				onsplice: (state, index) => {
+					let child = element.children[index];
+					if (is.present(child)) {
+						element.removeChild(child);
+					}
+				},
 				onupdate: (state) => {
 					if (this.renderer) {
-						while (element.firstChild) {
-							element.firstChild.remove();
+						while (is.present(element.lastChild)) {
+							element.lastChild.remove();
 						}
-						for (let value of state) {
-							let child = this.renderer(value);
-							if (is.present(child)) {
-								element.appendChild(child.render());
-							}
+						for (let v of state) {
+							let child = this.renderer(v);
+							element.appendChild(child.render());
 						}
 					}
 				}
-			})
+			});
 		}
 		return element;
 	}
