@@ -58,6 +58,11 @@ window.addEventListener("keydown", (event) => {
 		event.preventDefault();
 		event.stopPropagation();
 		player.toggle();
+	} else if (event.code === "Escape") {
+		event.preventDefault();
+		event.stopPropagation();
+		showDevices.updateState(false);
+		showContextMenu.updateState(false);
 	}
 });
 
