@@ -3,60 +3,94 @@
 		token?: string
 	},
 
-	ErrorMessage: {
-		errors: string[]
-	},
-
 	CreatePlaylistRequest: {
-		title: string,
-		description: string
+		playlist: {
+			title: string,
+			description: string
+		}
 	},
 
 	CreatePlaylistResponse: {
-		playlist: ../../database/schema/Playlist
+		errors: string[],
+		playlist_id: string
+	},
+
+	CreatePlaylist: {
+		playlist: ../../api/schema/objects/PlaylistBase
 	},
 
 	DeletePlaylistRequest: {
-		playlist_id: string
+		playlist: {
+			playlist_id: string
+		}
 	},
 
 	DeletePlaylistResponse: {
-		playlist_id: string
+		errors: string[]
+	},
+
+	DeletePlaylist: {
+		playlist: ../../api/schema/objects/PlaylistBase
 	},
 
 	UpdatePlaylistRequest: {
-		playlist_id: string,
-		title: string,
-		description: string
+		playlist: {
+			playlist_id: string,
+			title: string,
+			description: string
+		}
 	},
 
 	UpdatePlaylistResponse: {
-		playlist: ../../database/schema/Playlist
+		errors: string[]
+	},
+
+	UpdatePlaylist: {
+		playlist: ../../api/schema/objects/PlaylistBase
 	},
 
 	CreatePlaylistItemRequest: {
-		playlist_id: string,
-		track_id: string
+		playlist_item: {
+			playlist_id: string,
+			track_id: string
+		}
 	},
 
 	CreatePlaylistItemResponse: {
-		playlist_item: ../../database/schema/PlaylistItem
+		errors: string[],
+		playlist_item_id: string
+	},
+
+	CreatePlaylistItem: {
+		playlist_item: ../../api/schema/objects/PlaylistItemBase
 	},
 
 	DeletePlaylistItemRequest: {
-		playlist_item_id: string
+		playlist_item: {
+			playlist_item_id: string
+		}
 	},
 
 	DeletePlaylistItemResponse: {
-		playlist_item_id: string
+		errors: string[]
+	},
+
+	DeletePlaylistItem: {
+		playlist_item: ../../api/schema/objects/PlaylistItemBase
 	},
 
 	UpdatePlaylistItemRequest: {
-		playlist_item_id: string,
-		number: number
+		playlist_item: {
+			playlist_item_id: string,
+			number: number
+		}
 	},
 
 	UpdatePlaylistItemResponse: {
-		playlist_item: ../../database/schema/PlaylistItem
+		errors: string[]
+	},
+
+	UpdatePlaylistItem: {
+		playlist_item: ../../api/schema/objects/PlaylistItemBase
 	}
 }

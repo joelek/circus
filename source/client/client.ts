@@ -19,7 +19,7 @@ import { EntityLinkFactory } from "../ui/EntityLink";
 import { EntityCardFactory } from "../ui/EntityCard";
 import { EntityRowFactory } from "../ui/EntityRow";
 import { PlaybackButtonFactory } from "../ui/PlaybackButton";
-import { schema } from "../database/probes";
+import { PlaylistsClient } from "../playlists/client";
 
 
 
@@ -31,18 +31,22 @@ import { schema } from "../database/probes";
 
 
 
-function makeUrl(): string {
-	let path = `/sockets/context/?type=browser&name=Orbit`;
+function makeUrl(tail: string): string {
+	let path = `/sockets/${tail}`;
 	let protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 	let host = window.location.host;
 	return `${protocol}//${host}${path}`;
 }
 
-let player = new client.ContextClient(makeUrl());
+let player = new client.ContextClient(makeUrl(`context/?type=browser&name=Orbit`));
+let playlists = new PlaylistsClient(makeUrl(`playlists/`));
 
 window.addEventListener("focus", () => {
 	if (!player.isOnline.getState()) {
 		player.reconnect();
+	}
+	if (!playlists.isOnline()) {
+		playlists.reconnect();
 	}
 });
 
@@ -247,7 +251,6 @@ const tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined)
 const contextMenuEntity = new ObservableClass(undefined as apischema.objects.EntityBase | undefined);
 const showContextMenu = new ObservableClass(false);
 const contextMenuItems = new ArrayObservable(new Array<xml.XElement>());
-const playlists = new ArrayObservable(new Array<Playlist>());
 contextMenuEntity.addObserver((contextMenuEntity) => {
 	if (apischema.objects.TrackBase.is(contextMenuEntity)) {
 		contextMenuItems.update([
@@ -261,9 +264,50 @@ contextMenuEntity.addObserver((contextMenuEntity) => {
 					.add(Icon.makeCross())
 				),
 			xml.element("div")
+				.set("style", "align-items: center; cursor: pointer; display: grid; fill: rgb(255, 255, 255); gap: 16px; grid-template-columns: min-content 1fr;")
+				.on("click", async () => {
+					let playlist = await playlists.createPlaylist({
+						playlist: {
+							title: "New playlist",
+							description: "A recently created playlist."
+						}
+					});
+					if (playlist.errors.length > 0) {
+						return;
+					}
+					let playlist_item = await playlists.createPlaylistItem({
+						playlist_item: {
+							playlist_id: playlist.playlist_id,
+							track_id: contextMenuEntity.track_id
+						}
+					});
+					if (playlist_item.errors.length > 0) {
+						return;
+					}
+					showContextMenu.updateState(false);
+				})
+				.add(Icon.makePlus())
+				.add(renderTextHeader(xml.text("New playlist"))),
+			xml.element("div")
 				.set("style", "display: grid; gap: 16px;")
-				.bind("data-hide", playlists.compute((playlists) => playlists.length === 0))
-				.repeat(playlists, (playlist) => EntityRow.forPlaylist(playlist))
+				.bind("data-hide", playlists.playlists.compute((playlists) => playlists.length === 0))
+				.repeat(playlists.playlists, (playlist) => xml.element("div")
+					.set("style", "align-items: center; cursor: pointer; display: grid; fill: rgb(255, 255, 255); gap: 16px; grid-template-columns: min-content 1fr;")
+					.on("click", async () => {
+						let playlist_item = await playlists.createPlaylistItem({
+							playlist_item: {
+								playlist_id: playlist.getState().playlist_id,
+								track_id: contextMenuEntity.track_id
+							}
+						});
+						if (playlist_item.errors.length > 0) {
+							return;
+						}
+						showContextMenu.updateState(false);
+					})
+					.add(Icon.makeChevron())
+					.add(renderTextHeader(xml.text(playlist.getState().title)))
+				)
 		]);
 		showContextMenu.updateState(true);
 	} else {
@@ -918,6 +962,7 @@ tokenobs.addObserver((token2) => {
 	}
 	token = token2;
 	player.authenticate(token);
+	playlists.authenticate(token);
 });
 async function getToken(): Promise<string | undefined> {
 	return new Promise((resolve, reject) => {
@@ -2116,6 +2161,7 @@ let updateviewforuri = (uri: string): void => {
 						let movie = media;
 						return EntityRow.forMovie(movie, PlaybackButton.forMovie(movie));
 					}
+					throw `Expected code to be unreachable!`;
 				})
 			)
 			.render());

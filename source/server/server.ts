@@ -8,7 +8,8 @@ import * as api from "../api/api";
 import * as auth from "./auth";
 import * as indexer from "../database/indexer";
 import * as subsearch from "./subsearch";
-import * as context from "../player";
+import * as context from "../player/";
+import * as playlists from "../playlists/";
 import * as chromecasts from "../chromecast/chromecasts";
 import * as is from "../is";
 
@@ -109,6 +110,7 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 };
 
 const contextServer = new context.server.ContextServer();
+const playlistsServer = new playlists.server.PlaylistsServer();
 
 let indexTimer: NodeJS.Timeout | undefined;
 
@@ -126,8 +128,11 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 	let host = request.headers["host"] || "";
 	let method = request.method || "";
 	let path = request.url || "";
-	if (/^[/]sockets[/]/.test(path)) {
+	if (/^[/]sockets[/]context[/]/.test(path)) {
 		return contextServer.getRequestHandler()(request, response);
+	}
+	if (/^[/]sockets[/]playlists[/]/.test(path)) {
+		return playlistsServer.getRequestHandler()(request, response);
 	}
 	let startMs = Date.now();
 	response.on("finish", () => {
