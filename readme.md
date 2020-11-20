@@ -23,3 +23,5 @@
 * Add offline functionality with service workers.
 * Improve stream detection algorithm.
 * Index generated images.
+* Move authentication to typesockets.
+* Use intersection observer in carousel.
