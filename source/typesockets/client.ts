@@ -1,6 +1,8 @@
 import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as sockets from "@joelek/ts-sockets/build/shared";
+import * as shared from "./shared";
+import * as is from "../is";
 
 export interface WebSocketLike {
 	addEventListener<A extends keyof WebSocketEventMap>(type: A, listener: (event: WebSocketEventMap[A]) => void): void;
@@ -19,7 +21,7 @@ export type TypeSocketClientMessageMap<A extends stdlib.routing.MessageMap<A>> =
 		},
 		disconnect: {
 
-		}
+		},
 		message: {
 			type: keyof A,
 			data: A[keyof A]
@@ -34,10 +36,20 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	private nextConnectionAttemptDelayFactor: number;
 	private nextConnectionAttemptDelay: number;
 	private router: stdlib.routing.NamespacedMessageRouter<TypeSocketClientMessageMap<A>>;
-	private serializer: autoguard.serialization.MessageSerializer<A>;
+	private serializer: shared.Serializer<A>;
 	private url: string;
 	private factory: WebSocketFactory;
 	private socket: WebSocketLike;
+	private requests: Map<string, (type: keyof A, data: A[keyof A]) => void>;
+
+	private makeId(): string {
+		let string = "";
+		for (let i = 0; i < 32; i++) {
+			let number = Math.floor(Math.random() * 16);
+			string += number.toString(16);
+		}
+		return string;
+	}
 
 	private makeSocket(): WebSocketLike {
 		let socket = this.factory(this.url);
@@ -60,14 +72,24 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	}
 
 	private onMessage(event: WebSocketEventMap["message"]): void {
-		let deserialized = event.data as string;
-		this.serializer.deserialize(deserialized, (type, data) => {
-			this.router.route("sys", "message", {
-				type,
-				data
+		try {
+			this.serializer.deserialize(event.data as string, (type, data, id) => {
+				this.router.route("sys", "message", {
+					type,
+					data
+				});
+				if (is.present(id)) {
+					let callback = this.requests.get(id);
+					if (is.present(callback)) {
+						this.requests.delete(id);
+						callback(type, data);
+					}
+				}
+				this.router.route("app", type, data);
 			});
-			this.router.route("app", type, data);
-		});
+		} catch (error) {
+			this.socket.close();
+		}
 	}
 
 	private onOpen(event: WebSocketEventMap["open"]): void {
@@ -75,14 +97,27 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 		this.router.route("sys", "connect", {});
 	}
 
+	private queue(payload: string): void {
+		if (this.socket.readyState === sockets.ReadyState.OPEN) {
+			this.socket.send(payload);
+		} else {
+			let onopen = () => {
+				this.socket.removeEventListener("open", onopen);
+				this.socket.send(payload);
+			};
+			this.socket.addEventListener("open", onopen);
+		}
+	}
+
 	constructor(url: string, factory: WebSocketFactory, guards: autoguard.serialization.MessageGuardMap<A>) {
 		this.nextConnectionAttemptDelayFactor = 2.0 + Math.random();
 		this.nextConnectionAttemptDelay = 2000;
 		this.router = new stdlib.routing.NamespacedMessageRouter<TypeSocketClientMessageMap<A>>();
-		this.serializer = new autoguard.serialization.MessageSerializer<A>(guards);
+		this.serializer = new shared.Serializer<A>(guards);
 		this.url = url;
 		this.factory = factory;
 		this.socket = this.makeSocket();
+		this.requests = new Map<string, (type: keyof A, data: A[keyof A]) => void>();
 	}
 
 	addEventListener<B extends keyof TypeSocketClientMessageMap<A>, C extends keyof TypeSocketClientMessageMap<A>[B]>(namespace: B, type: C, listener: stdlib.routing.MessageObserver<TypeSocketClientMessageMap<A>[B][C]>): void {
@@ -103,15 +138,24 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 		this.router.addObserver(namespace, type, listener);
 	}
 
+	request<B extends keyof A, C extends keyof A>(type: B, response_type: C, data: A[B]): Promise<A[C]> {
+		return new Promise((resolve, reject) => {
+			let id = this.makeId();
+			let payload = this.serializer.serialize(type, data, id);
+			this.requests.set(id, (type, data) => {
+
+				if (type !== response_type) {
+					reject(`Received response with type "${type}" when expecting "${response_type}"!`);
+				} else {
+					resolve(data);
+				}
+			});
+			this.queue(payload);
+		});
+	}
+
 	send<B extends keyof A>(type: B, data: A[B]): void {
-		if (this.socket.readyState === sockets.ReadyState.OPEN) {
-			this.socket.send(this.serializer.serialize(type, data));
-		} else {
-			let open = () => {
-				this.socket.removeEventListener("open", open);
-				this.socket.send(this.serializer.serialize(type, data));
-			};
-			this.socket.addEventListener("open", open);
-		}
+		let payload = this.serializer.serialize(type, data);
+		this.queue(payload);
 	}
 };

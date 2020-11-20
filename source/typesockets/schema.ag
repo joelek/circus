@@ -1,0 +1,7 @@
+{
+	Envelope: {
+		type: string,
+		data: any,
+		id?: string
+	}
+}
