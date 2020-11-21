@@ -233,12 +233,12 @@ if (users.length() === 0) {
 	}
 }
 
-export const album_search = indices.SearchIndex.fromIndex(albums, (entry) => [entry.title]);
+export const album_search = indices.SearchIndex.fromIndex(albums, (entry) => [entry.title, entry.year?.toString()].filter(is.present));
 export const artist_search = indices.SearchIndex.fromIndex(artists, (entry) => [entry.name]);
 export const cue_search = indices.SearchIndex.fromIndex(cues, (entry) => entry.lines);
-export const episode_search = indices.SearchIndex.fromIndex(episodes, (entry) => [entry.title]);
+export const episode_search = indices.SearchIndex.fromIndex(episodes, (entry) => [entry.title, entry.year?.toString()].filter(is.present));
 export const genre_search = indices.SearchIndex.fromIndex(genres, (entry) => [entry.name]);
-export const movie_search = indices.SearchIndex.fromIndex(movies, (entry) => [entry.title]);
+export const movie_search = indices.SearchIndex.fromIndex(movies, (entry) => [entry.title, entry.year?.toString()].filter(is.present));
 export const person_search = indices.SearchIndex.fromIndex(persons, (entry) => [entry.name]);
 export const playlist_search = indices.SearchIndex.fromIndex(playlists, (entry) => [entry.title]);
 export const shows_search = indices.SearchIndex.fromIndex(shows, (entry) => [entry.name]);
