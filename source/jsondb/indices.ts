@@ -40,9 +40,9 @@ export class CollectionIndex<A extends Record<string, any>> {
 		}
 	}
 
-	update(record: A): void {
-		this.remove(record);
-		this.insert(record);
+	update(last: A, next: A): void {
+		this.remove(last);
+		this.insert(next);
 	}
 
 	static from<A>(records: Iterable<A>, getKey: (record: A) => string | undefined): CollectionIndex<A> {
@@ -55,17 +55,17 @@ export class CollectionIndex<A extends Record<string, any>> {
 
 	static fromIndex<A, B>(parent: RecordIndex<A>, child: RecordIndex<B>, getParentKey: (record: A) => string | undefined, getChildKey: (record: B) => string | undefined): CollectionIndex<B> {
 		let index = new CollectionIndex<B>(getChildKey);
-		child.on("insert", (record) => {
-			index.insert(record);
+		child.on("insert", (event) => {
+			index.insert(event.next);
 		});
-		child.on("remove", (record) => {
-			index.remove(record);
+		child.on("remove", (event) => {
+			index.remove(event.last);
 		});
-		child.on("update", (record) => {
-			index.update(record);
+		child.on("update", (event) => {
+			index.update(event.last, event.next);
 		});
-		parent.on("remove", (record) => {
-			let key = getParentKey(record);
+		parent.on("remove", (event) => {
+			let key = getParentKey(event.last);
 			for (let record of index.lookup(key)) {
 				child.remove(record);
 			}
@@ -75,13 +75,17 @@ export class CollectionIndex<A extends Record<string, any>> {
 };
 
 type RecordIndexEventMap<A> = {
-	"*": {
-		action: "insert" | "remove" | "update"
-		record: A
+	"*": {},
+	"insert": {
+		next: A
 	},
-	"insert": A,
-	"remove": A,
-	"update": A
+	"remove": {
+		last: A
+	},
+	"update": {
+		last: A,
+		next: A
+	}
 };
 
 export class RecordIndex<A extends Record<string, any>> {
@@ -89,31 +93,26 @@ export class RecordIndex<A extends Record<string, any>> {
 	private getKey: (record: A) => string | undefined;
 	private router: stdlib.routing.MessageRouter<RecordIndexEventMap<A>>;
 
-	private insertOrUpdate(record: A, action: "combine" | "replace" = "replace"): void {
-		let key = this.getKey(record);
-		let existing = this.map.get(key);
-		if (is.present(existing)) {
+	private insertOrUpdate(next: A, action: "combine" | "replace" = "replace"): void {
+		let key = this.getKey(next);
+		let last = this.map.get(key);
+		if (is.present(last)) {
 			if (action === "combine") {
-				for (let key in record) {
-					let value = record[key];
-					if (is.present(value)) {
-						existing[key] = record[key];
+				for (let key in last) {
+					let lastValue = last[key];
+					let nextValue = next[key];
+					if (is.present(lastValue) && is.absent(nextValue)) {
+						next[key] = last[key];
 					}
 				}
-			} else if (action === "replace") {
-				for (let key in existing) {
-					delete existing[key];
-				}
-				for (let key in record) {
-					existing[key] = record[key];
-				}
 			}
-			this.router.route("update", existing);
-			this.router.route("*", { action: "update", record: existing });
+			this.map.set(key, next);
+			this.router.route("update", { last, next });
+			this.router.route("*", {});
 		} else {
-			this.map.set(key, record);
-			this.router.route("insert", record);
-			this.router.route("*", { action: "insert", record: record });
+			this.map.set(key, next);
+			this.router.route("insert", { next });
+			this.router.route("*", {});
 		}
 	}
 
@@ -147,7 +146,7 @@ export class RecordIndex<A extends Record<string, any>> {
 		this.router.addObserver(type, listener);
 		if (type === "insert") {
 			for (let record of this.map.values()) {
-				(listener as stdlib.routing.MessageObserver<RecordIndexEventMap<A>["insert"]>)(record);
+				(listener as stdlib.routing.MessageObserver<RecordIndexEventMap<A>["insert"]>)({ next: record });
 			}
 		}
 	}
@@ -160,8 +159,8 @@ export class RecordIndex<A extends Record<string, any>> {
 		let key = this.getKey(record);
 		if (this.map.has(key)) {
 			this.map.delete(key);
-			this.router.route("remove", record);
-			this.router.route("*", { action: "remove", record: record });
+			this.router.route("remove", { last: record });
+			this.router.route("*", {});
 		}
 	}
 
@@ -251,9 +250,9 @@ export class SearchIndex<A extends Record<string, any>> {
 		}
 	}
 
-	update(record: A): void {
-		this.remove(record);
-		this.insert(record);
+	update(last: A, next: A): void {
+		this.remove(last);
+		this.insert(next);
 	}
 
 	static from<A>(records: Iterable<A>, getFields: (record: A) => Array<string>): SearchIndex<A> {
@@ -266,14 +265,14 @@ export class SearchIndex<A extends Record<string, any>> {
 
 	static fromIndex<A>(records: RecordIndex<A>, getFields: (record: A) => Array<string>): SearchIndex<A> {
 		let index = new SearchIndex<A>(getFields);
-		records.on("insert", (record) => {
-			index.insert(record);
+		records.on("insert", (event) => {
+			index.insert(event.next);
 		});
-		records.on("remove", (record) => {
-			index.remove(record);
+		records.on("remove", (event) => {
+			index.remove(event.last);
 		});
-		records.on("update", (record) => {
-			index.update(record);
+		records.on("update", (event) => {
+			index.update(event.last, event.next);
 		});
 		return index;
 	}

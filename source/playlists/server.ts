@@ -169,7 +169,7 @@ export class PlaylistsServer {
 				database.playlists.update({
 					...playlist,
 					...message.data.playlist
-				}, "combine");
+				});
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("UpdatePlaylist", Array.from(session.connections), {
 					playlist: api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
