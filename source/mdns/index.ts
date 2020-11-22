@@ -1,6 +1,7 @@
 import * as libdgram from "dgram";
 import * as is from "../is";
 
+const DEBUG = false;
 const MDNS_ADDRESS = "224.0.0.251";
 const MDNS_PORT = 5353;
 
@@ -17,6 +18,9 @@ let cache = new Map<string, CacheEntry | undefined>();
 let map = new Map<string, Set<Observer> | undefined>();
 
 function addCacheEntry(key: string, entry: CacheEntry): void {
+	if (DEBUG) {
+		console.log(`Adding cache entry:`, key, entry);
+	}
 	cache.set(key, entry);
 };
 
@@ -31,13 +35,14 @@ function lookupCacheEntry(host: string): string | undefined {
 	}
 }
 
-function notifyObservers(host: string): void {
-	let observers = map.get(host);
-	if (is.present(observers)) {
-		let value = lookupCacheEntry(host);
-		if (is.present(value)) {
-			for (let observer of observers) {
-				observer(value);
+function notifyObservers(): void {
+	for (let [host, observers] of map) {
+		if (is.present(observers)) {
+			let value = lookupCacheEntry(host);
+			if (is.present(value)) {
+				for (let observer of observers) {
+					observer(value);
+				}
 			}
 		}
 	}
@@ -112,19 +117,16 @@ async function parseRecord(buffer: Buffer, offset: number): Promise<Record> {
 		data = `${buffer[offset+0]}.${buffer[offset+1]}.${buffer[offset+2]}.${buffer[offset+3]}`;
 		offset += 4;
 		addCacheEntry(name.value, { type: "A", data: data });
-	}
-	if (type === 12) {
+	} else if (type === 12) {
 		let dname = await parseName(buffer, offset);
 		offset = dname.offset;
 		data = dname.value;
 		addCacheEntry(name.value, { type: "PTR", data: data });
-	}
-	if (type === 16) {
+	} else if (type === 16) {
 		let raw = buffer.slice(offset, offset + length);
 		offset += length;
 		data = raw.toString("binary");
-	}
-	if (type === 33) {
+	} else if (type === 33) {
 		let priority = buffer.readUInt16BE(offset);
 		offset += 2;
 		let weight = buffer.readUInt16BE(offset);
@@ -135,6 +137,11 @@ async function parseRecord(buffer: Buffer, offset: number): Promise<Record> {
 		offset = dname.offset;
 		data = dname.value;
 		addCacheEntry(name.value, { type: "SRV", data: data });
+	} else {
+		if (DEBUG) {
+			console.log(`Unknown DNS answer type ${type}! Skipping ${length} bytes...`, name);
+		}
+		offset += length;
 	}
 	return {
 		name: name.value,
@@ -199,15 +206,15 @@ socket.on("listening", () => {
 	socket.addMembership(MDNS_ADDRESS, "0.0.0.0");
 });
 
-socket.on("message", async (buffer) => {
+socket.on("message", async (buffer, rinfo) => {
 	try {
 		let packet = await parsePacket(buffer);
-		for (let answer of packet.answers) {
-			notifyObservers(answer.name);
-		}
+		notifyObservers();
 	} catch (error) {
-		console.error(`Expected a valid DNS packet!`);
-		console.error(error);
+		if (DEBUG) {
+			console.log(`Expected a valid DNS packet!`);
+			console.log(error);
+		}
 	}
 });
 

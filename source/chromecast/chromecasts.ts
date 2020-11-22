@@ -2,7 +2,7 @@ import * as libnet from "net";
 import * as libtls from "tls";
 import * as libhttp from "http";
 import * as cast_message from "./cast_message";
-import * as mdns from "./mdns";
+import * as mdns from "../mdns";
 import * as schema from "./schema";
 import * as is from "../is";
 import * as languages from "../languages";

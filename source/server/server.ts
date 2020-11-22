@@ -11,7 +11,10 @@ import * as subsearch from "./subsearch";
 import * as context from "../player/";
 import * as playlists from "../playlists/";
 import * as chromecasts from "../chromecast/chromecasts";
+import * as airplay from "../airplay/";
 import * as is from "../is";
+
+airplay.observe();
 
 let send_data = (file_id: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	if (request.url === undefined) {
