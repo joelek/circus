@@ -1944,7 +1944,7 @@ let updateviewforuri = (uri: string): void => {
 				)
 				.add(xml.element("div.content.content--compact")
 					.set("style", "display: grid; gap: 16px;")
-					.set("data-hidden", `${!canEdit}`)
+					.set("data-hide", `${!canEdit}`)
 					.add(xml.element("div")
 						.set("style", "position: relative;")
 						.add(xml.element("input")
@@ -1979,13 +1979,31 @@ let updateviewforuri = (uri: string): void => {
 				)
 				.add(playlist.items.length === 0 ? undefined : xml.element("div.content")
 					.set("style", "display: grid; gap: 16px;")
-					.add(...playlist.items.map((item, itemIndex) => {
-						return EntityRow.forTrack(item.track, PlaybackButton.forPlaylist(playlist, itemIndex));
-					}))
+					.add(...playlist.items.map((item, itemIndex) => xml.element("div")
+						.set("style", "align-items: center; display: grid; grid-template-columns: 1fr min-content; gap: 16px;")
+						.add(EntityRow.forTrack(item.track, PlaybackButton.forPlaylist(playlist, itemIndex)))
+						.add(makeButton()
+							.set("data-hide", `${!canEdit}`)
+							.on("click", async () => {
+								if (canModify.getState()) {
+									let response = await playlists.deletePlaylistItem({
+										playlist_item: {
+											playlist_item_id: item.playlist_item_id
+										}
+									});
+									if (response.errors.length > 0) {
+										return;
+									}
+									navigate(uri);
+								}
+							})
+							.add(Icon.makeMinus())
+						)
+					))
 				)
 				.add(xml.element("div.content.content--compact")
 					.set("style", "display: grid; gap: 16px;")
-					.set("data-hidden", `${!canEdit}`)
+					.set("data-hide", `${!canEdit}`)
 					.add(xml.element("button")
 						.bind2("data-enabled", computed((canUpdate) => "" + canUpdate, canModify))
 						.add(xml.text("Delete playlist"))
