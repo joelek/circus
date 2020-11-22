@@ -118,6 +118,16 @@ export class IconFactory {
 			)
 	}
 
+	makeMinus(): xnode.XElement {
+		return xnode.element("svg")
+			.set("width", "12px")
+			.set("height", "12px")
+			.set("viewBox", "0 0 24 24")
+			.add(xnode.element("path")
+				.set("d", "M1,14c-0.552,0-1-0.447-1-1v-2c0-0.553,0.448-1,1-1h22c0.553,0,1,0.447,1,1v2c0,0.553-0.447,1-1,1H1z")
+			)
+	}
+
 	makeNext(): xnode.XElement {
 		return xnode.element("svg")
 			.set("width", "12px")
