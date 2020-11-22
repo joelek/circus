@@ -1,33 +1,49 @@
-import * as libdgram from 'dgram';
+import * as libdgram from "dgram";
+import * as is from "../is";
+
+const MDNS_ADDRESS = "224.0.0.251";
+const MDNS_PORT = 5353;
 
 interface Observer {
 	(host: string): void;
 }
 
-let rcache: Record<string, string> = {};
-let observers: Record<string, Array<Observer>> = {};
+type CacheEntry = {
+	type: string,
+	data: string
+};
 
-let notify_observers = (key: string, value: string): void => {
-	let obs = observers[key];
-	if (obs !== undefined) {
-		for (let observer of obs) {
-			observer(value);
+let cache = new Map<string, CacheEntry | undefined>();
+let map = new Map<string, Set<Observer> | undefined>();
+
+function addCacheEntry(key: string, entry: CacheEntry): void {
+	cache.set(key, entry);
+};
+
+function lookupCacheEntry(host: string): string | undefined {
+	let entry = cache.get(host);
+	if (is.present(entry)) {
+		if (entry.type === "A") {
+			return entry.data;
+		} else {
+			return lookupCacheEntry(entry.data);
 		}
 	}
-	let newkey = rcache[key];
-	if (newkey !== undefined) {
-		notify_observers(newkey, value);
+}
+
+function notifyObservers(host: string): void {
+	let observers = map.get(host);
+	if (is.present(observers)) {
+		let value = lookupCacheEntry(host);
+		if (is.present(value)) {
+			for (let observer of observers) {
+				observer(value);
+			}
+		}
 	}
 };
 
-let add_cache_entry = (key: string, value: string, type: string): void => {
-	rcache[value] = key;
-	if (type === 'A') {
-		notify_observers(key, value);
-	}
-};
-
-let parse_name = async (buffer: Buffer, offset: number): Promise<{ value: string, offset: number }> => {
+async function parseName(buffer: Buffer, offset: number): Promise<{ value: string, offset: number }> {
 	let labels = new Array<string>();
 	while (true) {
 		let length = buffer.readUInt8(offset);
@@ -39,25 +55,30 @@ let parse_name = async (buffer: Buffer, offset: number): Promise<{ value: string
 			offset += 1;
 			let label = buffer.slice(offset, offset + length);
 			offset += length;
-			labels.push(label.toString('binary'));
+			labels.push(label.toString("binary"));
 			continue;
 		}
 		if (length < 192) {
 			throw new Error();
 		}
-		let name = await parse_name(buffer, buffer.readUInt16BE(offset) & 0x3FFF);
+		let name = await parseName(buffer, buffer.readUInt16BE(offset) & 0x3FFF);
 		labels.push(name.value);
 		offset += 2;
 		break;
 	}
 	return {
-		value: labels.join('.'),
+		value: labels.join("."),
 		offset: offset
 	};
 };
 
-let parse_question = async (buffer: Buffer, offset: number): Promise<{ value: string, offset: number }> => {
-	let name = await parse_name(buffer, offset);
+type Question = {
+	value: string,
+	offset: number
+};
+
+async function parseQuestion(buffer: Buffer, offset: number): Promise<Question> {
+	let name = await parseName(buffer, offset);
 	offset = name.offset;
 	let type = buffer.readUInt16BE(offset);
 	offset += 2;
@@ -69,8 +90,14 @@ let parse_question = async (buffer: Buffer, offset: number): Promise<{ value: st
 	};
 };
 
-let parse_record = async (buffer: Buffer, offset: number): Promise<{ name: string, data: string, offset: number }> => {
-	let name = await parse_name(buffer, offset);
+type Record = {
+	name: string,
+	data: string,
+	offset: number
+};
+
+async function parseRecord(buffer: Buffer, offset: number): Promise<Record> {
+	let name = await parseName(buffer, offset);
 	offset = name.offset;
 	let type = buffer.readUInt16BE(offset);
 	offset += 2;
@@ -80,22 +107,22 @@ let parse_record = async (buffer: Buffer, offset: number): Promise<{ name: strin
 	offset += 4;
 	let length = buffer.readUInt16BE(offset);
 	offset += 2;
-	let data = '';
+	let data = "";
 	if (type === 1) {
 		data = `${buffer[offset+0]}.${buffer[offset+1]}.${buffer[offset+2]}.${buffer[offset+3]}`;
 		offset += 4;
-		add_cache_entry(name.value, data, 'A');
+		addCacheEntry(name.value, { type: "A", data: data });
 	}
 	if (type === 12) {
-		let dname = await parse_name(buffer, offset);
+		let dname = await parseName(buffer, offset);
 		offset = dname.offset;
 		data = dname.value;
-		add_cache_entry(name.value, data, 'PTR');
+		addCacheEntry(name.value, { type: "PTR", data: data });
 	}
 	if (type === 16) {
 		let raw = buffer.slice(offset, offset + length);
 		offset += length;
-		data = raw.toString('binary');
+		data = raw.toString("binary");
 	}
 	if (type === 33) {
 		let priority = buffer.readUInt16BE(offset);
@@ -104,10 +131,10 @@ let parse_record = async (buffer: Buffer, offset: number): Promise<{ name: strin
 		offset += 2;
 		let port = buffer.readUInt16BE(offset);
 		offset += 2;
-		let dname = await parse_name(buffer, offset);
+		let dname = await parseName(buffer, offset);
 		offset = dname.offset;
 		data = dname.value;
-		add_cache_entry(name.value, data, 'SRV');
+		addCacheEntry(name.value, { type: "SRV", data: data });
 	}
 	return {
 		name: name.value,
@@ -116,7 +143,14 @@ let parse_record = async (buffer: Buffer, offset: number): Promise<{ name: strin
 	};
 };
 
-let parse_mdns = async (buffer: Buffer): Promise<void> => {
+type Packet = {
+	questions: Array<Question>,
+	answers: Array<Record>,
+	authorities: Array<Record>,
+	additionals: Array<Record>
+};
+
+async function parsePacket(buffer: Buffer): Promise<Packet> {
 	let offset = 0;
 	let header = buffer.slice(offset, offset + 12);
 	offset += 12;
@@ -126,86 +160,103 @@ let parse_mdns = async (buffer: Buffer): Promise<void> => {
 	let ancount = header.readUInt16BE(6);
 	let nscount = header.readUInt16BE(8);
 	let arcount = header.readUInt16BE(10);
-	let questions = new Array<{ value: string, offset: number }>();
+	let questions = new Array<Question>();
 	for (let i = 0; i < qdcount; i++) {
-		let result = await parse_question(buffer, offset);
+		let result = await parseQuestion(buffer, offset);
 		questions.push(result);
 		offset = result.offset;
 	}
-	let answers = new Array<{ name: string, data: string, offset: number } >();
+	let answers = new Array<Record>();
 	for (let i = 0; i < ancount; i++) {
-		let result = await parse_record(buffer, offset);
+		let result = await parseRecord(buffer, offset);
 		answers.push(result);
 		offset = result.offset;
 	}
-	let authorities = new Array<{ name: string, data: string, offset: number } >();
+	let authorities = new Array<Record>();
 	for (let i = 0; i < nscount; i++) {
-		let result = await parse_record(buffer, offset);
+		let result = await parseRecord(buffer, offset);
 		authorities.push(result);
 		offset = result.offset;
 	}
-	let additionals = new Array<{ name: string, data: string, offset: number } >();
+	let additionals = new Array<Record>();
 	for (let i = 0; i < arcount; i++) {
-		let result = await parse_record(buffer, offset);
+		let result = await parseRecord(buffer, offset);
 		additionals.push(result);
 		offset = result.offset;
 	}
+	return {
+		questions,
+		answers,
+		authorities,
+		additionals
+	};
 };
 
-const MDNS_ADDRESS = '224.0.0.251';
-const MDNS_PORT = 5353;
+const socket = libdgram.createSocket({ type: "udp4", reuseAddr: true });
 
-let socket = libdgram.createSocket({ type: 'udp4', reuseAddr: true });
-
-socket.on('listening', () => {
+socket.on("listening", () => {
 	socket.setMulticastLoopback(false);
-	socket.addMembership(MDNS_ADDRESS, '0.0.0.0');
+	socket.addMembership(MDNS_ADDRESS, "0.0.0.0");
 });
 
-socket.on('message', async (buffer, rinfo) => {
+socket.on("message", async (buffer) => {
 	try {
-		await parse_mdns(buffer);
-	} catch (error) {}
+		let packet = await parsePacket(buffer);
+		for (let answer of packet.answers) {
+			notifyObservers(answer.name);
+		}
+	} catch (error) {
+		console.error(`Expected a valid DNS packet!`);
+		console.error(error);
+	}
 });
 
 socket.bind(MDNS_PORT);
 
-export let discover = (host: string): void => {
-	let header = Buffer.alloc(12);
-	header.writeUInt16BE(1, 4);
-	let body = Buffer.alloc(1000);
-	let offset = 0;
-	let labels = host.split('.').forEach(a => {
-		if (a.length >= 64) {
-			throw new Error();
+// TODO: Encode labels properly.
+function sendDiscoveryPacket(host: string): void {
+	let buffers = Array<Buffer>();
+	let head = Buffer.alloc(12);
+	head.writeUInt16BE(1, 4);
+	buffers.push(head);
+	for (let label of host.split(".")) {
+		if (label.length >= 64) {
+			throw `Expected a label with a length less than 64!`;
 		}
-		body.writeUInt8(a.length, offset); offset += 1;
-		body.write(a, offset); offset += a.length;
-	});
-	body.writeUInt8(0, offset); offset += 1;
-	body.writeUInt16BE(12, offset); offset += 2;
-	body.writeUInt16BE(1, offset); offset += 2;
-	body = body.slice(0, 0 + offset);
-	socket.send(Buffer.concat([header, body]), MDNS_PORT, MDNS_ADDRESS);
+		let buffer = Buffer.alloc(1 + label.length);
+		buffer.writeUInt8(label.length, 0);
+		buffer.write(label, 1);
+		buffers.push(buffer);
+	}
+	let tail = Buffer.alloc(5);
+	tail.writeUInt8(0, 0);
+	tail.writeUInt16BE(12, 1);
+	tail.writeUInt16BE(1, 3);
+	buffers.push(tail);
+	socket.send(Buffer.concat(buffers), MDNS_PORT, MDNS_ADDRESS);
 };
 
 interface Cancellable {
 	cancel(): void;
-}
+};
 
-// TODO: Only notify with responses to specific host.
-export let observe = (host: string, observer: Observer): Cancellable => {
-	let obs = observers[host];
-	if (obs === undefined) {
-		obs = new Array<Observer>();
-		observers[host] = obs;
+export function observe(host: string, observer: Observer): Cancellable {
+	let observers = map.get(host);
+	if (is.absent(observers)) {
+		observers = new Set<Observer>();
+		map.set(host, observers);
 	}
-	obs.push(observer);
-	discover(host);
+	observers.add(observer);
+	sendDiscoveryPacket(host);
 	return {
 		cancel(): void {
-			let index = obs.lastIndexOf(observer);
-			obs = obs.slice(index, 1);
+			let observers = map.get(host);
+			if (is.present(observers)) {
+				observers.delete(observer);
+				if (observers.size === 0) {
+					map.delete(host);
+				}
+			}
 		}
 	};
 };
