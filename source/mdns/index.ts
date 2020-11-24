@@ -35,14 +35,13 @@ function lookupCacheEntry(host: string): string | undefined {
 	}
 }
 
-function notifyObservers(): void {
-	for (let [host, observers] of map) {
-		if (is.present(observers)) {
-			let value = lookupCacheEntry(host);
-			if (is.present(value)) {
-				for (let observer of observers) {
-					observer(value);
-				}
+function notifyObservers(host: string): void {
+	let observers = map.get(host);
+	if (is.present(observers)) {
+		let value = lookupCacheEntry(host);
+		if (is.present(value)) {
+			for (let observer of observers) {
+				observer(value);
 			}
 		}
 	}
@@ -209,7 +208,9 @@ socket.on("listening", () => {
 socket.on("message", async (buffer, rinfo) => {
 	try {
 		let packet = await parsePacket(buffer);
-		notifyObservers();
+		for (let answer of packet.answers) {
+			notifyObservers(answer.name);
+		}
 	} catch (error) {
 		if (DEBUG) {
 			console.log(`Expected a valid DNS packet!`);

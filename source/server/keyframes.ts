@@ -82,7 +82,7 @@ export async function getKeyframeOffsets(paths: Array<string>, streamIndex: numb
 				});
 				resolve(frames);
 			} catch (error) {
-				console.log(`Keyframes failed for ${paths.join("/")}!`);
+				//console.log(`Keyframes failed for ${paths.join("/")}!`);
 				reject(error);
 			}
 		})

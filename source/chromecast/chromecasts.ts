@@ -116,7 +116,6 @@ function removeListner(listener: Listener): void {
 	listeners.delete(listener);
 }
 
-// TODO: Invalidate cache of hostnames at reasonable intervals.
 mdns.observe("_googlecast._tcp.local", (hostname) => {
 	if (!hostnames.has(hostname)) {
 		hostnames.add(hostname);
@@ -136,14 +135,14 @@ function createSocket(hostname: string): Promise<libnet.Socket> {
 			rejectUnauthorized: false
 		});
 		socket.on("secureConnect", () => {
-			console.log(`Connected to chromecast at ${hostname}.`);
+			console.log(`Connected to Cast device at ${hostname}.`);
 			resolve(socket);
 		});
 		socket.on("close", () => {
-			console.log(`Disconnected from chromecast at ${hostname}.`);
+			console.log(`Disconnected from Cast device at ${hostname}.`);
 		});
 		socket.on("error", (error) => {
-			socket.end();
+			socket.destroy();
 		});
 	});
 }
