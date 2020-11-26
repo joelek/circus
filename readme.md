@@ -25,4 +25,3 @@
 * Move authentication to typesockets.
 * Support multiple active devices.
 * Add support for apple tv protocol.
-* Support multiple Cast devices.
