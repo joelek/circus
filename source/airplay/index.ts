@@ -239,8 +239,12 @@ async function makeSocket(host: string): Promise<libnet.Socket> {
 	let info = await api.getServerInfo(host);
 	let socket = await getEventConnection(info, host, (request) => {
 		try {
-			let document = plist.parse(request.body.toString());
-		} catch (error) {}
+			let string = request.body.toString();
+			let document = plist.parse(string);
+			console.log(JSON.stringify(document, null, 2));
+		} catch (error) {
+			console.log(error);
+		}
 	});
 	//await api.play(info, host, "https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_1920_18MG.mp4", 0);
 	return socket;
@@ -265,6 +269,10 @@ export function observe(): void {
 					devices.delete(host);
 				});
 			}
-		} catch (error) {}
+		} catch (error) {
+			console.log(error);
+		}
 	});
 };
+
+observe();
