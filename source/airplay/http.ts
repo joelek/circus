@@ -184,7 +184,7 @@ export class InboundSocket extends stdlib.routing.MessageRouter<InboundSocketEve
 				return socket.emit("error", `Expected a valid upgrade header!`);
 			}
 			socket.off("data", ondata);
-			socket.on("data", async () => {
+			socket.on("data", async (buffer) => {
 				try {
 					let request = parseRequest(buffer);
 					let response = await handle(request);
