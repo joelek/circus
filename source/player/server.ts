@@ -17,12 +17,12 @@ function getQuery(url: liburl.UrlWithParsedQuery, key: string): Array<string> {
 
 function makeDevice(connection_id: string, connection_url: string): schema.objects.Device {
 	let url = liburl.parse(connection_url, true);
+	let protocol = getQuery(url, "protocol").pop() ?? "";
 	let name = getQuery(url, "name").pop() ?? "";
-	let type = getQuery(url, "type").pop() ?? "";
 	return {
 		id: connection_id,
-		name: name,
-		type: type
+		protocol: protocol,
+		name: name
 	};
 }
 
@@ -139,7 +139,7 @@ export class ContextServer {
 			this.tss.send("SetLocalDevice", message.connection_id, {
 				device
 			});
-			if (device.type === "chromecast") {
+			if (device.protocol === "cast" || device.protocol === "airplay") {
 				this.chromecasts.updateState([...this.chromecasts.getState(), device]);
 			}
 		});
@@ -147,7 +147,7 @@ export class ContextServer {
 			console.log("disconnect: " + message.connection_url);
 			let device = makeDevice(message.connection_id, message.connection_url);
 			this.revokeAuthentication(message.connection_id);
-			if (device.type === "chromecast") {
+			if (device.protocol === "cast" || device.protocol === "airplay") {
 				this.chromecasts.updateState(this.chromecasts.getState().filter((chromecast) => {
 					return chromecast.id !== device.id;
 				}));

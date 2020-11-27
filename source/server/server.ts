@@ -14,8 +14,6 @@ import * as chromecasts from "../chromecast/chromecasts";
 import * as airplay from "../airplay/";
 import * as is from "../is";
 
-airplay.observe();
-
 let send_data = (file_id: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	if (request.url === undefined) {
 		throw new Error();
@@ -283,6 +281,7 @@ if (full_chain && certificate_key) {
 	}).listen(80, () => {
 		console.log("http://localhost:80");
 	});
+	airplay.observe(true);
 	chromecasts.observe(true);
 } else {
 	let server = libhttp.createServer({}, requestHandler);
@@ -290,6 +289,7 @@ if (full_chain && certificate_key) {
 		console.log("http://localhost:80");
 	});
 	server.keepAliveTimeout = 60 * 1000;
+	airplay.observe(false);
 	chromecasts.observe(false);
 }
 

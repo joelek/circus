@@ -1,0 +1,6 @@
+{
+	Event: {
+		sessionID: number,
+		state: "loading" | "playing" | "paused" | "stopped"
+	}
+}

@@ -23,7 +23,7 @@
 
 	Device: {
 		id: string,
-		type: string,
+		protocol: string,
 		name: string
 	},
 

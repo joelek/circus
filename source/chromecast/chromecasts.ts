@@ -171,14 +171,14 @@ function getDeviceName(hostname: string): Promise<string | undefined> {
 	});
 }
 
-export function observe(tls: boolean): void {
+export function observe(wss: boolean): void {
 	addListener(async (hostname) => {
 		let socket = await createSocket(hostname);
 		socket.on("close", () => {
 			hostnames.delete(hostname);
 		});
 		let deviceName = await getDeviceName(hostname);
-		new ChromecastPlayer(socket, deviceName ?? "Chromecast", tls);
+		new ChromecastPlayer(socket, deviceName ?? "Chromecast", wss);
 	});
 };
 
@@ -422,7 +422,7 @@ class ChromecastPlayer {
 		}, 5000);
 	}
 
-	constructor(socket: libnet.Socket, deviceName: string, tls: boolean) {
+	constructor(socket: libnet.Socket, deviceName: string, wss: boolean) {
 		let messageHandler = new MessageHandler(socket, (message) => {
 			let namespace = message.namespace;
 			if (namespace === ConnectionHandler.NAMESPACE) {
@@ -440,7 +440,7 @@ class ChromecastPlayer {
 		this.connectionHandler = new ConnectionHandler(messageHandler);
 		this.mediaHandler = new MediaHandler(messageHandler);
 		this.receiverHandler = new ReceiverHandler(messageHandler);
-		let url = `${tls ? "wss:" : "ws:"}//127.0.0.1/sockets/context/?type=chromecast&name=${deviceName}`;
+		let url = `${wss ? "wss:" : "ws:"}//127.0.0.1/sockets/context/?protocol=cast&name=${deviceName}`;
 		this.context = new libcontext.ContextClient(url, (url) => new sockets.WebSocketClient(url));
 		this.timer = undefined;
 		socket.on("close", () => {

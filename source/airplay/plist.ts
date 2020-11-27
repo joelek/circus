@@ -1,5 +1,4 @@
-import * as is from "../is";
-import * as xml from "../xml";
+import * as xml from "../xml/";
 
 type JSON = undefined | number | string | boolean | JSON[] | { [key: string]: JSON };
 
@@ -131,7 +130,7 @@ function parseJSON(node: xml.XMLElement): JSON {
 	throw `Expected a type!`;
 }
 
-export function parse(string: string): any {
+export function parseFromString(string: string): any {
 	let document = xml.parse(string);
 	let root = document.root;
 	root.tag("plist");
