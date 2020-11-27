@@ -1,7 +1,7 @@
 import * as http from "./http";
 
-export function play(outgoing_socket: http.OutboundSocket, session_id: string, url: string, progress_factor: number): Promise<http.Response> {
-	return outgoing_socket.request({
+export function play(socket: http.OutboundSocket, session_id: string, url: string, progress_factor: number): Promise<http.Response> {
+	return socket.request({
 		method: "POST",
 		path: `/play`,
 		headers: [
@@ -16,8 +16,8 @@ export function play(outgoing_socket: http.OutboundSocket, session_id: string, u
 	});
 };
 
-export function rate(outgoing_socket: http.OutboundSocket, session_id: string, factor: number): Promise<http.Response> {
-	return outgoing_socket.request({
+export function rate(socket: http.OutboundSocket, session_id: string, factor: number): Promise<http.Response> {
+	return socket.request({
 		method: "POST",
 		path: `/rate?value=${factor}`,
 		headers: [
@@ -26,8 +26,8 @@ export function rate(outgoing_socket: http.OutboundSocket, session_id: string, f
 	});
 };
 
-export function scrub(outgoing_socket: http.OutboundSocket, session_id: string, seconds: number): Promise<http.Response> {
-	return outgoing_socket.request({
+export function scrub(socket: http.OutboundSocket, session_id: string, seconds: number): Promise<http.Response> {
+	return socket.request({
 		method: "POST",
 		path: `/scrub?position=${seconds}`,
 		headers: [
@@ -36,8 +36,8 @@ export function scrub(outgoing_socket: http.OutboundSocket, session_id: string, 
 	});
 };
 
-export function stop(outgoing_socket: http.OutboundSocket, session_id: string): Promise<http.Response> {
-	return outgoing_socket.request({
+export function stop(socket: http.OutboundSocket, session_id: string): Promise<http.Response> {
+	return socket.request({
 		method: "POST",
 		path: `/stop`,
 		headers: [
@@ -46,8 +46,8 @@ export function stop(outgoing_socket: http.OutboundSocket, session_id: string): 
 	});
 };
 
-export function getServerInfo(outgoing_socket: http.OutboundSocket, session_id: string): Promise<http.Response> {
-	return outgoing_socket.request({
+export function getServerInfo(socket: http.OutboundSocket, session_id: string): Promise<http.Response> {
+	return socket.request({
 		method: "GET",
 		path: `/server-info`,
 		headers: [

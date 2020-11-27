@@ -49,6 +49,7 @@ export function serializeMessage(message: Partial<Message>): Buffer {
 	let head = Buffer.from([
 		message.line,
 		...headers.map((header) => `${header.key}: ${header.value}`),
+		``,
 		``
 	].join("\r\n"));
 	return Buffer.concat([head, body]);
@@ -149,10 +150,12 @@ export class OutboundSocket extends stdlib.routing.MessageRouter<OutboundSocketE
 	async request(request: Partial<Request>): Promise<Response> {
 		return new Promise((resolve, reject) => {
 			this.socket.write(serializeRequest(request));
-			this.socket.on("data", async (buffer) => {
+			let ondata = async (buffer: Buffer) => {
+				this.socket.off("data", ondata);
 				let response = parseResponse(buffer);
 				resolve(response);
-			});
+			};
+			this.socket.on("data", ondata);
 		});
 	}
 };
