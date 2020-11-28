@@ -2,25 +2,58 @@
 
 import { guards as autoguard } from "@joelek/ts-autoguard";
 
-export type Event = {
+export type LoadingEvent = {
 	"sessionID": number,
-	"state": "loading" | "playing" | "paused" | "stopped"
+	"state": "loading"
 };
 
-export const Event = autoguard.Object.of<Event>({
+export const LoadingEvent = autoguard.Object.of<LoadingEvent>({
 	"sessionID": autoguard.Number,
-	"state": autoguard.Union.of(
-		autoguard.StringLiteral.of("loading"),
-		autoguard.StringLiteral.of("playing"),
-		autoguard.StringLiteral.of("paused"),
-		autoguard.StringLiteral.of("stopped")
-	)
+	"state": autoguard.StringLiteral.of("loading")
+});
+
+export type PlayingEvent = {
+	"sessionID": number,
+	"state": "playing"
+};
+
+export const PlayingEvent = autoguard.Object.of<PlayingEvent>({
+	"sessionID": autoguard.Number,
+	"state": autoguard.StringLiteral.of("playing")
+});
+
+export type PausedEvent = {
+	"sessionID": number,
+	"state": "paused"
+};
+
+export const PausedEvent = autoguard.Object.of<PausedEvent>({
+	"sessionID": autoguard.Number,
+	"state": autoguard.StringLiteral.of("paused")
+});
+
+export type StoppedEvent = {
+	"sessionID": number,
+	"state": "stopped",
+	"reason": string
+};
+
+export const StoppedEvent = autoguard.Object.of<StoppedEvent>({
+	"sessionID": autoguard.Number,
+	"state": autoguard.StringLiteral.of("stopped"),
+	"reason": autoguard.String
 });
 
 export type Autoguard = {
-	"Event": Event
+	"LoadingEvent": LoadingEvent,
+	"PlayingEvent": PlayingEvent,
+	"PausedEvent": PausedEvent,
+	"StoppedEvent": StoppedEvent
 };
 
 export const Autoguard = {
-	"Event": Event
+	"LoadingEvent": LoadingEvent,
+	"PlayingEvent": PlayingEvent,
+	"PausedEvent": PausedEvent,
+	"StoppedEvent": StoppedEvent
 };

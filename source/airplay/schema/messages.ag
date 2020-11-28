@@ -1,6 +1,22 @@
 {
-	Event: {
+	LoadingEvent: {
 		sessionID: number,
-		state: "loading" | "playing" | "paused" | "stopped"
+		state: "loading"
+	},
+
+	PlayingEvent: {
+		sessionID: number,
+		state: "playing"
+	},
+
+	PausedEvent: {
+		sessionID: number,
+		state: "paused"
+	},
+
+	StoppedEvent: {
+		sessionID: number,
+		state: "stopped",
+		reason: string
 	}
 }

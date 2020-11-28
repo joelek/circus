@@ -12,7 +12,7 @@ import * as plist from "./plist";
 const MEDIA_SERVER = "https://ap.joelek.se";
 const PORT = 7000;
 
-function makeSessionID(): string {
+function makeCorrelationID(): string {
 	return [
 		libcrypto.randomBytes(4).toString("hex"),
 		libcrypto.randomBytes(2).toString("hex"),
@@ -29,25 +29,28 @@ type DeviceEventMap = {
 export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
 	constructor(host: string, wss: boolean) {
 		super();
-		let session_id = makeSessionID();
+		let correlation_id = makeCorrelationID();
 		let outbound = new http.OutboundSocket({ host: host, port: PORT });
 		outbound.addObserver("close", () => {
 			this.route("close", {});
 		});
-		api.getServerInfo(outbound, session_id).then((server_info) => {
+		api.getServerInfo(outbound, correlation_id).then(() => {
 			let inbound = new http.InboundSocket({ host: host, port: PORT }, {
 				method: "POST",
 				path: "/reverse",
 				headers: [
 					{ key: "X-Apple-Purpose", value: "event" },
-					{ key: "X-Apple-Session-ID", value: session_id }
+					{ key: "X-Apple-Session-ID", value: correlation_id }
 				]
 			}, async (request) => {
 				let string = request.body.toString();
 				let document = plist.parseFromString(string);
-				if (schema.messages.Event.is(document)) {
-					let event = document;
-					//console.log(event);
+				if (schema.messages.PlayingEvent.is(document)) {
+					context.resume();
+				} else if (schema.messages.PausedEvent.is(document)) {
+					context.pause();
+				} else if (schema.messages.StoppedEvent.is(document) && document.reason === "ended") {
+					context.next();
 				}
 				return {
 					status: 200,
@@ -57,19 +60,24 @@ export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
 			inbound.addObserver("close", () => {
 				this.route("close", {});
 			});
-			let url = `${wss ? "wss:" : "ws:"}//127.0.0.1/sockets/context/?protocol=airplay&name=AirPlayDevice`;
+			let url = `${wss ? "wss:" : "ws:"}//127.0.0.1/sockets/context/?protocol=airplay&name=AirPlay%20Device`;
 			let context = new player.ContextClient(url, (url) => new sockets.WebSocketClient(url));
 			observers.computed(async (currentLocalEntry, token) => {
 				if (is.present(currentLocalEntry) && is.present(token)) {
 					let url = `${MEDIA_SERVER}/files/${currentLocalEntry.media.file_id}/?token=${token}`;
-					let response = await api.play(outbound, session_id, url, 0.0);
+					await api.play(outbound, correlation_id, url, 0.0);
+				} else {
+					await api.stop(outbound, correlation_id);
 				}
 			}, context.currentLocalEntry, context.token);
 			observers.computed(async (currentLocalEntry, progress) => {
 				if (is.present(currentLocalEntry) && is.present(progress)) {
-					let response = await api.scrub(outbound, session_id, progress);
+					await api.scrub(outbound, correlation_id, progress);
 				}
 			}, context.currentLocalEntry, context.progress);
+			observers.computed(async (playback) => {
+				await api.rate(outbound, correlation_id, playback ? 1.0 : 0.0);
+			}, context.playback);
 			this.addObserver("close", () => {
 				context.close();
 				outbound.close();
