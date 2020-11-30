@@ -7,6 +7,7 @@ const CSS = `
 	.image-box {
 		background-color: ${theme.BACKGROUND_3};
 		position: relative;
+		transform: translate3d(0, 0, 0);
 	}
 
 	.image-box--circle {
