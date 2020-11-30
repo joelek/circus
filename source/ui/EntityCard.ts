@@ -18,8 +18,6 @@ const CSS = `
 	}
 
 	.entity-card__artwork {
-		border-radius: 2px;
-		overflow: hidden;
 		position: relative;
 	}
 

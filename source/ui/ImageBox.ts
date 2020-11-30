@@ -6,8 +6,10 @@ import * as is from "../is";
 const CSS = `
 	.image-box {
 		background-color: ${theme.BACKGROUND_3};
+		border-radius: 2px;
+		overflow: hidden;
 		position: relative;
-		transform: translate3d(0, 0, 0);
+		will-change: opacity;
 	}
 
 	.image-box--circle {

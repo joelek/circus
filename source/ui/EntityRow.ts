@@ -16,8 +16,6 @@ const CSS = `
 	}
 
 	.entity-row__artwork {
-		border-radius: 2px;
-		overflow: hidden;
 		position: relative;
 	}
 
