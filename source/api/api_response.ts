@@ -87,7 +87,9 @@ type PlaylistsResponse = {
 };
 
 type SeasonResponse = {
-	season: objects.Season
+	season: objects.Season,
+	last?: objects.Season,
+	next?: objects.Season
 };
 
 type SeasonsResponse = {

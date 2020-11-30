@@ -673,8 +673,13 @@ class SeasonRoute implements Route<{}, response.SeasonResponse> {
 		let parts = /^[/]api[/]video[/]seasons[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let season_id = parts[1];
 		let season = handler.lookupSeason(season_id, user_id);
+		let show = handler.lookupShow(season.show.show_id, user_id);
+		let last = show.seasons.find((show_season) => show_season.number === season.number - 1);
+		let next = show.seasons.find((show_season) => show_season.number === season.number + 1);
 		let payload: response.SeasonResponse = {
-			season
+			season,
+			last,
+			next
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));

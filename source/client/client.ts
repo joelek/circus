@@ -1581,6 +1581,8 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^video[/]seasons[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<{}, api_response.SeasonResponse>(`/api/video/seasons/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let season = response.season;
+			let last = response.last;
+			let next = response.next;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forSeason(season))
@@ -1590,6 +1592,31 @@ let updateviewforuri = (uri: string): void => {
 					.add(...season.episodes.map((episode, episodeIndex) => {
 						return EntityCard.forEpisode(episode, PlaybackButton.forSeason(season, episodeIndex));
 					}))
+				)
+				.add(xml.element("div.content")
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 8px; grid-auto-flow: column; justify-content: center;")
+						.add(xml.element("div.icon-button")
+							.set("data-enabled", `${is.present(last)}`)
+							.add(Icon.makeChevron()
+								.set("style", "transform: scale(-1.0, 1.0);")
+							)
+							.on("click", () => {
+								if (is.present(last)) {
+									navigate(`video/seasons/${last.season_id}/`)
+								}
+							})
+						)
+						.add(xml.element("div.icon-button")
+							.set("data-enabled", `${is.present(next)}`)
+							.add(Icon.makeChevron())
+							.on("click", () => {
+								if (is.present(next)) {
+									navigate(`video/seasons/${next.season_id}/`)
+								}
+							})
+						)
+					)
 				)
 				.render());
 		});
