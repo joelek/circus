@@ -257,7 +257,7 @@ const contextMenuEntity = new ObservableClass(undefined as apischema.objects.Ent
 const showContextMenu = new ObservableClass(false);
 const contextMenuItems = new ArrayObservable(new Array<xml.XElement>());
 contextMenuEntity.addObserver((contextMenuEntity) => {
-	if (apischema.objects.TrackBase.is(contextMenuEntity)) {
+	if (apischema.objects.Track.is(contextMenuEntity)) {
 		let title = new ObservableClass("");
 		let canCreate = computed((title) => {
 			if (title === "") {
@@ -298,6 +298,7 @@ contextMenuEntity.addObserver((contextMenuEntity) => {
 					})
 					.add(Icon.makeCross())
 				),
+			EntityRow.forTrack(contextMenuEntity),
 			xml.element("div")
 				.set("style", "display: grid; gap: 16px;")
 				.add(xml.element("div")
