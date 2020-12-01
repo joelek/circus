@@ -462,17 +462,21 @@ export function searchForCues(query: string, offset: number, limit: number, user
 			let video_files = database.getVideoFilesFromSubtitleFile.lookup(cue.subtitle.subtitle.file_id);
 			for (let video_file of video_files) {
 				try {
-					let episode = database.episode_files.lookup(video_file.video_file_id);
-					return {
-						...cue,
-						media: lookupEpisode(episode.episode_id, user_id)
+					let episode_files = database.getEpisodesFromFile.lookup(video_file.video_file_id);
+					for (let episode_file of episode_files) {
+						return {
+							...cue,
+							media: lookupEpisode(episode_file.episode_id, user_id)
+						};
 					}
 				} catch (error) {}
 				try {
-					let movie = database.movie_files.lookup(video_file.video_file_id);
-					return {
-						...cue,
-						media: lookupMovie(movie.movie_id, user_id)
+					let movie_files = database.getMoviesFromFile.lookup(video_file.video_file_id);
+					for (let movie_file of movie_files) {
+						return {
+							...cue,
+							media: lookupMovie(movie_file.movie_id, user_id)
+						};
 					}
 				} catch (error) {}
 			}
