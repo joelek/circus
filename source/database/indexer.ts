@@ -488,7 +488,8 @@ function indexFile(file: File): void {
 				subtitle_files.insert({
 					file_id: file_id,
 					mime: "text/vtt",
-					...subtitle_resource
+					duration_ms: subtitle_resource.duration_ms,
+					language: subtitle_resource.language
 				});
 			}
 		} else if (file.name.endsWith(".json")) {
@@ -498,8 +499,7 @@ function indexFile(file: File): void {
 			if (is.present(metadata_resource)) {
 				metadata_files.insert({
 					file_id: file_id,
-					mime: "application/json",
-					...metadata_resource
+					mime: "application/json"
 				});
 			}
 		} else if (file.name.endsWith(".mp3")) {
@@ -510,7 +510,7 @@ function indexFile(file: File): void {
 				audio_files.insert({
 					file_id: file_id,
 					mime: "audio/mp3",
-					...audio_resource
+					duration_ms: audio_resource.duration_ms
 				});
 			}
 		} else if (file.name.endsWith(".mp4")) {
@@ -523,13 +523,15 @@ function indexFile(file: File): void {
 				video_files.insert({
 					file_id: file_id,
 					mime: "video/mp4",
-					...video_resource
+					duration_ms: video_resource.duration_ms,
+					width: video_resource.width,
+					height: video_resource.height
 				});
 			} else if (is.present(audio_resource)) {
 				audio_files.insert({
 					file_id: file_id,
 					mime: "audio/mp4",
-					...audio_resource
+					duration_ms: audio_resource.duration_ms
 				});
 			}
 		} else if (file.name.endsWith(".jpg") || file.name.endsWith(".jpeg")) {
@@ -540,7 +542,8 @@ function indexFile(file: File): void {
 				image_files.insert({
 					file_id: file_id,
 					mime: "image/jpeg",
-					...image_resource
+					width: image_resource.width,
+					height: image_resource.height
 				});
 			}
 		}
