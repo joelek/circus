@@ -158,7 +158,12 @@ export const MetadataResource = autoguard.Object.of<MetadataResource>({
 export type SubtitleResource = {
 	"type": "subtitle",
 	"duration_ms": number,
-	"language"?: string
+	"language"?: string,
+	"cues": {
+		"start_ms": number,
+		"duration_ms": number,
+		"lines": string[]
+	}[]
 };
 
 export const SubtitleResource = autoguard.Object.of<SubtitleResource>({
@@ -167,7 +172,16 @@ export const SubtitleResource = autoguard.Object.of<SubtitleResource>({
 	"language": autoguard.Union.of(
 		autoguard.Undefined,
 		autoguard.String
-	)
+	),
+	"cues": autoguard.Array.of(autoguard.Object.of<{
+		"start_ms": number,
+		"duration_ms": number,
+		"lines": string[]
+	}>({
+		"start_ms": autoguard.Number,
+		"duration_ms": autoguard.Number,
+		"lines": autoguard.Array.of(autoguard.String)
+	}))
 });
 
 export type VideoResource = {

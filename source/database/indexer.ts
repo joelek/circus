@@ -6,6 +6,7 @@ import * as indices from "../jsondb/";
 import * as is from "../is";
 import * as probes from "./probes";
 import { Directory, File } from "./schema";
+import { default as config } from "../config";
 
 function wordify(string: string): Array<string> {
 	return string
@@ -503,6 +504,23 @@ function indexFile(file: File): void {
 					duration_ms: subtitle_resource.duration_ms,
 					language: subtitle_resource.language
 				});
+				if (config.use_cue_index) {
+					let subtitle_id = makeId("subtitle", file.file_id);
+					subtitles.insert({
+						subtitle_id: subtitle_id,
+						file_id: file.file_id
+					});
+					for (let cue of subtitle_resource.cues) {
+						let cue_id = makeId("cue", subtitle_id, `${cue.start_ms}`);
+						cues.insert({
+							cue_id: cue_id,
+							subtitle_id: subtitle_id,
+							start_ms: cue.start_ms,
+							duration_ms: cue.duration_ms,
+							lines: cue.lines.join("\n")
+						});
+					}
+				}
 			}
 		} else if (file.name.endsWith(".json")) {
 			probe = probes.json.probe(fd);
@@ -688,6 +706,7 @@ export function runIndexer(): void {
 			tokens.remove(token);
 		}
 	}
+	console.log(`Indexing finished.`);
 };
 
 runIndexer();

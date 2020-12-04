@@ -1,0 +1,5 @@
+{
+	Config: {
+		use_cue_index?: boolean
+	}
+}

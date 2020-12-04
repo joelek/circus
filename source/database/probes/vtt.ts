@@ -10,7 +10,8 @@ export function probe(fd: number): schema.Probe {
 	};
 	let buffer = libfs.readFileSync(fd);
 	let track = vtt.decode(buffer.toString());
-	let cue = track.body.cues.pop();
+	let cues = track.body.cues;
+	let cue = cues.length > 0 ? cues[cues.length - 1] : undefined;
 	let duration_ms = is.present(cue) ? cue.start_ms + cue.duration_ms : 0;
 	let language: string | undefined;
 	try {
@@ -20,7 +21,8 @@ export function probe(fd: number): schema.Probe {
 	result.resources.push({
 		type: "subtitle",
 		duration_ms,
-		language
+		language,
+		cues
 	});
 	return result;
 };
