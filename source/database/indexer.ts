@@ -52,13 +52,20 @@ if (!libfs.existsSync(TABLES_ROOT.join("/"))) {
 function loadIndex<A>(name: string, guard: autoguard.serialization.MessageGuard<A>, getKey: (record: A) => string): indices.RecordIndex<A> {
 	let path = [
 		...TABLES_ROOT,
-		`${name}.json`
+		`${name}.jsondb`
 	].join("/");
 	if (!libfs.existsSync(path)) {
-		libfs.writeFileSync(path, JSON.stringify([], null, "\t") + "\n");
+		libfs.writeFileSync(path, "");
 	}
-	let json = JSON.parse(libfs.readFileSync(path, "utf-8"));
-	let records = autoguard.guards.Array.of(guard).as(json);
+	let rows = libfs.readFileSync(path, "utf-8").split(/\r?\n/);
+	let records = new Array<A>();
+	for (let row of rows) {
+		if (row !== "") {
+			let json = JSON.parse(row);
+			let record = guard.as(json);
+			records.push(record);
+		}
+	}
 	return indices.RecordIndex.from(records, getKey);
 }
 
@@ -66,9 +73,14 @@ function saveIndex<A>(name: string, index: indices.RecordIndex<A>): void {
 	let records = Array.from(index);
 	let path = [
 		...TABLES_ROOT,
-		`${name}.json`
+		`${name}.jsondb`
 	].join("/");
-	libfs.writeFileSync(path, JSON.stringify(records, null, "\t") + "\n");
+	let fd = libfs.openSync(path, "w");
+	for (let record of records) {
+		let row = JSON.stringify(record) + "\n";
+		libfs.writeSync(fd, row);
+	}
+	libfs.closeSync(fd);
 }
 
 export const directories = loadIndex("directories", schema.Directory, (record) => record.directory_id);
