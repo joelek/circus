@@ -183,7 +183,7 @@
 		subtitle_id: string,
 		start_ms: number,
 		duration_ms: number,
-		lines: string[]
+		lines: string
 	},
 
 	User: {

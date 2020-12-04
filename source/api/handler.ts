@@ -106,7 +106,7 @@ export function lookupCueBase(cue_id: string, user_id: string, subtitle?: schema
 		subtitle: is.present(subtitle) ? subtitle : lookupSubtitleBase(cue.subtitle_id, user_id),
 		start_ms: cue.start_ms,
 		duration_ms: cue.duration_ms,
-		lines: cue.lines
+		lines: cue.lines.split("\n")
 	};
 };
 

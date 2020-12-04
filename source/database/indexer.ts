@@ -235,7 +235,7 @@ if (users.length() === 0) {
 
 export const album_search = indices.SearchIndex.fromIndex(albums, (entry) => [entry.title, entry.year?.toString()].filter(is.present));
 export const artist_search = indices.SearchIndex.fromIndex(artists, (entry) => [entry.name]);
-export const cue_search = indices.SearchIndex.fromIndex(cues, (entry) => entry.lines);
+export const cue_search = indices.SearchIndex.fromIndex(cues, (entry) => entry.lines.split("\n"));
 export const episode_search = indices.SearchIndex.fromIndex(episodes, (entry) => [entry.title, entry.year?.toString()].filter(is.present));
 export const genre_search = indices.SearchIndex.fromIndex(genres, (entry) => [entry.name]);
 export const movie_search = indices.SearchIndex.fromIndex(movies, (entry) => [entry.title, entry.year?.toString()].filter(is.present));

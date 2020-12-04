@@ -398,7 +398,7 @@ export type Cue = {
 	"subtitle_id": string,
 	"start_ms": number,
 	"duration_ms": number,
-	"lines": string[]
+	"lines": string
 };
 
 export const Cue = autoguard.Object.of<Cue>({
@@ -406,7 +406,7 @@ export const Cue = autoguard.Object.of<Cue>({
 	"subtitle_id": autoguard.String,
 	"start_ms": autoguard.Number,
 	"duration_ms": autoguard.Number,
-	"lines": autoguard.Array.of(autoguard.String)
+	"lines": autoguard.String
 });
 
 export type User = {
