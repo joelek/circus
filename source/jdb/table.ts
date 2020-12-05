@@ -4,6 +4,53 @@ import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
 
+function computeKeyHash(key: string): number {
+	let buffer = libcrypto.createHash("sha256")
+		.update(key)
+		.digest();
+	return buffer.readUInt32BE(0);
+}
+
+function makeIterator<A>(provider: () => A): Iterator<A> {
+	return {
+		next: () => {
+			try {
+				return {
+					done: false,
+					value: provider()
+				};
+			} catch (error) {}
+			return {
+				done: true,
+				value: undefined as unknown as A
+			};
+		}
+	};
+}
+
+function filterIterator<A>(iterator: Iterator<A>, predicate: (value: A) => boolean): Iterator<A> {
+	return makeIterator(() => {
+		while (true) {
+			let { done, value } = iterator.next();
+			if (done) {
+				throw ``;
+			}
+			if (predicate(value)) {
+				return value;
+			}
+		}
+	});
+}
+
+function mapIterator<A, B>(iterator: Iterator<A>, transform: (value: A) => B): Iterator<B> {
+	return makeIterator(() => {
+		let { done, value } = iterator.next();
+		if (done) {
+			throw ``;
+		}
+		return transform(value);
+	});
+}
 function readBuffer(fd: number, buffer: Buffer, position?: number): Buffer {
 	let bytes = libfs.readSync(fd, buffer, 0, buffer.length, position ?? null);
 	if (bytes !== buffer.length) {
@@ -23,7 +70,7 @@ function writeBuffer(fd: number, buffer: Buffer, position?: number): Buffer {
 export class RecordIndexHeader {
 	private buffer: Buffer;
 
-	get marker(): string {
+	get identifier(): string {
 		return this.buffer.slice(0, 8).toString("binary");
 	}
 
@@ -62,9 +109,9 @@ export class RecordIndexHeader {
 	}
 
 	read(fd: number, position: number): void {
-		let buffer = readBuffer(fd, Buffer.alloc(16), position ?? 0);
-		let marker = buffer.slice(0, 8).toString("binary");
-		if (marker !== this.marker) {
+		let buffer = readBuffer(fd, Buffer.alloc(16), position);
+		let identifier = buffer.slice(0, 8).toString("binary");
+		if (identifier !== this.identifier) {
 			throw `Unsupported file format!`;
 		}
 		let major = buffer.readUInt8(8);
@@ -75,7 +122,7 @@ export class RecordIndexHeader {
 	}
 
 	write(fd: number, position: number): void {
-		writeBuffer(fd, this.buffer, position ?? 0);
+		writeBuffer(fd, this.buffer, position);
 	}
 };
 
@@ -156,16 +203,9 @@ export class Table<A extends Record<string, undefined | null | string | number |
 	private key_hash_indices: Map<number, Set<number>>;
 	private router: stdlib.routing.MessageRouter<RecordIndexEventMap<A>>;
 	private guard: autoguard.serialization.MessageGuard<A>;
-	private getKey: KeyProvider<A>;
+	private key_provider: KeyProvider<A>;
 	private cache: Map<number, A>;
 	private free_chunk_index: number;
-
-	private computeKeyHash(key: string): number {
-		let buffer = libcrypto.createHash("sha256")
-			.update(key)
-			.digest();
-		return buffer.readUInt32BE(0);
-	}
 
 	private getRecord(index: number): A {
 		let record = this.cache.get(index);
@@ -190,8 +230,8 @@ export class Table<A extends Record<string, undefined | null | string | number |
 		let chunks = Math.ceil(serialized.length / this.header.chunk_size);
 		let buffer = Buffer.alloc(chunks * this.header.chunk_size);
 		buffer.set(serialized, 0);
-		let key = this.getKey(next);
-		let key_hash = this.computeKeyHash(key);
+		let key = this.key_provider(next);
+		let key_hash = computeKeyHash(key);
 		let indices = this.key_hash_indices.get(key_hash);
 		if (is.absent(indices)) {
 			indices = new Set<number>();
@@ -199,7 +239,7 @@ export class Table<A extends Record<string, undefined | null | string | number |
 		}
 		for (let index of indices) {
 			let last = this.getRecord(index);
-			if (this.getKey(last) === key) {
+			if (this.key_provider(last) === key) {
 				let entry = this.entries[index];
 				if (serialized.length <= entry.bytes_size) {
 					entry.bytes_free = buffer.length - serialized.length;
@@ -259,7 +299,7 @@ export class Table<A extends Record<string, undefined | null | string | number |
 		});
 	}
 
-	constructor(root: Array<string>, table_name: string, guard: autoguard.serialization.MessageGuard<A>, getKey: KeyProvider<A>) {
+	constructor(root: Array<string>, table_name: string, guard: autoguard.serialization.MessageGuard<A>, key_provider: KeyProvider<A>) {
 		let directory = [...root, table_name];
 		if (!libfs.existsSync(directory.join("/"))) {
 			libfs.mkdirSync(directory.join("/"), { recursive: true });
@@ -299,7 +339,7 @@ export class Table<A extends Record<string, undefined | null | string | number |
 		this.key_hash_indices = key_hash_indices;
 		this.router = new stdlib.routing.MessageRouter<RecordIndexEventMap<A>>();
 		this.guard = guard;
-		this.getKey = getKey;
+		this.key_provider = key_provider;
 		this.cache = new Map<number, A>();
 		this.free_chunk_index = free_chunk_index;
 	}
@@ -310,30 +350,18 @@ export class Table<A extends Record<string, undefined | null | string | number |
 	}
 
 	[Symbol.iterator](): Iterator<A> {
-		let index = 0;
-		return {
-			next: () => {
-				if (index >= this.entries.length) {
-					return {
-						done: true,
-						value: undefined as unknown as A
-					};
-				}
-				let entry = this.entries[index];
-				if (entry.bytes_used === 0) {
-					return {
-						done: true,
-						value: undefined as unknown as A
-					};
-				}
-				let value = this.getRecord(index);
+		let index = -1;
+		return makeIterator(() => {
+			while (true) {
 				index += 1;
-				return {
-					done: false,
-					value: value
-				};
+				if (index >= this.entries.length) {
+					throw ``;
+				}
+				try {
+					return this.getRecord(index);
+				} catch (error) {}
 			}
-		}
+		});
 	}
 
 	insert(record: A): void {
@@ -341,12 +369,12 @@ export class Table<A extends Record<string, undefined | null | string | number |
 	}
 
 	lookup(key: string): A {
-		let key_hash = this.computeKeyHash(key);
+		let key_hash = computeKeyHash(key);
 		let indices = this.key_hash_indices.get(key_hash);
 		if (is.present(indices)) {
 			for (let index of indices) {
 				let record = this.getRecord(index);
-				if (this.getKey(record) === key) {
+				if (this.key_provider(record) === key) {
 					return record;
 				}
 			}
@@ -368,12 +396,12 @@ export class Table<A extends Record<string, undefined | null | string | number |
 	}
 
 	remove(key: string): void {
-		let key_hash = this.computeKeyHash(key);
+		let key_hash = computeKeyHash(key);
 		let indices = this.key_hash_indices.get(key_hash);
 		if (is.present(indices)) {
 			for (let index of indices) {
 				let last = this.getRecord(index);
-				if (this.getKey(last) === key) {
+				if (this.key_provider(last) === key) {
 					let entry = this.entries[index];
 					this.cache.delete(index);
 					indices.delete(index);
@@ -394,6 +422,165 @@ export class Table<A extends Record<string, undefined | null | string | number |
 		this.insertOrUpdate(record);
 	}
 };
+
+
+
+
+
+
+
+
+
+
+export class IndexHeader {
+	private buffer: Buffer;
+
+	get identifier(): string {
+		return this.buffer.slice(0, 8).toString("binary");
+	}
+
+	get entries(): number {
+		return this.buffer.readUInt32BE(12);
+	}
+
+	set entries(value: number) {
+		this.buffer.writeUInt32BE(value, 12);
+	}
+
+	constructor() {
+		let buffer = Buffer.alloc(16);
+		buffer.write("\x01\xfb\x2e\x28\x8a\xa7\x98\x76", 0, "binary");
+		this.buffer = buffer;
+	}
+
+	read(fd: number, position: number): void {
+		let buffer = readBuffer(fd, Buffer.alloc(16), position);
+		let identifier = buffer.slice(0, 8).toString("binary");
+		if (identifier !== this.identifier) {
+			throw `Unsupported file format!`;
+		}
+		this.buffer = buffer;
+	}
+
+	write(fd: number, position: number): void {
+		writeBuffer(fd, this.buffer, position);
+	}
+};
+
+export class IndexEntry {
+	private buffer: Buffer;
+
+	get active(): boolean {
+		return this.buffer.readUInt8(0) === 1;
+	}
+
+	set active(value: boolean) {
+		this.buffer.writeUInt8(value ? 1 : 0, 0);
+	}
+
+	get key_hash(): number {
+		return this.buffer.readUInt32BE(4);
+	}
+
+	set key_hash(value: number) {
+		this.buffer.writeUInt32BE(value, 4);
+	}
+
+	get record_index(): number {
+		return this.buffer.readUInt32BE(12);
+	}
+
+	set record_index(value: number) {
+		this.buffer.writeUInt32BE(value, 12);
+	}
+
+	constructor() {
+		let buffer = Buffer.alloc(16);
+		this.buffer = buffer;
+	}
+
+	read(fd: number, position: number): void {
+		let buffer = readBuffer(fd, Buffer.alloc(16), position);
+		this.buffer = buffer;
+	}
+
+	write(fd: number, position: number): void {
+		writeBuffer(fd, this.buffer, position);
+	}
+};
+
+class Index<A> {
+	private map: number;
+	private indices_from_key_hash: Map<number, Set<number>>;
+	private entries: Array<IndexEntry>;
+	private key_provider: KeyProvider<A>;
+
+	constructor(root: Array<string>, table_name: string, key_provider: KeyProvider<A>) {
+		let directory = [...root, table_name];
+		if (!libfs.existsSync(directory.join("/"))) {
+			libfs.mkdirSync(directory.join("/"), { recursive: true });
+		}
+		let map_filename = [...directory, "map"];
+		let map_exists = libfs.existsSync(map_filename.join("/"));
+		let map = libfs.openSync(map_filename.join("/"), map_exists ? "r+" : "w+");
+		let header = new IndexHeader();
+		header.read(map, 0);
+		let key_hash_indices = new Map<number, Set<number>>();
+		let entries = new Array<IndexEntry>();
+		for (let index = 0; index < header.entries; index++) {
+			let entry = new IndexEntry();
+			entry.read(map, 16 + index * 16);
+			entries.push(entry);
+			entry.key_hash;
+			entry.record_index;
+			// create some cool indices
+		}
+		this.map = map;
+		this.indices_from_key_hash = key_hash_indices;
+		this.entries = entries;
+		this.key_provider = key_provider;
+	}
+
+	destroy(): void {
+		libfs.closeSync(this.map);
+	}
+
+	insert(record: A): void {
+
+	}
+
+	lookup(key: string, lookup: (index: number) => A): Iterator<A> {
+		let key_hash = computeKeyHash(key);
+		let indices = this.indices_from_key_hash.get(key_hash);
+		if (is.absent(indices)) {
+			return [][Symbol.iterator]();
+		}
+		return filterIterator(mapIterator(indices[Symbol.iterator](), (index) => {
+			return lookup(index);
+		}), (record) => {
+			return this.key_provider(record) === key;
+		});
+	}
+
+	remove(record: A): void {
+
+	}
+
+	update(last: A, next: A): void {
+		this.remove(last);
+		this.insert(next);
+	}
+}
+
+
+
+
+
+
+
+
+
+
 
 type Person = {
 	person_id: string,
