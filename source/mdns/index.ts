@@ -246,7 +246,8 @@ socket.on("message", async (buffer) => {
 socket.bind(MDNS_PORT);
 
 // TODO: Encode labels properly.
-function sendDiscoveryPacket(host: string): void {
+export function sendDiscoveryPacket(host: string): void {
+	console.log(`Sending discover packet for ${host}.`);
 	let buffers = Array<Buffer>();
 	let head = Buffer.alloc(12);
 	head.writeUInt16BE(1, 4);

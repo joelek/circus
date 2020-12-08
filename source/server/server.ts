@@ -152,6 +152,12 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 		response.end();
 		return;
 	}
+	if (method === "POST" && path === "/discover") {
+		airplay.discover();
+		chromecasts.discover();
+		response.writeHead(200);
+		return response.end("{}");
+	}
 	if (method === 'GET' && (parts = /^[/]files[/]([0-9a-f]{32})[/]/.exec(path)) !== null) {
 		let file_id = parts[1];
 		return send_data(file_id, request, response);

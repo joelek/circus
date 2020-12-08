@@ -997,6 +997,12 @@ tokenobs,
 showContextMenu,
 showDevices);
 
+showModal.addObserver((showModal) => {
+	if (showModal === "devices") {
+		req<{}, {}>("/discover", {}, () => {});
+	}
+});
+
 let token: string | undefined;
 tokenobs.addObserver((token2) => {
 	if (is.present(token2)) {

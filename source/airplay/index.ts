@@ -21,3 +21,7 @@ export function observe(wss: boolean): void {
 		}
 	});
 };
+
+export function discover(): void {
+	mdns.sendDiscoveryPacket("_airplay._tcp.local");
+};

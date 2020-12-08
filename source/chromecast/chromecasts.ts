@@ -127,6 +127,10 @@ mdns.observe("_googlecast._tcp.local", (hostname) => {
 	}
 });
 
+export function discover(): void {
+	mdns.sendDiscoveryPacket("_googlecast._tcp.local");
+};
+
 function createSocket(hostname: string): Promise<libnet.Socket> {
 	return new Promise((resolve, reject) => {
 		let socket = libtls.connect({
