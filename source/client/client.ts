@@ -48,6 +48,7 @@ window.addEventListener("focus", () => {
 	if (!playlists.isOnline()) {
 		playlists.reconnect();
 	}
+	req<{}, {}>("/discover", {}, () => {});
 });
 
 window.addEventListener("keydown", (event) => {
@@ -996,12 +997,6 @@ const showModal = computed((token, showContextMenu, showDevices) => {
 tokenobs,
 showContextMenu,
 showDevices);
-
-showModal.addObserver((showModal) => {
-	if (showModal === "devices") {
-		req<{}, {}>("/discover", {}, () => {});
-	}
-});
 
 let token: string | undefined;
 tokenobs.addObserver((token2) => {
