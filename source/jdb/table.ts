@@ -3,6 +3,7 @@ import * as libfs from "fs";
 import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
+import { threadId } from "worker_threads";
 
 function computeKeyHash(key: string): number {
 	let buffer = libcrypto.createHash("sha256")
@@ -421,6 +422,10 @@ export class Table<A extends Record<string, undefined | null | string | number |
 	update(record: A): void {
 		this.insertOrUpdate(record);
 	}
+
+	index<B extends Record<string, any>>(child: Table<B>, child_key_provider: KeyProvider<B>): Index<A> {
+
+	}
 };
 
 
@@ -509,13 +514,16 @@ export class IndexEntry {
 	}
 };
 
+type RecordProvider<A> = (record_index: number) => A;
+
 class Index<A> {
 	private map: number;
-	private indices_from_key_hash: Map<number, Set<number>>;
+	private entry_indices_from_key_hash: Map<number, Set<number>>;
 	private entries: Array<IndexEntry>;
 	private key_provider: KeyProvider<A>;
+	private record_provider: RecordProvider<A>;
 
-	constructor(root: Array<string>, table_name: string, key_provider: KeyProvider<A>) {
+	constructor(root: Array<string>, table_name: string, key_provider: KeyProvider<A>, record_provider: RecordProvider<A>) {
 		let directory = [...root, table_name];
 		if (!libfs.existsSync(directory.join("/"))) {
 			libfs.mkdirSync(directory.join("/"), { recursive: true });
@@ -525,38 +533,58 @@ class Index<A> {
 		let map = libfs.openSync(map_filename.join("/"), map_exists ? "r+" : "w+");
 		let header = new IndexHeader();
 		header.read(map, 0);
-		let key_hash_indices = new Map<number, Set<number>>();
+		let entry_indices_from_key_hash = new Map<number, Set<number>>();
 		let entries = new Array<IndexEntry>();
 		for (let index = 0; index < header.entries; index++) {
 			let entry = new IndexEntry();
 			entry.read(map, 16 + index * 16);
 			entries.push(entry);
-			entry.key_hash;
-			entry.record_index;
-			// create some cool indices
+			let indices = entry_indices_from_key_hash.get(entry.key_hash);
+			if (is.absent(indices)) {
+				indices = new Set<number>();
+				entry_indices_from_key_hash.set(entry.key_hash, indices);
+			}
+			indices.add(index);
 		}
 		this.map = map;
-		this.indices_from_key_hash = key_hash_indices;
+		this.entry_indices_from_key_hash = entry_indices_from_key_hash;
 		this.entries = entries;
 		this.key_provider = key_provider;
+		this.record_provider = record_provider;
 	}
 
 	destroy(): void {
 		libfs.closeSync(this.map);
 	}
 
-	insert(record: A): void {
-
+	insert(record_index: number): void {
+		let record = this.record_provider(record_index);
+		let key = this.key_provider(record);
+		let key_hash = computeKeyHash(key);
+		let entry_indices = this.entry_indices_from_key_hash.get(key_hash);
+		if (is.absent(entry_indices)) {
+			entry_indices = new Set<number>();
+			this.entry_indices_from_key_hash.set(key_hash, entry_indices);
+		}
+		for (let entry_index of entry_indices) {
+			let entry = this.entries[entry_index];
+			let record = this.record_provider(entry.record_index);
+			if (this.key_provider(record) === key) {
+				return;
+			}
+		}
+		// insert and write to disk
 	}
 
-	lookup(key: string, lookup: (index: number) => A): Iterator<A> {
+	lookup(key: string): Iterator<A> {
 		let key_hash = computeKeyHash(key);
-		let indices = this.indices_from_key_hash.get(key_hash);
-		if (is.absent(indices)) {
+		let entry_indices = this.entry_indices_from_key_hash.get(key_hash);
+		if (is.absent(entry_indices)) {
 			return [][Symbol.iterator]();
 		}
-		return filterIterator(mapIterator(indices[Symbol.iterator](), (index) => {
-			return lookup(index);
+		return filterIterator(mapIterator(entry_indices[Symbol.iterator](), (entry_index) => {
+			let entry = this.entries[entry_index];
+			return this.record_provider(entry.record_index);
 		}), (record) => {
 			return this.key_provider(record) === key;
 		});
@@ -584,22 +612,27 @@ class Index<A> {
 
 type Person = {
 	person_id: string,
-	name: string
+	name: string,
+	parent_person_id?: string
 };
 
 let Person = autoguard.guards.Object.of<Person>({
 	person_id: autoguard.guards.String,
-	name: autoguard.guards.String
+	name: autoguard.guards.String,
+	parent_person_id: autoguard.guards.Union.of(
+		autoguard.guards.String,
+		autoguard.guards.Undefined
+	)
 });
 
-let table = new Table<Person>([".", "private", "tables2"], "persons", Person, (record) => record.person_id);
+let persons = new Table<Person>([".", "private", "tables2"], "persons", Person, (record) => record.person_id);
 
-table.on("insert", (message) => {
+persons.on("insert", (message) => {
 	console.log("insert", message);
 });
-table.on("update", (message) => {
+persons.on("update", (message) => {
 	console.log("update", message);
 });
-table.on("remove", (message) => {
+persons.on("remove", (message) => {
 	console.log("remove", message);
 });
