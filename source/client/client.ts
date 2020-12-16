@@ -958,6 +958,17 @@ let req = <T extends api_response.ApiRequest, U extends api_response.ApiResponse
 	});
 	xhr.open('POST', uri, true);
 	xhr.send(JSON.stringify(body));
+};
+
+function preq<T extends api_response.ApiRequest, U extends api_response.ApiResponse>(uri: string, body: T): Promise<U> {
+	return new Promise((resolve, reject) => {
+		req<T, U>(uri, body, (status, response) => {
+			if (status >= 200 && status < 300) {
+				return resolve(response);
+			}
+			return reject();
+		});
+	});
 }
 
 const showDevices = new ObservableClass(false);
@@ -1028,7 +1039,6 @@ async function getNewToken(username: string, password: string): Promise<string |
 	});
 }
 
-let mount = document.createElement('div');
 let mountwrapper = document.createElement('div');
 
 let appcontainer = xml.element("div.app")
@@ -1295,39 +1305,10 @@ let modals = xml.element("div.modal-container")
 	);
 
 mountwrapper.appendChild(modals.render());
-let scroll_container = xml.element("div.scroll-container")
+let mount = xml.element("div.scroll-container")
 	.bind("data-hide", showVideo.addObserver((showVideo) => showVideo))
 	.render();
-let sentinel = xml.element("div.scroll-container__sentinel")
-	.set("style", "height: 1px")
-	.render();
-scroll_container.appendChild(mount);
-scroll_container.appendChild(sentinel);
-mountwrapper.appendChild(scroll_container);
-let scrollobserver: undefined | (() => Promise<void>);
-function setScrollObserver(obs?: () => Promise<void>): void {
-	if (is.present(scrollobserver)) {
-		observer.unobserve(sentinel);
-	}
-	scrollobserver = obs;
-	if (is.present(scrollobserver)) {
-		observer.observe(sentinel);
-	}
-}
-let observer = new IntersectionObserver(async (entries) => {
-	if (is.absent(scrollobserver)) {
-		return;
-	}
-	for (let entry of entries) {
-		if (entry.target === sentinel && entry.isIntersecting) {
-			await scrollobserver();
-			setScrollObserver(scrollobserver);
-			break;
-		}
-	}
-}, {
-	root: scroll_container
-});
+mountwrapper.appendChild(mount);
 
 /*
     if (document.webkitFullscreenElement) {
@@ -1501,11 +1482,21 @@ function renderTextParagraph(content: xml.XNode<any>) {
 		.add(content);
 }
 
+function observe(element: xml.XElement, handler: () => Promise<void>): xml.XElement {
+	element.ref().then((element) => {
+		let observer = new IntersectionObserver(async (entries) => {
+			for (let entry of entries) {
+				if (entry.target === element && entry.isIntersecting) {
+					await handler();
+				}
+			}
+		});
+		observer.observe(element);
+	});
+	return element;
+}
+
 let updateviewforuri = (uri: string): void => {
-	setScrollObserver();
-	while (mount.lastChild !== null) {
-		mount.removeChild(mount.lastChild);
-	}
 	let parts: RegExpExecArray | null;
 	if (false) {
 	} else if ((parts = /^audio[/]tracks[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
@@ -1514,22 +1505,20 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let playlists = new ArrayObservable<Playlist>([]);
-		setScrollObserver(() => new Promise((resolve, reject) => {
+		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<{}, api_response.TrackPlaylistsResponse>(`/api/audio/tracks/${track_id}/playlists/?offset=${offset}&token=${token}`, {}, (_, response) => {
-					for (let playlist of response.playlists) {
-						playlists.append(playlist);
-					}
-					offset += response.playlists.length;
-					if (response.playlists.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
-					resolve();
-				});
+				let response = await preq<{}, api_response.TrackPlaylistsResponse>(`/api/audio/tracks/${track_id}/playlists/?offset=${offset}&token=${token}`, {});
+				for (let playlist of response.playlists) {
+					playlists.append(playlist);
+				}
+				offset += response.playlists.length;
+				if (response.playlists.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}));
+		}
 		req<{}, api_response.TrackResponse>(`/api/audio/tracks/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let track = response.track;
 			mount.appendChild(xml.element("div")
@@ -1544,6 +1533,7 @@ let updateviewforuri = (uri: string): void => {
 						.repeat(playlists, (playlist) => EntityCard.forPlaylist(playlist))
 					)
 				)
+				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 				.render()
 			);
 		});
@@ -1553,22 +1543,20 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let tracks = new ArrayObservable<Track>([]);
-		setScrollObserver(() => new Promise((resolve, reject) => {
+		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<{}, api_response.TracksResponse>(`/api/audio/tracks/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {}, (_, response) => {
-					for (let track of response.tracks) {
-						tracks.append(track);
-					}
-					offset += response.tracks.length;
-					if (response.tracks.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
-					resolve();
-				});
+				let response = await preq<{}, api_response.TracksResponse>(`/api/audio/tracks/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {});
+				for (let track of response.tracks) {
+					tracks.append(track);
+				}
+				offset += response.tracks.length;
+				if (response.tracks.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}));
+		};
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Tracks")))
@@ -1578,6 +1566,7 @@ let updateviewforuri = (uri: string): void => {
 					.repeat(tracks, (track) => EntityCard.forTrack(track))
 				)
 			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
 	} else if ((parts = /^video[/]seasons[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
@@ -1628,22 +1617,20 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let seasons = new ArrayObservable<Season>([]);
-		setScrollObserver(() => new Promise((resolve, reject) => {
+		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<{}, api_response.SeasonsResponse>(`/api/video/seasons/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {}, (_, response) => {
-					for (let season of response.seasons) {
-						seasons.append(season);
-					}
-					offset += response.seasons.length;
-					if (response.seasons.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
-					resolve();
-				});
+				let response = await preq<{}, api_response.SeasonsResponse>(`/api/video/seasons/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {});
+				for (let season of response.seasons) {
+					seasons.append(season);
+				}
+				offset += response.seasons.length;
+				if (response.seasons.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}));
+		};
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Seasons")))
@@ -1653,6 +1640,7 @@ let updateviewforuri = (uri: string): void => {
 					.repeat(seasons, (season) => EntityRow.forSeason(season))
 				)
 			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
 	} else if ((parts = /^audio[/]discs[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
@@ -1676,22 +1664,20 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let discs = new ArrayObservable<Disc>([]);
-		setScrollObserver(() => new Promise((resolve, reject) => {
+		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<{}, api_response.DiscsResponse>(`/api/audio/discs/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {}, (_, response) => {
-					for (let disc of response.discs) {
-						discs.append(disc);
-					}
-					offset += response.discs.length;
-					if (response.discs.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
-					resolve();
-				});
+				let response = await preq<{}, api_response.DiscsResponse>(`/api/audio/discs/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {});
+				for (let disc of response.discs) {
+					discs.append(disc);
+				}
+				offset += response.discs.length;
+				if (response.discs.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}));
+		};
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Discs")))
@@ -1701,6 +1687,7 @@ let updateviewforuri = (uri: string): void => {
 					.repeat(discs, (disc) => EntityRow.forDisc(disc))
 				)
 			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
 	} else if ((parts = /^users[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
@@ -1725,22 +1712,20 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let users = new ArrayObservable<User>([]);
-		setScrollObserver(() => new Promise((resolve, reject) => {
+		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<{}, api_response.UsersResponse>(`/api/users/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {}, (_, response) => {
-					for (let user of response.users) {
-						users.append(user);
-					}
-					offset += response.users.length;
-					if (response.users.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
-					resolve();
-				});
+				let response = await preq<{}, api_response.UsersResponse>(`/api/users/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {});
+				for (let user of response.users) {
+					users.append(user);
+				}
+				offset += response.users.length;
+				if (response.users.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}));
+		};
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Users")))
@@ -1750,6 +1735,7 @@ let updateviewforuri = (uri: string): void => {
 					.repeat(users, (user) => EntityRow.forUser(user))
 				)
 			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
 	} else if ((parts = /^persons[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
@@ -1789,22 +1775,20 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let persons = new ArrayObservable<Person>([]);
-		setScrollObserver(() => new Promise((resolve, reject) => {
+		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<{}, api_response.PersonsResponse>(`/api/persons/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {}, (_, response) => {
-					for (let person of response.persons) {
-						persons.append(person);
-					}
-					offset += response.persons.length;
-					if (response.persons.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
-					resolve();
-				});
+				let response = await preq<{}, api_response.PersonsResponse>(`/api/persons/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {});
+				for (let person of response.persons) {
+					persons.append(person);
+				}
+				offset += response.persons.length;
+				if (response.persons.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}));
+		};
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Persons")))
@@ -1814,6 +1798,7 @@ let updateviewforuri = (uri: string): void => {
 					.repeat(persons, (person) => EntityRow.forPerson(person))
 				)
 			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
 	} else if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
@@ -1837,22 +1822,20 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let albums = new ArrayObservable<Album>([]);
-		setScrollObserver(() => new Promise((resolve, reject) => {
+		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<{}, api_response.AlbumsResponse>(`/api/audio/albums/?offset=${offset}&token=${token}`, {}, (_, response) => {
-					for (let album of response.albums) {
-						albums.append(album);
-					}
-					offset += response.albums.length;
-					if (response.albums.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
-					resolve();
-				});
+				let response = await preq<{}, api_response.AlbumsResponse>(`/api/audio/albums/?offset=${offset}&token=${token}`, {});
+				for (let album of response.albums) {
+					albums.append(album);
+				}
+				offset += response.albums.length;
+				if (response.albums.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}));
+		};
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Albums")))
@@ -1862,6 +1845,7 @@ let updateviewforuri = (uri: string): void => {
 					.repeat(albums, (album) => EntityCard.forAlbum(album))
 				)
 			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
@@ -1908,22 +1892,20 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let artists = new ArrayObservable<Artist>([]);
-		setScrollObserver(() => new Promise((resolve, reject) => {
+		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<api_response.ApiRequest, api_response.ArtistsResponse>(`/api/audio/artists/?offset=${offset}&token=${token}`, {}, (status, response) => {
-					for (let artist of response.artists) {
-						artists.append(artist);
-					}
-					offset += response.artists.length;
-					if (response.artists.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
-					resolve();
-				});
+				let response = await preq<api_response.ApiRequest, api_response.ArtistsResponse>(`/api/audio/artists/?offset=${offset}&token=${token}`, {});
+				for (let artist of response.artists) {
+					artists.append(artist);
+				}
+				offset += response.artists.length;
+				if (response.artists.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}));
+		}
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Artists")))
@@ -1933,8 +1915,8 @@ let updateviewforuri = (uri: string): void => {
 					.repeat(artists, (artist) => EntityCard.forArtist(artist))
 				)
 			)
-			.render()
-		);
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+			.render());
 	} else if ((parts = /^audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		let playlist_id = parts[1];
 		req<api_response.ApiRequest, api_response.PlaylistResponse>(`/api/audio/playlists/${playlist_id}/?token=${token}`, {}, async (status, response) => {
@@ -2186,22 +2168,20 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let episodes = new ArrayObservable<Episode>([]);
-		setScrollObserver(() => new Promise((resolve, reject) => {
+		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<{}, api_response.EpisodesResponse>(`/api/video/episodes/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {}, (_, response) => {
-					for (let episode of response.episodes) {
-						episodes.append(episode);
-					}
-					offset += response.episodes.length;
-					if (response.episodes.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
-					resolve();
-				});
+				let response = await preq<{}, api_response.EpisodesResponse>(`/api/video/episodes/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {});
+				for (let episode of response.episodes) {
+					episodes.append(episode);
+				}
+				offset += response.episodes.length;
+				if (response.episodes.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}));
+		};
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Episodes")))
@@ -2211,6 +2191,7 @@ let updateviewforuri = (uri: string): void => {
 					.repeat(episodes, (episode) => EntityRow.forEpisode(episode))
 				)
 			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
 	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
@@ -2220,22 +2201,20 @@ let updateviewforuri = (uri: string): void => {
 			let reachedEnd = new ObservableClass(false);
 			let isLoading = new ObservableClass(false);
 			let movies = new ArrayObservable<Movie>([]);
-			setScrollObserver(() => new Promise((resolve, reject) => {
+			async function load(): Promise<void> {
 				if (!reachedEnd.getState() && !isLoading.getState()) {
 					isLoading.updateState(true);
-					req<{}, api_response.MovieMovieSuggestionsResponse>(`/api/video/movies/${movie_id}/suggestions/movies/?offset=${offset}&token=${token}`, {}, (_, response) => {
-						for (let movie of response.movies) {
-							movies.append(movie);
-						}
-						offset += response.movies.length;
-						if (response.movies.length === 0) {
-							reachedEnd.updateState(true);
-						}
-						isLoading.updateState(false);
-						resolve();
-					});
+					let response = await preq<{}, api_response.MovieMovieSuggestionsResponse>(`/api/video/movies/${movie_id}/suggestions/movies/?offset=${offset}&token=${token}`, {});
+					for (let movie of response.movies) {
+						movies.append(movie);
+					}
+					offset += response.movies.length;
+					if (response.movies.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
 				}
-			}));
+			};
 			let movie = response.movie;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
@@ -2254,6 +2233,7 @@ let updateviewforuri = (uri: string): void => {
 						.repeat(movies, (movie) => EntityCard.forMovie(movie))
 					)
 				)
+				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 				.render()
 			);
 		});
@@ -2262,22 +2242,20 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let movies = new ArrayObservable<Movie>([]);
-		setScrollObserver(() => new Promise((resolve, reject) => {
+		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/?offset=${offset}&token=${token}`, {}, (status, response) => {
-					for (let movie of response.movies) {
-						movies.append(movie);
-					}
-					offset += response.movies.length;
-					if (response.movies.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
-					resolve();
-				});
+				let response = await preq<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/?offset=${offset}&token=${token}`, {});
+				for (let movie of response.movies) {
+					movies.append(movie);
+				}
+				offset += response.movies.length;
+				if (response.movies.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}));
+		};
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Movies")))
@@ -2287,6 +2265,7 @@ let updateviewforuri = (uri: string): void => {
 					.repeat(movies, (movie) => EntityCard.forMovie(movie))
 				)
 			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
 	} else if ((parts = /^video[/]cues[/]([^/?]*)/.exec(uri)) !== null) {
@@ -2298,22 +2277,20 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let cues = new ArrayObservable<Cue & { media: Episode | Movie }>([]);
-		setScrollObserver(() => new Promise((resolve, reject) => {
+		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<{}, api_response.CuesResponse>(`/api/video/cues/${encodeURIComponent(query.getState())}?offset=${offset}&token=${token}`, {}, (_, response) => {
-					for (let cue of response.cues) {
-						cues.append(cue);
-					}
-					offset += response.cues.length;
-					if (response.cues.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
-					resolve();
-				});
+				let response = await preq<{}, api_response.CuesResponse>(`/api/video/cues/${encodeURIComponent(query.getState())}?offset=${offset}&token=${token}`, {});
+				for (let cue of response.cues) {
+					cues.append(cue);
+				}
+				offset += response.cues.length;
+				if (response.cues.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}));
+		};
 		mount.appendChild(xml.element("div.content")
 			.set("style", "display: grid; gap: 32px;")
 			.add(xml.element("div")
@@ -2348,6 +2325,7 @@ let updateviewforuri = (uri: string): void => {
 					throw `Expected code to be unreachable!`;
 				})
 			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render());
 	} else if ((parts = /^video[/]genres[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		let genre_id = parts[1];
@@ -2364,8 +2342,8 @@ let updateviewforuri = (uri: string): void => {
 						.add(shows.length === 0 ? undefined : xml.element("div.content")
 							.set("style", "display: grid; gap: 24px;")
 							.add(renderTextHeader(xml.text("Shows")))
-							.add(Grid.make()
-								.add(...shows.map((show) => EntityCard.forShow(show)))
+							.add(carouselFactory.make(
+								...shows.map((show) => EntityCard.forShow(show)))
 							)
 						)
 						.add(movies.length === 0 ? undefined : xml.element("div.content")
@@ -2421,22 +2399,20 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let entities = new ArrayObservable<Entity>([]);
-		setScrollObserver(() => new Promise((resolve, reject) => {
+		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				req<{}, api_response.SearchResponse>(`/api/search/${encodeURIComponent(query.getState())}?offset=${offset}&token=${token}`, {}, (_, response) => {
-					for (let entity of response.entities) {
-						entities.append(entity);
-					}
-					offset += response.entities.length;
-					if (response.entities.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
-					resolve();
-				});
+				let response = await preq<{}, api_response.SearchResponse>(`/api/search/${encodeURIComponent(query.getState())}?offset=${offset}&token=${token}`, {});
+				for (let entity of response.entities) {
+					entities.append(entity);
+				}
+				offset += response.entities.length;
+				if (response.entities.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}));
+		};
 		mount.appendChild(xml.element("div.content")
 			.set("style", "display: grid; gap: 64px;")
 			.add(xml.element("div")
@@ -2460,6 +2436,7 @@ let updateviewforuri = (uri: string): void => {
 				.set("style", "display: grid; gap: 16px;")
 				.repeat(entities, (entity) => EntityRow.forEntity(entity))
 			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render());
 	} else {
 		mount.appendChild(xml.element("div")
@@ -2503,19 +2480,57 @@ let get_route = (pathname: string = window.location.pathname, basehref: string =
 	return uri;
 };
 
-
-
-function navigate (uri: string): void {
-	if (window.history.state === null) {
-		window.history.replaceState({ 'uri': uri }, '', uri);
+type CacheEntry = {
+	uri: string,
+	element: Element,
+	x: number,
+	y: number,
+};
+let mount_cache = new Array<CacheEntry>();
+let mounted_uri: string | undefined;
+function navigate(uri: string): void {
+	if (is.present(mounted_uri)) {
+		let entry = mount_cache.find((entry) => entry.uri === mounted_uri);
+		if (is.present(entry)) {
+			mount_cache.splice(mount_cache.indexOf(entry), 1);
+			entry.x = mount.scrollLeft;
+			entry.y = mount.scrollTop;
+		} else {
+			entry = {
+				uri: mounted_uri,
+				element: mount.firstChild as Element,
+				x: mount.scrollLeft,
+				y: mount.scrollTop
+			};
+		}
+		mount_cache.unshift(entry);
+	}
+	mount_cache = mount_cache.slice(0, 10);
+	while (is.present(mount.lastChild)) {
+		mount.lastChild.remove();
+	}
+	let entry = mount_cache.find((entry) => entry.uri === uri);
+	if (is.present(entry)) {
+		mount.appendChild(entry.element);
+		mount.scrollLeft = entry.x;
+		mount.scrollTop = entry.y;
+	} else {
+		updateviewforuri(uri);
+	}
+	if (is.absent(window.history.state)) {
+		window.history.replaceState({ uri }, "", uri);
 	} else {
 		if (uri !== window.history.state.uri) {
-			window.history.pushState({ 'uri': uri }, '', uri);
+			window.history.pushState({ uri }, "", uri);
 		}
 	}
-	updateviewforuri(uri);
-};
-navigate(get_route());
-window.addEventListener('popstate', (event) => {
-	navigate(event.state.uri);
-});
+	mounted_uri = uri;
+}
+function setupRouting(): void {
+	window.addEventListener("popstate", (event) => {
+		let uri: string = event.state.uri;
+		navigate(uri);
+	});
+	navigate(get_route());
+}
+setupRouting();
