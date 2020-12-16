@@ -4,10 +4,6 @@ function join(...parameters: any): string {
 	}).join("");
 }
 
-function formatSeasonEpisode(season: number, episode: number): string {
-	return "s" + ("00" + season).slice(-2) + "e" + ("00" + episode).slice(-2);
-}
-
 function formatTimestamp(ms: number): string {
 	let s = Math.floor(ms / 1000);
 	ms -= (s * 1000);
@@ -22,11 +18,7 @@ function formatTimestamp(ms: number): string {
 	return join(fh, ":", fm, ":", fs, ".", fms);
 }
 
-type Index<A> = { [key: string]: A | undefined };
-
 export {
 	join,
-	formatSeasonEpisode,
-	formatTimestamp,
-	Index
+	formatTimestamp
 };
