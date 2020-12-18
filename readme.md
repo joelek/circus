@@ -15,7 +15,6 @@
 * Promote cues and subtitles to entities.
 * Combine cue search and search into a single search.
 * Put languages in database.
-* Investigate error when launching chromecast.
 * Add offline functionality with service workers.
 * Improve stream detection algorithm.
 * Index generated images.
