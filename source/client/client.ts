@@ -2540,7 +2540,7 @@ type CacheEntry = {
 };
 let mount_cache = new Array<CacheEntry>();
 let mounted_uri: string | undefined;
-function navigate(uri: string): void {
+function navigate(uri: string, restore_scroll: boolean = false): void {
 	if (is.present(mounted_uri)) {
 		let entry = mount_cache.find((entry) => entry.uri === mounted_uri);
 		if (is.present(entry)) {
@@ -2564,8 +2564,13 @@ function navigate(uri: string): void {
 	let entry = mount_cache.find((entry) => entry.uri === uri);
 	if (is.present(entry)) {
 		mount.appendChild(entry.element);
-		mount.scrollLeft = entry.x;
-		mount.scrollTop = entry.y;
+		if (restore_scroll) {
+			mount.scrollLeft = entry.x;
+			mount.scrollTop = entry.y;
+		} else {
+			mount.scrollLeft = 0;
+			mount.scrollTop = 0;
+		}
 	} else {
 		updateviewforuri(uri);
 	}
@@ -2581,7 +2586,7 @@ function navigate(uri: string): void {
 function setupRouting(): void {
 	window.addEventListener("popstate", (event) => {
 		let uri: string = event.state.uri;
-		navigate(uri);
+		navigate(uri, true);
 	});
 	navigate(get_route());
 }
