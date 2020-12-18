@@ -50,7 +50,7 @@ export class EntityNavLinkFactory {
 						)
 					)
 					.add(xnode.element("div.entity-nav-link__title")
-						.add(xnode.text("Last"))
+						.add(xnode.text("View last"))
 					)
 				)
 			)
@@ -62,7 +62,7 @@ export class EntityNavLinkFactory {
 							.set("style", "transform: scale(1.0, 1.0);")
 					)
 					.add(xnode.element("div.entity-nav-link__title")
-						.add(xnode.text("Next"))
+						.add(xnode.text("View next"))
 					)
 				)
 			);
