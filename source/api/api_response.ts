@@ -19,7 +19,9 @@ type ArtistsResponse = {
 };
 
 type DiscResponse = {
-	disc: objects.Disc
+	disc: objects.Disc,
+	next?: objects.Disc,
+	last?: objects.Disc
 };
 
 type DiscsResponse = {
@@ -111,7 +113,9 @@ type TrackPlaylistsResponse = {
 };
 
 type TrackResponse = {
-	track: objects.Track
+	track: objects.Track,
+	last?: objects.Track,
+	next?: objects.Track
 };
 
 type TracksResponse = {

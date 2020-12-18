@@ -19,6 +19,7 @@ import { EntityLinkFactory } from "../ui/EntityLink";
 import { EntityCardFactory } from "../ui/EntityCard";
 import { EntityRowFactory } from "../ui/EntityRow";
 import { PlaybackButtonFactory } from "../ui/PlaybackButton";
+import { EntityNavLinkFactory } from "../ui/EntityNavLinkFactory";
 import { PlaylistsClient } from "../playlists/client";
 
 
@@ -380,6 +381,8 @@ document.head.appendChild(EntityCardFactory.makeStyle().render())
 const EntityRow = new EntityRowFactory(entityTitleFactory, EntityLink, ImageBox, PlaybackButton);
 document.head.appendChild(EntityRowFactory.makeStyle().render())
 
+const entityNavLinkFactory = new EntityNavLinkFactory(Icon, EntityLink);
+document.head.appendChild(EntityNavLinkFactory.makeStyle().render())
 
 
 
@@ -1523,9 +1526,14 @@ let updateviewforuri = (uri: string): void => {
 		}
 		req<{}, api_response.TrackResponse>(`/api/audio/tracks/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let track = response.track;
+			let last = response.last;
+			let next = response.next;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forTrack(track))
+				)
+				.add(xml.element("div.content")
+					.add(entityNavLinkFactory.make(last, next))
 				)
 				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
@@ -1587,41 +1595,7 @@ let updateviewforuri = (uri: string): void => {
 					}))
 				)
 				.add(xml.element("div.content")
-					.add(xml.element("div")
-						.set("style", "display: grid; gap: 16px; grid-template-columns: max(120px) max(120px); justify-content: center;")
-						.add(xml.element("div")
-							.set("style", "display: grid; gap: 8px; justify-items: center;")
-							.add(xml.element("div.icon-button")
-								.set("data-enabled", `${is.present(last)}`)
-								.add(Icon.makeChevron()
-									.set("style", "transform: scale(-1.0, 1.0);")
-								)
-								.on("click", () => {
-									if (is.present(last)) {
-										navigate(`video/seasons/${last.season_id}/`)
-									}
-								})
-							)
-							.add(xml.element("div.media-player__subtitle")
-								.add(xml.text("Last season"))
-							)
-						)
-						.add(xml.element("div")
-							.set("style", "display: grid; gap: 8px; justify-items: center;")
-							.add(xml.element("div.icon-button")
-								.set("data-enabled", `${is.present(next)}`)
-								.add(Icon.makeChevron())
-								.on("click", () => {
-									if (is.present(next)) {
-										navigate(`video/seasons/${next.season_id}/`)
-									}
-								})
-							)
-							.add(xml.element("div.media-player__subtitle")
-								.add(xml.text("Next season"))
-							)
-						)
-					)
+					.add(entityNavLinkFactory.make(last, next))
 				)
 				.render());
 		});
@@ -1660,6 +1634,8 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^audio[/]discs[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
 		req<{}, api_response.DiscResponse>(`/api/audio/discs/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let disc = response.disc;
+			let last = response.last;
+			let next = response.next;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forDisc(disc))
@@ -1669,6 +1645,9 @@ let updateviewforuri = (uri: string): void => {
 					.add(...disc.tracks.map((track, trackIndex) => {
 						return EntityRow.forTrack(track, PlaybackButton.forDisc(disc, trackIndex));
 					}))
+				)
+				.add(xml.element("div.content")
+					.add(entityNavLinkFactory.make(last, next))
 				)
 				.render());
 		});
@@ -2176,41 +2155,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(EntityCard.forEpisode(episode))
 				)
 				.add(xml.element("div.content")
-					.add(xml.element("div")
-						.set("style", "display: grid; gap: 16px; grid-template-columns: max(120px) max(120px); justify-content: center;")
-						.add(xml.element("div")
-							.set("style", "display: grid; gap: 8px; justify-items: center;")
-							.add(xml.element("div.icon-button")
-								.set("data-enabled", `${is.present(last)}`)
-								.add(Icon.makeChevron()
-									.set("style", "transform: scale(-1.0, 1.0);")
-								)
-								.on("click", () => {
-									if (is.present(last)) {
-										navigate(`video/episodes/${last.episode_id}/`)
-									}
-								})
-							)
-							.add(xml.element("div.media-player__subtitle")
-								.add(xml.text("Last episode"))
-							)
-						)
-						.add(xml.element("div")
-							.set("style", "display: grid; gap: 8px; justify-items: center;")
-							.add(xml.element("div.icon-button")
-								.set("data-enabled", `${is.present(next)}`)
-								.add(Icon.makeChevron())
-								.on("click", () => {
-									if (is.present(next)) {
-										navigate(`video/episodes/${next.episode_id}/`)
-									}
-								})
-							)
-							.add(xml.element("div.media-player__subtitle")
-								.add(xml.text("Next episode"))
-							)
-						)
-					)
+					.add(entityNavLinkFactory.make(last, next))
 				)
 				.render()
 			);

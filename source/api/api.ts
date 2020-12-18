@@ -640,8 +640,14 @@ class TrackRoute implements Route<{}, response.TrackResponse> {
 		let parts = /^[/]api[/]audio[/]tracks[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let track_id = parts[1];
 		let track = handler.lookupTrack(track_id, user_id);
+		let tracks = handler.lookupDisc(track.disc.disc_id, user_id).tracks;
+		let index = tracks.findIndex((other_track) => other_track.track_id === track.track_id);
+		let last = tracks[index - 1];
+		let next = tracks[index + 1];
 		let payload: response.TrackResponse = {
-			track
+			track,
+			last,
+			next
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
@@ -724,8 +730,14 @@ class DiscRoute implements Route<{}, response.DiscResponse> {
 		let parts = /^[/]api[/]audio[/]discs[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let season_id = parts[1];
 		let disc = handler.lookupDisc(season_id, user_id);
+		let discs = handler.lookupAlbum(disc.album.album_id, user_id).discs;
+		let index = discs.findIndex((other_disc) => other_disc.disc_id === disc.disc_id);
+		let last = discs[index - 1];
+		let next = discs[index + 1];
 		let payload: response.DiscResponse = {
-			disc
+			disc,
+			last,
+			next
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));

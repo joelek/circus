@@ -140,6 +140,46 @@ export class EntityLinkFactory {
 		return this.make(`users/`);
 	}
 
+	forEntity(entity: api.EntityBase): xnode.XElement {
+		if (api.AlbumBase.is(entity)) {
+			return this.forAlbum(entity);
+		}
+		if (api.ArtistBase.is(entity)) {
+			return this.forArtist(entity);
+		}
+		if (api.DiscBase.is(entity)) {
+			return this.forDisc(entity);
+		}
+		if (api.EpisodeBase.is(entity)) {
+			return this.forEpisode(entity);
+		}
+		if (api.GenreBase.is(entity)) {
+			return this.forGenre(entity);
+		}
+		if (api.PersonBase.is(entity)) {
+			return this.forPerson(entity);
+		}
+		if (api.PlaylistBase.is(entity)) {
+			return this.forPlaylist(entity);
+		}
+		if (api.MovieBase.is(entity)) {
+			return this.forMovie(entity);
+		}
+		if (api.SeasonBase.is(entity)) {
+			return this.forSeason(entity);
+		}
+		if (api.ShowBase.is(entity)) {
+			return this.forShow(entity);
+		}
+		if (api.TrackBase.is(entity)) {
+			return this.forTrack(entity);
+		}
+		if (api.UserBase.is(entity)) {
+			return this.forUser(entity);
+		}
+		throw `Expected code to be unreachable!`;
+	}
+
 	static makeStyle(): xnode.XElement {
 		return xnode.element("style")
 			.add(xnode.text(CSS));
