@@ -823,6 +823,7 @@ style.innerText = `
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
 		cursor: pointer;
 		fill: rgb(31, 31, 31);
+		max-width: fit-content;
 		padding: 8px;
 		transition: background-color 0.125s, transform 0.125s;
 	}
@@ -1586,26 +1587,38 @@ let updateviewforuri = (uri: string): void => {
 				)
 				.add(xml.element("div.content")
 					.add(xml.element("div")
-						.set("style", "display: grid; gap: 8px; grid-auto-flow: column; justify-content: center;")
-						.add(xml.element("div.icon-button")
-							.set("data-enabled", `${is.present(last)}`)
-							.add(Icon.makeChevron()
-								.set("style", "transform: scale(-1.0, 1.0);")
+						.set("style", "display: grid; gap: 16px; grid-template-columns: max(120px) max(120px); justify-content: center;")
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 8px; justify-items: center;")
+							.add(xml.element("div.icon-button")
+								.set("data-enabled", `${is.present(last)}`)
+								.add(Icon.makeChevron()
+									.set("style", "transform: scale(-1.0, 1.0);")
+								)
+								.on("click", () => {
+									if (is.present(last)) {
+										navigate(`video/seasons/${last.season_id}/`)
+									}
+								})
 							)
-							.on("click", () => {
-								if (is.present(last)) {
-									navigate(`video/seasons/${last.season_id}/`)
-								}
-							})
+							.add(xml.element("div.media-player__subtitle")
+								.add(xml.text("Last season"))
+							)
 						)
-						.add(xml.element("div.icon-button")
-							.set("data-enabled", `${is.present(next)}`)
-							.add(Icon.makeChevron())
-							.on("click", () => {
-								if (is.present(next)) {
-									navigate(`video/seasons/${next.season_id}/`)
-								}
-							})
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 8px; justify-items: center;")
+							.add(xml.element("div.icon-button")
+								.set("data-enabled", `${is.present(next)}`)
+								.add(Icon.makeChevron())
+								.on("click", () => {
+									if (is.present(next)) {
+										navigate(`video/seasons/${next.season_id}/`)
+									}
+								})
+							)
+							.add(xml.element("div.media-player__subtitle")
+								.add(xml.text("Next season"))
+							)
 						)
 					)
 				)
@@ -2155,9 +2168,48 @@ let updateviewforuri = (uri: string): void => {
 		let episode_id = parts[1];
 		req<api_response.ApiRequest, api_response.EpisodeResponse>(`/api/video/episodes/${episode_id}/?token=${token}`, {}, (status, response) => {
 			let episode = response.episode;
+			let last = response.last;
+			let next = response.next;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forEpisode(episode))
+				)
+				.add(xml.element("div.content")
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 16px; grid-template-columns: max(120px) max(120px); justify-content: center;")
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 8px; justify-items: center;")
+							.add(xml.element("div.icon-button")
+								.set("data-enabled", `${is.present(last)}`)
+								.add(Icon.makeChevron()
+									.set("style", "transform: scale(-1.0, 1.0);")
+								)
+								.on("click", () => {
+									if (is.present(last)) {
+										navigate(`video/episodes/${last.episode_id}/`)
+									}
+								})
+							)
+							.add(xml.element("div.media-player__subtitle")
+								.add(xml.text("Last episode"))
+							)
+						)
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 8px; justify-items: center;")
+							.add(xml.element("div.icon-button")
+								.set("data-enabled", `${is.present(next)}`)
+								.add(Icon.makeChevron())
+								.on("click", () => {
+									if (is.present(next)) {
+										navigate(`video/episodes/${next.episode_id}/`)
+									}
+								})
+							)
+							.add(xml.element("div.media-player__subtitle")
+								.add(xml.text("Next episode"))
+							)
+						)
+					)
 				)
 				.render()
 			);

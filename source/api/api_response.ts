@@ -27,7 +27,9 @@ type DiscsResponse = {
 };
 
 type EpisodeResponse = {
-	episode: objects.Episode
+	episode: objects.Episode,
+	last?: objects.Episode,
+	next?: objects.Episode
 };
 
 type EpisodesResponse = {

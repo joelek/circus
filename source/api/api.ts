@@ -181,8 +181,14 @@ class EpisodeRoute implements Route<response.ApiRequest, response.EpisodeRespons
 		let parts = /^[/]api[/]video[/]episodes[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let episode_id = parts[1];
 		let episode = handler.lookupEpisode(episode_id, user_id);
+		let episodes = handler.lookupSeason(episode.season.season_id, user_id).episodes;
+		let index = episodes.findIndex((other_episode) => other_episode.episode_id === episode.episode_id);
+		let last = episodes[index - 1];
+		let next = episodes[index + 1];
 		let payload: response.EpisodeResponse = {
-			episode
+			episode,
+			last,
+			next
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
@@ -673,9 +679,10 @@ class SeasonRoute implements Route<{}, response.SeasonResponse> {
 		let parts = /^[/]api[/]video[/]seasons[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let season_id = parts[1];
 		let season = handler.lookupSeason(season_id, user_id);
-		let show = handler.lookupShow(season.show.show_id, user_id);
-		let last = show.seasons.find((show_season) => show_season.number === season.number - 1);
-		let next = show.seasons.find((show_season) => show_season.number === season.number + 1);
+		let seasons = handler.lookupShow(season.show.show_id, user_id).seasons;
+		let index = seasons.findIndex((other_season) => other_season.season_id === season.season_id);
+		let last = seasons[index - 1];
+		let next = seasons[index + 1];
 		let payload: response.SeasonResponse = {
 			season,
 			last,
