@@ -96,7 +96,7 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 	}
 }
 
-type Listener = (hostname: string) => void;
+type Listener = (hostname: string, service_info?: Array<string>) => void;
 
 const hostnames = new Set<string>();
 const listeners = new Set<Listener>();
@@ -116,12 +116,13 @@ function removeListner(listener: Listener): void {
 	listeners.delete(listener);
 }
 
-mdns.observe("_googlecast._tcp.local", (hostname) => {
+mdns.observe("_googlecast._tcp.local", (service_device) => {
+	let { hostname, service_info } = { ...service_device };
 	if (!hostnames.has(hostname)) {
 		hostnames.add(hostname);
 		for (let listener of listeners) {
 			try {
-				listener(hostname);
+				listener(hostname, service_info);
 			} catch (error) {}
 		}
 	}
@@ -151,38 +152,41 @@ function createSocket(hostname: string): Promise<libnet.Socket> {
 	});
 }
 
-function getDeviceName(hostname: string): Promise<string | undefined> {
-	return new Promise((resolve, reject) => {
-		libhttp.get(`http://${hostname}:8008/ssdp/device-desc.xml`, (response) => {
-			let chunks = [] as Buffer[];
-			response.on("data", (chunk) => {
-				chunks.push(chunk);
-			});
-			response.on("end", () => {
-				let body = Buffer.concat(chunks);
-				let string = body.toString();
-				let parts = /<friendlyName>([^<]+)<\/friendlyName>/.exec(string);
-				if (is.present(parts)) {
-					resolve(parts[1]);
-				} else {
-					resolve(undefined);
-				}
-			});
-			response.on("error", () => {
-				reject();
-			});
-		});
-	});
+function getDeviceName(service_info: Array<string>): string {
+	for (let entry of service_info) {
+		let parts = entry.split("=");
+		if (parts.length >= 2) {
+			let key = parts[0];
+			if (key === "fn") {
+				return parts.slice(1).join("=");
+			}
+		}
+	}
+	return "Chromecast";
+}
+
+function getDeviceType(service_info: Array<string>): string {
+	for (let entry of service_info) {
+		let parts = entry.split("=");
+		if (parts.length >= 2) {
+			let key = parts[0];
+			if (key === "md") {
+				return parts.slice(1).join("=");
+			}
+		}
+	}
+	return "Generic Cast Device";
 }
 
 export function observe(wss: boolean): void {
-	addListener(async (hostname) => {
+	addListener(async (hostname, service_info) => {
 		let socket = await createSocket(hostname);
 		socket.on("close", () => {
 			hostnames.delete(hostname);
 		});
-		let deviceName = await getDeviceName(hostname);
-		new ChromecastPlayer(socket, deviceName ?? "Chromecast", wss);
+		let deviceName = getDeviceName(service_info ?? []);
+		let deviceType = getDeviceType(service_info ?? []);
+		new ChromecastPlayer(socket, wss, deviceName, deviceType);
 	});
 };
 
@@ -426,7 +430,7 @@ class ChromecastPlayer {
 		}, 5000);
 	}
 
-	constructor(socket: libnet.Socket, deviceName: string, wss: boolean) {
+	constructor(socket: libnet.Socket, wss: boolean, device_name: string, device_type: string) {
 		let messageHandler = new MessageHandler(socket, (message) => {
 			let namespace = message.namespace;
 			if (namespace === ConnectionHandler.NAMESPACE) {
@@ -444,7 +448,7 @@ class ChromecastPlayer {
 		this.connectionHandler = new ConnectionHandler(messageHandler);
 		this.mediaHandler = new MediaHandler(messageHandler);
 		this.receiverHandler = new ReceiverHandler(messageHandler);
-		let url = `${wss ? "wss:" : "ws:"}//127.0.0.1/sockets/context/?protocol=cast&name=${deviceName}`;
+		let url = `${wss ? "wss:" : "ws:"}//127.0.0.1/sockets/context/?protocol=cast&name=${encodeURIComponent(device_name)}&type=${encodeURIComponent(device_type)}`;
 		this.context = new libcontext.ContextClient(url, (url) => new sockets.WebSocketClient(url));
 		this.timer = undefined;
 		socket.on("close", () => {

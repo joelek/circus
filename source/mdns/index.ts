@@ -4,13 +4,18 @@ import * as is from "../is";
 const MDNS_ADDRESS = "224.0.0.251";
 const MDNS_PORT = 5353;
 
+type Device = {
+	hostname: string,
+	service_info?: Array<string>
+};
+
 interface Observer {
-	(host: string): void;
+	(device: Device): void;
 }
 
 let map = new Map<string, Set<Observer>>();
 
-function parseName(buffer: Buffer, offset: number): { value: string, offset: number } {
+function parseName(buffer: Buffer, offset: number): { labels: Array<string>, offset: number } {
 	let labels = new Array<string>();
 	while (true) {
 		let length = buffer.readUInt8(offset);
@@ -18,23 +23,20 @@ function parseName(buffer: Buffer, offset: number): { value: string, offset: num
 			offset += 1;
 			break;
 		}
-		if (length < 64) {
+		if (length < 192) {
 			offset += 1;
 			let label = buffer.slice(offset, offset + length);
 			offset += length;
-			labels.push(label.toString("binary"));
+			labels.push(label.toString());
 			continue;
 		}
-		if (length < 192) {
-			throw new Error();
-		}
 		let name = parseName(buffer, buffer.readUInt16BE(offset) & 0x3FFF);
-		labels.push(name.value);
+		labels.push(name.labels.join("."));
 		offset += 2;
 		break;
 	}
 	return {
-		value: labels.join("."),
+		labels: labels,
 		offset: offset
 	};
 };
@@ -42,6 +44,7 @@ function parseName(buffer: Buffer, offset: number): { value: string, offset: num
 enum Type {
 	A = 1,
 	PTR = 12,
+	TXT = 16,
 	SRV = 33
 };
 
@@ -59,7 +62,7 @@ async function parseQuestion(packet: Buffer, offset: number): Promise<Question &
 	let kind = packet.readUInt16BE(offset);
 	offset += 2;
 	return {
-		value: name.value,
+		value: name.labels.join("."),
 		type,
 		kind,
 		offset
@@ -71,11 +74,14 @@ type Answer = {
 	type: number,
 	kind: number,
 	ttl: number,
-	data_offset: number
+	packet: Buffer,
+	data_offset: number,
+	data_length: number
 };
 
-function parseA(packet: Packet, data_offset: number): { ipv4: string } {
-	let buffer = packet.buffer;
+function parseA(answer: Answer): { ipv4: string } {
+	let buffer = answer.packet;
+	let data_offset = answer.data_offset;
 	let a = buffer.readUInt8(data_offset);
 	data_offset += 1;
 	let b = buffer.readUInt8(data_offset);
@@ -90,17 +96,28 @@ function parseA(packet: Packet, data_offset: number): { ipv4: string } {
 	};
 }
 
-function parsePTR(packet: Packet, data_offset: number): { to: string } {
-	let buffer = packet.buffer;
+function parsePTR(answer: Answer): { to: string } {
+	let buffer = answer.packet;
+	let data_offset = answer.data_offset;
 	let to = parseName(buffer, data_offset);
 	data_offset = to.offset;
 	return {
-		to: to.value
+		to: to.labels.join(".")
 	};
 }
 
-function parseSRV(packet: Packet, data_offset: number): { priority: number, weight: number, port: number, to: string } {
-	let buffer = packet.buffer;
+function parseTXT(answer: Answer): { content: Array<string> } {
+	let buffer = answer.packet;
+	let data_offset = answer.data_offset;
+	let content = parseName(buffer, data_offset);
+	return {
+		content: content.labels
+	};
+}
+
+function parseSRV(answer: Answer): { priority: number, weight: number, port: number, to: string } {
+	let buffer = answer.packet;
+	let data_offset = answer.data_offset;
 	let priority = buffer.readUInt16BE(data_offset);
 	data_offset += 2;
 	let weight = buffer.readUInt16BE(data_offset);
@@ -113,33 +130,34 @@ function parseSRV(packet: Packet, data_offset: number): { priority: number, weig
 		priority,
 		weight,
 		port,
-		to: to.value
+		to: to.labels.join(".")
 	};
 }
 
-function parseAnswer(buffer: Buffer, offset: number): Answer & { offset: number } {
-	let name = parseName(buffer, offset);
+function parseAnswer(packet: Buffer, offset: number): Answer {
+	let name = parseName(packet, offset);
 	offset = name.offset;
-	let type = buffer.readUInt16BE(offset);
+	let type = packet.readUInt16BE(offset);
 	offset += 2;
-	let kind = buffer.readUInt16BE(offset);
+	let kind = packet.readUInt16BE(offset);
 	offset += 2;
-	let ttl = buffer.readUInt32BE(offset);
+	let ttl = packet.readUInt32BE(offset);
 	offset += 4;
-	let length = buffer.readUInt16BE(offset);
+	let data_length = packet.readUInt16BE(offset);
 	offset += 2;
 	let data_offset = offset;
-	if (offset + length > buffer.length) {
+	if (data_offset + data_length > packet.length) {
 		throw `Invalid buffer length!`;
 	}
-	offset += length;
+	offset += data_length;
 	return {
-		name: name.value,
+		name: name.labels.join("."),
 		type,
 		kind,
 		ttl,
+		packet,
 		data_offset,
-		offset
+		data_length
 	};
 };
 
@@ -171,19 +189,19 @@ async function parsePacket(buffer: Buffer): Promise<Packet> {
 	for (let i = 0; i < ancount; i++) {
 		let result = await parseAnswer(buffer, offset);
 		answers.push(result);
-		offset = result.offset;
+		offset = result.data_offset + result.data_length;
 	}
 	let authorities = new Array<Answer>();
 	for (let i = 0; i < nscount; i++) {
 		let result = await parseAnswer(buffer, offset);
 		authorities.push(result);
-		offset = result.offset;
+		offset = result.data_offset + result.data_length;
 	}
 	let additionals = new Array<Answer>();
 	for (let i = 0; i < arcount; i++) {
 		let result = await parseAnswer(buffer, offset);
 		additionals.push(result);
-		offset = result.offset;
+		offset = result.data_offset + result.data_length;
 	}
 	return {
 		buffer,
@@ -194,18 +212,43 @@ async function parsePacket(buffer: Buffer): Promise<Packet> {
 	};
 };
 
-function lookupHostname(hostname: string, packet: Packet): string | undefined {
+function lookupDevice(device: Device, packet: Packet): Device | undefined {
 	for (let answer of [...packet.answers, ...packet.authorities, ...packet.additionals]) {
-		if (answer.name === hostname) {
+		if (answer.name === device.hostname) {
+			if (answer.type === Type.TXT) {
+				try {
+					let record = parseTXT(answer);
+					device = {
+						...device,
+						service_info: record.content
+					};
+				} catch (error) {}
+			}
+		}
+	}
+	for (let answer of [...packet.answers, ...packet.authorities, ...packet.additionals]) {
+		if (answer.name === device.hostname) {
 			if (answer.type === Type.A) {
-				let record = parseA(packet, answer.data_offset);
-				return record.ipv4;
+				let record = parseA(answer);
+				device = {
+					...device,
+					hostname: record.ipv4
+				};
+				return device;
 			} else if (answer.type === Type.PTR) {
-				let record = parsePTR(packet, answer.data_offset);
-				return lookupHostname(record.to, packet);
+				let record = parsePTR(answer);
+				device = {
+					...device,
+					hostname: record.to
+				};
+				return lookupDevice(device, packet);
 			} else if (answer.type === Type.SRV) {
-				let record = parseSRV(packet, answer.data_offset);
-				return lookupHostname(record.to, packet);
+				let record = parseSRV(answer);
+				device = {
+					...device,
+					hostname: record.to
+				};
+				return lookupDevice(device, packet);
 			}
 		}
 	}
@@ -216,10 +259,10 @@ function notifyObservers(packet: Packet): void {
 		let hostname = answer.name;
 		let observers = map.get(hostname);
 		if (is.present(observers)) {
-			let value = lookupHostname(hostname, packet);
-			if (is.present(value)) {
+			let device = lookupDevice({ hostname }, packet);
+			if (is.present(device)) {
 				for (let observer of observers) {
-					observer(value);
+					observer(device);
 				}
 			}
 		}
@@ -247,7 +290,6 @@ socket.bind(MDNS_PORT);
 
 // TODO: Encode labels properly.
 export function sendDiscoveryPacket(host: string): void {
-	console.log(`Sending discover packet for ${host}.`);
 	let buffers = Array<Buffer>();
 	let head = Buffer.alloc(12);
 	head.writeUInt16BE(1, 4);

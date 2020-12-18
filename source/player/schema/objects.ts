@@ -72,13 +72,15 @@ export const ContextItem = autoguard.Union.of(
 export type Device = {
 	"id": string,
 	"protocol": string,
-	"name": string
+	"name": string,
+	"type": string
 };
 
 export const Device = autoguard.Object.of<Device>({
 	"id": autoguard.String,
 	"protocol": autoguard.String,
-	"name": autoguard.String
+	"name": autoguard.String,
+	"type": autoguard.String
 });
 
 export type Session = {

@@ -24,7 +24,8 @@
 	Device: {
 		id: string,
 		protocol: string,
-		name: string
+		name: string,
+		type: string
 	},
 
 	Session: {

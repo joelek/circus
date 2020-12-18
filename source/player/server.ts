@@ -19,10 +19,12 @@ function makeDevice(connection_id: string, connection_url: string): schema.objec
 	let url = liburl.parse(connection_url, true);
 	let protocol = getQuery(url, "protocol").pop() ?? "";
 	let name = getQuery(url, "name").pop() ?? "";
+	let type = getQuery(url, "type").pop() ?? "";
 	return {
 		id: connection_id,
 		protocol: protocol,
-		name: name
+		name: name,
+		type: type
 	};
 }
 
