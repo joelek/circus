@@ -91,12 +91,12 @@ const CSS = `
 		word-break: break-word;
 	}
 
-	.entity-card__description--clamp {
+	.entity-card__description--compact {
 		display: -webkit-box;
-		max-height: 100px;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 3;
+		max-height: 60px;
 		overflow: hidden;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 5;
 	}
 `;
 
@@ -109,18 +109,23 @@ function isHighDefinition(width: number, height: number): boolean {
 	}
 }
 
+type Options = Partial<{
+	playbackButton: xnode.XElement,
+	compactDescription: boolean
+}>;
+
 export class EntityCardFactory {
 	private entityTitleFactory: EntityTitleFactory;
 	private entityLinkFactory: EntityLinkFactory;
 	private ImageBox: ImageBoxFactory;
 	private PlaybackButton: PlaybackButtonFactory;
 
-	private make(link: xnode.XElement, image: xnode.XElement, playbackButton: xnode.XElement | undefined, titles: xnode.XElement[], subtitles: xnode.XElement[], tags: xnode.XElement[], description?: string): xnode.XElement {
+	private make(link: xnode.XElement, image: xnode.XElement, titles: xnode.XElement[], subtitles: xnode.XElement[], tags: xnode.XElement[], description: string | undefined, options: Options = {}): xnode.XElement {
 		return link.add(xnode.element("div.entity-card")
 			.add(xnode.element("div.entity-card__artwork")
 				.add(image)
 				.add(xnode.element("div.entity-card__playback")
-					.add(playbackButton)
+					.add(options.playbackButton)
 				)
 			)
 			.add(xnode.element("div.entity-card__content")
@@ -137,7 +142,7 @@ export class EntityCardFactory {
 					.add(tags.length === 0 ? undefined : xnode.element("div.entity-card__tags")
 						.add(...tags)
 					)
-					.add(is.absent(description) ? undefined : xnode.element("div.entity-card__description.entity-card__description--clamp")
+					.add(is.absent(description) ? undefined : xnode.element(options.compactDescription === false ? "div.entity-card__description" : "div.entity-card__description.entity-card__description--compact")
 						.add(xnode.text(description))
 					)
 				)
@@ -152,47 +157,48 @@ export class EntityCardFactory {
 		this.PlaybackButton = PlaybackButton;
 	}
 
-	forEntity(entity: api.Entity): xnode.XElement {
+	forEntity(entity: api.Entity, options: Options = {}): xnode.XElement {
 		if (api.Album.is(entity)) {
-			return this.forAlbum(entity);
+			return this.forAlbum(entity, options);
 		}
 		if (api.Artist.is(entity)) {
-			return this.forArtist(entity);
+			return this.forArtist(entity, options);
 		}
 		if (api.Disc.is(entity)) {
-			return this.forDisc(entity);
+			return this.forDisc(entity, options);
 		}
 		if (api.Episode.is(entity)) {
-			return this.forEpisode(entity);
+			return this.forEpisode(entity, options);
 		}
 		if (api.Genre.is(entity)) {
-			return this.forGenre(entity);
+			return this.forGenre(entity, options);
 		}
 		if (api.Person.is(entity)) {
-			return this.forPerson(entity);
+			return this.forPerson(entity, options);
 		}
 		if (api.Playlist.is(entity)) {
-			return this.forPlaylist(entity);
+			return this.forPlaylist(entity, options);
 		}
 		if (api.Movie.is(entity)) {
-			return this.forMovie(entity);
+			return this.forMovie(entity, options);
 		}
 		if (api.Season.is(entity)) {
-			return this.forSeason(entity);
+			return this.forSeason(entity, options);
 		}
 		if (api.Show.is(entity)) {
-			return this.forShow(entity);
+			return this.forShow(entity, options);
 		}
 		if (api.Track.is(entity)) {
-			return this.forTrack(entity);
+			return this.forTrack(entity, options);
 		}
 		if (api.User.is(entity)) {
-			return this.forUser(entity);
+			return this.forUser(entity, options);
 		}
 		throw `Expected code to be unreachable!`;
 	}
 
-	forAlbum(album: api.Album, playbackButton: xnode.XElement = this.PlaybackButton.forAlbum(album)): xnode.XElement {
+	forAlbum(album: api.Album, options: Options = {}): xnode.XElement {
+		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forAlbum(album);
 		let duration_ms = 0;
 		for (let disc of album.discs) {
 			for (let track of disc.tracks) {
@@ -210,10 +216,11 @@ export class EntityCardFactory {
 			is.present(album.year) ? `${album.year}` : undefined,
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, titles, subtitles, tags, undefined, options);
 	}
 
-	forArtist(artist: api.Artist, playbackButton: xnode.XElement = this.PlaybackButton.forArtist(artist)): xnode.XElement {
+	forArtist(artist: api.Artist, options: Options = {}): xnode.XElement {
+		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forArtist(artist);
 		let duration_ms = 0;
 		for (let album of artist.albums) {
 			for (let disc of album.discs) {
@@ -232,10 +239,11 @@ export class EntityCardFactory {
 			"Artist",
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, titles, subtitles, tags, undefined, options);
 	}
 
-	forDisc(disc: api.Disc, playbackButton: xnode.XElement = this.PlaybackButton.forDisc(disc)): xnode.XElement {
+	forDisc(disc: api.Disc, options: Options = {}): xnode.XElement {
+		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forDisc(disc);
 		let duration_ms = 0;
 		for (let track of disc.tracks) {
 			duration_ms += track.media.duration_ms;
@@ -252,10 +260,11 @@ export class EntityCardFactory {
 			"Disc",
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, titles, subtitles, tags, undefined, options);
 	}
 
-	forEpisode(episode: api.Episode, playbackButton: xnode.XElement = this.PlaybackButton.forEpisode(episode)): xnode.XElement {
+	forEpisode(episode: api.Episode, options: Options = {}): xnode.XElement {
+		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forEpisode(episode);
 		let duration_ms = 0;
 		duration_ms += episode.media.duration_ms;
 		let link = this.entityLinkFactory.forEpisode(episode);
@@ -278,10 +287,10 @@ export class EntityCardFactory {
 		if (is.present(episode.last_stream_date)) {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("\u2713")));
 		}
-		return this.make(link, image, playbackButton, titles, subtitles, tags, episode.summary);
+		return this.make(link, image, titles, subtitles, tags, episode.summary, options);
 	}
 
-	forGenre(genre: api.Genre): xnode.XElement {
+	forGenre(genre: api.Genre, options: Options = {}): xnode.XElement {
 		let link = this.entityLinkFactory.forGenre(genre);
 		let image = this.ImageBox.forSquare();
 		let titles = [
@@ -291,10 +300,11 @@ export class EntityCardFactory {
 		let tags = [
 			"Genre"
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(link, image, undefined, titles, subtitles, tags);
+		return this.make(link, image, titles, subtitles, tags, undefined, options);
 	}
 
-	forMovie(movie: api.Movie, playbackButton: xnode.XElement = this.PlaybackButton.forMovie(movie)): xnode.XElement {
+	forMovie(movie: api.Movie, options: Options = {}): xnode.XElement {
+		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forMovie(movie);
 		let duration_ms = 0;
 		duration_ms += movie.media.duration_ms;
 		let link = this.entityLinkFactory.forMovie(movie);
@@ -314,10 +324,10 @@ export class EntityCardFactory {
 		if (is.present(movie.last_stream_date)) {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("\u2713")));
 		}
-		return this.make(link, image, playbackButton, titles, subtitles, tags, movie.summary);
+		return this.make(link, image, titles, subtitles, tags, movie.summary, options);
 	}
 
-	forPerson(person: api.Person): xnode.XElement {
+	forPerson(person: api.Person, options: Options = {}): xnode.XElement {
 		let link = this.entityLinkFactory.forPerson(person);
 		let image = this.ImageBox.forSquare();
 		let titles = [
@@ -327,10 +337,11 @@ export class EntityCardFactory {
 		let tags = [
 			"Person"
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(link, image, undefined, titles, subtitles, tags);
+		return this.make(link, image, titles, subtitles, tags, undefined, options);
 	}
 
-	forPlaylist(playlist: api.Playlist, playbackButton: xnode.XElement = this.PlaybackButton.forPlaylist(playlist)): xnode.XElement {
+	forPlaylist(playlist: api.Playlist, options: Options = {}): xnode.XElement {
+		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forPlaylist(playlist);
 		let duration_ms = 0;
 		for (let item of playlist.items) {
 			duration_ms += item.track.media.duration_ms;
@@ -347,10 +358,11 @@ export class EntityCardFactory {
 			"Playlist",
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(link, image, playbackButton, titles, subtitles, tags, playlist.description);
+		return this.make(link, image, titles, subtitles, tags, playlist.description, options);
 	}
 
-	forSeason(season: api.Season, playbackButton: xnode.XElement = this.PlaybackButton.forSeason(season)): xnode.XElement {
+	forSeason(season: api.Season, options: Options = {}): xnode.XElement {
+		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forSeason(season);
 		let duration_ms = 0;
 		for (let episode of season.episodes) {
 			duration_ms += episode.media.duration_ms;
@@ -367,10 +379,11 @@ export class EntityCardFactory {
 			"Season",
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, titles, subtitles, tags, undefined, options);
 	}
 
-	forShow(show: api.Show, playbackButton: xnode.XElement = this.PlaybackButton.forShow(show)): xnode.XElement {
+	forShow(show: api.Show, options: Options = {}): xnode.XElement {
+		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forShow(show);
 		let duration_ms = 0;
 		for (let season of show.seasons) {
 			for (let episode of season.episodes) {
@@ -387,10 +400,11 @@ export class EntityCardFactory {
 			"Show",
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(link, image, playbackButton, titles, subtitles, tags, show.summary);
+		return this.make(link, image, titles, subtitles, tags, show.summary, options);
 	}
 
-	forTrack(track: api.Track, playbackButton: xnode.XElement = this.PlaybackButton.forTrack(track)): xnode.XElement {
+	forTrack(track: api.Track, options: Options = {}): xnode.XElement {
+		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forTrack(track);
 		let duration_ms = 0;
 		duration_ms += track.media.duration_ms;
 		let link = this.entityLinkFactory.forTrack(track);
@@ -406,10 +420,10 @@ export class EntityCardFactory {
 			"Track",
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(link, image, playbackButton, titles, subtitles, tags);
+		return this.make(link, image, titles, subtitles, tags, undefined, options);
 	}
 
-	forUser(user: api.User): xnode.XElement {
+	forUser(user: api.User, options: Options = {}): xnode.XElement {
 		let link = this.entityLinkFactory.forUser(user);
 		let image = this.ImageBox.forSquare();
 		let titles = [
@@ -421,7 +435,7 @@ export class EntityCardFactory {
 		let tags = [
 			"User"
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(link, image, undefined, titles, subtitles, tags);
+		return this.make(link, image, titles, subtitles, tags, undefined, options);
 	}
 
 	static makeStyle(): xnode.XElement {

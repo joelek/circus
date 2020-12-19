@@ -1532,7 +1532,7 @@ let updateviewforuri = (uri: string): void => {
 			let next = response.next;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forTrack(track))
+					.add(EntityCard.forTrack(track, { compactDescription: false }))
 				)
 				.add(xml.element("div.content")
 					.add(entityNavLinkFactory.make(last, next))
@@ -1588,12 +1588,14 @@ let updateviewforuri = (uri: string): void => {
 			let next = response.next;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forSeason(season))
+					.add(EntityCard.forSeason(season, { compactDescription: false }))
 				)
 				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
 					.add(...season.episodes.map((episode, episodeIndex) => {
-						return EntityCard.forEpisode(episode, PlaybackButton.forSeason(season, episodeIndex));
+						return EntityCard.forEpisode(episode, {
+							playbackButton: PlaybackButton.forSeason(season, episodeIndex)
+						});
 					}))
 				)
 				.add(xml.element("div.content")
@@ -1640,7 +1642,7 @@ let updateviewforuri = (uri: string): void => {
 			let next = response.next;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forDisc(disc))
+					.add(EntityCard.forDisc(disc, { compactDescription: false }))
 				)
 				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 16px;")
@@ -1801,7 +1803,7 @@ let updateviewforuri = (uri: string): void => {
 			let album = response.album;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forAlbum(album))
+					.add(EntityCard.forAlbum(album, { compactDescription: false }))
 				)
 				.add(...album.discs.map((disc, discIndex) => xml.element("div.content")
 					.set("style", "display: grid; gap: 16px;")
@@ -1850,7 +1852,7 @@ let updateviewforuri = (uri: string): void => {
 			let appearances = response.appearances;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forArtist(artist))
+					.add(EntityCard.forArtist(artist, { compactDescription: false }))
 				)
 				.add(tracks.length === 0 ? undefined : xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
@@ -1867,7 +1869,9 @@ let updateviewforuri = (uri: string): void => {
 					.add(renderTextHeader(xml.text("Discography")))
 					.add(Grid.make()
 						.add(...artist.albums.map((album, albumIndex) => {
-							return EntityCard.forAlbum(album, PlaybackButton.forArtist(artist, albumIndex));
+							return EntityCard.forAlbum(album, {
+								playbackButton: PlaybackButton.forArtist(artist, albumIndex)
+							});
 						}))
 					)
 				)
@@ -1946,7 +1950,7 @@ let updateviewforuri = (uri: string): void => {
 			};
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forPlaylist(playlist))
+					.add(EntityCard.forPlaylist(playlist, { compactDescription: false }))
 				)
 				.add(xml.element("div.content.content--compact")
 					.set("style", "display: grid; gap: 16px;")
@@ -2109,7 +2113,7 @@ let updateviewforuri = (uri: string): void => {
 			const indices = getNextEpisode(show);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forShow(show))
+					.add(EntityCard.forShow(show, { compactDescription: false }))
 				)
 				.add(xml.element("div.content")
 					.set("data-hide", `${show.actors.length === 0}`)
@@ -2119,13 +2123,16 @@ let updateviewforuri = (uri: string): void => {
 				.add(is.absent(indices) ? undefined : xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
 					.add(renderTextHeader(xml.text("Suggested episode")))
-					.add(EntityCard.forEpisode(show.seasons[indices.seasonIndex].episodes[indices.episodeIndex], PlaybackButton.forShow(show, indices.seasonIndex, indices.episodeIndex)))
+					.add(EntityCard.forEpisode(show.seasons[indices.seasonIndex].episodes[indices.episodeIndex], {
+						playbackButton: PlaybackButton.forShow(show, indices.seasonIndex, indices.episodeIndex)
+					}))
 				)
 				.add(...show.seasons.map((season, seasonIndex) => xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
 						.add(renderTextHeader(xml.text(`Season ${season.number}`)))
-						.add(carouselFactory.make(...season.episodes.map((episode, episodeIndex) => EntityCard.forEpisode(episode, PlaybackButton.forShow(show, seasonIndex, episodeIndex))))
-						)
+						.add(carouselFactory.make(...season.episodes.map((episode, episodeIndex) => EntityCard.forEpisode(episode, {
+							playbackButton: PlaybackButton.forShow(show, seasonIndex, episodeIndex)
+						}))))
 					)
 				)
 				.render()
@@ -2154,7 +2161,7 @@ let updateviewforuri = (uri: string): void => {
 			let next = response.next;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forEpisode(episode))
+					.add(EntityCard.forEpisode(episode, { compactDescription: false }))
 				)
 				.add(xml.element("div.content")
 					.add(entityNavLinkFactory.make(last, next))
@@ -2218,7 +2225,7 @@ let updateviewforuri = (uri: string): void => {
 			let movie = response.movie;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(EntityCard.forMovie(movie))
+					.add(EntityCard.forMovie(movie, { compactDescription: false }))
 				)
 				.add(xml.element("div.content")
 					.set("data-hide", `${movie.actors.length === 0}`)
