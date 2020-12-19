@@ -1346,13 +1346,15 @@ let mp = xml.element("div.content")
 			.add(xml.element("div.media-player__subtitle")
 				.add(xml.text(mediaPlayerSubtitle))
 			)
-			.on("click", (event) => {
+			.on("click", () => {
 				let context = player.context.getState();
 				if (is.present(context)) {
 					if (Album.is(context)) {
 						navigate(`audio/albums/${context.album_id}/`);
 					} else if (Artist.is(context)) {
 						navigate(`audio/artists/${context.artist_id}/`);
+					} else if (Disc.is(context)) {
+						navigate(`audio/discs/${context.disc_id}/`);
 					} else if (Episode.is(context)) {
 						navigate(`video/episodes/${context.episode_id}/`);
 					} else if (Movie.is(context)) {
