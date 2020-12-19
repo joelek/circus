@@ -1535,7 +1535,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(EntityCard.forTrack(track, { compactDescription: false }))
 				)
 				.add(xml.element("div.content")
-					.add(entityNavLinkFactory.make(last, next))
+					.add(entityNavLinkFactory.forTrack(last, next))
 				)
 				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
@@ -1599,7 +1599,7 @@ let updateviewforuri = (uri: string): void => {
 					}))
 				)
 				.add(xml.element("div.content")
-					.add(entityNavLinkFactory.make(last, next))
+					.add(entityNavLinkFactory.forSeason(last, next))
 				)
 				.render());
 		});
@@ -1651,7 +1651,7 @@ let updateviewforuri = (uri: string): void => {
 					}))
 				)
 				.add(xml.element("div.content")
-					.add(entityNavLinkFactory.make(last, next))
+					.add(entityNavLinkFactory.forDisc(last, next))
 				)
 				.render());
 		});
@@ -2164,7 +2164,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(EntityCard.forEpisode(episode, { compactDescription: false }))
 				)
 				.add(xml.element("div.content")
-					.add(entityNavLinkFactory.make(last, next))
+					.add(entityNavLinkFactory.forEpisode(last, next))
 				)
 				.render()
 			);

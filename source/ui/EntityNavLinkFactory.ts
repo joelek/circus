@@ -8,7 +8,7 @@ const CSS = `
 	.entity-nav-link {
 		display: grid;
 		gap: 16px;
-		grid-template-columns: max(120px) max(120px);
+		grid-template-columns: max-content max-content;
 		justify-content: center;
 	}
 
@@ -32,12 +32,7 @@ export class EntityNavLinkFactory {
 	private iconFactory: IconFactory;
 	private entityLinkFactory: EntityLinkFactory;
 
-	constructor(iconFactory: IconFactory, entityLinkFactory: EntityLinkFactory) {
-		this.iconFactory = iconFactory;
-		this.entityLinkFactory = entityLinkFactory;
-	}
-
-	make(last: api.EntityBase | undefined, next: api.EntityBase | undefined): xnode.XElement {
+	private make(type: string, last: api.EntityBase | undefined, next: api.EntityBase | undefined): xnode.XElement {
 		let lastLink = is.absent(last) ? xnode.element("span") : this.entityLinkFactory.forEntity(last);
 		let nextLink = is.absent(next) ? xnode.element("span") : this.entityLinkFactory.forEntity(next);
 		return xnode.element("div.entity-nav-link")
@@ -50,7 +45,7 @@ export class EntityNavLinkFactory {
 						)
 					)
 					.add(xnode.element("div.entity-nav-link__title")
-						.add(xnode.text("View last"))
+						.add(xnode.text(`Last ${type}`))
 					)
 				)
 			)
@@ -62,10 +57,31 @@ export class EntityNavLinkFactory {
 							.set("style", "transform: scale(1.0, 1.0);")
 					)
 					.add(xnode.element("div.entity-nav-link__title")
-						.add(xnode.text("View next"))
+						.add(xnode.text(`Next ${type}`))
 					)
 				)
 			);
+	}
+
+	constructor(iconFactory: IconFactory, entityLinkFactory: EntityLinkFactory) {
+		this.iconFactory = iconFactory;
+		this.entityLinkFactory = entityLinkFactory;
+	}
+
+	forDisc(last: api.DiscBase | undefined, next: api.DiscBase | undefined): xnode.XElement {
+		return this.make("disc", last, next);
+	}
+
+	forEpisode(last: api.EpisodeBase | undefined, next: api.EpisodeBase | undefined): xnode.XElement {
+		return this.make("episode", last, next);
+	}
+
+	forSeason(last: api.SeasonBase | undefined, next: api.SeasonBase | undefined): xnode.XElement {
+		return this.make("season", last, next);
+	}
+
+	forTrack(last: api.TrackBase | undefined, next: api.TrackBase | undefined): xnode.XElement {
+		return this.make("track", last, next);
 	}
 
 	static makeStyle(): xnode.XElement {
