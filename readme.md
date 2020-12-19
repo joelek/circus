@@ -19,3 +19,5 @@
 * Improve stream detection algorithm.
 * Index generated images.
 * Move authentication to typesockets.
+* Improve show page layout.
+* Fix error with mdns devices disconnecting from network.
