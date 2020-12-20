@@ -1421,7 +1421,13 @@ player.playback.addObserver(async (playback) => {
 player.currentEntry.addObserver(async (currentEntry) => {
 	let ref = await progresstrack.ref() as HTMLElement;
 	let duration = currentEntry?.media.duration_ms ?? 1;
-	ref.style.setProperty("animation-duration", `${duration}ms`);
+	ref.style.setProperty("animation-name", "none");
+	window.requestAnimationFrame(() => {
+		window.requestAnimationFrame(() => {
+			ref.style.setProperty("animation-duration", `${duration}ms`);
+			ref.style.setProperty("animation-name", "progress");
+		});
+	});
 });
 async function progressupdate(page_x: number): Promise<void> {
 	let ref = await progresscontainer.ref() as HTMLElement;
