@@ -778,6 +778,11 @@ style.innerText = `
 
 
 	.media-player {
+		display: grid;
+		gap: 16px;
+	}
+
+	.media-player__top {
 		align-items: center;
 		display: grid;
 		gap: 16px;
@@ -815,7 +820,42 @@ style.innerText = `
 		grid-auto-flow: column;
 	}
 
+	.media-player__bottom {
 
+	}
+
+	.media-player__progress-container {
+		background-color: rgb(31, 31, 31);
+		border-radius: 4px;
+		cursor: pointer;
+		height: 8px;
+		overflow: hidden;
+		position: relative;
+		z-index: 1;
+	}
+
+	@keyframes progress {
+		0% {
+			transform: translate(-100%, 0%);
+		}
+		100% {
+			transform: translate(0%, 0%);
+		}
+	}
+
+	.media-player__progress-track {
+		animation-delay: 0s;
+		animation-duration: 0s;
+		animation-name: progress;
+		animation-play-state: paused;
+		animation-timing-function: linear;
+		background-color: ${ACCENT_COLOR};
+		height: 100%;
+		width: 100%;
+		transform: translate(-100%, 0%);
+		position: absolute;
+		z-index: 0;
+	}
 
 
 
@@ -888,7 +928,7 @@ style.innerText = `
 	.app__content {
 		background-color: rgb(31, 31, 31);
 		overflow: hidden;
-		padding: 64px 0px 72px 0px;
+		padding: 64px 0px 96px 0px;
 		position: relative;
 		z-index: 0;
 	}
@@ -1358,83 +1398,158 @@ let mpw = xml.element("div.app__navigation")
 	)
 	.render();
 
+
+
+
+let progresscontainer = xml.element("div.media-player__progress-container");
+let progresstrack = xml.element("div.media-player__progress-track");
+player.progress.addObserver(async (progress) => {
+	let ref = await progresstrack.ref() as HTMLElement;
+	ref.style.setProperty("animation-name", "none");
+	window.requestAnimationFrame(() => {
+		window.requestAnimationFrame(() => {
+			ref.style.setProperty("animation-delay", `-${progress ?? 0}s`);
+			ref.style.setProperty("animation-name", "progress");
+		});
+	});
+});
+player.playback.addObserver(async (playback) => {
+	let ref = await progresstrack.ref() as HTMLElement;
+	let state = playback ? "running" : "paused";
+	ref.style.setProperty("animation-play-state", state);
+});
+player.currentEntry.addObserver(async (currentEntry) => {
+	let ref = await progresstrack.ref() as HTMLElement;
+	let duration = currentEntry?.media.duration_ms ?? 1;
+	ref.style.setProperty("animation-duration", `${duration}ms`);
+});
+async function progressupdate(page_x: number): Promise<void> {
+	let ref = await progresscontainer.ref() as HTMLElement;
+	let x = page_x - ref.offsetLeft;
+	let w = ref.offsetWidth;
+	let factor = Math.max(0.0, Math.min(x / w, 1.0));
+	let currentEntry = player.currentEntry.getState();
+	if (is.present(currentEntry)) {
+		let progress = factor * currentEntry.media.duration_ms / 1000;
+		player.seek(progress);
+	}
+}
+let progressactive = false;
+progresscontainer
+	.on("mousedown", async (event) => {
+		progressactive = true;
+		await progressupdate(event.pageX);
+	})
+	.on("mousemove", async (event) => {
+		if (progressactive) {
+			await progressupdate(event.pageX);
+		}
+	})
+	.on("mouseup", () => {
+		progressactive = false;
+	})
+	.on("mouseleave", () => {
+		progressactive = false;
+	})
+	.on("touchstart", async (event) => {
+		progressactive = true;
+		await progressupdate(event.touches[0].pageX);
+	})
+	.on("touchmove", async (event) => {
+		if (progressactive) {
+			await progressupdate(event.touches[0].pageX);
+		}
+	})
+	.on("touchend", () => {
+		progressactive = false;
+	})
+	.on("touchcancel", () => {
+		progressactive = false;
+	})
+	.add(progresstrack);
+
 let mp = xml.element("div.content")
 	.set("style", "padding: 16px;")
 	.add(xml.element("div.media-player")
-		.add(xml.element("div.media-player__metadata")
-			.add(xml.element("div.media-player__title")
-				.add(xml.text(mediaPlayerTitle))
-			)
-			.add(xml.element("div.media-player__subtitle")
-				.add(xml.text(mediaPlayerSubtitle))
-			)
-			.on("click", () => {
-				let context = player.context.getState();
-				if (is.present(context)) {
-					if (Album.is(context)) {
-						navigate(`audio/albums/${context.album_id}/`);
-					} else if (Artist.is(context)) {
-						navigate(`audio/artists/${context.artist_id}/`);
-					} else if (Disc.is(context)) {
-						navigate(`audio/discs/${context.disc_id}/`);
-					} else if (Episode.is(context)) {
-						navigate(`video/episodes/${context.episode_id}/`);
-					} else if (Movie.is(context)) {
-						navigate(`video/movies/${context.movie_id}/`);
-					} else if (Playlist.is(context)) {
-						navigate(`audio/playlists/${context.playlist_id}/`);
-					} else if (Season.is(context)) {
-						navigate(`video/seasons/${context.season_id}/`);
-					} else if (Show.is(context)) {
-						navigate(`video/shows/${context.show_id}/`);
-					} else if (Track.is(context)) {
-						navigate(`audio/tracks/${context.track_id}/`);
-					} else {
-						throw `Expected code to be unreachable!`;
+		.add(xml.element("div.media-player__top")
+			.add(xml.element("div.media-player__metadata")
+				.add(xml.element("div.media-player__title")
+					.add(xml.text(mediaPlayerTitle))
+				)
+				.add(xml.element("div.media-player__subtitle")
+					.add(xml.text(mediaPlayerSubtitle))
+				)
+				.on("click", () => {
+					let context = player.context.getState();
+					if (is.present(context)) {
+						if (Album.is(context)) {
+							navigate(`audio/albums/${context.album_id}/`);
+						} else if (Artist.is(context)) {
+							navigate(`audio/artists/${context.artist_id}/`);
+						} else if (Disc.is(context)) {
+							navigate(`audio/discs/${context.disc_id}/`);
+						} else if (Episode.is(context)) {
+							navigate(`video/episodes/${context.episode_id}/`);
+						} else if (Movie.is(context)) {
+							navigate(`video/movies/${context.movie_id}/`);
+						} else if (Playlist.is(context)) {
+							navigate(`audio/playlists/${context.playlist_id}/`);
+						} else if (Season.is(context)) {
+							navigate(`video/seasons/${context.season_id}/`);
+						} else if (Show.is(context)) {
+							navigate(`video/shows/${context.show_id}/`);
+						} else if (Track.is(context)) {
+							navigate(`audio/tracks/${context.track_id}/`);
+						} else {
+							throw `Expected code to be unreachable!`;
+						}
 					}
-				}
-			})
+				})
+			)
+			.add(xml.element("div.media-player__controls")
+				.add(makeButton()
+					.bind("data-hide", player.devices.compute((devices) => {
+						return devices.length < 2;
+					}))
+					.add(Icon.makeBroadcast())
+					.on("click", () => {
+						showDevices.updateState(!showDevices.getState());
+					})
+				)
+				.add(makeButton()
+					.bind("data-enabled", player.canPlayLast.addObserver(a => a))
+					.add(Icon.makeLast())
+					.on("click", () => {
+						player.last();
+					})
+				)
+				.add(makeButton()
+					.bind("data-enabled", player.canPlayCurrent.addObserver(a => a))
+					.add(Icon.makePlay()
+						.bind("data-hide", player.playback.addObserver((playback) => {
+							return playback === true;
+						}))
+					)
+					.add(Icon.makePause()
+						.bind("data-hide", player.playback.addObserver((playback) => {
+							return playback === false;
+						}))
+					)
+					.on("click", () => {
+						player.toggle();
+					})
+				)
+				.add(makeButton()
+					.bind("data-enabled", player.canPlayNext.addObserver(a => a))
+					.add(Icon.makeNext())
+					.on("click", () => {
+						player.next();
+					})
+				)
+			)
 		)
-		.add(xml.element("div.media-player__controls")
-			.add(makeButton()
-				.bind("data-hide", player.devices.compute((devices) => {
-					return devices.length < 2;
-				}))
-				.add(Icon.makeBroadcast())
-				.on("click", () => {
-					showDevices.updateState(!showDevices.getState());
-				})
-			)
-			.add(makeButton()
-				.bind("data-enabled", player.canPlayLast.addObserver(a => a))
-				.add(Icon.makeLast())
-				.on("click", () => {
-					player.last();
-				})
-			)
-			.add(makeButton()
-				.bind("data-enabled", player.canPlayCurrent.addObserver(a => a))
-				.add(Icon.makePlay()
-					.bind("data-hide", player.playback.addObserver((playback) => {
-						return playback === true;
-					}))
-				)
-				.add(Icon.makePause()
-					.bind("data-hide", player.playback.addObserver((playback) => {
-						return playback === false;
-					}))
-				)
-				.on("click", () => {
-					player.toggle();
-				})
-			)
-			.add(makeButton()
-				.bind("data-enabled", player.canPlayNext.addObserver(a => a))
-				.add(Icon.makeNext())
-				.on("click", () => {
-					player.next();
-				})
-			)
+		.add(xml.element("div.media-player__bottom")
+			.add(progresscontainer)
 		)
 	)
 	.render();

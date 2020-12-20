@@ -579,6 +579,7 @@ export class ContextClient {
 	}
 
 	seek(progress?: number): void {
+		this.progress.updateState(progress);
 		this.tsc.send("SetProgress", {
 			progress: progress
 		});
