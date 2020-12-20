@@ -1441,36 +1441,21 @@ async function progressupdate(page_x: number): Promise<void> {
 	}
 }
 let progressactive = false;
+document.body.addEventListener("pointermove", async (event) => {
+	if (progressactive) {
+		await progressupdate(event.pageX);
+	}
+});
+document.body.addEventListener("pointerup", async (event) => {
+	progressactive = false;
+});
+document.body.addEventListener("pointerleave", async (event) => {
+	progressactive = false;
+});
 progresscontainer
-	.on("mousedown", async (event) => {
+	.on("pointerdown", async (event) => {
 		progressactive = true;
 		await progressupdate(event.pageX);
-	})
-	.on("mousemove", async (event) => {
-		if (progressactive) {
-			await progressupdate(event.pageX);
-		}
-	})
-	.on("mouseup", () => {
-		progressactive = false;
-	})
-	.on("mouseleave", () => {
-		progressactive = false;
-	})
-	.on("touchstart", async (event) => {
-		progressactive = true;
-		await progressupdate(event.touches[0].pageX);
-	})
-	.on("touchmove", async (event) => {
-		if (progressactive) {
-			await progressupdate(event.touches[0].pageX);
-		}
-	})
-	.on("touchend", () => {
-		progressactive = false;
-	})
-	.on("touchcancel", () => {
-		progressactive = false;
 	})
 	.add(progresstrack);
 
