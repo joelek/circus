@@ -2141,12 +2141,11 @@ let updateviewforuri = (uri: string): void => {
 						playbackButton: PlaybackButton.forShow(show, indices.seasonIndex, indices.episodeIndex)
 					}))
 				)
-				.add(...show.seasons.map((season, seasonIndex) => xml.element("div.content")
-					.set("style", "display: grid; gap: 24px;")
-						.add(renderTextHeader(xml.text(`Season ${season.number}`)))
-						.add(carouselFactory.make(...season.episodes.map((episode, episodeIndex) => EntityCard.forEpisode(episode, {
-							playbackButton: PlaybackButton.forShow(show, seasonIndex, episodeIndex)
-						}))))
+				.add(xml.element("div.content")
+					.add(Grid.make()
+						.add(...show.seasons.map((season, seasonIndex) => EntityCard.forSeason(season, {
+							playbackButton: PlaybackButton.forShow(show, seasonIndex)
+						})))
 					)
 				)
 				.render()
