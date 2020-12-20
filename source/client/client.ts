@@ -793,6 +793,7 @@ style.innerText = `
 	.media-player__title {
 		color: rgb(255, 255, 255);
 		font-size: 16px;
+		height: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -801,6 +802,7 @@ style.innerText = `
 	.media-player__subtitle {
 		color: rgb(159, 159, 159);
 		font-size: 16px;
+		height: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -864,19 +866,29 @@ style.innerText = `
 	.app {
 		display: grid;
 		height: 100%;
-		grid-template-rows: min-content 1fr min-content;
+		position: relative;
 	}
 
 	.app__header {
 		background-color: ${ACCENT_COLOR};
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
+		position: absolute;
+			top: 0px;
+			left: 0px;
+			right: 0px;
+		transition: transform 0.25s;
 		z-index: 1;
+	}
+
+	.app__header[data-hide=true] {
+		display: initial!important;
+		transform: translate(0%, -100%);
 	}
 
 	.app__content {
 		background-color: rgb(31, 31, 31);
-		height: auto;
 		overflow: hidden;
+		padding: 64px 0px 72px 0px;
 		position: relative;
 		z-index: 0;
 	}
@@ -884,12 +896,28 @@ style.innerText = `
 	.app__navigation {
 		background-color: rgb(47, 47, 47);
 		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
-		position: relative;
+		position: absolute;
+			bottom: 0px;
+			left: 0px;
+			right: 0px;
+		transition: transform 0.25s;
 		z-index: 1;
+	}
+
+	.app__navigation[data-hide=true] {
+		display: initial!important;
+		transform: translate(0%, 100%);
 	}
 
 	.app__message-bar {
 		background-color: ${ACCENT_COLOR};
+	}
+
+	.app__video {
+		background-color: rgb(0, 0, 0);
+		height: 100%;
+		position: absolute;
+		width: 100%;
 	}
 
 	.offline-indicator {
@@ -1049,12 +1077,13 @@ async function getNewToken(username: string, password: string): Promise<string |
 
 let mountwrapper = document.createElement('div');
 
+let showUserInterface = new ObservableClass(true);
 let appcontainer = xml.element("div.app")
 	.render();
 document.body.appendChild(appcontainer);
 
-
 let appheader = xml.element("div.app__header")
+	.bind("data-hide", showUserInterface.addObserver((showUserInterface) => !showUserInterface))
 	.add(xml.element("div.content")
 		.set("style", "padding: 16px")
 		.add(xml.element("div.page-header__title")
@@ -1319,7 +1348,6 @@ let mount = xml.element("div.scroll-container")
 	.render();
 mountwrapper.appendChild(mount);
 
-let showUserInterface = new ObservableClass(true);
 let mpw = xml.element("div.app__navigation")
 	.bind("data-hide", showUserInterface.addObserver((showUserInterface) => !showUserInterface))
 	.add(xml.element("div.app__message-bar")
@@ -1424,34 +1452,25 @@ lastVideo.style.setProperty("display", "none");
 nextVideo.setAttribute("preload", "auto");
 nextVideo.style.setProperty("display", "none");
 
-let timeout: number | undefined;
-
 currentVideo.addEventListener("click", () => {
-	showUserInterface.updateState(true);
-	window.clearTimeout(timeout);
-	timeout = window.setTimeout(() => {
-		showUserInterface.updateState(false);
-	}, 5000);
+	player.pause();
 });
 
 showVideo.addObserver((showVideo) => {
-	showUserInterface.updateState(true);
-	window.clearTimeout(timeout);
 	if (showVideo) {
-		timeout = window.setTimeout(() => {
-			showUserInterface.updateState(false);
-		}, 5000);
+		showUserInterface.updateState(false);
+	} else {
+		showUserInterface.updateState(true);
 	}
 });
 
-let videowrapper = xml.element("div")
+let videowrapper = xml.element("div.app__video")
 	.bind("data-hide", showVideo.addObserver((showVideo) => {
 		return !showVideo;
 	}))
-	.set("style", "background-color: rgb(0, 0, 0); height: 100%;")
 	.render();
 
-mountwrapper.appendChild(videowrapper);
+appcontainer.appendChild(videowrapper);
 videowrapper.appendChild(currentVideo);
 videowrapper.appendChild(lastVideo);
 videowrapper.appendChild(nextVideo);

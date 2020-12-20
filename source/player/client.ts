@@ -35,6 +35,7 @@ export class ContextClient {
 	readonly isOnline = new observers.ObservableClass(false);
 
 	private play(context: schema.objects.Context, index: number): void {
+		this.isCurrentEntryVideo.updateState(false);
 		this.tsc.send("SetContext", {
 			context
 		});
