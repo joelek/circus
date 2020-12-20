@@ -938,11 +938,9 @@ style.innerText = `
 
 
 	.scroll-container {
-		box-sizing: border-box;
 		height: 100%;
 		overflow-y: scroll;
 		overflow-x: auto;
-		padding-left: 8px;
 		width: 100%;
 	}
 
