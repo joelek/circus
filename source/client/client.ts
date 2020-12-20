@@ -993,10 +993,12 @@ const showVideo = new ObservableClass(false);
 	let computer = () => {
 		let isDeviceLocal = player.isDeviceLocal.getState();
 		let isCurrentEntryVideo = player.isCurrentEntryVideo.getState();
-		showVideo.updateState(isDeviceLocal && isCurrentEntryVideo);
+		let localPlayback = player.localPlayback.getState();
+		showVideo.updateState(isDeviceLocal && isCurrentEntryVideo && localPlayback);
 	};
 	player.isDeviceLocal.addObserver(computer);
 	player.isCurrentEntryVideo.addObserver(computer);
+	player.localPlayback.addObserver(computer);
 }
 const showModal = computed((token, showContextMenu, showDevices) => {
 	if (is.absent(token)) {
@@ -1315,17 +1317,9 @@ let mount = xml.element("div.scroll-container")
 	.render();
 mountwrapper.appendChild(mount);
 
-/*
-    if (document.webkitFullscreenElement) {
-      document.webkitCancelFullScreen();
-    } else {
-      const el = document.documentElement;
-      el.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-    }
- */
-
-
+let showUserInterface = new ObservableClass(true);
 let mpw = xml.element("div.app__navigation")
+	.bind("data-hide", showUserInterface.addObserver((showUserInterface) => !showUserInterface))
 	.add(xml.element("div.app__message-bar")
 		.bind("data-hide", player.isOnline.addObserver((isOnline) => isOnline))
 		.add(xml.element("div.offline-indicator")
@@ -1427,6 +1421,26 @@ lastVideo.setAttribute("preload", "auto");
 lastVideo.style.setProperty("display", "none");
 nextVideo.setAttribute("preload", "auto");
 nextVideo.style.setProperty("display", "none");
+
+let timeout: number | undefined;
+
+currentVideo.addEventListener("click", () => {
+	showUserInterface.updateState(true);
+	window.clearTimeout(timeout);
+	timeout = window.setTimeout(() => {
+		showUserInterface.updateState(false);
+	}, 5000);
+});
+
+showVideo.addObserver((showVideo) => {
+	showUserInterface.updateState(true);
+	window.clearTimeout(timeout);
+	if (showVideo) {
+		timeout = window.setTimeout(() => {
+			showUserInterface.updateState(false);
+		}, 5000);
+	}
+});
 
 let videowrapper = xml.element("div")
 	.bind("data-hide", showVideo.addObserver((showVideo) => {
