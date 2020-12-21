@@ -68,10 +68,6 @@ window.addEventListener("keydown", (event) => {
 	}
 });
 
-player.isOnline.addObserver((isOnline) => {
-	document.documentElement.setAttribute("data-online", `${isOnline}`);
-});
-
 let lastVideo = document.createElement("video");
 let currentVideo = document.createElement("video");
 let nextVideo = document.createElement("video");
@@ -82,9 +78,6 @@ let isLoading = new ObservableClass(true);
 currentVideo.addEventListener("loadeddata", () => {
 	isLoading.updateState(false);
 });
-player.playback.addObserver((playback) => {
-	currentVideo.autoplay = playback;
-})
 currentVideo.addEventListener("playing", () => {
 	player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
 });
@@ -202,6 +195,7 @@ player.currentEntry.addObserver((currentEntry) => {
 			return;
 		} else {
 			currentVideo.src = `/files/${currentLocalEntry.media.file_id}/?token=${token}`;
+			currentVideo.load();
 		}
 		while (currentVideo.lastChild != null) {
 			currentVideo.removeChild(currentVideo.lastChild);
