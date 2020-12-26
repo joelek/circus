@@ -19,3 +19,4 @@
 * Index generated images.
 * Move authentication to typesockets.
 * Fix error with mdns devices disconnecting from network.
+* Add infinite scrolling to genre page.
