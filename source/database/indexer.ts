@@ -8,8 +8,8 @@ import * as probes from "./probes";
 import { Directory, File } from "./schema";
 import { default as config } from "../config";
 
-function wordify(string: string): Array<string> {
-	return string
+function wordify(string: string | number): Array<string> {
+	return String(string)
 		.toLowerCase()
 		.normalize("NFKD")
 		.replace(/[\|\/\\\_\-]/g, " ")
@@ -18,7 +18,7 @@ function wordify(string: string): Array<string> {
 		.split(/[ ]+/g);
 }
 
-function makeId(...components: Array<string | undefined>): string {
+function makeId(...components: Array<string | number | undefined>): string {
 	components = components
 		.map((component) => wordify(component ?? ""))
 		.map((words) => {
@@ -395,7 +395,7 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 			}, "combine");
 		}
 	} else if (probes.schema.MovieMetadata.is(metadata)) {
-		let movie_id = makeId("movie", metadata.title);
+		let movie_id = makeId("movie", metadata.title, metadata.year);
 		movies.insert({
 			movie_id: movie_id,
 			title: metadata.title,
@@ -433,7 +433,7 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 			}, "combine");
 		}
 	} else if (probes.schema.TrackMetadata.is(metadata)) {
-		let album_id = makeId("album", metadata.album.title);
+		let album_id = makeId("album", metadata.album.title, metadata.album.year);
 		albums.insert({
 			album_id: album_id,
 			title: metadata.album.title,
