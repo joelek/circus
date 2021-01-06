@@ -1,6 +1,5 @@
 import * as libnet from "net";
 import * as libtls from "tls";
-import * as libhttp from "http";
 import * as cast_message from "./cast_message";
 import * as mdns from "../mdns";
 import * as schema from "./schema";
@@ -96,62 +95,6 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 	}
 }
 
-type Listener = (hostname: string, service_info?: Array<string>) => void;
-
-const hostnames = new Set<string>();
-const listeners = new Set<Listener>();
-
-function addListener(listener: Listener): void {
-	if (!listeners.has(listener)) {
-		listeners.add(listener);
-		for (let hostname of hostnames) {
-			try {
-				listener(hostname);
-			} catch (error) {}
-		}
-	}
-}
-
-function removeListner(listener: Listener): void {
-	listeners.delete(listener);
-}
-
-mdns.observe("_googlecast._tcp.local", (service_device) => {
-	let { hostname, service_info } = { ...service_device };
-	if (!hostnames.has(hostname)) {
-		hostnames.add(hostname);
-		for (let listener of listeners) {
-			try {
-				listener(hostname, service_info);
-			} catch (error) {}
-		}
-	}
-});
-
-export function discover(): void {
-	mdns.sendDiscoveryPacket("_googlecast._tcp.local");
-};
-
-function createSocket(hostname: string): Promise<libnet.Socket> {
-	return new Promise((resolve, reject) => {
-		let socket = libtls.connect({
-			host: hostname,
-			port: 8009,
-			rejectUnauthorized: false
-		});
-		socket.on("secureConnect", () => {
-			console.log(`Connected to Cast device at ${hostname}.`);
-			resolve(socket);
-		});
-		socket.on("close", () => {
-			console.log(`Disconnected from Cast device at ${hostname}.`);
-		});
-		socket.on("error", (error) => {
-			socket.destroy();
-		});
-	});
-}
-
 function getDeviceName(service_info: Array<string>): string {
 	for (let entry of service_info) {
 		let parts = entry.split("=");
@@ -178,16 +121,42 @@ function getDeviceType(service_info: Array<string>): string {
 	return "Generic Cast Device";
 }
 
+const connections = new Map<string, libnet.Socket>();
+
 export function observe(wss: boolean): void {
-	addListener(async (hostname, service_info) => {
-		let socket = await createSocket(hostname);
-		socket.on("close", () => {
-			hostnames.delete(hostname);
-		});
-		let deviceName = getDeviceName(service_info ?? []);
-		let deviceType = getDeviceType(service_info ?? []);
-		new ChromecastPlayer(socket, wss, deviceName, deviceType);
+	mdns.observe("_googlecast._tcp.local", async (service_device) => {
+		try {
+			let { hostname, service_info } = { ...service_device };
+			let connection = connections.get(hostname);
+			if (is.absent(connection)) {
+				let socket = libtls.connect({
+					host: hostname,
+					port: 8009,
+					rejectUnauthorized: false
+				});
+				connections.set(hostname, socket);
+				socket.on("secureConnect", () => {
+					console.log(`Connected to Cast device at ${hostname}.`);
+					let deviceName = getDeviceName(service_info ?? []);
+					let deviceType = getDeviceType(service_info ?? []);
+					new ChromecastPlayer(socket, wss, deviceName, deviceType);
+				});
+				socket.on("close", () => {
+					console.log(`Disconnected from Cast device at ${hostname}.`);
+					connections.delete(hostname);
+				});
+				socket.on("error", (error) => {
+					socket.destroy();
+				});
+			}
+		} catch (error) {
+			console.log(error);
+		}
 	});
+};
+
+export function discover(): void {
+	mdns.sendDiscoveryPacket("_googlecast._tcp.local");
 };
 
 function unwrapPacketPayload(socket: libnet.Socket, onpayload: (buffer: Buffer) => void) {
