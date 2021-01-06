@@ -122,7 +122,7 @@ function setupIndexTimer(): void {
 	indexTimer = setTimeout(() => {
 		indexTimer = undefined;
 		indexer.runIndexer();
-	}, 10 * 60 * 1000);
+	}, 60 * 60 * 1000);
 }
 
 function requestHandler(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
