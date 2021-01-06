@@ -12,12 +12,6 @@ const CSS = `
 		will-change: opacity;
 	}
 
-	.image-box--circle {
-		border-radius: 50%;
-		overflow: hidden;
-		padding-bottom: ${1/1 * 100}%;
-	}
-
 	.image-box--poster {
 		padding-bottom: ${3/2 * 100}%;
 	}
@@ -54,7 +48,7 @@ export class ImageBoxFactory {
 		this.token = token;
 	}
 
-	for(url?: string, format: "circle" | "poster" | "square" | "video" = "square"): xnode.XElement {
+	for(url?: string, format: "poster" | "square" | "video" = "square"): xnode.XElement {
 		let isLoaded = new observables.ObservableClass(false);
 		return xnode.element(`div.image-box.image-box--${format}`)
 			.add(is.absent(url) ? undefined : xnode.element("img.image-box__image")
@@ -68,10 +62,6 @@ export class ImageBoxFactory {
 					isLoaded.updateState(true);
 				})
 			);
-	}
-
-	forCircle(url?: string): xnode.XElement {
-		return this.for(url, "circle");
 	}
 
 	forPoster(url?: string): xnode.XElement {
