@@ -1,5 +1,6 @@
 import * as api from "../api/schema/objects";
 import * as is from "../is";
+import * as theme from "./theme";
 import * as xnode from "../xnode";
 import { IconFactory } from "./Icon";
 import { EntityLinkFactory } from "./EntityLink";
@@ -20,7 +21,7 @@ const CSS = `
 	}
 
 	.entity-nav-link__title {
-		color: rgb(159, 159, 159);
+		color: ${theme.TEXT_1};
 		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
