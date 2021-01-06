@@ -2470,29 +2470,46 @@ let updateviewforuri = (uri: string): void => {
 			let genre = response.genre;
 			req<{}, api_response.GenreShowsResponse>(`/api/video/genres/${genre_id}/shows/?token=${token}`, {}, (status, response) => {
 				let shows = response.shows;
-				req<{}, api_response.GenreMoviesResponse>(`/api/video/genres/${genre_id}/movies/?token=${token}`, {}, (status, response) => {
-					let movies = response.movies;
-					mount.appendChild(xml.element("div")
-						.add(xml.element("div.content")
-							.add(renderTextHeader(xml.text(genre.title)))
+				let offset = 0;
+				let reachedEnd = new ObservableClass(false);
+				let isLoading = new ObservableClass(false);
+				let movies = new ArrayObservable<Movie>([]);
+				async function load(): Promise<void> {
+					if (!reachedEnd.getState() && !isLoading.getState()) {
+						isLoading.updateState(true);
+						let response = await preq<{}, api_response.GenreMoviesResponse>(`/api/video/genres/${genre_id}/movies/?offset=${offset}&token=${token}`, {});
+						for (let movie of response.movies) {
+							movies.append(movie);
+						}
+						offset += response.movies.length;
+						if (response.movies.length === 0) {
+							reachedEnd.updateState(true);
+						}
+						isLoading.updateState(false);
+					}
+				};
+				mount.appendChild(xml.element("div")
+					.add(xml.element("div.content")
+						.add(renderTextHeader(xml.text(genre.title)))
+					)
+					.add(shows.length === 0 ? undefined : xml.element("div.content")
+						.set("style", "display: grid; gap: 24px;")
+						.add(renderTextHeader(xml.text("Shows")))
+						.add(carouselFactory.make(
+							...shows.map((show) => EntityCard.forShow(show)))
 						)
-						.add(shows.length === 0 ? undefined : xml.element("div.content")
-							.set("style", "display: grid; gap: 24px;")
-							.add(renderTextHeader(xml.text("Shows")))
-							.add(carouselFactory.make(
-								...shows.map((show) => EntityCard.forShow(show)))
-							)
+					)
+					.add(xml.element("div.content")
+						.bind("data-hide", movies.compute((movies) => movies.length === 0))
+						.set("style", "display: grid; gap: 24px;")
+						.add(renderTextHeader(xml.text("Movies")))
+						.add(Grid.make()
+							.repeat(movies, (movie) => EntityCard.forMovie(movie))
 						)
-						.add(movies.length === 0 ? undefined : xml.element("div.content")
-							.set("style", "display: grid; gap: 24px;")
-							.add(renderTextHeader(xml.text("Movies")))
-							.add(Grid.make()
-								.add(...movies.map((movie) => EntityCard.forMovie(movie)))
-							)
-						)
-						.render()
-					);
-				});
+					)
+					.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+					.render()
+				);
 			});
 		});
 	} else if ((parts = /^video[/]genres[/]([^/?]*)/.exec(uri)) !== null) {
