@@ -19,6 +19,7 @@
 * Improve stream detection algorithm.
 * Index generated images.
 * Move authentication to typesockets.
-* Fix error with mdns devices disconnecting from network.
 * Add synchronization to playback protocol.
 * Add shuffle and repeat features to player.
+* Index content at regular one hour intervals when inactive.
+* Add statistics page.
