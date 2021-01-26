@@ -2695,7 +2695,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeIconLink(Icon.makeMonitor(), "Watch", "video/"))
 					.add(makeIconLink(Icon.makeSpeaker(), "Listen", "audio/"))
 					.add(makeIconLink(Icon.makeMagnifyingGlassLine(), "Search", "search/"))
-					.add(makeIconLink(Icon.makeCalendar(), "Years", "years/"))
+					.add(makeIconLink(Icon.makeCalendar(), "Revisit", "years/"))
 				)
 			)
 		.render());
