@@ -606,10 +606,10 @@ style.innerText = `
 	.content {
 		box-sizing: border-box;
 		display: grid;
-		gap: 64px;
+		gap: 24px;
 		margin: 0px auto;
 		max-width: 960px;
-		padding: 32px;
+		padding: 24px;
 	}
 
 	.content--narrow {
