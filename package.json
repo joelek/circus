@@ -24,7 +24,8 @@
 		"clean": "rm -rf ./build/ ./node_modules/",
 		"codegen": "npx autoguard --standalone=false",
 		"preversion": "npm run build && git add ./",
-		"postversion": "git push && git push --tags"
+		"postversion": "git push && git push --tags",
+		"run": "node ."
 	},
 	"version": "0.0.100"
 }
