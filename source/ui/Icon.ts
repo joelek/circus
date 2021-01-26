@@ -53,6 +53,21 @@ export class IconFactory {
 			);
 	}
 
+	makeDisc(): xnode.XElement {
+		return xnode.element("svg")
+			.set("width", "12px")
+			.set("height", "12px")
+			.set("viewBox", "0 0 24 24")
+			.add(xnode.element("path")
+				.set("d", "M12,24C5.383,24,0,18.617,0,12C0,5.383,5.383,0,12,0c6.617,0,12,5.383,12,12C24,18.617,18.617,24,12,24z M12,2C6.486,2,2,6.486,2,12c0,5.514,4.486,10,10,10c5.514,0,10-4.486,10-10C22,6.486,17.514,2,12,2z")
+			)
+			.add(xnode.element("circle")
+				.set("cx", "12")
+				.set("cy", "12")
+				.set("r", "2")
+			);
+	}
+
 	makeForward(): xnode.XElement {
 		return xnode.element("svg")
 			.set("width", "12px")
@@ -128,6 +143,19 @@ export class IconFactory {
 			)
 	}
 
+	makeMonitor(): xnode.XElement {
+		return xnode.element("svg")
+			.set("width", "12px")
+			.set("height", "12px")
+			.set("viewBox", "0 0 24 24")
+			.add(xnode.element("path")
+				.set("d", "M23,19H1c-0.552,0-1-0.447-1-1V2c0-0.552,0.448-1,1-1h22c0.553,0,1,0.448,1,1v16C24,18.553,23.553,19,23,19z M2,17h20V3H2V17z")
+			)
+			.add(xnode.element("path")
+				.set("d", "M17,23H7c-0.552,0-1-0.447-1-1s0.448-1,1-1h10c0.553,0,1,0.447,1,1S17.553,23,17,23z")
+			)
+	}
+
 	makeNext(): xnode.XElement {
 		return xnode.element("svg")
 			.set("width", "12px")
@@ -190,6 +218,24 @@ export class IconFactory {
 			.set("viewBox", "0 0 24 24")
 			.add(xnode.element("path")
 				.set("d", "M18.088,22.585c-0.159,0-0.319-0.038-0.466-0.115L12,19.514L6.377,22.47c-0.146,0.077-0.306,0.115-0.465,0.115c-0.207,0-0.414-0.064-0.588-0.191c-0.308-0.224-0.462-0.603-0.398-0.978L6,15.154L1.451,10.72c-0.272-0.266-0.371-0.663-0.253-1.024c0.118-0.362,0.431-0.626,0.807-0.681L8.292,8.1l2.812-5.696C11.271,2.063,11.619,1.847,12,1.847s0.729,0.216,0.896,0.558l2.812,5.696l6.287,0.914c0.377,0.055,0.689,0.318,0.808,0.681c0.117,0.361,0.02,0.759-0.253,1.024L18,15.154l1.073,6.262c0.064,0.375-0.09,0.754-0.397,0.978C18.501,22.521,18.295,22.585,18.088,22.585z")
+			);
+	}
+
+	makeSpeaker(): xnode.XElement {
+		return xnode.element("svg")
+			.set("width", "12px")
+			.set("height", "12px")
+			.set("viewBox", "0 0 24 24")
+			.add(xnode.element("path")
+				.set("d", "M20,24H4c-0.552,0-1-0.447-1-1V1c0-0.552,0.448-1,1-1h16c0.553,0,1,0.448,1,1v22C21,23.553,20.553,24,20,24z M5,22h14V2H5V22z")
+			)
+			.add(xnode.element("path")
+				.set("d", "M12,20c-2.757,0-5-2.243-5-5s2.243-5,5-5s5,2.243,5,5S14.757,20,12,20z M12,12c-1.654,0-3,1.346-3,3s1.346,3,3,3s3-1.346,3-3S13.654,12,12,12z")
+			)
+			.add(xnode.element("circle")
+				.set("cx", "12")
+				.set("cy", "6")
+				.set("r", "2")
 			);
 	}
 

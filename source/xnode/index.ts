@@ -107,7 +107,7 @@ export class XElement implements XNode<globalThis.Element> {
 	}
 
 	render(): globalThis.Element {
-		let ns = ["svg", "path"].indexOf(this.tag) >= 0 ? "http://www.w3.org/2000/svg" : "http://www.w3.org/1999/xhtml";
+		let ns = ["svg", "path", "circle"].indexOf(this.tag) >= 0 ? "http://www.w3.org/2000/svg" : "http://www.w3.org/1999/xhtml";
 		let element = document.createElementNS(ns, this.tag);
 		element.setAttribute = (() => {
 			let setAttribute = element.setAttribute.bind(element);
