@@ -818,10 +818,14 @@ style.innerText = `
 
 	}
 
+	.media-player__progress {
+		cursor: pointer;
+		padding: 8px 0px;
+	}
+
 	.media-player__progress-container {
 		background-color: rgb(31, 31, 31);
 		border-radius: 4px;
-		cursor: pointer;
 		height: 8px;
 		overflow: hidden;
 		position: relative;
@@ -1459,6 +1463,7 @@ let mpw = xml.element("div.app__navigation")
 
 
 
+let progress = xml.element("div.media-player__progress");
 let progresscontainer = xml.element("div.media-player__progress-container");
 let progresstrack = xml.element("div.media-player__progress-track");
 player.progress.addObserver(async (progress) => {
@@ -1510,12 +1515,14 @@ document.body.addEventListener("pointerup", async (event) => {
 document.body.addEventListener("pointerleave", async (event) => {
 	progressactive = false;
 });
-progresscontainer
+progress
 	.on("pointerdown", async (event) => {
 		progressactive = true;
 		await progressupdate(event.pageX);
 	})
-	.add(progresstrack);
+	.add(progresscontainer
+		.add(progresstrack)
+	);
 
 let mp = xml.element("div.content")
 	.set("style", "padding: 16px;")
@@ -1598,7 +1605,7 @@ let mp = xml.element("div.content")
 			)
 		)
 		.add(xml.element("div.media-player__bottom")
-			.add(progresscontainer)
+			.add(progress)
 		)
 	)
 	.render();
