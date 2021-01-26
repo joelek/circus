@@ -17,6 +17,25 @@ export class IconFactory {
 			);
 	}
 
+	makeCalendar(): xnode.XElement {
+		return xnode.element("svg")
+			.set("width", "12px")
+			.set("height", "12px")
+			.set("viewBox", "0 0 24 24")
+			.add(xnode.element("path")
+				.set("d", "M21,24H3c-1.654,0-3-1.346-3-3V6c0-1.654,1.346-3,3-3h18c1.654,0,3,1.346,3,3v15C24,22.654,22.654,24,21,24z M3,5C2.449,5,2,5.449,2,6v15c0,0.552,0.449,1,1,1h18c0.552,0,1-0.448,1-1V6c0-0.551-0.448-1-1-1H3z")
+			)
+			.add(xnode.element("path")
+				.set("d", "M6,8C5.448,8,5,7.552,5,7V1c0-0.552,0.448-1,1-1s1,0.448,1,1v6C7,7.552,6.552,8,6,8z")
+			)
+			.add(xnode.element("path")
+				.set("d", "M18,8c-0.553,0-1-0.448-1-1V1c0-0.552,0.447-1,1-1s1,0.448,1,1v6C19,7.552,18.553,8,18,8z")
+			)
+			.add(xnode.element("path")
+				.set("d", "M23,12H1c-0.552,0-1-0.447-1-1s0.448-1,1-1h22c0.553,0,1,0.447,1,1S23.553,12,23,12z")
+			);
+	}
+
 	makeChevron(): xnode.XElement {
 		return xnode.element("svg")
 			.set("width", "12px")
