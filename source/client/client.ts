@@ -1006,8 +1006,78 @@ style.innerText = `
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
+
+
+
+
+
+
+
+	.icon-link {
+		background-color: rgb(47, 47, 47);
+		border-radius: 2px;
+		cursor: pointer;
+		padding-bottom: 100%;
+		position: relative;
+	}
+
+	.icon-link__content {
+		height: 100%;
+		position: absolute;
+			top: 0%;
+			left: 0%;
+		width: 100%;
+		display: grid;
+		gap: 12px;
+		align-items: center;
+		justify-content: center;
+		justify-items: center;
+		align-content: center;
+	}
+
+	.icon-link__icon {
+		fill: rgb(159, 159, 159);
+		transition: fill 0.125s;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.icon-link:hover .icon-link__icon {
+			fill: rgb(255, 255, 255)
+		}
+	}
+
+	.icon-link__title {
+		color: rgb(159, 159, 159);
+		font-size: 16px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		transition: color 0.125s;
+		white-space: nowrap;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.icon-link:hover .icon-link__title {
+			color: rgb(255, 255, 255)
+		}
+	}
 `;
 document.head.appendChild(style);
+
+
+function makeIconLink(icon: xml.XElement, title: string, url: string): xml.XElement {
+	return xml.element("div.icon-link")
+		.add(xml.element("div.icon-link__content")
+			.add(icon
+				.set("class", "icon-link__icon")
+				.set("width", "24px")
+				.set("height", "24px")
+			)
+			.add(xml.element("div.icon-link__title")
+				.add(xml.text(title))
+			)
+		)
+		.on("click", () => navigate(url));
+}
 
 const makeButton = () => xml.element("div.icon-button");
 
@@ -2595,16 +2665,15 @@ let updateviewforuri = (uri: string): void => {
 	} else {
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
-				.add(renderTextHeader(xml.text("Home")))
+				.add(renderTextHeader(xml.text("Start")))
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));")
+					.add(makeIconLink(Icon.makeMonitor(), "Watch", "video/"))
+					.add(makeIconLink(Icon.makeSpeaker(), "Listen", "audio/"))
+				)
 			)
 			.add(xml.element("div.content")
 				.set("style", "display: grid; gap: 32px;")
-				.add(renderTextHeader(xml.text("Audio"))
-					.on("click", () => navigate("audio/"))
-				)
-				.add(renderTextHeader(xml.text("Video"))
-					.on("click", () => navigate("video/"))
-				)
 				.add(renderTextHeader(xml.text("Search"))
 					.on("click", () => navigate("search/"))
 				)
