@@ -2665,7 +2665,6 @@ let updateviewforuri = (uri: string): void => {
 	} else {
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
-				.add(renderTextHeader(xml.text("Start")))
 				.add(xml.element("div")
 					.set("style", "display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));")
 					.add(makeIconLink(Icon.makeMonitor(), "Watch", "video/"))
