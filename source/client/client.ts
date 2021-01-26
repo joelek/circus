@@ -2623,8 +2623,19 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
+		let headEntities = new ArrayObservable<Entity>([]);
+		let tailEntities = new ArrayObservable<Entity>([]);
+		entities.addObserver({
+			onappend(entity) {
+				if (headEntities.getState().length === 0) {
+					headEntities.append(entity);
+				} else {
+					tailEntities.append(entity);
+				}
+			}
+		});
 		mount.appendChild(xml.element("div.content")
-			.set("style", "display: grid; gap: 64px;")
+			.set("style", "display: grid; gap: 48px;")
 			.add(xml.element("div")
 				.set("style", "position: relative;")
 				.add(xml.element("input")
@@ -2643,8 +2654,14 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(xml.element("div")
+				.set("style", "display: grid; gap: 24px;")
+				.bind("data-hide", headEntities.compute(is.absent))
+				.repeat(headEntities, (entity) => EntityCard.forEntity(entity))
+			)
+			.add(xml.element("div")
 				.set("style", "display: grid; gap: 16px;")
-				.repeat(entities, (entity) => EntityRow.forEntity(entity))
+				.bind("data-hide", tailEntities.compute(is.absent))
+				.repeat(tailEntities, (entity) => EntityRow.forEntity(entity))
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render());
