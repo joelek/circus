@@ -5,7 +5,6 @@
 * Move playlist editing to context menu (fixes cache error).
 * Create back and forward buttons for navigation.
 * Add reload option for cached pages.
-* Make start view a combined search and nav view.
 * Create new database that supports incremental writes.
 * Create typed REST API.
 * Set document title based on page.
