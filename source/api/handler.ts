@@ -640,6 +640,7 @@ export function searchForYears(query: string, offset: number, length: number, us
 
 export function searchForEntities(query: string, user_id: string, offset: number, limit: number): schema.objects.Entity[] {
 	let results = [
+		...database.year_search.lookup(query).map((result) => ({ ...result, type_rank: 10 })),
 		...database.album_search.lookup(query).map((result) => ({ ...result, type_rank: 9 })),
 		...database.artist_search.lookup(query).map((result) => ({ ...result, type_rank: 6 })),
 		...database.episode_search.lookup(query).map((result) => ({ ...result, type_rank: 4 })),
@@ -676,6 +677,8 @@ export function searchForEntities(query: string, user_id: string, offset: number
 			return lookupTrack(entry.track_id, user_id);
 		} else if (records.User.is(entry)) {
 			return lookupUser(entry.user_id);
+		} else if (records.Year.is(entry)) {
+			return lookupYear(entry.year_id, user_id);
 		}
 		throw `Expected code to be unreachable!`;
 	});

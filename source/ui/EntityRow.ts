@@ -129,6 +129,9 @@ export class EntityRowFactory {
 		if (api.User.is(entity)) {
 			return this.forUser(entity);
 		}
+		if (api.Year.is(entity)) {
+			return this.forYear(entity);
+		}
 		throw `Expected code to be unreachable!`;
 	}
 
@@ -263,6 +266,16 @@ export class EntityRowFactory {
 		let subtitles = [
 			xnode.element("span").add(xnode.text(user.username))
 		];
+		return this.make(link, image, undefined, titles, subtitles);
+	}
+
+	forYear(year: api.Year): xnode.XElement {
+		let link = this.entityLinkFactory.forYear(year);
+		let image = this.ImageBox.forSquare();
+		let titles = [
+			this.entityTitleFactory.forYear(year)
+		];
+		let subtitles = [] as xnode.XElement[];
 		return this.make(link, image, undefined, titles, subtitles);
 	}
 

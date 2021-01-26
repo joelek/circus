@@ -140,6 +140,14 @@ export class EntityLinkFactory {
 		return this.make(`users/`);
 	}
 
+	forYear(year: api.YearBase): xnode.XElement {
+		return this.make(`years/${year.year_id}/`);
+	}
+
+	forYears(): xnode.XElement {
+		return this.make(`years/`);
+	}
+
 	forEntity(entity: api.EntityBase): xnode.XElement {
 		if (api.AlbumBase.is(entity)) {
 			return this.forAlbum(entity);
@@ -176,6 +184,9 @@ export class EntityLinkFactory {
 		}
 		if (api.UserBase.is(entity)) {
 			return this.forUser(entity);
+		}
+		if (api.YearBase.is(entity)) {
+			return this.forYear(entity);
 		}
 		throw `Expected code to be unreachable!`;
 	}

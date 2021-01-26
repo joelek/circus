@@ -177,7 +177,7 @@
 
 	},
 
-	EntityBase: AlbumBase | ArtistBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PersonBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase,
+	EntityBase: AlbumBase | ArtistBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PersonBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase,
 
-	Entity: Album | Artist | Disc | Episode | Genre | Movie | Person | Playlist | Season | Show | Track | User
+	Entity: Album | Artist | Disc | Episode | Genre | Movie | Person | Playlist | Season | Show | Track | User | Year
 }

@@ -450,7 +450,7 @@ export const Year = autoguard.Intersection.of(
 	autoguard.Object.of<{}>({})
 );
 
-export type EntityBase = AlbumBase | ArtistBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PersonBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase;
+export type EntityBase = AlbumBase | ArtistBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PersonBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase;
 
 export const EntityBase = autoguard.Union.of(
 	autoguard.Reference.of<AlbumBase>(() => AlbumBase),
@@ -464,10 +464,11 @@ export const EntityBase = autoguard.Union.of(
 	autoguard.Reference.of<SeasonBase>(() => SeasonBase),
 	autoguard.Reference.of<ShowBase>(() => ShowBase),
 	autoguard.Reference.of<TrackBase>(() => TrackBase),
-	autoguard.Reference.of<UserBase>(() => UserBase)
+	autoguard.Reference.of<UserBase>(() => UserBase),
+	autoguard.Reference.of<YearBase>(() => YearBase)
 );
 
-export type Entity = Album | Artist | Disc | Episode | Genre | Movie | Person | Playlist | Season | Show | Track | User;
+export type Entity = Album | Artist | Disc | Episode | Genre | Movie | Person | Playlist | Season | Show | Track | User | Year;
 
 export const Entity = autoguard.Union.of(
 	autoguard.Reference.of<Album>(() => Album),
@@ -481,7 +482,8 @@ export const Entity = autoguard.Union.of(
 	autoguard.Reference.of<Season>(() => Season),
 	autoguard.Reference.of<Show>(() => Show),
 	autoguard.Reference.of<Track>(() => Track),
-	autoguard.Reference.of<User>(() => User)
+	autoguard.Reference.of<User>(() => User),
+	autoguard.Reference.of<Year>(() => Year)
 );
 
 export type Autoguard = {

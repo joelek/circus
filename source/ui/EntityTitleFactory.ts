@@ -103,6 +103,10 @@ export class EntityTitleFactory {
 		return this.make(this.entityLinkFactory.forUser(user), user.name);
 	}
 
+	forYear(year: api.YearBase): xnode.XElement {
+		return this.make(this.entityLinkFactory.forYear(year), year.year.toString());
+	}
+
 	static makeStyle(): xnode.XElement {
 		return xnode.element("style")
 			.add(xnode.text(CSS));

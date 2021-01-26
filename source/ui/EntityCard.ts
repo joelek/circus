@@ -194,6 +194,9 @@ export class EntityCardFactory {
 		if (api.User.is(entity)) {
 			return this.forUser(entity, options);
 		}
+		if (api.Year.is(entity)) {
+			return this.forYear(entity, options);
+		}
 		throw `Expected code to be unreachable!`;
 	}
 
@@ -434,6 +437,19 @@ export class EntityCardFactory {
 		];
 		let tags = [
 			"User"
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		return this.make(link, image, titles, subtitles, tags, undefined, options);
+	}
+
+	forYear(year: api.Year, options: Options = {}): xnode.XElement {
+		let link = this.entityLinkFactory.forYear(year);
+		let image = this.ImageBox.forSquare();
+		let titles = [
+			this.entityTitleFactory.forYear(year)
+		];
+		let subtitles = [] as xnode.XElement[];
+		let tags = [
+			"Year"
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, titles, subtitles, tags, undefined, options);
 	}
