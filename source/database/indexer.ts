@@ -169,8 +169,8 @@ export const years = new indices.RecordIndex<schema.Year>((record) => record.yea
 export const getMoviesFromYear = indices.CollectionIndex.fromIndex(years, movies, (record) => record.year?.toString(), (record) => record.year?.toString());
 export const getAlbumsFromYear = indices.CollectionIndex.fromIndex(years, albums, (record) => record.year?.toString(), (record) => record.year?.toString());
 
-for (let movie of movies) {
-	let year = movie.year;
+movies.on("insert", (message) => {
+	let year = message.next.year;
 	if (is.present(year)) {
 		let year_id = makeId("year", year);
 		years.insert({
@@ -178,10 +178,10 @@ for (let movie of movies) {
 			year: year
 		});
 	}
-}
+});
 
-for (let album of albums) {
-	let year = album.year;
+albums.on("insert", (message) => {
+	let year = message.next.year;
 	if (is.present(year)) {
 		let year_id = makeId("year", year);
 		years.insert({
@@ -189,7 +189,7 @@ for (let album of albums) {
 			year: year
 		});
 	}
-}
+});
 
 {
 	let timer: NodeJS.Timeout | undefined;
