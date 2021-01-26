@@ -1036,14 +1036,8 @@ style.innerText = `
 	}
 
 	.icon-link__icon {
-		fill: rgb(159, 159, 159);
+		fill: rgb(255, 255, 255);
 		transition: fill 0.125s;
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.icon-link:hover .icon-link__icon {
-			fill: rgb(255, 255, 255)
-		}
 	}
 
 	.icon-link__title {
