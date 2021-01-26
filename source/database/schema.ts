@@ -494,6 +494,16 @@ export const PlaylistItem = autoguard.Object.of<PlaylistItem>({
 	"added_ms": autoguard.Number
 });
 
+export type Year = {
+	"year_id": string,
+	"year": number
+};
+
+export const Year = autoguard.Object.of<Year>({
+	"year_id": autoguard.String,
+	"year": autoguard.Number
+});
+
 export type Autoguard = {
 	"Directory": Directory,
 	"File": File,
@@ -531,7 +541,8 @@ export type Autoguard = {
 	"Token": Token,
 	"Stream": Stream,
 	"Playlist": Playlist,
-	"PlaylistItem": PlaylistItem
+	"PlaylistItem": PlaylistItem,
+	"Year": Year
 };
 
 export const Autoguard = {
@@ -571,5 +582,6 @@ export const Autoguard = {
 	"Token": Token,
 	"Stream": Stream,
 	"Playlist": Playlist,
-	"PlaylistItem": PlaylistItem
+	"PlaylistItem": PlaylistItem,
+	"Year": Year
 };

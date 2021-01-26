@@ -417,6 +417,21 @@ export function lookupUser(user_id: string): schema.objects.User {
 	};
 };
 
+export function lookupYearBase(year_id: string, user_id: string): schema.objects.YearBase {
+	let year = database.years.lookup(year_id);
+	return {
+		year_id: year.year_id,
+		year: year.year
+	};
+};
+
+export function lookupYear(year_id: string, user_id: string): schema.objects.Year {
+	let year = lookupYearBase(year_id, user_id);
+	return {
+		...year
+	};
+};
+
 export function searchForAlbums(query: string, offset: number, length: number, user_id: string): schema.objects.Album[] {
 	if (query === "") {
 		return Array.from(database.albums)
@@ -609,6 +624,20 @@ export function searchForUsers(query: string, offset: number, length: number, us
 	}
 };
 
+export function searchForYears(query: string, offset: number, length: number, user_id: string): schema.objects.Year[] {
+	if (query === "") {
+		return Array.from(database.years)
+			.sort(jsondb.LexicalSort.decreasing((record) => record.year.toString()))
+			.slice(offset, offset + length)
+			.map((record) => lookupYear(record.year_id, user_id));
+	} else {
+		return database.year_search.lookup(query)
+			.map((record) => record.record)
+			.slice(offset, offset + length)
+			.map((record) => lookupYear(record.year_id, user_id));
+	}
+};
+
 export function searchForEntities(query: string, user_id: string, offset: number, limit: number): schema.objects.Entity[] {
 	let results = [
 		...database.album_search.lookup(query).map((result) => ({ ...result, type_rank: 9 })),
@@ -769,4 +798,20 @@ export function getUserPlaylists(subject_user_id: string, user_id: string): sche
 	return database.getPlaylistsFromUser.lookup(subject_user_id)
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
 		.map((entry) => lookupPlaylist(entry.playlist_id, user_id));
+};
+
+export function getMoviesFromYear(year_id: string, user_id: string, offset: number, length: number): schema.objects.Movie[] {
+	return database.getMoviesFromYear.lookup(lookupYearBase(year_id, user_id).year.toString())
+		.map((entry) => database.movies.lookup(entry.movie_id))
+		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
+		.slice(offset, offset + length)
+		.map((entry) => lookupMovie(entry.movie_id, user_id));
+};
+
+export function getAlbumsFromYear(year_id: string, user_id: string, offset: number, length: number): schema.objects.Album[] {
+	return database.getAlbumsFromYear.lookup(lookupYearBase(year_id, user_id).year.toString())
+		.map((entry) => database.albums.lookup(entry.album_id))
+		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
+		.slice(offset, offset + length)
+		.map((entry) => lookupAlbum(entry.album_id, user_id));
 };

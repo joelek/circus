@@ -225,5 +225,10 @@
 		track_id: string,
 		number: number,
 		added_ms: number
+	},
+
+	Year: {
+		year_id: string,
+		year: number
 	}
 }

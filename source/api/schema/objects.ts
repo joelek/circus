@@ -433,6 +433,23 @@ export const Cue = autoguard.Intersection.of(
 	autoguard.Object.of<{}>({})
 );
 
+export type YearBase = {
+	"year_id": string,
+	"year": number
+};
+
+export const YearBase = autoguard.Object.of<YearBase>({
+	"year_id": autoguard.String,
+	"year": autoguard.Number
+});
+
+export type Year = YearBase & {};
+
+export const Year = autoguard.Intersection.of(
+	autoguard.Reference.of<YearBase>(() => YearBase),
+	autoguard.Object.of<{}>({})
+);
+
 export type EntityBase = AlbumBase | ArtistBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PersonBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase;
 
 export const EntityBase = autoguard.Union.of(
@@ -498,6 +515,8 @@ export type Autoguard = {
 	"Subtitle": Subtitle,
 	"CueBase": CueBase,
 	"Cue": Cue,
+	"YearBase": YearBase,
+	"Year": Year,
 	"EntityBase": EntityBase,
 	"Entity": Entity
 };
@@ -533,6 +552,8 @@ export const Autoguard = {
 	"Subtitle": Subtitle,
 	"CueBase": CueBase,
 	"Cue": Cue,
+	"YearBase": YearBase,
+	"Year": Year,
 	"EntityBase": EntityBase,
 	"Entity": Entity
 };

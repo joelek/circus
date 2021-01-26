@@ -168,6 +168,15 @@
 
 	},
 
+	YearBase: {
+		year_id: string,
+		year: number
+	},
+
+	Year: YearBase & {
+
+	},
+
 	EntityBase: AlbumBase | ArtistBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PersonBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase,
 
 	Entity: Album | Artist | Disc | Episode | Genre | Movie | Person | Playlist | Season | Show | Track | User

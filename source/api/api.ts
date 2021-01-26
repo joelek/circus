@@ -890,6 +890,52 @@ class PersonsRoute implements Route<{}, response.PersonsResponse> {
 	}
 }
 
+class YearRoute implements Route<{}, response.YearResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let user_id = getUserId(request);
+		let parts = /^[/]api[/]years[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let year_id = parts[1];
+		let year = handler.lookupYear(year_id, user_id);
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let movies = handler.getMoviesFromYear(year_id, user_id, offset, length);
+		let albums = handler.getAlbumsFromYear(year_id, user_id, offset, length);
+		let payload: response.YearResponse = {
+			year: year,
+			movies: movies,
+			albums: albums
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]years[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+	}
+}
+
+class YearsRoute implements Route<{}, response.YearsResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let user_id = getUserId(request);
+		let parts = /^[/]api[/]years[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let query = decodeURIComponent(parts[1]);
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let years = handler.searchForYears(query, offset, length, user_id);
+		let payload: response.YearsResponse = {
+			years
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]years[/]([^/?]*)/.test(request.url ?? "/");
+	}
+}
+
 let router = new Router()
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
@@ -925,6 +971,8 @@ let router = new Router()
 	.registerRoute(new GenreMoviesRoute())
 	.registerRoute(new GenreRoute())
 	.registerRoute(new GenresRoute())
+	.registerRoute(new YearRoute())
+	.registerRoute(new YearsRoute())
 	.registerRoute(new SearchRoute());
 
 let handleRequest = (request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {

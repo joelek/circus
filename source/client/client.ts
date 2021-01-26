@@ -2647,6 +2647,45 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render());
+	} else if ((parts = /^years[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+		let year_id = parts[1];
+		preq<{}, api_response.YearResponse>(`/api/years/${year_id}/?token=${token}`, {}).then((response) => {
+			let year = response.year;
+			let movies = response.movies;
+			let albums = response.albums;
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(renderTextHeader(xml.text(`${year.year}`)))
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 24px;")
+						.set("data-hide", `${movies.length === 0}`)
+						.add(renderTextHeader(xml.text("Movies")))
+						.add(carouselFactory.make(...movies.map((movie) => EntityCard.forMovie(movie))))
+					)
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 24px;")
+						.set("data-hide", `${albums.length === 0}`)
+						.add(renderTextHeader(xml.text("Albums")))
+						.add(Grid.make()
+							.add(...albums.map((album) => EntityCard.forAlbum(album)))
+						)
+					)
+				)
+			.render());
+		});
+	} else if ((parts = /^years[/]([^/]*)/.exec(uri)) !== null) {
+		let query = decodeURIComponent(parts[1]);
+		preq<{}, api_response.YearsResponse>(`/api/years/${encodeURIComponent(query)}?length=100&token=${token}`, {}).then((response) => {
+			let years = response.years;
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));")
+						.add(...years.map((year) => makeIconLink(Icon.makeCalendar(), `${year.year}`, `years/${year.year_id}/`)))
+					)
+				)
+			.render());
+		});
 	} else {
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
@@ -2655,6 +2694,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeIconLink(Icon.makeMonitor(), "Watch", "video/"))
 					.add(makeIconLink(Icon.makeSpeaker(), "Listen", "audio/"))
 					.add(makeIconLink(Icon.makeMagnifyingGlassLine(), "Search", "search/"))
+					.add(makeIconLink(Icon.makeCalendar(), "Years", "years/"))
 				)
 			)
 		.render());

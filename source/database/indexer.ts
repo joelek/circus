@@ -165,6 +165,31 @@ export const getPlaylistsFromUser = indices.CollectionIndex.fromIndex(users, pla
 export const playlist_items = loadIndex("playlist_items", schema.PlaylistItem, (record) => record.playlist_item_id);
 export const getPlaylistsItemsFromPlaylist = indices.CollectionIndex.fromIndex(playlists, playlist_items, (record) => record.playlist_id, (record) => record.playlist_id);
 export const getPlaylistItemsFromTrack = indices.CollectionIndex.fromIndex(tracks, playlist_items, (record) => record.track_id, (record) => record.track_id);
+export const years = new indices.RecordIndex<schema.Year>((record) => record.year_id);
+export const getMoviesFromYear = indices.CollectionIndex.fromIndex(years, movies, (record) => record.year?.toString(), (record) => record.year?.toString());
+export const getAlbumsFromYear = indices.CollectionIndex.fromIndex(years, albums, (record) => record.year?.toString(), (record) => record.year?.toString());
+
+for (let movie of movies) {
+	let year = movie.year;
+	if (is.present(year)) {
+		let year_id = makeId("year", year);
+		years.insert({
+			year_id: year_id,
+			year: year
+		});
+	}
+}
+
+for (let album of albums) {
+	let year = album.year;
+	if (is.present(year)) {
+		let year_id = makeId("year", year);
+		years.insert({
+			year_id: year_id,
+			year: year
+		});
+	}
+}
 
 {
 	let timer: NodeJS.Timeout | undefined;
@@ -257,6 +282,7 @@ export const playlist_search = indices.SearchIndex.fromIndex(playlists, (entry) 
 export const shows_search = indices.SearchIndex.fromIndex(shows, (entry) => [entry.name]);
 export const track_search = indices.SearchIndex.fromIndex(tracks, (entry) => [entry.title]);
 export const user_search = indices.SearchIndex.fromIndex(users, (entry) => [entry.name, entry.username]);
+export const year_search = indices.SearchIndex.fromIndex(years, (entry) => [entry.year.toString()]);
 
 export function getPath(entry: Directory | File): Array<string> {
 	let path = new Array<string>();

@@ -1,5 +1,15 @@
 import * as objects from "./schema/objects";
 
+type YearResponse = {
+	year: objects.Year,
+	movies: objects.Movie[],
+	albums: objects.Album[]
+};
+
+type YearsResponse = {
+	years: objects.Year[]
+};
+
 type AlbumResponse = {
 	album: objects.Album
 };
@@ -178,6 +188,8 @@ interface AuthResponse extends ApiResponse {
 }
 
 export {
+	YearResponse,
+	YearsResponse,
 	AlbumResponse,
 	AlbumsResponse,
 	ArtistResponse,
