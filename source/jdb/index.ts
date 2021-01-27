@@ -198,6 +198,7 @@ export class Table<A extends Record<string, any>> {
 	private guard: autoguard.serialization.MessageGuard<A>;
 	private key_provider: KeyProvider<A>;
 	private cache: Map<number, A>;
+	private cache_list: Set<number>;
 	private free_entries: Map<number, Set<number>>;
 
 	private getEntryFor(chunk_length: number, key_hash: number): number {
@@ -226,6 +227,8 @@ export class Table<A extends Record<string, any>> {
 	private getRecord(index: number): A {
 		let record = this.cache.get(index);
 		if (is.present(record)) {
+			this.cache_list.delete(index);
+			this.cache_list.add(index);
 			return record;
 		}
 		let entry = this.entries[index];
@@ -238,6 +241,13 @@ export class Table<A extends Record<string, any>> {
 		let json = JSON.parse(string);
 		record = this.guard.as(json);
 		this.cache.set(index, record);
+		this.cache_list.add(index);
+		if (this.cache_list.size > 1000) {
+			for (let idx of this.cache_list) {
+				this.cache_list.delete(idx);
+				break;
+			}
+		}
 		return record;
 	}
 
@@ -357,6 +367,7 @@ export class Table<A extends Record<string, any>> {
 		this.guard = guard;
 		this.key_provider = key_provider;
 		this.cache = new Map<number, A>();
+		this.cache_list = new Set<number>();
 		this.free_entries = free_entries;
 	}
 
@@ -432,6 +443,7 @@ export class Table<A extends Record<string, any>> {
 					let position = entry.chunk_offset * this.header.chunk_size;
 					writeBuffer(this.bin, buffer, position);
 					this.cache.delete(index);
+					this.cache_list.delete(index);
 					indices.delete(index);
 					entry.is_occupied = false;
 					entry.key_hash = 0;
