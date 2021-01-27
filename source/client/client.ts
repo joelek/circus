@@ -926,7 +926,7 @@ style.innerText = `
 	.app__content {
 		background-color: rgb(31, 31, 31);
 		overflow: hidden;
-		padding: 64px 0px 96px 0px;
+		padding: 64px 0px 112px 0px;
 		position: relative;
 		z-index: 0;
 	}

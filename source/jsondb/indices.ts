@@ -3,39 +3,45 @@ import * as is from "../is";
 import * as sorters from "./sorters";
 
 export class CollectionIndex<A extends Record<string, any>> {
-	private map: Map<string | undefined, Set<A>>;
-	private getKey: (record: A) => string | undefined;
+	private getPrimaryKeysFromIndexedValue: Map<string | undefined, Set<string | undefined>>;
+	private lookupRecord: (key: string | undefined) => A;
+	private getPrimaryKey: (record: A) => string | undefined;
+	private getIndexedValue: (record: A) => string | undefined;
 
-	constructor(getKey: (record: A) => string | undefined) {
-		this.map = new Map<string | undefined, Set<A>>();
-		this.getKey = getKey;
+	constructor(lookupRecord: (key: string | undefined) => A, getPrimaryKey: (record: A) => string | undefined, getIndexedValue: (record: A) => string | undefined) {
+		this.getPrimaryKeysFromIndexedValue = new Map<string | undefined, Set<string | undefined>>();
+		this.lookupRecord = lookupRecord;
+		this.getPrimaryKey = getPrimaryKey;
+		this.getIndexedValue = getIndexedValue;
 	}
 
 	insert(record: A): void {
-		let key = this.getKey(record);
-		let set = this.map.get(key);
-		if (is.absent(set)) {
-			set = new Set<A>();
-			this.map.set(key, set);
+		let indexedValue = this.getIndexedValue(record);
+		let primaryKeys = this.getPrimaryKeysFromIndexedValue.get(indexedValue);
+		if (is.absent(primaryKeys)) {
+			primaryKeys = new Set<string | undefined>();
+			this.getPrimaryKeysFromIndexedValue.set(indexedValue, primaryKeys);
 		}
-		set.add(record);
+		let primaryKey = this.getPrimaryKey(record);
+		primaryKeys.add(primaryKey);
 	}
 
 	lookup(key: string | undefined): Array<A> {
-		let set = this.map.get(key);
-		if (is.present(set)) {
-			return Array.from(set);
+		let primaryKeys = this.getPrimaryKeysFromIndexedValue.get(key);
+		if (is.present(primaryKeys)) {
+			return Array.from(primaryKeys).map(this.lookupRecord);
 		}
 		return new Array<A>();
 	}
 
 	remove(record: A): void {
-		let key = this.getKey(record);
-		let set = this.map.get(key);
-		if (is.present(set)) {
-			set.delete(record);
-			if (set.size === 0) {
-				this.map.delete(key);
+		let indexedValue = this.getIndexedValue(record);
+		let primaryKeys = this.getPrimaryKeysFromIndexedValue.get(indexedValue);
+		if (is.present(primaryKeys)) {
+			let primaryKey = this.getPrimaryKey(record);
+			primaryKeys.delete(primaryKey);
+			if (primaryKeys.size === 0) {
+				this.getPrimaryKeysFromIndexedValue.delete(indexedValue);
 			}
 		}
 	}
@@ -45,16 +51,8 @@ export class CollectionIndex<A extends Record<string, any>> {
 		this.insert(next);
 	}
 
-	static from<A>(records: Iterable<A>, getKey: (record: A) => string | undefined): CollectionIndex<A> {
-		let index = new CollectionIndex<A>(getKey);
-		for (let record of records) {
-			index.insert(record);
-		}
-		return index;
-	}
-
-	static fromIndex<A, B>(parent: RecordIndex<A>, child: RecordIndex<B>, getParentKey: (record: A) => string | undefined, getChildKey: (record: B) => string | undefined): CollectionIndex<B> {
-		let index = new CollectionIndex<B>(getChildKey);
+	static fromIndex<A, B>(parent: RecordIndex<A>, child: RecordIndex<B>, getIndexedValue: (record: B) => string | undefined): CollectionIndex<B> {
+		let index = new CollectionIndex<B>((key) => child.lookup(key), (record) => child.keyof(record), getIndexedValue);
 		child.on("insert", (event) => {
 			index.insert(event.next);
 		});
@@ -65,7 +63,7 @@ export class CollectionIndex<A extends Record<string, any>> {
 			index.update(event.last, event.next);
 		});
 		parent.on("remove", (event) => {
-			let key = getParentKey(event.last);
+			let key = parent.keyof(event.last);
 			for (let record of index.lookup(key)) {
 				child.remove(record);
 			}
@@ -89,13 +87,13 @@ type RecordIndexEventMap<A> = {
 };
 
 export class RecordIndex<A extends Record<string, any>> {
-	private map: Map<string | undefined, A>;
+	private getRecordFromKey: Map<string | undefined, A>;
 	private getKey: (record: A) => string | undefined;
 	private router: stdlib.routing.MessageRouter<RecordIndexEventMap<A>>;
 
 	private insertOrUpdate(next: A, action: "combine" | "replace" = "replace"): void {
 		let key = this.getKey(next);
-		let last = this.map.get(key);
+		let last = this.getRecordFromKey.get(key);
 		if (is.present(last)) {
 			if (action === "combine") {
 				for (let key in last) {
@@ -106,36 +104,40 @@ export class RecordIndex<A extends Record<string, any>> {
 					}
 				}
 			}
-			this.map.set(key, next);
+			this.getRecordFromKey.set(key, next);
 			this.router.route("update", { last, next });
 			this.router.route("*", {});
 		} else {
-			this.map.set(key, next);
+			this.getRecordFromKey.set(key, next);
 			this.router.route("insert", { next });
 			this.router.route("*", {});
 		}
 	}
 
 	constructor(getKey: (record: A) => string | undefined) {
-		this.map = new Map<string | undefined, A>();
+		this.getRecordFromKey = new Map<string | undefined, A>();
 		this.getKey = getKey;
 		this.router = new stdlib.routing.MessageRouter<RecordIndexEventMap<A>>();
 	}
 
 	[Symbol.iterator](): Iterator<A> {
-		return this.map.values();
+		return this.getRecordFromKey.values();
 	}
 
 	insert(record: A, action: "combine" | "replace" = "replace"): void {
 		this.insertOrUpdate(record, action);
 	}
 
+	keyof(record: A): string | undefined {
+		return this.getKey(record);
+	}
+
 	length(): number {
-		return this.map.size;
+		return this.getRecordFromKey.size;
 	}
 
 	lookup(key: string | undefined): A {
-		let record = this.map.get(key);
+		let record = this.getRecordFromKey.get(key);
 		if (is.absent(record)) {
 			throw `Expected "${key}" to match a record!`;
 		}
@@ -145,7 +147,7 @@ export class RecordIndex<A extends Record<string, any>> {
 	on<B extends keyof RecordIndexEventMap<A>>(type: B, listener: stdlib.routing.MessageObserver<RecordIndexEventMap<A>[B]>): void {
 		this.router.addObserver(type, listener);
 		if (type === "insert") {
-			for (let record of this.map.values()) {
+			for (let record of this.getRecordFromKey.values()) {
 				(listener as stdlib.routing.MessageObserver<RecordIndexEventMap<A>["insert"]>)({ next: record });
 			}
 		}
@@ -157,8 +159,8 @@ export class RecordIndex<A extends Record<string, any>> {
 
 	remove(record: A): void {
 		let key = this.getKey(record);
-		if (this.map.has(key)) {
-			this.map.delete(key);
+		if (this.getRecordFromKey.has(key)) {
+			this.getRecordFromKey.delete(key);
 			this.router.route("remove", { last: record });
 			this.router.route("*", {});
 		}
@@ -192,58 +194,64 @@ export function getTokens(query: string): Array<string> {
 };
 
 export class SearchIndex<A extends Record<string, any>> {
-	private map: Map<string, Set<A>>;
-	private getFields: (record: A) => Array<string>;
+	private getPrimaryKeysFromToken: Map<string | undefined, Set<string | undefined>>;
+	private lookupRecord: (key: string | undefined) => A;
+	private getPrimaryKey: (record: A) => string | undefined;
+	private getIndexedValues: (record: A) => Array<string>;
 
-	constructor(getFields: (record: A) => Array<string>) {
-		this.map = new Map<string, Set<A>>();
-		this.getFields = getFields;
+	constructor(lookupRecord: (key: string | undefined) => A, getPrimaryKey: (record: A) => string | undefined, getIndexedValues: (record: A) => Array<string>) {
+		this.getPrimaryKeysFromToken = new Map<string, Set<string | undefined>>();
+		this.lookupRecord = lookupRecord;
+		this.getPrimaryKey = getPrimaryKey;
+		this.getIndexedValues = getIndexedValues;
 	}
 
 	insert(record: A): void {
-		for (let value of this.getFields(record)) {
+		for (let value of this.getIndexedValues(record)) {
 			let tokens = getTokens(value);
 			for (let token of tokens) {
-				let set = this.map.get(token);
-				if (is.absent(set)) {
-					set = new Set<A>();
-					this.map.set(token, set);
+				let primaryKeys = this.getPrimaryKeysFromToken.get(token);
+				if (is.absent(primaryKeys)) {
+					primaryKeys = new Set<string | undefined>();
+					this.getPrimaryKeysFromToken.set(token, primaryKeys);
 				}
-				set.add(record);
+				let primaryKey = this.getPrimaryKey(record);
+				primaryKeys.add(primaryKey);
 			}
 		}
 	}
 
 	lookup(query: string): Array<SearchResult<A>> {
 		let tokens = getTokens(query);
-		let sets = tokens.map((token) => {
-			return this.map.get(token);
+		let primaryKeySets = tokens.map((token) => {
+			return this.getPrimaryKeysFromToken.get(token);
 		}).filter(is.present);
-		let map = new Map<A, number>();
-		for (let set of sets) {
-			for (let id of set) {
-				let rank = map.get(id) ?? (0 - tokens.length);
-				map.set(id, rank + 2);
+		let map = new Map<string | undefined, number>();
+		for (let primaryKeys of primaryKeySets) {
+			for (let primaryKey of primaryKeys) {
+				let rank = map.get(primaryKey) ?? (0 - tokens.length);
+				map.set(primaryKey, rank + 2);
 			}
 		}
 		return Array.from(map.entries())
 			.filter((entry) => entry[1] >= 0)
 			.sort(sorters.NumericSort.increasing((entry) => entry[1]))
 			.map((entry) => ({
-				record: entry[0],
+				record: this.lookupRecord(entry[0]),
 				rank: entry[1]
 			}));
 	}
 
 	remove(record: A): void {
-		for (let value of this.getFields(record)) {
+		for (let value of this.getIndexedValues(record)) {
 			let tokens = getTokens(value);
 			for (let token of tokens) {
-				let set = this.map.get(token);
-				if (is.present(set)) {
-					set.delete(record);
-					if (set.size === 0) {
-						this.map.delete(token);
+				let primaryKeys = this.getPrimaryKeysFromToken.get(token);
+				if (is.present(primaryKeys)) {
+					let primaryKey = this.getPrimaryKey(record);
+					primaryKeys.delete(primaryKey);
+					if (primaryKeys.size === 0) {
+						this.getPrimaryKeysFromToken.delete(token);
 					}
 				}
 			}
@@ -255,16 +263,8 @@ export class SearchIndex<A extends Record<string, any>> {
 		this.insert(next);
 	}
 
-	static from<A>(records: Iterable<A>, getFields: (record: A) => Array<string>): SearchIndex<A> {
-		let searchIndex = new SearchIndex<A>(getFields);
-		for (let record of records) {
-			searchIndex.insert(record);
-		}
-		return searchIndex;
-	}
-
-	static fromIndex<A>(records: RecordIndex<A>, getFields: (record: A) => Array<string>): SearchIndex<A> {
-		let index = new SearchIndex<A>(getFields);
+	static fromIndex<A>(records: RecordIndex<A>, getIndexedValues: (record: A) => Array<string>): SearchIndex<A> {
+		let index = new SearchIndex<A>((key) => records.lookup(key), (record) => records.keyof(record), getIndexedValues);
 		records.on("insert", (event) => {
 			index.insert(event.next);
 		});
