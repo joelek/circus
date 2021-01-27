@@ -3,9 +3,11 @@ import * as libfs from "fs";
 import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
-import { threadId } from "worker_threads";
 
-function computeKeyHash(key: string): number {
+function computeKeyHash(key: string | undefined): number {
+	if (is.absent(key)) {
+		return 0;
+	}
 	let buffer = libcrypto.createHash("sha256")
 		.update(key)
 		.digest();
@@ -52,6 +54,7 @@ function mapIterator<A, B>(iterator: Iterator<A>, transform: (value: A) => B): I
 		return transform(value);
 	});
 }
+
 function readBuffer(fd: number, buffer: Buffer, position?: number): Buffer {
 	let bytes = libfs.readSync(fd, buffer, 0, buffer.length, position ?? null);
 	if (bytes !== buffer.length) {
@@ -68,6 +71,7 @@ function writeBuffer(fd: number, buffer: Buffer, position?: number): Buffer {
 	return buffer;
 }
 
+// TODO: Add more zero padding to all types to support larger indices and tables in the future.
 export class RecordIndexHeader {
 	private buffer: Buffer;
 
@@ -101,7 +105,7 @@ export class RecordIndexHeader {
 
 	constructor() {
 		let buffer = Buffer.alloc(16);
-		buffer.write("\x23\x52\xdb\x07\xec\x77\x30\x61", 0, "binary");
+		buffer.write("\x23\x52\xDB\x07\xEC\x77\x30\x61", 0, "binary");
 		buffer.writeUInt8(1, 8);
 		buffer.writeUInt8(0, 9);
 		buffer.writeUInt16BE(256, 10);
@@ -194,9 +198,9 @@ type RecordIndexEventMap<A> = {
 	}
 };
 
-type KeyProvider<A> = (record: A) => string;
+type KeyProvider<A> = (record: A) => string | undefined;
 
-export class Table<A extends Record<string, undefined | null | string | number | boolean>> {
+export class Table<A extends Record<string, any>> {
 	private toc: number;
 	private bin: number;
 	private header: RecordIndexHeader;
@@ -298,6 +302,7 @@ export class Table<A extends Record<string, undefined | null | string | number |
 		this.router.route("insert", {
 			next: next
 		});
+		this.entries.push(entry);
 	}
 
 	constructor(root: Array<string>, table_name: string, guard: autoguard.serialization.MessageGuard<A>, key_provider: KeyProvider<A>) {
@@ -369,7 +374,15 @@ export class Table<A extends Record<string, undefined | null | string | number |
 		this.insertOrUpdate(record);
 	}
 
-	lookup(key: string): A {
+	keyof(record: A): string | undefined {
+		return this.key_provider(record);
+	}
+
+	length(): number {
+		return this.entries.length;
+	}
+
+	lookup(key: string | undefined): A {
 		let key_hash = computeKeyHash(key);
 		let indices = this.key_hash_indices.get(key_hash);
 		if (is.present(indices)) {
@@ -396,7 +409,8 @@ export class Table<A extends Record<string, undefined | null | string | number |
 		this.router.addObserver(type, listener);
 	}
 
-	remove(key: string): void {
+	remove(record: A): void {
+		let key = this.key_provider(record);
 		let key_hash = computeKeyHash(key);
 		let indices = this.key_hash_indices.get(key_hash);
 		if (is.present(indices)) {
@@ -422,14 +436,7 @@ export class Table<A extends Record<string, undefined | null | string | number |
 	update(record: A): void {
 		this.insertOrUpdate(record);
 	}
-
-	index<B extends Record<string, any>>(child: Table<B>, child_key_provider: KeyProvider<B>): Index<A> {
-
-	}
 };
-
-
-
 
 
 
@@ -596,43 +603,6 @@ class Index<A> {
 
 	update(last: A, next: A): void {
 		this.remove(last);
-		this.insert(next);
+		//this.insert(next);
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-type Person = {
-	person_id: string,
-	name: string,
-	parent_person_id?: string
-};
-
-let Person = autoguard.guards.Object.of<Person>({
-	person_id: autoguard.guards.String,
-	name: autoguard.guards.String,
-	parent_person_id: autoguard.guards.Union.of(
-		autoguard.guards.String,
-		autoguard.guards.Undefined
-	)
-});
-
-let persons = new Table<Person>([".", "private", "tables2"], "persons", Person, (record) => record.person_id);
-
-persons.on("insert", (message) => {
-	console.log("insert", message);
-});
-persons.on("update", (message) => {
-	console.log("update", message);
-});
-persons.on("remove", (message) => {
-	console.log("remove", message);
-});

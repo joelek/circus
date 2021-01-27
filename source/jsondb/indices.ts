@@ -1,6 +1,7 @@
 import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
 import * as sorters from "./sorters";
+import * as jdb from "../jdb";
 
 export class CollectionIndex<A extends Record<string, any>> {
 	private getPrimaryKeysFromIndexedValue: Map<string | undefined, Set<string | undefined>>;
@@ -52,6 +53,26 @@ export class CollectionIndex<A extends Record<string, any>> {
 	}
 
 	static fromIndex<A, B>(parent: RecordIndex<A>, child: RecordIndex<B>, getIndexedValue: (record: B) => string | undefined): CollectionIndex<B> {
+		let index = new CollectionIndex<B>((key) => child.lookup(key), (record) => child.keyof(record), getIndexedValue);
+		child.on("insert", (event) => {
+			index.insert(event.next);
+		});
+		child.on("remove", (event) => {
+			index.remove(event.last);
+		});
+		child.on("update", (event) => {
+			index.update(event.last, event.next);
+		});
+		parent.on("remove", (event) => {
+			let key = parent.keyof(event.last);
+			for (let record of index.lookup(key)) {
+				child.remove(record);
+			}
+		});
+		return index;
+	}
+
+	static fromTable<A, B>(parent: jdb.Table<A>, child: jdb.Table<B>, getIndexedValue: (record: B) => string | undefined): CollectionIndex<B> {
 		let index = new CollectionIndex<B>((key) => child.lookup(key), (record) => child.keyof(record), getIndexedValue);
 		child.on("insert", (event) => {
 			index.insert(event.next);
@@ -264,6 +285,20 @@ export class SearchIndex<A extends Record<string, any>> {
 	}
 
 	static fromIndex<A>(records: RecordIndex<A>, getIndexedValues: (record: A) => Array<string>): SearchIndex<A> {
+		let index = new SearchIndex<A>((key) => records.lookup(key), (record) => records.keyof(record), getIndexedValues);
+		records.on("insert", (event) => {
+			index.insert(event.next);
+		});
+		records.on("remove", (event) => {
+			index.remove(event.last);
+		});
+		records.on("update", (event) => {
+			index.update(event.last, event.next);
+		});
+		return index;
+	}
+
+	static fromTable<A>(records: jdb.Table<A>, getIndexedValues: (record: A) => Array<string>): SearchIndex<A> {
 		let index = new SearchIndex<A>((key) => records.lookup(key), (record) => records.keyof(record), getIndexedValues);
 		records.on("insert", (event) => {
 			index.insert(event.next);

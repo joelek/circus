@@ -235,7 +235,7 @@ export class PlaylistsServer {
 				for (let playlist_item of playlist_items) {
 					if (playlist_item.number > number) {
 						playlist_item.number -= 1;
-						database.playlist_items.update(playlist_item, "combine");
+						database.playlist_items.update(playlist_item);
 					}
 				}
 				let session = this.getOrCreateSession(user_id);
@@ -274,20 +274,20 @@ export class PlaylistsServer {
 					for (let i = old_index + 1; i < new_index; i++) {
 						let playlist_item = playlist_items[i];
 						playlist_item.number -= 1;
-						database.playlist_items.update(playlist_item, "combine")
+						database.playlist_items.update(playlist_item)
 					}
 				} else if (new_index < old_index) {
 					for (let i = new_index; i < old_index; i++) {
 						let playlist_item = playlist_items[i];
 						playlist_item.number += 1;
-						database.playlist_items.update(playlist_item, "combine")
+						database.playlist_items.update(playlist_item)
 					}
 				}
 				playlist_item.number = number;
 				database.playlist_items.update({
 					...playlist_item,
 					...message.data.playlist_item
-				}, "combine");
+				});
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("UpdatePlaylistItem", Array.from(session.connections), {
 					playlist_item: api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
