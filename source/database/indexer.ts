@@ -305,6 +305,13 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 			year: metadata.year,
 			summary: metadata.summary
 		});
+		if (is.present(metadata.year)) {
+			let year_id = makeId("year", metadata.year);
+			years.insert({
+				year_id: year_id,
+				year: metadata.year
+			});
+		}
 		for (let file_id of file_ids) {
 			movie_files.insert({
 				movie_id: movie_id,
@@ -342,6 +349,13 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 			title: metadata.album.title,
 			year: metadata.album.year
 		});
+		if (is.present(metadata.album.year)) {
+			let year_id = makeId("year", metadata.album.year);
+			years.insert({
+				year_id: year_id,
+				year: metadata.album.year
+			});
+		}
 		for (let [index, artist] of metadata.album.artists.entries()) {
 			let artist_id = makeId("artist", artist.title);
 			artists.insert({

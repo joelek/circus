@@ -4,6 +4,8 @@ import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
 
+// Updates are not reflected in cache.
+
 function computeKeyHash(key: string | undefined): number {
 	if (is.absent(key)) {
 		return 0;
