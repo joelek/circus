@@ -198,7 +198,30 @@ export class Table<A extends Record<string, any>> {
 	private guard: autoguard.serialization.MessageGuard<A>;
 	private key_provider: KeyProvider<A>;
 	private cache: Map<number, A>;
-	private free_chunk_index: number;
+	private free_entries: Map<number, Set<number>>;
+
+	private getEntryFor(chunk_length: number, key_hash: number): number {
+		let free_entry_set = this.free_entries.get(chunk_length);
+		if (is.present(free_entry_set)) {
+			for (let entry_index of free_entry_set) {
+				let entry = this.entries[entry_index];
+				entry.is_occupied = true;
+				entry.key_hash = key_hash;
+				entry.write(this.toc, 16 + entry_index * 16);
+				free_entry_set.delete(entry_index);
+				return entry_index;
+			}
+		}
+		let entry_index = this.entries.length;
+		let entry = new RecordIndexEntry();
+		entry.chunk_offset = Math.ceil(libfs.fstatSync(this.bin).size / this.header.chunk_size);
+		entry.chunk_length = chunk_length;
+		entry.is_occupied = true;
+		entry.key_hash = key_hash;
+		entry.write(this.toc, 16 + entry_index * 16);
+		this.entries.push(entry);
+		return entry_index;
+	}
 
 	private getRecord(index: number): A {
 		let record = this.cache.get(index);
@@ -246,21 +269,20 @@ export class Table<A extends Record<string, any>> {
 						entry.is_occupied = false;
 						entry.key_hash = 0;
 						entry.write(this.toc, 16 + index * 16);
+						let free_entry_set = this.free_entries.get(entry.chunk_length);
+						if (is.absent(free_entry_set)) {
+							free_entry_set = new Set<number>();
+							this.free_entries.set(entry.chunk_length, free_entry_set);
+						}
+						free_entry_set.add(index);
 					}
 					{
-						let chunk_offset = this.free_chunk_index;
-						let entry = new RecordIndexEntry();
-						entry.chunk_offset = chunk_offset;
-						entry.chunk_length = chunks;
-						entry.is_occupied = true;
-						entry.key_hash = key_hash;
-						entry.write(this.toc, 16 + chunk_offset * 16);
+						let entry_index = this.getEntryFor(chunks, key_hash);
+						let entry = this.entries[entry_index];
 						let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
 						buffer.set(serialized, 0);
-						let position = entry.chunk_offset * this.header.chunk_size;
-						writeBuffer(this.bin, buffer, position);
-						this.free_chunk_index += chunks;
-						indices.add(chunk_offset);
+						writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
+						indices.add(entry_index);
 					}
 				}
 				this.cache.set(index, next);
@@ -271,20 +293,12 @@ export class Table<A extends Record<string, any>> {
 				return;
 			}
 		}
-		let chunk_offset = this.free_chunk_index;
-		let entry = new RecordIndexEntry();
-		entry.chunk_offset = chunk_offset;
-		entry.chunk_length = chunks;
-		entry.is_occupied = true;
-		entry.key_hash = key_hash;
-		entry.write(this.toc, 16 + chunk_offset * 16);
+		let entry_index = this.getEntryFor(chunks, key_hash);
+		let entry = this.entries[entry_index];
 		let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
 		buffer.set(serialized, 0);
-		let position = entry.chunk_offset * this.header.chunk_size;
-		writeBuffer(this.bin, buffer, position);
-		this.free_chunk_index += chunks;
-		indices.add(chunk_offset);
-		this.entries.push(entry);
+		writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
+		indices.add(entry_index);
 		this.router.route("insert", {
 			next: next
 		});
@@ -303,8 +317,8 @@ export class Table<A extends Record<string, any>> {
 		let bin = libfs.openSync(bin_filename.join("/"), bin_exists ? "r+" : "w+");
 		let entries = new Array<RecordIndexEntry>();
 		let key_hash_indices = new Map<number, Set<number>>();
-		let free_chunk_index = 0;
 		let header = new RecordIndexHeader();
+		let free_entries = new Map<number, Set<number>>();
 		if (toc_exists) {
 			header.read(toc, 0);
 			let entry_count = libfs.fstatSync(toc).size / 16 - 1;
@@ -314,13 +328,21 @@ export class Table<A extends Record<string, any>> {
 			for (let index = 0; index < entry_count; index++) {
 				let entry = new RecordIndexEntry();
 				entry.read(toc, 16 + index * 16);
-				free_chunk_index = Math.max(entry.chunk_offset + entry.chunk_length, free_chunk_index);
-				let indices = key_hash_indices.get(entry.key_hash);
-				if (is.absent(indices)) {
-					indices = new Set<number>();
-					key_hash_indices.set(entry.key_hash, indices);
+				if (entry.is_occupied) {
+					let indices = key_hash_indices.get(entry.key_hash);
+					if (is.absent(indices)) {
+						indices = new Set<number>();
+						key_hash_indices.set(entry.key_hash, indices);
+					}
+					indices.add(index);
+				} else {
+					let free_entry_set = free_entries.get(entry.chunk_length);
+					if (is.absent(free_entry_set)) {
+						free_entry_set = new Set<number>();
+						free_entries.set(entry.chunk_length, free_entry_set);
+					}
+					free_entry_set.add(index);
 				}
-				indices.add(index);
 				entries.push(entry);
 			}
 		} else {
@@ -335,7 +357,7 @@ export class Table<A extends Record<string, any>> {
 		this.guard = guard;
 		this.key_provider = key_provider;
 		this.cache = new Map<number, A>();
-		this.free_chunk_index = free_chunk_index;
+		this.free_entries = free_entries;
 	}
 
 	destroy(): void {
@@ -414,10 +436,16 @@ export class Table<A extends Record<string, any>> {
 					entry.is_occupied = false;
 					entry.key_hash = 0;
 					entry.write(this.toc, 16 + index * 16);
+					let free_entry_set = this.free_entries.get(entry.chunk_length);
+					if (is.absent(free_entry_set)) {
+						free_entry_set = new Set<number>();
+						this.free_entries.set(entry.chunk_length, free_entry_set);
+					}
+					free_entry_set.add(index);
 					this.router.route("remove", {
 						last: last
 					});
-					return;
+					break;
 				}
 			}
 		}
