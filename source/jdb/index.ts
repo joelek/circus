@@ -71,7 +71,6 @@ function writeBuffer(fd: number, buffer: Buffer, position?: number): Buffer {
 	return buffer;
 }
 
-// TODO: Add more zero padding to all types to support larger indices and tables in the future.
 export class RecordIndexHeader {
 	private buffer: Buffer;
 
@@ -79,37 +78,26 @@ export class RecordIndexHeader {
 		return this.buffer.slice(0, 8).toString("binary");
 	}
 
-	get major(): number {
-		return this.buffer.readUInt8(8);
+	get chunk_size_minus_one(): number {
+		return this.buffer.readUInt32BE(8);
 	}
 
-	get minor(): number {
-		return this.buffer.readUInt8(9);
+	set chunk_size_minus_one(value: number) {
+		this.buffer.writeUInt32BE(value, 8);
 	}
 
 	get chunk_size(): number {
-		return this.buffer.readUInt16BE(10);
+		return this.chunk_size_minus_one + 1;
 	}
 
 	set chunk_size(value: number) {
-		this.buffer.writeUInt16BE(value, 10);
-	}
-
-	get entries(): number {
-		return this.buffer.readUInt32BE(12);
-	}
-
-	set entries(value: number) {
-		this.buffer.writeUInt32BE(value, 12);
+		this.chunk_size_minus_one = value - 1;
 	}
 
 	constructor() {
 		let buffer = Buffer.alloc(16);
 		buffer.write("\x23\x52\xDB\x07\xEC\x77\x30\x61", 0, "binary");
-		buffer.writeUInt8(1, 8);
-		buffer.writeUInt8(0, 9);
-		buffer.writeUInt16BE(256, 10);
-		buffer.writeUInt32BE(0, 12);
+		buffer.writeUInt32BE(255, 8);
 		this.buffer = buffer;
 	}
 
@@ -117,10 +105,6 @@ export class RecordIndexHeader {
 		let buffer = readBuffer(fd, Buffer.alloc(16), position);
 		let identifier = buffer.slice(0, 8).toString("binary");
 		if (identifier !== this.identifier) {
-			throw `Unsupported file format!`;
-		}
-		let major = buffer.readUInt8(8);
-		if (major !== this.major) {
 			throw `Unsupported file format!`;
 		}
 		this.buffer = buffer;
@@ -142,24 +126,28 @@ export class RecordIndexEntry {
 		this.buffer.writeUInt32BE(value, 0);
 	}
 
-	get bytes_used(): number {
+	get chunk_length_minus_one(): number {
 		return this.buffer.readUInt32BE(4);
 	}
 
-	set bytes_used(value: number) {
+	set chunk_length_minus_one(value: number) {
 		this.buffer.writeUInt32BE(value, 4);
 	}
 
-	get bytes_free(): number {
-		return this.buffer.readUInt32BE(8);
+	get chunk_length(): number {
+		return this.chunk_length_minus_one + 1;
 	}
 
-	set bytes_free(value: number) {
-		this.buffer.writeUInt32BE(value, 8);
+	set chunk_length(value: number) {
+		this.chunk_length_minus_one = value - 1;
 	}
 
-	get bytes_size(): number {
-		return this.bytes_used + this.bytes_free;
+	get is_occupied(): boolean {
+		return this.buffer.readUInt32BE(8) === 1;
+	}
+
+	set is_occupied(value: boolean) {
+		this.buffer.writeUInt32BE(value ? 1 : 0, 8);
 	}
 
 	get key_hash(): number {
@@ -218,12 +206,12 @@ export class Table<A extends Record<string, any>> {
 			return record;
 		}
 		let entry = this.entries[index];
-		if (entry.bytes_used === 0) {
+		if (!entry.is_occupied) {
 			throw `Expected ${index} to match a record!`;
 		}
 		let position = entry.chunk_offset * this.header.chunk_size;
-		let buffer = readBuffer(this.bin, Buffer.alloc(entry.bytes_used), position);
-		let string = buffer.toString();
+		let buffer = readBuffer(this.bin, Buffer.alloc(entry.chunk_length * this.header.chunk_size), position);
+		let string = buffer.toString().replace(/[\0]+$/, "");
 		let json = JSON.parse(string);
 		record = this.guard.as(json);
 		this.cache.set(index, record);
@@ -232,9 +220,7 @@ export class Table<A extends Record<string, any>> {
 
 	private insertOrUpdate(next: A): void {
 		let serialized = Buffer.from(JSON.stringify(next));
-		let chunks = Math.ceil(serialized.length / this.header.chunk_size);
-		let buffer = Buffer.alloc(chunks * this.header.chunk_size);
-		buffer.set(serialized, 0);
+		let chunks = Math.max(1, Math.ceil(serialized.length / this.header.chunk_size));
 		let key = this.key_provider(next);
 		let key_hash = computeKeyHash(key);
 		let indices = this.key_hash_indices.get(key_hash);
@@ -246,37 +232,35 @@ export class Table<A extends Record<string, any>> {
 			let last = this.getRecord(index);
 			if (this.key_provider(last) === key) {
 				let entry = this.entries[index];
-				if (serialized.length <= entry.bytes_size) {
-					entry.bytes_free = buffer.length - serialized.length;
-					entry.bytes_used = serialized.length;
-					entry.write(this.toc, 16 + index * 16);
+				if (chunks <= entry.chunk_length) {
+					let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
+					buffer.set(serialized, 0);
 					let position = entry.chunk_offset * this.header.chunk_size;
 					writeBuffer(this.bin, buffer, position);
 				} else {
 					{
-						let buffer = Buffer.alloc(entry.bytes_size);
+						let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
 						let position = entry.chunk_offset * this.header.chunk_size;
 						writeBuffer(this.bin, buffer, position);
 						indices.delete(index);
-						entry.bytes_free += entry.bytes_used;
-						entry.bytes_used = 0;
+						entry.is_occupied = false;
 						entry.key_hash = 0;
 						entry.write(this.toc, 16 + index * 16);
 					}
 					{
-						let index = this.free_chunk_index;
+						let chunk_offset = this.free_chunk_index;
 						let entry = new RecordIndexEntry();
-						entry.bytes_used = serialized.length;
-						entry.bytes_free = buffer.length - serialized.length;
-						entry.chunk_offset = index;
+						entry.chunk_offset = chunk_offset;
+						entry.chunk_length = chunks;
+						entry.is_occupied = true;
 						entry.key_hash = key_hash;
-						entry.write(this.toc, 16 + index * 16);
+						entry.write(this.toc, 16 + chunk_offset * 16);
+						let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
+						buffer.set(serialized, 0);
 						let position = entry.chunk_offset * this.header.chunk_size;
 						writeBuffer(this.bin, buffer, position);
 						this.free_chunk_index += chunks;
-						indices.add(index);
-						this.header.entries += 1;
-						this.header.write(this.toc, 0);
+						indices.add(chunk_offset);
 					}
 				}
 				this.cache.set(index, next);
@@ -287,27 +271,27 @@ export class Table<A extends Record<string, any>> {
 				return;
 			}
 		}
-		let index = this.free_chunk_index;
+		let chunk_offset = this.free_chunk_index;
 		let entry = new RecordIndexEntry();
-		entry.bytes_used = serialized.length;
-		entry.bytes_free = buffer.length - serialized.length;
-		entry.chunk_offset = index;
+		entry.chunk_offset = chunk_offset;
+		entry.chunk_length = chunks;
+		entry.is_occupied = true;
 		entry.key_hash = key_hash;
-		entry.write(this.toc, 16 + index * 16);
+		entry.write(this.toc, 16 + chunk_offset * 16);
+		let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
+		buffer.set(serialized, 0);
 		let position = entry.chunk_offset * this.header.chunk_size;
 		writeBuffer(this.bin, buffer, position);
 		this.free_chunk_index += chunks;
-		indices.add(index);
-		this.header.entries += 1;
-		this.header.write(this.toc, 0);
+		indices.add(chunk_offset);
+		this.entries.push(entry);
 		this.router.route("insert", {
 			next: next
 		});
-		this.entries.push(entry);
 	}
 
 	constructor(root: Array<string>, table_name: string, guard: autoguard.serialization.MessageGuard<A>, key_provider: KeyProvider<A>) {
-		let directory = [...root, table_name];
+		let directory = [ ...root, table_name ];
 		if (!libfs.existsSync(directory.join("/"))) {
 			libfs.mkdirSync(directory.join("/"), { recursive: true });
 		}
@@ -323,11 +307,14 @@ export class Table<A extends Record<string, any>> {
 		let header = new RecordIndexHeader();
 		if (toc_exists) {
 			header.read(toc, 0);
-			for (let index = 0; index < header.entries; index++) {
+			let entry_count = libfs.fstatSync(toc).size / 16 - 1;
+			if (!Number.isInteger(entry_count)) {
+				throw `Expected an even number of entries!`;
+			}
+			for (let index = 0; index < entry_count; index++) {
 				let entry = new RecordIndexEntry();
 				entry.read(toc, 16 + index * 16);
-				let chunks = entry.bytes_size / header.chunk_size;
-				free_chunk_index = Math.max(entry.chunk_offset + chunks, free_chunk_index);
+				free_chunk_index = Math.max(entry.chunk_offset + entry.chunk_length, free_chunk_index);
 				let indices = key_hash_indices.get(entry.key_hash);
 				if (is.absent(indices)) {
 					indices = new Set<number>();
@@ -419,10 +406,12 @@ export class Table<A extends Record<string, any>> {
 				let last = this.getRecord(index);
 				if (this.key_provider(last) === key) {
 					let entry = this.entries[index];
+					let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
+					let position = entry.chunk_offset * this.header.chunk_size;
+					writeBuffer(this.bin, buffer, position);
 					this.cache.delete(index);
 					indices.delete(index);
-					entry.bytes_free += entry.bytes_used;
-					entry.bytes_used = 0;
+					entry.is_occupied = false;
 					entry.key_hash = 0;
 					entry.write(this.toc, 16 + index * 16);
 					this.router.route("remove", {
