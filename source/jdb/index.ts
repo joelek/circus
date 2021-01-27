@@ -4,8 +4,6 @@ import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
 
-// Updates are not reflected in cache.
-
 function computeKeyHash(key: string | undefined): number {
 	if (is.absent(key)) {
 		return 0;
@@ -281,6 +279,7 @@ export class Table<A extends Record<string, any>> {
 						this.header.write(this.toc, 0);
 					}
 				}
+				this.cache.set(index, next);
 				this.router.route("update", {
 					last: last,
 					next: next
