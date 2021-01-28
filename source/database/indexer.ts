@@ -625,8 +625,11 @@ export function runIndexer(): void {
 		}
 	}
 	console.log(`Indexing finished.`);
-	let mbs = process.memoryUsage().heapUsed / 1024 / 1024;
-	console.log(`Memory usage: ${mbs.toFixed()} MB`);
+	if (global.gc) {
+		global.gc();
+		let mbs = process.memoryUsage().heapUsed / 1024 / 1024;
+		console.log(`Memory usage: ${mbs.toFixed()} MB`);
+	}
 };
 
 runIndexer();
