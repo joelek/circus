@@ -102,12 +102,11 @@ export class RecordIndexHeader {
 	}
 
 	read(fd: number, position: number): void {
-		let buffer = readBuffer(fd, Buffer.alloc(16), position);
-		let identifier = buffer.slice(0, 8).toString("binary");
+		readBuffer(fd, this.buffer, position);
+		let identifier = this.buffer.slice(0, 8).toString("binary");
 		if (identifier !== this.identifier) {
 			throw `Unsupported file format!`;
 		}
-		this.buffer = buffer;
 	}
 
 	write(fd: number, position: number): void {
@@ -164,8 +163,7 @@ export class RecordIndexEntry {
 	}
 
 	read(fd: number, position: number): void {
-		let buffer = readBuffer(fd, Buffer.alloc(16), position);
-		this.buffer = buffer;
+		readBuffer(fd, this.buffer, position);
 	}
 
 	write(fd: number, position: number): void {
@@ -336,7 +334,6 @@ export class Table<A extends Record<string, any>> {
 		let bin_filename = [...directory, "bin"];
 		let bin_exists = libfs.existsSync(bin_filename.join("/"));
 		let bin = libfs.openSync(bin_filename.join("/"), bin_exists ? "r+" : "w+");
-		let entries = new Array<RecordIndexEntry>();
 		let key_hash_indices = new Map<number, Set<number>>();
 		let header = new RecordIndexHeader();
 		let free_entries = new Map<number, Set<number>>();
@@ -346,8 +343,8 @@ export class Table<A extends Record<string, any>> {
 			if (!Number.isInteger(entry_count)) {
 				throw `Expected an even number of entries!`;
 			}
+			let entry = new RecordIndexEntry();
 			for (let index = 0; index < entry_count; index++) {
-				let entry = new RecordIndexEntry();
 				entry.read(toc, 16 + index * 16);
 				if (entry.is_occupied) {
 					let indices = key_hash_indices.get(entry.key_hash);
@@ -364,7 +361,6 @@ export class Table<A extends Record<string, any>> {
 					}
 					free_entry_set.add(index);
 				}
-				entries.push(entry);
 			}
 		} else {
 			header.write(toc, 0);
