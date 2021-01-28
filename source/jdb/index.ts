@@ -253,6 +253,7 @@ export class Table<A extends Record<string, any>> {
 		this.cache_list.add(index);
 		if (this.cache_list.size > 1000) {
 			for (let idx of this.cache_list) {
+				this.cache.delete(idx);
 				this.cache_list.delete(idx);
 				break;
 			}
