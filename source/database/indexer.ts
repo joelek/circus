@@ -501,6 +501,7 @@ function indexFile(file: File): void {
 	libfs.closeSync(fd);
 	let stats = libfs.statSync(path.join("/"));
 	file.index_timestamp = stats.mtime.valueOf();
+	files.update(file);
 }
 
 function indexFiles(): void {
