@@ -192,7 +192,6 @@ export class Table<A extends Record<string, any>> {
 	private toc: number;
 	private bin: number;
 	private header: RecordIndexHeader;
-	private entries: Array<RecordIndexEntry>;
 	private key_hash_indices: Map<number, Set<number>>;
 	private router: stdlib.routing.MessageRouter<RecordIndexEventMap<A>>;
 	private guard: autoguard.serialization.MessageGuard<A>;
@@ -201,11 +200,24 @@ export class Table<A extends Record<string, any>> {
 	private cache_list: Set<number>;
 	private free_entries: Map<number, Set<number>>;
 
+	private getNumberOfEntries(): number {
+		let entry_count = libfs.fstatSync(this.toc).size / 16 - 1;
+		if (!Number.isInteger(entry_count)) {
+			throw `Expected an even number of entries!`;
+		}
+		return entry_count;
+	}
+
+	private readEntry(index: number, entry: RecordIndexEntry = new RecordIndexEntry()): RecordIndexEntry {
+		entry.read(this.toc, 16 + index * 16);
+		return entry;
+	}
+
 	private getEntryFor(chunk_length: number, key_hash: number): number {
 		let free_entry_set = this.free_entries.get(chunk_length);
 		if (is.present(free_entry_set)) {
 			for (let entry_index of free_entry_set) {
-				let entry = this.entries[entry_index];
+				let entry = this.readEntry(entry_index);
 				entry.is_occupied = true;
 				entry.key_hash = key_hash;
 				entry.write(this.toc, 16 + entry_index * 16);
@@ -213,14 +225,13 @@ export class Table<A extends Record<string, any>> {
 				return entry_index;
 			}
 		}
-		let entry_index = this.entries.length;
+		let entry_index = this.getNumberOfEntries();
 		let entry = new RecordIndexEntry();
 		entry.chunk_offset = Math.ceil(libfs.fstatSync(this.bin).size / this.header.chunk_size);
 		entry.chunk_length = chunk_length;
 		entry.is_occupied = true;
 		entry.key_hash = key_hash;
 		entry.write(this.toc, 16 + entry_index * 16);
-		this.entries.push(entry);
 		return entry_index;
 	}
 
@@ -231,7 +242,7 @@ export class Table<A extends Record<string, any>> {
 			this.cache_list.add(index);
 			return record;
 		}
-		let entry = this.entries[index];
+		let entry = this.readEntry(index);
 		if (!entry.is_occupied) {
 			throw `Expected ${index} to match a record!`;
 		}
@@ -264,7 +275,7 @@ export class Table<A extends Record<string, any>> {
 		for (let index of indices) {
 			let last = this.getRecord(index);
 			if (this.key_provider(last) === key) {
-				let entry = this.entries[index];
+				let entry = this.readEntry(index);
 				if (chunks <= entry.chunk_length) {
 					let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
 					buffer.set(serialized, 0);
@@ -288,7 +299,7 @@ export class Table<A extends Record<string, any>> {
 					}
 					{
 						let entry_index = this.getEntryFor(chunks, key_hash);
-						let entry = this.entries[entry_index];
+						let entry = this.readEntry(entry_index);
 						let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
 						buffer.set(serialized, 0);
 						writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
@@ -304,7 +315,7 @@ export class Table<A extends Record<string, any>> {
 			}
 		}
 		let entry_index = this.getEntryFor(chunks, key_hash);
-		let entry = this.entries[entry_index];
+		let entry = this.readEntry(entry_index);
 		let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
 		buffer.set(serialized, 0);
 		writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
@@ -361,7 +372,6 @@ export class Table<A extends Record<string, any>> {
 		this.toc = toc;
 		this.bin = bin;
 		this.header = header;
-		this.entries = entries;
 		this.key_hash_indices = key_hash_indices;
 		this.router = new stdlib.routing.MessageRouter<RecordIndexEventMap<A>>();
 		this.guard = guard;
@@ -381,7 +391,7 @@ export class Table<A extends Record<string, any>> {
 		return makeIterator(() => {
 			while (true) {
 				index += 1;
-				if (index >= this.entries.length) {
+				if (index >= this.getNumberOfEntries()) {
 					throw ``;
 				}
 				try {
@@ -400,7 +410,7 @@ export class Table<A extends Record<string, any>> {
 	}
 
 	length(): number {
-		return this.entries.length;
+		return this.getNumberOfEntries();
 	}
 
 	lookup(key: string | undefined): A {
@@ -438,7 +448,7 @@ export class Table<A extends Record<string, any>> {
 			for (let index of indices) {
 				let last = this.getRecord(index);
 				if (this.key_provider(last) === key) {
-					let entry = this.entries[index];
+					let entry = this.readEntry(index);
 					let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
 					let position = entry.chunk_offset * this.header.chunk_size;
 					writeBuffer(this.bin, buffer, position);
