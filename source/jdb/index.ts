@@ -107,20 +107,31 @@ export class RecordIndexHeader {
 export class RecordIndexEntry {
 	private buffer: Buffer;
 
+	get key(): string {
+		return this.buffer.slice(0, 8).toString("hex");
+	}
+
+	set key(value: string) {
+		if (!/^[0-9a-f]{16}$/.test(value)) {
+			throw `Invalid key, ${value}!`;
+		}
+		this.buffer.set(Buffer.from(value, "hex"), 0);
+	}
+
 	get chunk_offset(): number {
-		return this.buffer.readUInt32BE(0);
+		return this.buffer.readUInt32BE(8);
 	}
 
 	set chunk_offset(value: number) {
-		this.buffer.writeUInt32BE(value, 0);
+		this.buffer.writeUInt32BE(value, 8);
 	}
 
 	get chunk_length_minus_one(): number {
-		return this.buffer.readUInt32BE(4);
+		return this.buffer.readUInt32BE(12);
 	}
 
 	set chunk_length_minus_one(value: number) {
-		this.buffer.writeUInt32BE(value, 4);
+		this.buffer.writeUInt32BE(value, 12);
 	}
 
 	get chunk_length(): number {
@@ -129,17 +140,6 @@ export class RecordIndexEntry {
 
 	set chunk_length(value: number) {
 		this.chunk_length_minus_one = value - 1;
-	}
-
-	get key(): string {
-		return this.buffer.slice(8, 8 + 8).toString("hex");
-	}
-
-	set key(value: string) {
-		if (!/^[0-9a-f]{16}$/.test(value)) {
-			throw `Invalid key, ${value}!`;
-		}
-		this.buffer.set(Buffer.from(value, "hex"), 8);
 	}
 
 	constructor() {
