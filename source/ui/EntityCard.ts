@@ -256,6 +256,25 @@ export class EntityCardFactory {
 		let tags = [
 			"Cue"
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		if (false) {
+		} else if (api.Episode.is(cue.media)) {
+			let episode = cue.media;
+			titles = [
+				this.entityTitleFactory.forEpisode(episode)
+			];
+			subtitles = [
+				this.entityTitleFactory.forShow(episode.season.show),
+				this.entityTitleFactory.forSeason(episode.season)
+			];
+		} else if (api.Movie.is(cue.media)) {
+			let movie = cue.media;
+			titles = [
+				this.entityTitleFactory.forMovie(movie)
+			];
+			subtitles = movie.genres.map((genre) => this.entityTitleFactory.forGenre(genre));
+		} else {
+			throw `Expected code to be unreachable!`;
+		}
 		return this.make(link, image, titles, subtitles, tags, cue.lines.join("\n"), options);
 	}
 

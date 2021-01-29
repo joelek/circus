@@ -165,7 +165,7 @@
 	},
 
 	Cue: CueBase & {
-
+		media: Episode | Movie
 	},
 
 	YearBase: {

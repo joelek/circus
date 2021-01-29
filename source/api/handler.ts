@@ -112,8 +112,29 @@ export function lookupCueBase(cue_id: string, user_id: string, subtitle?: schema
 
 export function lookupCue(cue_id: string, user_id: string, subtitle?: schema.objects.SubtitleBase): schema.objects.Cue {
 	let cue = lookupCueBase(cue_id, user_id, subtitle);
+	let medias = database.getVideoFilesFromSubtitleFile.lookup(cue.subtitle.subtitle.file_id)
+		.map((video_subtitle) => {
+			try {
+				let episode_files = database.getEpisodesFromFile.lookup(video_subtitle.video_file_id);
+				for (let episode_file of episode_files) {
+					return lookupEpisode(episode_file.episode_id, user_id);
+				}
+			} catch (error) {}
+			try {
+				let movie_files = database.getMoviesFromFile.lookup(video_subtitle.video_file_id);
+				for (let movie_file of movie_files) {
+					return lookupMovie(movie_file.movie_id, user_id);
+				}
+			} catch (error) {}
+		})
+		.filter(is.present);
+	let media = medias.shift();
+	if (is.absent(media)) {
+		throw `Expected a media entity!`;
+	}
 	return {
-		...cue
+		...cue,
+		media
 	};
 };
 

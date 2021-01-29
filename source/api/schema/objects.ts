@@ -426,11 +426,20 @@ export const CueBase = autoguard.Object.of<CueBase>({
 	"lines": autoguard.Array.of(autoguard.String)
 });
 
-export type Cue = CueBase & {};
+export type Cue = CueBase & {
+	"media": Episode | Movie
+};
 
 export const Cue = autoguard.Intersection.of(
 	autoguard.Reference.of<CueBase>(() => CueBase),
-	autoguard.Object.of<{}>({})
+	autoguard.Object.of<{
+		"media": Episode | Movie
+	}>({
+		"media": autoguard.Union.of(
+			autoguard.Reference.of<Episode>(() => Episode),
+			autoguard.Reference.of<Movie>(() => Movie)
+		)
+	})
 );
 
 export type YearBase = {
