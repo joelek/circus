@@ -4,16 +4,6 @@ import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
 
-function computeKeyHash(key: string | undefined): number {
-	if (is.absent(key)) {
-		return 0;
-	}
-	let buffer = libcrypto.createHash("sha256")
-		.update(key)
-		.digest();
-	return buffer.readUInt32BE(0);
-}
-
 function makeIterator<A>(provider: () => A): Iterator<A> {
 	return {
 		next: () => {
@@ -141,20 +131,15 @@ export class RecordIndexEntry {
 		this.chunk_length_minus_one = value - 1;
 	}
 
-	get is_occupied(): boolean {
-		return this.buffer.readUInt32BE(8) === 1;
+	get key(): string {
+		return this.buffer.slice(8, 8 + 8).toString("hex");
 	}
 
-	set is_occupied(value: boolean) {
-		this.buffer.writeUInt32BE(value ? 1 : 0, 8);
-	}
-
-	get key_hash(): number {
-		return this.buffer.readUInt32BE(12);
-	}
-
-	set key_hash(value: number) {
-		this.buffer.writeUInt32BE(value, 12);
+	set key(value: string) {
+		if (!/^[0-9a-f]{16}$/.test(value)) {
+			throw `Invalid key, ${value}!`;
+		}
+		this.buffer.set(Buffer.from(value, "hex"), 8);
 	}
 
 	constructor() {
@@ -184,13 +169,13 @@ type RecordIndexEventMap<A> = {
 	}
 };
 
-type KeyProvider<A> = (record: A) => string | undefined;
+type KeyProvider<A> = (record: A) => string;
 
 export class Table<A extends Record<string, any>> {
 	private toc: number;
 	private bin: number;
 	private header: RecordIndexHeader;
-	private key_hash_indices: Map<number, Set<number>>;
+	private indexFromKey: Record<string, number | undefined>;
 	private router: stdlib.routing.MessageRouter<RecordIndexEventMap<A>>;
 	private guard: autoguard.serialization.MessageGuard<A>;
 	private key_provider: KeyProvider<A>;
@@ -211,13 +196,12 @@ export class Table<A extends Record<string, any>> {
 		return entry;
 	}
 
-	private getEntryFor(chunk_length: number, key_hash: number): number {
+	private getEntryFor(chunk_length: number, key: string): number {
 		let free_entry_set = this.free_entries.get(chunk_length);
 		if (is.present(free_entry_set)) {
 			for (let entry_index of free_entry_set) {
 				let entry = this.readEntry(entry_index);
-				entry.is_occupied = true;
-				entry.key_hash = key_hash;
+				entry.key = key;
 				entry.write(this.toc, 16 + entry_index * 16);
 				free_entry_set.delete(entry_index);
 				return entry_index;
@@ -227,8 +211,7 @@ export class Table<A extends Record<string, any>> {
 		let entry = new RecordIndexEntry();
 		entry.chunk_offset = Math.ceil(libfs.fstatSync(this.bin).size / this.header.chunk_size);
 		entry.chunk_length = chunk_length;
-		entry.is_occupied = true;
-		entry.key_hash = key_hash;
+		entry.key = key;
 		entry.write(this.toc, 16 + entry_index * 16);
 		return entry_index;
 	}
@@ -241,7 +224,7 @@ export class Table<A extends Record<string, any>> {
 			return record;
 		}
 		let entry = this.readEntry(index);
-		if (!entry.is_occupied) {
+		if (entry.key === "0000000000000000") {
 			throw `Expected ${index} to match a record!`;
 		}
 		let position = entry.chunk_offset * this.header.chunk_size;
@@ -265,60 +248,50 @@ export class Table<A extends Record<string, any>> {
 		let serialized = Buffer.from(JSON.stringify(next));
 		let chunks = Math.max(1, Math.ceil(serialized.length / this.header.chunk_size));
 		let key = this.key_provider(next);
-		let key_hash = computeKeyHash(key);
-		let indices = this.key_hash_indices.get(key_hash);
-		if (is.absent(indices)) {
-			indices = new Set<number>();
-			this.key_hash_indices.set(key_hash, indices);
-		}
-		for (let index of indices) {
+		let index = this.indexFromKey[key];
+		if (is.present(index)) {
 			let last = this.getRecord(index);
-			if (this.key_provider(last) === key) {
-				let entry = this.readEntry(index);
-				if (chunks <= entry.chunk_length) {
+			let entry = this.readEntry(index);
+			if (chunks <= entry.chunk_length) {
+				let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
+				buffer.set(serialized, 0);
+				writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
+			} else {
+				{
+					let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
+					writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
+					delete this.indexFromKey[key];
+					entry.key = "0000000000000000";
+					entry.write(this.toc, 16 + index * 16);
+					let free_entry_set = this.free_entries.get(entry.chunk_length);
+					if (is.absent(free_entry_set)) {
+						free_entry_set = new Set<number>();
+						this.free_entries.set(entry.chunk_length, free_entry_set);
+					}
+					free_entry_set.add(index);
+				}
+				{
+					let entry_index = this.getEntryFor(chunks, key);
+					let entry = this.readEntry(entry_index);
 					let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
 					buffer.set(serialized, 0);
-					let position = entry.chunk_offset * this.header.chunk_size;
-					writeBuffer(this.bin, buffer, position);
-				} else {
-					{
-						let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
-						let position = entry.chunk_offset * this.header.chunk_size;
-						writeBuffer(this.bin, buffer, position);
-						indices.delete(index);
-						entry.is_occupied = false;
-						entry.key_hash = 0;
-						entry.write(this.toc, 16 + index * 16);
-						let free_entry_set = this.free_entries.get(entry.chunk_length);
-						if (is.absent(free_entry_set)) {
-							free_entry_set = new Set<number>();
-							this.free_entries.set(entry.chunk_length, free_entry_set);
-						}
-						free_entry_set.add(index);
-					}
-					{
-						let entry_index = this.getEntryFor(chunks, key_hash);
-						let entry = this.readEntry(entry_index);
-						let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
-						buffer.set(serialized, 0);
-						writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
-						indices.add(entry_index);
-					}
+					writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
+					this.indexFromKey[key] = entry_index;
 				}
-				this.cache.set(index, next);
-				this.router.route("update", {
-					last: last,
-					next: next
-				});
-				return;
 			}
+			this.cache.set(index, next);
+			this.router.route("update", {
+				last: last,
+				next: next
+			});
+			return;
 		}
-		let entry_index = this.getEntryFor(chunks, key_hash);
+		let entry_index = this.getEntryFor(chunks, key);
 		let entry = this.readEntry(entry_index);
 		let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
 		buffer.set(serialized, 0);
 		writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
-		indices.add(entry_index);
+		this.indexFromKey[key] = entry_index;
 		this.router.route("insert", {
 			next: next
 		});
@@ -335,7 +308,7 @@ export class Table<A extends Record<string, any>> {
 		let bin_filename = [...directory, "bin"];
 		let bin_exists = libfs.existsSync(bin_filename.join("/"));
 		let bin = libfs.openSync(bin_filename.join("/"), bin_exists ? "r+" : "w+");
-		let key_hash_indices = new Map<number, Set<number>>();
+		let indexFromKey = {} as Record<string, number | undefined>;
 		let header = new RecordIndexHeader();
 		let free_entries = new Map<number, Set<number>>();
 		if (toc_exists) {
@@ -347,13 +320,8 @@ export class Table<A extends Record<string, any>> {
 			let entry = new RecordIndexEntry();
 			for (let index = 0; index < entry_count; index++) {
 				entry.read(toc, 16 + index * 16);
-				if (entry.is_occupied) {
-					let indices = key_hash_indices.get(entry.key_hash);
-					if (is.absent(indices)) {
-						indices = new Set<number>();
-						key_hash_indices.set(entry.key_hash, indices);
-					}
-					indices.add(index);
+				if (entry.key !== "0000000000000000") {
+					indexFromKey[entry.key] = index;
 				} else {
 					let free_entry_set = free_entries.get(entry.chunk_length);
 					if (is.absent(free_entry_set)) {
@@ -369,7 +337,7 @@ export class Table<A extends Record<string, any>> {
 		this.toc = toc;
 		this.bin = bin;
 		this.header = header;
-		this.key_hash_indices = key_hash_indices;
+		this.indexFromKey = indexFromKey;
 		this.router = new stdlib.routing.MessageRouter<RecordIndexEventMap<A>>();
 		this.guard = guard;
 		this.key_provider = key_provider;
@@ -411,14 +379,11 @@ export class Table<A extends Record<string, any>> {
 	}
 
 	lookup(key: string | undefined): A {
-		let key_hash = computeKeyHash(key);
-		let indices = this.key_hash_indices.get(key_hash);
-		if (is.present(indices)) {
-			for (let index of indices) {
-				let record = this.getRecord(index);
-				if (this.key_provider(record) === key) {
-					return record;
-				}
+		let index = this.indexFromKey[key ?? "0000000000000000"];
+		if (is.present(index)) {
+			let record = this.getRecord(index);
+			if (this.key_provider(record) === key) {
+				return record;
 			}
 		}
 		throw `Expected ${key} to match a record!`;
@@ -439,33 +404,28 @@ export class Table<A extends Record<string, any>> {
 
 	remove(record: A): void {
 		let key = this.key_provider(record);
-		let key_hash = computeKeyHash(key);
-		let indices = this.key_hash_indices.get(key_hash);
-		if (is.present(indices)) {
-			for (let index of indices) {
-				let last = this.getRecord(index);
-				if (this.key_provider(last) === key) {
-					let entry = this.readEntry(index);
-					let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
-					let position = entry.chunk_offset * this.header.chunk_size;
-					writeBuffer(this.bin, buffer, position);
-					this.cache.delete(index);
-					this.cache_list.delete(index);
-					indices.delete(index);
-					entry.is_occupied = false;
-					entry.key_hash = 0;
-					entry.write(this.toc, 16 + index * 16);
-					let free_entry_set = this.free_entries.get(entry.chunk_length);
-					if (is.absent(free_entry_set)) {
-						free_entry_set = new Set<number>();
-						this.free_entries.set(entry.chunk_length, free_entry_set);
-					}
-					free_entry_set.add(index);
-					this.router.route("remove", {
-						last: last
-					});
-					break;
+		let index = this.indexFromKey[key];
+		if (is.present(index)) {
+			let last = this.getRecord(index);
+			if (this.key_provider(last) === key) {
+				let entry = this.readEntry(index);
+				let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
+				let position = entry.chunk_offset * this.header.chunk_size;
+				writeBuffer(this.bin, buffer, position);
+				this.cache.delete(index);
+				this.cache_list.delete(index);
+				delete this.indexFromKey[key];
+				entry.key = Buffer.alloc(8).toString("hex");
+				entry.write(this.toc, 16 + index * 16);
+				let free_entry_set = this.free_entries.get(entry.chunk_length);
+				if (is.absent(free_entry_set)) {
+					free_entry_set = new Set<number>();
+					this.free_entries.set(entry.chunk_length, free_entry_set);
 				}
+				free_entry_set.add(index);
+				this.router.route("remove", {
+					last: last
+				});
 			}
 		}
 	}
@@ -481,7 +441,7 @@ export class Table<A extends Record<string, any>> {
 
 
 
-export class IndexHeader {
+/* export class IndexHeader {
 	private buffer: Buffer;
 
 	get identifier(): string {
@@ -643,3 +603,4 @@ class Index<A> {
 		//this.insert(next);
 	}
 }
+ */
