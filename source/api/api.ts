@@ -96,7 +96,7 @@ class Router {
 class ArtistRoute implements Route<{}, response.ArtistResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]audio[/]artists[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]audio[/]artists[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let artist_id = parts[1];
 		let artist = handler.lookupArtist(artist_id, user_id);
 		let tracks = handler.getArtistTracks(artist_id, 0, 3, user_id);
@@ -111,7 +111,7 @@ class ArtistRoute implements Route<{}, response.ArtistResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]audio[/]artists[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]audio[/]artists[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -139,7 +139,7 @@ class ArtistsRoute implements Route<{}, response.ArtistsResponse> {
 class AlbumRoute implements Route<{}, response.AlbumResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]audio[/]albums[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]audio[/]albums[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let album_id = parts[1];
 		let album = handler.lookupAlbum(album_id, user_id);
 		let payload: response.AlbumResponse = {
@@ -150,7 +150,7 @@ class AlbumRoute implements Route<{}, response.AlbumResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]audio[/]albums[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]audio[/]albums[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -178,7 +178,7 @@ class AlbumsRoute implements Route<{}, response.AlbumsResponse> {
 class EpisodeRoute implements Route<response.ApiRequest, response.EpisodeResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]video[/]episodes[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]video[/]episodes[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let episode_id = parts[1];
 		let episode = handler.lookupEpisode(episode_id, user_id);
 		let episodes = handler.lookupSeason(episode.season.season_id, user_id).episodes;
@@ -195,7 +195,7 @@ class EpisodeRoute implements Route<response.ApiRequest, response.EpisodeRespons
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]video[/]episodes[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]video[/]episodes[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -223,7 +223,7 @@ class EpisodesRoute implements Route<{}, response.EpisodesResponse> {
 class ShowRoute implements Route<{}, response.ShowResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]video[/]shows[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]video[/]shows[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let show_id = parts[1];
 		let show = handler.lookupShow(show_id, user_id);
 		let payload: response.ShowResponse = {
@@ -234,7 +234,7 @@ class ShowRoute implements Route<{}, response.ShowResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]video[/]shows[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]video[/]shows[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -268,7 +268,7 @@ class AuthWithTokenRoute implements Route<response.ApiRequest, response.AuthWith
 		if (request.url === undefined) {
 			throw new Error();
 		}
-		let parts = /^[/]api[/]auth[/][?]token[=]([0-9a-f]{64})/.exec(request.url);
+		let parts = /^[/]api[/]auth[/][?]token[=]([0-9a-f]{32})/.exec(request.url);
 		if (parts === null) {
 			throw new Error();
 		}
@@ -285,7 +285,7 @@ class AuthWithTokenRoute implements Route<response.ApiRequest, response.AuthWith
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]auth[/][?]token[=]([0-9a-f]{64})/.test(request.url);
+		return request.method === 'POST' && request.url !== undefined && /^[/]api[/]auth[/][?]token[=]([0-9a-f]{32})/.test(request.url);
 	}
 }
 
@@ -378,7 +378,7 @@ class RegisterRoute implements Route<{}, {}> {
 class MovieMovieSuggestionsRoute implements Route<{}, response.MovieMovieSuggestionsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]video[/]movies[/]([0-9a-f]{32})[/]suggestions[/]movies[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]video[/]movies[/]([0-9a-f]{16})[/]suggestions[/]movies[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
@@ -392,7 +392,7 @@ class MovieMovieSuggestionsRoute implements Route<{}, response.MovieMovieSuggest
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]video[/]movies[/]([0-9a-f]{32})[/]suggestions[/]movies[/]/.test(request.url ?? "/");
+		return /^[/]api[/]video[/]movies[/]([0-9a-f]{16})[/]suggestions[/]movies[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -403,7 +403,7 @@ class MovieMovieSuggestionsRoute implements Route<{}, response.MovieMovieSuggest
 class MovieRoute implements Route<{}, response.MovieResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]video[/]movies[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]video[/]movies[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let movie_id = parts[1];
 		let movie = handler.lookupMovie(movie_id, user_id);
 		let payload: response.MovieResponse = {
@@ -414,7 +414,7 @@ class MovieRoute implements Route<{}, response.MovieResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]video[/]movies[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]video[/]movies[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -442,7 +442,7 @@ class MoviesRoute implements Route<{}, response.MoviesResponse> {
 class PlaylistRoute implements Route<{}, response.PlaylistResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]audio[/]playlists[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let playlist_id = parts[1];
 		let playlist = handler.lookupPlaylist(playlist_id, user_id);
 		let payload: response.PlaylistResponse = {
@@ -453,7 +453,7 @@ class PlaylistRoute implements Route<{}, response.PlaylistResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]audio[/]playlists[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]audio[/]playlists[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -535,7 +535,7 @@ class GenresRoute implements Route<{}, response.GenresResponse> {
 class GenreShowsRoute implements Route<{}, response.GenreShowsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]shows[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{16})[/]shows[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
@@ -549,14 +549,14 @@ class GenreShowsRoute implements Route<{}, response.GenreShowsResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]shows[/]/.test(request.url ?? "/");
+		return /^[/]api[/]video[/]genres[/]([0-9a-f]{16})[/]shows[/]/.test(request.url ?? "/");
 	}
 }
 
 class GenreMoviesRoute implements Route<{}, response.GenreMoviesResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]movies[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{16})[/]movies[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
@@ -570,14 +570,14 @@ class GenreMoviesRoute implements Route<{}, response.GenreMoviesResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]movies[/]/.test(request.url ?? "/");
+		return /^[/]api[/]video[/]genres[/]([0-9a-f]{16})[/]movies[/]/.test(request.url ?? "/");
 	}
 }
 
 class GenreRoute implements Route<{}, response.GenreResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]video[/]genres[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let genre_id = parts[1];
 		let genre = handler.lookupGenre(genre_id, user_id);
 		let payload: response.GenreResponse = {
@@ -588,7 +588,7 @@ class GenreRoute implements Route<{}, response.GenreResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]video[/]genres[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]video[/]genres[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -616,7 +616,7 @@ class SearchRoute implements Route<{}, response.SearchResponse> {
 class TrackPlaylistsRoute implements Route<{}, response.TrackPlaylistsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]audio[/]tracks[/]([0-9a-f]{32})[/]playlists[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]audio[/]tracks[/]([0-9a-f]{16})[/]playlists[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let track_id = decodeURIComponent(parts[1]);
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
@@ -630,14 +630,14 @@ class TrackPlaylistsRoute implements Route<{}, response.TrackPlaylistsResponse> 
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]audio[/]tracks[/]([0-9a-f]{32})[/]playlists[/]/.test(request.url ?? "/");
+		return /^[/]api[/]audio[/]tracks[/]([0-9a-f]{16})[/]playlists[/]/.test(request.url ?? "/");
 	}
 }
 
 class TrackRoute implements Route<{}, response.TrackResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]audio[/]tracks[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]audio[/]tracks[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let track_id = parts[1];
 		let track = handler.lookupTrack(track_id, user_id);
 		let tracks = handler.lookupDisc(track.disc.disc_id, user_id).tracks;
@@ -654,7 +654,7 @@ class TrackRoute implements Route<{}, response.TrackResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]audio[/]tracks[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]audio[/]tracks[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -682,7 +682,7 @@ class TracksRoute implements Route<{}, response.TracksResponse> {
 class SeasonRoute implements Route<{}, response.SeasonResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]video[/]seasons[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]video[/]seasons[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let season_id = parts[1];
 		let season = handler.lookupSeason(season_id, user_id);
 		let seasons = handler.lookupShow(season.show.show_id, user_id).seasons;
@@ -699,7 +699,7 @@ class SeasonRoute implements Route<{}, response.SeasonResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]video[/]seasons[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]video[/]seasons[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -727,7 +727,7 @@ class SeasonsRoute implements Route<{}, response.SeasonsResponse> {
 class DiscRoute implements Route<{}, response.DiscResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]audio[/]discs[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]audio[/]discs[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let season_id = parts[1];
 		let disc = handler.lookupDisc(season_id, user_id);
 		let discs = handler.lookupAlbum(disc.album.album_id, user_id).discs;
@@ -744,7 +744,7 @@ class DiscRoute implements Route<{}, response.DiscResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]audio[/]discs[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]audio[/]discs[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -772,7 +772,7 @@ class DiscsRoute implements Route<{}, response.SeasonsResponse> {
 class UserRoute implements Route<{}, response.UserResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]users[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]users[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let user = handler.lookupUser(parts[1]);
 		let playlists = handler.getUserPlaylists(user.user_id, user_id);
 		let payload: response.UserResponse = {
@@ -784,7 +784,7 @@ class UserRoute implements Route<{}, response.UserResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]users[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]users[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -812,7 +812,7 @@ class UsersRoute implements Route<{}, response.UsersResponse> {
 class PersonShowsRoute implements Route<{}, response.PersonShowsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]persons[/]([0-9a-f]{32})[/]shows[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]persons[/]([0-9a-f]{16})[/]shows[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let person_id = parts[1];
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
@@ -826,14 +826,14 @@ class PersonShowsRoute implements Route<{}, response.PersonShowsResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]persons[/]([0-9a-f]{32})[/]shows[/]/.test(request.url ?? "/");
+		return /^[/]api[/]persons[/]([0-9a-f]{16})[/]shows[/]/.test(request.url ?? "/");
 	}
 }
 
 class PersonMoviesRoute implements Route<{}, response.PersonMoviesResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]persons[/]([0-9a-f]{32})[/]movies[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]persons[/]([0-9a-f]{16})[/]movies[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let person_id = parts[1];
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
@@ -847,14 +847,14 @@ class PersonMoviesRoute implements Route<{}, response.PersonMoviesResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]persons[/]([0-9a-f]{32})[/]movies[/]/.test(request.url ?? "/");
+		return /^[/]api[/]persons[/]([0-9a-f]{16})[/]movies[/]/.test(request.url ?? "/");
 	}
 }
 
 class PersonRoute implements Route<{}, response.PersonResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]persons[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]persons[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let person_id = parts[1];
 		let person = handler.lookupPerson(person_id, user_id);
 		let payload: response.PersonResponse = {
@@ -865,7 +865,7 @@ class PersonRoute implements Route<{}, response.PersonResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]persons[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]persons[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 
@@ -893,7 +893,7 @@ class PersonsRoute implements Route<{}, response.PersonsResponse> {
 class YearRoute implements Route<{}, response.YearResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]years[/]([0-9a-f]{32})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]years[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
 		let year_id = parts[1];
 		let year = handler.lookupYear(year_id, user_id);
 		let url = liburl.parse(request.url ?? "/", true);
@@ -911,7 +911,7 @@ class YearRoute implements Route<{}, response.YearResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]years[/]([0-9a-f]{32})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]years[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 

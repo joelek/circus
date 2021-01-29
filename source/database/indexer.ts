@@ -28,7 +28,7 @@ function makeId(...components: Array<string | number | undefined>): string {
 	return libcrypto.createHash("sha256")
 		.update(components.join("\0"))
 		.digest("hex")
-		.slice(0, 32);
+		.slice(0, 16);
 }
 
 const MEDIA_ROOT = [
@@ -143,7 +143,7 @@ export const getAlbumsFromYear = indices.CollectionIndex.fromTable(years, albums
 if (users.length() === 0) {
 	if (keys.length() === 0) {
 		keys.insert({
-			key_id: makeId("key", libcrypto.randomBytes(16).toString("hex"))
+			key_id: makeId("key", libcrypto.randomBytes(8).toString("hex"))
 		});
 	}
 }

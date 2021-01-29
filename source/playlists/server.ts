@@ -98,7 +98,7 @@ export class PlaylistsServer {
 				if (Buffer.from(description).length >= 256) {
 					errors.push(`The playlist description is too long!`);
 				}
-				let playlist_id = libcrypto.randomBytes(16).toString("hex");
+				let playlist_id = libcrypto.randomBytes(8).toString("hex");
 				this.tss.respond(message, "CreatePlaylistResponse", {
 					errors,
 					playlist_id
@@ -188,7 +188,7 @@ export class PlaylistsServer {
 				}
 				let track_id = message.data.playlist_item.track_id;
 				let track = database.tracks.lookup(track_id);
-				let playlist_item_id = libcrypto.randomBytes(16).toString("hex");
+				let playlist_item_id = libcrypto.randomBytes(8).toString("hex");
 				this.tss.respond(message, "CreatePlaylistItemResponse", {
 					errors,
 					playlist_item_id

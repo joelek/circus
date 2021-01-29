@@ -13,7 +13,7 @@ function getMediaFile(subtitle: dbschema.Subtitle): dbschema.File {
 }
 
 function createWorkingDirectory(cb: { (wd: string[], id: string): void }): void {
-	let id = libcrypto.randomBytes(16).toString("hex");
+	let id = libcrypto.randomBytes(8).toString("hex");
 	let wd = [".", "private", "jobs", id];
 	libfs.mkdirSync(wd.join("/"), { recursive: true });
 	return cb(wd, id);

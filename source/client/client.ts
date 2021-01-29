@@ -1710,7 +1710,7 @@ function observe(element: xml.XElement, handler: () => Promise<void>): xml.XElem
 let updateviewforuri = (uri: string): void => {
 	let parts: RegExpExecArray | null;
 	if (false) {
-	} else if ((parts = /^audio[/]tracks[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^audio[/]tracks[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let track_id = parts[1];
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
@@ -1785,7 +1785,7 @@ let updateviewforuri = (uri: string): void => {
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
-	} else if ((parts = /^video[/]seasons[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]seasons[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		req<{}, api_response.SeasonResponse>(`/api/video/seasons/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let season = response.season;
 			let last = response.last;
@@ -1839,7 +1839,7 @@ let updateviewforuri = (uri: string): void => {
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
-	} else if ((parts = /^audio[/]discs[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^audio[/]discs[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		req<{}, api_response.DiscResponse>(`/api/audio/discs/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let disc = response.disc;
 			let last = response.last;
@@ -1891,7 +1891,7 @@ let updateviewforuri = (uri: string): void => {
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
-	} else if ((parts = /^users[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^users[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		req<{}, api_response.UserResponse>(`/api/users/${parts[1]}/?token=${token}`, {}, (_, response) => {
 			let user = response.user;
 			let playlists = response.playlists;
@@ -1939,7 +1939,7 @@ let updateviewforuri = (uri: string): void => {
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
-	} else if ((parts = /^persons[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^persons[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let person_id = parts[1];
 		req<{}, api_response.PersonResponse>(`/api/persons/${person_id}/?token=${token}`, {}, (_, response) => {
 			let person = response.person;
@@ -2000,7 +2000,7 @@ let updateviewforuri = (uri: string): void => {
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
-	} else if ((parts = /^audio[/]albums[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^audio[/]albums[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.AlbumResponse>(`/api/audio/albums/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let album = response.album;
 			mount.appendChild(xml.element("div")
@@ -2047,7 +2047,7 @@ let updateviewforuri = (uri: string): void => {
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
-	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		req<api_response.ApiRequest, api_response.ArtistResponse>(`/api/audio/artists/${parts[1]}/?token=${token}`, {}, (status, response) => {
 			let artist = response.artist;
 			let tracks = response.tracks;
@@ -2118,7 +2118,7 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render());
-	} else if ((parts = /^audio[/]playlists[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^audio[/]playlists[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let playlist_id = parts[1];
 		req<api_response.ApiRequest, api_response.PlaylistResponse>(`/api/audio/playlists/${playlist_id}/?token=${token}`, {}, async (status, response) => {
 			let playlist = response.playlist;
@@ -2262,7 +2262,7 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 		.render());
-	} else if ((parts = /^video[/]shows[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]shows[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		function getNextEpisode(show: Show): undefined | { seasonIndex: number, episodeIndex: number } {
 			let indices: undefined | {
 				seasonIndex: number,
@@ -2347,7 +2347,7 @@ let updateviewforuri = (uri: string): void => {
 				.render()
 			);
 		});
-	} else if ((parts = /^video[/]episodes[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]episodes[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let episode_id = parts[1];
 		req<api_response.ApiRequest, api_response.EpisodeResponse>(`/api/video/episodes/${episode_id}/?token=${token}`, {}, (status, response) => {
 			let episode = response.episode;
@@ -2395,7 +2395,7 @@ let updateviewforuri = (uri: string): void => {
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
-	} else if ((parts = /^video[/]movies[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]movies[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let movie_id = parts[1];
 		req<api_response.ApiRequest, api_response.MovieResponse>(`/api/video/movies/${movie_id}/?token=${token}`, {}, (status, response) => {
 			let offset = 0;
@@ -2528,7 +2528,7 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render());
-	} else if ((parts = /^video[/]genres[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^video[/]genres[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let genre_id = parts[1];
 		req<{}, api_response.GenreResponse>(`/api/video/genres/${genre_id}/?token=${token}`, {}, (status, response) => {
 			let genre = response.genre;
@@ -2662,7 +2662,7 @@ let updateviewforuri = (uri: string): void => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render());
-	} else if ((parts = /^years[/]([0-9a-f]{32})[/]/.exec(uri)) !== null) {
+	} else if ((parts = /^years[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let year_id = parts[1];
 		preq<{}, api_response.YearResponse>(`/api/years/${year_id}/?token=${token}`, {}).then((response) => {
 			let year = response.year;

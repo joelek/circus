@@ -32,7 +32,7 @@ export function createUser(request: schema.messages.RegisterRequest): schema.mes
 			errors
 		};
 	}
-	let user_id = libcrypto.randomBytes(16).toString("hex");
+	let user_id = libcrypto.randomBytes(8).toString("hex");
 	database.users.insert({
 		user_id,
 		username,

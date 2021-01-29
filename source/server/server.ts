@@ -78,7 +78,7 @@ let send_data = (file_id: string, request: libhttp.IncomingMessage, response: li
 			if (offset + s.bytesRead === size) {
 				let timestamp_ms = Date.now();
 				indexer.streams.insert({
-					stream_id: libcrypto.randomBytes(16).toString("hex"),
+					stream_id: libcrypto.randomBytes(8).toString("hex"),
 					user_id,
 					file_id,
 					timestamp_ms
@@ -158,12 +158,12 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 		response.writeHead(200);
 		return response.end("{}");
 	}
-	if (method === 'GET' && (parts = /^[/]files[/]([0-9a-f]{32})[/]/.exec(path)) !== null) {
+	if (method === 'GET' && (parts = /^[/]files[/]([0-9a-f]{16})[/]/.exec(path)) !== null) {
 		let file_id = parts[1];
 		return send_data(file_id, request, response);
 	}
 	if (/^[/]media[/]/.test(path)) {
-		if ((parts = /^[/]media[/]stills[/]([0-9a-f]{32})[/]/.exec(path)) != null) {
+		if ((parts = /^[/]media[/]stills[/]([0-9a-f]{16})[/]/.exec(path)) != null) {
 			let file_id = parts[1];
 			let file = indexer.files.lookup(file_id);
 			let filename = [".", "private", "stills", file.file_id];
@@ -183,7 +183,7 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 			}
 			return;
 		}
-		if ((parts = /^[/]media[/]gifs[/]([0-9a-f]{32})[/]/.exec(path)) != null) {
+		if ((parts = /^[/]media[/]gifs[/]([0-9a-f]{16})[/]/.exec(path)) != null) {
 			let cue_id = parts[1];
 			let cue = indexer.cues.lookup(cue_id);
 			let filename = [".", "private", "memes", cue.cue_id];

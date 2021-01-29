@@ -3,8 +3,8 @@ import * as indexer from "../database/indexer";
 import * as passwords from "./passwords";
 
 function generate_token(user_id: string): string {
-	let selector = libcrypto.randomBytes(16);
-	let validator = libcrypto.randomBytes(16);
+	let selector = libcrypto.randomBytes(8);
+	let validator = libcrypto.randomBytes(8);
 	let hash = libcrypto.createHash('sha256');
 	hash.update(validator);
 	let validator_hash = hash.digest('hex');
@@ -30,7 +30,7 @@ export function createToken(username: string, password: string): string {
 }
 
 export function getUserId(chunk: string): string {
-	let parts = /^([0-9a-f]{32})([0-9a-f]{32})$/.exec(chunk);
+	let parts = /^([0-9a-f]{16})([0-9a-f]{16})$/.exec(chunk);
 	if (!parts) {
 		throw new Error();
 	}
