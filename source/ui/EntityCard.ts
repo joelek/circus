@@ -111,7 +111,8 @@ function isHighDefinition(width: number, height: number): boolean {
 
 type Options = Partial<{
 	playbackButton: xnode.XElement,
-	compactDescription: boolean
+	compactDescription: boolean,
+	image: xnode.XElement
 }>;
 
 export class EntityCardFactory {
@@ -123,7 +124,7 @@ export class EntityCardFactory {
 	private make(link: xnode.XElement, image: xnode.XElement, titles: xnode.XElement[], subtitles: xnode.XElement[], tags: xnode.XElement[], description: string | undefined, options: Options = {}): xnode.XElement {
 		return link.add(xnode.element("div.entity-card")
 			.add(xnode.element("div.entity-card__artwork")
-				.add(image)
+				.add(options.image ?? image)
 				.add(xnode.element("div.entity-card__playback")
 					.add(options.playbackButton)
 				)
@@ -249,33 +250,16 @@ export class EntityCardFactory {
 	}
 
 	forCue(cue: api.Cue, options: Options = {}): xnode.XElement {
-		let link = this.entityLinkFactory.forCue(cue);
-		let image = this.ImageBox.forVideo(`/media/gifs/${cue.cue_id}/`);
-		let titles = [] as xnode.XElement[];
-		let subtitles = [] as xnode.XElement[];
-		let tags = [
-			"Cue"
-		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forCue(cue);
+		options.image = this.ImageBox.forVideo(`/media/gifs/${cue.cue_id}/`);
 		if (false) {
 		} else if (api.Episode.is(cue.media)) {
-			let episode = cue.media;
-			titles = [
-				this.entityTitleFactory.forEpisode(episode)
-			];
-			subtitles = [
-				this.entityTitleFactory.forShow(episode.season.show),
-				this.entityTitleFactory.forSeason(episode.season)
-			];
+			return this.forEpisode(cue.media, options);
 		} else if (api.Movie.is(cue.media)) {
-			let movie = cue.media;
-			titles = [
-				this.entityTitleFactory.forMovie(movie)
-			];
-			subtitles = movie.genres.map((genre) => this.entityTitleFactory.forGenre(genre));
+			return this.forMovie(cue.media, options);
 		} else {
 			throw `Expected code to be unreachable!`;
 		}
-		return this.make(link, image, titles, subtitles, tags, cue.lines.join("\n"), options);
 	}
 
 	forDisc(disc: api.Disc, options: Options = {}): xnode.XElement {

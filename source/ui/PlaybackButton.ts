@@ -63,12 +63,15 @@ export class PlaybackButtonFactory {
 		this.iconFactory = iconFactory;
 	}
 
-	forEntity(entity: api.Album | api.Artist | api.Disc | api.Episode | api.Movie | api.Playlist | api.Season | api.Show | api.Track): xnode.XElement {
+	forEntity(entity: api.Album | api.Artist | api.Cue | api.Disc | api.Episode | api.Movie | api.Playlist | api.Season | api.Show | api.Track): xnode.XElement {
 		if (api.Album.is(entity)) {
 			return this.forAlbum(entity);
 		}
 		if (api.Artist.is(entity)) {
 			return this.forArtist(entity);
+		}
+		if (api.Cue.is(entity)) {
+			return this.forCue(entity);
 		}
 		if (api.Disc.is(entity)) {
 			return this.forDisc(entity);
@@ -150,6 +153,42 @@ export class PlaybackButtonFactory {
 			return true;
 		}, this.player.contextPath);
 		return this.make(isContext, () => this.player.playArtist(artist, albumIndex, discIndex, trackIndex));
+	}
+
+	forCue(cue: api.Cue): xnode.XElement {
+		if (false) {
+		} else if (api.Episode.is(cue.media)) {
+			let episode = cue.media;
+			let isContext = observables.computed((contextPath) => {
+				if (!is.present(contextPath)) {
+					return false;
+				}
+				if (contextPath[contextPath.length - 1] !== episode.episode_id) {
+					return false;
+				}
+				return true;
+			}, this.player.contextPath);
+			return this.make(isContext, () => {
+				this.player.playEpisode(episode);
+				this.player.seek(cue.start_ms / 1000);
+			});
+		} else if (api.Movie.is(cue.media)) {
+			let movie = cue.media;
+			let isContext = observables.computed((contextPath) => {
+				if (!is.present(contextPath)) {
+					return false;
+				}
+				if (contextPath[contextPath.length - 1] !== movie.movie_id) {
+					return false;
+				}
+				return true;
+			}, this.player.contextPath);
+			return this.make(isContext, () => {
+				this.player.playMovie(movie);
+				this.player.seek(cue.start_ms / 1000);
+			});
+		}
+		throw `Expected code to be unreachable!`;
 	}
 
 	forDisc(disc: api.Disc, trackIndex?: number): xnode.XElement {

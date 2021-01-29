@@ -158,12 +158,15 @@ export class EntityRowFactory {
 		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
-	forCue(cue: api.Cue): xnode.XElement {
-		let link = this.entityLinkFactory.forCue(cue);
-		let image = this.ImageBox.forVideo(`/media/gifs/${cue.cue_id}/`);
-		let titles = new Array<xnode.XElement>();
-		let subtitles = new Array<xnode.XElement>();
-		return this.make(link, image, undefined, titles, subtitles);
+	forCue(cue: api.Cue, playbackButton: xnode.XElement = this.PlaybackButton.forCue(cue)): xnode.XElement {
+		if (false) {
+		} else if (api.Episode.is(cue.media)) {
+			return this.forEpisode(cue.media, playbackButton);
+		} else if (api.Movie.is(cue.media)) {
+			return this.forMovie(cue.media, playbackButton);
+		} else {
+			throw `Expected code to be unreachable!`;
+		}
 	}
 
 	forDisc(disc: api.Disc, playbackButton: xnode.XElement = this.PlaybackButton.forDisc(disc)): xnode.XElement {
