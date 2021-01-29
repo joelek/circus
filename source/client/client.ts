@@ -2470,9 +2470,6 @@ let updateviewforuri = (uri: string): void => {
 			.render()
 		);
 	} else if ((parts = /^video[/]cues[/]([^/?]*)/.exec(uri)) !== null) {
-		//navigate(`video/episodes/${episode.episode_id}/${cue.start_ms}/`);
-		//navigate(`video/movies/${movie.movie_id}/${cue.start_ms}/`);
-		//window.open("/media/gifs/" + cue.cue_id + "/");
 		let query = new ObservableClass(decodeURIComponent(parts[1]));
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
@@ -2503,7 +2500,7 @@ let updateviewforuri = (uri: string): void => {
 					.bind2("value", query)
 					.on("keyup", (event) => {
 						if (event.code === "Enter") {
-							navigate(`video/cues/${encodeURIComponent(query.getState())}/`);
+							navigate(`video/cues/${encodeURIComponent(query.getState())}`);
 						}
 					})
 				)
@@ -2642,7 +2639,7 @@ let updateviewforuri = (uri: string): void => {
 					.bind2("value", query)
 					.on("keyup", (event) => {
 						if (event.code === "Enter") {
-							navigate(`search/${encodeURIComponent(query.getState())}/`);
+							navigate(`search/${encodeURIComponent(query.getState())}`);
 						}
 					})
 				)

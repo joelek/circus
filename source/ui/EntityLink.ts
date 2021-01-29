@@ -60,6 +60,10 @@ export class EntityLinkFactory {
 		return this.make(`audio/artists/`);
 	}
 
+	forCue(cue: api.CueBase): xnode.XElement {
+		return this.make(`video/cues/${cue.cue_id}/`);
+	}
+
 	forDisc(disc: api.DiscBase): xnode.XElement {
 		return this.make(`audio/discs/${disc.disc_id}/`);
 	}
@@ -154,6 +158,9 @@ export class EntityLinkFactory {
 		}
 		if (api.ArtistBase.is(entity)) {
 			return this.forArtist(entity);
+		}
+		if (api.CueBase.is(entity)) {
+			return this.forCue(entity);
 		}
 		if (api.DiscBase.is(entity)) {
 			return this.forDisc(entity);

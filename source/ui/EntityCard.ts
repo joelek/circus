@@ -164,6 +164,9 @@ export class EntityCardFactory {
 		if (api.Artist.is(entity)) {
 			return this.forArtist(entity, options);
 		}
+		if (api.Cue.is(entity)) {
+			return this.forCue(entity, options);
+		}
 		if (api.Disc.is(entity)) {
 			return this.forDisc(entity, options);
 		}
@@ -243,6 +246,17 @@ export class EntityCardFactory {
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, titles, subtitles, tags, undefined, options);
+	}
+
+	forCue(cue: api.Cue, options: Options = {}): xnode.XElement {
+		let link = this.entityLinkFactory.forCue(cue);
+		let image = this.ImageBox.forVideo(`/media/gifs/${cue.cue_id}/`);
+		let titles = [] as xnode.XElement[];
+		let subtitles = [] as xnode.XElement[];
+		let tags = [
+			"Cue"
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		return this.make(link, image, titles, subtitles, tags, cue.lines.join("\n"), options);
 	}
 
 	forDisc(disc: api.Disc, options: Options = {}): xnode.XElement {

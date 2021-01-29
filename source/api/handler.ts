@@ -640,9 +640,9 @@ export function searchForYears(query: string, offset: number, length: number, us
 
 export function searchForEntities(query: string, user_id: string, offset: number, limit: number): schema.objects.Entity[] {
 	let results = [
-		...database.year_search.lookup(query).map((result) => ({ ...result, type_rank: 10 })),
 		...database.album_search.lookup(query).map((result) => ({ ...result, type_rank: 9 })),
 		...database.artist_search.lookup(query).map((result) => ({ ...result, type_rank: 6 })),
+		...database.cue_search.lookup(query).map((result) => ({ ...result, type_rank: 11 })),
 		...database.episode_search.lookup(query).map((result) => ({ ...result, type_rank: 4 })),
 		...database.genre_search.lookup(query).map((result) => ({ ...result, type_rank: 2 })),
 		...database.movie_search.lookup(query).map((result) => ({ ...result, type_rank: 8 })),
@@ -650,7 +650,8 @@ export function searchForEntities(query: string, user_id: string, offset: number
 		...database.playlist_search.lookup(query).map((result) => ({ ...result, type_rank: 3 })),
 		...database.shows_search.lookup(query).map((result) => ({ ...result, type_rank: 7 })),
 		...database.track_search.lookup(query).map((result) => ({ ...result, type_rank: 5 })),
-		...database.user_search.lookup(query).map((result) => ({ ...result, type_rank: 0 }))
+		...database.user_search.lookup(query).map((result) => ({ ...result, type_rank: 0 })),
+		...database.year_search.lookup(query).map((result) => ({ ...result, type_rank: 10 }))
 	].sort(jsondb.CombinedSort.of(
 		jsondb.NumericSort.decreasing((value) => value.rank),
 		jsondb.NumericSort.decreasing((value) => value.type_rank)
@@ -661,7 +662,9 @@ export function searchForEntities(query: string, user_id: string, offset: number
 			return lookupAlbum(entry.album_id, user_id);
 		} else if (records.Artist.is(entry)) {
 			return lookupArtist(entry.artist_id, user_id);
-		} else if (records.Episode.is(entry)) {
+		} else if (records.Cue.is(entry)) {
+			return lookupCue(entry.cue_id, user_id);
+		}else if (records.Episode.is(entry)) {
 			return lookupEpisode(entry.episode_id, user_id);
 		} else if (records.Genre.is(entry)) {
 			return lookupGenre(entry.genre_id, user_id);

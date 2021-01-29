@@ -99,6 +99,9 @@ export class EntityRowFactory {
 		if (api.Artist.is(entity)) {
 			return this.forArtist(entity);
 		}
+		if (api.Cue.is(entity)) {
+			return this.forCue(entity);
+		}
 		if (api.Disc.is(entity)) {
 			return this.forDisc(entity);
 		}
@@ -153,6 +156,14 @@ export class EntityRowFactory {
 		];
 		let subtitles = new Array<xnode.XElement>();
 		return this.make(link, image, playbackButton, titles, subtitles);
+	}
+
+	forCue(cue: api.Cue): xnode.XElement {
+		let link = this.entityLinkFactory.forCue(cue);
+		let image = this.ImageBox.forVideo(`/media/gifs/${cue.cue_id}/`);
+		let titles = new Array<xnode.XElement>();
+		let subtitles = new Array<xnode.XElement>();
+		return this.make(link, image, undefined, titles, subtitles);
 	}
 
 	forDisc(disc: api.Disc, playbackButton: xnode.XElement = this.PlaybackButton.forDisc(disc)): xnode.XElement {
