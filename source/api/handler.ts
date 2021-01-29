@@ -461,9 +461,9 @@ export function searchForAlbums(query: string, offset: number, length: number, u
 			.map((record) => lookupAlbum(record.album_id, user_id));
 	} else {
 		return database.album_search.lookup(query)
-			.map((record) => record.record)
+			.map((record) => record.id)
 			.slice(offset, offset + length)
-			.map((record) => lookupAlbum(record.album_id, user_id));
+			.map((id) => lookupAlbum(id, user_id));
 	}
 };
 
@@ -483,9 +483,9 @@ export function searchForArtists(query: string, offset: number, length: number, 
 			.map((record) => lookupArtist(record.artist_id, user_id));
 	} else {
 		return database.artist_search.lookup(query)
-			.map((record) => record.record)
+			.map((record) => record.id)
 			.slice(offset, offset + length)
-			.map((record) => lookupArtist(record.artist_id, user_id));
+			.map((id) => lookupArtist(id, user_id));
 	}
 };
 
@@ -493,7 +493,7 @@ export function searchForCues(query: string, offset: number, limit: number, user
 	return database.cue_search.lookup(query)
 		.sort(jsondb.NumericSort.decreasing((value) => value.rank))
 		.slice(offset, offset + limit)
-		.map((record) => lookupCue(record.record.cue_id, user_id))
+		.map((record) => lookupCue(record.id, user_id))
 		.map((cue) => {
 			let video_files = database.getVideoFilesFromSubtitleFile.lookup(cue.subtitle.subtitle.file_id);
 			for (let video_file of video_files) {
@@ -535,9 +535,9 @@ export function searchForEpisodes(query: string, offset: number, length: number,
 			.map((record) => lookupEpisode(record.episode_id, user_id));
 	} else {
 		return database.episode_search.lookup(query)
-			.map((record) => record.record)
+			.map((record) => record.id)
 			.slice(offset, offset + length)
-			.map((record) => lookupEpisode(record.episode_id, user_id));
+			.map((id) => lookupEpisode(id, user_id));
 	}
 };
 
@@ -548,9 +548,9 @@ export function searchForGenres(query: string, offset: number, length: number, u
 			.map((record) => lookupGenre(record.genre_id, user_id));
 	} else {
 		return database.genre_search.lookup(query)
-			.map((record) => record.record)
+			.map((record) => record.id)
 			.slice(offset, offset + length)
-			.map((record) => lookupGenre(record.genre_id, user_id));
+			.map((id) => lookupGenre(id, user_id));
 	}
 };
 
@@ -562,9 +562,9 @@ export function searchForMovies(query: string, offset: number, length: number, u
 			.map((record) => lookupMovie(record.movie_id, user_id));
 	} else {
 		return database.movie_search.lookup(query)
-			.map((record) => record.record)
+			.map((record) => record.id)
 			.slice(offset, offset + length)
-			.map((record) => lookupMovie(record.movie_id, user_id));
+			.map((id) => lookupMovie(id, user_id));
 	}
 };
 
@@ -576,9 +576,9 @@ export function searchForPersons(query: string, offset: number, length: number, 
 			.map((record) => lookupPerson(record.person_id, user_id));
 	} else {
 		return database.person_search.lookup(query)
-			.map((record) => record.record)
+			.map((record) => record.id)
 			.slice(offset, offset + length)
-			.map((record) => lookupPerson(record.person_id, user_id));
+			.map((id) => lookupPerson(id, user_id));
 	}
 };
 
@@ -590,9 +590,9 @@ export function searchForPlaylists(query: string, offset: number, length: number
 			.map((record) => lookupPlaylist(record.playlist_id, user_id));
 	} else {
 		return database.playlist_search.lookup(query)
-			.map((record) => record.record)
+			.map((record) => record.id)
 			.slice(offset, offset + length)
-			.map((record) => lookupPlaylist(record.playlist_id, user_id));
+			.map((id) => lookupPlaylist(id, user_id));
 	}
 };
 
@@ -611,9 +611,9 @@ export function searchForShows(query: string, offset: number, length: number, us
 			.map((record) => lookupShow(record.show_id, user_id));
 	} else {
 		return database.shows_search.lookup(query)
-			.map((record) => record.record)
+			.map((record) => record.id)
 			.slice(offset, offset + length)
-			.map((record) => lookupShow(record.show_id, user_id));
+			.map((id) => lookupShow(id, user_id));
 	}
 };
 
@@ -625,9 +625,9 @@ export function searchForTracks(query: string, offset: number, length: number, u
 			.map((record) => lookupTrack(record.track_id, user_id));
 	} else {
 		return database.track_search.lookup(query)
-			.map((record) => record.record)
+			.map((record) => record.id)
 			.slice(offset, offset + length)
-			.map((record) => lookupTrack(record.track_id, user_id));
+			.map((id) => lookupTrack(id, user_id));
 	}
 };
 
@@ -639,9 +639,9 @@ export function searchForUsers(query: string, offset: number, length: number, us
 			.map((record) => lookupUser(record.user_id));
 	} else {
 		return database.user_search.lookup(query)
-			.map((record) => record.record)
+			.map((record) => record.id)
 			.slice(offset, offset + length)
-			.map((record) => lookupUser(record.user_id));
+			.map((id) => lookupUser(id));
 	}
 };
 
@@ -653,56 +653,58 @@ export function searchForYears(query: string, offset: number, length: number, us
 			.map((record) => lookupYear(record.year_id, user_id));
 	} else {
 		return database.year_search.lookup(query)
-			.map((record) => record.record)
+			.map((record) => record.id)
 			.slice(offset, offset + length)
-			.map((record) => lookupYear(record.year_id, user_id));
+			.map((id) => lookupYear(id, user_id));
 	}
 };
 
 export function searchForEntities(query: string, user_id: string, offset: number, limit: number): schema.objects.Entity[] {
 	let results = [
-		...database.album_search.lookup(query).map((result) => ({ ...result, type_rank: 9 })),
-		...database.artist_search.lookup(query).map((result) => ({ ...result, type_rank: 6 })),
-		...database.cue_search.lookup(query).map((result) => ({ ...result, type_rank: 11 })),
-		...database.episode_search.lookup(query).map((result) => ({ ...result, type_rank: 4 })),
-		...database.genre_search.lookup(query).map((result) => ({ ...result, type_rank: 2 })),
-		...database.movie_search.lookup(query).map((result) => ({ ...result, type_rank: 8 })),
-		...database.person_search.lookup(query).map((result) => ({ ...result, type_rank: 1 })),
-		...database.playlist_search.lookup(query).map((result) => ({ ...result, type_rank: 3 })),
-		...database.shows_search.lookup(query).map((result) => ({ ...result, type_rank: 7 })),
-		...database.track_search.lookup(query).map((result) => ({ ...result, type_rank: 5 })),
-		...database.user_search.lookup(query).map((result) => ({ ...result, type_rank: 0 })),
-		...database.year_search.lookup(query).map((result) => ({ ...result, type_rank: 10 }))
+		...database.album_search.lookup(query).map((result) => ({ ...result, type: "ALBUM", type_rank: 9 })),
+		...database.artist_search.lookup(query).map((result) => ({ ...result, type: "ARTIST", type_rank: 6 })),
+		...database.cue_search.lookup(query).slice(0, 1).map((result) => ({ ...result, type: "CUE", type_rank: 11 })),
+		...database.episode_search.lookup(query).map((result) => ({ ...result, type: "EPISODE", type_rank: 4 })),
+		...database.genre_search.lookup(query).map((result) => ({ ...result, type: "GENRE", type_rank: 2 })),
+		...database.movie_search.lookup(query).map((result) => ({ ...result, type: "MOVIE", type_rank: 8 })),
+		...database.person_search.lookup(query).map((result) => ({ ...result, type: "PERSON", type_rank: 1 })),
+		...database.playlist_search.lookup(query).map((result) => ({ ...result, type: "PLAYLIST", type_rank: 3 })),
+		...database.shows_search.lookup(query).map((result) => ({ ...result, type: "SHOW", type_rank: 7 })),
+		...database.track_search.lookup(query).map((result) => ({ ...result, type: "TRACK", type_rank: 5 })),
+		...database.user_search.lookup(query).map((result) => ({ ...result, type: "USER", type_rank: 0 })),
+		...database.year_search.lookup(query).map((result) => ({ ...result, type: "YEAR", type_rank: 10 }))
 	].sort(jsondb.CombinedSort.of(
 		jsondb.NumericSort.decreasing((value) => value.rank),
 		jsondb.NumericSort.decreasing((value) => value.type_rank)
 	)).slice(offset, offset + limit);
 	let entities = results.map((result) => {
-		let entry = result.record;
-		if (records.Album.is(entry)) {
-			return lookupAlbum(entry.album_id, user_id);
-		} else if (records.Artist.is(entry)) {
-			return lookupArtist(entry.artist_id, user_id);
-		} else if (records.Cue.is(entry)) {
-			return lookupCue(entry.cue_id, user_id);
-		}else if (records.Episode.is(entry)) {
-			return lookupEpisode(entry.episode_id, user_id);
-		} else if (records.Genre.is(entry)) {
-			return lookupGenre(entry.genre_id, user_id);
-		} else if (records.Movie.is(entry)) {
-			return lookupMovie(entry.movie_id, user_id);
-		} else if (records.Person.is(entry)) {
-			return lookupPerson(entry.person_id, user_id);
-		} else if (records.Playlist.is(entry)) {
-			return lookupPlaylist(entry.playlist_id, user_id);
-		} else if (records.Show.is(entry)) {
-			return lookupShow(entry.show_id, user_id);
-		} else if (records.Track.is(entry)) {
-			return lookupTrack(entry.track_id, user_id);
-		} else if (records.User.is(entry)) {
-			return lookupUser(entry.user_id);
-		} else if (records.Year.is(entry)) {
-			return lookupYear(entry.year_id, user_id);
+		let type = result.type;
+		let id = result.id;
+		if (false) {
+		} else if (type === "ALBUM") {
+			return lookupAlbum(id, user_id);
+		} else if (type === "ARTIST") {
+			return lookupArtist(id, user_id);
+		} else if (type === "CUE") {
+			return lookupCue(id, user_id);
+		}else if (type === "EPISODE") {
+			return lookupEpisode(id, user_id);
+		} else if (type === "GENRE") {
+			return lookupGenre(id, user_id);
+		} else if (type === "MOVIE") {
+			return lookupMovie(id, user_id);
+		} else if (type === "PERSON") {
+			return lookupPerson(id, user_id);
+		} else if (type === "PLAYLIST") {
+			return lookupPlaylist(id, user_id);
+		} else if (type === "SHOW") {
+			return lookupShow(id, user_id);
+		} else if (type === "TRACK") {
+			return lookupTrack(id, user_id);
+		} else if (type === "USER") {
+			return lookupUser(id);
+		} else if (type === "YEAR") {
+			return lookupYear(id, user_id);
 		}
 		throw `Expected code to be unreachable!`;
 	});

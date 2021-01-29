@@ -370,7 +370,7 @@ export class Table<A extends Record<string, any>> {
 		this.insertOrUpdate(record);
 	}
 
-	keyof(record: A): string | undefined {
+	keyof(record: A): string {
 		return this.key_provider(record);
 	}
 

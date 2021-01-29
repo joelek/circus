@@ -4,13 +4,13 @@ import * as sorters from "./sorters";
 import * as jdb from "../jdb";
 
 export class CollectionIndex<A extends Record<string, any>> {
-	private getPrimaryKeysFromIndexedValue: Map<string | undefined, Set<string | undefined>>;
-	private lookupRecord: (key: string | undefined) => A;
-	private getPrimaryKey: (record: A) => string | undefined;
+	private getPrimaryKeysFromIndexedValue: Map<string | undefined, Set<string>>;
+	private lookupRecord: (key: string) => A;
+	private getPrimaryKey: (record: A) => string;
 	private getIndexedValue: (record: A) => string | undefined;
 
-	constructor(lookupRecord: (key: string | undefined) => A, getPrimaryKey: (record: A) => string | undefined, getIndexedValue: (record: A) => string | undefined) {
-		this.getPrimaryKeysFromIndexedValue = new Map<string | undefined, Set<string | undefined>>();
+	constructor(lookupRecord: (key: string) => A, getPrimaryKey: (record: A) => string, getIndexedValue: (record: A) => string | undefined) {
+		this.getPrimaryKeysFromIndexedValue = new Map<string | undefined, Set<string>>();
 		this.lookupRecord = lookupRecord;
 		this.getPrimaryKey = getPrimaryKey;
 		this.getIndexedValue = getIndexedValue;
@@ -20,7 +20,7 @@ export class CollectionIndex<A extends Record<string, any>> {
 		let indexedValue = this.getIndexedValue(record);
 		let primaryKeys = this.getPrimaryKeysFromIndexedValue.get(indexedValue);
 		if (is.absent(primaryKeys)) {
-			primaryKeys = new Set<string | undefined>();
+			primaryKeys = new Set<string>();
 			this.getPrimaryKeysFromIndexedValue.set(indexedValue, primaryKeys);
 		}
 		let primaryKey = this.getPrimaryKey(record);
@@ -108,8 +108,8 @@ type RecordIndexEventMap<A> = {
 };
 
 export class RecordIndex<A extends Record<string, any>> {
-	private getRecordFromKey: Map<string | undefined, A>;
-	private getKey: (record: A) => string | undefined;
+	private getRecordFromKey: Map<string, A>;
+	private getKey: (record: A) => string;
 	private router: stdlib.routing.MessageRouter<RecordIndexEventMap<A>>;
 
 	private insertOrUpdate(next: A, action: "combine" | "replace" = "replace"): void {
@@ -135,8 +135,8 @@ export class RecordIndex<A extends Record<string, any>> {
 		}
 	}
 
-	constructor(getKey: (record: A) => string | undefined) {
-		this.getRecordFromKey = new Map<string | undefined, A>();
+	constructor(getKey: (record: A) => string) {
+		this.getRecordFromKey = new Map<string, A>();
 		this.getKey = getKey;
 		this.router = new stdlib.routing.MessageRouter<RecordIndexEventMap<A>>();
 	}
@@ -149,7 +149,7 @@ export class RecordIndex<A extends Record<string, any>> {
 		this.insertOrUpdate(record, action);
 	}
 
-	keyof(record: A): string | undefined {
+	keyof(record: A): string {
 		return this.getKey(record);
 	}
 
@@ -157,7 +157,7 @@ export class RecordIndex<A extends Record<string, any>> {
 		return this.getRecordFromKey.size;
 	}
 
-	lookup(key: string | undefined): A {
+	lookup(key: string): A {
 		let record = this.getRecordFromKey.get(key);
 		if (is.absent(record)) {
 			throw `Expected "${key}" to match a record!`;
@@ -191,7 +191,7 @@ export class RecordIndex<A extends Record<string, any>> {
 		this.insertOrUpdate(record, action);
 	}
 
-	static from<A>(records: Iterable<A>, getKey: (record: A) => string | undefined): RecordIndex<A> {
+	static from<A>(records: Iterable<A>, getKey: (record: A) => string): RecordIndex<A> {
 		let index = new RecordIndex<A>(getKey);
 		for (let record of records) {
 			index.insert(record);
@@ -200,8 +200,8 @@ export class RecordIndex<A extends Record<string, any>> {
 	}
 };
 
-export type SearchResult<A> = {
-	record: A,
+export type SearchResult = {
+	id: string,
 	rank: number
 };
 
@@ -214,14 +214,14 @@ export function getTokens(query: string): Array<string> {
 };
 
 export class SearchIndex<A extends Record<string, any>> {
-	private getPrimaryKeysFromToken: Map<string | undefined, Set<string | undefined>>;
-	private lookupRecord: (key: string | undefined) => A;
-	private getPrimaryKey: (record: A) => string | undefined;
+	private getPrimaryKeysFromToken: Map<string, Set<string>>;
+	private lookupRecord: (key: string) => A;
+	private getPrimaryKey: (record: A) => string;
 	private getIndexedValues: (record: A) => Array<string>;
 	private useDict: boolean;
 
-	constructor(lookupRecord: (key: string | undefined) => A, getPrimaryKey: (record: A) => string | undefined, getIndexedValues: (record: A) => Array<string>, useDict: boolean) {
-		this.getPrimaryKeysFromToken = new Map<string, Set<string | undefined>>();
+	constructor(lookupRecord: (key: string) => A, getPrimaryKey: (record: A) => string, getIndexedValues: (record: A) => Array<string>, useDict: boolean) {
+		this.getPrimaryKeysFromToken = new Map<string, Set<string>>();
 		this.lookupRecord = lookupRecord;
 		this.getPrimaryKey = getPrimaryKey;
 		this.getIndexedValues = getIndexedValues;
@@ -237,7 +237,7 @@ export class SearchIndex<A extends Record<string, any>> {
 			for (let token of tokens) {
 				let primaryKeys = this.getPrimaryKeysFromToken.get(token);
 				if (is.absent(primaryKeys)) {
-					primaryKeys = new Set<string | undefined>();
+					primaryKeys = new Set<string>();
 					this.getPrimaryKeysFromToken.set(token, primaryKeys);
 				}
 				let primaryKey = this.getPrimaryKey(record);
@@ -246,12 +246,12 @@ export class SearchIndex<A extends Record<string, any>> {
 		}
 	}
 
-	lookup(query: string): Array<SearchResult<A>> {
+	lookup(query: string): Array<SearchResult> {
 		let tokens = getTokens(query);
 		let primaryKeySets = tokens.map((token) => {
 			return this.getPrimaryKeysFromToken.get(token);
 		}).filter(is.present);
-		let map = new Map<string | undefined, number>();
+		let map = new Map<string, number>();
 		for (let primaryKeys of primaryKeySets) {
 			for (let primaryKey of primaryKeys) {
 				let rank = map.get(primaryKey) ?? (0 - tokens.length);
@@ -262,7 +262,7 @@ export class SearchIndex<A extends Record<string, any>> {
 			.filter((entry) => entry[1] >= 0)
 			.sort(sorters.NumericSort.increasing((entry) => entry[1]))
 			.map((entry) => ({
-				record: this.lookupRecord(entry[0]),
+				id: entry[0],
 				rank: entry[1]
 			}));
 	}
