@@ -5,7 +5,6 @@ import * as database from "../database/indexer";
 import * as jsondb from "../jsondb";
 import * as is from "../is";
 import * as schema from "./schema/";
-import * as records from "../database/schema";
 
 export function createUser(request: schema.messages.RegisterRequest): schema.messages.RegisterResponse | schema.messages.ErrorMessage {
 	let { username, password, name, key_id } = { ...request };
@@ -663,7 +662,6 @@ export function searchForEntities(query: string, user_id: string, offset: number
 	let results = [
 		...database.album_search.lookup(query).map((result) => ({ ...result, type: "ALBUM", type_rank: 9 })),
 		...database.artist_search.lookup(query).map((result) => ({ ...result, type: "ARTIST", type_rank: 6 })),
-		...database.cue_search.lookup(query).slice(0, 1).map((result) => ({ ...result, type: "CUE", type_rank: 11 })),
 		...database.episode_search.lookup(query).map((result) => ({ ...result, type: "EPISODE", type_rank: 4 })),
 		...database.genre_search.lookup(query).map((result) => ({ ...result, type: "GENRE", type_rank: 2 })),
 		...database.movie_search.lookup(query).map((result) => ({ ...result, type: "MOVIE", type_rank: 8 })),
@@ -676,8 +674,15 @@ export function searchForEntities(query: string, user_id: string, offset: number
 	].sort(jsondb.CombinedSort.of(
 		jsondb.NumericSort.decreasing((value) => value.rank),
 		jsondb.NumericSort.decreasing((value) => value.type_rank)
-	)).slice(offset, offset + limit);
-	let entities = results.map((result) => {
+	));
+	let cue = database.cue_search.lookup(query).shift();
+	if (is.present(cue)) {
+		let result = results[0];
+		if (is.absent(result) || cue.rank > result.rank) {
+			results.unshift({ ...cue, type: "CUE", type_rank: 11 });
+		}
+	}
+	let entities = results.slice(offset, offset + limit).map((result) => {
 		let type = result.type;
 		let id = result.id;
 		if (false) {
