@@ -150,7 +150,7 @@ if (users.length() === 0) {
 
 export const album_search = indices.SearchIndex.fromTable(albums, (entry) => [entry.title, entry.year?.toString()].filter(is.present));
 export const artist_search = indices.SearchIndex.fromTable(artists, (entry) => [entry.name]);
-export const cue_search = indices.SearchIndex.fromTable(cues, (entry) => entry.lines.split("\n"), true);
+export const cue_search = indices.SearchIndex.fromTable(cues, (entry) => entry.lines.split("\n"), 4);
 export const episode_search = indices.SearchIndex.fromTable(episodes, (entry) => [entry.title, entry.year?.toString()].filter(is.present));
 export const genre_search = indices.SearchIndex.fromTable(genres, (entry) => [entry.name]);
 export const movie_search = indices.SearchIndex.fromTable(movies, (entry) => [entry.title, entry.year?.toString()].filter(is.present));

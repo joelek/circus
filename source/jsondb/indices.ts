@@ -218,22 +218,19 @@ export class SearchIndex<A extends Record<string, any>> {
 	private lookupRecord: (key: string) => A;
 	private getPrimaryKey: (record: A) => string;
 	private getIndexedValues: (record: A) => Array<string>;
-	private useDict: boolean;
+	private minTokenLength: number;
 
-	constructor(lookupRecord: (key: string) => A, getPrimaryKey: (record: A) => string, getIndexedValues: (record: A) => Array<string>, useDict: boolean) {
+	constructor(lookupRecord: (key: string) => A, getPrimaryKey: (record: A) => string, getIndexedValues: (record: A) => Array<string>, minTokenLength: number) {
 		this.getPrimaryKeysFromToken = new Map<string, Set<string>>();
 		this.lookupRecord = lookupRecord;
 		this.getPrimaryKey = getPrimaryKey;
 		this.getIndexedValues = getIndexedValues;
-		this.useDict = useDict;
+		this.minTokenLength = minTokenLength;
 	}
 
 	insert(record: A): void {
 		for (let value of this.getIndexedValues(record)) {
-			let tokens = getTokens(value);
-			if (this.useDict) {
-				tokens = tokens.filter((token) => token.length >= 4);
-			}
+			let tokens = getTokens(value).filter((token) => token.length >= this.minTokenLength);
 			for (let token of tokens) {
 				let primaryKeys = this.getPrimaryKeysFromToken.get(token);
 				if (is.absent(primaryKeys)) {
@@ -247,7 +244,7 @@ export class SearchIndex<A extends Record<string, any>> {
 	}
 
 	lookup(query: string): Array<SearchResult> {
-		let tokens = getTokens(query);
+		let tokens = getTokens(query).filter((token) => token.length >= this.minTokenLength);
 		let primaryKeySets = tokens.map((token) => {
 			return this.getPrimaryKeysFromToken.get(token);
 		}).filter(is.present);
@@ -288,8 +285,8 @@ export class SearchIndex<A extends Record<string, any>> {
 		this.insert(next);
 	}
 
-	static fromIndex<A>(records: RecordIndex<A>, getIndexedValues: (record: A) => Array<string>, useDict: boolean = false): SearchIndex<A> {
-		let index = new SearchIndex<A>((key) => records.lookup(key), (record) => records.keyof(record), getIndexedValues, useDict);
+	static fromIndex<A>(records: RecordIndex<A>, getIndexedValues: (record: A) => Array<string>, minTokenLength: number = 0): SearchIndex<A> {
+		let index = new SearchIndex<A>((key) => records.lookup(key), (record) => records.keyof(record), getIndexedValues, minTokenLength);
 		records.on("insert", (event) => {
 			index.insert(event.next);
 		});
@@ -302,8 +299,8 @@ export class SearchIndex<A extends Record<string, any>> {
 		return index;
 	}
 
-	static fromTable<A>(records: jdb.Table<A>, getIndexedValues: (record: A) => Array<string>, useDict: boolean = false): SearchIndex<A> {
-		let index = new SearchIndex<A>((key) => records.lookup(key), (record) => records.keyof(record), getIndexedValues, useDict);
+	static fromTable<A>(records: jdb.Table<A>, getIndexedValues: (record: A) => Array<string>, minTokenLength: number = 0): SearchIndex<A> {
+		let index = new SearchIndex<A>((key) => records.lookup(key), (record) => records.keyof(record), getIndexedValues, minTokenLength);
 		records.on("insert", (event) => {
 			index.insert(event.next);
 		});
