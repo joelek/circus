@@ -260,7 +260,7 @@ export class SearchIndex<A extends Record<string, any>> {
 		}
 		return Array.from(map.entries())
 			.filter((entry) => entry[1] >= 0)
-			.sort(sorters.NumericSort.increasing((entry) => entry[1]))
+			.sort(sorters.NumericSort.decreasing((entry) => entry[1]))
 			.map((entry) => ({
 				id: entry[0],
 				rank: entry[1]
