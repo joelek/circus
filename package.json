@@ -1,14 +1,13 @@
 {
 	"bin": {},
+	"dependencies": {},
 	"devDependencies": {
 		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^4",
+		"@joelek/ts-bundle": "github:joelek/ts-bundle#semver:^0",
 		"@joelek/ts-sockets": "github:joelek/ts-sockets#semver:^2",
-		"@types/node": "^14.14.6",
-		"typescript": "^4.0.5",
-		"webpack": "^5.3.2",
-		"webpack-cli": "^4.1.0"
+		"@types/node": "^14",
+		"typescript": "^4"
 	},
-	"dependencies": {},
 	"license": "UNLICENSED",
 	"main": "./dist/server.min.js",
 	"name": "@joelek/castaway",
@@ -17,12 +16,13 @@
 		"url": "https://github.com/joelek/castaway.git"
 	},
 	"scripts": {
-		"build": "rm -rf ./dist/ && npm run codegen && npx tsc && npm run bundle",
-		"bundle:client": "npx webpack --entry ./build/client/client.js --output-filename client.min.js --target web",
-		"bundle:server": "npx webpack --entry ./build/server/server.js --output-filename server.min.js --target node",
-		"bundle": "npm run bundle:client && npm run bundle:server",
+		"build": "npm run codegen && npm run compile && npm run bundle",
+		"bundle:client": "tsb --entry=./build/client/client.js --bundle=./dist/client.min.js",
+		"bundle:server": "tsb --entry=./build/server/server.js --bundle=./dist/server.min.js",
+		"bundle": "rm -rf ./dist/ && npm run bundle:client && npm run bundle:server",
 		"clean": "rm -rf ./build/ ./node_modules/",
 		"codegen": "npx autoguard --standalone=false",
+		"compile": "rm -rf ./build/ && npx tsc --build",
 		"preversion": "npm run build && git add ./",
 		"postversion": "git push && git push --tags",
 		"run": "node ."
