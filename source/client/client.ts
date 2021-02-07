@@ -710,6 +710,19 @@ style.innerText = `
 		z-index: 1;
 	}
 
+	.modal-container[data-hide] {
+		display: initial!important;
+	}
+
+	.modal-container[data-hide=false] {
+		transform: translate(0%, -100%);
+		transition: transform 0.5s;
+	}
+
+	.modal-container[data-hide=true] {
+		transform: none;
+		transition: none;
+	}
 
 
 
@@ -1199,6 +1212,10 @@ appcontainer.appendChild(appheader);
 mountwrapper.setAttribute("class", "app__content");
 appcontainer.appendChild(mountwrapper);
 
+let maincontent = document.createElement('div');
+maincontent.setAttribute("style", "position: relative; width: 100%; height: 100%;");
+mountwrapper.appendChild(maincontent);
+
 let devicelist = new ArrayObservable<Device & {
 	active: boolean,
 	local: boolean
@@ -1442,11 +1459,11 @@ let modals = xml.element("div.modal-container")
 		)
 	);
 
-mountwrapper.appendChild(modals.render());
 let mount = xml.element("div.scroll-container")
 	.bind("data-hide", showVideo.addObserver((showVideo) => showVideo))
 	.render();
-mountwrapper.appendChild(mount);
+maincontent.appendChild(mount);
+maincontent.appendChild(modals.render());
 
 let mpw = xml.element("div.app__navigation")
 	.bind("data-hide", showUserInterface.addObserver((showUserInterface) => !showUserInterface))
