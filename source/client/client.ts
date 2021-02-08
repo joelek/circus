@@ -2513,7 +2513,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("input")
 					.set("type", "text")
 					.set("spellcheck", "false")
-					.set("placeholder", "Search query")
+					.set("placeholder", "Search...")
 					.bind2("value", query)
 					.on("keyup", (event) => {
 						if (event.code === "Enter") {
@@ -2521,7 +2521,7 @@ let updateviewforuri = (uri: string): void => {
 						}
 					})
 				)
-				.add(Icon.makeMagnifyingGlass()
+				.add(Icon.makeMagnifyingGlassLine()
 					.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
 				)
 			)
@@ -2652,7 +2652,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("input")
 					.set("type", "text")
 					.set("spellcheck", "false")
-					.set("placeholder", "Search query")
+					.set("placeholder", "Search...")
 					.bind2("value", query)
 					.on("keyup", (event) => {
 						if (event.code === "Enter") {
@@ -2660,7 +2660,7 @@ let updateviewforuri = (uri: string): void => {
 						}
 					})
 				)
-				.add(Icon.makeMagnifyingGlass()
+				.add(Icon.makeMagnifyingGlassLine()
 					.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
 				)
 			)
