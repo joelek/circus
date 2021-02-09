@@ -7,15 +7,24 @@ const CSS = `
 		gap: 24px;
 		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 	}
+
+	.grid--mini {
+		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+	}
 `;
+
+type Options = Partial<{
+	mini: boolean
+}>;
 
 export class GridFactory {
 	constructor() {
 
 	}
 
-	make(): xnode.XElement {
-		return xnode.element("div.grid");
+	make(options?: Options): xnode.XElement {
+		let mini = options?.mini ?? false;
+		return xnode.element(`div.grid${mini ? ".grid--mini" : ""}`);
 	}
 
 	static makeStyle(): xnode.XElement {

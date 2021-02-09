@@ -2271,8 +2271,7 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^audio[/]/.exec(uri)) !== null) {
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
-				.add(xml.element("div")
-					.set("style", "display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));")
+				.add(Grid.make({ mini: true })
 					.add(makeIconLink(Icon.makeDisc(), "Albums", "audio/albums/"))
 					.add(makeIconLink(Icon.makePersonLine(), "Artists", "audio/artists/"))
 					.add(makeIconLink(Icon.makeList(), "Playlists", "audio/playlists/"))
@@ -2566,8 +2565,7 @@ let updateviewforuri = (uri: string): void => {
 			let genres = response.genres;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(xml.element("div")
-						.set("style", "display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));")
+					.add(Grid.make({ mini: true })
 						.add(...genres.map((genre) => makeIconLink(Icon.makePieChart(), genre.title, `video/genres/${genre.genre_id}/`)))
 					)
 				)
@@ -2577,8 +2575,7 @@ let updateviewforuri = (uri: string): void => {
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
-				.add(xml.element("div")
-					.set("style", "display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));")
+				.add(Grid.make({ mini: true })
 					.add(makeIconLink(Icon.makeStarLine(), "Movies", "video/movies/"))
 					.add(makeIconLink(Icon.makeMonitor(), "Shows", "video/shows/"))
 					.add(makeIconLink(Icon.makePieChart(), "Genres", "video/genres/"))
@@ -2678,8 +2675,7 @@ let updateviewforuri = (uri: string): void => {
 			let years = response.years;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
-					.add(xml.element("div")
-						.set("style", "display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));")
+					.add(Grid.make({ mini: true })
 						.add(...years.map((year) => makeIconLink(Icon.makeCalendar(), `${year.year}`, `years/${year.year_id}/`)))
 					)
 				)
@@ -2688,8 +2684,7 @@ let updateviewforuri = (uri: string): void => {
 	} else {
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
-				.add(xml.element("div")
-					.set("style", "display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));")
+				.add(Grid.make({ mini: true })
 					.add(makeIconLink(Icon.makeMonitor(), "Watch", "video/"))
 					.add(makeIconLink(Icon.makeSpeaker(), "Listen", "audio/"))
 					.add(makeIconLink(Icon.makeMagnifyingGlassLine(), "Search", "search/"))
