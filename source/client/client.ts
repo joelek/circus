@@ -2567,7 +2567,8 @@ let updateviewforuri = (uri: string): void => {
 			});
 		});
 	} else if ((parts = /^video[/]genres[/]([^/?]*)/.exec(uri)) !== null) {
-		req<{}, api_response.GenresResponse>(`/api/video/genres/?token=${token}`, {}, (status, response) => {
+		let encodedQuery = parts[1];
+		req<{}, api_response.GenresResponse>(`/api/video/genres/${encodedQuery}?token=${token}`, {}, (status, response) => {
 			let genres = response.genres;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
