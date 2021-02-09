@@ -606,7 +606,7 @@ style.innerText = `
 	.content {
 		box-sizing: border-box;
 		display: grid;
-		gap: 24px;
+		gap: 48px;
 		margin: 0px auto;
 		max-width: 960px;
 		padding: 24px;
@@ -2646,7 +2646,6 @@ let updateviewforuri = (uri: string): void => {
 			}
 		});
 		mount.appendChild(xml.element("div.content")
-			.set("style", "display: grid; gap: 48px;")
 			.add(xml.element("div")
 				.set("style", "position: relative;")
 				.add(xml.element("input")
