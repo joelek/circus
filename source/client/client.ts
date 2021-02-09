@@ -21,6 +21,7 @@ import { EntityRowFactory } from "../ui/EntityRow";
 import { PlaybackButtonFactory } from "../ui/PlaybackButton";
 import { EntityNavLinkFactory } from "../ui/EntityNavLinkFactory";
 import { PlaylistsClient } from "../playlists/client";
+import { encode } from "../database/vtt/vtt";
 
 
 
@@ -1771,7 +1772,7 @@ let updateviewforuri = (uri: string): void => {
 			);
 		});
 	} else if ((parts = /^audio[/]tracks[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = parts[1];
+		let encodedQuery = parts[1];
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
@@ -1779,7 +1780,7 @@ let updateviewforuri = (uri: string): void => {
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				let response = await preq<{}, api_response.TracksResponse>(`/api/audio/tracks/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {});
+				let response = await preq<{}, api_response.TracksResponse>(`/api/audio/tracks/${encodedQuery}?offset=${offset}&token=${token}`, {});
 				for (let track of response.tracks) {
 					tracks.append(track);
 				}
@@ -1825,7 +1826,7 @@ let updateviewforuri = (uri: string): void => {
 				.render());
 		});
 	} else if ((parts = /^video[/]seasons[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = parts[1];
+		let encodedQuery = parts[1];
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
@@ -1833,7 +1834,7 @@ let updateviewforuri = (uri: string): void => {
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				let response = await preq<{}, api_response.SeasonsResponse>(`/api/video/seasons/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {});
+				let response = await preq<{}, api_response.SeasonsResponse>(`/api/video/seasons/${encodedQuery}?offset=${offset}&token=${token}`, {});
 				for (let season of response.seasons) {
 					seasons.append(season);
 				}
@@ -1877,7 +1878,7 @@ let updateviewforuri = (uri: string): void => {
 				.render());
 		});
 	} else if ((parts = /^audio[/]discs[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = parts[1];
+		let encodedQuery = parts[1];
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
@@ -1885,7 +1886,7 @@ let updateviewforuri = (uri: string): void => {
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				let response = await preq<{}, api_response.DiscsResponse>(`/api/audio/discs/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {});
+				let response = await preq<{}, api_response.DiscsResponse>(`/api/audio/discs/${encodedQuery}?offset=${offset}&token=${token}`, {});
 				for (let disc of response.discs) {
 					discs.append(disc);
 				}
@@ -1925,7 +1926,7 @@ let updateviewforuri = (uri: string): void => {
 				.render());
 		});
 	} else if ((parts = /^users[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = parts[1];
+		let encodedQuery = parts[1];
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
@@ -1933,7 +1934,7 @@ let updateviewforuri = (uri: string): void => {
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				let response = await preq<{}, api_response.UsersResponse>(`/api/users/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {});
+				let response = await preq<{}, api_response.UsersResponse>(`/api/users/${encodedQuery}?offset=${offset}&token=${token}`, {});
 				for (let user of response.users) {
 					users.append(user);
 				}
@@ -1986,7 +1987,7 @@ let updateviewforuri = (uri: string): void => {
 			});
 		});
 	} else if ((parts = /^persons[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = parts[1];
+		let encodedQuery = parts[1];
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
@@ -1994,7 +1995,7 @@ let updateviewforuri = (uri: string): void => {
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				let response = await preq<{}, api_response.PersonsResponse>(`/api/persons/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {});
+				let response = await preq<{}, api_response.PersonsResponse>(`/api/persons/${encodedQuery}?offset=${offset}&token=${token}`, {});
 				for (let person of response.persons) {
 					persons.append(person);
 				}
@@ -2034,6 +2035,7 @@ let updateviewforuri = (uri: string): void => {
 				.render());
 		});
 	} else if ((parts = /^audio[/]albums[/]([^/?]*)/.exec(uri)) !== null) {
+		let encodedQuery = parts[1];
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
@@ -2041,7 +2043,7 @@ let updateviewforuri = (uri: string): void => {
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				let response = await preq<{}, api_response.AlbumsResponse>(`/api/audio/albums/?offset=${offset}&token=${token}`, {});
+				let response = await preq<{}, api_response.AlbumsResponse>(`/api/audio/albums/${encodedQuery}?offset=${offset}&token=${token}`, {});
 				for (let album of response.albums) {
 					albums.append(album);
 				}
@@ -2106,6 +2108,7 @@ let updateviewforuri = (uri: string): void => {
 				.render());
 		});
 	} else if ((parts = /^audio[/]artists[/]([^/?]*)/.exec(uri)) !== null) {
+		let encodedQuery = parts[1];
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
@@ -2113,7 +2116,7 @@ let updateviewforuri = (uri: string): void => {
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				let response = await preq<api_response.ApiRequest, api_response.ArtistsResponse>(`/api/audio/artists/?offset=${offset}&token=${token}`, {});
+				let response = await preq<api_response.ApiRequest, api_response.ArtistsResponse>(`/api/audio/artists/${encodedQuery}?offset=${offset}&token=${token}`, {});
 				for (let artist of response.artists) {
 					artists.append(artist);
 				}
@@ -2254,7 +2257,8 @@ let updateviewforuri = (uri: string): void => {
 				.render());
 		});
 	} else if ((parts = /^audio[/]playlists[/]([^/?]*)/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.PlaylistsResponse>(`/api/audio/playlists/?token=${token}`, {}, (status, response) => {
+		let encodedQuery = parts[1];
+		req<api_response.ApiRequest, api_response.PlaylistsResponse>(`/api/audio/playlists/${encodedQuery}?token=${token}`, {}, (status, response) => {
 			let playlists = response.playlists;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
@@ -2349,7 +2353,8 @@ let updateviewforuri = (uri: string): void => {
 			);
 		});
 	} else if ((parts = /^video[/]shows[/]([^/?]*)/.exec(uri)) !== null) {
-		req<api_response.ApiRequest, api_response.ShowsResponse>(`/api/video/shows/?token=${token}`, {}, (status, response) => {
+		let encodedQuery = parts[1];
+		req<api_response.ApiRequest, api_response.ShowsResponse>(`/api/video/shows/${encodedQuery}?token=${token}`, {}, (status, response) => {
 			let shows = response.shows;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
@@ -2380,7 +2385,7 @@ let updateviewforuri = (uri: string): void => {
 			);
 		});
 	} else if ((parts = /^video[/]episodes[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = parts[1];
+		let encodedQuery = parts[1];
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
@@ -2388,7 +2393,7 @@ let updateviewforuri = (uri: string): void => {
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				let response = await preq<{}, api_response.EpisodesResponse>(`/api/video/episodes/${encodeURIComponent(query)}?offset=${offset}&token=${token}`, {});
+				let response = await preq<{}, api_response.EpisodesResponse>(`/api/video/episodes/${encodedQuery}?offset=${offset}&token=${token}`, {});
 				for (let episode of response.episodes) {
 					episodes.append(episode);
 				}
@@ -2455,6 +2460,7 @@ let updateviewforuri = (uri: string): void => {
 			);
 		});
 	} else if ((parts = /^video[/]movies[/]([^/?]*)/.exec(uri)) !== null) {
+		let encodedQuery = parts[1];
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
@@ -2462,7 +2468,7 @@ let updateviewforuri = (uri: string): void => {
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				let response = await preq<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/?offset=${offset}&token=${token}`, {});
+				let response = await preq<api_response.ApiRequest, api_response.MoviesResponse>(`/api/video/movies/${encodedQuery}?offset=${offset}&token=${token}`, {});
 				for (let movie of response.movies) {
 					movies.append(movie);
 				}
@@ -2486,7 +2492,7 @@ let updateviewforuri = (uri: string): void => {
 			.render()
 		);
 	} else if ((parts = /^video[/]cues[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = new ObservableClass(decodeURIComponent(parts[1]));
+		let encodedQuery = parts[1];
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
@@ -2494,7 +2500,7 @@ let updateviewforuri = (uri: string): void => {
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				let response = await preq<{}, api_response.CuesResponse>(`/api/video/cues/${encodeURIComponent(query.getState())}?offset=${offset}&token=${token}`, {});
+				let response = await preq<{}, api_response.CuesResponse>(`/api/video/cues/${encodedQuery}?offset=${offset}&token=${token}`, {});
 				for (let cue of response.cues) {
 					cues.append(cue);
 				}
@@ -2670,8 +2676,8 @@ let updateviewforuri = (uri: string): void => {
 			.render());
 		});
 	} else if ((parts = /^years[/]([^/]*)/.exec(uri)) !== null) {
-		let query = decodeURIComponent(parts[1]);
-		preq<{}, api_response.YearsResponse>(`/api/years/${encodeURIComponent(query)}?length=100&token=${token}`, {}).then((response) => {
+		let encodedQuery = parts[1];
+		preq<{}, api_response.YearsResponse>(`/api/years/${encodedQuery}?length=100&token=${token}`, {}).then((response) => {
 			let years = response.years;
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
