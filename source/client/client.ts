@@ -2507,38 +2507,9 @@ let updateviewforuri = (uri: string): void => {
 			}
 		};
 		mount.appendChild(xml.element("div.content")
-			.set("style", "display: grid; gap: 32px;")
-			.add(xml.element("div")
-				.set("style", "position: relative;")
-				.add(xml.element("input")
-					.set("type", "text")
-					.set("spellcheck", "false")
-					.set("placeholder", "Search...")
-					.bind2("value", query)
-					.on("keyup", (event) => {
-						if (event.code === "Enter") {
-							navigate(`video/cues/${encodeURIComponent(query.getState())}`);
-						}
-					})
-				)
-				.add(Icon.makeMagnifyingGlassLine()
-					.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
-				)
-			)
 			.add(xml.element("div")
 				.set("style", "display: grid; gap: 16px;")
-				.repeat(cues, (cue) => {
-					let media = cue.media;
-					if (Episode.is(media)) {
-						let episode = media;
-						return EntityRow.forEpisode(episode, PlaybackButton.forEpisode(episode));
-					}
-					if (Movie.is(media)) {
-						let movie = media;
-						return EntityRow.forMovie(movie, PlaybackButton.forMovie(movie));
-					}
-					throw `Expected code to be unreachable!`;
-				})
+				.repeat(cues, (cue) => EntityRow.forCue(cue))
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render());
