@@ -40,7 +40,7 @@ function makeUrl(tail: string): string {
 	return `${protocol}//${host}${path}`;
 }
 
-let player = new client.ContextClient(makeUrl(`context/?type=browser&name=Orbit`));
+let player = new client.ContextClient(makeUrl(`context/?type=browser&name=Client`));
 let playlists = new PlaylistsClient(makeUrl(`playlists/`));
 
 window.addEventListener("focus", () => {
@@ -1201,7 +1201,7 @@ let appheader = xml.element("div.app__header")
 	.add(xml.element("div.content")
 		.set("style", "padding: 16px")
 		.add(xml.element("div.page-header__title")
-			.add(xml.text("Orbit"))
+			.add(xml.text(document.title))
 			.on("click", () => {
 				navigate("/");
 			})
