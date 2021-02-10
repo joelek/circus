@@ -9,7 +9,6 @@ import * as api from "./api";
 import * as http from "./http";
 import * as plist from "./plist";
 
-const MEDIA_SERVER = "https://ap.joelek.se";
 const PORT = 7000;
 
 function makeCorrelationID(): string {
@@ -27,7 +26,7 @@ type DeviceEventMap = {
 };
 
 export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
-	constructor(host: string, wss: boolean, device_name: string, device_type: string) {
+	constructor(host: string, wss: boolean, media_server_host: string, device_name: string, device_type: string) {
 		super();
 		let correlation_id = makeCorrelationID();
 		let outbound = new http.OutboundSocket({ host: host, port: PORT });
@@ -64,7 +63,7 @@ export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
 			let context = new player.ContextClient(url, (url) => new sockets.WebSocketClient(url));
 			observers.computed(async (currentLocalEntry, token) => {
 				if (is.present(currentLocalEntry) && is.present(token)) {
-					let url = `${MEDIA_SERVER}/files/${currentLocalEntry.media.file_id}/?token=${token}`;
+					let url = `${media_server_host}/files/${currentLocalEntry.media.file_id}/?token=${token}`;
 					await api.play(outbound, correlation_id, url, 0.0);
 				} else {
 					await api.stop(outbound, correlation_id);

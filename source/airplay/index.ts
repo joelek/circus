@@ -28,7 +28,7 @@ function getDeviceType(service_info: Array<string>): string {
 	return "Generic AirPlay Device";
 }
 
-export function observe(wss: boolean): void {
+export function observe(wss: boolean, media_server_host: string): void {
 	mdns.observe("_airplay._tcp.local", async (service_device) => {
 		try {
 			let { hostname, service_info } = { ...service_device };
@@ -36,7 +36,7 @@ export function observe(wss: boolean): void {
 			if (is.absent(device)) {
 				let device_name = getDeviceName(service_info ?? []);
 				let device_type = getDeviceType(service_info ?? []);
-				let device = new Device(hostname, wss, device_name, device_type);
+				let device = new Device(hostname, wss, media_server_host, device_name, device_type);
 				devices.set(hostname, device);
 				device.addObserver("close", function onclose() {
 					device.removeObserver("close", onclose);

@@ -2,6 +2,7 @@ import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as libhttp from "http";
 import * as libhttps from "https";
+import * as libos from "os";
 import * as libpath from "path";
 import * as liburl from "url";
 import * as api from "../api/api";
@@ -262,41 +263,49 @@ function read(path: string): Buffer | undefined {
 	return undefined;
 }
 
+function getLocalIp(family: string = "ipv4"): string {
+	let networkInterfaces = libos.networkInterfaces();
+	for (let interfaceInfos of Object.values(networkInterfaces)) {
+		if (is.present(interfaceInfos)) {
+			for (let interfaceInfo of interfaceInfos) {
+				if (interfaceInfo.internal === true) {
+					continue;
+				}
+				if (interfaceInfo.family.toLowerCase() === family.toLowerCase()) {
+					return interfaceInfo.address;
+				}
+			}
+		}
+	}
+	throw `Expected a local interface!`;
+}
+
 let full_chain = read("./private/certs/full_chain.pem");
 let dhparam = read("./private/certs/dhparam.pem");
 let certificate_key = read("./private/certs/certificate_key.pem");
 
+// TODO: Use hostname from certificate.
+let media_server_host = `http://${getLocalIp()}`;
+let http_server = libhttp.createServer({}, requestHandler);
+http_server.listen(80, () => {
+	console.log("http://localhost:80");
+});
+http_server.keepAliveTimeout = 60 * 1000;
 if (full_chain && certificate_key) {
-	let server = libhttps.createServer({
+	let https_server = libhttps.createServer({
 		cert: full_chain,
 		dhparam: dhparam,
 		key: certificate_key
 	}, requestHandler);
-	server.listen(443, () => {
+	https_server.listen(443, () => {
 		console.log("https://localhost:443");
 	});
-	server.keepAliveTimeout = 60 * 1000;
-	libhttp.createServer({}, (request, response) => {
-		let host = request.headers["host"] || "";
-		let path = request.url || "";
-		let hostname = host.split(":").shift() as string;
-		response.writeHead(307, {
-			"Location": "https://" + hostname + ":" + 443 + path
-		});
-		response.end();
-	}).listen(80, () => {
-		console.log("http://localhost:80");
-	});
-	airplay.observe(true);
-	chromecasts.observe(true);
+	https_server.keepAliveTimeout = 60 * 1000;
+	airplay.observe(true, media_server_host);
+	chromecasts.observe(true, media_server_host);
 } else {
-	let server = libhttp.createServer({}, requestHandler);
-	server.listen(80, () => {
-		console.log("http://localhost:80");
-	});
-	server.keepAliveTimeout = 60 * 1000;
-	airplay.observe(false);
-	chromecasts.observe(false);
+	airplay.observe(false, media_server_host);
+	chromecasts.observe(false, media_server_host);
 }
 
 for (let key of indexer.getKeysFromUser.lookup(undefined)) {

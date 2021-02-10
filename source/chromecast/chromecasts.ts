@@ -13,7 +13,6 @@ import * as stdlib from "@joelek/ts-stdlib";
 import { Episode, Movie, Track } from "../api/schema/objects";
 
 const DEBUG = false;
-const MEDIA_SERVER = "https://ap.joelek.se";
 
 function getLanguage(language: string | undefined): { language: string, name: string } {
 	let entry =  languages.db[language ?? "eng"] ?? languages.db["eng"];
@@ -26,13 +25,13 @@ function getLanguage(language: string | undefined): { language: string, name: st
 	};
 }
 
-function makeMediaInformation(item: Episode | Movie | Track, token: string): schema.objects.MediaInformation {
+function makeMediaInformation(item: Episode | Movie | Track, media_server_host: string, token: string): schema.objects.MediaInformation {
 	if (Episode.is(item)) {
 		let episode = item;
 		let season = episode.season;
 		let show = season.show;
 		return {
-			contentId: `${MEDIA_SERVER}/files/${item.media.file_id}/?token=${token}`,
+			contentId: `${media_server_host}/files/${item.media.file_id}/?token=${token}`,
 			contentType: episode.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
@@ -45,7 +44,7 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 				trackId: subtitleIndex,
 				type: "TEXT",
 				trackType: "TEXT",
-				trackContentId: `${MEDIA_SERVER}/files/${subtitle.file_id}/?token=${token}`,
+				trackContentId: `${media_server_host}/files/${subtitle.file_id}/?token=${token}`,
 				trackContentType: subtitle.mime,
 				subtype: "SUBTITLES"
 			}))
@@ -53,14 +52,14 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 	} else if (Movie.is(item)) {
 		let movie = item;
 		return {
-			contentId: `${MEDIA_SERVER}/files/${item.media.file_id}/?token=${token}`,
+			contentId: `${media_server_host}/files/${item.media.file_id}/?token=${token}`,
 			contentType: movie.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
 				metadataType: 0,
 				title: movie.title,
 				images: movie.artwork.map((image) => ({
-					url: `${MEDIA_SERVER}/files/${image.file_id}/?token=${token}`
+					url: `${media_server_host}/files/${image.file_id}/?token=${token}`
 				}))
 			},
 			tracks: movie.subtitles.map((subtitle, subtitleIndex) => ({
@@ -68,7 +67,7 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 				trackId: subtitleIndex,
 				type: "TEXT",
 				trackType: "TEXT",
-				trackContentId: `${MEDIA_SERVER}/files/${subtitle.file_id}/?token=${token}`,
+				trackContentId: `${media_server_host}/files/${subtitle.file_id}/?token=${token}`,
 				trackContentType: subtitle.mime,
 				subtype: "SUBTITLES"
 			}))
@@ -78,7 +77,7 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 		let disc = track.disc;
 		let album = disc.album;
 		return {
-			contentId: `${MEDIA_SERVER}/files/${item.media.file_id}/?token=${token}`,
+			contentId: `${media_server_host}/files/${item.media.file_id}/?token=${token}`,
 			contentType: item.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
@@ -86,7 +85,7 @@ function makeMediaInformation(item: Episode | Movie | Track, token: string): sch
 				title: track.title,
 				subtitle: track.artists.map((artist) => artist.title).join(" \u00b7 "),
 				images: album.artwork.map((image) => ({
-					url: `${MEDIA_SERVER}/files/${image.file_id}/?token=${token}`
+					url: `${media_server_host}/files/${image.file_id}/?token=${token}`
 				}))
 			}
 		};
@@ -123,7 +122,7 @@ function getDeviceType(service_info: Array<string>): string {
 
 const connections = new Map<string, libnet.Socket>();
 
-export function observe(wss: boolean): void {
+export function observe(wss: boolean, media_server_host: string): void {
 	mdns.observe("_googlecast._tcp.local", async (service_device) => {
 		try {
 			let { hostname, service_info } = { ...service_device };
@@ -139,7 +138,7 @@ export function observe(wss: boolean): void {
 					console.log(`Connected to Cast device at ${hostname}.`);
 					let deviceName = getDeviceName(service_info ?? []);
 					let deviceType = getDeviceType(service_info ?? []);
-					new ChromecastPlayer(socket, wss, deviceName, deviceType);
+					new ChromecastPlayer(socket, wss, media_server_host, deviceName, deviceType);
 				});
 				socket.on("close", () => {
 					console.log(`Disconnected from Cast device at ${hostname}.`);
@@ -399,7 +398,7 @@ class ChromecastPlayer {
 		}, 5000);
 	}
 
-	constructor(socket: libnet.Socket, wss: boolean, device_name: string, device_type: string) {
+	constructor(socket: libnet.Socket, wss: boolean, media_server_host: string, device_name: string, device_type: string) {
 		let messageHandler = new MessageHandler(socket, (message) => {
 			let namespace = message.namespace;
 			if (namespace === ConnectionHandler.NAMESPACE) {
@@ -503,7 +502,7 @@ class ChromecastPlayer {
 				let currentLocalEntry = this.context.currentLocalEntry.getState();
 				let token = this.context.token.getState();
 				if (is.present(transportId) && is.present(currentLocalEntry) && is.present(token)) {
-					let media = makeMediaInformation(currentLocalEntry, token);
+					let media = makeMediaInformation(currentLocalEntry, media_server_host, token);
 					let activeTrackIds: number[] | undefined;
 					if (is.present(media.tracks)) {
 						let swe = media.tracks.find((track) => {
