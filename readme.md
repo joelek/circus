@@ -1,4 +1,4 @@
-# @joelek/castaway
+# @joelek/circus
 
 ## Ideas
 

@@ -10,10 +10,10 @@
 	},
 	"license": "UNLICENSED",
 	"main": "./dist/server.min.js",
-	"name": "@joelek/castaway",
+	"name": "@joelek/circus",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/joelek/castaway.git"
+		"url": "https://github.com/joelek/circus.git"
 	},
 	"scripts": {
 		"build": "npm run codegen && npm run compile && npm run bundle",
