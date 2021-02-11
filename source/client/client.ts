@@ -131,14 +131,14 @@ player.currentEntry.addObserver((currentEntry) => {
 			let season = episode.season;
 			let show = season.show;
 			mediaPlayerTitle.updateState(episode.title);
-			mediaPlayerSubtitle.updateState(show.title);
+			mediaPlayerSubtitle.updateState([ show.title, `Season ${episode.season.number}` ].join(" \u00b7 "));
 			session.setMetadata({
 				title: episode.title
 			});
 		} else if (Movie.is(currentEntry)) {
 			let movie = currentEntry;
 			mediaPlayerTitle.updateState(movie.title);
-			mediaPlayerSubtitle.updateState("");
+			mediaPlayerSubtitle.updateState(movie.genres.map((genre) => genre.title).join(" \u00b7 "));
 			session.setMetadata({
 				title: movie.title,
 				artwork: movie.artwork.map((image) => ({
@@ -152,7 +152,7 @@ player.currentEntry.addObserver((currentEntry) => {
 			let disc = track.disc;
 			let album = disc.album;
 			mediaPlayerTitle.updateState(track.title);
-			mediaPlayerSubtitle.updateState(track.artists.map((artist) => artist.title).join(" \u00b7 "));
+			mediaPlayerSubtitle.updateState([ ...track.artists.map((artist) => artist.title), track.disc.album.title ].join(" \u00b7 "));
 			session.setMetadata({
 				title: track.title,
 				artist: track.artists.map((artist) => artist.title).join(" \u00b7 "),
