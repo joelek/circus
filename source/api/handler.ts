@@ -6,6 +6,8 @@ import * as jsondb from "../jsondb";
 import * as is from "../is";
 import * as schema from "./schema/";
 
+const DEMO_MODE = false;
+
 export function createUser(request: schema.messages.RegisterRequest): schema.messages.RegisterResponse | schema.messages.ErrorMessage {
 	let { username, password, name, key_id } = { ...request };
 	let errors = new Array<string>();
@@ -53,7 +55,7 @@ export function lookupAlbumBase(album_id: string, user_id: string): schema.objec
 	let album = database.albums.lookup(album_id);
 	return {
 		album_id: album.album_id,
-		title: album.title,
+		title: DEMO_MODE ? "Album title" : album.title,
 		artwork: database.getFilesFromAlbum.lookup(album_id)
 			.map((record) => {
 				try {
@@ -83,7 +85,7 @@ export function lookupArtistBase(artist_id: string, user_id: string): schema.obj
 	let artist = database.artists.lookup(artist_id);
 	return {
 		artist_id: artist.artist_id,
-		title: artist.name
+		title: DEMO_MODE ? "Artist name" : artist.name
 	};
 };
 
@@ -160,7 +162,7 @@ export function lookupEpisodeBase(episode_id: string, user_id: string, season?: 
 	let episode = database.episodes.lookup(episode_id);
 	return {
 		episode_id: episode.episode_id,
-		title: episode.title,
+		title: DEMO_MODE ? "Episode title" : episode.title,
 		number: episode.number,
 		season: is.present(season) ? season : lookupSeasonBase(episode.season_id, user_id)
 	};
@@ -189,7 +191,7 @@ export function lookupEpisode(episode_id: string, user_id: string, season?: sche
 	return {
 		...episode,
 		year: record.year,
-		summary: record.summary,
+		summary: DEMO_MODE ? "Episode summary." : record.summary,
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media,
 		subtitles: subtitles
@@ -215,7 +217,7 @@ export function lookupMovieBase(movie_id: string, user_id: string): schema.objec
 	let movie = database.movies.lookup(movie_id);
 	return {
 		movie_id: movie.movie_id,
-		title: movie.title,
+		title: DEMO_MODE ? "Movie title" : movie.title,
 		artwork: database.getFilesFromMovie.lookup(movie_id)
 			.map((record) => {
 				try {
@@ -249,7 +251,7 @@ export function lookupMovie(movie_id: string, user_id: string): schema.objects.M
 	return {
 		...movie,
 		year: record.year,
-		summary: record.summary,
+		summary: DEMO_MODE ? "Movie summary." : record.summary,
 		genres: database.getGenresFromMovie.lookup(movie_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
 			.map((record) => lookupGenreBase(record.genre_id, user_id)),
@@ -266,7 +268,7 @@ export function lookupPersonBase(person_id: string, user_id: string): schema.obj
 	let person = database.persons.lookup(person_id);
 	return {
 		person_id: person.person_id,
-		name: person.name
+		name: DEMO_MODE ? "Person name" : person.name
 	};
 };
 
@@ -337,7 +339,7 @@ export function lookupShowBase(show_id: string, user_id: string): schema.objects
 	let show = database.shows.lookup(show_id);
 	return {
 		show_id: show.show_id,
-		title: show.name,
+		title: DEMO_MODE ? "Show title" : show.name,
 		artwork: database.getFilesFromShow.lookup(show_id)
 			.map((record) => {
 				try {
@@ -354,7 +356,7 @@ export function lookupShow(show_id: string, user_id: string): schema.objects.Sho
 	let record = database.shows.lookup(show_id);
 	return {
 		...show,
-		summary: record.summary,
+		summary: DEMO_MODE ? "Show summary." : record.summary,
 		genres: database.getGenresFromShow.lookup(show_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
 			.map((record) => lookupGenreBase(record.genre_id, user_id)),
@@ -389,7 +391,7 @@ export function lookupTrackBase(track_id: string, user_id: string, disc?: schema
 	let track = database.tracks.lookup(track_id);
 	return {
 		track_id: track.track_id,
-		title: track.title,
+		title: DEMO_MODE ? "Track title" : track.title,
 		disc: is.present(disc) ? disc : lookupDiscBase(track.disc_id, user_id),
 		number: track.number
 	};
