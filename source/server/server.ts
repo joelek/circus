@@ -285,10 +285,11 @@ let dhparam = read("./private/certs/dhparam.pem");
 let certificate_key = read("./private/certs/certificate_key.pem");
 
 // TODO: Use hostname from certificate.
-let media_server_host = `http://${getLocalIp()}`;
+let hostname = getLocalIp();
+let media_server_host = `http://${hostname}`;
 let http_server = libhttp.createServer({}, requestHandler);
 http_server.listen(80, () => {
-	console.log("http://localhost:80");
+	console.log(`http://${hostname}:80`);
 });
 http_server.keepAliveTimeout = 60 * 1000;
 if (full_chain && certificate_key) {
@@ -298,7 +299,7 @@ if (full_chain && certificate_key) {
 		key: certificate_key
 	}, requestHandler);
 	https_server.listen(443, () => {
-		console.log("https://localhost:443");
+		console.log(`https://${hostname}:443`);
 	});
 	https_server.keepAliveTimeout = 60 * 1000;
 	airplay.observe(true, media_server_host);
