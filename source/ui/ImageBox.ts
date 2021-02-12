@@ -13,7 +13,7 @@ const CSS = `
 	}
 
 	.image-box--poster {
-		padding-bottom: ${3/2 * 100}%;
+		padding-bottom: ${1/1 * 100}%;
 	}
 
 	.image-box--square {
