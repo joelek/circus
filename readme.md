@@ -21,8 +21,10 @@ System for streaming audio and video content.
 
 Circus delivers streaming media through HTTP range requests and as such, media support will essentially be determined by the device of the user. It is recommended to use the following media formats for optimal support.
 
- Audio: AAC
- Video: H264
+```
+Audio: AAC
+Video: H264
+```
 
 ### Indexing
 
@@ -107,11 +109,13 @@ Circus features a custom playback protocol for playback and synchronization betw
 
 Circus can be installed on a wide range of server infrastructure since it's built almost entirely using NodeJS. Extra features become available when the FFMPEG tool suite is installed on the server.
 
-Download the latest release package from https://github.com/joelek/circus/releases . Advanced users may clone the repository using git and by that gain a convenient way of upgrading whenever new relaeses become available.
+Download the latest release package from https://github.com/joelek/circus/releases . Advanced users may clone the repository using git and by that gain a convenient way of upgrading whenever new releases become available.
 
-The server is started using `node .` and should ideally be configured to run as an automatically run background service. The command launches an HTTP server on port 80 as well as an HTTPS server on port 443 if "full_chain.pem" and "certificate_key.pem" can be located in the "./private/certs/" directory.
+The server is started using `node .` and should ideally be configured to run automatically as a background service. The command launches an HTTP server on port 80 as well as an HTTPS server on port 443 if "full_chain.pem" and "certificate_key.pem" can be located in the "./private/certs/" directory.
 
 Media files are indexed from the "./private/media/" directory. You need to either move your media files or create symbolic links if your media is located elsewhere.
+
+Visit the domain or IP-address of the server in any web browser and register your user using the registration key displayed when launching the server.
 
 ## Future plans
 
