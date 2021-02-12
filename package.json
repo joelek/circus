@@ -25,7 +25,7 @@
 		"compile": "rm -rf ./build/ && npx tsc --build",
 		"preversion": "npm run build && git add ./",
 		"postversion": "git push && git push --tags",
-		"run": "node ."
+		"start": "node ."
 	},
 	"version": "0.0.108"
 }
