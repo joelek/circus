@@ -14,6 +14,7 @@ import * as playlists from "../playlists/";
 import * as chromecasts from "../chromecast/chromecasts";
 import * as airplay from "../airplay/";
 import * as is from "../is";
+import { default as config } from "../config";
 
 let send_data = (file_id: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
 	if (request.url === undefined) {
@@ -280,16 +281,16 @@ function getLocalIp(family: string = "ipv4"): string {
 	throw `Expected a local interface!`;
 }
 
-let full_chain = read("./private/certs/full_chain.pem");
+let full_chain = read(config.certificate_path.join("/"));
 let dhparam = read("./private/certs/dhparam.pem");
-let certificate_key = read("./private/certs/certificate_key.pem");
+let certificate_key = read(config.certificate_key_path.join("/"));
 
 // TODO: Use hostname from certificate.
 let hostname = getLocalIp();
 let media_server_host = `http://${hostname}`;
 let http_server = libhttp.createServer({}, requestHandler);
-http_server.listen(80, () => {
-	console.log(`http://${hostname}:80`);
+http_server.listen(config.http_port, () => {
+	console.log(`http://${hostname}:${config.http_port}`);
 });
 http_server.keepAliveTimeout = 60 * 1000;
 if (full_chain && certificate_key) {
@@ -298,8 +299,8 @@ if (full_chain && certificate_key) {
 		dhparam: dhparam,
 		key: certificate_key
 	}, requestHandler);
-	https_server.listen(443, () => {
-		console.log(`https://${hostname}:443`);
+	https_server.listen(config.https_port, () => {
+		console.log(`https://${hostname}:${config.https_port}`);
 	});
 	https_server.keepAliveTimeout = 60 * 1000;
 	airplay.observe(true, media_server_host);

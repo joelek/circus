@@ -108,13 +108,13 @@ Circus can be installed on a wide range of server infrastructure since it's buil
 
 Download the latest release package from https://github.com/joelek/circus/releases and unpack it. Advanced users may clone the repository using git and gain a convenient way of upgrading whenever new releases become available.
 
-The server is started using `node .` and should ideally be configured to run automatically as a background service. The command launches an HTTP server on port 80 as well as an HTTPS server on port 443 if "full_chain.pem" and "certificate_key.pem" can be located in the "./private/certs/" directory.
-
-Media files are indexed from the "./private/media/" directory. You need to either move your media files or create symbolic links if your media is located elsewhere.
+The server is started using `node .` and should ideally be configured to run automatically as a background service. The command launches an HTTP server as well as an HTTPS server if a certificate file and a certificate key file can be located.
 
 Visit the domain or IP-address of the server in any web browser and register your user using the registration key displayed when launching the server. The registration key is consumed upon successful registration.
 
 Circus technically supports multiple users although there is currently no way of generating additional registration keys. This will likely change in the future.
+
+Ports, paths and other settings can be configured through altering the config file located in the "./private/config/" directory. The config file is written to disk as Circus is launched.
 
 ## Screenshots
 
@@ -164,4 +164,3 @@ Circus technically supports multiple users although there is currently no way of
 * Improve database performance. Only lookup records that are required.
 * Verify external track metadata functionality.
 * Add way of generating additional registration keys.
-* Make ports and paths configurable.

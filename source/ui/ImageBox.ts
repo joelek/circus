@@ -38,6 +38,7 @@ const CSS = `
 
 	[data-opaque="true"] {
 		opacity: 1;
+		//filter: blur(32px);
 	}
 `;
 

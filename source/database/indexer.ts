@@ -31,14 +31,8 @@ function makeId(...components: Array<string | number | undefined>): string {
 		.slice(0, 16);
 }
 
-const MEDIA_ROOT = [
-	".",
-	"private",
-	"media"
-];
-
-if (!libfs.existsSync(MEDIA_ROOT.join("/"))) {
-	libfs.mkdirSync(MEDIA_ROOT.join("/"));
+if (!libfs.existsSync(config.media_path.join("/"))) {
+	libfs.mkdirSync(config.media_path.join("/"));
 }
 
 const TABLES_ROOT = [
@@ -171,7 +165,7 @@ export function getPath(entry: Directory | File): Array<string> {
 		}
 		entry = directories.lookup(parent_directory_id);
 	}
-	return [...MEDIA_ROOT, ...path];
+	return [...config.media_path, ...path];
 };
 
 function getDirectoryPath(directory: Directory): Array<string> {
@@ -614,7 +608,7 @@ export function runIndexer(): void {
 	for (let file of getFilesFromDirectory.lookup(undefined)) {
 		checkFile(file);
 	}
-	visitDirectory(MEDIA_ROOT);
+	visitDirectory(config.media_path);
 	indexFiles();
 	associateMetadata();
 	associateImages();
