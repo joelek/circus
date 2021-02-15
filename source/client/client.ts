@@ -609,7 +609,7 @@ style.innerText = `
 		display: grid;
 		gap: 48px;
 		margin: 0px auto;
-		max-width: 960px;
+		max-width: 1080px;
 		padding: 24px;
 	}
 
@@ -974,7 +974,7 @@ style.innerText = `
 
 	.offline-indicator {
 		margin: 0px auto;
-		max-width: 960px;
+		max-width: 1080px;
 		padding: 8px;
 	}
 
