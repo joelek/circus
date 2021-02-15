@@ -1,10 +1,10 @@
 {
-	PersonBase: {
-		person_id: string,
+	ActorBase: {
+		actor_id: string,
 		name: string
 	},
 
-	Person: PersonBase & {
+	Actor: ActorBase & {
 
 	},
 
@@ -103,7 +103,7 @@
 		year?: number,
 		summary?: string,
 		genres: Genre[],
-		actors: Person[],
+		actors: Actor[],
 		last_stream_date?: number,
 		media: ../../database/schema/VideoFile,
 		subtitles: ../../database/schema/SubtitleFile[]
@@ -118,7 +118,7 @@
 	Show: ShowBase & {
 		summary?: string,
 		genres: Genre[],
-		actors: Person[],
+		actors: Actor[],
 		seasons: Season[]
 	},
 
@@ -177,7 +177,7 @@
 
 	},
 
-	EntityBase: AlbumBase | ArtistBase | CueBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PersonBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase,
+	EntityBase: ActorBase | AlbumBase | ArtistBase | CueBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase,
 
-	Entity: Album | Artist | Cue | Disc | Episode | Genre | Movie | Person | Playlist | Season | Show | Track | User | Year
+	Entity: Actor | Album | Artist | Cue | Disc | Episode | Genre | Movie | Playlist | Season | Show | Track | User | Year
 }

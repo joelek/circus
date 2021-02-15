@@ -139,20 +139,20 @@
 		file_id: string
 	},
 
-	Person: {
-		person_id: string,
+	Actor: {
+		actor_id: string,
 		name: string
 	},
 
-	MoviePerson: {
+	MovieActor: {
 		movie_id: string,
-		person_id: string,
+		actor_id: string,
 		order: number
 	},
 
-	ShowPerson: {
+	ShowActor: {
 		show_id: string,
-		person_id: string,
+		actor_id: string,
 		order: number
 	},
 

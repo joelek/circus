@@ -6,20 +6,20 @@ import { SubtitleFile } from "../../database/schema";
 import { VideoFile } from "../../database/schema";
 import { guards as autoguard } from "@joelek/ts-autoguard";
 
-export type PersonBase = {
-	"person_id": string,
+export type ActorBase = {
+	"actor_id": string,
 	"name": string
 };
 
-export const PersonBase = autoguard.Object.of<PersonBase>({
-	"person_id": autoguard.String,
+export const ActorBase = autoguard.Object.of<ActorBase>({
+	"actor_id": autoguard.String,
 	"name": autoguard.String
 });
 
-export type Person = PersonBase & {};
+export type Actor = ActorBase & {};
 
-export const Person = autoguard.Intersection.of(
-	autoguard.Reference.of<PersonBase>(() => PersonBase),
+export const Actor = autoguard.Intersection.of(
+	autoguard.Reference.of<ActorBase>(() => ActorBase),
 	autoguard.Object.of<{}>({})
 );
 
@@ -241,7 +241,7 @@ export type Movie = MovieBase & {
 	"year"?: number,
 	"summary"?: string,
 	"genres": Genre[],
-	"actors": Person[],
+	"actors": Actor[],
 	"last_stream_date"?: number,
 	"media": VideoFile,
 	"subtitles": SubtitleFile[]
@@ -253,7 +253,7 @@ export const Movie = autoguard.Intersection.of(
 		"year"?: number,
 		"summary"?: string,
 		"genres": Genre[],
-		"actors": Person[],
+		"actors": Actor[],
 		"last_stream_date"?: number,
 		"media": VideoFile,
 		"subtitles": SubtitleFile[]
@@ -267,7 +267,7 @@ export const Movie = autoguard.Intersection.of(
 			autoguard.String
 		),
 		"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre)),
-		"actors": autoguard.Array.of(autoguard.Reference.of<Person>(() => Person)),
+		"actors": autoguard.Array.of(autoguard.Reference.of<Actor>(() => Actor)),
 		"last_stream_date": autoguard.Union.of(
 			autoguard.Undefined,
 			autoguard.Number
@@ -292,7 +292,7 @@ export const ShowBase = autoguard.Object.of<ShowBase>({
 export type Show = ShowBase & {
 	"summary"?: string,
 	"genres": Genre[],
-	"actors": Person[],
+	"actors": Actor[],
 	"seasons": Season[]
 };
 
@@ -301,7 +301,7 @@ export const Show = autoguard.Intersection.of(
 	autoguard.Object.of<{
 		"summary"?: string,
 		"genres": Genre[],
-		"actors": Person[],
+		"actors": Actor[],
 		"seasons": Season[]
 	}>({
 		"summary": autoguard.Union.of(
@@ -309,7 +309,7 @@ export const Show = autoguard.Intersection.of(
 			autoguard.String
 		),
 		"genres": autoguard.Array.of(autoguard.Reference.of<Genre>(() => Genre)),
-		"actors": autoguard.Array.of(autoguard.Reference.of<Person>(() => Person)),
+		"actors": autoguard.Array.of(autoguard.Reference.of<Actor>(() => Actor)),
 		"seasons": autoguard.Array.of(autoguard.Reference.of<Season>(() => Season))
 	})
 );
@@ -459,9 +459,10 @@ export const Year = autoguard.Intersection.of(
 	autoguard.Object.of<{}>({})
 );
 
-export type EntityBase = AlbumBase | ArtistBase | CueBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PersonBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase;
+export type EntityBase = ActorBase | AlbumBase | ArtistBase | CueBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase;
 
 export const EntityBase = autoguard.Union.of(
+	autoguard.Reference.of<ActorBase>(() => ActorBase),
 	autoguard.Reference.of<AlbumBase>(() => AlbumBase),
 	autoguard.Reference.of<ArtistBase>(() => ArtistBase),
 	autoguard.Reference.of<CueBase>(() => CueBase),
@@ -469,7 +470,6 @@ export const EntityBase = autoguard.Union.of(
 	autoguard.Reference.of<EpisodeBase>(() => EpisodeBase),
 	autoguard.Reference.of<GenreBase>(() => GenreBase),
 	autoguard.Reference.of<MovieBase>(() => MovieBase),
-	autoguard.Reference.of<PersonBase>(() => PersonBase),
 	autoguard.Reference.of<PlaylistBase>(() => PlaylistBase),
 	autoguard.Reference.of<SeasonBase>(() => SeasonBase),
 	autoguard.Reference.of<ShowBase>(() => ShowBase),
@@ -478,9 +478,10 @@ export const EntityBase = autoguard.Union.of(
 	autoguard.Reference.of<YearBase>(() => YearBase)
 );
 
-export type Entity = Album | Artist | Cue | Disc | Episode | Genre | Movie | Person | Playlist | Season | Show | Track | User | Year;
+export type Entity = Actor | Album | Artist | Cue | Disc | Episode | Genre | Movie | Playlist | Season | Show | Track | User | Year;
 
 export const Entity = autoguard.Union.of(
+	autoguard.Reference.of<Actor>(() => Actor),
 	autoguard.Reference.of<Album>(() => Album),
 	autoguard.Reference.of<Artist>(() => Artist),
 	autoguard.Reference.of<Cue>(() => Cue),
@@ -488,7 +489,6 @@ export const Entity = autoguard.Union.of(
 	autoguard.Reference.of<Episode>(() => Episode),
 	autoguard.Reference.of<Genre>(() => Genre),
 	autoguard.Reference.of<Movie>(() => Movie),
-	autoguard.Reference.of<Person>(() => Person),
 	autoguard.Reference.of<Playlist>(() => Playlist),
 	autoguard.Reference.of<Season>(() => Season),
 	autoguard.Reference.of<Show>(() => Show),
@@ -498,8 +498,8 @@ export const Entity = autoguard.Union.of(
 );
 
 export type Autoguard = {
-	"PersonBase": PersonBase,
-	"Person": Person,
+	"ActorBase": ActorBase,
+	"Actor": Actor,
 	"ArtistBase": ArtistBase,
 	"Artist": Artist,
 	"AlbumBase": AlbumBase,
@@ -535,8 +535,8 @@ export type Autoguard = {
 };
 
 export const Autoguard = {
-	"PersonBase": PersonBase,
-	"Person": Person,
+	"ActorBase": ActorBase,
+	"Actor": Actor,
 	"ArtistBase": ArtistBase,
 	"Artist": Artist,
 	"AlbumBase": AlbumBase,

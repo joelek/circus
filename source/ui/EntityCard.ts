@@ -159,6 +159,9 @@ export class EntityCardFactory {
 	}
 
 	forEntity(entity: api.Entity, options: Options = {}): xnode.XElement {
+		if (api.Actor.is(entity)) {
+			return this.forActor(entity, options);
+		}
 		if (api.Album.is(entity)) {
 			return this.forAlbum(entity, options);
 		}
@@ -176,9 +179,6 @@ export class EntityCardFactory {
 		}
 		if (api.Genre.is(entity)) {
 			return this.forGenre(entity, options);
-		}
-		if (api.Person.is(entity)) {
-			return this.forPerson(entity, options);
 		}
 		if (api.Playlist.is(entity)) {
 			return this.forPlaylist(entity, options);
@@ -202,6 +202,19 @@ export class EntityCardFactory {
 			return this.forYear(entity, options);
 		}
 		throw `Expected code to be unreachable!`;
+	}
+
+	forActor(actor: api.Actor, options: Options = {}): xnode.XElement {
+		let link = this.entityLinkFactory.forActor(actor);
+		let image = this.ImageBox.forSquare();
+		let titles = [
+			this.entityTitleFactory.forActor(actor)
+		];
+		let subtitles = [] as xnode.XElement[];
+		let tags = [
+			"Actor"
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		return this.make(link, image, titles, subtitles, tags, undefined, options);
 	}
 
 	forAlbum(album: api.Album, options: Options = {}): xnode.XElement {
@@ -345,19 +358,6 @@ export class EntityCardFactory {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("\u2713")));
 		}
 		return this.make(link, image, titles, subtitles, tags, movie.summary, options);
-	}
-
-	forPerson(person: api.Person, options: Options = {}): xnode.XElement {
-		let link = this.entityLinkFactory.forPerson(person);
-		let image = this.ImageBox.forSquare();
-		let titles = [
-			this.entityTitleFactory.forPerson(person)
-		];
-		let subtitles = [] as xnode.XElement[];
-		let tags = [
-			"Person"
-		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(link, image, titles, subtitles, tags, undefined, options);
 	}
 
 	forPlaylist(playlist: api.Playlist, options: Options = {}): xnode.XElement {

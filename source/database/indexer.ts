@@ -99,13 +99,13 @@ export const movies = loadIndex("movies", schema.Movie, (record) => record.movie
 export const movie_files = loadIndex("movie_files", schema.MovieFile, (record) => makeId(record.movie_id, record.file_id));
 export const getMoviesFromFile = indices.CollectionIndex.fromTable(files, movie_files, (record) => record.file_id);
 export const getFilesFromMovie = indices.CollectionIndex.fromTable(movies, movie_files, (record) => record.movie_id);
-export const persons = loadIndex("persons", schema.Person, (record) => record.person_id);
-export const movie_persons = loadIndex("movie_persons", schema.MoviePerson, (record) => makeId(record.movie_id, record.person_id));
-export const getMoviesFromPerson = indices.CollectionIndex.fromTable(persons, movie_persons, (record) => record.person_id);
-export const getPersonsFromMovie = indices.CollectionIndex.fromTable(movies, movie_persons, (record) => record.movie_id);
-export const show_persons = loadIndex("show_persons", schema.ShowPerson, (record) => makeId(record.show_id, record.person_id));
-export const getShowsFromPerson = indices.CollectionIndex.fromTable(persons, show_persons, (record) => record.person_id);
-export const getPersonsFromShow = indices.CollectionIndex.fromTable(shows, show_persons, (record) => record.show_id);
+export const actors = loadIndex("actors", schema.Actor, (record) => record.actor_id);
+export const movie_actors = loadIndex("movie_actors", schema.MovieActor, (record) => makeId(record.movie_id, record.actor_id));
+export const getMoviesFromActor = indices.CollectionIndex.fromTable(actors, movie_actors, (record) => record.actor_id);
+export const getActorsFromMovie = indices.CollectionIndex.fromTable(movies, movie_actors, (record) => record.movie_id);
+export const show_actors = loadIndex("show_actors", schema.ShowActor, (record) => makeId(record.show_id, record.actor_id));
+export const getShowsFromActor = indices.CollectionIndex.fromTable(actors, show_actors, (record) => record.actor_id);
+export const getActorsFromShow = indices.CollectionIndex.fromTable(shows, show_actors, (record) => record.show_id);
 export const genres = loadIndex("genres", schema.Genre, (record) => record.genre_id);
 export const movie_genres = loadIndex("movie_genres", schema.MovieGenre, (record) => makeId(record.movie_id, record.genre_id));
 export const getMoviesFromGenre = indices.CollectionIndex.fromTable(genres, movie_genres, (record) => record.genre_id);
@@ -148,7 +148,7 @@ export const cue_search = indices.SearchIndex.fromTable(cues, (entry) => entry.l
 export const episode_search = indices.SearchIndex.fromTable(episodes, (entry) => [entry.title, entry.year?.toString()].filter(is.present));
 export const genre_search = indices.SearchIndex.fromTable(genres, (entry) => [entry.name]);
 export const movie_search = indices.SearchIndex.fromTable(movies, (entry) => [entry.title, entry.year?.toString()].filter(is.present));
-export const person_search = indices.SearchIndex.fromTable(persons, (entry) => [entry.name]);
+export const actor_search = indices.SearchIndex.fromTable(actors, (entry) => [entry.name]);
 export const playlist_search = indices.SearchIndex.fromTable(playlists, (entry) => [entry.title]);
 export const shows_search = indices.SearchIndex.fromTable(shows, (entry) => [entry.name]);
 export const track_search = indices.SearchIndex.fromTable(tracks, (entry) => [entry.title]);
@@ -268,13 +268,13 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 			});
 		}
 		for (let [index, actor] of metadata.show.actors.entries()) {
-			let person_id = makeId("person", actor);
-			persons.insert({
-				person_id: person_id,
+			let actor_id = makeId("actor", actor);
+			actors.insert({
+				actor_id: actor_id,
 				name: actor
 			});
-			show_persons.insert({
-				person_id: person_id,
+			show_actors.insert({
+				actor_id: actor_id,
 				show_id: show_id,
 				order: index
 			});
@@ -313,13 +313,13 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 			});
 		}
 		for (let [index, actor] of metadata.actors.entries()) {
-			let person_id = makeId("person", actor);
-			persons.insert({
-				person_id: person_id,
+			let actor_id = makeId("actor", actor);
+			actors.insert({
+				actor_id: actor_id,
 				name: actor
 			});
-			movie_persons.insert({
-				person_id: person_id,
+			movie_actors.insert({
+				actor_id: actor_id,
 				movie_id: movie_id,
 				order: index
 			});

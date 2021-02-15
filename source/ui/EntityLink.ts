@@ -44,6 +44,10 @@ export class EntityLinkFactory {
 		this.contextMenuEntity = contextMenuEntity;
 	}
 
+	forActor(actor: api.ActorBase): xnode.XElement {
+		return this.make(`actors/${actor.actor_id}/`);
+	}
+
 	forAlbum(album: api.AlbumBase): xnode.XElement {
 		return this.make(`audio/albums/${album.album_id}/`);
 	}
@@ -96,12 +100,8 @@ export class EntityLinkFactory {
 		return this.make(`video/movies/`);
 	}
 
-	forPerson(person: api.PersonBase): xnode.XElement {
-		return this.make(`persons/${person.person_id}/`);
-	}
-
-	forPersons(): xnode.XElement {
-		return this.make(`persons/`);
+	forActors(): xnode.XElement {
+		return this.make(`actors/`);
 	}
 
 	forPlaylist(playlist: api.PlaylistBase): xnode.XElement {
@@ -153,6 +153,9 @@ export class EntityLinkFactory {
 	}
 
 	forEntity(entity: api.EntityBase): xnode.XElement {
+		if (api.ActorBase.is(entity)) {
+			return this.forActor(entity);
+		}
 		if (api.AlbumBase.is(entity)) {
 			return this.forAlbum(entity);
 		}
@@ -170,9 +173,6 @@ export class EntityLinkFactory {
 		}
 		if (api.GenreBase.is(entity)) {
 			return this.forGenre(entity);
-		}
-		if (api.PersonBase.is(entity)) {
-			return this.forPerson(entity);
 		}
 		if (api.PlaylistBase.is(entity)) {
 			return this.forPlaylist(entity);

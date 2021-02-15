@@ -5,7 +5,7 @@ import { ArrayObservable, computed, ObservableClass } from "../observers";
 import * as client from "../player/client";
 import * as is from "../is";
 import {  ContextAlbum, ContextArtist, Device } from "../player/schema/objects";
-import { Album, Artist, Cue, Disc, Entity, Episode, Movie, Person, Playlist, Season, Show, Track, User } from "../api/schema/objects";
+import { Actor, Album, Artist, Cue, Disc, Entity, Episode, Movie, Playlist, Season, Show, Track, User } from "../api/schema/objects";
 import * as xml from "../xnode";
 import { formatDuration as format_duration } from "../ui/metadata";
 import * as apischema from "../api/schema";
@@ -1957,17 +1957,17 @@ let updateviewforuri = (uri: string): void => {
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render()
 		);
-	} else if ((parts = /^persons[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
-		let person_id = parts[1];
-		req<{}, api_response.PersonResponse>(`/api/persons/${person_id}/?token=${token}`, {}, (_, response) => {
-			let person = response.person;
-			req<{}, api_response.PersonShowsResponse>(`/api/persons/${person_id}/shows/?token=${token}`, {}, (_, response) => {
+	} else if ((parts = /^actors[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
+		let actor_id = parts[1];
+		req<{}, api_response.ActorResponse>(`/api/actors/${actor_id}/?token=${token}`, {}, (_, response) => {
+			let actor = response.actor;
+			req<{}, api_response.ActorShowsResponse>(`/api/actors/${actor_id}/shows/?token=${token}`, {}, (_, response) => {
 				let shows = response.shows;
-				req<{}, api_response.PersonMoviesResponse>(`/api/persons/${person_id}/movies/?token=${token}`, {}, (_, response) => {
+				req<{}, api_response.ActorMoviesResponse>(`/api/actors/${actor_id}/movies/?token=${token}`, {}, (_, response) => {
 					let movies = response.movies;
 					mount.appendChild(xml.element("div.content")
 						.set("style", "display: grid; gap: 64px;")
-						.add(renderTextHeader(xml.text(person.name)))
+						.add(renderTextHeader(xml.text(actor.name)))
 						.add(xml.element("div")
 							.set("style", "display: grid; gap: 24px;")
 							.set("data-hide", `${shows.length === 0}`)
@@ -1986,21 +1986,21 @@ let updateviewforuri = (uri: string): void => {
 				});
 			});
 		});
-	} else if ((parts = /^persons[/]([^/?]*)/.exec(uri)) !== null) {
+	} else if ((parts = /^actors[/]([^/?]*)/.exec(uri)) !== null) {
 		let encodedQuery = parts[1];
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
-		let persons = new ArrayObservable<Person>([]);
+		let actors = new ArrayObservable<Actor>([]);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				let response = await preq<{}, api_response.PersonsResponse>(`/api/persons/${encodedQuery}?offset=${offset}&token=${token}`, {});
-				for (let person of response.persons) {
-					persons.append(person);
+				let response = await preq<{}, api_response.ActorsResponse>(`/api/actors/${encodedQuery}?offset=${offset}&token=${token}`, {});
+				for (let actor of response.actors) {
+					actors.append(actor);
 				}
-				offset += response.persons.length;
-				if (response.persons.length === 0) {
+				offset += response.actors.length;
+				if (response.actors.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -2008,11 +2008,11 @@ let updateviewforuri = (uri: string): void => {
 		};
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
-				.add(renderTextHeader(xml.text("Persons")))
+				.add(renderTextHeader(xml.text("Actors")))
 			)
 			.add(xml.element("div.content")
 				.add(Grid.make()
-					.repeat(persons, (person) => EntityCard.forPerson(person))
+					.repeat(actors, (actor) => EntityCard.forActor(actor))
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
@@ -2333,7 +2333,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.set("data-hide", `${show.actors.length === 0}`)
 					.set("style", "display: grid; gap: 16px;")
-					.add(...show.actors.map((actor) => EntityRow.forPerson(actor)))
+					.add(...show.actors.map((actor) => EntityRow.forActor(actor)))
 				)
 				.add(is.absent(indices) ? undefined : xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
@@ -2445,7 +2445,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.set("data-hide", `${movie.actors.length === 0}`)
 					.set("style", "display: grid; gap: 16px;")
-					.add(...movie.actors.map((actor) => EntityRow.forPerson(actor)))
+					.add(...movie.actors.map((actor) => EntityRow.forActor(actor)))
 				)
 				.add(xml.element("div.content")
 					.bind("data-hide", movies.compute((movies) => movies.length === 0))

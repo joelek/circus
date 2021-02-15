@@ -809,16 +809,16 @@ class UsersRoute implements Route<{}, response.UsersResponse> {
 	}
 }
 
-class PersonShowsRoute implements Route<{}, response.PersonShowsResponse> {
+class ActorShowsRoute implements Route<{}, response.ActorShowsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]persons[/]([0-9a-f]{16})[/]shows[/]/.exec(request.url ?? "/") as RegExpExecArray;
-		let person_id = parts[1];
+		let parts = /^[/]api[/]actors[/]([0-9a-f]{16})[/]shows[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let actor_id = parts[1];
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let shows = handler.getShowsFromPerson(person_id, user_id, offset, length);
-		let payload: response.PersonShowsResponse = {
+		let shows = handler.getShowsFromActor(actor_id, user_id, offset, length);
+		let payload: response.ActorShowsResponse = {
 			shows
 		};
 		response.writeHead(200);
@@ -826,20 +826,20 @@ class PersonShowsRoute implements Route<{}, response.PersonShowsResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]persons[/]([0-9a-f]{16})[/]shows[/]/.test(request.url ?? "/");
+		return /^[/]api[/]actors[/]([0-9a-f]{16})[/]shows[/]/.test(request.url ?? "/");
 	}
 }
 
-class PersonMoviesRoute implements Route<{}, response.PersonMoviesResponse> {
+class ActorMoviesRoute implements Route<{}, response.ActorMoviesResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]persons[/]([0-9a-f]{16})[/]movies[/]/.exec(request.url ?? "/") as RegExpExecArray;
-		let person_id = parts[1];
+		let parts = /^[/]api[/]actors[/]([0-9a-f]{16})[/]movies[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let actor_id = parts[1];
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let movies = handler.getMoviesFromPerson(person_id, user_id, offset, length);
-		let payload: response.PersonMoviesResponse = {
+		let movies = handler.getMoviesFromActor(actor_id, user_id, offset, length);
+		let payload: response.ActorMoviesResponse = {
 			movies
 		};
 		response.writeHead(200);
@@ -847,46 +847,46 @@ class PersonMoviesRoute implements Route<{}, response.PersonMoviesResponse> {
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]persons[/]([0-9a-f]{16})[/]movies[/]/.test(request.url ?? "/");
+		return /^[/]api[/]actors[/]([0-9a-f]{16})[/]movies[/]/.test(request.url ?? "/");
 	}
 }
 
-class PersonRoute implements Route<{}, response.PersonResponse> {
+class ActorRoute implements Route<{}, response.ActorResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]persons[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
-		let person_id = parts[1];
-		let person = handler.lookupPerson(person_id, user_id);
-		let payload: response.PersonResponse = {
-			person
+		let parts = /^[/]api[/]actors[/]([0-9a-f]{16})[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let actor_id = parts[1];
+		let actor = handler.lookupActor(actor_id, user_id);
+		let payload: response.ActorResponse = {
+			actor: actor
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]persons[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
+		return /^[/]api[/]actors[/]([0-9a-f]{16})[/]/.test(request.url ?? "/");
 	}
 }
 
-class PersonsRoute implements Route<{}, response.PersonsResponse> {
+class ActorsRoute implements Route<{}, response.ActorsResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
-		let parts = /^[/]api[/]persons[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
+		let parts = /^[/]api[/]actors[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
 		let query = decodeURIComponent(parts[1]);
 		let url = liburl.parse(request.url ?? "/", true);
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let persons = handler.searchForPersons(query, offset, length, user_id);
-		let payload: response.PersonsResponse = {
-			persons
+		let actors = handler.searchForActors(query, offset, length, user_id);
+		let payload: response.ActorsResponse = {
+			actors
 		};
 		response.writeHead(200);
 		response.end(JSON.stringify(payload));
 	}
 
 	handlesRequest(request: libhttp.IncomingMessage): boolean {
-		return /^[/]api[/]persons[/]([^/?]*)/.test(request.url ?? "/");
+		return /^[/]api[/]actors[/]([^/?]*)/.test(request.url ?? "/");
 	}
 }
 
@@ -951,10 +951,10 @@ let router = new Router()
 	.registerRoute(new EpisodesRoute())
 	.registerRoute(new ShowRoute())
 	.registerRoute(new ShowsRoute())
-	.registerRoute(new PersonShowsRoute())
-	.registerRoute(new PersonMoviesRoute())
-	.registerRoute(new PersonRoute())
-	.registerRoute(new PersonsRoute())
+	.registerRoute(new ActorShowsRoute())
+	.registerRoute(new ActorMoviesRoute())
+	.registerRoute(new ActorRoute())
+	.registerRoute(new ActorsRoute())
 	.registerRoute(new PlaylistRoute())
 	.registerRoute(new PlaylistsRoute())
 	.registerRoute(new TrackPlaylistsRoute())

@@ -93,6 +93,9 @@ export class EntityRowFactory {
 	}
 
 	forEntity(entity: api.Entity): xnode.XElement {
+		if (api.Actor.is(entity)) {
+			return this.forActor(entity);
+		}
 		if (api.Album.is(entity)) {
 			return this.forAlbum(entity);
 		}
@@ -110,9 +113,6 @@ export class EntityRowFactory {
 		}
 		if (api.Genre.is(entity)) {
 			return this.forGenre(entity);
-		}
-		if (api.Person.is(entity)) {
-			return this.forPerson(entity);
 		}
 		if (api.Playlist.is(entity)) {
 			return this.forPlaylist(entity);
@@ -136,6 +136,16 @@ export class EntityRowFactory {
 			return this.forYear(entity);
 		}
 		throw `Expected code to be unreachable!`;
+	}
+
+	forActor(actor: api.Actor): xnode.XElement {
+		let link = this.entityLinkFactory.forActor(actor);
+		let image = this.ImageBox.forSquare();
+		let titles = [
+			this.entityTitleFactory.forActor(actor)
+		];
+		let subtitles = [] as xnode.XElement[];
+		return this.make(link, image, undefined, titles, subtitles);
 	}
 
 	forAlbum(album: api.Album, playbackButton: xnode.XElement = this.PlaybackButton.forAlbum(album)): xnode.XElement {
@@ -212,16 +222,6 @@ export class EntityRowFactory {
 		];
 		let subtitles = movie.genres.map((genre) => this.entityTitleFactory.forGenre(genre));
 		return this.make(link, image, playbackButton, titles, subtitles);
-	}
-
-	forPerson(person: api.Person): xnode.XElement {
-		let link = this.entityLinkFactory.forPerson(person);
-		let image = this.ImageBox.forSquare();
-		let titles = [
-			this.entityTitleFactory.forPerson(person)
-		];
-		let subtitles = [] as xnode.XElement[];
-		return this.make(link, image, undefined, titles, subtitles);
 	}
 
 	forPlaylist(playlist: api.Playlist, playbackButton: xnode.XElement = this.PlaybackButton.forPlaylist(playlist)): xnode.XElement {

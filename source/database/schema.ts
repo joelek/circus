@@ -315,37 +315,37 @@ export const MovieFile = autoguard.Object.of<MovieFile>({
 	"file_id": autoguard.String
 });
 
-export type Person = {
-	"person_id": string,
+export type Actor = {
+	"actor_id": string,
 	"name": string
 };
 
-export const Person = autoguard.Object.of<Person>({
-	"person_id": autoguard.String,
+export const Actor = autoguard.Object.of<Actor>({
+	"actor_id": autoguard.String,
 	"name": autoguard.String
 });
 
-export type MoviePerson = {
+export type MovieActor = {
 	"movie_id": string,
-	"person_id": string,
+	"actor_id": string,
 	"order": number
 };
 
-export const MoviePerson = autoguard.Object.of<MoviePerson>({
+export const MovieActor = autoguard.Object.of<MovieActor>({
 	"movie_id": autoguard.String,
-	"person_id": autoguard.String,
+	"actor_id": autoguard.String,
 	"order": autoguard.Number
 });
 
-export type ShowPerson = {
+export type ShowActor = {
 	"show_id": string,
-	"person_id": string,
+	"actor_id": string,
 	"order": number
 };
 
-export const ShowPerson = autoguard.Object.of<ShowPerson>({
+export const ShowActor = autoguard.Object.of<ShowActor>({
 	"show_id": autoguard.String,
-	"person_id": autoguard.String,
+	"actor_id": autoguard.String,
 	"order": autoguard.Number
 });
 
@@ -528,9 +528,9 @@ export type Autoguard = {
 	"EpisodeFile": EpisodeFile,
 	"Movie": Movie,
 	"MovieFile": MovieFile,
-	"Person": Person,
-	"MoviePerson": MoviePerson,
-	"ShowPerson": ShowPerson,
+	"Actor": Actor,
+	"MovieActor": MovieActor,
+	"ShowActor": ShowActor,
 	"Genre": Genre,
 	"MovieGenre": MovieGenre,
 	"ShowGenre": ShowGenre,
@@ -569,9 +569,9 @@ export const Autoguard = {
 	"EpisodeFile": EpisodeFile,
 	"Movie": Movie,
 	"MovieFile": MovieFile,
-	"Person": Person,
-	"MoviePerson": MoviePerson,
-	"ShowPerson": ShowPerson,
+	"Actor": Actor,
+	"MovieActor": MovieActor,
+	"ShowActor": ShowActor,
 	"Genre": Genre,
 	"MovieGenre": MovieGenre,
 	"ShowGenre": ShowGenre,

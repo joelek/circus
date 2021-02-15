@@ -16,6 +16,9 @@ export class EntityTitleFactory {
 	}
 
 	forEntity(entity: api.Entity): xnode.XElement {
+		if (api.Actor.is(entity)) {
+			return this.forActor(entity);
+		}
 		if (api.Album.is(entity)) {
 			return this.forAlbum(entity);
 		}
@@ -34,9 +37,6 @@ export class EntityTitleFactory {
 		if (api.Movie.is(entity)) {
 			return this.forMovie(entity);
 		}
-		if (api.Person.is(entity)) {
-			return this.forPerson(entity);
-		}
 		if (api.Playlist.is(entity)) {
 			return this.forPlaylist(entity);
 		}
@@ -53,6 +53,10 @@ export class EntityTitleFactory {
 			return this.forUser(entity);
 		}
 		throw `Expected code to be unreachable!`;
+	}
+
+	forActor(actor: api.ActorBase): xnode.XElement {
+		return this.make(this.entityLinkFactory.forActor(actor), actor.name);
 	}
 
 	forAlbum(album: api.AlbumBase): xnode.XElement {
@@ -77,10 +81,6 @@ export class EntityTitleFactory {
 
 	forMovie(movie: api.MovieBase): xnode.XElement {
 		return this.make(this.entityLinkFactory.forMovie(movie), movie.title);
-	}
-
-	forPerson(person: api.PersonBase): xnode.XElement {
-		return this.make(this.entityLinkFactory.forPerson(person), person.name);
 	}
 
 	forPlaylist(playlist: api.PlaylistBase): xnode.XElement {

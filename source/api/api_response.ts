@@ -76,20 +76,20 @@ type MoviesResponse = {
 	movies: objects.Movie[]
 };
 
-type PersonResponse = {
-	person: objects.Person
+type ActorResponse = {
+	actor: objects.Actor
 };
 
-type PersonShowsResponse = {
+type ActorShowsResponse = {
 	shows: objects.Show[]
 };
 
-type PersonMoviesResponse = {
+type ActorMoviesResponse = {
 	movies: objects.Movie[]
 };
 
-type PersonsResponse = {
-	persons: objects.Person[]
+type ActorsResponse = {
+	actors: objects.Actor[]
 };
 
 type PlaylistResponse = {
@@ -209,10 +209,10 @@ export {
 	MovieMovieSuggestionsResponse,
 	MovieResponse,
 	MoviesResponse,
-	PersonShowsResponse,
-	PersonMoviesResponse,
-	PersonResponse,
-	PersonsResponse,
+	ActorShowsResponse,
+	ActorMoviesResponse,
+	ActorResponse,
+	ActorsResponse,
 	PlaylistResponse,
 	PlaylistsResponse,
 	TrackPlaylistsResponse,

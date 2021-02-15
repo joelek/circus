@@ -254,27 +254,27 @@ export function lookupMovie(movie_id: string, user_id: string): schema.objects.M
 		genres: database.getGenresFromMovie.lookup(movie_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
 			.map((record) => lookupGenreBase(record.genre_id, user_id)),
-		actors: database.getPersonsFromMovie.lookup(movie_id)
+		actors: database.getActorsFromMovie.lookup(movie_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupPerson(record.person_id, user_id)),
+			.map((record) => lookupActor(record.actor_id, user_id)),
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media,
 		subtitles: subtitles
 	};
 };
 
-export function lookupPersonBase(person_id: string, user_id: string): schema.objects.PersonBase {
-	let person = database.persons.lookup(person_id);
+export function lookupActorBase(actor_id: string, user_id: string): schema.objects.ActorBase {
+	let actor = database.actors.lookup(actor_id);
 	return {
-		person_id: person.person_id,
-		name: config.use_demo_mode ? "Person name" : person.name
+		actor_id: actor.actor_id,
+		name: config.use_demo_mode ? "Actor name" : actor.name
 	};
 };
 
-export function lookupPerson(person_id: string, user_id: string): schema.objects.Person {
-	let person = lookupPersonBase(person_id, user_id);
+export function lookupActor(actor_id: string, user_id: string): schema.objects.Actor {
+	let actor = lookupActorBase(actor_id, user_id);
 	return {
-		...person
+		...actor
 	};
 };
 
@@ -359,9 +359,9 @@ export function lookupShow(show_id: string, user_id: string): schema.objects.Sho
 		genres: database.getGenresFromShow.lookup(show_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
 			.map((record) => lookupGenreBase(record.genre_id, user_id)),
-		actors: database.getPersonsFromShow.lookup(show_id)
+		actors: database.getActorsFromShow.lookup(show_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupPersonBase(record.person_id, user_id)),
+			.map((record) => lookupActorBase(record.actor_id, user_id)),
 		seasons: database.getSeasonsFromShow.lookup(show_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
 			.map((record) => lookupSeason(record.season_id, user_id, show))
@@ -568,17 +568,17 @@ export function searchForMovies(query: string, offset: number, length: number, u
 	}
 };
 
-export function searchForPersons(query: string, offset: number, length: number, user_id: string): schema.objects.Person[] {
+export function searchForActors(query: string, offset: number, length: number, user_id: string): schema.objects.Actor[] {
 	if (query === "") {
-		return Array.from(database.persons)
+		return Array.from(database.actors)
 			.sort(jsondb.LexicalSort.increasing((record) => record.name))
 			.slice(offset, offset + length)
-			.map((record) => lookupPerson(record.person_id, user_id));
+			.map((record) => lookupActor(record.actor_id, user_id));
 	} else {
-		return database.person_search.lookup(query)
+		return database.actor_search.lookup(query)
 			.map((record) => record.id)
 			.slice(offset, offset + length)
-			.map((id) => lookupPerson(id, user_id));
+			.map((id) => lookupActor(id, user_id));
 	}
 };
 
@@ -661,12 +661,12 @@ export function searchForYears(query: string, offset: number, length: number, us
 
 export function searchForEntities(query: string, user_id: string, offset: number, limit: number): schema.objects.Entity[] {
 	let results = [
+		...database.actor_search.lookup(query).map((result) => ({ ...result, type: "ACTOR", type_rank: 1 })),
 		...database.album_search.lookup(query).map((result) => ({ ...result, type: "ALBUM", type_rank: 9 })),
 		...database.artist_search.lookup(query).map((result) => ({ ...result, type: "ARTIST", type_rank: 6 })),
 		...database.episode_search.lookup(query).map((result) => ({ ...result, type: "EPISODE", type_rank: 4 })),
 		...database.genre_search.lookup(query).map((result) => ({ ...result, type: "GENRE", type_rank: 2 })),
 		...database.movie_search.lookup(query).map((result) => ({ ...result, type: "MOVIE", type_rank: 8 })),
-		...database.person_search.lookup(query).map((result) => ({ ...result, type: "PERSON", type_rank: 1 })),
 		...database.playlist_search.lookup(query).map((result) => ({ ...result, type: "PLAYLIST", type_rank: 3 })),
 		...database.shows_search.lookup(query).map((result) => ({ ...result, type: "SHOW", type_rank: 7 })),
 		...database.track_search.lookup(query).map((result) => ({ ...result, type: "TRACK", type_rank: 5 })),
@@ -687,6 +687,8 @@ export function searchForEntities(query: string, user_id: string, offset: number
 		let type = result.type;
 		let id = result.id;
 		if (false) {
+		} else if (type === "ACTOR") {
+			return lookupActor(id, user_id);
 		} else if (type === "ALBUM") {
 			return lookupAlbum(id, user_id);
 		} else if (type === "ARTIST") {
@@ -699,8 +701,6 @@ export function searchForEntities(query: string, user_id: string, offset: number
 			return lookupGenre(id, user_id);
 		} else if (type === "MOVIE") {
 			return lookupMovie(id, user_id);
-		} else if (type === "PERSON") {
-			return lookupPerson(id, user_id);
 		} else if (type === "PLAYLIST") {
 			return lookupPlaylist(id, user_id);
 		} else if (type === "SHOW") {
@@ -805,8 +805,8 @@ export function getMoviesFromGenre(video_genre_id: string, user_id: string, offs
 		.map((entry) => lookupMovie(entry.movie_id, user_id));
 };
 
-export function getMoviesFromPerson(person_id: string, user_id: string, offset: number, length: number): schema.objects.Movie[] {
-	return database.getMoviesFromPerson.lookup(person_id)
+export function getMoviesFromActor(actor_id: string, user_id: string, offset: number, length: number): schema.objects.Movie[] {
+	return database.getMoviesFromActor.lookup(actor_id)
 		.map((entry) => database.movies.lookup(entry.movie_id))
 		.sort(jsondb.LexicalSort.increasing((movie) => movie.title))
 		.slice(offset, offset + length)
@@ -821,8 +821,8 @@ export function getShowsFromGenre(video_genre_id: string, user_id: string, offse
 		.map((entry) => lookupShow(entry.show_id, user_id));
 };
 
-export function getShowsFromPerson(person_id: string, user_id: string, offset: number, length: number): schema.objects.Show[] {
-	return database.getShowsFromPerson.lookup(person_id)
+export function getShowsFromActor(actor_id: string, user_id: string, offset: number, length: number): schema.objects.Show[] {
+	return database.getShowsFromActor.lookup(actor_id)
 		.map((entry) => database.shows.lookup(entry.show_id))
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.name))
 		.slice(offset, offset + length)
