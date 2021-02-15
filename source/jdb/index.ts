@@ -234,7 +234,7 @@ export class Table<A extends Record<string, any>> {
 		record = this.guard.as(json);
 		this.cache.set(index, record);
 		this.cache_list.add(index);
-		if (this.cache_list.size > 1000) {
+		if (this.cache_list.size > 100000) {
 			for (let idx of this.cache_list) {
 				this.cache.delete(idx);
 				this.cache_list.delete(idx);
