@@ -6,14 +6,14 @@ import * as is from "../is";
 const CSS = `
 	.image-box {
 		background-color: ${theme.BACKGROUND_3};
-		border-radius: 2px;
+		border-radius: 4px;
 		overflow: hidden;
 		position: relative;
 		will-change: opacity;
 	}
 
 	.image-box--poster {
-		padding-bottom: ${1/1 * 100}%;
+		padding-bottom: ${3/2 * 100}%;
 	}
 
 	.image-box--square {
