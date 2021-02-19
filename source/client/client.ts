@@ -1033,7 +1033,7 @@ style.innerText = `
 
 	.icon-link {
 		background-color: rgb(47, 47, 47);
-		border-radius: 2px;
+		border-radius: 4px;
 		cursor: pointer;
 		padding-bottom: 100%;
 		position: relative;
