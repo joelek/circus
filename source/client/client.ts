@@ -543,7 +543,7 @@ style.innerText = `
 		box-sizing: border-box;
 		color: rgb(255, 255, 255);
 		font-size: 16px;
-		padding: 8px 16px 8px 32px;
+		padding: 8px 16px 8px 40px;
 		width: 100%;
 	}
 
@@ -885,29 +885,24 @@ style.innerText = `
 
 
 	.icon-button {
-		background-color: rgb(255, 255, 255);
-		border-radius: 50%;
-		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
 		cursor: pointer;
-		fill: rgb(31, 31, 31);
-		max-width: fit-content;
-		padding: 8px;
-		transition: background-color 0.125s, transform 0.125s;
+		fill: rgb(255, 255, 255);
+		padding: 4px;
+		transition: fill 0.125s, transform 0.125s;
 	}
 
 	.icon-button[data-enabled="false"] {
-		background-color: rgb(79, 79, 79);
 		cursor: default;
+		fill: rgb(31, 31, 31);
 	}
 
 	.icon-button[data-active="true"] {
-		background-color: ${ACCENT_COLOR};
-		fill: rgb(255, 255, 255);
+		fill: ${ACCENT_COLOR};
 	}
 
 	@media (hover: hover) and (pointer: fine) {
 		.icon-button:not([data-enabled="false"]):hover {
-			transform: scale(1.25);
+			transform: scale(1.50);
 		}
 
 		.icon-button:active {

@@ -19,7 +19,7 @@ const CSS = `
 
 	@media (hover: hover) and (pointer: fine) {
 		.playback-button:not([data-enabled="false"]):hover {
-			transform: scale(1.25);
+			transform: scale(1.50);
 		}
 
 		.playback-button:active {
