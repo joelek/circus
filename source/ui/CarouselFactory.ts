@@ -80,9 +80,7 @@ export class CarouselFactory {
 			.add(xnode.element("div.carousel__controls")
 				.add(xnode.element("div.icon-button")
 					.bind("data-enabled", canScrollLast.addObserver((canScrollLast) => `${canScrollLast}`))
-					.add(this.iconFactory.makeChevron()
-						.set("style", "transform: scale(-1.0, 1.0);")
-					)
+					.add(this.iconFactory.makeChevron({ direction: "left" }))
 					.on("click", async () => {
 						if (canScrollLast.getState()) {
 							let content = await contentElement.ref() as HTMLElement;
