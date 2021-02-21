@@ -145,12 +145,8 @@ Ports, paths and other settings can be configured through altering the config fi
 ## Future plans
 
 * Move playlist editing to context menu (fixes cache error).
-* Create back and forward buttons for navigation.
-* Add reload option for cached pages.
 * Create typed REST API.
 * Set document title based on page.
-* Edit icons to look better in 12px.
-* Export icons with 24px sizes.
 * Create and use layout components with standard spacing.
 * Put languages in database.
 * Add offline functionality with service workers.
@@ -161,6 +157,8 @@ Ports, paths and other settings can be configured through altering the config fi
 * Add shuffle and repeat features to player.
 * Index content at regular one hour intervals when inactive.
 * Add statistics page.
-* Improve database performance. Only lookup records that are required.
 * Verify external track metadata functionality.
 * Add way of generating additional registration keys.
+* Add shortcuts to start page.
+* Add additional entity pages.
+* Add filter to entity pages.
