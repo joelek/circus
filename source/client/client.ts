@@ -455,7 +455,10 @@ style.innerText = `
 	}
 
 	.page-header {
-		background-color: ${ACCENT_COLOR};
+		align-items: center;
+		display: grid;
+		gap: 16px;
+		grid-template-columns: 1fr auto;
 	}
 
 	.page-header__title {
@@ -466,6 +469,13 @@ style.innerText = `
 		transform-origin: left;
 		transition: transform 0.125s;
 		white-space: nowrap;
+	}
+
+	.page-header__controls {
+		display: grid;
+		gap: 8px;
+		grid-auto-columns: minmax(auto, min-content);
+		grid-auto-flow: column;
 	}
 
 	@media (hover: hover) and (pointer: fine) {
@@ -1195,16 +1205,58 @@ let showUserInterface = new ObservableClass(true);
 let appcontainer = xml.element("div.app")
 	.render();
 document.body.appendChild(appcontainer);
+let historyLength = new ObservableClass(window.history.length);
+let historyIndex = new ObservableClass(window.history.length - 1);
+let lastHistoryIndex = computed((historyLength, historyIndex) => {
+	if (historyLength === 0) {
+		return;
+	}
+	if (historyIndex - 1 < 0) {
+		return;
+	}
+	return historyIndex - 1;
+}, historyLength, historyIndex);
+let nextHistoryIndex = computed((historyLength, historyIndex) => {
+	if (historyLength === 0) {
+		return;
+	}
+	if (historyIndex + 1 >= historyLength) {
+		return;
+	}
+	return historyIndex + 1;
+}, historyLength, historyIndex);
 
 let appheader = xml.element("div.app__header")
 	.bind("data-hide", showUserInterface.addObserver((showUserInterface) => !showUserInterface))
 	.add(xml.element("div.content")
 		.set("style", "padding: 16px")
-		.add(xml.element("div.page-header__title")
-			.add(xml.text(document.title))
-			.on("click", () => {
-				navigate("/");
-			})
+		.add(xml.element("div.page-header")
+			.add(xml.element("div.page-header__title")
+				.add(xml.text(document.title))
+				.on("click", () => {
+					navigate("");
+				})
+			)
+			.add(xml.element("div.page-header__controls")
+				.add(makeButton()
+					.bind("data-enabled", lastHistoryIndex.addObserver(is.present))
+					.add(Icon.makeChevron().set("style", "transform: scale(-1.0, 1.0);"))
+					.on("click", () => {
+						if (is.present(lastHistoryIndex)) {
+							window.history.back();
+						}
+					})
+				)
+				.add(makeButton()
+					.bind("data-enabled", nextHistoryIndex.addObserver(is.present))
+					.add(Icon.makeChevron())
+					.on("click", () => {
+						if (is.present(nextHistoryIndex)) {
+							window.history.forward();
+						}
+					})
+				)
+			)
 		)
 	)
 	.render();
@@ -2767,10 +2819,14 @@ function navigate(uri: string, restore_scroll: boolean = false): void {
 		updateviewforuri(uri);
 	}
 	if (is.absent(window.history.state)) {
-		window.history.replaceState({ uri }, "", uri);
+		window.history.replaceState({ uri, index: historyIndex.getState() }, "", uri);
 	} else {
 		if (uri !== window.history.state.uri) {
-			window.history.pushState({ uri }, "", uri);
+			window.history.pushState({ uri, index: historyIndex.getState() + 1 }, "", uri);
+			historyIndex.updateState(historyIndex.getState() + 1);
+			historyLength.updateState(historyIndex.getState() + 1);
+		} else {
+			historyIndex.updateState(window.history.state.index);
 		}
 	}
 	mounted_uri = uri;
