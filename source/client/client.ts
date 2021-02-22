@@ -607,8 +607,11 @@ style.innerText = `
 		color: rgb(255, 255, 255);
 		cursor: pointer;
 		font-size: 16px;
+		overflow: hidden;
 		padding: 8px 16px;
+		text-overflow: ellipsis;
 		transition: background-color 0.125s, color 0.125s;
+		white-space: nowrap;
 	}
 
 	button[data-enabled="false"] {
