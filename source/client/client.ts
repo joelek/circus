@@ -2332,6 +2332,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeIconLink(Icon.makeDisc(), "Albums", "audio/albums/"))
 					.add(makeIconLink(Icon.makePerson(), "Artists", "audio/artists/"))
 					.add(makeIconLink(Icon.makeBulletList(), "Playlists", "audio/playlists/"))
+					.add(makeIconLink(Icon.makeNote(), "Tracks", "audio/tracks/"))
 				)
 			)
 		.render());
