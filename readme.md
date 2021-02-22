@@ -161,3 +161,4 @@ Ports, paths and other settings can be configured through altering the config fi
 * Add shortcuts to start page.
 * Add additional entity pages.
 * Add filter to entity pages.
+* Change line heights to make umlauts fit.
