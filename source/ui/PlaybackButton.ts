@@ -40,9 +40,13 @@ export class PlaybackButtonFactory {
 		}, isContext, this.player.playback);
 		return xnode.element("div.playback-button")
 			.add(this.iconFactory.makePlay()
+				.set("width", "12px")
+				.set("height", "12px")
 				.bind("data-hide", isPlaying.addObserver((isPlaying) => isPlaying))
 			)
 			.add(this.iconFactory.makePause()
+				.set("width", "12px")
+				.set("height", "12px")
 				.bind("data-hide", isPlaying.addObserver((isPlaying) => !isPlaying))
 			)
 			.on("click", () => {
