@@ -253,7 +253,7 @@ const tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined)
 const contextMenuEntity = new ObservableClass(undefined as apischema.objects.EntityBase | undefined);
 const showContextMenu = new ObservableClass(false);
 const contextMenuItems = new ArrayObservable(new Array<xml.XElement>());
-contextMenuEntity.addObserver((contextMenuEntity) => {
+contextMenuEntity.addObserver(async (contextMenuEntity) => {
 	if (apischema.objects.Track.is(contextMenuEntity)) {
 		let title = new ObservableClass("");
 		let canCreate = computed((title) => {
@@ -288,7 +288,7 @@ contextMenuEntity.addObserver((contextMenuEntity) => {
 		contextMenuItems.update([
 			xml.element("div")
 				.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr min-content;")
-				.add(renderTextHeader(xml.text("Add to playlist")))
+				.add(renderTextHeader(xml.text("Track")))
 				.add(makeButton()
 					.on("click", () => {
 						showContextMenu.updateState(false);
@@ -304,7 +304,7 @@ contextMenuEntity.addObserver((contextMenuEntity) => {
 						.bind2("value", title)
 						.set("type", "text")
 						.set("spellcheck", "false")
-						.set("placeholder", "Playlist title")
+						.set("placeholder", "Title...")
 						.on("keyup", async (event) => {
 							if (event.code === "Enter") {
 								await doCreate();
@@ -325,8 +325,8 @@ contextMenuEntity.addObserver((contextMenuEntity) => {
 			xml.element("div")
 				.set("style", "display: grid; gap: 16px;")
 				.bind("data-hide", playlists.playlists.compute((playlists) => playlists.length === 0))
-				.repeat(playlists.playlists, (playlist) => xml.element("div")
-					.set("style", "align-items: center; cursor: pointer; display: grid; fill: rgb(255, 255, 255); gap: 16px; grid-template-columns: min-content 1fr;")
+				.repeat(playlists.playlists, (playlist) => xml.element("button")
+					.add(xml.text(`Add to "${playlist.getState().title}"`))
 					.on("click", async () => {
 						let playlist_item = await playlists.createPlaylistItem({
 							playlist_item: {
@@ -339,8 +339,99 @@ contextMenuEntity.addObserver((contextMenuEntity) => {
 						}
 						showContextMenu.updateState(false);
 					})
-					.add(Icon.makeChevron())
-					.add(renderTextHeader(xml.text(playlist.getState().title)))
+				)
+		]);
+		showContextMenu.updateState(true);
+	} else if (apischema.objects.Playlist.is(contextMenuEntity)) {
+		let hasWritePermission = (await playlists.getPermissions({
+			playlist: {
+				playlist_id: contextMenuEntity.playlist_id
+			}
+		})).permissions === "write";
+		let title = new ObservableClass(contextMenuEntity.title);
+		let description = new ObservableClass(contextMenuEntity.description);
+		let canUpdate = computed((title, description) => {
+			if (title === "") {
+				return false;
+			}
+			return true;
+		}, title, description);
+		let doUpdate = async () => {
+			if (canUpdate.getState()) {
+				let playlist = await playlists.updatePlaylist({
+					playlist: {
+						playlist_id: contextMenuEntity.playlist_id,
+						title: title.getState(),
+						description:  description.getState()
+					}
+				});
+				if (playlist.errors.length > 0) {
+					return;
+				}
+				showContextMenu.updateState(false);
+			}
+		};
+		contextMenuItems.update([
+			xml.element("div")
+				.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr auto;")
+				.add(renderTextHeader(xml.text("Playlist")))
+				.add(makeButton()
+					.on("click", () => {
+						showContextMenu.updateState(false);
+					})
+					.add(Icon.makeCross())
+				),
+			EntityRow.forPlaylist(contextMenuEntity),
+			xml.element("div")
+				.set("data-hide", `${!hasWritePermission}`)
+				.set("style", "display: grid; gap: 16px;")
+				.add(xml.element("div")
+					.set("style", "position: relative;")
+					.add(xml.element("input")
+						.bind2("value", title)
+						.set("type", "text")
+						.set("spellcheck", "false")
+						.set("placeholder", "Title...")
+					)
+					.add(Icon.makeStar()
+						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+					)
+				)
+				.add(xml.element("div")
+					.set("style", "position: relative;")
+					.add(xml.element("input")
+						.bind2("value", description)
+						.set("type", "text")
+						.set("spellcheck", "false")
+						.set("placeholder", "Description...")
+					)
+					.add(Icon.makeStar()
+						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+					)
+				)
+				.add(xml.element("button")
+					.bind2("data-enabled", computed((canPerform) => "" + canPerform, canUpdate))
+					.add(xml.text("Update playlist"))
+					.on("click", async () => {
+						await doUpdate();
+					})
+				)
+				.add(xml.element("button")
+					.bind2("data-enabled", computed((canPerform) => "" + canPerform, canUpdate))
+					.add(xml.text("Delete playlist"))
+					.on("click", async () => {
+						if (canUpdate.getState()) {
+							let response = await playlists.deletePlaylist({
+								playlist: {
+									playlist_id: contextMenuEntity.playlist_id
+								}
+							});
+							if (response.errors.length > 0) {
+								return;
+							}
+							showContextMenu.updateState(false);
+						}
+					})
 				)
 		]);
 		showContextMenu.updateState(true);
@@ -2195,72 +2286,14 @@ let updateviewforuri = (uri: string): void => {
 		let playlist_id = parts[1];
 		req<api_response.ApiRequest, api_response.PlaylistResponse>(`/api/audio/playlists/${playlist_id}/?token=${token}`, {}, async (status, response) => {
 			let playlist = response.playlist;
-			let canEdit = (await playlists.getPermissions({
+			let hasWritePermission = (await playlists.getPermissions({
 				playlist: {
 					playlist_id
 				}
 			})).permissions === "write";
-			let title = new ObservableClass(playlist.title);
-			let description = new ObservableClass(playlist.description);
-			let canModify = computed((title) => {
-				if (title === "") {
-					return false;
-				}
-				return true;
-			}, title);
-			let doUpdate = async () => {
-				if (canModify.getState()) {
-					let response = await playlists.updatePlaylist({
-						playlist: {
-							playlist_id: playlist_id,
-							title: title.getState(),
-							description: description.getState()
-						}
-					});
-					if (response.errors.length > 0) {
-						return;
-					}
-					navigate(uri);
-				}
-			};
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forPlaylist(playlist, { compactDescription: false }))
-				)
-				.add(xml.element("div.content.content--compact")
-					.set("style", "display: grid; gap: 16px;")
-					.set("data-hide", `${!canEdit}`)
-					.add(xml.element("div")
-						.set("style", "position: relative;")
-						.add(xml.element("input")
-							.bind2("value", title)
-							.set("type", "text")
-							.set("spellcheck", "false")
-							.set("placeholder", "Playlist title")
-						)
-						.add(Icon.makeStar()
-							.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
-						)
-					)
-					.add(xml.element("div")
-						.set("style", "position: relative;")
-						.add(xml.element("input")
-							.bind2("value", description)
-							.set("type", "text")
-							.set("spellcheck", "false")
-							.set("placeholder", "Playlist description")
-						)
-						.add(Icon.makeStar()
-							.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
-						)
-					)
-					.add(xml.element("button")
-						.bind2("data-enabled", computed((canUpdate) => "" + canUpdate, canModify))
-						.add(xml.text("Update playlist"))
-						.on("click", async () => {
-							await doUpdate();
-						})
-					)
 				)
 				.add(playlist.items.length === 0 ? undefined : xml.element("div.content")
 					.set("style", "display: grid; gap: 16px;")
@@ -2268,44 +2301,22 @@ let updateviewforuri = (uri: string): void => {
 						.set("style", "align-items: center; display: grid; grid-template-columns: 1fr min-content; gap: 16px;")
 						.add(EntityRow.forTrack(item.track, PlaybackButton.forPlaylist(playlist, itemIndex)))
 						.add(makeButton()
-							.set("data-hide", `${!canEdit}`)
+							.set("data-hide", `${!hasWritePermission}`)
 							.on("click", async () => {
-								if (canModify.getState()) {
-									let response = await playlists.deletePlaylistItem({
-										playlist_item: {
-											playlist_item_id: item.playlist_item_id
-										}
-									});
-									if (response.errors.length > 0) {
-										return;
-									}
-									navigate(uri);
-								}
-							})
-							.add(Icon.makeMinus())
-						)
-					))
-				)
-				.add(xml.element("div.content.content--compact")
-					.set("style", "display: grid; gap: 16px;")
-					.set("data-hide", `${!canEdit}`)
-					.add(xml.element("button")
-						.bind2("data-enabled", computed((canUpdate) => "" + canUpdate, canModify))
-						.add(xml.text("Delete playlist"))
-						.on("click", async () => {
-							if (canModify.getState()) {
-								let response = await playlists.deletePlaylist({
-									playlist: {
-										playlist_id
+								let response = await playlists.deletePlaylistItem({
+									playlist_item: {
+										playlist_item_id: item.playlist_item_id
 									}
 								});
 								if (response.errors.length > 0) {
 									return;
 								}
-								navigate("");
-							}
-						})
-					)
+								// TODO: Remove item instead of navigating.
+								navigate(uri);
+							})
+							.add(Icon.makeMinus())
+						)
+					))
 				)
 				.render());
 		});
