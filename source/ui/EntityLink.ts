@@ -45,11 +45,15 @@ export class EntityLinkFactory {
 	}
 
 	forActor(actor: api.ActorBase): xnode.XElement {
-		return this.make(`actors/${actor.actor_id}/`);
+		return this.make(`actors/${actor.actor_id}/`, actor);
+	}
+
+	forActors(): xnode.XElement {
+		return this.make(`actors/`);
 	}
 
 	forAlbum(album: api.AlbumBase): xnode.XElement {
-		return this.make(`audio/albums/${album.album_id}/`);
+		return this.make(`audio/albums/${album.album_id}/`, album);
 	}
 
 	forAlbums(): xnode.XElement {
@@ -57,7 +61,7 @@ export class EntityLinkFactory {
 	}
 
 	forArtist(artist: api.ArtistBase): xnode.XElement {
-		return this.make(`audio/artists/${artist.artist_id}/`);
+		return this.make(`audio/artists/${artist.artist_id}/`, artist);
 	}
 
 	forArtists(): xnode.XElement {
@@ -65,11 +69,11 @@ export class EntityLinkFactory {
 	}
 
 	forCue(cue: api.CueBase): xnode.XElement {
-		return this.make(`video/cues/${cue.cue_id}/`);
+		return this.make(`video/cues/${cue.cue_id}/`, cue);
 	}
 
 	forDisc(disc: api.DiscBase): xnode.XElement {
-		return this.make(`audio/discs/${disc.disc_id}/`);
+		return this.make(`audio/discs/${disc.disc_id}/`, disc);
 	}
 
 	forDiscs(): xnode.XElement {
@@ -77,7 +81,7 @@ export class EntityLinkFactory {
 	}
 
 	forEpisode(episode: api.EpisodeBase): xnode.XElement {
-		return this.make(`video/episodes/${episode.episode_id}/`);
+		return this.make(`video/episodes/${episode.episode_id}/`, episode);
 	}
 
 	forEpisodes(): xnode.XElement {
@@ -85,7 +89,7 @@ export class EntityLinkFactory {
 	}
 
 	forGenre(genre: api.GenreBase): xnode.XElement {
-		return this.make(`video/genres/${genre.genre_id}/`);
+		return this.make(`video/genres/${genre.genre_id}/`, genre);
 	}
 
 	forGenres(): xnode.XElement {
@@ -93,19 +97,15 @@ export class EntityLinkFactory {
 	}
 
 	forMovie(movie: api.MovieBase): xnode.XElement {
-		return this.make(`video/movies/${movie.movie_id}/`);
+		return this.make(`video/movies/${movie.movie_id}/`, movie);
 	}
 
 	forMovies(): xnode.XElement {
 		return this.make(`video/movies/`);
 	}
 
-	forActors(): xnode.XElement {
-		return this.make(`actors/`);
-	}
-
 	forPlaylist(playlist: api.PlaylistBase): xnode.XElement {
-		return this.make(`audio/playlists/${playlist.playlist_id}/`);
+		return this.make(`audio/playlists/${playlist.playlist_id}/`, playlist);
 	}
 
 	forPlaylists(): xnode.XElement {
@@ -113,7 +113,7 @@ export class EntityLinkFactory {
 	}
 
 	forSeason(season: api.SeasonBase): xnode.XElement {
-		return this.make(`video/seasons/${season.season_id}/`);
+		return this.make(`video/seasons/${season.season_id}/`, season);
 	}
 
 	forSeasons(): xnode.XElement {
@@ -121,7 +121,7 @@ export class EntityLinkFactory {
 	}
 
 	forShow(show: api.ShowBase): xnode.XElement {
-		return this.make(`video/shows/${show.show_id}/`);
+		return this.make(`video/shows/${show.show_id}/`, show);
 	}
 
 	forShows(): xnode.XElement {
@@ -137,7 +137,7 @@ export class EntityLinkFactory {
 	}
 
 	forUser(user: api.UserBase): xnode.XElement {
-		return this.make(`users/${user.user_id}/`);
+		return this.make(`users/${user.user_id}/`, user);
 	}
 
 	forUsers(): xnode.XElement {
@@ -145,7 +145,7 @@ export class EntityLinkFactory {
 	}
 
 	forYear(year: api.YearBase): xnode.XElement {
-		return this.make(`years/${year.year_id}/`);
+		return this.make(`years/${year.year_id}/`, year);
 	}
 
 	forYears(): xnode.XElement {
