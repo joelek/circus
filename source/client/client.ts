@@ -426,27 +426,24 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 					)
 				)
 				.add(xml.element("button")
-					.bind2("data-enabled", computed((canPerform) => "" + canPerform, canUpdate))
+					.bind2("data-enabled", computed((canUpdate) => "" + canUpdate, canUpdate))
 					.add(xml.text("Update playlist"))
 					.on("click", async () => {
 						await doUpdate();
 					})
 				),
 			xml.element("button")
-				.bind2("data-enabled", computed((canPerform) => "" + canPerform, canUpdate))
 				.add(xml.text("Delete playlist"))
 				.on("click", async () => {
-					if (canUpdate.getState()) {
-						let response = await playlists.deletePlaylist({
-							playlist: {
-								playlist_id: contextMenuEntity.playlist_id
-							}
-						});
-						if (response.errors.length > 0) {
-							return;
+					let response = await playlists.deletePlaylist({
+						playlist: {
+							playlist_id: contextMenuEntity.playlist_id
 						}
-						showContextMenu.updateState(false);
+					});
+					if (response.errors.length > 0) {
+						return;
 					}
+					showContextMenu.updateState(false);
 				})
 		]);
 		showContextMenu.updateState(true);
