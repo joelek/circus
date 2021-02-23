@@ -2895,6 +2895,12 @@ function setupRouting(): void {
 		let uri: string = event.state.uri;
 		navigate(uri, true);
 	});
-	navigate(get_route());
+	let run = false;
+	verifiedToken.addObserver((verifiedToken) => {
+		if (is.present(verifiedToken) && !run) {
+			run = true;
+			navigate(get_route());
+		}
+	});
 }
 setupRouting();
