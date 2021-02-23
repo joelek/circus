@@ -2063,11 +2063,11 @@ let updateviewforuri = (uri: string): void => {
 			let user = response.user;
 			let playlists = response.playlists;
 			mount.appendChild(xml.element("div.content")
-				.set("style", "display: grid; gap: 64px;")
 				.add(renderTextHeader(xml.text(user.name)))
 				.add(xml.element("div")
-					.set("data-hide", `${playlists.length === 0}`)
 					.set("style", "display: grid; gap: 24px;")
+					.set("data-hide", `${playlists.length === 0}`)
+					.add(renderTextHeader(xml.text("Playlists")))
 					.add(Grid.make()
 						.add(...playlists.map((playlist) => EntityCard.forPlaylist(playlist)))
 					)
