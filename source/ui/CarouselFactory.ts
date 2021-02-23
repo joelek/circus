@@ -32,7 +32,7 @@ const CSS = `
 
 	.carousel__controls {
 		display: grid;
-		gap: 8px;
+		gap: 16px;
 		grid-auto-flow: column;
 		justify-content: center;
 	}
