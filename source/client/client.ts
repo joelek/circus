@@ -824,9 +824,10 @@ style.innerText = `
 
 	.modal-container {
 		background-color: rgb(31, 31, 31);
+		box-shadow: 0px 0px 8px 4px rgb(0, 0, 0, 0.25);
 		height: 100%;
-		position: absolute;
-		width: 100%;
+		position: absolute; bottom: 0px; right: 0px;
+		width: min(320px, 100%);
 		z-index: 1;
 	}
 
@@ -835,12 +836,12 @@ style.innerText = `
 	}
 
 	.modal-container[data-hide=false] {
-		transform: translate(0%, -100%);
+		transform: none;
 		transition: transform 0.5s;
 	}
 
 	.modal-container[data-hide=true] {
-		transform: none;
+		transform: translate(100%, 0%);
 		transition: none;
 	}
 
@@ -2880,6 +2881,9 @@ type CacheEntry = {
 let mount_cache = new Array<CacheEntry>();
 let mounted_uri: string | undefined;
 function navigate(uri: string, use_cache: boolean = false): void {
+	if (is.absent(verifiedToken.getState())) {
+		return;
+	}
 	if (is.present(mounted_uri)) {
 		let entry = mount_cache.find((entry) => entry.uri === mounted_uri);
 		if (is.present(entry)) {
