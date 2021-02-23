@@ -52,7 +52,7 @@ External image and metadata files may be used to supply additional information t
 			"Genre name"
 		],
 		"actors": [
-			"Person name"
+			"Actor name"
 		]
 	}
 }
@@ -68,7 +68,7 @@ External image and metadata files may be used to supply additional information t
 		"Genre name"
 	],
 	"actors": [
-		"Person name"
+		"Actor name"
 	]
 }
 ```
@@ -158,7 +158,6 @@ Ports, paths and other settings can be configured through altering the config fi
 * Add statistics page.
 * Verify external track metadata functionality.
 * Add way of generating additional registration keys.
-* Add shortcuts to start page.
 * Add additional entity pages.
 * Add filter to entity pages.
 * Change line heights to make umlauts fit.
