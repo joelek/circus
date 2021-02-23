@@ -2703,6 +2703,12 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
+		function reset() {
+			offset = 0;
+			reachedEnd.updateState(false);
+			entities.update([]);
+			load();
+		}
 		let headEntities = new ArrayObservable<Entity>([]);
 		let tailEntities = new ArrayObservable<Entity>([]);
 		entities.addObserver({
@@ -2711,6 +2717,13 @@ let updateviewforuri = (uri: string): void => {
 					headEntities.append(entity);
 				} else {
 					tailEntities.append(entity);
+				}
+			},
+			onsplice(entity, index) {
+				if (index === 0) {
+					headEntities.update([]);
+				} else {
+					tailEntities.splice(index - 1);
 				}
 			}
 		});
@@ -2724,7 +2737,9 @@ let updateviewforuri = (uri: string): void => {
 					.bind2("value", query)
 					.on("keyup", (event) => {
 						if (event.code === "Enter") {
-							navigate(`search/${encodeURIComponent(query.getState())}`);
+							let uri = `search/${encodeURIComponent(query.getState())}`;
+							window.history.replaceState({ ...window.history.state, uri }, "", uri);
+							reset();
 						}
 					})
 				)
