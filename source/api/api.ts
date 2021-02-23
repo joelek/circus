@@ -769,6 +769,48 @@ class DiscsRoute implements Route<{}, response.SeasonsResponse> {
 	}
 }
 
+class UserAlbumsRoute implements Route<{}, response.UserAlbumsResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let user_id = getUserId(request);
+		let parts = /^[/]api[/]users[/]([0-9a-f]{16})?[/]albums[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let user = handler.lookupUser(parts[1] ?? user_id);
+		let albums = handler.getUserAlbums(user.user_id, offset, length, user_id);
+		let payload: response.UserAlbumsResponse = {
+			albums
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]users[/]([0-9a-f]{16})?[/]albums[/]/.test(request.url ?? "/");
+	}
+}
+
+class UserShowsRoute implements Route<{}, response.UserShowsResponse> {
+	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+		let user_id = getUserId(request);
+		let parts = /^[/]api[/]users[/]([0-9a-f]{16})?[/]shows[/]/.exec(request.url ?? "/") as RegExpExecArray;
+		let url = liburl.parse(request.url ?? "/", true);
+		let offset = getOptionalInteger(url, "offset") ?? 0;
+		let length = getOptionalInteger(url, "length") ?? 24;
+		let user = handler.lookupUser(parts[1] ?? user_id);
+		let shows = handler.getUserShows(user.user_id, offset, length, user_id);
+		let payload: response.UserShowsResponse = {
+			shows
+		};
+		response.writeHead(200);
+		response.end(JSON.stringify(payload));
+	}
+
+	handlesRequest(request: libhttp.IncomingMessage): boolean {
+		return /^[/]api[/]users[/]([0-9a-f]{16})?[/]shows[/]/.test(request.url ?? "/");
+	}
+}
+
 class UserRoute implements Route<{}, response.UserResponse> {
 	handleRequest(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
 		let user_id = getUserId(request);
@@ -937,6 +979,8 @@ class YearsRoute implements Route<{}, response.YearsResponse> {
 }
 
 let router = new Router()
+	.registerRoute(new UserAlbumsRoute())
+	.registerRoute(new UserShowsRoute())
 	.registerRoute(new AuthWithTokenRoute())
 	.registerRoute(new AuthRoute())
 	.registerRoute(new RegisterRoute())

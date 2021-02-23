@@ -2760,6 +2760,20 @@ let updateviewforuri = (uri: string): void => {
 			.render());
 		});
 	} else {
+		let shows = new ArrayObservable<apischema.objects.Show>([]);
+		let albums = new ArrayObservable<apischema.objects.Album>([]);
+		verifiedToken.addObserver(async (token) => {
+			if (is.present(token)) {
+				{
+					let resp = await preq<{}, api_response.UserShowsResponse>(`/api/users//shows/?token=${token}`, {});
+					shows.update(resp.shows);
+				}
+				{
+					let resp = await preq<{}, api_response.UserAlbumsResponse>(`/api/users//albums/?token=${token}`, {});
+					albums.update(resp.albums);
+				}
+			}
+		});
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
 				.add(Grid.make({ mini: true })
@@ -2767,6 +2781,20 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeIconLink(Icon.makeSpeaker(), "Listen", "audio/"))
 					.add(makeIconLink(Icon.makeMagnifyingGlass(), "Search", "search/"))
 					.add(makeIconLink(Icon.makeCalendar(), "Revisit", "years/"))
+				)
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 24px")
+					.bind("data-hide", shows.compute((shows) => shows.length === 0))
+					.add(renderTextHeader(xml.text("Suggested shows")))
+					.repeat(shows, (show) => EntityCard.forShow(show))
+				)
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 24px")
+					.bind("data-hide", albums.compute((albums) => albums.length === 0))
+					.add(renderTextHeader(xml.text("Suggested albums")))
+					.add(Grid.make()
+						.repeat(albums, (album) => EntityCard.forAlbum(album))
+					)
 				)
 			)
 		.render());

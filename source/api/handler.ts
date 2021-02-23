@@ -749,14 +749,14 @@ export function getArtistAppearances(artist_id: string, user_id: string): schema
 };
 
 export function getArtistTracks(artist_id: string, offset: number, length: number, user_id: string): schema.objects.Track[] {
-	let track_ids = new Map<string, number>();
+	let track_weights = new Map<string, number>();
 	for (let track_artist of database.getTracksFromArtist.lookup(artist_id)) {
 		for (let file of database.getFilesFromTrack.lookup(track_artist.track_id)) {
 			let streams = database.getStreamsFromFile.lookup(file.file_id);
-			track_ids.set(track_artist.track_id, streams.length);
+			track_weights.set(track_artist.track_id, streams.length);
 		}
 	}
-	return Array.from(track_ids.entries())
+	return Array.from(track_weights.entries())
 		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
 		.map((entry) => entry[0])
@@ -833,6 +833,50 @@ export function getUserPlaylists(subject_user_id: string, user_id: string): sche
 	return database.getPlaylistsFromUser.lookup(subject_user_id)
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
 		.map((entry) => lookupPlaylist(entry.playlist_id, user_id));
+};
+
+export function getUserAlbums(subject_user_id: string, offset: number, length: number, user_id: string): schema.objects.Album[] {
+	let album_weights = new Map<string, number>();
+	let streams = database.getStreamsFromUser.lookup(subject_user_id);
+	for (let stream of streams) {
+		let track_files = database.getTracksFromFile.lookup(stream.file_id);
+		for (let track_file of track_files) {
+			let track = database.tracks.lookup(track_file.track_id);
+			let disc = database.discs.lookup(track.disc_id);
+			let album = database.albums.lookup(disc.album_id);
+			let album_id = album.album_id;
+			let weight = album_weights.get(album_id) ?? 0;
+			weight += 1;
+			album_weights.set(album_id, weight);
+		}
+	}
+	return Array.from(album_weights.entries())
+		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
+		.slice(offset, offset + length)
+		.map((entry) => entry[0])
+		.map((album_id) => lookupAlbum(album_id, user_id));
+};
+
+export function getUserShows(subject_user_id: string, offset: number, length: number, user_id: string): schema.objects.Show[] {
+	let show_weights = new Map<string, number>();
+	let streams = database.getStreamsFromUser.lookup(subject_user_id);
+	for (let stream of streams) {
+		let episode_files = database.getEpisodesFromFile.lookup(stream.file_id);
+		for (let episode_file of episode_files) {
+			let episode = database.episodes.lookup(episode_file.episode_id);
+			let season = database.seasons.lookup(episode.season_id);
+			let show = database.shows.lookup(season.show_id);
+			let show_id = show.show_id;
+			let weight = show_weights.get(show_id) ?? 0;
+			weight += 1;
+			show_weights.set(show_id, weight);
+		}
+	}
+	return Array.from(show_weights.entries())
+		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
+		.slice(offset, offset + length)
+		.map((entry) => entry[0])
+		.map((artist_id) => lookupShow(artist_id, user_id));
 };
 
 export function getMoviesFromYear(year_id: string, user_id: string, offset: number, length: number): schema.objects.Movie[] {

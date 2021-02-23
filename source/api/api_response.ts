@@ -137,6 +137,14 @@ type UserResponse = {
 	playlists: objects.Playlist[]
 };
 
+type UserAlbumsResponse = {
+	albums: objects.Album[]
+};
+
+type UserShowsResponse = {
+	shows: objects.Show[]
+};
+
 type UsersResponse = {
 	users: objects.User[]
 };
@@ -188,6 +196,8 @@ interface AuthResponse extends ApiResponse {
 }
 
 export {
+	UserAlbumsResponse,
+	UserShowsResponse,
 	YearResponse,
 	YearsResponse,
 	AlbumResponse,
