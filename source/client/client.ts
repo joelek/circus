@@ -2784,7 +2784,18 @@ let updateviewforuri = (uri: string): void => {
 					.set("style", "display: grid; gap: 24px")
 					.bind("data-hide", shows.compute((shows) => shows.length === 0))
 					.add(renderTextHeader(xml.text("Suggested shows")))
-					.repeat(shows, (show) => EntityCard.forShow(show))
+					.add(carouselFactory.make((() => {
+						let widgets = new ArrayObservable<xml.XElement>([]);
+						shows.addObserver({
+							onappend(show) {
+								widgets.append(EntityCard.forShow(show));
+							},
+							onsplice(show, index) {
+								widgets.splice(index);
+							}
+						});
+						return widgets;
+					})()))
 				)
 				.add(xml.element("div")
 					.set("style", "display: grid; gap: 24px")
