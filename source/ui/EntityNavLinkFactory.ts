@@ -9,7 +9,7 @@ const CSS = `
 	.entity-nav-link {
 		display: grid;
 		gap: 16px;
-		grid-template-columns: max-content max-content;
+		grid-auto-flow: column;
 		justify-content: center;
 	}
 
@@ -18,11 +18,6 @@ const CSS = `
 		display: grid;
 		gap: 8px;
 		justify-items: center;
-	}
-
-	.entity-nav-link__last[data-enabled="false"],
-	.entity-nav-link__next[data-enabled="false"] {
-		visibility: hidden;
 	}
 
 	.entity-nav-link__title {
@@ -44,8 +39,8 @@ export class EntityNavLinkFactory {
 		return xnode.element("div.entity-nav-link")
 			.add(lastLink.add(
 				xnode.element("div.entity-nav-link__last")
-					.set("data-enabled", `${is.present(last)}`)
 					.add(xnode.element("div.icon-button")
+						.set("data-enabled", `${is.present(last)}`)
 						.add(this.iconFactory.makeChevron({ direction: "left" }))
 					)
 					.add(xnode.element("div.entity-nav-link__title")
@@ -55,8 +50,8 @@ export class EntityNavLinkFactory {
 			)
 			.add(nextLink.add(
 				xnode.element("div.entity-nav-link__next")
-					.set("data-enabled", `${is.present(next)}`)
 					.add(xnode.element("div.icon-button")
+						.set("data-enabled", `${is.present(next)}`)
 						.add(this.iconFactory.makeChevron())
 					)
 					.add(xnode.element("div.entity-nav-link__title")

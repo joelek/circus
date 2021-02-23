@@ -36,6 +36,20 @@ const CSS = `
 		grid-auto-flow: column;
 		justify-content: center;
 	}
+
+	.carousel__control {
+		display: grid;
+		gap: 8px;
+		justify-items: center;
+	}
+
+	.carousel__control-title {
+		color: rgb(159, 159, 159);
+		font-size: 16px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 `;
 
 export class CarouselFactory {
@@ -86,9 +100,7 @@ export class CarouselFactory {
 				.repeat(children, (child) => child)
 			)
 			.add(xnode.element("div.carousel__controls")
-				.add(xnode.element("div.icon-button")
-					.bind("data-enabled", canScrollLast.addObserver((canScrollLast) => `${canScrollLast}`))
-					.add(this.iconFactory.makeChevron({ direction: "left" }))
+				.add(xnode.element("div.carousel__control")
 					.on("click", async () => {
 						if (canScrollLast.getState()) {
 							let content = await contentElement.ref() as HTMLElement;
@@ -97,10 +109,15 @@ export class CarouselFactory {
 							content.scrollTo({ left: ref.offsetLeft - content.offsetLeft, behavior: "smooth" });
 						}
 					})
+					.add(xnode.element("div.icon-button")
+						.bind("data-enabled", canScrollLast.addObserver((canScrollLast) => `${canScrollLast}`))
+						.add(this.iconFactory.makeChevron({ direction: "left" }))
+					)
+					.add(xnode.element("div.carousel__control-title")
+						.add(xnode.text("Last item"))
+					)
 				)
-				.add(xnode.element("div.icon-button")
-					.bind("data-enabled", canScrollNext.addObserver((canScrollNext) => `${canScrollNext}`))
-					.add(this.iconFactory.makeChevron())
+				.add(xnode.element("div.carousel__control")
 					.on("click", async () => {
 						if (canScrollNext.getState()) {
 							let content = await contentElement.ref() as HTMLElement;
@@ -109,6 +126,13 @@ export class CarouselFactory {
 							content.scrollTo({ left: ref.offsetLeft - content.offsetLeft, behavior: "smooth" });
 						}
 					})
+					.add(xnode.element("div.icon-button")
+						.bind("data-enabled", canScrollNext.addObserver((canScrollNext) => `${canScrollNext}`))
+						.add(this.iconFactory.makeChevron())
+					)
+					.add(xnode.element("div.carousel__control-title")
+						.add(xnode.text("Next item"))
+					)
 				)
 			);
 	}

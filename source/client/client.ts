@@ -653,7 +653,7 @@ style.innerText = `
 		box-sizing: border-box;
 		color: rgb(255, 255, 255);
 		font-size: 16px;
-		padding: 8px 16px 8px 40px;
+		padding: 8px 16px 8px 32px;
 		width: 100%;
 	}
 
@@ -995,19 +995,33 @@ style.innerText = `
 
 
 	.icon-button {
+		background-color: rgb(255, 255, 255);
+		border-radius: 50%;
+		box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
 		cursor: pointer;
-		fill: rgb(255, 255, 255);
-		padding: 4px;
-		transition: fill 0.125s, transform 0.125s;
+		fill: rgb(31, 31, 31);
+		padding: 8px;
+		transition: background-color 0.125s, transform 0.125s;
 	}
 
 	.icon-button[data-enabled="false"] {
+		background-color: rgb(79, 79, 79);
 		cursor: default;
+	}
+
+	.icon-button--flat {
+		background-color: transparent!important;
+		box-shadow: none;
+		fill: rgb(255, 255, 255);
+	}
+
+	.icon-button--flat[data-enabled="false"] {
 		fill: rgb(31, 31, 31);
 	}
 
 	.icon-button[data-active="true"] {
-		fill: ${ACCENT_COLOR};
+		background-color: ${ACCENT_COLOR};
+		fill: rgb(255, 255, 255);
 	}
 
 	@media (hover: hover) and (pointer: fine) {
@@ -1206,7 +1220,10 @@ function makeIconLink(icon: xml.XElement, title: string, url: string): xml.XElem
 		.on("click", () => navigate(url));
 }
 
-const makeButton = () => xml.element("div.icon-button");
+const makeButton = (options?: Partial<{ style: "flat" | "normal" }>) => {
+	let style = options?.style ?? "normal";
+	return xml.element(`div.icon-button${style === "normal" ? "" : ".icon-button--flat"}`);
+};
 
 interface ReqCallback<T extends api_response.ApiResponse> {
 	(status: number, value: T): void;
@@ -1329,24 +1346,33 @@ let appheader = xml.element("div.app__header")
 				})
 			)
 			.add(xml.element("div.page-header__controls")
-				.add(makeButton()
-					.add(Icon.makeReload())
+				.add(makeButton({ style: "flat" })
+					.add(Icon.makeReload()
+						.set("width", "16px")
+						.set("height", "16px")
+					)
 					.on("click", () => {
 						window.location.reload();
 					})
 				)
-				.add(makeButton()
+				.add(makeButton({ style: "flat" })
 					.bind("data-enabled", lastHistoryIndex.addObserver(is.present))
-					.add(Icon.makeChevron({ direction: "left" }))
+					.add(Icon.makeChevron({ direction: "left" })
+						.set("width", "16px")
+						.set("height", "16px")
+					)
 					.on("click", () => {
 						if (is.present(lastHistoryIndex)) {
 							window.history.back();
 						}
 					})
 				)
-				.add(makeButton()
+				.add(makeButton({ style: "flat" })
 					.bind("data-enabled", nextHistoryIndex.addObserver(is.present))
-					.add(Icon.makeChevron())
+					.add(Icon.makeChevron()
+						.set("width", "16px")
+						.set("height", "16px")
+					)
 					.on("click", () => {
 						if (is.present(nextHistoryIndex)) {
 							window.history.forward();
