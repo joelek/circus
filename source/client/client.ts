@@ -431,24 +431,23 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 					.on("click", async () => {
 						await doUpdate();
 					})
-				)
-				.add(xml.element("button")
-					.bind2("data-enabled", computed((canPerform) => "" + canPerform, canUpdate))
-					.add(xml.text("Delete playlist"))
-					.on("click", async () => {
-						if (canUpdate.getState()) {
-							let response = await playlists.deletePlaylist({
-								playlist: {
-									playlist_id: contextMenuEntity.playlist_id
-								}
-							});
-							if (response.errors.length > 0) {
-								return;
+				),
+			xml.element("button")
+				.bind2("data-enabled", computed((canPerform) => "" + canPerform, canUpdate))
+				.add(xml.text("Delete playlist"))
+				.on("click", async () => {
+					if (canUpdate.getState()) {
+						let response = await playlists.deletePlaylist({
+							playlist: {
+								playlist_id: contextMenuEntity.playlist_id
 							}
-							showContextMenu.updateState(false);
+						});
+						if (response.errors.length > 0) {
+							return;
 						}
-					})
-				)
+						showContextMenu.updateState(false);
+					}
+				})
 		]);
 		showContextMenu.updateState(true);
 	} else {
