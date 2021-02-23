@@ -248,8 +248,24 @@ player.currentEntry.addObserver((currentEntry) => {
 
 
 
+const savedToken = new ObservableClass(localStorage.getItem("token") ?? undefined);
+const verifiedToken = new ObservableClass(undefined as string | undefined);
+savedToken.addObserver((savedToken) => {
+	if (is.present(savedToken)) {
+		localStorage.setItem("token", savedToken);
+	} else {
+		localStorage.removeItem("token");
+	}
+});
+savedToken.addObserver(async (savedToken) => {
+	if (is.present(savedToken)) {
+		let response = await preq<{}, api_response.AuthWithTokenReponse>(`/api/auth/?token=${savedToken}`, {});
+		verifiedToken.updateState(response.token);
+	} else {
+		verifiedToken.updateState(undefined);
+	}
+});
 
-const tokenobs = new ObservableClass(localStorage.getItem("token") ?? undefined);
 const contextMenuEntity = new ObservableClass(undefined as apischema.objects.EntityBase | undefined);
 const showContextMenu = new ObservableClass(false);
 const contextMenuItems = new ArrayObservable(new Array<xml.XElement>());
@@ -452,7 +468,7 @@ document.head.appendChild(CarouselFactory.makeStyle().render())
 const PlaybackButton = new PlaybackButtonFactory(player, Icon);
 document.head.appendChild(PlaybackButtonFactory.makeStyle().render())
 
-const ImageBox = new ImageBoxFactory(tokenobs);
+const ImageBox = new ImageBoxFactory(verifiedToken);
 document.head.appendChild(ImageBoxFactory.makeStyle().render())
 
 const EntityLink = new EntityLinkFactory(navigate, contextMenuEntity);
@@ -1196,7 +1212,7 @@ interface ReqCallback<T extends api_response.ApiResponse> {
 	(status: number, value: T): void;
 }
 
-let req = <T extends api_response.ApiRequest, U extends api_response.ApiResponse>(uri: string, body: T, cb: ReqCallback<U>): void => {
+function req<T extends api_response.ApiRequest, U extends api_response.ApiResponse>(uri: string, body: T, cb: ReqCallback<U>): void {
 	let xhr = new XMLHttpRequest();
 	xhr.addEventListener('readystatechange', () => {
 		if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -1205,7 +1221,7 @@ let req = <T extends api_response.ApiRequest, U extends api_response.ApiResponse
 	});
 	xhr.open('POST', uri, true);
 	xhr.send(JSON.stringify(body));
-};
+}
 
 function preq<T extends api_response.ApiRequest, U extends api_response.ApiResponse>(uri: string, body: T): Promise<U> {
 	return new Promise((resolve, reject) => {
@@ -1254,35 +1270,21 @@ const showModal = computed((token, showContextMenu, showDevices) => {
 		return "devices";
 	}
 },
-tokenobs,
+verifiedToken,
 showContextMenu,
 showDevices);
 
 let token: string | undefined;
-tokenobs.addObserver((token2) => {
-	if (is.present(token2)) {
-		localStorage.setItem("token", token2);
-	} else {
-		localStorage.removeItem("token");
-	}
-	token = token2;
-	player.authenticate(token);
-	playlists.authenticate(token);
+verifiedToken.addObserver((verifiedToken) => {
+	token = verifiedToken;
+	player.authenticate(verifiedToken);
+	playlists.authenticate(verifiedToken);
 });
-async function getToken(): Promise<string | undefined> {
-	return new Promise((resolve, reject) => {
-		req<api_response.ApiRequest, api_response.AuthWithTokenReponse>(`/api/auth/?token=${token}`, {}, (status, response) => {
-			tokenobs.updateState(response.token);
-			resolve(token);
-		});
-	});
-}
-getToken().catch(() => {});
 
 async function getNewToken(username: string, password: string): Promise<string | undefined> {
 	return new Promise((resolve, reject) => {
 		req<api_response.AuthRequest, api_response.AuthResponse>(`/api/auth/`, { username, password }, (status, response) => {
-			tokenobs.updateState(response.token);
+			savedToken.updateState(response.token);
 			resolve(token);
 		});
 	});
@@ -1449,7 +1451,7 @@ async function doRegister(): Promise<void> {
 				loginErrors.update(response.errors);
 			} else {
 				loginErrors.update([]);
-				tokenobs.updateState(response.token);
+				savedToken.updateState(response.token);
 			}
 		});
 	}
