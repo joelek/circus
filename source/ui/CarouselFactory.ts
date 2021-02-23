@@ -45,19 +45,23 @@ export class CarouselFactory {
 		this.iconFactory = iconFactory;
 	}
 
-	make(...children: Array<xnode.XElement>): xnode.XElement {
+	make(children: observers.ArrayObservable<xnode.XElement>): xnode.XElement {
+		let childLength = new observers.ObservableClass(children.getState().length);
+		children.compute((children) => {
+			childLength.updateState(children.length);
+		});
 		let activeIndex = new observers.ObservableClass(0);
 		let canScrollLast = observers.computed((activeIndex) => {
 			return activeIndex > 0;
 		}, activeIndex);
-		let canScrollNext = observers.computed((activeIndex) => {
-			return activeIndex < children.length - 1;
-		}, activeIndex);
+		let canScrollNext = observers.computed((activeIndex, childLength) => {
+			return activeIndex < childLength - 1;
+		}, activeIndex, childLength);
 		let contentElement = xnode.element("div.carousel__content");
 		contentElement.ref().then(async (contentElement) => {
 			let observer = new IntersectionObserver(async (entries) => {
 				for (let entry of entries) {
-					for (let [index, child] of children.entries()) {
+					for (let [index, child] of children.getState().entries()) {
 						let ref = await child.ref();
 						if (entry.target === ref && entry.isIntersecting) {
 							activeIndex.updateState(index);
@@ -68,14 +72,18 @@ export class CarouselFactory {
 			}, {
 				root: contentElement
 			});
-			for (let child of children) {
-				let ref = await child.ref();
-				observer.observe(ref);
-			}
+			children.addObserver({
+				async onappend(state) {
+					observer.observe(await state.ref());
+				},
+				async onsplice(state, index) {
+					observer.unobserve(await state.ref());
+				}
+			});
 		});
 		return xnode.element("div.carousel")
 			.add(contentElement
-				.add(...children)
+				.repeat(children, (child) => child)
 			)
 			.add(xnode.element("div.carousel__controls")
 				.add(xnode.element("div.icon-button")
@@ -84,7 +92,7 @@ export class CarouselFactory {
 					.on("click", async () => {
 						if (canScrollLast.getState()) {
 							let content = await contentElement.ref() as HTMLElement;
-							let child = children[activeIndex.getState() - 1];
+							let child = children.getState()[activeIndex.getState() - 1];
 							let ref = await child.ref() as HTMLElement;
 							content.scrollTo({ left: ref.offsetLeft - content.offsetLeft, behavior: "smooth" });
 						}
@@ -96,7 +104,7 @@ export class CarouselFactory {
 					.on("click", async () => {
 						if (canScrollNext.getState()) {
 							let content = await contentElement.ref() as HTMLElement;
-							let child = children[activeIndex.getState() + 1];
+							let child = children.getState()[activeIndex.getState() + 1];
 							let ref = await child.ref() as HTMLElement;
 							content.scrollTo({ left: ref.offsetLeft - content.offsetLeft, behavior: "smooth" });
 						}
