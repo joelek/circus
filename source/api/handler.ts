@@ -7,6 +7,12 @@ import * as is from "../is";
 import * as schema from "./schema/";
 import { default as config } from "../config";
 
+export function getStreamWeight(timestamp_ms: number): number {
+	let ms = Date.now() - timestamp_ms;
+	let weeks = ms / (1000 * 60 * 60 * 24 * 7);
+	return Math.pow(0.5, weeks);
+};
+
 export function createUser(request: schema.messages.RegisterRequest): schema.messages.RegisterResponse | schema.messages.ErrorMessage {
 	let { username, password, name, key_id } = { ...request };
 	let errors = new Array<string>();
@@ -751,9 +757,14 @@ export function getArtistAppearances(artist_id: string, user_id: string): schema
 export function getArtistTracks(artist_id: string, offset: number, length: number, user_id: string): schema.objects.Track[] {
 	let track_weights = new Map<string, number>();
 	for (let track_artist of database.getTracksFromArtist.lookup(artist_id)) {
-		for (let file of database.getFilesFromTrack.lookup(track_artist.track_id)) {
+		let track_id = track_artist.track_id;
+		for (let file of database.getFilesFromTrack.lookup(track_id)) {
 			let streams = database.getStreamsFromFile.lookup(file.file_id);
-			track_weights.set(track_artist.track_id, streams.length);
+			for (let stream of streams) {
+				let weight = track_weights.get(track_id) ?? 0;
+				weight += getStreamWeight(stream.timestamp_ms);
+				track_weights.set(track_id, weight);
+			}
 		}
 	}
 	return Array.from(track_weights.entries())
@@ -846,7 +857,7 @@ export function getUserAlbums(subject_user_id: string, offset: number, length: n
 			let album = database.albums.lookup(disc.album_id);
 			let album_id = album.album_id;
 			let weight = album_weights.get(album_id) ?? 0;
-			weight += 1;
+			weight += getStreamWeight(stream.timestamp_ms);
 			album_weights.set(album_id, weight);
 		}
 	}
@@ -868,7 +879,7 @@ export function getUserShows(subject_user_id: string, offset: number, length: nu
 			let show = database.shows.lookup(season.show_id);
 			let show_id = show.show_id;
 			let weight = show_weights.get(show_id) ?? 0;
-			weight += 1;
+			weight += getStreamWeight(stream.timestamp_ms);
 			show_weights.set(show_id, weight);
 		}
 	}
