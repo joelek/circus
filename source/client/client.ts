@@ -2808,7 +2808,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div")
 					.set("style", "display: grid; gap: 24px")
 					.bind("data-hide", shows.compute((shows) => shows.length === 0))
-					.add(renderTextHeader(xml.text("Suggested shows")))
+					.add(renderTextHeader(xml.text("Popular shows")))
 					.add(carouselFactory.make((() => {
 						let widgets = new ArrayObservable<xml.XElement>([]);
 						shows.addObserver({
@@ -2825,19 +2825,10 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div")
 					.set("style", "display: grid; gap: 24px")
 					.bind("data-hide", albums.compute((albums) => albums.length === 0))
-					.add(renderTextHeader(xml.text("Suggested albums")))
-					.add(carouselFactory.make((() => {
-						let widgets = new ArrayObservable<xml.XElement>([]);
-						albums.addObserver({
-							onappend(album) {
-								widgets.append(EntityCard.forAlbum(album));
-							},
-							onsplice(album, index) {
-								widgets.splice(index);
-							}
-						});
-						return widgets;
-					})()))
+					.add(renderTextHeader(xml.text("Popular albums")))
+					.add(Grid.make()
+						.repeat(albums, (album) => EntityCard.forAlbum(album))
+					)
 				)
 			)
 		.render());
