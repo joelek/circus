@@ -162,3 +162,4 @@ Ports, paths and other settings can be configured through altering the config fi
 * Add additional entity pages.
 * Add filter to entity pages.
 * Change line heights to make umlauts fit.
+* Fix crash on playback of empty contexts.
