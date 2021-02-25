@@ -2734,11 +2734,15 @@ let updateviewforuri = (uri: string): void => {
 					.set("placeholder", "Search...")
 					.bind2("value", query)
 					.on("keyup", (event) => {
+						let target = event.target as HTMLInputElement;
 						if (event.code === "Enter") {
-							let uri = `search/${encodeURIComponent(query.getState())}`;
-							window.history.replaceState({ ...window.history.state, uri }, "", uri);
-							reset();
+							target.blur();
 						}
+					})
+					.on("blur", () => {
+						let uri = `search/${encodeURIComponent(query.getState())}`;
+						window.history.replaceState({ ...window.history.state, uri }, "", uri);
+						reset();
 					})
 				)
 				.add(Icon.makeMagnifyingGlass()
