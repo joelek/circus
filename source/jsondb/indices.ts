@@ -301,6 +301,9 @@ export class SearchIndex<A extends Record<string, any>> {
 
 	static fromTable<A>(records: jdb.Table<A>, getIndexedValues: (record: A) => Array<string>, minTokenLength: number = 0): SearchIndex<A> {
 		let index = new SearchIndex<A>((key) => records.lookup(key), (record) => records.keyof(record), getIndexedValues, minTokenLength);
+		for (let record of records) {
+			index.insert(record);
+		}
 		records.on("insert", (event) => {
 			index.insert(event.next);
 		});

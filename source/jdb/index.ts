@@ -1,7 +1,18 @@
+import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
+
+function getGroupId(value: string | number | undefined): string {
+	if (is.absent(value)) {
+		return "0000000000000000";
+	}
+	return libcrypto.createHash("sha256")
+		.update(String(value))
+		.digest("hex")
+		.slice(0, 16);
+}
 
 function* map<A, B>(iterable: Iterable<A>, transform: (item: A, index: number) => B): Iterable<B> {
 	let i = 0;
@@ -406,11 +417,6 @@ export class Table<A extends Record<string, any>> {
 
 	on<B extends keyof RecordIndexEventMap<A>>(type: B, listener: stdlib.routing.MessageObserver<RecordIndexEventMap<A>[B]>): void {
 		this.router.addObserver(type, listener);
-		if (type === "insert") {
-			for (let record of this) {
-				(listener as stdlib.routing.MessageObserver<RecordIndexEventMap<A>["insert"]>)({ next: record });
-			}
-		}
 	}
 
 	off<B extends keyof RecordIndexEventMap<A>>(type: B, listener: stdlib.routing.MessageObserver<RecordIndexEventMap<A>[B]>): void {
@@ -525,7 +531,7 @@ export class IndexEntry {
 	}
 };
 
-type GroupKeyProvider<A> = (record: A) => string | undefined;
+type GroupKeyProvider<A> = (record: A) => string | number | undefined;
 type RecordProvider<A> = (key: string) => A;
 
 export class Index<A> {
@@ -593,7 +599,7 @@ export class Index<A> {
 	}
 
 	insert(record: A): void {
-		let groupKey = this.getGroupKey(record) ?? "0000000000000000";
+		let groupKey = getGroupId(this.getGroupKey(record));
 		let recordKeys = this.getRecordKeysFromGroupKey.get(groupKey);
 		if (is.absent(recordKeys)) {
 			recordKeys = new Set<string>();
@@ -624,15 +630,18 @@ export class Index<A> {
 		return length;
 	}
 
-	lookup(groupKey: string | undefined): Iterable<A> {
-		let recordKeys = this.getRecordKeysFromGroupKey.get(groupKey ?? "0000000000000000") ?? new Set<string>();
-		return map(recordKeys.values(), (recordKey) => {
+	lookup(value: string | number | undefined): Array<A> {
+		let groupKey = getGroupId(value);
+		let set = (this.getRecordKeysFromGroupKey.get(groupKey) ?? new Set<string>());
+		let iterable = map(set.values(), (recordKey) => {
 			return this.getRecordFromKey(recordKey);
 		});
+		let array = Array.from(iterable);
+		return array;
 	}
 
 	remove(record: A): void {
-		let groupKey = this.getGroupKey(record) ?? "0000000000000000";
+		let groupKey = getGroupId(this.getGroupKey(record));
 		let recordKeys = this.getRecordKeysFromGroupKey.get(groupKey) ?? new Set<string>();
 		let recordKey = this.getRecordKey(record);
 		if (recordKeys.has(recordKey)) {

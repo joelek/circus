@@ -55,12 +55,17 @@ if (!libfs.existsSync(INDICES_ROOT.join("/"))) {
 	libfs.mkdirSync(INDICES_ROOT.join("/"));
 }
 
-function loadIndex<A>(name: string, guard: autoguard.serialization.MessageGuard<A>, getKey: (record: A) => string): jdb.Table<A> {
+function loadTable<A>(name: string, guard: autoguard.serialization.MessageGuard<A>, getKey: (record: A) => string): jdb.Table<A> {
 	return new jdb.Table<A>(TABLES_ROOT, name, guard, getKey);
 }
 
-function loadGroupIndex<A, B>(name: string, parent: jdb.Table<A>, child: jdb.Table<B>, getGroupKey: (record: B) => string | undefined): jdb.Index<B> {
+function loadIndex<A, B>(name: string, parent: jdb.Table<A>, child: jdb.Table<B>, getGroupKey: (record: B) => string | number | undefined): jdb.Index<B> {
 	let index = new jdb.Index<B>(INDICES_ROOT, name, (key) => child.lookup(key), getGroupKey, (record) => child.keyof(record));
+	if (index.length() === 0) {
+		for (let record of child) {
+			index.insert(record);
+		}
+	}
 	child.on("insert", (event) => {
 		index.insert(event.next);
 	});
@@ -79,90 +84,90 @@ function loadGroupIndex<A, B>(name: string, parent: jdb.Table<A>, child: jdb.Tab
 	return index;
 }
 
-export const directories = loadIndex("directories", schema.Directory, (record) => record.directory_id);
-export const getDirectoriesFromDirectory = loadGroupIndex("directory_directories", directories, directories, (record) => record.parent_directory_id);
-export const files = loadIndex("files", schema.File, (record) => record.file_id);
-export const getFilesFromDirectory = indices.CollectionIndex.fromTable(directories, files, (record) => record.parent_directory_id);
-export const audio_files = loadIndex("audio_files", schema.AudioFile, (record) => record.file_id);
-export const getAudioFiles = indices.CollectionIndex.fromTable(files, audio_files, (record) => record.file_id);
-export const image_files = loadIndex("image_files", schema.ImageFile, (record) => record.file_id);
-export const getImageFilesFromFile = indices.CollectionIndex.fromTable(files, image_files, (record) => record.file_id);
-export const metadata_files = loadIndex("metadata_files", schema.MetadataFile, (record) => record.file_id);
-export const getMetadataFilesFromFile = indices.CollectionIndex.fromTable(files, metadata_files, (record) => record.file_id);
-export const subtitle_files = loadIndex("subtitle_files", schema.SubtitleFile, (record) => record.file_id);
-export const getSubtitleFilesFromFile = indices.CollectionIndex.fromTable(files, subtitle_files, (record) => record.file_id);
-export const video_files = loadIndex("video_files", schema.VideoFile, (record) => record.file_id);
-export const getVideoFilesFromFile = indices.CollectionIndex.fromTable(files, video_files, (record) => record.file_id);
-export const video_subtitles = loadIndex("video_subtitles", schema.VideoSubtitle, (record) => makeId(record.video_file_id, record.subtitle_file_id));
-export const getSubtitleFilesFromVideoFile = indices.CollectionIndex.fromTable(video_files, video_subtitles, (record) => record.video_file_id);
-export const getVideoFilesFromSubtitleFile = indices.CollectionIndex.fromTable(subtitle_files, video_subtitles, (record) => record.subtitle_file_id);
-export const artists = loadIndex("artists", schema.Artist, (record) => record.artist_id);
-export const albums = loadIndex("albums", schema.Album, (record) => record.album_id);
-export const album_files = loadIndex("album_files", schema.AlbumFile, (record) => makeId(record.album_id, record.file_id));
-export const getAlbumsFromFile = indices.CollectionIndex.fromTable(files, album_files, (record) => record.file_id);
-export const getFilesFromAlbum = indices.CollectionIndex.fromTable(albums, album_files, (record) => record.album_id);
-export const discs = loadIndex("discs", schema.Disc, (record) => record.disc_id);
-export const getDiscsFromAlbum = indices.CollectionIndex.fromTable(albums, discs, (record) => record.album_id);
-export const tracks = loadIndex("tracks", schema.Track, (record) => record.track_id);
-export const getTracksFromDisc = indices.CollectionIndex.fromTable(discs, tracks, (record) => record.disc_id);
-export const track_files = loadIndex("track_files", schema.TrackFile, (record) => makeId(record.track_id, record.file_id));
-export const getTracksFromFile = indices.CollectionIndex.fromTable(files, track_files, (record) => record.file_id);
-export const getFilesFromTrack = indices.CollectionIndex.fromTable(tracks, track_files, (record) => record.track_id);
-export const album_artists = loadIndex("album_artists", schema.AlbumArtist, (record) => makeId(record.album_id, record.artist_id));
-export const getArtistsFromAlbum = indices.CollectionIndex.fromTable(albums, album_artists, (record) => record.album_id);
-export const getAlbumsFromArtist = indices.CollectionIndex.fromTable(artists, album_artists, (record) => record.artist_id);
-export const track_artists = loadIndex("track_artists", schema.TrackArtist, (record) => makeId(record.track_id, record.artist_id));
-export const getArtistsFromTrack = indices.CollectionIndex.fromTable(tracks, track_artists, (record) => record.track_id);
-export const getTracksFromArtist = indices.CollectionIndex.fromTable(artists, track_artists, (record) => record.artist_id);
-export const shows = loadIndex("shows", schema.Show, (record) => record.show_id);
-export const show_files = loadIndex("show_files", schema.ShowFile, (record) => makeId(record.show_id, record.file_id));
-export const getShowsFromFile = indices.CollectionIndex.fromTable(files, show_files, (record) => record.file_id);
-export const getFilesFromShow = indices.CollectionIndex.fromTable(shows, show_files, (record) => record.show_id);
-export const seasons = loadIndex("seasons", schema.Season, (record) => record.season_id);
-export const getSeasonsFromShow = indices.CollectionIndex.fromTable(shows, seasons, (record) => record.show_id);
-export const episodes = loadIndex("episodes", schema.Episode, (record) => record.episode_id);
-export const getEpisodesFromSeason = indices.CollectionIndex.fromTable(seasons, episodes, (record) => record.season_id);
-export const episode_files = loadIndex("episode_files", schema.EpisodeFile, (record) => makeId(record.episode_id, record.file_id));
-export const getEpisodesFromFile = indices.CollectionIndex.fromTable(files, episode_files, (record) => record.file_id);
-export const getFilesFromEpisode = indices.CollectionIndex.fromTable(episodes, episode_files, (record) => record.episode_id);
-export const movies = loadIndex("movies", schema.Movie, (record) => record.movie_id);
-export const movie_files = loadIndex("movie_files", schema.MovieFile, (record) => makeId(record.movie_id, record.file_id));
-export const getMoviesFromFile = indices.CollectionIndex.fromTable(files, movie_files, (record) => record.file_id);
-export const getFilesFromMovie = indices.CollectionIndex.fromTable(movies, movie_files, (record) => record.movie_id);
-export const actors = loadIndex("actors", schema.Actor, (record) => record.actor_id);
-export const movie_actors = loadIndex("movie_actors", schema.MovieActor, (record) => makeId(record.movie_id, record.actor_id));
-export const getMoviesFromActor = indices.CollectionIndex.fromTable(actors, movie_actors, (record) => record.actor_id);
-export const getActorsFromMovie = indices.CollectionIndex.fromTable(movies, movie_actors, (record) => record.movie_id);
-export const show_actors = loadIndex("show_actors", schema.ShowActor, (record) => makeId(record.show_id, record.actor_id));
-export const getShowsFromActor = indices.CollectionIndex.fromTable(actors, show_actors, (record) => record.actor_id);
-export const getActorsFromShow = indices.CollectionIndex.fromTable(shows, show_actors, (record) => record.show_id);
-export const genres = loadIndex("genres", schema.Genre, (record) => record.genre_id);
-export const movie_genres = loadIndex("movie_genres", schema.MovieGenre, (record) => makeId(record.movie_id, record.genre_id));
-export const getMoviesFromGenre = indices.CollectionIndex.fromTable(genres, movie_genres, (record) => record.genre_id);
-export const getGenresFromMovie = indices.CollectionIndex.fromTable(movies, movie_genres, (record) => record.movie_id);
-export const show_genres = loadIndex("show_genres", schema.ShowGenre, (record) => makeId(record.show_id, record.genre_id));
-export const getShowsFromGenre = indices.CollectionIndex.fromTable(genres, show_genres, (record) => record.genre_id);
-export const getGenresFromShow = indices.CollectionIndex.fromTable(shows, show_genres, (record) => record.show_id);
-export const subtitles = loadIndex("subtitles", schema.Subtitle, (record) => record.subtitle_id);
-export const cues = loadIndex("cues", schema.Cue, (record) => record.cue_id);
-export const getCuesFromSubtitle = indices.CollectionIndex.fromTable(subtitles, cues, (record) => record.subtitle_id);
-export const users = loadIndex("users", schema.User, (record) => record.user_id);
-export const getUsersFromUsername = indices.CollectionIndex.fromTable(users, users, (record) => record.username);
-export const keys = loadIndex("keys", schema.Key, (record) => record.key_id);
-export const getKeysFromUser = indices.CollectionIndex.fromTable(users, keys, (record) => record.user_id);
-export const tokens = loadIndex("tokens", schema.Token, (record) => record.token_id);
-export const getTokensFromUser = indices.CollectionIndex.fromTable(users, tokens, (record) => record.user_id);
-export const streams = loadIndex("streams", schema.Stream, (record) => record.stream_id);
-export const getStreamsFromUser = indices.CollectionIndex.fromTable(users, streams, (record) => record.user_id);
-export const getStreamsFromFile = indices.CollectionIndex.fromTable(files, streams, (record) => record.file_id);
-export const playlists = loadIndex("playlists", schema.Playlist, (record) => record.playlist_id);
-export const getPlaylistsFromUser = indices.CollectionIndex.fromTable(users, playlists, (record) => record.user_id);
-export const playlist_items = loadIndex("playlist_items", schema.PlaylistItem, (record) => record.playlist_item_id);
-export const getPlaylistsItemsFromPlaylist = indices.CollectionIndex.fromTable(playlists, playlist_items, (record) => record.playlist_id);
-export const getPlaylistItemsFromTrack = indices.CollectionIndex.fromTable(tracks, playlist_items, (record) => record.track_id);
-export const years = loadIndex("years", schema.Year, (record) => record.year_id);
-export const getMoviesFromYear = indices.CollectionIndex.fromTable(years, movies, (record) => record.year?.toString());
-export const getAlbumsFromYear = indices.CollectionIndex.fromTable(years, albums, (record) => record.year?.toString());
+export const directories = loadTable("directories", schema.Directory, (record) => record.directory_id);
+export const getDirectoriesFromDirectory = loadIndex("directory_directories", directories, directories, (record) => record.parent_directory_id);
+export const files = loadTable("files", schema.File, (record) => record.file_id);
+export const getFilesFromDirectory = loadIndex("directory_files", directories, files, (record) => record.parent_directory_id);
+export const audio_files = loadTable("audio_files", schema.AudioFile, (record) => record.file_id);
+export const getAudioFiles = loadIndex("file_audio_files", files, audio_files, (record) => record.file_id);
+export const image_files = loadTable("image_files", schema.ImageFile, (record) => record.file_id);
+export const getImageFilesFromFile = loadIndex("file_image_files", files, image_files, (record) => record.file_id);
+export const metadata_files = loadTable("metadata_files", schema.MetadataFile, (record) => record.file_id);
+export const getMetadataFilesFromFile = loadIndex("file_metadata_files", files, metadata_files, (record) => record.file_id);
+export const subtitle_files = loadTable("subtitle_files", schema.SubtitleFile, (record) => record.file_id);
+export const getSubtitleFilesFromFile = loadIndex("file_subtitle_files", files, subtitle_files, (record) => record.file_id);
+export const video_files = loadTable("video_files", schema.VideoFile, (record) => record.file_id);
+export const getVideoFilesFromFile = loadIndex("file_video_files", files, video_files, (record) => record.file_id);
+export const video_subtitles = loadTable("video_subtitles", schema.VideoSubtitle, (record) => makeId(record.video_file_id, record.subtitle_file_id));
+export const getSubtitleFilesFromVideoFile = loadIndex("video_file_video_subtitles", video_files, video_subtitles, (record) => record.video_file_id);
+export const getVideoFilesFromSubtitleFile = loadIndex("subtitle_file_video_subtitles", subtitle_files, video_subtitles, (record) => record.subtitle_file_id);
+export const artists = loadTable("artists", schema.Artist, (record) => record.artist_id);
+export const albums = loadTable("albums", schema.Album, (record) => record.album_id);
+export const album_files = loadTable("album_files", schema.AlbumFile, (record) => makeId(record.album_id, record.file_id));
+export const getAlbumsFromFile = loadIndex("file_album_files", files, album_files, (record) => record.file_id);
+export const getFilesFromAlbum = loadIndex("album_album_files", albums, album_files, (record) => record.album_id);
+export const discs = loadTable("discs", schema.Disc, (record) => record.disc_id);
+export const getDiscsFromAlbum = loadIndex("album_discs", albums, discs, (record) => record.album_id);
+export const tracks = loadTable("tracks", schema.Track, (record) => record.track_id);
+export const getTracksFromDisc = loadIndex("disc_tracks", discs, tracks, (record) => record.disc_id);
+export const track_files = loadTable("track_files", schema.TrackFile, (record) => makeId(record.track_id, record.file_id));
+export const getTracksFromFile = loadIndex("file_track_files", files, track_files, (record) => record.file_id);
+export const getFilesFromTrack = loadIndex("track_track_files", tracks, track_files, (record) => record.track_id);
+export const album_artists = loadTable("album_artists", schema.AlbumArtist, (record) => makeId(record.album_id, record.artist_id));
+export const getArtistsFromAlbum = loadIndex("album_album_artists", albums, album_artists, (record) => record.album_id);
+export const getAlbumsFromArtist = loadIndex("artist_album_artists", artists, album_artists, (record) => record.artist_id);
+export const track_artists = loadTable("track_artists", schema.TrackArtist, (record) => makeId(record.track_id, record.artist_id));
+export const getArtistsFromTrack = loadIndex("track_track_artists", tracks, track_artists, (record) => record.track_id);
+export const getTracksFromArtist = loadIndex("artist_track_artists", artists, track_artists, (record) => record.artist_id);
+export const shows = loadTable("shows", schema.Show, (record) => record.show_id);
+export const show_files = loadTable("show_files", schema.ShowFile, (record) => makeId(record.show_id, record.file_id));
+export const getShowsFromFile = loadIndex("file_show_files", files, show_files, (record) => record.file_id);
+export const getFilesFromShow = loadIndex("show_show_files", shows, show_files, (record) => record.show_id);
+export const seasons = loadTable("seasons", schema.Season, (record) => record.season_id);
+export const getSeasonsFromShow = loadIndex("show_seasons", shows, seasons, (record) => record.show_id);
+export const episodes = loadTable("episodes", schema.Episode, (record) => record.episode_id);
+export const getEpisodesFromSeason = loadIndex("season_episodes", seasons, episodes, (record) => record.season_id);
+export const episode_files = loadTable("episode_files", schema.EpisodeFile, (record) => makeId(record.episode_id, record.file_id));
+export const getEpisodesFromFile = loadIndex("file_episode_files", files, episode_files, (record) => record.file_id);
+export const getFilesFromEpisode = loadIndex("episode_episode_files", episodes, episode_files, (record) => record.episode_id);
+export const movies = loadTable("movies", schema.Movie, (record) => record.movie_id);
+export const movie_files = loadTable("movie_files", schema.MovieFile, (record) => makeId(record.movie_id, record.file_id));
+export const getMoviesFromFile = loadIndex("file_movie_files", files, movie_files, (record) => record.file_id);
+export const getFilesFromMovie = loadIndex("movie_movie_files", movies, movie_files, (record) => record.movie_id);
+export const actors = loadTable("actors", schema.Actor, (record) => record.actor_id);
+export const movie_actors = loadTable("movie_actors", schema.MovieActor, (record) => makeId(record.movie_id, record.actor_id));
+export const getMoviesFromActor = loadIndex("actor_movie_actors", actors, movie_actors, (record) => record.actor_id);
+export const getActorsFromMovie = loadIndex("movie_movie_actors", movies, movie_actors, (record) => record.movie_id);
+export const show_actors = loadTable("show_actors", schema.ShowActor, (record) => makeId(record.show_id, record.actor_id));
+export const getShowsFromActor = loadIndex("actor_show_actors", actors, show_actors, (record) => record.actor_id);
+export const getActorsFromShow = loadIndex("show_show_actors", shows, show_actors, (record) => record.show_id);
+export const genres = loadTable("genres", schema.Genre, (record) => record.genre_id);
+export const movie_genres = loadTable("movie_genres", schema.MovieGenre, (record) => makeId(record.movie_id, record.genre_id));
+export const getMoviesFromGenre = loadIndex("genre_movie_genres", genres, movie_genres, (record) => record.genre_id);
+export const getGenresFromMovie = loadIndex("movie_movie_genres", movies, movie_genres, (record) => record.movie_id);
+export const show_genres = loadTable("show_genres", schema.ShowGenre, (record) => makeId(record.show_id, record.genre_id));
+export const getShowsFromGenre = loadIndex("genre_show_genres", genres, show_genres, (record) => record.genre_id);
+export const getGenresFromShow = loadIndex("show_show_genres", shows, show_genres, (record) => record.show_id);
+export const subtitles = loadTable("subtitles", schema.Subtitle, (record) => record.subtitle_id);
+export const cues = loadTable("cues", schema.Cue, (record) => record.cue_id);
+export const getCuesFromSubtitle = loadIndex("subtitle_cues", subtitles, cues, (record) => record.subtitle_id);
+export const users = loadTable("users", schema.User, (record) => record.user_id);
+export const getUsersFromUsername = loadIndex("user_users", users, users, (record) => record.username);
+export const keys = loadTable("keys", schema.Key, (record) => record.key_id);
+export const getKeysFromUser = loadIndex("user_keys", users, keys, (record) => record.user_id);
+export const tokens = loadTable("tokens", schema.Token, (record) => record.token_id);
+export const getTokensFromUser = loadIndex("user_tokens", users, tokens, (record) => record.user_id);
+export const streams = loadTable("streams", schema.Stream, (record) => record.stream_id);
+export const getStreamsFromUser = loadIndex("user_streams", users, streams, (record) => record.user_id);
+export const getStreamsFromFile = loadIndex("file_streams", files, streams, (record) => record.file_id);
+export const playlists = loadTable("playlists", schema.Playlist, (record) => record.playlist_id);
+export const getPlaylistsFromUser = loadIndex("user_playlists", users, playlists, (record) => record.user_id);
+export const playlist_items = loadTable("playlist_items", schema.PlaylistItem, (record) => record.playlist_item_id);
+export const getPlaylistsItemsFromPlaylist = loadIndex("playlist_playlist_items", playlists, playlist_items, (record) => record.playlist_id);
+export const getPlaylistItemsFromTrack = loadIndex("track_playlist_items", tracks, playlist_items, (record) => record.track_id);
+export const years = loadTable("years", schema.Year, (record) => record.year_id);
+export const getMoviesFromYear = loadIndex("year_movies", years, movies, (record) => record.year);
+export const getAlbumsFromYear = loadIndex("year_albums", years, albums, (record) => record.year);
 
 if (users.length() === 0) {
 	if (keys.length() === 0) {
