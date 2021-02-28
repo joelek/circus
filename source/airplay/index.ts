@@ -28,12 +28,25 @@ function getDeviceType(service_info: Array<string>): string {
 	return "Generic AirPlay Device";
 }
 
+function isProtocolSupported(service_info: Array<string>): boolean {
+	for (let entry of service_info) {
+		let parts = entry.split("=");
+		if (parts.length >= 2) {
+			let key = parts[0];
+			if (key === "protovers") {
+				parts.slice(1).join("=") === "1.0";
+			}
+		}
+	}
+	return false;
+}
+
 export function observe(wss: boolean, media_server_host: string): void {
 	mdns.observe("_airplay._tcp.local", async (service_device) => {
 		try {
 			let { hostname, service_info } = { ...service_device };
 			let device = devices.get(hostname);
-			if (is.absent(device)) {
+			if (is.absent(device) && isProtocolSupported(service_info ?? [])) {
 				let device_name = getDeviceName(service_info ?? []);
 				let device_type = getDeviceType(service_info ?? []);
 				let device = new Device(hostname, wss, media_server_host, device_name, device_type);
