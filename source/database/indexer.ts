@@ -45,12 +45,42 @@ if (!libfs.existsSync(TABLES_ROOT.join("/"))) {
 	libfs.mkdirSync(TABLES_ROOT.join("/"));
 }
 
+const INDICES_ROOT = [
+	".",
+	"private",
+	"indices"
+];
+
+if (!libfs.existsSync(INDICES_ROOT.join("/"))) {
+	libfs.mkdirSync(INDICES_ROOT.join("/"));
+}
+
 function loadIndex<A>(name: string, guard: autoguard.serialization.MessageGuard<A>, getKey: (record: A) => string): jdb.Table<A> {
 	return new jdb.Table<A>(TABLES_ROOT, name, guard, getKey);
 }
 
+function loadGroupIndex<A, B>(name: string, parent: jdb.Table<A>, child: jdb.Table<B>, getGroupKey: (record: B) => string | undefined): jdb.Index<B> {
+	let index = new jdb.Index<B>(INDICES_ROOT, name, (key) => child.lookup(key), getGroupKey, (record) => child.keyof(record));
+	child.on("insert", (event) => {
+		index.insert(event.next);
+	});
+	child.on("remove", (event) => {
+		index.remove(event.last);
+	});
+	child.on("update", (event) => {
+		index.update(event.last, event.next);
+	});
+	parent.on("remove", (event) => {
+		let key = parent.keyof(event.last);
+		for (let record of index.lookup(key)) {
+			child.remove(record);
+		}
+	});
+	return index;
+}
+
 export const directories = loadIndex("directories", schema.Directory, (record) => record.directory_id);
-export const getDirectoriesFromDirectory = indices.CollectionIndex.fromTable(directories, directories, (record) => record.parent_directory_id);
+export const getDirectoriesFromDirectory = loadGroupIndex("directory_directories", directories, directories, (record) => record.parent_directory_id);
 export const files = loadIndex("files", schema.File, (record) => record.file_id);
 export const getFilesFromDirectory = indices.CollectionIndex.fromTable(directories, files, (record) => record.parent_directory_id);
 export const audio_files = loadIndex("audio_files", schema.AudioFile, (record) => record.file_id);
