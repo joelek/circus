@@ -10,7 +10,7 @@ System for streaming audio and video content.
 
 * Devices with a modern web browser
 * Devices implementing the Cast protocol
-* Devices implementing the AirPlay protocol
+* Devices implementing the AirPlay (v1) protocol
 
 ## Media support
 
