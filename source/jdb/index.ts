@@ -1,8 +1,23 @@
-import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
+
+function* map<A, B>(iterable: Iterable<A>, transform: (item: A, index: number) => B): Iterable<B> {
+	let i = 0;
+	for (var item of iterable) {
+		yield transform(item, i++);
+	}
+}
+
+function* filter<A, B>(iterable: Iterable<A>, predicate: (item: A, index: number) => boolean): Iterable<A> {
+	let i = 0;
+	for (var item of iterable) {
+		if (predicate(item, i++)) {
+			yield item;
+		}
+	}
+}
 
 function makeIterator<A>(provider: () => A): Iterator<A> {
 	return {
@@ -169,7 +184,7 @@ type RecordIndexEventMap<A> = {
 	}
 };
 
-type KeyProvider<A> = (record: A) => string;
+type RecordKeyProvider<A> = (record: A) => string;
 
 export class Table<A extends Record<string, any>> {
 	private toc: number;
@@ -178,7 +193,7 @@ export class Table<A extends Record<string, any>> {
 	private indexFromKey: Record<string, number | undefined>;
 	private router: stdlib.routing.MessageRouter<RecordIndexEventMap<A>>;
 	private guard: autoguard.serialization.MessageGuard<A>;
-	private key_provider: KeyProvider<A>;
+	private key_provider: RecordKeyProvider<A>;
 	private cache: Map<number, A>;
 	private cache_list: Set<number>;
 	private free_entries: Map<number, Set<number>>;
@@ -186,7 +201,7 @@ export class Table<A extends Record<string, any>> {
 	private getNumberOfEntries(): number {
 		let entry_count = libfs.fstatSync(this.toc).size / 16 - 1;
 		if (!Number.isInteger(entry_count)) {
-			throw `Expected an even number of entries!`;
+			throw `Expected a non-fractional number of entries!`;
 		}
 		return entry_count;
 	}
@@ -297,7 +312,7 @@ export class Table<A extends Record<string, any>> {
 		});
 	}
 
-	constructor(root: Array<string>, table_name: string, guard: autoguard.serialization.MessageGuard<A>, key_provider: KeyProvider<A>) {
+	constructor(root: Array<string>, table_name: string, guard: autoguard.serialization.MessageGuard<A>, key_provider: RecordKeyProvider<A>) {
 		let directory = [ ...root, table_name ];
 		if (!libfs.existsSync(directory.join("/"))) {
 			libfs.mkdirSync(directory.join("/"), { recursive: true });
@@ -315,7 +330,7 @@ export class Table<A extends Record<string, any>> {
 			header.read(toc, 0);
 			let entry_count = libfs.fstatSync(toc).size / 16 - 1;
 			if (!Number.isInteger(entry_count)) {
-				throw `Expected an even number of entries!`;
+				throw `Expected a non-fractional number of entries!`;
 			}
 			let entry = new RecordIndexEntry();
 			for (let index = 0; index < entry_count; index++) {
@@ -435,25 +450,11 @@ export class Table<A extends Record<string, any>> {
 	}
 };
 
-
-
-
-
-
-
-/* export class IndexHeader {
+export class IndexHeader {
 	private buffer: Buffer;
 
 	get identifier(): string {
 		return this.buffer.slice(0, 8).toString("binary");
-	}
-
-	get entries(): number {
-		return this.buffer.readUInt32BE(12);
-	}
-
-	set entries(value: number) {
-		this.buffer.writeUInt32BE(value, 12);
 	}
 
 	constructor() {
@@ -463,12 +464,11 @@ export class Table<A extends Record<string, any>> {
 	}
 
 	read(fd: number, position: number): void {
-		let buffer = readBuffer(fd, Buffer.alloc(16), position);
-		let identifier = buffer.slice(0, 8).toString("binary");
+		readBuffer(fd, this.buffer, position);
+		let identifier = this.buffer.slice(0, 8).toString("binary");
 		if (identifier !== this.identifier) {
 			throw `Unsupported file format!`;
 		}
-		this.buffer = buffer;
 	}
 
 	write(fd: number, position: number): void {
@@ -479,28 +479,36 @@ export class Table<A extends Record<string, any>> {
 export class IndexEntry {
 	private buffer: Buffer;
 
-	get active(): boolean {
-		return this.buffer.readUInt8(0) === 1;
+	get group_key(): string {
+		return this.buffer.slice(0, 8).toString("hex");
 	}
 
-	set active(value: boolean) {
-		this.buffer.writeUInt8(value ? 1 : 0, 0);
+	set group_key(value: string) {
+		if (!/^[0-9a-f]{16}$/.test(value)) {
+			throw `Invalid group key, ${value}!`;
+		}
+		this.buffer.set(Buffer.from(value, "hex"), 0);
 	}
 
-	get key_hash(): number {
-		return this.buffer.readUInt32BE(4);
+	get key(): string {
+		return this.buffer.slice(8, 8 + 8).toString("hex");
 	}
 
-	set key_hash(value: number) {
-		this.buffer.writeUInt32BE(value, 4);
+	set key(value: string) {
+		if (!/^[0-9a-f]{16}$/.test(value)) {
+			throw `Invalid key, ${value}!`;
+		}
+		this.buffer.set(Buffer.from(value, "hex"), 8);
 	}
 
-	get record_index(): number {
-		return this.buffer.readUInt32BE(12);
+	get is_free(): boolean {
+		return /^[0]{16}$/.test(this.buffer.toString("hex"));
 	}
 
-	set record_index(value: number) {
-		this.buffer.writeUInt32BE(value, 12);
+	set is_free(value: boolean) {
+		if (value) {
+			this.buffer.fill(0);
+		}
 	}
 
 	constructor() {
@@ -509,8 +517,7 @@ export class IndexEntry {
 	}
 
 	read(fd: number, position: number): void {
-		let buffer = readBuffer(fd, Buffer.alloc(16), position);
-		this.buffer = buffer;
+		readBuffer(fd, this.buffer, position);
 	}
 
 	write(fd: number, position: number): void {
@@ -518,89 +525,135 @@ export class IndexEntry {
 	}
 };
 
-type RecordProvider<A> = (record_index: number) => A;
+type GroupKeyProvider<A> = (record: A) => string | undefined;
+type RecordProvider<A> = (key: string) => A;
 
-class Index<A> {
-	private map: number;
-	private entry_indices_from_key_hash: Map<number, Set<number>>;
+export class Index<A> {
+	private fd: number;
+	private getRecordKeysFromGroupKey: Map<string, Set<string>>;
 	private entries: Array<IndexEntry>;
-	private key_provider: KeyProvider<A>;
-	private record_provider: RecordProvider<A>;
+	private getRecordFromKey: RecordProvider<A>;
+	private getGroupKey: GroupKeyProvider<A>;
+	private getRecordKey: RecordKeyProvider<A>;
+	private freeSlots: Array<number>;
+	private getIndexFromKeys: Map<string, number>;
 
-	constructor(root: Array<string>, table_name: string, key_provider: KeyProvider<A>, record_provider: RecordProvider<A>) {
-		let directory = [...root, table_name];
+	constructor(root: Array<string>, index_name: string, getRecordFromKey: RecordProvider<A>, getGroupKey: GroupKeyProvider<A>, getRecordKey: RecordKeyProvider<A>) {
+		let directory = [...root, index_name];
 		if (!libfs.existsSync(directory.join("/"))) {
 			libfs.mkdirSync(directory.join("/"), { recursive: true });
 		}
-		let map_filename = [...directory, "map"];
-		let map_exists = libfs.existsSync(map_filename.join("/"));
-		let map = libfs.openSync(map_filename.join("/"), map_exists ? "r+" : "w+");
-		let header = new IndexHeader();
-		header.read(map, 0);
-		let entry_indices_from_key_hash = new Map<number, Set<number>>();
+		let setFilename = [...directory, "set"];
+		let setExists = libfs.existsSync(setFilename.join("/"));
+		let fd = libfs.openSync(setFilename.join("/"), setExists ? "r+" : "w+");
+		let getRecordKeysFromGroupKey = new Map<string, Set<string>>();
 		let entries = new Array<IndexEntry>();
-		for (let index = 0; index < header.entries; index++) {
-			let entry = new IndexEntry();
-			entry.read(map, 16 + index * 16);
-			entries.push(entry);
-			let indices = entry_indices_from_key_hash.get(entry.key_hash);
-			if (is.absent(indices)) {
-				indices = new Set<number>();
-				entry_indices_from_key_hash.set(entry.key_hash, indices);
+		let freeSlots = new Array<number>();
+		let getIndexFromKeys = new Map<string, number>();
+		let header = new IndexHeader();
+		if (setExists) {
+			header.read(fd, 0);
+			let length = (libfs.fstatSync(fd).size - 16) / 16;
+			if (!Number.isInteger(length)) {
+				throw `Expected an integer length!`;
 			}
-			indices.add(index);
+			for (let index = 0; index < length; index++) {
+				let entry = new IndexEntry();
+				entry.read(fd, 16 + index * 16);
+				if (entry.is_free) {
+					freeSlots.push(index);
+				} else {
+					let groupKey = entry.group_key;
+					let recordKey = entry.key;
+					let recordKeys = getRecordKeysFromGroupKey.get(groupKey);
+					if (is.absent(recordKeys)) {
+						recordKeys = new Set<string>();
+						getRecordKeysFromGroupKey.set(groupKey, recordKeys);
+					}
+					recordKeys.add(recordKey);
+					getIndexFromKeys.set(groupKey + recordKey, index);
+				}
+				entries.push(entry);
+			}
+		} else {
+			header.write(fd, 0);
 		}
-		this.map = map;
-		this.entry_indices_from_key_hash = entry_indices_from_key_hash;
+		this.fd = fd;
+		this.getRecordKeysFromGroupKey = getRecordKeysFromGroupKey;
 		this.entries = entries;
-		this.key_provider = key_provider;
-		this.record_provider = record_provider;
+		this.getRecordFromKey = getRecordFromKey;
+		this.getGroupKey = getGroupKey;
+		this.getRecordKey = getRecordKey;
+		this.freeSlots = freeSlots;
+		this.getIndexFromKeys = getIndexFromKeys;
 	}
 
 	destroy(): void {
-		libfs.closeSync(this.map);
+		libfs.closeSync(this.fd);
 	}
 
-	insert(record_index: number): void {
-		let record = this.record_provider(record_index);
-		let key = this.key_provider(record);
-		let key_hash = computeKeyHash(key);
-		let entry_indices = this.entry_indices_from_key_hash.get(key_hash);
-		if (is.absent(entry_indices)) {
-			entry_indices = new Set<number>();
-			this.entry_indices_from_key_hash.set(key_hash, entry_indices);
+	insert(record: A): void {
+		let groupKey = this.getGroupKey(record) ?? "0000000000000000";
+		let recordKeys = this.getRecordKeysFromGroupKey.get(groupKey);
+		if (is.absent(recordKeys)) {
+			recordKeys = new Set<string>();
+			this.getRecordKeysFromGroupKey.set(groupKey, recordKeys);
 		}
-		for (let entry_index of entry_indices) {
-			let entry = this.entries[entry_index];
-			let record = this.record_provider(entry.record_index);
-			if (this.key_provider(record) === key) {
-				return;
+		let recordKey = this.getRecordKey(record);
+		if (!recordKeys.has(recordKey)) {
+			let index = this.freeSlots.pop();
+			if (is.absent(index)) {
+				index = this.length();
+				this.entries.push(new IndexEntry());
 			}
+			let entry = this.entries[index];
+			entry.group_key = groupKey;
+			entry.key = recordKey;
+			entry.write(this.fd, 16 + index * 16);
+			recordKeys.add(recordKey);
+			this.getIndexFromKeys.set(groupKey + recordKey, index);
 		}
-		// insert and write to disk
 	}
 
-	lookup(key: string): Iterator<A> {
-		let key_hash = computeKeyHash(key);
-		let entry_indices = this.entry_indices_from_key_hash.get(key_hash);
-		if (is.absent(entry_indices)) {
-			return [][Symbol.iterator]();
+	length(): number {
+		let size = libfs.fstatSync(this.fd).size;
+		let length = (size - 16) / 16;
+		if (!Number.isInteger(length)) {
+			throw `Expected an integer length!`;
 		}
-		return filterIterator(mapIterator(entry_indices[Symbol.iterator](), (entry_index) => {
-			let entry = this.entries[entry_index];
-			return this.record_provider(entry.record_index);
-		}), (record) => {
-			return this.key_provider(record) === key;
+		return length;
+	}
+
+	lookup(groupKey: string | undefined): Iterable<A> {
+		let recordKeys = this.getRecordKeysFromGroupKey.get(groupKey ?? "0000000000000000") ?? new Set<string>();
+		return map(recordKeys.values(), (recordKey) => {
+			return this.getRecordFromKey(recordKey);
 		});
 	}
 
 	remove(record: A): void {
-
+		let groupKey = this.getGroupKey(record) ?? "0000000000000000";
+		let recordKeys = this.getRecordKeysFromGroupKey.get(groupKey) ?? new Set<string>();
+		let recordKey = this.getRecordKey(record);
+		if (recordKeys.has(recordKey)) {
+			let index = this.getIndexFromKeys.get(groupKey + recordKey);
+			if (is.absent(index)) {
+				throw `Expected an index!`;
+			}
+			let entry = this.entries[index];
+			entry.is_free = true;
+			entry.write(this.fd, 16 + index * 16);
+			recordKeys.delete(recordKey);
+			if (recordKeys.size === 0) {
+				this.getRecordKeysFromGroupKey.delete(groupKey);
+			}
+			this.getIndexFromKeys.delete(groupKey + recordKey);
+			this.freeSlots.push(index);
+		}
 	}
 
 	update(last: A, next: A): void {
 		this.remove(last);
-		//this.insert(next);
+		this.insert(next);
 	}
-}
- */
+};

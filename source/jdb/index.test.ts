@@ -18,15 +18,58 @@ let Person = autoguard.guards.Object.of<Person>({
 
 let persons = new jdb.Table<Person>([".", "private", "tables2"], "persons", Person, (record) => record.person_id);
 
+
+let children = new jdb.Index<Person>(
+	[".", "private", "tables2"],
+	"children",
+	(key) => persons.lookup(key),
+	(record) => record.parent_person_id,
+	(record) => record.person_id
+);
+
 persons.on("insert", (message) => {
-	console.log("insert", message);
+	//console.log("insert", message);
+	children.insert(message.next);
 });
 persons.on("update", (message) => {
-	console.log("update", message);
+	//console.log("update", message);
+	children.update(message.last, message.next);
 });
 persons.on("remove", (message) => {
-	console.log("remove", message);
+	//console.log("remove", message);
+	children.insert(message.last);
 });
+
+
+persons.insert({
+	person_id: "0000000000000001",
+	name: "Parent 1",
+})
+persons.insert({
+	person_id: "0000000000000002",
+	name: "Parent 2",
+})
+persons.insert({
+	person_id: "0000000000000003",
+	name: "Child 3",
+	parent_person_id: "0000000000000001"
+})
+persons.insert({
+	person_id: "0000000000000004",
+	name: "Child 4",
+	parent_person_id: "0000000000000001"
+})
+persons.insert({
+	person_id: "0000000000000005",
+	name: "Child 5",
+	parent_person_id: "0000000000000002"
+})
+console.log(children);
+
+console.log(Array.from(children.lookup(undefined)));
+console.log(Array.from(children.lookup("0000000000000001")));
+console.log(Array.from(children.lookup("0000000000000002")));
+
 /*
 array of uint16 cannot have type information for every entry, must be encoded in array array of bool?
 field size cannot be explicit for tiny types
