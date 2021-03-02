@@ -523,7 +523,7 @@ export function searchForArtists(query: string, offset: number, length: number, 
 };
 
 export function searchForCues(query: string, offset: number, limit: number, user_id: string): (schema.objects.Cue & { media: schema.objects.Episode | schema.objects.Movie })[] {
-	return database.cue_search.search(query)
+	return is.absent(database.cue_search) ? [] : database.cue_search.search(query)
 		.sort(jsondb.NumericSort.decreasing((value) => value.rank))
 		.slice(offset, offset + limit)
 		.map((record) => lookupCue(record.id, user_id))
@@ -719,7 +719,7 @@ export function searchForEntities(query: string, user_id: string, offset: number
 		jsondb.NumericSort.decreasing((value) => value.rank),
 		jsondb.NumericSort.decreasing((value) => value.type_rank)
 	));
-	let cue = database.cue_search.search(query).collect().shift();
+	let cue = is.absent(database.cue_search) ? undefined : database.cue_search.search(query).collect().shift();
 	if (is.present(cue)) {
 		let result = results[0];
 		if (is.absent(result) || cue.rank > result.rank) {

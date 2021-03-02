@@ -179,7 +179,7 @@ if (users.length() === 0) {
 
 export const album_search = loadIndex("search_albums", albums, albums, (entry) => [entry.title, entry.year].filter(is.present), jdb.Index.QUERY_TOKENIZER);
 export const artist_search = loadIndex("search_artists", artists, artists, (entry) => [entry.name], jdb.Index.QUERY_TOKENIZER);
-export const cue_search = loadIndex("search_cues", cues, cues, (entry) => entry.lines.split("\n"), jdb.Index.QUERY_TOKENIZER);
+export const cue_search = !config.use_cue_index ? undefined : loadIndex("search_cues", cues, cues, (entry) => entry.lines.split("\n"), (value) => jdb.Index.QUERY_TOKENIZER(value).filter((token) => /^\p{L}{4,}$/u.test(String(token))));
 export const episode_search = loadIndex("search_episodes", episodes, episodes, (entry) => [entry.title, entry.year].filter(is.present), jdb.Index.QUERY_TOKENIZER);
 export const genre_search = loadIndex("search_genres", genres, genres, (entry) => [entry.name], jdb.Index.QUERY_TOKENIZER);
 export const movie_search = loadIndex("search_movies", movies, movies, (entry) => [entry.title, entry.year].filter(is.present), jdb.Index.QUERY_TOKENIZER);
@@ -450,22 +450,20 @@ function indexFile(file: File): void {
 					duration_ms: subtitle_resource.duration_ms,
 					language: subtitle_resource.language
 				});
-				if (config.use_cue_index) {
-					let subtitle_id = makeId("subtitle", file.file_id);
-					subtitles.insert({
+				let subtitle_id = makeId("subtitle", file.file_id);
+				subtitles.insert({
+					subtitle_id: subtitle_id,
+					file_id: file.file_id
+				});
+				for (let cue of subtitle_resource.cues) {
+					let cue_id = makeId("cue", subtitle_id, `${cue.start_ms}`);
+					cues.insert({
+						cue_id: cue_id,
 						subtitle_id: subtitle_id,
-						file_id: file.file_id
+						start_ms: cue.start_ms,
+						duration_ms: cue.duration_ms,
+						lines: cue.lines.join("\n")
 					});
-					for (let cue of subtitle_resource.cues) {
-						let cue_id = makeId("cue", subtitle_id, `${cue.start_ms}`);
-						cues.insert({
-							cue_id: cue_id,
-							subtitle_id: subtitle_id,
-							start_ms: cue.start_ms,
-							duration_ms: cue.duration_ms,
-							lines: cue.lines.join("\n")
-						});
-					}
 				}
 			}
 		} else if (file.name.endsWith(".json")) {
