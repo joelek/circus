@@ -537,7 +537,6 @@ type RecordProvider<A> = (key: string) => A;
 export class Index<A> {
 	private fd: number;
 	private getRecordKeysFromGroupKey: Map<string, Set<string>>;
-	private entries: Array<IndexEntry>;
 	private getRecordFromKey: RecordProvider<A>;
 	private getGroupKey: GroupKeyProvider<A>;
 	private getRecordKey: RecordKeyProvider<A>;
@@ -553,7 +552,6 @@ export class Index<A> {
 		let setExists = libfs.existsSync(setFilename.join("/"));
 		let fd = libfs.openSync(setFilename.join("/"), setExists ? "r+" : "w+");
 		let getRecordKeysFromGroupKey = new Map<string, Set<string>>();
-		let entries = new Array<IndexEntry>();
 		let freeSlots = new Array<number>();
 		let getIndexFromKeys = new Map<string, number>();
 		let header = new IndexHeader();
@@ -579,14 +577,12 @@ export class Index<A> {
 					recordKeys.add(recordKey);
 					getIndexFromKeys.set(groupKey + recordKey, index);
 				}
-				entries.push(entry);
 			}
 		} else {
 			header.write(fd, 0);
 		}
 		this.fd = fd;
 		this.getRecordKeysFromGroupKey = getRecordKeysFromGroupKey;
-		this.entries = entries;
 		this.getRecordFromKey = getRecordFromKey;
 		this.getGroupKey = getGroupKey;
 		this.getRecordKey = getRecordKey;
@@ -607,12 +603,8 @@ export class Index<A> {
 		}
 		let recordKey = this.getRecordKey(record);
 		if (!recordKeys.has(recordKey)) {
-			let index = this.freeSlots.pop();
-			if (is.absent(index)) {
-				index = this.length();
-				this.entries.push(new IndexEntry());
-			}
-			let entry = this.entries[index];
+			let index = this.freeSlots.pop() ?? this.length();
+			let entry = new IndexEntry();
 			entry.group_key = groupKey;
 			entry.key = recordKey;
 			entry.write(this.fd, 16 + index * 16);
@@ -649,7 +641,7 @@ export class Index<A> {
 			if (is.absent(index)) {
 				throw `Expected an index!`;
 			}
-			let entry = this.entries[index];
+			let entry = new IndexEntry();
 			entry.is_free = true;
 			entry.write(this.fd, 16 + index * 16);
 			recordKeys.delete(recordKey);
