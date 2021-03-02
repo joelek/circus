@@ -34,11 +34,11 @@ function isProtocolSupported(service_info: Array<string>): boolean {
 		if (parts.length >= 2) {
 			let key = parts[0];
 			if (key === "protovers") {
-				parts.slice(1).join("=") === "1.0";
+				return parts.slice(1).join("=") === "1.0";
 			}
 		}
 	}
-	return false;
+	return true;
 }
 
 export function observe(wss: boolean, media_server_host: string): void {
