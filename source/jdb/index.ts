@@ -3,8 +3,9 @@ import * as libfs from "fs";
 import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
+import { sorters } from "../jsondb";
 
-function getGroupId(value: string | number | undefined): string {
+function computeHash(value: boolean | null | number | string | undefined): string {
 	if (is.absent(value)) {
 		return "0000000000000000";
 	}
@@ -215,7 +216,7 @@ export class RecordIndexEntry {
 	}
 };
 
-type RecordIndexEventMap<A> = {
+export type RecordIndexEventMap<A> = {
 	"insert": {
 		next: A
 	},
@@ -228,7 +229,7 @@ type RecordIndexEventMap<A> = {
 	}
 };
 
-type RecordKeyProvider<A> = (record: A) => string;
+export type RecordKeyProvider<A> = (record: A) => string;
 
 export class Table<A extends Record<string, any>> {
 	private toc: number;
@@ -512,11 +513,11 @@ export class IndexHeader {
 export class IndexEntry {
 	private buffer: Buffer;
 
-	get group_key(): string {
+	get hash(): string {
 		return this.buffer.slice(0, 8).toString("hex");
 	}
 
-	set group_key(value: string) {
+	set hash(value: string) {
 		if (!/^[0-9a-f]{16}$/.test(value)) {
 			throw `Invalid group key, ${value}!`;
 		}
@@ -558,19 +559,26 @@ export class IndexEntry {
 	}
 };
 
-type GroupKeyProvider<A> = (record: A) => string | number | undefined;
-type RecordProvider<A> = (key: string) => A;
+export type GroupKeyProvider<A> = (record: A) => Array<boolean | null | number | string | undefined>;
+export type RecordProvider<A> = (key: string) => A;
+export type TokenProvider = (value: boolean | null | number | string | undefined) => Array<boolean | null | number | string | undefined>;
+
+export type SearchResult<A> = {
+	id: string;
+	rank: number;
+};
 
 export class Index<A> {
 	private fd: number;
-	private getRecordKeysFromGroupKey: Map<string, Set<string>>;
+	private getKeysFromHash: Map<string, Set<string>>;
 	private getRecordFromKey: RecordProvider<A>;
-	private getGroupKey: GroupKeyProvider<A>;
-	private getRecordKey: RecordKeyProvider<A>;
+	private getValues: GroupKeyProvider<A>;
+	private getKey: RecordKeyProvider<A>;
+	private getTokensFromValue: TokenProvider;
 	private freeSlots: Array<number>;
-	private getIndexFromKeys: Map<string, number>;
+	private getIndexFromHashAndKey: Map<string, number>;
 
-	constructor(root: Array<string>, index_name: string, getRecordFromKey: RecordProvider<A>, getGroupKey: GroupKeyProvider<A>, getRecordKey: RecordKeyProvider<A>) {
+	constructor(root: Array<string>, index_name: string, getRecordFromKey: RecordProvider<A>, getValues: GroupKeyProvider<A>, getRecordKey: RecordKeyProvider<A>, getQueryTokens: TokenProvider) {
 		let directory = [...root, index_name];
 		if (!libfs.existsSync(directory.join("/"))) {
 			libfs.mkdirSync(directory.join("/"), { recursive: true });
@@ -594,7 +602,7 @@ export class Index<A> {
 				if (entry.is_free) {
 					freeSlots.push(index);
 				} else {
-					let groupKey = entry.group_key;
+					let groupKey = entry.hash;
 					let recordKey = entry.key;
 					let recordKeys = getRecordKeysFromGroupKey.get(groupKey);
 					if (is.absent(recordKeys)) {
@@ -609,12 +617,13 @@ export class Index<A> {
 			header.write(fd, 0);
 		}
 		this.fd = fd;
-		this.getRecordKeysFromGroupKey = getRecordKeysFromGroupKey;
+		this.getKeysFromHash = getRecordKeysFromGroupKey;
 		this.getRecordFromKey = getRecordFromKey;
-		this.getGroupKey = getGroupKey;
-		this.getRecordKey = getRecordKey;
+		this.getValues = getValues;
+		this.getKey = getRecordKey;
+		this.getTokensFromValue = getQueryTokens;
 		this.freeSlots = freeSlots;
-		this.getIndexFromKeys = getIndexFromKeys;
+		this.getIndexFromHashAndKey = getIndexFromKeys;
 	}
 
 	destroy(): void {
@@ -622,21 +631,25 @@ export class Index<A> {
 	}
 
 	insert(record: A): void {
-		let groupKey = getGroupId(this.getGroupKey(record));
-		let recordKeys = this.getRecordKeysFromGroupKey.get(groupKey);
-		if (is.absent(recordKeys)) {
-			recordKeys = new Set<string>();
-			this.getRecordKeysFromGroupKey.set(groupKey, recordKeys);
-		}
-		let recordKey = this.getRecordKey(record);
-		if (!recordKeys.has(recordKey)) {
-			let index = this.freeSlots.pop() ?? this.length();
-			let entry = new IndexEntry();
-			entry.group_key = groupKey;
-			entry.key = recordKey;
-			entry.write(this.fd, 16 + index * 16);
-			recordKeys.add(recordKey);
-			this.getIndexFromKeys.set(groupKey + recordKey, index);
+		for (let value of this.getValues(record)) {
+			for (let token of this.getTokensFromValue(value)) {
+				let hash = computeHash(token);
+				let keys = this.getKeysFromHash.get(hash);
+				if (is.absent(keys)) {
+					keys = new Set<string>();
+					this.getKeysFromHash.set(hash, keys);
+				}
+				let key = this.getKey(record);
+				if (!keys.has(key)) {
+					let index = this.freeSlots.pop() ?? this.length();
+					let entry = new IndexEntry();
+					entry.hash = hash;
+					entry.key = key;
+					entry.write(this.fd, 16 + index * 16);
+					keys.add(key);
+					this.getIndexFromHashAndKey.set(hash + key, index);
+				}
+			}
 		}
 	}
 
@@ -649,37 +662,72 @@ export class Index<A> {
 		return length;
 	}
 
-	lookup(query: number | string | undefined): StreamIterable<A> {
-		let groupKey = getGroupId(query);
-		return StreamIterable.of(this.getRecordKeysFromGroupKey.get(groupKey))
-			.map((recordKey) => {
-				return this.getRecordFromKey(recordKey);
-			});
+	lookup(value: boolean | null | number | string | undefined): StreamIterable<A> {
+		return this.search(value).map((result) => this.getRecordFromKey(result.id));
 	}
 
 	remove(record: A): void {
-		let groupKey = getGroupId(this.getGroupKey(record));
-		let recordKeys = this.getRecordKeysFromGroupKey.get(groupKey) ?? new Set<string>();
-		let recordKey = this.getRecordKey(record);
-		if (recordKeys.has(recordKey)) {
-			let index = this.getIndexFromKeys.get(groupKey + recordKey);
-			if (is.absent(index)) {
-				throw `Expected an index!`;
+		for (let value of this.getValues(record)) {
+			for (let token of this.getTokensFromValue(value)) {
+				let hash = computeHash(token);
+				let keys = this.getKeysFromHash.get(hash);
+				if (is.present(keys)) {
+					let key = this.getKey(record);
+					if (keys.has(key)) {
+						let index = this.getIndexFromHashAndKey.get(hash + key);
+						if (is.absent(index)) {
+							throw `Expected an index!`;
+						}
+						let entry = new IndexEntry();
+						entry.is_free = true;
+						entry.write(this.fd, 16 + index * 16);
+						keys.delete(key);
+						if (keys.size === 0) {
+							this.getKeysFromHash.delete(hash);
+						}
+						this.getIndexFromHashAndKey.delete(hash + key);
+						this.freeSlots.push(index);
+					}
+				}
 			}
-			let entry = new IndexEntry();
-			entry.is_free = true;
-			entry.write(this.fd, 16 + index * 16);
-			recordKeys.delete(recordKey);
-			if (recordKeys.size === 0) {
-				this.getRecordKeysFromGroupKey.delete(groupKey);
-			}
-			this.getIndexFromKeys.delete(groupKey + recordKey);
-			this.freeSlots.push(index);
 		}
+	}
+
+	search(value: boolean | null | number | string | undefined): StreamIterable<SearchResult<A>> {
+		let sets = this.getTokensFromValue(value)
+			.map((token) => computeHash(token))
+			.map((hash) => this.getKeysFromHash.get(hash))
+			.filter(is.present);
+		let map = new Map<string, number>();
+		for (let keys of sets) {
+			for (let key of keys) {
+				let rank = map.get(key) ?? (0 - sets.length);
+				map.set(key, rank + 2);
+			}
+		}
+		return StreamIterable.of(map.entries())
+			.filter((entry) => entry[1] >= 0)
+			.sort(sorters.NumericSort.decreasing((entry) => entry[1]))
+			.map((entry) => ({
+				id: entry[0],
+				rank:  entry[1]
+			}));
 	}
 
 	update(last: A, next: A): void {
 		this.remove(last);
 		this.insert(next);
 	}
+
+	static QUERY_TOKENIZER: TokenProvider = (value) => {
+		let normalized = String(value);
+		normalized = normalized.toLowerCase();
+		normalized = normalized.normalize("NFKD");
+		normalized = normalized.replace(/[\p{M}]/gu, "");
+		return Array.from(normalized.match(/(\p{L}+|\p{N}+)/gu) ?? []);
+	};
+
+	static VALUE_TOKENIZER: TokenProvider = (value) => {
+		return [ value ];
+	};
 };

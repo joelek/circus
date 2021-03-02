@@ -23,8 +23,9 @@ let children = new jdb.Index<Person>(
 	[".", "private", "tables2"],
 	"children",
 	(key) => persons.lookup(key),
-	(record) => record.parent_person_id,
-	(record) => record.person_id
+	(record) => [record.parent_person_id],
+	(record) => record.person_id,
+	(value) => [value]
 );
 
 persons.on("insert", (message) => {
