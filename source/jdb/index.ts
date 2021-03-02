@@ -147,7 +147,7 @@ export class RecordIndexHeader {
 	constructor() {
 		let buffer = Buffer.alloc(16);
 		buffer.write("\x23\x52\xDB\x07\xEC\x77\x30\x61", 0, "binary");
-		buffer.writeUInt32BE(255, 8);
+		buffer.writeUInt32BE(63, 8);
 		this.buffer = buffer;
 	}
 
