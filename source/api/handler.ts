@@ -16,7 +16,7 @@ export function getStreamWeight(timestamp_ms: number): number {
 export function createUser(request: schema.messages.RegisterRequest): schema.messages.RegisterResponse | schema.messages.ErrorMessage {
 	let { username, password, name, key_id } = { ...request };
 	let errors = new Array<string>();
-	if (database.getUsersFromUsername.lookup(username).length > 0) {
+	if (database.getUsersFromUsername.lookup(username).collect().length > 0) {
 		errors.push(`The requested username is not available.`);
 	}
 	try {
@@ -67,7 +67,8 @@ export function lookupAlbumBase(album_id: string, user_id: string): schema.objec
 					return database.image_files.lookup(record.file_id);
 				} catch (error) {}
 			})
-			.filter(is.present)
+			.include(is.present)
+			.collect()
 	};
 };
 
@@ -78,11 +79,13 @@ export function lookupAlbum(album_id: string, user_id: string): schema.objects.A
 		...album,
 		artists: database.getArtistsFromAlbum.lookup(album_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupArtistBase(record.artist_id, user_id)),
+			.map((record) => lookupArtistBase(record.artist_id, user_id))
+			.collect(),
 		year: record.year,
 		discs: database.getDiscsFromAlbum.lookup(album_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
 			.map((record) => lookupDisc(record.disc_id, user_id, album))
+			.collect()
 	};
 };
 
@@ -102,6 +105,7 @@ export function lookupArtist(artist_id: string, user_id: string): schema.objects
 			.map((record) => database.albums.lookup(record.album_id))
 			.sort(jsondb.NumericSort.decreasing((record) => record.year))
 			.map((record) => lookupAlbum(record.album_id, user_id))
+			.collect()
 	};
 };
 
@@ -133,7 +137,8 @@ export function lookupCue(cue_id: string, user_id: string, subtitle?: schema.obj
 				}
 			} catch (error) {}
 		})
-		.filter(is.present);
+		.include(is.present)
+		.collect();
 	let media = medias.shift();
 	if (is.absent(media)) {
 		throw `Expected a media entity!`;
@@ -160,6 +165,7 @@ export function lookupDisc(disc_id: string, user_id: string, album?: schema.obje
 		tracks: database.getTracksFromDisc.lookup(disc_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
 			.map((record) => lookupTrack(record.track_id, user_id, disc))
+			.collect()
 	};
 };
 
@@ -182,17 +188,20 @@ export function lookupEpisode(episode_id: string, user_id: string, season?: sche
 				return database.video_files.lookup(record.file_id);
 			} catch (error) {}
 		})
-		.filter(is.present)
-		.sort(jsondb.NumericSort.decreasing((record) => record.height));
+		.include(is.present)
+		.sort(jsondb.NumericSort.decreasing((record) => record.height))
+		.collect();
 	let media = files.shift();
 	if (is.absent(media)) {
 		throw `Expected a valid video file!`;
 	}
 	let subtitles = database.getSubtitleFilesFromVideoFile.lookup(media.file_id)
-		.map((record) => database.subtitle_files.lookup(record.subtitle_file_id));
+		.map((record) => database.subtitle_files.lookup(record.subtitle_file_id))
+		.collect();
 	let streams = database.getStreamsFromFile.lookup(media.file_id)
 		.filter((stream) => stream.user_id === user_id)
-		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
+		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)))
+		.collect();
 	return {
 		...episode,
 		year: record.year,
@@ -229,7 +238,8 @@ export function lookupMovieBase(movie_id: string, user_id: string): schema.objec
 					return database.image_files.lookup(record.file_id);
 				} catch (error) {}
 			})
-			.filter(is.present)
+			.include(is.present)
+			.collect()
 	};
 };
 
@@ -242,27 +252,32 @@ export function lookupMovie(movie_id: string, user_id: string): schema.objects.M
 				return database.video_files.lookup(record.file_id);
 			} catch (error) {}
 		})
-		.filter(is.present)
-		.sort(jsondb.NumericSort.decreasing((record) => record.height));
+		.include(is.present)
+		.sort(jsondb.NumericSort.decreasing((record) => record.height))
+		.collect();
 	let media = files.shift();
 	if (is.absent(media)) {
 		throw `Expected a valid video file!`;
 	}
 	let subtitles = database.getSubtitleFilesFromVideoFile.lookup(media.file_id)
-		.map((record) => database.subtitle_files.lookup(record.subtitle_file_id));
+		.map((record) => database.subtitle_files.lookup(record.subtitle_file_id))
+		.collect();
 	let streams = database.getStreamsFromFile.lookup(media.file_id)
 		.filter((stream) => stream.user_id === user_id)
-		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
+		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)))
+		.collect();
 	return {
 		...movie,
 		year: record.year,
 		summary: config.use_demo_mode ? "Movie summary." : record.summary,
 		genres: database.getGenresFromMovie.lookup(movie_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupGenreBase(record.genre_id, user_id)),
+			.map((record) => lookupGenreBase(record.genre_id, user_id))
+			.collect(),
 		actors: database.getActorsFromMovie.lookup(movie_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupActor(record.actor_id, user_id)),
+			.map((record) => lookupActor(record.actor_id, user_id))
+			.collect(),
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media,
 		subtitles: subtitles
@@ -301,6 +316,7 @@ export function lookupPlaylist(playlist_id: string, user_id: string, user?: sche
 		items: database.getPlaylistsItemsFromPlaylist.lookup(playlist_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
 			.map((record) => lookupPlaylistItem(record.playlist_item_id, user_id, playlist))
+			.collect()
 	};
 };
 
@@ -337,6 +353,7 @@ export function lookupSeason(season_id: string, user_id: string, show?: schema.o
 		episodes: database.getEpisodesFromSeason.lookup(season_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
 			.map((record) => lookupEpisode(record.episode_id, user_id, season))
+			.collect()
 	}
 };
 
@@ -351,8 +368,9 @@ export function lookupShowBase(show_id: string, user_id: string): schema.objects
 					return database.image_files.lookup(record.file_id);
 				} catch (error) {}
 			})
-			.filter(is.present)
+			.include(is.present)
 			.slice(0, 1)
+			.collect()
 	};
 };
 
@@ -364,13 +382,16 @@ export function lookupShow(show_id: string, user_id: string): schema.objects.Sho
 		summary: config.use_demo_mode ? "Show summary." : record.summary,
 		genres: database.getGenresFromShow.lookup(show_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupGenreBase(record.genre_id, user_id)),
+			.map((record) => lookupGenreBase(record.genre_id, user_id))
+			.collect(),
 		actors: database.getActorsFromShow.lookup(show_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupActorBase(record.actor_id, user_id)),
+			.map((record) => lookupActorBase(record.actor_id, user_id))
+			.collect(),
 		seasons: database.getSeasonsFromShow.lookup(show_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
 			.map((record) => lookupSeason(record.season_id, user_id, show))
+			.collect()
 	};
 };
 
@@ -389,6 +410,7 @@ export function lookupSubtitle(subtitle_id: string, user_id: string): schema.obj
 		cues: database.getCuesFromSubtitle.lookup(subtitle_id)
 			.map((record) => lookupCue(record.cue_id, user_id))
 			.sort(jsondb.NumericSort.increasing((record) => record.start_ms))
+			.collect()
 	};
 };
 
@@ -410,19 +432,22 @@ export function lookupTrack(track_id: string, user_id: string, disc?: schema.obj
 				return database.audio_files.lookup(record.file_id);
 			} catch (error) {}
 		})
-		.filter(is.present);
+		.include(is.present)
+		.collect();
 	let media = files.shift();
 	if (is.absent(media)) {
 		throw `Expected a valid audio file!`;
 	}
 	let streams = database.getStreamsFromFile.lookup(media.file_id)
 		.filter((stream) => stream.user_id === user_id)
-		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
+		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)))
+		.collect();
 	return {
 		...track,
 		artists: database.getArtistsFromTrack.lookup(track_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupArtistBase(record.artist_id, user_id)),
+			.map((record) => lookupArtistBase(record.artist_id, user_id))
+			.collect(),
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media
 	};
@@ -478,7 +503,7 @@ export function searchForArtists(query: string, offset: number, length: number, 
 		return Array.from(database.artists)
 			.map((artist) => ({
 				artist,
-				albums: database.getAlbumsFromArtist.lookup(artist.artist_id)
+				albums: database.getAlbumsFromArtist.lookup(artist.artist_id).collect()
 			}))
 			.sort(jsondb.CombinedSort.of(
 				jsondb.CustomSort.increasing((entry) => entry.albums.length === 0),
@@ -730,7 +755,8 @@ export function getArtistAppearances(artist_id: string, user_id: string): schema
 	});
 	let disc_ids = tracks.map((track) => {
 		return track.disc_id;
-	});
+	})
+	.collect();
 	disc_ids = Array.from(new Set<string>(disc_ids));
 	let discs = disc_ids.map((disc_id) => {
 		return database.discs.lookup(disc_id);
@@ -797,7 +823,7 @@ export function getMovieSuggestions(movie_id: string, offset: number, length: nu
 		}
 	}
 	for (let entry of map) {
-		let video_genres = database.getGenresFromMovie.lookup(entry[0]);
+		let video_genres = database.getGenresFromMovie.lookup(entry[0]).collect();
 		map.set(entry[0], entry[1] - video_genres.length);
 	}
 	map.delete(movie_id);
@@ -813,7 +839,8 @@ export function getMoviesFromGenre(video_genre_id: string, user_id: string, offs
 		.map((entry) => database.movies.lookup(entry.movie_id))
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
 		.slice(offset, offset + length)
-		.map((entry) => lookupMovie(entry.movie_id, user_id));
+		.map((entry) => lookupMovie(entry.movie_id, user_id))
+		.collect();
 };
 
 export function getMoviesFromActor(actor_id: string, user_id: string, offset: number, length: number): schema.objects.Movie[] {
@@ -821,7 +848,8 @@ export function getMoviesFromActor(actor_id: string, user_id: string, offset: nu
 		.map((entry) => database.movies.lookup(entry.movie_id))
 		.sort(jsondb.LexicalSort.increasing((movie) => movie.title))
 		.slice(offset, offset + length)
-		.map((entry) => lookupMovie(entry.movie_id, user_id));
+		.map((entry) => lookupMovie(entry.movie_id, user_id))
+		.collect();
 };
 
 export function getShowsFromGenre(video_genre_id: string, user_id: string, offset: number, length: number): schema.objects.Show[] {
@@ -829,7 +857,8 @@ export function getShowsFromGenre(video_genre_id: string, user_id: string, offse
 		.map((entry) => database.shows.lookup(entry.show_id))
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.name))
 		.slice(offset, offset + length)
-		.map((entry) => lookupShow(entry.show_id, user_id));
+		.map((entry) => lookupShow(entry.show_id, user_id))
+		.collect();
 };
 
 export function getShowsFromActor(actor_id: string, user_id: string, offset: number, length: number): schema.objects.Show[] {
@@ -837,13 +866,15 @@ export function getShowsFromActor(actor_id: string, user_id: string, offset: num
 		.map((entry) => database.shows.lookup(entry.show_id))
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.name))
 		.slice(offset, offset + length)
-		.map((entry) => lookupShow(entry.show_id, user_id));
+		.map((entry) => lookupShow(entry.show_id, user_id))
+		.collect();
 };
 
 export function getUserPlaylists(subject_user_id: string, user_id: string): schema.objects.Playlist[] {
 	return database.getPlaylistsFromUser.lookup(subject_user_id)
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
-		.map((entry) => lookupPlaylist(entry.playlist_id, user_id));
+		.map((entry) => lookupPlaylist(entry.playlist_id, user_id))
+		.collect();
 };
 
 export function getUserAlbums(subject_user_id: string, offset: number, length: number, user_id: string): schema.objects.Album[] {
@@ -895,7 +926,8 @@ export function getMoviesFromYear(year_id: string, user_id: string, offset: numb
 		.map((entry) => database.movies.lookup(entry.movie_id))
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
 		.slice(offset, offset + length)
-		.map((entry) => lookupMovie(entry.movie_id, user_id));
+		.map((entry) => lookupMovie(entry.movie_id, user_id))
+		.collect();
 };
 
 export function getAlbumsFromYear(year_id: string, user_id: string, offset: number, length: number): schema.objects.Album[] {
@@ -903,5 +935,6 @@ export function getAlbumsFromYear(year_id: string, user_id: string, offset: numb
 		.map((entry) => database.albums.lookup(entry.album_id))
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
 		.slice(offset, offset + length)
-		.map((entry) => lookupAlbum(entry.album_id, user_id));
+		.map((entry) => lookupAlbum(entry.album_id, user_id))
+		.collect();
 };

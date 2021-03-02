@@ -554,7 +554,8 @@ function getSiblingFiles(subject: File): Array<File> {
 				return file;
 			} catch (error) {}
 		})
-		.filter(is.present);
+		.include(is.present)
+		.collect();
 	let basename = subject.name.split(".")[0];
 	let candidates_sharing_basename = candidates_in_directory
 		.filter((file) => file.name.split(".")[0] === basename);

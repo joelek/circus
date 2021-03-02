@@ -18,7 +18,7 @@ function generate_token(user_id: string): string {
 }
 
 export function createToken(username: string, password: string): string {
-	let users = indexer.getUsersFromUsername.lookup(username);
+	let users = indexer.getUsersFromUsername.lookup(username).collect();
 	let user = users.shift();
 	if (!user) {
 		throw ``;

@@ -66,9 +66,9 @@ persons.insert({
 })
 console.log(children);
 
-console.log(Array.from(children.lookup(undefined)));
-console.log(Array.from(children.lookup("0000000000000001")));
-console.log(Array.from(children.lookup("0000000000000002")));
+console.log(children.lookup(undefined).collect());
+console.log(children.lookup("0000000000000001").collect());
+console.log(children.lookup("0000000000000002").collect());
 
 /*
 array of uint16 cannot have type information for every entry, must be encoded in array array of bool?

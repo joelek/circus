@@ -197,7 +197,8 @@ export class PlaylistsServer {
 					return;
 				}
 				let playlist_items = database.getPlaylistsItemsFromPlaylist.lookup(playlist_id)
-					.sort(jsondb.NumericSort.increasing((record) => record.number));
+					.sort(jsondb.NumericSort.increasing((record) => record.number))
+					.collect();
 				let playlist_item = {
 					playlist_item_id: playlist_item_id,
 					playlist_id: playlist_id,
@@ -258,7 +259,8 @@ export class PlaylistsServer {
 				}
 				let number = message.data.playlist_item.number;
 				let playlist_items = database.getPlaylistsItemsFromPlaylist.lookup(playlist.playlist_id)
-					.sort(jsondb.NumericSort.increasing((record) => record.number));
+					.sort(jsondb.NumericSort.increasing((record) => record.number))
+					.collect();
 				if (number < 1 || number > playlist_items.length) {
 					errors.push(`Expected a position between ${1} and ${playlist_items.length} (${number})!`);
 				}

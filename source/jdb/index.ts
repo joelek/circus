@@ -14,61 +14,94 @@ function getGroupId(value: string | number | undefined): string {
 		.slice(0, 16);
 }
 
-function* map<A, B>(iterable: Iterable<A>, transform: (item: A, index: number) => B): Iterable<B> {
-	let i = 0;
-	for (var item of iterable) {
-		yield transform(item, i++);
-	}
-}
-
-function* filter<A, B>(iterable: Iterable<A>, predicate: (item: A, index: number) => boolean): Iterable<A> {
-	let i = 0;
-	for (var item of iterable) {
-		if (predicate(item, i++)) {
-			yield item;
+function* filter<A>(iterable: Iterable<A>, predicate: (value: A, index: number) => boolean): Iterable<A> {
+	let index = 0;
+	for (let value of iterable) {
+		if (predicate(value, index++)) {
+			yield value;
 		}
 	}
 }
 
-function makeIterator<A>(provider: () => A): Iterator<A> {
-	return {
-		next: () => {
-			try {
-				return {
-					done: false,
-					value: provider()
-				};
-			} catch (error) {}
-			return {
-				done: true,
-				value: undefined as unknown as A
-			};
+function* include<A, B extends A>(iterable: Iterable<A>, predicate: (value: A, index: number) => value is B): Iterable<B> {
+	let index = 0;
+	for (let value of iterable) {
+		if (predicate(value, index++)) {
+			yield value;
 		}
-	};
+	}
 }
 
-function filterIterator<A>(iterator: Iterator<A>, predicate: (value: A) => boolean): Iterator<A> {
-	return makeIterator(() => {
-		while (true) {
-			let { done, value } = iterator.next();
-			if (done) {
-				throw ``;
-			}
-			if (predicate(value)) {
+function* map<A, B>(iterable: Iterable<A>, transform: (value: A, index: number) => B): Iterable<B> {
+	let index = 0;
+	for (let value of iterable) {
+		yield transform(value, index++);
+	}
+}
+
+class StreamIterable<A> {
+	private values: Iterable<A>;
+
+	private constructor(values: Iterable<A>) {
+		this.values = values;
+	}
+
+	[Symbol.iterator](): Iterator<A> {
+		return this.values[Symbol.iterator]();
+	}
+
+	collect(): Array<A> {
+		return Array.from(this.values);
+	}
+
+	filter(predicate: (value: A, index: number) => boolean): StreamIterable<A> {
+		return new StreamIterable<A>(filter(this.values, predicate));
+	}
+
+	find(predicate: (value: A, index: number) => boolean): A | undefined {
+		let index = 0;
+		for (let value of this.values) {
+			if (predicate(value, index++)) {
 				return value;
 			}
 		}
-	});
-}
+	}
 
-function mapIterator<A, B>(iterator: Iterator<A>, transform: (value: A) => B): Iterator<B> {
-	return makeIterator(() => {
-		let { done, value } = iterator.next();
-		if (done) {
-			throw ``;
+	include<B extends A>(predicate: (value: A, index: number) => value is B): StreamIterable<B> {
+		return new StreamIterable<B>(include(this.values, predicate));
+	}
+
+	includes(predicate: (value: A, index: number) => boolean): boolean {
+		let index = 0;
+		for (let value of this.values) {
+			if (predicate(value, index++)) {
+				return true;
+			}
 		}
-		return transform(value);
-	});
+		return false;
+	}
+
+	map<B>(transform: (value: A, index: number) => B): StreamIterable<B> {
+		return new StreamIterable(map(this.values, transform));
+	}
+
+	slice(start?: number, end?: number): StreamIterable<A> {
+		let array = this.collect().slice(start, end);
+		return new StreamIterable(array);
+	}
+
+	sort(comparator?: (one: A, two: A) => number): StreamIterable<A> {
+		let array = this.collect().sort(comparator);
+		return new StreamIterable(array);
+	}
+
+	unique(): StreamIterable<A> {
+		return new StreamIterable(new Set(this.values));
+	}
+
+	static of<A>(values: Iterable<A> | undefined): StreamIterable<A> {
+		return new StreamIterable<A>(values ?? new Array<A>());
+	}
 }
 
 function readBuffer(fd: number, buffer: Buffer, position?: number): Buffer {
@@ -377,19 +410,13 @@ export class Table<A extends Record<string, any>> {
 		libfs.closeSync(this.bin);
 	}
 
-	[Symbol.iterator](): Iterator<A> {
-		let index = -1;
-		return makeIterator(() => {
-			while (true) {
-				index += 1;
-				if (index >= this.getNumberOfEntries()) {
-					throw ``;
-				}
-				try {
-					return this.getRecord(index);
-				} catch (error) {}
-			}
-		});
+	*[Symbol.iterator](): Iterator<A> {
+		let index = 0;
+		while (index < this.getNumberOfEntries()) {
+			try {
+				yield this.getRecord(index++);
+			} catch (error) {}
+		}
 	}
 
 	insert(record: A): void {
@@ -622,14 +649,12 @@ export class Index<A> {
 		return length;
 	}
 
-	lookup(value: string | number | undefined): Array<A> {
-		let groupKey = getGroupId(value);
-		let set = (this.getRecordKeysFromGroupKey.get(groupKey) ?? new Set<string>());
-		let iterable = map(set.values(), (recordKey) => {
-			return this.getRecordFromKey(recordKey);
-		});
-		let array = Array.from(iterable);
-		return array;
+	lookup(query: number | string | undefined): StreamIterable<A> {
+		let groupKey = getGroupId(query);
+		return StreamIterable.of(this.getRecordKeysFromGroupKey.get(groupKey))
+			.map((recordKey) => {
+				return this.getRecordFromKey(recordKey);
+			});
 	}
 
 	remove(record: A): void {

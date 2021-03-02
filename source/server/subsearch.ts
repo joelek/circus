@@ -8,7 +8,7 @@ import * as keyframes from "./keyframes";
 import * as dbschema from "../database/schema"
 
 function getMediaFile(subtitle: dbschema.Subtitle): dbschema.File {
-	let video_files = indexer.getVideoFilesFromSubtitleFile.lookup(subtitle.file_id);
+	let video_files = indexer.getVideoFilesFromSubtitleFile.lookup(subtitle.file_id).collect();
 	return indexer.files.lookup(video_files[0].video_file_id);
 }
 
