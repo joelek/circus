@@ -59,11 +59,13 @@ function loadTable<A>(name: string, guard: autoguard.serialization.MessageGuard<
 	return new jdb.Table<A>(TABLES_ROOT, name, guard, getKey);
 }
 
-function loadIndex<A, B>(name: string, parent: jdb.Table<A>, child: jdb.Table<B>, getGroupKey: jdb.GroupKeyProvider<B>, tokenizer: jdb.TokenProvider = jdb.Index.VALUE_TOKENIZER): jdb.Index<B> {
-	let index = new jdb.Index<B>(INDICES_ROOT, name, (key) => child.lookup(key), getGroupKey, (record) => child.keyof(record), tokenizer);
+function loadIndex<A, B>(name: string, parent: jdb.Table<A>, child: jdb.Table<B>, getGroupKey: jdb.GroupKeyProvider<B>, tokenizer: jdb.TokenProvider = jdb.Index.VALUE_TOKENIZER, maxGroupSize?: number): jdb.Index<B> {
+	let index = new jdb.Index<B>(INDICES_ROOT, name, (key) => child.lookup(key), getGroupKey, (record) => child.keyof(record), tokenizer, maxGroupSize);
 	if (index.length() === 0) {
 		for (let record of child) {
-			index.insert(record);
+			try {
+				index.insert(record);
+			} catch (error) {}
 		}
 	}
 	child.on("insert", (event) => {
@@ -179,7 +181,7 @@ if (users.length() === 0) {
 
 export const album_search = loadIndex("search_albums", albums, albums, (entry) => [entry.title, entry.year].filter(is.present), jdb.Index.QUERY_TOKENIZER);
 export const artist_search = loadIndex("search_artists", artists, artists, (entry) => [entry.name], jdb.Index.QUERY_TOKENIZER);
-export const cue_search = !config.use_cue_index ? undefined : loadIndex("search_cues", cues, cues, (entry) => entry.lines.split("\n"), (value) => jdb.Index.QUERY_TOKENIZER(value).filter((token) => /^\p{L}{4,}$/u.test(String(token))));
+export const cue_search = !config.use_cue_index ? undefined : loadIndex("search_cues", cues, cues, (entry) => entry.lines.split("\n"), jdb.Index.WORD_TOKENIZER, 1024);
 export const episode_search = loadIndex("search_episodes", episodes, episodes, (entry) => [entry.title, entry.year].filter(is.present), jdb.Index.QUERY_TOKENIZER);
 export const genre_search = loadIndex("search_genres", genres, genres, (entry) => [entry.name], jdb.Index.QUERY_TOKENIZER);
 export const movie_search = loadIndex("search_movies", movies, movies, (entry) => [entry.title, entry.year].filter(is.present), jdb.Index.QUERY_TOKENIZER);

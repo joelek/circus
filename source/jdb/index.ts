@@ -5,10 +5,7 @@ import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
 import { sorters } from "../jsondb";
 
-function computeHash(value: boolean | null | number | string | undefined): string {
-	if (is.absent(value)) {
-		return "0000000000000000";
-	}
+export function computeHash(value: boolean | null | number | string | undefined): string {
 	return libcrypto.createHash("sha256")
 		.update(String(value))
 		.digest("hex")
@@ -235,13 +232,12 @@ export class Table<A extends Record<string, any>> {
 	private toc: number;
 	private bin: number;
 	private header: RecordIndexHeader;
-	private indexFromKey: Record<string, number | undefined>;
+	private indexFromKey: Record<string, number | undefined>; // 70k elements tar 5mb, 2195857 elements tar 170mb
 	private router: stdlib.routing.MessageRouter<RecordIndexEventMap<A>>;
 	private guard: autoguard.serialization.MessageGuard<A>;
 	private key_provider: RecordKeyProvider<A>;
 	private cache: Map<number, A>;
-	private cache_list: Set<number>;
-	private free_entries: Map<number, Set<number>>;
+	private free_entries: Set<number>;
 
 	private getNumberOfEntries(): number {
 		let entry_count = libfs.fstatSync(this.toc).size / 16 - 1;
@@ -251,24 +247,24 @@ export class Table<A extends Record<string, any>> {
 		return entry_count;
 	}
 
-	private readEntry(index: number, entry: RecordIndexEntry = new RecordIndexEntry()): RecordIndexEntry {
+	private readEntry(index: number, entry: RecordIndexEntry): RecordIndexEntry {
 		entry.read(this.toc, 16 + index * 16);
 		return entry;
 	}
 
 	private getEntryFor(chunk_length: number, key: string): number {
-		let free_entry_set = this.free_entries.get(chunk_length);
-		if (is.present(free_entry_set)) {
-			for (let entry_index of free_entry_set) {
-				let entry = this.readEntry(entry_index);
+		let entry = new RecordIndexEntry();
+		for (let entry_index of this.free_entries) {
+			this.readEntry(entry_index, entry);
+			if (entry.chunk_length >= chunk_length || entry_index === this.getNumberOfEntries() - 1) {
+				this.free_entries.delete(entry_index);
 				entry.key = key;
+				entry.chunk_length = Math.max(entry.chunk_length, chunk_length);
 				entry.write(this.toc, 16 + entry_index * 16);
-				free_entry_set.delete(entry_index);
 				return entry_index;
 			}
 		}
 		let entry_index = this.getNumberOfEntries();
-		let entry = new RecordIndexEntry();
 		entry.chunk_offset = Math.ceil(libfs.fstatSync(this.bin).size / this.header.chunk_size);
 		entry.chunk_length = chunk_length;
 		entry.key = key;
@@ -279,25 +275,32 @@ export class Table<A extends Record<string, any>> {
 	private getRecord(index: number): A {
 		let record = this.cache.get(index);
 		if (is.present(record)) {
-			this.cache_list.delete(index);
-			this.cache_list.add(index);
+			this.cache.delete(index);
+			this.cache.set(index, record);
 			return record;
 		}
-		let entry = this.readEntry(index);
+		let entry = new RecordIndexEntry();
+		this.readEntry(index, entry);
 		if (entry.key === "0000000000000000") {
 			throw `Expected ${index} to match a record!`;
 		}
 		let position = entry.chunk_offset * this.header.chunk_size;
-		let buffer = readBuffer(this.bin, Buffer.alloc(entry.chunk_length * this.header.chunk_size), position);
-		let string = buffer.toString().replace(/[\0]+$/, "");
+		let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
+		readBuffer(this.bin, buffer, position);
+		let end = buffer.length;
+		while (end > 0) {
+			if (buffer[end-1] !== 0) {
+				break;
+			}
+			end -= 1;
+		}
+		let string = buffer.toString("utf8", 0, end);
 		let json = JSON.parse(string);
 		record = this.guard.as(json);
 		this.cache.set(index, record);
-		this.cache_list.add(index);
-		if (this.cache_list.size > 100000) {
-			for (let idx of this.cache_list) {
+		if (this.cache.size > 10000) {
+			for (let idx of this.cache.keys()) {
 				this.cache.delete(idx);
-				this.cache_list.delete(idx);
 				break;
 			}
 		}
@@ -305,40 +308,33 @@ export class Table<A extends Record<string, any>> {
 	}
 
 	private insertOrUpdate(next: A): void {
-		let serialized = Buffer.from(JSON.stringify(next));
-		let chunks = Math.max(1, Math.ceil(serialized.length / this.header.chunk_size));
 		let key = this.key_provider(next);
+		let string = JSON.stringify(next);
+		let binary = new TextEncoder().encode(string);
+		let chunks = Math.max(1, Math.ceil(binary.length / this.header.chunk_size));
 		let index = this.indexFromKey[key];
 		if (is.present(index)) {
 			let last = this.getRecord(index);
-			let entry = this.readEntry(index);
+			let entry = this.readEntry(index, new RecordIndexEntry());
 			if (chunks <= entry.chunk_length) {
 				let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
-				buffer.set(serialized, 0);
+				buffer.set(binary, 0);
 				writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
 			} else {
-				{
-					let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
-					writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
-					delete this.indexFromKey[key];
-					entry.key = "0000000000000000";
-					entry.write(this.toc, 16 + index * 16);
-					let free_entry_set = this.free_entries.get(entry.chunk_length);
-					if (is.absent(free_entry_set)) {
-						free_entry_set = new Set<number>();
-						this.free_entries.set(entry.chunk_length, free_entry_set);
-					}
-					free_entry_set.add(index);
-				}
-				{
-					let entry_index = this.getEntryFor(chunks, key);
-					let entry = this.readEntry(entry_index);
-					let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
-					buffer.set(serialized, 0);
-					writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
-					this.indexFromKey[key] = entry_index;
-				}
+				let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
+				writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
+				delete this.indexFromKey[key];
+				entry.key = "0000000000000000";
+				entry.write(this.toc, 16 + index * 16);
+				this.free_entries.add(index);
+				index = this.getEntryFor(chunks * 2, key);
+				entry = this.readEntry(index, new RecordIndexEntry());
+				let buffer2 = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
+				buffer2.set(binary, 0);
+				writeBuffer(this.bin, buffer2, entry.chunk_offset * this.header.chunk_size);
+				this.indexFromKey[key] = index;
 			}
+			this.cache.delete(index);
 			this.cache.set(index, next);
 			this.router.route("update", {
 				last: last,
@@ -346,12 +342,13 @@ export class Table<A extends Record<string, any>> {
 			});
 			return;
 		}
-		let entry_index = this.getEntryFor(chunks, key);
-		let entry = this.readEntry(entry_index);
+		index = this.getEntryFor(chunks, key);
+		let entry = this.readEntry(index, new RecordIndexEntry());
 		let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
-		buffer.set(serialized, 0);
+		buffer.set(binary, 0);
 		writeBuffer(this.bin, buffer, entry.chunk_offset * this.header.chunk_size);
-		this.indexFromKey[key] = entry_index;
+		this.indexFromKey[key] = index;
+		this.cache.set(index, next);
 		this.router.route("insert", {
 			next: next
 		});
@@ -370,7 +367,7 @@ export class Table<A extends Record<string, any>> {
 		let bin = libfs.openSync(bin_filename.join("/"), bin_exists ? "r+" : "w+");
 		let indexFromKey = {} as Record<string, number | undefined>;
 		let header = new RecordIndexHeader();
-		let free_entries = new Map<number, Set<number>>();
+		let free_entries = new Set<number>();
 		if (toc_exists) {
 			header.read(toc, 0);
 			let entry_count = libfs.fstatSync(toc).size / 16 - 1;
@@ -383,12 +380,7 @@ export class Table<A extends Record<string, any>> {
 				if (entry.key !== "0000000000000000") {
 					indexFromKey[entry.key] = index;
 				} else {
-					let free_entry_set = free_entries.get(entry.chunk_length);
-					if (is.absent(free_entry_set)) {
-						free_entry_set = new Set<number>();
-						free_entries.set(entry.chunk_length, free_entry_set);
-					}
-					free_entry_set.add(index);
+					free_entries.add(index);
 				}
 			}
 		} else {
@@ -402,7 +394,6 @@ export class Table<A extends Record<string, any>> {
 		this.guard = guard;
 		this.key_provider = key_provider;
 		this.cache = new Map<number, A>();
-		this.cache_list = new Set<number>();
 		this.free_entries = free_entries;
 	}
 
@@ -412,10 +403,9 @@ export class Table<A extends Record<string, any>> {
 	}
 
 	*[Symbol.iterator](): Iterator<A> {
-		let index = 0;
-		while (index < this.getNumberOfEntries()) {
+		for (let index = 0; index < this.getNumberOfEntries(); index++) {
 			try {
-				yield this.getRecord(index++);
+				yield this.getRecord(index);
 			} catch (error) {}
 		}
 	}
@@ -457,21 +447,15 @@ export class Table<A extends Record<string, any>> {
 		if (is.present(index)) {
 			let last = this.getRecord(index);
 			if (this.key_provider(last) === key) {
-				let entry = this.readEntry(index);
+				let entry = this.readEntry(index, new RecordIndexEntry());
 				let buffer = Buffer.alloc(entry.chunk_length * this.header.chunk_size);
 				let position = entry.chunk_offset * this.header.chunk_size;
 				writeBuffer(this.bin, buffer, position);
 				this.cache.delete(index);
-				this.cache_list.delete(index);
 				delete this.indexFromKey[key];
 				entry.key = Buffer.alloc(8).toString("hex");
 				entry.write(this.toc, 16 + index * 16);
-				let free_entry_set = this.free_entries.get(entry.chunk_length);
-				if (is.absent(free_entry_set)) {
-					free_entry_set = new Set<number>();
-					this.free_entries.set(entry.chunk_length, free_entry_set);
-				}
-				free_entry_set.add(index);
+				this.free_entries.add(index);
 				this.router.route("remove", {
 					last: last
 				});
@@ -563,103 +547,96 @@ export type GroupKeyProvider<A> = (record: A) => Array<boolean | null | number |
 export type RecordProvider<A> = (key: string) => A;
 export type TokenProvider = (value: boolean | null | number | string | undefined) => Array<boolean | null | number | string | undefined>;
 
-export type SearchResult<A> = {
+export type SearchResult = {
 	id: string;
 	rank: number;
 };
 
+export type IndexRecord = {
+	id: string,
+	keys: Array<string>
+};
+
+export const IndexRecord = autoguard.guards.Object.of<IndexRecord>({
+	id: autoguard.guards.String,
+	keys: autoguard.guards.Array.of(autoguard.guards.String)
+});
+
+function computePosition(key: string, keys: Array<string>, lower: number = 0, upper: number = keys.length - 1): number {
+	let length = upper - lower + 1;
+	let index = lower + Math.floor(length / 2);
+	if (length > 0) {
+		let compareKey = keys[index];
+		if (key < compareKey) {
+			return computePosition(key, keys, lower, index - 1);
+		}
+		if (key > compareKey) {
+			return computePosition(key, keys, index + 1, upper);
+		}
+	}
+	return index;
+}
+
+function insert(key: string, keys: Array<string>): void {
+	let position = computePosition(key, keys);
+	if (keys[position] !== key) {
+		keys.splice(position, 0, key);
+	}
+}
+function remove(key: string, keys: Array<string>): void {
+	let position = computePosition(key, keys);
+	if (keys[position] === key) {
+		keys.splice(position, 1);
+	}
+}
+
 export class Index<A> {
-	private fd: number;
-	private getKeysFromHash: Map<string, Set<string>>;
+	private table: Table<IndexRecord>;
 	private getRecordFromKey: RecordProvider<A>;
 	private getValues: GroupKeyProvider<A>;
 	private getKey: RecordKeyProvider<A>;
 	private getTokensFromValue: TokenProvider;
-	private freeSlots: Array<number>;
-	private getIndexFromHashAndKey: Map<string, number>;
+	private maxGroupSize?: number;
 
-	constructor(root: Array<string>, index_name: string, getRecordFromKey: RecordProvider<A>, getValues: GroupKeyProvider<A>, getRecordKey: RecordKeyProvider<A>, getQueryTokens: TokenProvider) {
-		let directory = [...root, index_name];
-		if (!libfs.existsSync(directory.join("/"))) {
-			libfs.mkdirSync(directory.join("/"), { recursive: true });
-		}
-		let setFilename = [...directory, "set"];
-		let setExists = libfs.existsSync(setFilename.join("/"));
-		let fd = libfs.openSync(setFilename.join("/"), setExists ? "r+" : "w+");
-		let getRecordKeysFromGroupKey = new Map<string, Set<string>>();
-		let freeSlots = new Array<number>();
-		let getIndexFromKeys = new Map<string, number>();
-		let header = new IndexHeader();
-		if (setExists) {
-			header.read(fd, 0);
-			let length = (libfs.fstatSync(fd).size - 16) / 16;
-			if (!Number.isInteger(length)) {
-				throw `Expected an integer length!`;
-			}
-			for (let index = 0; index < length; index++) {
-				let entry = new IndexEntry();
-				entry.read(fd, 16 + index * 16);
-				if (entry.is_free) {
-					freeSlots.push(index);
-				} else {
-					let groupKey = entry.hash;
-					let recordKey = entry.key;
-					let recordKeys = getRecordKeysFromGroupKey.get(groupKey);
-					if (is.absent(recordKeys)) {
-						recordKeys = new Set<string>();
-						getRecordKeysFromGroupKey.set(groupKey, recordKeys);
-					}
-					recordKeys.add(recordKey);
-					getIndexFromKeys.set(groupKey + recordKey, index);
-				}
-			}
-		} else {
-			header.write(fd, 0);
-		}
-		this.fd = fd;
-		this.getKeysFromHash = getRecordKeysFromGroupKey;
+	constructor(root: Array<string>, index_name: string, getRecordFromKey: RecordProvider<A>, getValues: GroupKeyProvider<A>, getRecordKey: RecordKeyProvider<A>, getQueryTokens: TokenProvider, maxGroupSize?: number) {
+		this.table = new Table<IndexRecord>(root, index_name, IndexRecord, (record) => record.id);
 		this.getRecordFromKey = getRecordFromKey;
 		this.getValues = getValues;
 		this.getKey = getRecordKey;
 		this.getTokensFromValue = getQueryTokens;
-		this.freeSlots = freeSlots;
-		this.getIndexFromHashAndKey = getIndexFromKeys;
-	}
-
-	destroy(): void {
-		libfs.closeSync(this.fd);
+		this.maxGroupSize = maxGroupSize;
 	}
 
 	insert(record: A): void {
+		let key = this.getKey(record);
 		for (let value of this.getValues(record)) {
 			for (let token of this.getTokensFromValue(value)) {
 				let hash = computeHash(token);
-				let keys = this.getKeysFromHash.get(hash);
-				if (is.absent(keys)) {
-					keys = new Set<string>();
-					this.getKeysFromHash.set(hash, keys);
+				let record: IndexRecord | undefined;
+				try {
+					record = this.table.lookup(hash);
+				} catch (error) {}
+				if (is.absent(record)) {
+					record = {
+						id: hash,
+						keys: []
+					};
 				}
-				let key = this.getKey(record);
-				if (!keys.has(key)) {
-					let index = this.freeSlots.pop() ?? this.length();
-					let entry = new IndexEntry();
-					entry.hash = hash;
-					entry.key = key;
-					entry.write(this.fd, 16 + index * 16);
-					keys.add(key);
-					this.getIndexFromHashAndKey.set(hash + key, index);
+				let keys = record.keys;
+				if (is.present(this.maxGroupSize) && keys.length >= this.maxGroupSize) {
+					continue;
+				}
+				let position = computePosition(key, keys);
+				if (keys[position] !== key) {
+					keys.splice(position, 0, key);
+					this.table.update(record);
 				}
 			}
 		}
 	}
 
 	length(): number {
-		let size = libfs.fstatSync(this.fd).size;
-		let length = (size - 16) / 16;
-		if (!Number.isInteger(length)) {
-			throw `Expected an integer length!`;
-		}
-		return length;
+		return this.table.length();
 	}
 
 	lookup(value: boolean | null | number | string | undefined): StreamIterable<A> {
@@ -667,41 +644,48 @@ export class Index<A> {
 	}
 
 	remove(record: A): void {
+		let key = this.getKey(record);
 		for (let value of this.getValues(record)) {
 			for (let token of this.getTokensFromValue(value)) {
 				let hash = computeHash(token);
-				let keys = this.getKeysFromHash.get(hash);
-				if (is.present(keys)) {
-					let key = this.getKey(record);
-					if (keys.has(key)) {
-						let index = this.getIndexFromHashAndKey.get(hash + key);
-						if (is.absent(index)) {
-							throw `Expected an index!`;
-						}
-						let entry = new IndexEntry();
-						entry.is_free = true;
-						entry.write(this.fd, 16 + index * 16);
-						keys.delete(key);
-						if (keys.size === 0) {
-							this.getKeysFromHash.delete(hash);
-						}
-						this.getIndexFromHashAndKey.delete(hash + key);
-						this.freeSlots.push(index);
+				let keys = new Array<string>();
+				try {
+					let record = this.table.lookup(hash);
+					keys = record.keys;
+				} catch (error) {}
+				let position = computePosition(key, keys);
+				if (keys[position] === key) {
+					keys.splice(position, 1);
+					if (keys.length > 0) {
+						this.table.update({
+							id: hash,
+							keys: keys
+						});
+					} else {
+						this.table.remove({
+							id: hash,
+							keys: keys
+						});
 					}
 				}
 			}
 		}
 	}
 
-	search(value: boolean | null | number | string | undefined): StreamIterable<SearchResult<A>> {
-		let sets = this.getTokensFromValue(value)
+	search(value: boolean | null | number | string | undefined): StreamIterable<SearchResult> {
+		let tokens = this.getTokensFromValue(value);
+		let records = tokens
 			.map((token) => computeHash(token))
-			.map((hash) => this.getKeysFromHash.get(hash))
+			.map((hash) => {
+				try {
+					return this.table.lookup(hash);
+				} catch (error) {}
+			})
 			.filter(is.present);
 		let map = new Map<string, number>();
-		for (let keys of sets) {
-			for (let key of keys) {
-				let rank = map.get(key) ?? (0 - sets.length);
+		for (let record of records) {
+			for (let key of record.keys) {
+				let rank = map.get(key) ?? (0 - tokens.length);
 				map.set(key, rank + 2);
 			}
 		}
@@ -710,7 +694,7 @@ export class Index<A> {
 			.sort(sorters.NumericSort.decreasing((entry) => entry[1]))
 			.map((entry) => ({
 				id: entry[0],
-				rank:  entry[1]
+				rank: entry[1]
 			}));
 	}
 
@@ -719,15 +703,28 @@ export class Index<A> {
 		this.insert(next);
 	}
 
+	static NUMBER_TOKENIZER: TokenProvider = (value) => {
+		let normalized = String(value);
+		normalized = normalized.toLowerCase();
+		normalized = normalized.normalize("NFC");
+		return Array.from(normalized.match(/(\p{N}+)/gu) ?? []);
+	};
+
 	static QUERY_TOKENIZER: TokenProvider = (value) => {
 		let normalized = String(value);
 		normalized = normalized.toLowerCase();
-		normalized = normalized.normalize("NFKD");
-		normalized = normalized.replace(/[\p{M}]/gu, "");
+		normalized = normalized.normalize("NFC");
 		return Array.from(normalized.match(/(\p{L}+|\p{N}+)/gu) ?? []);
 	};
 
 	static VALUE_TOKENIZER: TokenProvider = (value) => {
 		return [ value ];
+	};
+
+	static WORD_TOKENIZER: TokenProvider = (value) => {
+		let normalized = String(value);
+		normalized = normalized.toLowerCase();
+		normalized = normalized.normalize("NFC");
+		return Array.from(normalized.match(/(\p{L}+)/gu) ?? []);
 	};
 };
