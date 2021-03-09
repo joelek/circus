@@ -11,6 +11,7 @@ export function open(path: Array<string>): number {
 };
 
 export function read(fd: number, buffer: Buffer, offset: number): Buffer {
+	let length = buffer.length;
 	let bytes = libfs.readSync(fd, buffer, {
 		position: offset
 	});
