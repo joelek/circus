@@ -1,6 +1,7 @@
 import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import { IntegerAssert } from "./asserts";
+import { Person } from "./schema";
 
 export function open(path: Array<string>): number {
 	let filename = path.join("/");
@@ -49,17 +50,6 @@ export class Chunk {
 		write(fd, this.buffer, offset);
 	}
 };
-
-
-
-
-
-
-
-
-
-
-
 
 export class Counter extends Chunk {
 	static SIZE = 8;
@@ -138,6 +128,7 @@ export class Entry extends Chunk {
 
 export class BlockHandler {
 	static OVERHEAD_FACTOR = 1.25;
+	static RESERVED_BLOCKS = 256;
 
 	private bin: number;
 	private toc: number;
@@ -151,14 +142,14 @@ export class BlockHandler {
 	private createNewBlock(minLength: number): number {
 		let entry = new Entry();
 		entry.offset = size(this.bin);
-		entry.length = Math.pow(2, this.computePool(Math.ceil(minLength * BlockHandler.OVERHEAD_FACTOR)));
+		entry.length = Math.pow(2, this.computePool(minLength));
 		write(this.bin, Buffer.alloc(entry.length), entry.offset);
 		write(this.toc, entry.buffer, size(this.toc));
 		return this.getCount() - 1;
 	}
 
 	private createOldBlock(minLength: number): number {
-		let pool = this.computePool(Math.ceil(minLength * BlockHandler.OVERHEAD_FACTOR));
+		let pool = this.computePool(minLength);
 		let counter = new Counter();
 		this.readBlock(pool, counter.buffer, 0);
 		if (counter.count === 0) {
@@ -194,13 +185,14 @@ export class BlockHandler {
 		this.bin = open([ ...path, "bin" ]);
 		this.toc = open([ ...path, "toc" ]);
 		if (this.getCount() === 0) {
-			for (let i = 0; i < 64; i++) {
-				this.createNewBlock(8);
+			for (let i = 0; i < BlockHandler.RESERVED_BLOCKS; i++) {
+				this.createNewBlock(16);
 			}
 		}
 	}
 
 	createBlock(minLength: number): number {
+		minLength = Math.ceil(minLength * BlockHandler.OVERHEAD_FACTOR);
 		try {
 			return this.createOldBlock(minLength);
 		} catch (error) {}
@@ -210,8 +202,7 @@ export class BlockHandler {
 		throw `Unable to create block with length ${minLength}!`;
 	}
 
-	deleteBlock(index: number): void {
-		IntegerAssert.atLeast(64, index);
+	private deleteBlock(index: number): void {
 		let entry = new Entry();
 		this.readEntry(index, entry);
 		if (entry.deleted) {
@@ -221,7 +212,8 @@ export class BlockHandler {
 		let counter = new Counter();
 		this.readBlock(pool, counter.buffer, 0);
 		let minLength = Counter.SIZE + (counter.count + 1) * Pointer.SIZE;
-		if (minLength > entry.length) {
+		let length = this.readEntry(pool, new Entry()).length;
+		if (minLength > length) {
 			this.resizeBlock(pool, minLength);
 		}
 		let pointer = new Pointer();
@@ -229,6 +221,8 @@ export class BlockHandler {
 		this.writeBlock(pool, pointer.buffer, Counter.SIZE + (counter.count * Pointer.SIZE));
 		counter.count += 1;
 		this.writeBlock(pool, counter.buffer, 0);
+		let buffer = Buffer.alloc(entry.length);
+		this.writeBlock(index, buffer, 0);
 		entry.deleted = true;
 		this.writeEntry(index, entry);
 	}
@@ -276,33 +270,9 @@ export class BlockHandler {
 	}
 };
 
-let bh = new BlockHandler([ ".", "private", "jdb2" ]);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
 export type Key = Array<boolean | null | number | string | undefined>;
 export type KeyProvider<A> = (record: A) => Key;
+export type RecordDeserializer<A> = (buffer: Buffer) => A;
 export type RecordSerializer<A> = (record: A) => Buffer;
 export type SearchResult<A> = {
 	record(): A;
@@ -310,16 +280,15 @@ export type SearchResult<A> = {
 };
 
 export class Table<A> {
-	private cat: number;
-	private bin: number;
-	private toc: number;
+	private blockHandler: BlockHandler;
 	private keyProvider: KeyProvider<A>;
 
-	constructor(path: Array<string>, keyProvider: KeyProvider<A>) {
-		this.cat = open([ ...path, "cat" ]);
-		this.bin = open([ ...path, "bin" ]);
-		this.toc = open([ ...path, "toc" ]);
+	constructor(blockHandler: BlockHandler, keyProvider: KeyProvider<A>) {
+		this.blockHandler = blockHandler;
 		this.keyProvider = keyProvider;
+		if (blockHandler.getCount() === BlockHandler.RESERVED_BLOCKS) {
+			blockHandler.createBlock(256);
+		}
 	}
 
 	delete(record: A): void {
@@ -332,6 +301,9 @@ export class Table<A> {
 	}
 
 	search(...key: Key): SearchResult<A> {
-
+		throw ``;
 	}
-}; */
+};
+
+let blockHandler = new BlockHandler([ ".", "private", "jdb2" ]);
+let table = new Table<Person>(blockHandler, (record) => [ record.person_id ]);

@@ -1,0 +1,6 @@
+{
+	Person: {
+		person_id: string,
+		name: string
+	}
+}
