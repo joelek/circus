@@ -1,5 +1,7 @@
 import * as libcrypto from "crypto";
 import * as libfs from "fs";
+import * as autoguard from "@joelek/ts-autoguard";
+import * as is from "../is";
 import { IntegerAssert } from "./asserts";
 import { Person } from "./schema";
 
@@ -92,6 +94,14 @@ export class Pointer extends Chunk {
 export class Entry extends Chunk {
 	static SIZE = 16;
 
+	get deleted(): boolean {
+		return this.buffer.readUInt8(0) === 0x80;
+	}
+
+	set deleted(value: boolean) {
+		this.buffer.writeUInt8(value ? 0x80 : 0x00, 0);
+	}
+
 	get offset(): number {
 		return this.buffer.readUInt32BE(4);
 	}
@@ -111,14 +121,6 @@ export class Entry extends Chunk {
 		this.buffer.writeUInt32BE(value, 12);
 	}
 
-	get deleted(): boolean {
-		return this.buffer.readUInt8(8) === 0x80;
-	}
-
-	set deleted(value: boolean) {
-		this.buffer.writeUInt8(value ? 0x80 : 0x00, 8);
-	}
-
 	constructor(buffer?: Buffer) {
 		buffer = buffer ?? Buffer.alloc(Entry.SIZE);
 		IntegerAssert.exactly(buffer.length, Entry.SIZE);
@@ -127,7 +129,6 @@ export class Entry extends Chunk {
 };
 
 export class BlockHandler {
-	static OVERHEAD_FACTOR = 1.25;
 	static RESERVED_BLOCKS = 256;
 
 	private bin: number;
@@ -192,7 +193,6 @@ export class BlockHandler {
 	}
 
 	createBlock(minLength: number): number {
-		minLength = Math.ceil(minLength * BlockHandler.OVERHEAD_FACTOR);
 		try {
 			return this.createOldBlock(minLength);
 		} catch (error) {}
@@ -270,8 +270,8 @@ export class BlockHandler {
 	}
 };
 
-export type Key = Array<boolean | null | number | string | undefined>;
-export type KeyProvider<A> = (record: A) => Key;
+export type Keys = Array<boolean | null | number | string | undefined>;
+export type KeysProvider<A> = (record: A) => Keys;
 export type RecordDeserializer<A> = (buffer: Buffer) => A;
 export type RecordSerializer<A> = (record: A) => Buffer;
 export type SearchResult<A> = {
@@ -279,29 +279,123 @@ export type SearchResult<A> = {
 	records(includePrefixMatches?: boolean): Array<A>;
 };
 
+export class Node extends Chunk {
+	static SIZE = 32;
+
+	get nodeTableIndex(): number {
+		return this.buffer.readUInt32BE(4);
+	}
+
+	set nodeTableIndex(value: number) {
+		IntegerAssert.between(0, value, 0xFFFFFFFF);
+		this.buffer.writeUInt32BE(value, 4);
+	}
+
+	get exactMatchesIndex(): number {
+		return this.buffer.readUInt32BE(12);
+	}
+
+	set exactMatchesIndex(value: number) {
+		IntegerAssert.between(0, value, 0xFFFFFFFF);
+		this.buffer.writeUInt32BE(value, 12);
+	}
+
+	get prefixMatchesIndex(): number {
+		return this.buffer.readUInt32BE(20);
+	}
+
+	set prefixMatchesIndex(value: number) {
+		IntegerAssert.between(0, value, 0xFFFFFFFF);
+		this.buffer.writeUInt32BE(value, 20);
+	}
+
+	get nullIndex(): number {
+		return this.buffer.readUInt32BE(28);
+	}
+
+	set nullIndex(value: number) {
+		IntegerAssert.between(0, value, 0xFFFFFFFF);
+		this.buffer.writeUInt32BE(value, 28);
+	}
+
+	constructor(buffer?: Buffer) {
+		buffer = buffer ?? Buffer.alloc(Entry.SIZE);
+		IntegerAssert.exactly(buffer.length, Entry.SIZE);
+		super(buffer);
+	}
+};
+
 export class Table<A> {
 	private blockHandler: BlockHandler;
-	private keyProvider: KeyProvider<A>;
+	private keysProvider: KeysProvider<A>;
 
-	constructor(blockHandler: BlockHandler, keyProvider: KeyProvider<A>) {
+	// Array of
+	private serializeKey(keys: Keys): Array<number | null | undefined> {
+		let buffers = keys
+			.map((key) => {
+				if (key === null) {
+					return null;
+				}
+				if (key === undefined) {
+					return Buffer.of(0);
+				}
+				if (key === false) {
+					return Buffer.of(0);
+				}
+				if (key === true) {
+					return Buffer.of(1);
+				}
+				// TODO: Improve number serialization.
+				if (typeof key === "number") {
+					let buffer = Buffer.of(8);
+					buffer.writeUInt32BE(key, 4);
+					return buffer;
+				}
+				if (typeof key === "string") {
+					return Buffer.from(key);
+				}
+			})
+			.filter(is.present);
+		throw ``;
+	}
+
+	private getNode(key: Buffer): Node {
+		let index = BlockHandler.RESERVED_BLOCKS + 1;
+
+/*
+three pointers to blocks
+1) first pointer is to block with fixed size table of 256 pointers = 2048 bytes
+2) second pointer is to block with exact matches
+3) third pointer is to block with prefix matches
+*/
+		throw ``;
+	}
+
+	constructor(blockHandler: BlockHandler, keysProvider: KeysProvider<A>) {
 		this.blockHandler = blockHandler;
-		this.keyProvider = keyProvider;
+		this.keysProvider = keysProvider;
 		if (blockHandler.getCount() === BlockHandler.RESERVED_BLOCKS) {
-			blockHandler.createBlock(256);
+			blockHandler.createBlock(Node.SIZE);
 		}
 	}
 
 	delete(record: A): void {
-		let key = this.keyProvider(record);
+		let keys = this.keysProvider(record);
+		let key = this.serializeKey(keys);
 	}
 
 	insert(record: A): void {
-		let key = this.keyProvider(record);
-
+		let keys = this.keysProvider(record);
+		let key = this.serializeKey(keys);
 	}
 
-	search(...key: Key): SearchResult<A> {
+	search(...keys: Keys): SearchResult<A> {
 		throw ``;
+	}
+
+	update(record: A): void {
+		let keys = this.keysProvider(record);
+		let key = this.serializeKey(keys);
 	}
 };
 
