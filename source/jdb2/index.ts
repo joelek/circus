@@ -184,8 +184,8 @@ export class BlockHandler {
 	}
 
 	constructor(path: Array<string>) {
-		this.bin = open([ ...path, "bin" ]);
-		this.toc = open([ ...path, "toc" ]);
+		this.bin = open([...path, "bin"]);
+		this.toc = open([...path, "toc"]);
 		if (this.getCount() === 0) {
 			for (let i = 0; i < BlockHandler.FIRST_APPLICATION_BLOCK; i++) {
 				this.createNewBlock(16);
@@ -293,7 +293,7 @@ export class BlockHandler {
 		IntegerAssert.between(0, length, entry.length - offset);
 		write(this.bin, buffer, entry.offset + offset);
 		if (is.absent(skipLength)) {
-			write(this.bin, Buffer.alloc(entry.length - buffer.length), buffer.length);
+			write(this.bin, Buffer.alloc(entry.length - buffer.length), entry.offset + buffer.length);
 		}
 		return buffer
 	}
@@ -304,6 +304,11 @@ export type KeysProvider<A> = (record: A) => Keys;
 export type RecordParser<A> = (json: any) => A;
 
 export class Table<A> {
+	static LEAF_NODE_COUNT = 1;
+	static FULL_NODE_COUNT = 258;
+	static LEAF_NODE_SIZE = Pointer.SIZE * Table.LEAF_NODE_COUNT;
+	static FULL_NODE_SIZE = Pointer.SIZE * Table.FULL_NODE_COUNT;
+
 	private blockHandler: BlockHandler;
 	private keysProvider: KeysProvider<A>;
 	private recordParser: RecordParser<A>;
@@ -352,7 +357,7 @@ export class Table<A> {
 		this.keysProvider = keysProvider;
 		this.recordParser = recordParser;
 		if (blockHandler.getCount() === BlockHandler.FIRST_APPLICATION_BLOCK) {
-			blockHandler.createBlock(Pointer.SIZE);
+			blockHandler.createBlock(Table.LEAF_NODE_SIZE);
 		}
 	}
 
@@ -367,13 +372,12 @@ export class Table<A> {
 		let nodeIndex = BlockHandler.FIRST_APPLICATION_BLOCK;
 		let pointer = new Pointer();
 		for (let i = 0; i <= keyBytes.length; i++) {
-			if (this.blockHandler.getBlockSize(nodeIndex) === Pointer.SIZE) {
+			if (this.blockHandler.getBlockSize(nodeIndex) === Table.LEAF_NODE_SIZE) {
 				this.blockHandler.readBlock(nodeIndex, pointer.buffer, 0);
 				if (pointer.index === 0) {
 					pointer.index = this.blockHandler.createBlock(serializedRecord.length);
 					this.blockHandler.writeBlock(pointer.index, serializedRecord);
 					this.blockHandler.writeBlock(nodeIndex, pointer.buffer, 0);
-					// TODO: Emit insert event.
 					console.log("insert");
 					return;
 				} else {
@@ -385,7 +389,7 @@ export class Table<A> {
 						console.log("update");
 						return;
 					} else {
-						let otherNodeIndex = this.blockHandler.createBlock(Pointer.SIZE * 256 + Pointer.SIZE + Pointer.SIZE);
+						let otherNodeIndex = this.blockHandler.createBlock(Table.FULL_NODE_SIZE);
 						this.blockHandler.swapBlocks(nodeIndex, otherNodeIndex);
 						let keyBytesTwo = this.getKeyBytes(keysTwo);
 						let tableIndex = this.getTableIndex(keyBytesTwo, i);
@@ -405,20 +409,60 @@ export class Table<A> {
 		throw `Expected code to be unreachable!`;
 	}
 
+	lookup(...keys: Keys): A {
+		let records = this.search(...keys);
+		for (let record of records) {
+			let keysTwo = this.keysProvider(record);
+			if (this.compareKeys(keys, keysTwo)) {
+				return record;
+			}
+			break;
+		}
+		throw `Expected a record!`;
+	}
+
 	search(...keys: Keys): StreamIterable<A> {
 		let keyBytes = this.getKeyBytes(keys);
-		let keyBytesIndex = 0;
-		throw ``;
+		let nodeIndex = BlockHandler.FIRST_APPLICATION_BLOCK;
+		let pointer = new Pointer();
+		for (let i = 0; i < keyBytes.length; i++) {
+			if (this.blockHandler.getBlockSize(nodeIndex) === Table.LEAF_NODE_SIZE) {
+				this.blockHandler.readBlock(nodeIndex, pointer.buffer, 0);
+				if (pointer.index === 0) {
+					break;
+				} else {
+					return StreamIterable.of([pointer.index])
+						.map((index) => this.getRecord(index));
+				}
+			} else {
+				let tableIndex = this.getTableIndex(keyBytes, i);
+				this.blockHandler.readBlock(nodeIndex, pointer.buffer, Pointer.SIZE * tableIndex);
+				if (pointer.index === 0) {
+					break;
+				} else {
+					nodeIndex = pointer.index;
+				}
+			}
+		}
+		return StreamIterable.of([]);
 	}
 };
 
-let blockHandler = new BlockHandler([ ".", "private", "jdb2" ]);
-let table = new Table<Person>(blockHandler, (record) => [ record.person_id ], Person.as);
-table.insert({
-	person_id: "a",
-	name: "Joel"
-});
-table.insert({
-	person_id: "b",
-	name: "Joel2"
-});
+let blockHandler = new BlockHandler([".", "private", "jdb2"]);
+let table = new Table<Person>(blockHandler, (record) => [record.person_id], Person.as);
+{
+	let start = process.hrtime.bigint();
+	table.insert({
+		person_id: "a",
+		name: "Joe"
+	});
+	let end = process.hrtime.bigint();
+	console.log(Number(end - start) / 1000000, "ms");
+}
+{
+	let start = process.hrtime.bigint();
+	let records = table.search("a");
+	let end = process.hrtime.bigint();
+	console.log(Number(end - start) / 1000000, "ms");
+	console.log(records.collect());
+}
