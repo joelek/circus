@@ -1,10 +1,11 @@
-import * as libcrypto from "crypto";
 import * as libfs from "fs";
-import * as autoguard from "@joelek/ts-autoguard";
+import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
 import { IntegerAssert } from "./asserts";
-import { Person } from "./schema";
 import { StreamIterable } from "../jdb";
+import { Cue, Directory, File, Key, Year } from "../database/schema";
+
+const DEBUG = false;
 
 export function open(path: Array<string>): number {
 	let filename = path.join("/");
@@ -62,13 +63,13 @@ export class Counter extends Chunk {
 	}
 
 	set count(value: number) {
-		IntegerAssert.between(0, value, 0xFFFFFFFF);
+		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
 		this.buffer.writeUInt32BE(value, 4);
 	}
 
 	constructor(buffer?: Buffer) {
 		buffer = buffer ?? Buffer.alloc(Counter.SIZE);
-		IntegerAssert.exactly(buffer.length, Counter.SIZE);
+		if (DEBUG) IntegerAssert.exactly(buffer.length, Counter.SIZE);
 		super(buffer);
 	}
 };
@@ -81,13 +82,13 @@ export class Pointer extends Chunk {
 	}
 
 	set index(value: number) {
-		IntegerAssert.between(0, value, 0xFFFFFFFF);
+		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
 		this.buffer.writeUInt32BE(value, 4);
 	}
 
 	constructor(buffer?: Buffer) {
 		buffer = buffer ?? Buffer.alloc(Pointer.SIZE);
-		IntegerAssert.exactly(buffer.length, Pointer.SIZE);
+		if (DEBUG) IntegerAssert.exactly(buffer.length, Pointer.SIZE);
 		super(buffer);
 	}
 };
@@ -108,7 +109,7 @@ export class Entry extends Chunk {
 	}
 
 	set offset(value: number) {
-		IntegerAssert.between(0, value, 0xFFFFFFFF);
+		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
 		this.buffer.writeUInt32BE(value, 4);
 	}
 
@@ -118,25 +119,27 @@ export class Entry extends Chunk {
 
 	set length(value: number) {
 		value = value - 1;
-		IntegerAssert.between(0, value, 0xFFFFFFFF);
+		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
 		this.buffer.writeUInt32BE(value, 12);
 	}
 
 	constructor(buffer?: Buffer) {
 		buffer = buffer ?? Buffer.alloc(Entry.SIZE);
-		IntegerAssert.exactly(buffer.length, Entry.SIZE);
+		if (DEBUG) IntegerAssert.exactly(buffer.length, Entry.SIZE);
 		super(buffer);
 	}
 };
 
 export class BlockHandler {
-	static FIRST_APPLICATION_BLOCK = 256;
+	static FIRST_APPLICATION_BLOCK = 64;
 
 	private bin: number;
 	private toc: number;
+	private blockCache: Map<number, Buffer>;
+	private entryCache: Map<number, Entry>;
 
 	private computePool(minLength: number): number {
-		IntegerAssert.atLeast(0, minLength);
+		if (DEBUG) IntegerAssert.atLeast(0, minLength);
 		let lengthLog2 = Math.ceil(Math.log2(Math.max(1, minLength)));
 		return lengthLog2;
 	}
@@ -172,20 +175,29 @@ export class BlockHandler {
 	}
 
 	private readEntry(index: number, entry: Entry): Entry {
-		IntegerAssert.between(0, index, this.getCount() - 1);
-		read(this.toc, entry.buffer, index * Entry.SIZE);
+		if (DEBUG) IntegerAssert.between(0, index, this.getCount() - 1);
+		let cached = this.entryCache.get(index);
+		if (is.absent(cached)) {
+			cached = new Entry();
+			read(this.toc, cached.buffer, index * Entry.SIZE);
+			this.entryCache.set(index, cached);
+		}
+		cached.buffer.copy(entry.buffer, 0, 0);
 		return entry;
 	}
 
 	private writeEntry(index: number, entry: Entry): Entry {
-		IntegerAssert.between(0, index, this.getCount() - 1);
+		if (DEBUG) IntegerAssert.between(0, index, this.getCount() - 1);
 		write(this.toc, entry.buffer, index * Entry.SIZE);
+		this.entryCache.delete(index);
 		return entry;
 	}
 
 	constructor(path: Array<string>) {
 		this.bin = open([...path, "bin"]);
 		this.toc = open([...path, "toc"]);
+		this.blockCache = new Map<number, Buffer>();
+		this.entryCache = new Map<number, Entry>();
 		if (this.getCount() === 0) {
 			for (let i = 0; i < BlockHandler.FIRST_APPLICATION_BLOCK; i++) {
 				this.createNewBlock(16);
@@ -195,6 +207,7 @@ export class BlockHandler {
 
 	clearBlock(index: number): void {
 		this.writeBlock(index);
+		this.blockCache.delete(index);
 	}
 
 	createBlock(minLength: number): number {
@@ -220,6 +233,7 @@ export class BlockHandler {
 		let length = this.readEntry(pool, new Entry()).length;
 		if (minLength > length) {
 			this.resizeBlock(pool, minLength);
+			this.readBlock(pool, counter.buffer, 0); // Resize can in theory consume one block.
 		}
 		let pointer = new Pointer();
 		pointer.index = index;
@@ -230,6 +244,7 @@ export class BlockHandler {
 		this.writeBlock(index, buffer, 0);
 		entry.deleted = true;
 		this.writeEntry(index, entry);
+		this.blockCache.delete(index);
 	}
 
 	getBlockSize(index: number): number {
@@ -240,7 +255,7 @@ export class BlockHandler {
 
 	getCount(): number {
 		let count = size(this.toc) / Entry.SIZE;
-		IntegerAssert.atLeast(0, count);
+		if (DEBUG) IntegerAssert.atLeast(0, count);
 		return count;
 	}
 
@@ -250,9 +265,15 @@ export class BlockHandler {
 		buffer = buffer ?? Buffer.alloc(entry.length);
 		let offset = skipLength ?? 0;
 		let length = buffer.length;
-		IntegerAssert.between(0, offset, entry.length - 1);
-		IntegerAssert.between(0, length, entry.length - offset);
-		read(this.bin, buffer, entry.offset + offset);
+		if (DEBUG) IntegerAssert.between(0, offset, entry.length - 1);
+		if (DEBUG) IntegerAssert.between(0, length, entry.length - offset);
+		let cached = this.blockCache.get(index);
+		if (is.absent(cached)) {
+			cached = Buffer.alloc(entry.length);
+			read(this.bin, cached, entry.offset);
+			this.blockCache.set(index, cached);
+		}
+		cached.copy(buffer, 0, offset);
 		return buffer;
 	}
 
@@ -267,11 +288,12 @@ export class BlockHandler {
 		this.readEntry(indexTwo, entryTwo);
 		let length = Math.min(entry.length, entryTwo.length);
 		let buffer = Buffer.alloc(length);
-		read(this.bin, buffer, entry.offset);
-		write(this.bin, buffer, entryTwo.offset);
+		this.readBlock(index, buffer);
+		this.writeBlock(index, buffer);
 		this.writeEntry(index, entryTwo);
 		this.writeEntry(indexTwo, entry);
 		this.deleteBlock(indexTwo);
+		this.blockCache.delete(index);
 	}
 
 	swapBlocks(indexOne: number, indexTwo: number): void {
@@ -281,6 +303,8 @@ export class BlockHandler {
 		this.readEntry(indexTwo, entryTwo);
 		this.writeEntry(indexOne, entryTwo);
 		this.writeEntry(indexTwo, entryOne);
+		this.blockCache.delete(indexOne);
+		this.blockCache.delete(indexTwo);
 	}
 
 	writeBlock(index: number, buffer?: Buffer, skipLength?: number): Buffer {
@@ -289,12 +313,13 @@ export class BlockHandler {
 		buffer = buffer ?? Buffer.alloc(entry.length);
 		let offset = skipLength ?? 0;
 		let length = buffer.length;
-		IntegerAssert.between(0, offset, entry.length - 1);
-		IntegerAssert.between(0, length, entry.length - offset);
+		if (DEBUG) IntegerAssert.between(0, offset, entry.length - 1);
+		if (DEBUG) IntegerAssert.between(0, length, entry.length - offset);
 		write(this.bin, buffer, entry.offset + offset);
 		if (is.absent(skipLength)) {
 			write(this.bin, Buffer.alloc(entry.length - buffer.length), entry.offset + buffer.length);
 		}
+		this.blockCache.delete(index);
 		return buffer
 	}
 };
@@ -303,31 +328,44 @@ export type Keys = Array<string | undefined>;
 export type KeysProvider<A> = (record: A) => Keys;
 export type RecordParser<A> = (json: any) => A;
 
-export class Table<A> {
-	static ROOT_BLOCK_INDEX = BlockHandler.FIRST_APPLICATION_BLOCK;
-	static LEAF_NODE_COUNT = 1;
-	static FULL_NODE_COUNT = 256 + 1;
-	static LEAF_NODE_SIZE = Pointer.SIZE * Table.LEAF_NODE_COUNT;
-	static FULL_NODE_SIZE = Pointer.SIZE * Table.FULL_NODE_COUNT;
+export type TableEventMap<A> = {
+	"insert": {
+		next: A
+	},
+	"remove": {
+		last: A
+	},
+	"update": {
+		last: A,
+		next: A
+	}
+};
+
+export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
+	static ROOT_NODE_INDEX = BlockHandler.FIRST_APPLICATION_BLOCK;
+	static NODE_SIZE = Pointer.SIZE * 2;
+	static TABLE_SIZE = Pointer.SIZE * 256;
 
 	private blockHandler: BlockHandler;
 	private keysProvider: KeysProvider<A>;
 	private recordParser: RecordParser<A>;
+	private recordCache: Map<number, A>;
+	private keyCache: Map<string, number>;
 
-	private getKeyBytes(keys: Keys): Array<number | undefined> {
-		let bytes = new Array<number | undefined>();
-		for (let [index, key] of keys.entries()) {
-			if (index > 0) {
-				bytes.push(undefined);
-			}
+	private serializeKeys(keys: Keys): Buffer {
+		let buffers = new Array<Buffer>();
+		for (let key of keys) {
 			if (typeof key === "string") {
-				let buffer = Buffer.from(key);
-				bytes.push(...buffer);
+				if (/^[0-9a-fA-F]{8,}$/.test(key)) {
+					buffers.push(Buffer.from(key, "hex"));
+				} else {
+					buffers.push(Buffer.from(key));
+				}
 			} else {
-				bytes.push(undefined);
+				buffers.push(Buffer.alloc(1));
 			}
 		}
-		return bytes;
+		return Buffer.concat(buffers);
 	}
 
 	private compareKeys(one: Keys, two: Keys): boolean {
@@ -342,93 +380,148 @@ export class Table<A> {
 		return true;
 	}
 
-	private getTableIndex(keyBytes: Array<number | undefined>, keyBytesIndex: number): number {
-		let keyByte = keyBytes[keyBytesIndex];
-		if (is.present(keyByte)) {
-			return keyByte + 1;
-		}
-		return 0;
-	}
-
 	private getRecord(index: number): A {
+		let record = this.recordCache.get(index);
+		if (is.present(record)) {
+			this.recordCache.delete(index);
+			this.recordCache.set(index, record);
+			return record;
+		}
 		let block = this.blockHandler.readBlock(index);
 		let string = block.toString().replace(/[\0]*$/, "");
 		let json = JSON.parse(string);
-		return this.recordParser(json);
-	}
-
-	private *createIterable(nodeIndex: number): Iterable<A> {
-		let pointer = new Pointer();
-		if (this.blockHandler.getBlockSize(nodeIndex) === Table.FULL_NODE_SIZE) {
-			for (let i = 0; i < Table.FULL_NODE_COUNT; i++) {
-				this.blockHandler.readBlock(nodeIndex, pointer.buffer, i * Pointer.SIZE);
-				if (pointer.index !== 0) {
-					yield* this.createIterable(pointer.index);
-				}
+		record = this.recordParser(json);
+		this.recordCache.set(index, record);
+		if (this.recordCache.size > 10000) {
+			for (let idx of this.recordCache.keys()) {
+				this.recordCache.delete(idx);
+				break;
 			}
-		} else {
-			this.blockHandler.readBlock(nodeIndex, pointer.buffer, 0 * Pointer.SIZE);
-			if (pointer.index !== 0) {
-				yield this.getRecord(pointer.index);
+		}
+		return record;
+	}
+/*
+load s
+
+without asserts: 340ms
+with asserts, with cache: 580ms
+with asserts, without cache: 670ms
+with noop asserts, without cache: 670 ms  => performance hit is from function calls
+with deactivated asserts, without cache: 400ms
+with deactivated asserts, with cache: 340ms
++ with key cache: 100 ms
++ with block cache: 80ms
++ with entry cache: 50ms
+
+V1:
+string => number => (cache) (30ms)
+
+V2:
+string => bytes => traversion => number => (cache)
+
+disk access is really slow
+lookup traversion is slow
+
+ */
+	private *createIterable(nodeIndex: number): Iterable<A> {
+		let resident = new Pointer();
+		this.blockHandler.readBlock(nodeIndex, resident.buffer, 0 * Pointer.SIZE);
+		if (resident.index !== 0) {
+			yield this.getRecord(resident.index);
+		}
+		let table = new Pointer();
+		this.blockHandler.readBlock(nodeIndex, table.buffer, 1 * Pointer.SIZE);
+		if (table.index !== 0) {
+			let node = new Pointer();
+			for (let i = 0; i < 256; i++) {
+				this.blockHandler.readBlock(table.index, node.buffer, i * Pointer.SIZE);
+				if (node.index !== 0) {
+					yield* this.createIterable(node.index);
+				}
 			}
 		}
 	}
 
 	constructor(blockHandler: BlockHandler, keysProvider: KeysProvider<A>, recordParser: RecordParser<A>) {
+		super();
 		this.blockHandler = blockHandler;
 		this.keysProvider = keysProvider;
 		this.recordParser = recordParser;
-		if (blockHandler.getCount() === Table.ROOT_BLOCK_INDEX) {
-			blockHandler.createBlock(Table.FULL_NODE_SIZE);
+		this.recordCache = new Map<number, A>();
+		this.keyCache = new Map<string, number>();
+		if (blockHandler.getCount() === Table.ROOT_NODE_INDEX) {
+			blockHandler.createBlock(Table.NODE_SIZE);
 		}
 	}
 
-	delete(record: A): void {
-		throw ``;
+	*[Symbol.iterator](): Iterator<A> {
+		yield* this.createIterable(Table.ROOT_NODE_INDEX);
 	}
 
-	insert(record: A): void {
-		let serializedRecord = Buffer.from(JSON.stringify(record));
-		let keys = this.keysProvider(record);
-		let keyBytes = this.getKeyBytes(keys);
-		let nodeIndex = Table.ROOT_BLOCK_INDEX;
-		let pointer = new Pointer();
-		for (let i = 0; i <= keyBytes.length; i++) {
-			if (this.blockHandler.getBlockSize(nodeIndex) === Table.LEAF_NODE_SIZE) {
-				this.blockHandler.readBlock(nodeIndex, pointer.buffer, 0);
-				if (pointer.index === 0) {
-					pointer.index = this.blockHandler.createBlock(serializedRecord.length);
-					this.blockHandler.writeBlock(pointer.index, serializedRecord);
-					this.blockHandler.writeBlock(nodeIndex, pointer.buffer, 0);
-					console.log("insert");
-					return;
+	insert(next: A): void {
+		let serializedRecord = Buffer.from(JSON.stringify(next));
+		let keys = this.keysProvider(next);
+		let keyBytes = this.serializeKeys(keys);
+		let currentNodeIndex = Table.ROOT_NODE_INDEX;
+		let resident = new Pointer();
+		let table = new Pointer();
+		let node = new Pointer();
+		let zero = new Pointer();
+		for (let [index, keyByte] of keyBytes.entries()) {
+			this.blockHandler.readBlock(currentNodeIndex, table.buffer, 1 * Pointer.SIZE);
+			if (table.index === 0) {
+				this.blockHandler.readBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
+				if (resident.index === 0) {
+					break;
 				} else {
-					let recordTwo = this.getRecord(pointer.index);
-					let keysTwo = this.keysProvider(recordTwo);
-					if (this.compareKeys(keys, keysTwo)) {
-						this.blockHandler.resizeBlock(pointer.index, serializedRecord.length);
-						this.blockHandler.writeBlock(pointer.index, serializedRecord);
-						console.log("update");
-						return;
-					} else {
-						let otherNodeIndex = this.blockHandler.createBlock(Table.FULL_NODE_SIZE);
-						this.blockHandler.swapBlocks(nodeIndex, otherNodeIndex);
-						let keyBytesTwo = this.getKeyBytes(keysTwo);
-						let tableIndex = this.getTableIndex(keyBytesTwo, i);
-						pointer.index = otherNodeIndex;
-						this.blockHandler.writeBlock(nodeIndex, pointer.buffer, Pointer.SIZE * tableIndex);
+					let residentRecord = this.getRecord(resident.index);
+					let residentKeys = this.keysProvider(residentRecord);
+					let residentKeyBytes = this.serializeKeys(residentKeys);
+					if (residentKeyBytes.equals(keyBytes)) {
+						break;
+					}
+					table.index = this.blockHandler.createBlock(Table.TABLE_SIZE);
+					this.blockHandler.writeBlock(currentNodeIndex, table.buffer, 1 * Pointer.SIZE);
+					let residentKeyByte = residentKeyBytes[index] as number | undefined;
+					if (is.present(residentKeyByte)) {
+						node.index = this.blockHandler.createBlock(Table.NODE_SIZE);
+						this.blockHandler.writeBlock(node.index, resident.buffer, 0 * Pointer.SIZE);
+						this.blockHandler.writeBlock(table.index, node.buffer, residentKeyByte * Pointer.SIZE);
+						this.blockHandler.writeBlock(currentNodeIndex, zero.buffer, 0 * Pointer.SIZE);
+						this.keyCache.delete(residentKeyBytes.toString("binary"));
 					}
 				}
 			}
-			let tableIndex = this.getTableIndex(keyBytes, i);
-			this.blockHandler.readBlock(nodeIndex, pointer.buffer, Pointer.SIZE * tableIndex);
-			if (pointer.index === 0) {
-				pointer.index = this.blockHandler.createBlock(Pointer.SIZE);
-				this.blockHandler.writeBlock(nodeIndex, pointer.buffer, Pointer.SIZE * tableIndex);
+			this.blockHandler.readBlock(table.index, node.buffer, keyByte * Pointer.SIZE);
+			if (node.index === 0) {
+				node.index = this.blockHandler.createBlock(Table.NODE_SIZE);
+				this.blockHandler.writeBlock(table.index, node.buffer, keyByte * Pointer.SIZE);
 			}
-			nodeIndex = pointer.index;
+			currentNodeIndex = node.index;
 		}
-		throw `Expected code to be unreachable!`;
+		this.blockHandler.readBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
+		if (resident.index === 0) {
+			resident.index = this.blockHandler.createBlock(serializedRecord.length);
+			this.blockHandler.writeBlock(resident.index, serializedRecord);
+			this.blockHandler.writeBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
+			this.route("insert", {
+				next: next
+			});
+		} else {
+			let last = this.getRecord(resident.index);
+			this.blockHandler.resizeBlock(resident.index, serializedRecord.length);
+			this.blockHandler.writeBlock(resident.index, serializedRecord);
+			this.recordCache.delete(resident.index);
+			this.route("update", {
+				last: last,
+				next: next
+			});
+		}
+	}
+
+	// TODO: Remove when indices are built using new database table.
+	keyof(record: A): string {
+		return this.keysProvider(record).map((value) => String(value)).join("");
 	}
 
 	lookup(...keys: Keys): A {
@@ -440,60 +533,84 @@ export class Table<A> {
 			}
 			break;
 		}
-		throw `Expected a record!`;
+		throw `Expected a record for ${keys}!`;
+	}
+
+	remove(last: A): void {
+		let keys = this.keysProvider(last);
+		let keyBytes = this.serializeKeys(keys);
+		let currentNodeIndex = Table.ROOT_NODE_INDEX;
+		let node = new Pointer();
+		let table = new Pointer();
+		let resident = new Pointer();
+		for (let keyByte of keyBytes) {
+			this.blockHandler.readBlock(currentNodeIndex, table.buffer, 1 * Pointer.SIZE);
+			if (table.index === 0) {
+				this.blockHandler.readBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
+				if (resident.index === 0) {
+					return;
+				} else {
+					break;
+				}
+			}
+			this.blockHandler.readBlock(table.index, node.buffer, keyByte * Pointer.SIZE);
+			if (node.index === 0) {
+				return;
+			}
+			currentNodeIndex = node.index;
+		}
+		this.blockHandler.readBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
+		if (resident.index !== 0) {
+			let record = this.getRecord(resident.index);
+			let keysTwo = this.keysProvider(record);
+			if (this.compareKeys(keys, keysTwo)) {
+				this.blockHandler.deleteBlock(resident.index);
+				resident.index = 0;
+				this.blockHandler.writeBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
+				let keyString = keyBytes.toString("binary");
+				this.keyCache.delete(keyString);
+				this.route("remove", {
+					last: last
+				});
+			}
+		}
 	}
 
 	search(...keys: Keys): StreamIterable<A> {
-		let keyBytes = this.getKeyBytes(keys);
-		let nodeIndex = Table.ROOT_BLOCK_INDEX;
-		let pointer = new Pointer();
-		for (let i = 0; i < keyBytes.length; i++) {
-			if (this.blockHandler.getBlockSize(nodeIndex) === Table.LEAF_NODE_SIZE) {
-				this.blockHandler.readBlock(nodeIndex, pointer.buffer, 0);
-				if (pointer.index === 0) {
-					return StreamIterable.of([]);
-				} else {
-					return StreamIterable.of([pointer.index])
-						.map((index) => this.getRecord(index));
+		let keyBytes = this.serializeKeys(keys);
+		let keyString = keyBytes.toString("binary");
+		let currentNodeIndex = this.keyCache.get(keyString);
+		if (is.absent(currentNodeIndex)) {
+			currentNodeIndex = Table.ROOT_NODE_INDEX;
+			let node = new Pointer();
+			let table = new Pointer();
+			let resident = new Pointer();
+			for (let keyByte of keyBytes) {
+				this.blockHandler.readBlock(currentNodeIndex, table.buffer, 1 * Pointer.SIZE);
+				if (table.index === 0) {
+					this.blockHandler.readBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
+					if (resident.index === 0) {
+						return StreamIterable.of([]);
+					} else {
+						let record = this.getRecord(resident.index);
+						let keysTwo = this.keysProvider(record);
+						if (this.compareKeys(keys, keysTwo)) {
+							this.keyCache.set(keyBytes.toString("binary"), currentNodeIndex);
+						}
+						break;
+					}
 				}
-			} else {
-				let tableIndex = this.getTableIndex(keyBytes, i);
-				this.blockHandler.readBlock(nodeIndex, pointer.buffer, Pointer.SIZE * tableIndex);
-				if (pointer.index === 0) {
+				this.blockHandler.readBlock(table.index, node.buffer, keyByte * Pointer.SIZE);
+				if (node.index === 0) {
 					return StreamIterable.of([]);
-				} else {
-					nodeIndex = pointer.index;
 				}
+				currentNodeIndex = node.index;
 			}
 		}
-		return StreamIterable.of(this.createIterable(nodeIndex));
+		return StreamIterable.of(this.createIterable(currentNodeIndex));
+	}
+
+	update(next: A): void {
+		this.insert(next);
 	}
 };
-
-let blockHandler = new BlockHandler([".", "private", "jdb2"]);
-let table = new Table<Person>(blockHandler, (record) => [record.person_id], Person.as);
-{
-	let start = process.hrtime.bigint();
-	table.insert({
-		person_id: "joel",
-		name: "Joel"
-	});
-	let end = process.hrtime.bigint();
-	console.log(Number(end - start) / 1000000, "ms");
-}
-{
-	let start = process.hrtime.bigint();
-	table.insert({
-		person_id: "a",
-		name: "A"
-	});
-	let end = process.hrtime.bigint();
-	console.log(Number(end - start) / 1000000, "ms");
-}
-{
-	let start = process.hrtime.bigint();
-	let records = table.search("a");
-	let end = process.hrtime.bigint();
-	console.log(Number(end - start) / 1000000, "ms");
-	console.log(records.collect());
-}

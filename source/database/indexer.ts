@@ -8,6 +8,7 @@ import * as probes from "./probes";
 import { Directory, File } from "./schema";
 import { default as config } from "../config";
 import * as jdb from "../jdb";
+import * as jdb2 from "../jdb2";
 
 function wordify(string: string | number): Array<string> {
 	return String(string)
@@ -55,12 +56,13 @@ if (!libfs.existsSync(INDICES_ROOT.join("/"))) {
 	libfs.mkdirSync(INDICES_ROOT.join("/"));
 }
 
-function loadTable<A>(name: string, guard: autoguard.serialization.MessageGuard<A>, getKey: (record: A) => string): jdb.Table<A> {
-	return new jdb.Table<A>(TABLES_ROOT, name, guard, getKey);
+function loadTable<A>(name: string, guard: autoguard.serialization.MessageGuard<A>, getKey: (record: A) => string): jdb2.Table<A> {
+	let blockHandler = new jdb2.BlockHandler([".", "private", "tables2", name]);
+	return new jdb2.Table<A>(blockHandler, (record) => [getKey(record)], (json) => guard.as(json));
 }
 
-function loadIndex<A, B>(name: string, parent: jdb.Table<A>, child: jdb.Table<B>, getGroupKey: jdb.GroupKeyProvider<B>, tokenizer: jdb.TokenProvider = jdb.Index.VALUE_TOKENIZER, maxGroupSize?: number): jdb.Index<B> {
-	let index = new jdb.Index<B>(INDICES_ROOT, name, (key) => child.lookup(key), getGroupKey, (record) => child.keyof(record), tokenizer, maxGroupSize);
+function loadIndex<A, B>(name: string, parent: jdb2.Table<A>, child: jdb2.Table<B>, getGroupKey: jdb.GroupKeyProvider<B>, tokenizer: jdb.TokenProvider = jdb.Index.VALUE_TOKENIZER, maxGroupSize?: number): jdb.Index<B> {
+	let index = new jdb.Index<B>([".", "private", "indices2"], name, (key) => child.lookup(key), getGroupKey, (record) => child.keyof(record), tokenizer, maxGroupSize);
 	if (index.length() === 0) {
 		for (let record of child) {
 			try {
@@ -68,16 +70,16 @@ function loadIndex<A, B>(name: string, parent: jdb.Table<A>, child: jdb.Table<B>
 			} catch (error) {}
 		}
 	}
-	child.on("insert", (event) => {
+	child.addObserver("insert", (event) => {
 		index.insert(event.next);
 	});
-	child.on("remove", (event) => {
+	child.addObserver("remove", (event) => {
 		index.remove(event.last);
 	});
-	child.on("update", (event) => {
+	child.addObserver("update", (event) => {
 		index.update(event.last, event.next);
 	});
-	parent.on("remove", (event) => {
+	parent.addObserver("remove", (event) => {
 		let key = parent.keyof(event.last);
 		for (let record of index.lookup(key)) {
 			child.remove(record);
@@ -171,12 +173,10 @@ export const years = loadTable("years", schema.Year, (record) => record.year_id)
 export const getMoviesFromYear = loadIndex("year_movies", years, movies, (record) => [record.year]);
 export const getAlbumsFromYear = loadIndex("year_albums", years, albums, (record) => [record.year]);
 
-if (users.length() === 0) {
-	if (keys.length() === 0) {
-		keys.insert({
-			key_id: makeId("key", libcrypto.randomBytes(8).toString("hex"))
-		});
-	}
+if (getKeysFromUser.lookup(undefined).collect().length === 0) {
+	keys.insert({
+		key_id: makeId("key", libcrypto.randomBytes(8).toString("hex"))
+	});
 }
 
 export const album_search = loadIndex("search_albums", albums, albums, (entry) => [entry.title, entry.year].filter(is.present), jdb.Index.QUERY_TOKENIZER);
