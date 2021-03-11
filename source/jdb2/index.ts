@@ -304,8 +304,9 @@ export type KeysProvider<A> = (record: A) => Keys;
 export type RecordParser<A> = (json: any) => A;
 
 export class Table<A> {
+	static ROOT_BLOCK_INDEX = BlockHandler.FIRST_APPLICATION_BLOCK;
 	static LEAF_NODE_COUNT = 1;
-	static FULL_NODE_COUNT = 258;
+	static FULL_NODE_COUNT = 256 + 1;
 	static LEAF_NODE_SIZE = Pointer.SIZE * Table.LEAF_NODE_COUNT;
 	static FULL_NODE_SIZE = Pointer.SIZE * Table.FULL_NODE_COUNT;
 
@@ -342,7 +343,11 @@ export class Table<A> {
 	}
 
 	private getTableIndex(keyBytes: Array<number | undefined>, keyBytesIndex: number): number {
-		return keyBytesIndex < keyBytes.length ? keyBytes[keyBytesIndex] ?? 256 : 257;
+		let keyByte = keyBytes[keyBytesIndex];
+		if (is.present(keyByte)) {
+			return keyByte + 1;
+		}
+		return 0;
 	}
 
 	private getRecord(index: number): A {
@@ -352,12 +357,29 @@ export class Table<A> {
 		return this.recordParser(json);
 	}
 
+	private *createIterable(nodeIndex: number): Iterable<A> {
+		let pointer = new Pointer();
+		if (this.blockHandler.getBlockSize(nodeIndex) === Table.FULL_NODE_SIZE) {
+			for (let i = 0; i < Table.FULL_NODE_COUNT; i++) {
+				this.blockHandler.readBlock(nodeIndex, pointer.buffer, i * Pointer.SIZE);
+				if (pointer.index !== 0) {
+					yield* this.createIterable(pointer.index);
+				}
+			}
+		} else {
+			this.blockHandler.readBlock(nodeIndex, pointer.buffer, 0 * Pointer.SIZE);
+			if (pointer.index !== 0) {
+				yield this.getRecord(pointer.index);
+			}
+		}
+	}
+
 	constructor(blockHandler: BlockHandler, keysProvider: KeysProvider<A>, recordParser: RecordParser<A>) {
 		this.blockHandler = blockHandler;
 		this.keysProvider = keysProvider;
 		this.recordParser = recordParser;
-		if (blockHandler.getCount() === BlockHandler.FIRST_APPLICATION_BLOCK) {
-			blockHandler.createBlock(Table.LEAF_NODE_SIZE);
+		if (blockHandler.getCount() === Table.ROOT_BLOCK_INDEX) {
+			blockHandler.createBlock(Table.FULL_NODE_SIZE);
 		}
 	}
 
@@ -369,7 +391,7 @@ export class Table<A> {
 		let serializedRecord = Buffer.from(JSON.stringify(record));
 		let keys = this.keysProvider(record);
 		let keyBytes = this.getKeyBytes(keys);
-		let nodeIndex = BlockHandler.FIRST_APPLICATION_BLOCK;
+		let nodeIndex = Table.ROOT_BLOCK_INDEX;
 		let pointer = new Pointer();
 		for (let i = 0; i <= keyBytes.length; i++) {
 			if (this.blockHandler.getBlockSize(nodeIndex) === Table.LEAF_NODE_SIZE) {
@@ -423,13 +445,13 @@ export class Table<A> {
 
 	search(...keys: Keys): StreamIterable<A> {
 		let keyBytes = this.getKeyBytes(keys);
-		let nodeIndex = BlockHandler.FIRST_APPLICATION_BLOCK;
+		let nodeIndex = Table.ROOT_BLOCK_INDEX;
 		let pointer = new Pointer();
 		for (let i = 0; i < keyBytes.length; i++) {
 			if (this.blockHandler.getBlockSize(nodeIndex) === Table.LEAF_NODE_SIZE) {
 				this.blockHandler.readBlock(nodeIndex, pointer.buffer, 0);
 				if (pointer.index === 0) {
-					break;
+					return StreamIterable.of([]);
 				} else {
 					return StreamIterable.of([pointer.index])
 						.map((index) => this.getRecord(index));
@@ -438,13 +460,13 @@ export class Table<A> {
 				let tableIndex = this.getTableIndex(keyBytes, i);
 				this.blockHandler.readBlock(nodeIndex, pointer.buffer, Pointer.SIZE * tableIndex);
 				if (pointer.index === 0) {
-					break;
+					return StreamIterable.of([]);
 				} else {
 					nodeIndex = pointer.index;
 				}
 			}
 		}
-		return StreamIterable.of([]);
+		return StreamIterable.of(this.createIterable(nodeIndex));
 	}
 };
 
@@ -453,8 +475,17 @@ let table = new Table<Person>(blockHandler, (record) => [record.person_id], Pers
 {
 	let start = process.hrtime.bigint();
 	table.insert({
+		person_id: "joel",
+		name: "Joel"
+	});
+	let end = process.hrtime.bigint();
+	console.log(Number(end - start) / 1000000, "ms");
+}
+{
+	let start = process.hrtime.bigint();
+	table.insert({
 		person_id: "a",
-		name: "Joe"
+		name: "A"
 	});
 	let end = process.hrtime.bigint();
 	console.log(Number(end - start) / 1000000, "ms");
