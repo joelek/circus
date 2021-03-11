@@ -4,6 +4,7 @@ import * as autoguard from "@joelek/ts-autoguard";
 import * as is from "../is";
 import { IntegerAssert } from "./asserts";
 import { Person } from "./schema";
+import { StreamIterable } from "../jdb";
 
 export function open(path: Array<string>): number {
 	let filename = path.join("/");
@@ -300,21 +301,12 @@ export class BlockHandler {
 
 export type Keys = Array<string | undefined>;
 export type KeysProvider<A> = (record: A) => Keys;
-export type RecordSerializer<A> = (record: A) => Buffer;
-export type RecordDeserializer<A> = (buffer: Buffer) => A;
-
-
-
-export type SearchResult<A> = {
-	record(): A;
-	records(includePrefixMatches?: boolean): Array<A>;
-};
+export type RecordParser<A> = (json: any) => A;
 
 export class Table<A> {
 	private blockHandler: BlockHandler;
 	private keysProvider: KeysProvider<A>;
-	private recordSerializer: RecordSerializer<A>;
-	private recordDeserializer: RecordDeserializer<A>;
+	private recordParser: RecordParser<A>;
 
 	private getKeyBytes(keys: Keys): Array<number | undefined> {
 		let bytes = new Array<number | undefined>();
@@ -348,11 +340,17 @@ export class Table<A> {
 		return keyBytesIndex < keyBytes.length ? keyBytes[keyBytesIndex] ?? 256 : 257;
 	}
 
-	constructor(blockHandler: BlockHandler, keysProvider: KeysProvider<A>, recordSerializer: RecordSerializer<A>, recordDeserializer: RecordDeserializer<A>) {
+	private getRecord(index: number): A {
+		let block = this.blockHandler.readBlock(index);
+		let string = block.toString().replace(/[\0]*$/, "");
+		let json = JSON.parse(string);
+		return this.recordParser(json);
+	}
+
+	constructor(blockHandler: BlockHandler, keysProvider: KeysProvider<A>, recordParser: RecordParser<A>) {
 		this.blockHandler = blockHandler;
 		this.keysProvider = keysProvider;
-		this.recordSerializer = recordSerializer;
-		this.recordDeserializer = recordDeserializer;
+		this.recordParser = recordParser;
 		if (blockHandler.getCount() === BlockHandler.FIRST_APPLICATION_BLOCK) {
 			blockHandler.createBlock(Pointer.SIZE);
 		}
@@ -363,13 +361,12 @@ export class Table<A> {
 	}
 
 	insert(record: A): void {
-		let serializedRecord = this.recordSerializer(record);
+		let serializedRecord = Buffer.from(JSON.stringify(record));
 		let keys = this.keysProvider(record);
 		let keyBytes = this.getKeyBytes(keys);
-		let keyBytesIndex = 0;
 		let nodeIndex = BlockHandler.FIRST_APPLICATION_BLOCK;
 		let pointer = new Pointer();
-		while (true) {
+		for (let i = 0; i <= keyBytes.length; i++) {
 			if (this.blockHandler.getBlockSize(nodeIndex) === Pointer.SIZE) {
 				this.blockHandler.readBlock(nodeIndex, pointer.buffer, 0);
 				if (pointer.index === 0) {
@@ -377,28 +374,27 @@ export class Table<A> {
 					this.blockHandler.writeBlock(pointer.index, serializedRecord);
 					this.blockHandler.writeBlock(nodeIndex, pointer.buffer, 0);
 					// TODO: Emit insert event.
-					break;
+					console.log("insert");
+					return;
 				} else {
-					let recordTwo = this.recordDeserializer(this.blockHandler.readBlock(pointer.index));
+					let recordTwo = this.getRecord(pointer.index);
 					let keysTwo = this.keysProvider(recordTwo);
 					if (this.compareKeys(keys, keysTwo)) {
 						this.blockHandler.resizeBlock(pointer.index, serializedRecord.length);
 						this.blockHandler.writeBlock(pointer.index, serializedRecord);
-						// TODO: Emit update event.
-						break;
+						console.log("update");
+						return;
 					} else {
 						let otherNodeIndex = this.blockHandler.createBlock(Pointer.SIZE * 256 + Pointer.SIZE + Pointer.SIZE);
-						this.blockHandler.writeBlock(otherNodeIndex, pointer.buffer);
 						this.blockHandler.swapBlocks(nodeIndex, otherNodeIndex);
 						let keyBytesTwo = this.getKeyBytes(keysTwo);
-						let tableIndex = this.getTableIndex(keyBytesTwo, keyBytesIndex);
+						let tableIndex = this.getTableIndex(keyBytesTwo, i);
 						pointer.index = otherNodeIndex;
 						this.blockHandler.writeBlock(nodeIndex, pointer.buffer, Pointer.SIZE * tableIndex);
 					}
 				}
 			}
-			let tableIndex = this.getTableIndex(keyBytes, keyBytesIndex);
-			keyBytesIndex += 1;
+			let tableIndex = this.getTableIndex(keyBytes, i);
 			this.blockHandler.readBlock(nodeIndex, pointer.buffer, Pointer.SIZE * tableIndex);
 			if (pointer.index === 0) {
 				pointer.index = this.blockHandler.createBlock(Pointer.SIZE);
@@ -406,16 +402,23 @@ export class Table<A> {
 			}
 			nodeIndex = pointer.index;
 		}
+		throw `Expected code to be unreachable!`;
 	}
 
-	search(...keys: Keys): SearchResult<A> {
+	search(...keys: Keys): StreamIterable<A> {
+		let keyBytes = this.getKeyBytes(keys);
+		let keyBytesIndex = 0;
 		throw ``;
 	}
 };
 
 let blockHandler = new BlockHandler([ ".", "private", "jdb2" ]);
-let table = new Table<Person>(blockHandler, (record) => [ record.person_id ], (record) => Buffer.from(JSON.stringify(record)), (buffer) => Person.as(JSON.parse(Buffer.toString())));
+let table = new Table<Person>(blockHandler, (record) => [ record.person_id ], Person.as);
 table.insert({
 	person_id: "a",
 	name: "Joel"
+});
+table.insert({
+	person_id: "b",
+	name: "Joel2"
 });

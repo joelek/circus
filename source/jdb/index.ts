@@ -37,7 +37,7 @@ function* map<A, B>(iterable: Iterable<A>, transform: (value: A, index: number) 
 	}
 }
 
-class StreamIterable<A> {
+export class StreamIterable<A> {
 	private values: Iterable<A>;
 
 	private constructor(values: Iterable<A>) {
@@ -100,7 +100,7 @@ class StreamIterable<A> {
 	static of<A>(values: Iterable<A> | undefined): StreamIterable<A> {
 		return new StreamIterable<A>(values ?? new Array<A>());
 	}
-}
+};
 
 function readBuffer(fd: number, buffer: Buffer, position?: number): Buffer {
 	let bytes = libfs.readSync(fd, buffer, 0, buffer.length, position ?? null);
