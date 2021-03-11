@@ -2,20 +2,42 @@
 
 import { guards as autoguard } from "@joelek/ts-autoguard";
 
-export type Person = {
-	"person_id": string,
-	"name": string
+export type Value = boolean | string | number | null | undefined;
+
+export const Value = autoguard.Union.of(
+	autoguard.Boolean,
+	autoguard.String,
+	autoguard.Number,
+	autoguard.Null,
+	autoguard.Undefined
+);
+
+export type IndexEntry = {
+	"token": Value,
+	"index": number
 };
 
-export const Person = autoguard.Object.of<Person>({
-	"person_id": autoguard.String,
-	"name": autoguard.String
+export const IndexEntry = autoguard.Object.of<IndexEntry>({
+	"token": autoguard.Reference.of<Value>(() => Value),
+	"index": autoguard.Number
+});
+
+export type KeyEntry = {
+	"key": Value
+};
+
+export const KeyEntry = autoguard.Object.of<KeyEntry>({
+	"key": autoguard.Reference.of<Value>(() => Value)
 });
 
 export type Autoguard = {
-	"Person": Person
+	"Value": Value,
+	"IndexEntry": IndexEntry,
+	"KeyEntry": KeyEntry
 };
 
 export const Autoguard = {
-	"Person": Person
+	"Value": Value,
+	"IndexEntry": IndexEntry,
+	"KeyEntry": KeyEntry
 };

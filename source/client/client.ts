@@ -304,7 +304,7 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 		contextMenuItems.update([
 			xml.element("div")
 				.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr min-content;")
-				.add(renderTextHeader(xml.text("Track")))
+				.add(renderTextHeader(xml.text("Track menu")))
 				.add(makeButton()
 					.on("click", () => {
 						showContextMenu.updateState(false);
@@ -390,7 +390,7 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 		contextMenuItems.update([
 			xml.element("div")
 				.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr auto;")
-				.add(renderTextHeader(xml.text("Playlist")))
+				.add(renderTextHeader(xml.text("Playlist menu")))
 				.add(makeButton()
 					.on("click", () => {
 						showContextMenu.updateState(false);

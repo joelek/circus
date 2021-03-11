@@ -44,8 +44,11 @@ export class StreamIterable<A> {
 		this.values = values;
 	}
 
-	[Symbol.iterator](): Iterator<A> {
-		return this.values[Symbol.iterator]();
+	*[Symbol.iterator](): Iterator<A> {
+		//yield* this.values;
+		for (let value of this.values) {
+			yield value;
+		}
 	}
 
 	collect(): Array<A> {

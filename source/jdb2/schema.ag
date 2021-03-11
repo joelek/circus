@@ -1,6 +1,10 @@
 {
-	Person: {
-		person_id: string,
-		name: string
+	Value: boolean | string | number | null | undefined,
+	IndexEntry: {
+		token: Value,
+		index: number
+	},
+	KeyEntry: {
+		key: Value
 	}
 }

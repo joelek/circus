@@ -6,6 +6,8 @@ import * as jsondb from "../jsondb";
 import * as is from "../is";
 import * as schema from "./schema/";
 import { default as config } from "../config";
+import { SearchResult } from "../jdb2";
+import { Actor, Album, Artist, Cue, Episode, Genre, Movie, Playlist, Show, Track, User, Year } from "../database/schema";
 
 export function getStreamWeight(timestamp_ms: number): number {
 	let ms = Date.now() - timestamp_ms;
@@ -492,8 +494,8 @@ export function searchForAlbums(query: string, offset: number, length: number, u
 			.map((record) => lookupAlbum(record.album_id, user_id));
 	} else {
 		return database.album_search.search(query)
-			.map((record) => record.id)
 			.slice(offset, offset + length)
+			.map((record) => record.lookup().album_id)
 			.map((id) => lookupAlbum(id, user_id))
 			.collect();
 	}
@@ -515,8 +517,8 @@ export function searchForArtists(query: string, offset: number, length: number, 
 			.map((record) => lookupArtist(record.artist_id, user_id));
 	} else {
 		return database.artist_search.search(query)
-			.map((record) => record.id)
 			.slice(offset, offset + length)
+			.map((record) => record.lookup().artist_id)
 			.map((id) => lookupArtist(id, user_id))
 			.collect();
 	}
@@ -524,9 +526,8 @@ export function searchForArtists(query: string, offset: number, length: number, 
 
 export function searchForCues(query: string, offset: number, limit: number, user_id: string): (schema.objects.Cue & { media: schema.objects.Episode | schema.objects.Movie })[] {
 	return is.absent(database.cue_search) ? [] : database.cue_search.search(query)
-		.sort(jsondb.NumericSort.decreasing((value) => value.rank))
 		.slice(offset, offset + limit)
-		.map((record) => lookupCue(record.id, user_id))
+		.map((record) => lookupCue(record.lookup().cue_id, user_id))
 		.map((cue) => {
 			let video_files = database.getVideoFilesFromSubtitleFile.lookup(cue.subtitle.subtitle.file_id);
 			for (let video_file of video_files) {
@@ -569,8 +570,8 @@ export function searchForEpisodes(query: string, offset: number, length: number,
 			.map((record) => lookupEpisode(record.episode_id, user_id));
 	} else {
 		return database.episode_search.search(query)
-			.map((record) => record.id)
 			.slice(offset, offset + length)
+			.map((record) => record.lookup().episode_id)
 			.map((id) => lookupEpisode(id, user_id))
 			.collect();
 	}
@@ -583,8 +584,8 @@ export function searchForGenres(query: string, offset: number, length: number, u
 			.map((record) => lookupGenre(record.genre_id, user_id));
 	} else {
 		return database.genre_search.search(query)
-			.map((record) => record.id)
 			.slice(offset, offset + length)
+			.map((record) => record.lookup().genre_id)
 			.map((id) => lookupGenre(id, user_id))
 			.collect();
 	}
@@ -598,8 +599,8 @@ export function searchForMovies(query: string, offset: number, length: number, u
 			.map((record) => lookupMovie(record.movie_id, user_id));
 	} else {
 		return database.movie_search.search(query)
-			.map((record) => record.id)
 			.slice(offset, offset + length)
+			.map((record) => record.lookup().movie_id)
 			.map((id) => lookupMovie(id, user_id))
 			.collect();
 	}
@@ -613,8 +614,8 @@ export function searchForActors(query: string, offset: number, length: number, u
 			.map((record) => lookupActor(record.actor_id, user_id));
 	} else {
 		return database.actor_search.search(query)
-			.map((record) => record.id)
 			.slice(offset, offset + length)
+			.map((record) => record.lookup().actor_id)
 			.map((id) => lookupActor(id, user_id))
 			.collect();
 	}
@@ -628,8 +629,8 @@ export function searchForPlaylists(query: string, offset: number, length: number
 			.map((record) => lookupPlaylist(record.playlist_id, user_id));
 	} else {
 		return database.playlist_search.search(query)
-			.map((record) => record.id)
 			.slice(offset, offset + length)
+			.map((record) => record.lookup().playlist_id)
 			.map((id) => lookupPlaylist(id, user_id))
 			.collect();
 	}
@@ -650,8 +651,8 @@ export function searchForShows(query: string, offset: number, length: number, us
 			.map((record) => lookupShow(record.show_id, user_id));
 	} else {
 		return database.shows_search.search(query)
-			.map((record) => record.id)
 			.slice(offset, offset + length)
+			.map((record) => record.lookup().show_id)
 			.map((id) => lookupShow(id, user_id))
 			.collect();
 	}
@@ -665,8 +666,8 @@ export function searchForTracks(query: string, offset: number, length: number, u
 			.map((record) => lookupTrack(record.track_id, user_id));
 	} else {
 		return database.track_search.search(query)
-			.map((record) => record.id)
 			.slice(offset, offset + length)
+			.map((record) => record.lookup().track_id)
 			.map((id) => lookupTrack(id, user_id))
 			.collect();
 	}
@@ -680,8 +681,8 @@ export function searchForUsers(query: string, offset: number, length: number, us
 			.map((record) => lookupUser(record.user_id));
 	} else {
 		return database.user_search.search(query)
-			.map((record) => record.id)
 			.slice(offset, offset + length)
+			.map((record) => record.lookup().user_id)
 			.map((id) => lookupUser(id))
 			.collect();
 	}
@@ -695,8 +696,8 @@ export function searchForYears(query: string, offset: number, length: number, us
 			.map((record) => lookupYear(record.year_id, user_id));
 	} else {
 		return database.year_search.search(query)
-			.map((record) => record.id)
 			.slice(offset, offset + length)
+			.map((record) => record.lookup().year_id)
 			.map((id) => lookupYear(id, user_id))
 			.collect();
 	}
@@ -714,46 +715,47 @@ export function searchForEntities(query: string, user_id: string, offset: number
 		...database.shows_search.search(query).map((result) => ({ ...result, type: "SHOW", type_rank: 7 })),
 		...database.track_search.search(query).map((result) => ({ ...result, type: "TRACK", type_rank: 5 })),
 		...database.user_search.search(query).map((result) => ({ ...result, type: "USER", type_rank: 0 })),
-		...database.year_search.search(query).map((result) => ({ ...result, type: "YEAR", type_rank: 10 }))
+		...database.year_search.search(query).map((result) => ({ ...result, type: "YEAR", type_rank: 10 })),
+		...new Array<SearchResult<Cue> & { type: "CUE", type_rank: number }>()
 	].sort(jsondb.CombinedSort.of(
 		jsondb.NumericSort.decreasing((value) => value.rank),
 		jsondb.NumericSort.decreasing((value) => value.type_rank)
 	));
-	let cue = is.absent(database.cue_search) ? undefined : database.cue_search.search(query).collect().shift();
+	let cue = is.absent(database.cue_search) ? undefined : database.cue_search.search(query).slice(0, 1).collect().shift();
 	if (is.present(cue)) {
 		let result = results[0];
 		if (is.absent(result) || cue.rank > result.rank) {
 			results.unshift({ ...cue, type: "CUE", type_rank: 11 });
 		}
 	}
-	let entities = results.slice(offset, offset + limit).map((result) => {
+	let entities = results.slice(offset, offset + limit)
+		.map((result) => {
 		let type = result.type;
-		let id = result.id;
 		if (false) {
 		} else if (type === "ACTOR") {
-			return lookupActor(id, user_id);
+			return lookupActor((result.lookup() as Actor).actor_id, user_id);
 		} else if (type === "ALBUM") {
-			return lookupAlbum(id, user_id);
+			return lookupAlbum((result.lookup() as Album).album_id, user_id);
 		} else if (type === "ARTIST") {
-			return lookupArtist(id, user_id);
+			return lookupArtist((result.lookup() as Artist).artist_id, user_id);
 		} else if (type === "CUE") {
-			return lookupCue(id, user_id);
+			return lookupCue((result.lookup() as Cue).cue_id, user_id);
 		}else if (type === "EPISODE") {
-			return lookupEpisode(id, user_id);
+			return lookupEpisode((result.lookup() as Episode).episode_id, user_id);
 		} else if (type === "GENRE") {
-			return lookupGenre(id, user_id);
+			return lookupGenre((result.lookup() as Genre).genre_id, user_id);
 		} else if (type === "MOVIE") {
-			return lookupMovie(id, user_id);
+			return lookupMovie((result.lookup() as Movie).movie_id, user_id);
 		} else if (type === "PLAYLIST") {
-			return lookupPlaylist(id, user_id);
+			return lookupPlaylist((result.lookup() as Playlist).playlist_id, user_id);
 		} else if (type === "SHOW") {
-			return lookupShow(id, user_id);
+			return lookupShow((result.lookup() as Show).show_id, user_id);
 		} else if (type === "TRACK") {
-			return lookupTrack(id, user_id);
+			return lookupTrack((result.lookup() as Track).track_id, user_id);
 		} else if (type === "USER") {
-			return lookupUser(id);
+			return lookupUser((result.lookup() as User).user_id);
 		} else if (type === "YEAR") {
-			return lookupYear(id, user_id);
+			return lookupYear((result.lookup() as Year).year_id, user_id);
 		}
 		throw `Expected code to be unreachable!`;
 	});

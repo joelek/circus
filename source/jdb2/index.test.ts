@@ -6,7 +6,6 @@ type Person = {
 	name: string,
 	parent_person_id?: string
 };
-
 let Person = autoguard.guards.Object.of<Person>({
 	person_id: autoguard.guards.String,
 	name: autoguard.guards.String,
@@ -16,60 +15,58 @@ let Person = autoguard.guards.Object.of<Person>({
 	)
 });
 
-let persons = new jdb.Table<Person>([".", "private", "tables2"], "persons", Person, (record) => record.person_id);
-
-
-let children = new jdb.Index<Person>(
-	[".", "private", "tables2"],
-	"children",
-	(key) => persons.lookup(key),
-	(record) => [record.parent_person_id],
+let persons = new jdb.Table<Person>(
+	new jdb.BlockHandler([".", "private", "testtables", "persons"]),
 	(record) => record.person_id,
-	(value) => [value]
+	Person.as
+);
+let children = new jdb.Index<Person, Person>(
+	new jdb.BlockHandler([".", "private", "testtables", "children"]),
+	persons,
+	persons,
+	(record) => [record.parent_person_id]
+);
+let search = new jdb.Index<Person, Person>(
+	new jdb.BlockHandler([".", "private", "testtables", "search"]),
+	persons,
+	persons,
+	(record) => [record.name],
+	jdb.Index.QUERY_TOKENIZER
 );
 
-persons.on("insert", (message) => {
-	//console.log("insert", message);
-	children.insert(message.next);
+persons.insert({
+	person_id: "1",
+	name: "Parent A",
 });
-persons.on("update", (message) => {
-	//console.log("update", message);
-	children.update(message.last, message.next);
+persons.insert({
+	person_id: "2",
+	name: "Parent B",
 });
-persons.on("remove", (message) => {
-	//console.log("remove", message);
-	children.insert(message.last);
+persons.insert({
+	person_id: "3",
+	name: "Child A",
+	parent_person_id: "1"
+});
+persons.insert({
+	person_id: "4",
+	name: "Child B",
+	parent_person_id: "1"
+});
+persons.insert({
+	person_id: "5",
+	name: "Child C",
+	parent_person_id: "2"
 });
 
-
-persons.insert({
-	person_id: "0000000000000001",
-	name: "Parent 1",
-})
-persons.insert({
-	person_id: "0000000000000002",
-	name: "Parent 2",
-})
-persons.insert({
-	person_id: "0000000000000003",
-	name: "Child 3",
-	parent_person_id: "0000000000000001"
-})
-persons.insert({
-	person_id: "0000000000000004",
-	name: "Child 4",
-	parent_person_id: "0000000000000001"
-})
-persons.insert({
-	person_id: "0000000000000005",
-	name: "Child 5",
-	parent_person_id: "0000000000000002"
-})
-console.log(children);
-
+console.log(persons.lookup("5"));
 console.log(children.lookup(undefined).collect());
-console.log(children.lookup("0000000000000001").collect());
-console.log(children.lookup("0000000000000002").collect());
+console.log(children.lookup("1").collect());
+console.log(children.lookup("2").collect());
+console.log(search.lookup("parent").collect());
+console.log(search.lookup("child").collect());
+console.log(search.lookup("a").collect());
+
+search.debug();
 
 /*
 array of uint16 cannot have type information for every entry, must be encoded in array array of bool?

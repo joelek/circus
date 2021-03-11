@@ -8,6 +8,7 @@ import * as probes from "./probes";
 import { Directory, File } from "./schema";
 import { default as config } from "../config";
 import * as jdb from "../jdb";
+import * as jdb2 from "../jdb2";
 
 function wordify(string: string | number): Array<string> {
 	return String(string)
@@ -55,34 +56,15 @@ if (!libfs.existsSync(INDICES_ROOT.join("/"))) {
 	libfs.mkdirSync(INDICES_ROOT.join("/"));
 }
 
-function loadTable<A>(name: string, guard: autoguard.serialization.MessageGuard<A>, getKey: (record: A) => string): jdb.Table<A> {
-	return new jdb.Table<A>(TABLES_ROOT, name, guard, getKey);
+function loadTable<A>(name: string, guard: autoguard.serialization.MessageGuard<A>, getKey: jdb2.ValueProvider<A>): jdb2.Table<A> {
+	let blockHandler = new jdb2.BlockHandler([".", "private", "tables2", name]);
+	let table = new jdb2.Table<A>(blockHandler, getKey, (json) => guard.as(json));
+	return table;
 }
 
-function loadIndex<A, B>(name: string, parent: jdb.Table<A>, child: jdb.Table<B>, getGroupKey: jdb.GroupKeyProvider<B>, tokenizer: jdb.TokenProvider = jdb.Index.VALUE_TOKENIZER, maxGroupSize?: number): jdb.Index<B> {
-	let index = new jdb.Index<B>(INDICES_ROOT, name, (key) => child.lookup(key), getGroupKey, (record) => child.keyof(record), tokenizer, maxGroupSize);
-	if (index.length() === 0) {
-		for (let record of child) {
-			try {
-				index.insert(record);
-			} catch (error) {}
-		}
-	}
-	child.on("insert", (event) => {
-		index.insert(event.next);
-	});
-	child.on("remove", (event) => {
-		index.remove(event.last);
-	});
-	child.on("update", (event) => {
-		index.update(event.last, event.next);
-	});
-	parent.on("remove", (event) => {
-		let key = parent.keyof(event.last);
-		for (let record of index.lookup(key)) {
-			child.remove(record);
-		}
-	});
+function loadIndex<A, B>(name: string, parent: jdb2.Table<A>, child: jdb2.Table<B>, getGroupKey: jdb2.ValuesProvider<B>, tokenizer: jdb2.Tokenizer = jdb2.Index.VALUE_TOKENIZER): jdb2.Index<A, B> {
+	let blockHandler = new jdb2.BlockHandler([".", "private", "indices2", name]);
+	let index = new jdb2.Index<A, B>(blockHandler, parent, child, getGroupKey, tokenizer);
 	return index;
 }
 
@@ -171,26 +153,24 @@ export const years = loadTable("years", schema.Year, (record) => record.year_id)
 export const getMoviesFromYear = loadIndex("year_movies", years, movies, (record) => [record.year]);
 export const getAlbumsFromYear = loadIndex("year_albums", years, albums, (record) => [record.year]);
 
-if (users.length() === 0) {
-	if (keys.length() === 0) {
-		keys.insert({
-			key_id: makeId("key", libcrypto.randomBytes(8).toString("hex"))
-		});
-	}
+if (getKeysFromUser.lookup(undefined).collect().length === 0) {
+	keys.insert({
+		key_id: makeId("key", libcrypto.randomBytes(8).toString("hex"))
+	});
 }
 
-export const album_search = loadIndex("search_albums", albums, albums, (entry) => [entry.title, entry.year].filter(is.present), jdb.Index.QUERY_TOKENIZER);
-export const artist_search = loadIndex("search_artists", artists, artists, (entry) => [entry.name], jdb.Index.QUERY_TOKENIZER);
-export const cue_search = !config.use_cue_index ? undefined : loadIndex("search_cues", cues, cues, (entry) => entry.lines.split("\n"), jdb.Index.WORD_TOKENIZER, 1024);
-export const episode_search = loadIndex("search_episodes", episodes, episodes, (entry) => [entry.title, entry.year].filter(is.present), jdb.Index.QUERY_TOKENIZER);
-export const genre_search = loadIndex("search_genres", genres, genres, (entry) => [entry.name], jdb.Index.QUERY_TOKENIZER);
-export const movie_search = loadIndex("search_movies", movies, movies, (entry) => [entry.title, entry.year].filter(is.present), jdb.Index.QUERY_TOKENIZER);
-export const actor_search = loadIndex("search_actors", actors, actors, (entry) => [entry.name], jdb.Index.QUERY_TOKENIZER);
-export const playlist_search = loadIndex("search_playlists", playlists, playlists, (entry) => [entry.title], jdb.Index.QUERY_TOKENIZER);
-export const shows_search = loadIndex("search_shows", shows, shows, (entry) => [entry.name], jdb.Index.QUERY_TOKENIZER);
-export const track_search = loadIndex("search_tracks", tracks, tracks, (entry) => [entry.title], jdb.Index.QUERY_TOKENIZER);
-export const user_search = loadIndex("search_users", users, users, (entry) => [entry.name, entry.username], jdb.Index.QUERY_TOKENIZER);
-export const year_search = loadIndex("search_years", years, years, (entry) => [entry.year], jdb.Index.QUERY_TOKENIZER);
+export const album_search = loadIndex("search_albums", albums, albums, (entry) => [entry.title, entry.year].filter(is.present), jdb2.Index.QUERY_TOKENIZER);
+export const artist_search = loadIndex("search_artists", artists, artists, (entry) => [entry.name], jdb2.Index.QUERY_TOKENIZER);
+export const cue_search = !config.use_cue_index ? undefined : loadIndex("search_cues", cues, cues, (entry) => [entry.lines], jdb2.Index.WORD_TOKENIZER);
+export const episode_search = loadIndex("search_episodes", episodes, episodes, (entry) => [entry.title, entry.year].filter(is.present), jdb2.Index.QUERY_TOKENIZER);
+export const genre_search = loadIndex("search_genres", genres, genres, (entry) => [entry.name], jdb2.Index.QUERY_TOKENIZER);
+export const movie_search = loadIndex("search_movies", movies, movies, (entry) => [entry.title, entry.year].filter(is.present), jdb2.Index.QUERY_TOKENIZER);
+export const actor_search = loadIndex("search_actors", actors, actors, (entry) => [entry.name], jdb2.Index.QUERY_TOKENIZER);
+export const playlist_search = loadIndex("search_playlists", playlists, playlists, (entry) => [entry.title], jdb2.Index.QUERY_TOKENIZER);
+export const shows_search = loadIndex("search_shows", shows, shows, (entry) => [entry.name], jdb2.Index.QUERY_TOKENIZER);
+export const track_search = loadIndex("search_tracks", tracks, tracks, (entry) => [entry.title], jdb2.Index.QUERY_TOKENIZER);
+export const user_search = loadIndex("search_users", users, users, (entry) => [entry.name, entry.username], jdb2.Index.QUERY_TOKENIZER);
+export const year_search = loadIndex("search_years", years, years, (entry) => [entry.year], jdb2.Index.QUERY_TOKENIZER);
 
 export function getPath(entry: Directory | File): Array<string> {
 	let path = new Array<string>();
