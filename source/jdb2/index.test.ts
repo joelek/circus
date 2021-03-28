@@ -58,9 +58,6 @@ persons.insert({
 	parent_person_id: "2"
 });
 
-
-search.debug(0);
-
 console.log(persons.lookup("5"));
 console.log(children.lookup(undefined).collect());
 console.log(children.lookup("1").collect());

@@ -1,9 +1,9 @@
 import * as libfs from "fs";
+import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
 import { IntegerAssert } from "./asserts";
 import { StreamIterable } from "../jdb";
-import { IndexEntry, KeyEntry, Value } from "./schema";
 import { sorters } from "../jsondb";
 
 const DEBUG = false;
@@ -132,6 +132,7 @@ export class Entry extends Chunk {
 };
 
 export type WeightProvider<A> = (value: A) => number;
+export type Value = boolean | string | number | null | undefined;
 
 export class Cache<A extends Value, B> {
 	private map: Map<A, B>;
@@ -493,7 +494,7 @@ export function serializeKey(key: Value): Buffer {
 		if (/^[0-9a-f]{8,}$/i.test(key)) {
 			return Buffer.from(key, "hex");
 		} else {
-			return Buffer.from(key);
+			return Buffer.from(key, "binary");
 		}
 	}
 	return Buffer.alloc(0);
@@ -753,12 +754,6 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			if (result.keyBytes.equals(serializeKey(key))) {
 				return record;
 			}
-			console.log("no match", {
-				key: key,
-				resultKey: result.keyBytes.toString("binary"),
-				keyBytes: serializeKey(key),
-				resultKeyBytes: result.keyBytes,
-			});
 			break;
 		}
 		throw `Expected a record for ${key}!`;
@@ -991,16 +986,16 @@ export class Index<A, B> {
 		return Array.from(normalized.match(/(\p{L}+)/gu) ?? []);
 	};
 
-	private tokenTable: Table<IndexEntry>;
-	private keyTable: Table<KeyEntry>;
+	private tokenTable: Table<number>;
+	private keyTable: Table<{}>;
 	private parentTable: Table<A>;
 	private childTable: Table<B>;
 	private getIndexedValues: ValuesProvider<B>;
 	private getTokens: Tokenizer;
 
 	constructor(blockHandler: BlockHandler, parentTable: Table<A>, childTable: Table<B>, getIndexedValues: ValuesProvider<B>, getTokens: Tokenizer = Index.VALUE_TOKENIZER) {
-		let tokenTable = new Table<IndexEntry>(blockHandler, IndexEntry.as, (record) => record.token);
-		let keyTable = new Table<KeyEntry>(blockHandler, KeyEntry.as, (record) => record.key);
+		let tokenTable = new Table<number>(blockHandler, autoguard.guards.Number.as);
+		let keyTable = new Table<{}>(blockHandler, autoguard.guards.Object.of({}).as);
 		function insert(key: Value, next: B) {
 			let values = getIndexedValues(next);
 			for (let value of values) {
@@ -1008,20 +1003,17 @@ export class Index<A, B> {
 				for (let token of tokens) {
 					let index: number | undefined;
 					try {
-						let tokenEntry = tokenTable.lookup(token);
-						index = tokenEntry.index;
+						index = tokenTable.lookup(token);
 					} catch (error) {}
 					if (is.absent(index)) {
 						index = blockHandler.createBlock(Table.NODE_SIZE);
-						tokenTable.insert({
-							token,
-							index
+						tokenTable.insert(index, {
+							key: token
 						});
 					}
-					keyTable.insert({
-						key
-					}, {
-						index
+					keyTable.insert({}, {
+						index,
+						key: key
 					});
 				}
 			}
@@ -1033,15 +1025,13 @@ export class Index<A, B> {
 				for (let token of tokens) {
 					let index: number | undefined;
 					try {
-						let tokenEntry = tokenTable.lookup(token);
-						index = tokenEntry.index;
+						index = tokenTable.lookup(token);
 					} catch (error) {
 						continue;
 					}
-					keyTable.remove({
-						key
-					}, {
-						index
+					keyTable.remove({}, {
+						index,
+						key: key
 					});
 				}
 			}
@@ -1060,12 +1050,13 @@ export class Index<A, B> {
 			update(event.key, event.last, event.next);
 		});
 		parentTable.addObserver("remove", (event) => {
-			let results = tokenTable.search(event.key);
+			let token = event.key;
+			let results = tokenTable.search(token);
 			for (let result of results) {
-				let { token, index } = result.lookup();
-				let keyEntries = keyTable.search(token, { index });
+				let index = result.lookup();
+				let keyEntries = keyTable.search(undefined, { index, prefix: true });
 				for (let keyEntry of keyEntries) {
-					let child = childTable.lookup(keyEntry.lookup().key);
+					let child = childTable.lookup(keyEntry.keyBytes.toString("binary"));
 					childTable.remove(child);
 				}
 			}
@@ -1103,10 +1094,10 @@ export class Index<A, B> {
 		for (let token of tokens) {
 			let results = this.tokenTable.search(token);
 			for (let result of results) {
-				let { token, index } = result.lookup();
+				let index = result.lookup();
 				let keyEntries = this.keyTable.search(undefined, { index, prefix: true });
 				for (let keyEntry of keyEntries) {
-					let { key } = keyEntry.lookup();
+					let key = keyEntry.keyBytes.toString("binary");
 					let rank = map.get(key) ?? (0 - tokens.length);
 					map.set(key, rank + 2);
 				}
