@@ -721,16 +721,16 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 	debug(index: number = Table.ROOT_NODE_INDEX, depth: number = 0): void {
 		let node = new Node();
 		this.blockHandler.readBlock(index, node.buffer);
-		console.log("\t".repeat(depth), `"${node.prefixBytes.toString()}"`);
+		console.log("\t".repeat(depth), `${node.prefixBytes.toString("hex")}`);
 		if (node.residentIndex !== 0) {
-			console.log("\t".repeat(depth), this.getRecord(node.residentIndex));
+			console.log("\t".repeat(depth), JSON.stringify(this.getRecord(node.residentIndex)));
 		}
 		if (node.pointersIndex !== 0) {
 			let pointer = new Pointer();
 			for (let i = 0; i < 256; i++) {
 				this.blockHandler.readBlock(node.pointersIndex, pointer.buffer, i * Pointer.SIZE);
 				if (pointer.index !== 0) {
-					console.log("\t".repeat(depth), `${String.fromCharCode(i)} (0x${i.toString(16).padStart(2, "0")}) =>`);
+					console.log("\t".repeat(depth), `${Buffer.of(i).toString("hex")} =>`);
 					this.debug(pointer.index, depth + 1);
 				}
 			}
