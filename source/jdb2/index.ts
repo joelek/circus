@@ -449,6 +449,7 @@ export type RecordParser<A> = (json: any) => A;
 export type Tokenizer = (value: Value) => Array<Value>;
 
 export type SearchResult<A> = {
+	keyBytes: Buffer,
 	rank: number;
 	lookup: () => A;
 };
@@ -481,31 +482,31 @@ export function computeCommonPrefixLength(prefixBytes: Buffer, keyBytes: Buffer,
 	return length;
 };
 
+export function serializeKey(key: Value): Buffer {
+	if (typeof key === "boolean") {
+		return Buffer.of(key ? 1 : 0);
+	}
+	if (typeof key === "number") {
+		return Buffer.from(`${key}`);
+	}
+	if (typeof key === "string") {
+		if (/^[0-9a-f]{8,}$/i.test(key)) {
+			return Buffer.from(key, "hex");
+		} else {
+			return Buffer.from(key);
+		}
+	}
+	return Buffer.alloc(0);
+};
+
 export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 	static ROOT_NODE_INDEX = BlockHandler.FIRST_APPLICATION_BLOCK;
 	static NODE_SIZE = 8 + Pointer.SIZE * 2;
 	static TABLE_SIZE = Pointer.SIZE * 256;
 
 	private blockHandler: BlockHandler;
-	private keyProvider: ValueProvider<A>;
 	private recordParser: RecordParser<A>;
-
-	private serializeKey(key: Value): Buffer {
-		if (typeof key === "boolean") {
-			return Buffer.of(key ? 1 : 0);
-		}
-		if (typeof key === "number") {
-			return Buffer.from(`${key}`);
-		}
-		if (typeof key === "string") {
-			if (/^[0-9a-f]{8,}$/i.test(key)) {
-				return Buffer.from(key, "hex");
-			} else {
-				return Buffer.from(key);
-			}
-		}
-		return Buffer.alloc(0);
-	}
+	private keyProvider?: ValueProvider<A>;
 
 	private getRecord(index: number): A {
 		let block = this.blockHandler.readBlock(index);
@@ -543,18 +544,21 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			}
 		}
 	} */
-	private *createIterable(nodeIndex: number, options?: Partial<{ rank: number, prefix: boolean }>): Iterable<{ index: number, rank: number }> {
+	private *createIterable(nodeIndex: number, options?: Partial<{ path: Array<Buffer>, rank: number, recursive: boolean }>): Iterable<{ keyBytes: Buffer, index: number, rank: number }> {
 		let rank = options?.rank ?? 0;
-		let prefix = options?.prefix ?? false;
+		let recursive = options?.recursive ?? false;
+		let path = options?.path?.slice() ?? new Array<Buffer>();
 		let node = new Node();
 		this.blockHandler.readBlock(nodeIndex, node.buffer);
+		path.push(node.prefixBytes);
 		if (node.residentIndex !== 0) {
 			yield {
+				keyBytes: Buffer.concat(path),
 				index: node.residentIndex,
 				rank: rank
 			};
 		}
-		if (prefix) {
+		if (recursive) {
 			if (node.pointersIndex !== 0) {
 				let pointer = new Pointer();
 				for (let i = 0; i < 256; i++) {
@@ -562,6 +566,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 					if (pointer.index !== 0) {
 						yield* this.createIterable(pointer.index, {
 							...options,
+							path: [...path, Buffer.of(i)],
 							rank: rank - 1
 						});
 					}
@@ -570,26 +575,25 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 	}
 
-	constructor(blockHandler: BlockHandler, keyProvider: ValueProvider<A>, recordParser: RecordParser<A>, options?: Partial<{ rootNodeIndex: number }>) {
+	constructor(blockHandler: BlockHandler, recordParser: RecordParser<A>, keyProvider?: ValueProvider<A>) {
 		super();
 		this.blockHandler = blockHandler;
-		this.keyProvider = keyProvider;
 		this.recordParser = recordParser;
+		this.keyProvider = keyProvider;
 		if (blockHandler.getCount() === Table.ROOT_NODE_INDEX) {
 			blockHandler.createBlock(Table.NODE_SIZE);
 		}
 	}
 
 	*[Symbol.iterator](): Iterator<A> {
-		yield* StreamIterable.of(this.createIterable(Table.ROOT_NODE_INDEX, { prefix: true }))
+		yield* StreamIterable.of(this.createIterable(Table.ROOT_NODE_INDEX, { recursive: true }))
 			.map((node) => this.getRecord(node.index))
 			.slice();
 	}
 
 	entries(): Iterable<[Value, A]> {
-		return StreamIterable.of(this.createIterable(Table.ROOT_NODE_INDEX, { prefix: true }))
-			.map((node) => this.getRecord(node.index))
-			.map<[Value, A]>((record) => [this.keyProvider(record), record])
+		return StreamIterable.of(this.createIterable(Table.ROOT_NODE_INDEX, { recursive: true }))
+			.map<[Value, A]>((node) => [node.keyBytes.toString("binary"), this.getRecord(node.index)])
 			.slice();
 	}
 /*
@@ -674,10 +678,10 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 	} */
 
-	insert(next: A, options?: Partial<{ index: number }>): void {
+	insert(next: A, options?: Partial<{ key: Value, index: number }>): void {
 		let serializedRecord = Buffer.from(JSON.stringify(next));
-		let key = this.keyProvider(next);
-		let keyBytes = this.serializeKey(key);
+		let key = this.keyProvider?.(next) ?? options?.key;
+		let keyBytes = serializeKey(key);
 		let keyByteIndex = 0;
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
 		let currentNode = new Node();
@@ -746,10 +750,15 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		let results = this.search(key, options);
 		for (let result of results) {
 			let record = result.lookup();
-			let recordKey = this.keyProvider(record);
-			if (recordKey === key) {
+			if (result.keyBytes.equals(serializeKey(key))) {
 				return record;
 			}
+			console.log("no match", {
+				key: key,
+				resultKey: result.keyBytes.toString("binary"),
+				keyBytes: serializeKey(key),
+				resultKeyBytes: result.keyBytes,
+			});
 			break;
 		}
 		throw `Expected a record for ${key}!`;
@@ -795,9 +804,9 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 	} */
 
-	remove(last: A, options?: Partial<{ index: number }>): void {
-		let key = this.keyProvider(last);
-		let keyBytes = this.serializeKey(key);
+	remove(last: A, options?: Partial<{ key: Value, index: number }>): void {
+		let key = this.keyProvider?.(last) ?? options?.key;
+		let keyBytes = serializeKey(key);
 		let keyByteIndex = 0;
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
 		let currentNode = new Node();
@@ -836,13 +845,13 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 	}
 
-	private areKeysMatching(recordKeyBytes: Buffer, keyBytes: Buffer, prefix: boolean): boolean {
+/* 	private areKeysMatching(recordKeyBytes: Buffer, keyBytes: Buffer, prefix: boolean): boolean {
 		if (prefix) {
 			return recordKeyBytes.slice(0, keyBytes.length).equals(keyBytes);
 		} else {
 			return recordKeyBytes.equals(keyBytes);
 		}
-	}
+	} */
 /*
 	search(key: Value, options?: Partial<{ index: number, prefix: boolean }>): StreamIterable<SearchResult<A>> {
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
@@ -880,7 +889,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 	} */
 
 	search(key: Value, options?: Partial<{ index: number, prefix: boolean }>): StreamIterable<SearchResult<A>> {
-		let keyBytes = this.serializeKey(key);
+		let keyBytes = serializeKey(key);
 		let keyByteIndex = 0;
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
 		let currentNode = new Node();
@@ -908,7 +917,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			currentNodeIndex = pointer.index;
 		}
 		let prefix = options?.prefix ?? false;
-		return StreamIterable.of(this.createIterable(currentNodeIndex, { prefix }))
+		return StreamIterable.of(this.createIterable(currentNodeIndex, { path: [keyBytes.slice(0, keyByteIndex)], recursive: prefix }))
 			.map((node) => ({
 				...node,
 				lookup: () => this.getRecord(node.index)
@@ -947,7 +956,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			for (let i = 0; i < 256; i++) {
 				this.blockHandler.readBlock(node.pointersIndex, pointer.buffer, i * Pointer.SIZE);
 				if (pointer.index !== 0) {
-					console.log("\t".repeat(depth), `0x${i.toString(16).padStart(2, "0")}/${String.fromCharCode(i)} =>`);
+					console.log("\t".repeat(depth), `${String.fromCharCode(i)} (0x${i.toString(16).padStart(2, "0")}) =>`);
 					this.debug(pointer.index, depth + 1);
 				}
 			}
@@ -990,8 +999,8 @@ export class Index<A, B> {
 	private getTokens: Tokenizer;
 
 	constructor(blockHandler: BlockHandler, parentTable: Table<A>, childTable: Table<B>, getIndexedValues: ValuesProvider<B>, getTokens: Tokenizer = Index.VALUE_TOKENIZER) {
-		let tokenTable = new Table<IndexEntry>(blockHandler, (record) => record.token, IndexEntry.as);
-		let keyTable = new Table<KeyEntry>(blockHandler, (record) => record.key, KeyEntry.as);
+		let tokenTable = new Table<IndexEntry>(blockHandler, IndexEntry.as, (record) => record.token);
+		let keyTable = new Table<KeyEntry>(blockHandler, KeyEntry.as, (record) => record.key);
 		function insert(key: Value, next: B) {
 			let values = getIndexedValues(next);
 			for (let value of values) {
@@ -1061,7 +1070,7 @@ export class Index<A, B> {
 				}
 			}
 		});
-		if (blockHandler.getCount() === Table.ROOT_NODE_INDEX) {
+		if (blockHandler.getCount() === Table.ROOT_NODE_INDEX + 1) {
 			for (let [key, record] of childTable.entries()) {
 				insert(key, record);
 			}
@@ -1094,7 +1103,7 @@ export class Index<A, B> {
 		for (let token of tokens) {
 			let results = this.tokenTable.search(token);
 			for (let result of results) {
-				let { index, token } = result.lookup();
+				let { token, index } = result.lookup();
 				let keyEntries = this.keyTable.search(undefined, { index, prefix: true });
 				for (let keyEntry of keyEntries) {
 					let { key } = keyEntry.lookup();
@@ -1107,6 +1116,7 @@ export class Index<A, B> {
 			.filter((result) => result[1] >= 0)
 			.sort(sorters.NumericSort.decreasing((result) => result[1]))
 			.map((entry) => ({
+				keyBytes: serializeKey(entry[0]),
 				rank: entry[1],
 				lookup: () => this.childTable.lookup(entry[0])
 			}));

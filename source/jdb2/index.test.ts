@@ -17,8 +17,8 @@ let Person = autoguard.guards.Object.of<Person>({
 
 let persons = new jdb.Table<Person>(
 	new jdb.BlockHandler([".", "private", "testtables", "persons"]),
-	(record) => record.person_id,
-	Person.as
+	Person.as,
+	(record) => record.person_id
 );
 let children = new jdb.Index<Person, Person>(
 	new jdb.BlockHandler([".", "private", "testtables", "children"]),
@@ -58,6 +58,9 @@ persons.insert({
 	parent_person_id: "2"
 });
 
+
+search.debug(0);
+
 console.log(persons.lookup("5"));
 console.log(children.lookup(undefined).collect());
 console.log(children.lookup("1").collect());
@@ -66,7 +69,6 @@ console.log(search.lookup("parent").collect());
 console.log(search.lookup("child").collect());
 console.log(search.lookup("a").collect());
 
-search.debug();
 
 /*
 array of uint16 cannot have type information for every entry, must be encoded in array array of bool?

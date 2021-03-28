@@ -58,7 +58,7 @@ if (!libfs.existsSync(INDICES_ROOT.join("/"))) {
 
 function loadTable<A>(name: string, guard: autoguard.serialization.MessageGuard<A>, getKey: jdb2.ValueProvider<A>): jdb2.Table<A> {
 	let blockHandler = new jdb2.BlockHandler([".", "private", "tables2", name]);
-	let table = new jdb2.Table<A>(blockHandler, getKey, (json) => guard.as(json));
+	let table = new jdb2.Table<A>(blockHandler, (json) => guard.as(json), getKey);
 	return table;
 }
 
