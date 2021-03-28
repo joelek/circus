@@ -57,15 +57,15 @@ export class Chunk {
 };
 
 export class Counter extends Chunk {
-	static SIZE = 8;
+	static SIZE = 4;
 
 	get count(): number {
-		return this.buffer.readUInt32BE(4);
+		return this.buffer.readUInt32BE(0);
 	}
 
 	set count(value: number) {
 		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
-		this.buffer.writeUInt32BE(value, 4);
+		this.buffer.writeUInt32BE(value, 0);
 	}
 
 	constructor(buffer?: Buffer) {
@@ -76,15 +76,15 @@ export class Counter extends Chunk {
 };
 
 export class Pointer extends Chunk {
-	static SIZE = 8;
+	static SIZE = 4;
 
 	get index(): number {
-		return this.buffer.readUInt32BE(4);
+		return this.buffer.readUInt32BE(0);
 	}
 
 	set index(value: number) {
 		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
-		this.buffer.writeUInt32BE(value, 4);
+		this.buffer.writeUInt32BE(value, 0);
 	}
 
 	constructor(buffer?: Buffer) {
@@ -98,12 +98,12 @@ export class Entry extends Chunk {
 	static SIZE = 16;
 
 	get offset(): number {
-		return this.buffer.readUInt32BE(4);
+		return Number(this.buffer.readBigUInt64BE(0));
 	}
 
 	set offset(value: number) {
-		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
-		this.buffer.writeUInt32BE(value, 4);
+		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFFFFFF);
+		this.buffer.writeBigUInt64BE(BigInt(value), 0);
 	}
 
 	get deleted(): boolean {
@@ -115,13 +115,15 @@ export class Entry extends Chunk {
 	}
 
 	get length(): number {
-		return this.buffer.readUInt32BE(12) + 1;
+		return Number(this.buffer.readBigUInt64BE(8) & BigInt(0xFFFFFFFFFFFF)) + 1;
 	}
 
 	set length(value: number) {
 		value = value - 1;
-		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
-		this.buffer.writeUInt32BE(value, 12);
+		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFFFFFF);
+		let deleted = this.deleted;
+		this.buffer.writeBigUInt64BE(BigInt(value), 8);
+		this.deleted = deleted;
 	}
 
 	constructor(buffer?: Buffer) {
@@ -434,13 +436,13 @@ export class Pointers extends Chunk {
 
 	get(index: number): number {
 		if (DEBUG) IntegerAssert.between(0, index, 255);
-		return this.buffer.readUInt32BE(index * Pointer.SIZE + 4);
+		return this.buffer.readUInt32BE(index * Pointer.SIZE);
 	}
 
 	set(index: number, value: number): void {
 		if (DEBUG) IntegerAssert.between(0, index, 255);
 		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
-		this.buffer.writeUInt32BE(value, index * Pointer.SIZE + 4);
+		this.buffer.writeUInt32BE(value, index * Pointer.SIZE);
 	}
 };
 
