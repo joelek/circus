@@ -561,6 +561,25 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			.slice();
 	}
 
+	debug(index: number = Table.ROOT_NODE_INDEX, depth: number = 0): void {
+		let node = new Node();
+		this.blockHandler.readBlock(index, node.buffer);
+		console.log("\t".repeat(depth), `${node.prefixBytes.toString("hex")}`);
+		if (node.residentIndex !== 0) {
+			console.log("\t".repeat(depth), JSON.stringify(this.getRecord(node.residentIndex)));
+		}
+		if (node.pointersIndex !== 0) {
+			let pointer = new Pointer();
+			for (let i = 0; i < 256; i++) {
+				this.blockHandler.readBlock(node.pointersIndex, pointer.buffer, i * Pointer.SIZE);
+				if (pointer.index !== 0) {
+					console.log("\t".repeat(depth), `${Buffer.of(i).toString("hex")} =>`);
+					this.debug(pointer.index, depth + 1);
+				}
+			}
+		}
+	}
+
 	entries(): Iterable<[Value, A]> {
 		return StreamIterable.of(this.createIterable(Table.ROOT_NODE_INDEX, { recursive: true }))
 			.map<[Value, A]>((node) => [node.keyBytes.toString("binary"), this.getRecord(node.index)])
@@ -716,25 +735,6 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 				...node,
 				lookup: () => this.getRecord(node.index)
 			}));
-	}
-
-	debug(index: number = Table.ROOT_NODE_INDEX, depth: number = 0): void {
-		let node = new Node();
-		this.blockHandler.readBlock(index, node.buffer);
-		console.log("\t".repeat(depth), `${node.prefixBytes.toString("hex")}`);
-		if (node.residentIndex !== 0) {
-			console.log("\t".repeat(depth), JSON.stringify(this.getRecord(node.residentIndex)));
-		}
-		if (node.pointersIndex !== 0) {
-			let pointer = new Pointer();
-			for (let i = 0; i < 256; i++) {
-				this.blockHandler.readBlock(node.pointersIndex, pointer.buffer, i * Pointer.SIZE);
-				if (pointer.index !== 0) {
-					console.log("\t".repeat(depth), `${Buffer.of(i).toString("hex")} =>`);
-					this.debug(pointer.index, depth + 1);
-				}
-			}
-		}
 	}
 
 	update(record: A): void {
