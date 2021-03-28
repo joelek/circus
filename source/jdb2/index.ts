@@ -514,34 +514,6 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		return record;
 	}
 
-/* 	private *createIterable(nodeIndex: number, options?: Partial<{ rank: number, prefix: boolean }>): Iterable<{ index: number, rank: number }> {
-		let rank = options?.rank ?? 0;
-		let prefix = options?.prefix ?? false;
-		let resident = new Pointer();
-		this.blockHandler.readBlock(nodeIndex, resident.buffer, 0 * Pointer.SIZE);
-		if (resident.index !== 0) {
-			yield {
-				index: resident.index,
-				rank: rank
-			};
-		}
-		if (prefix) {
-			let table = new Pointer();
-			this.blockHandler.readBlock(nodeIndex, table.buffer, 1 * Pointer.SIZE);
-			if (table.index !== 0) {
-				let node = new Pointer();
-				for (let i = 0; i < 256; i++) {
-					this.blockHandler.readBlock(table.index, node.buffer, i * Pointer.SIZE);
-					if (node.index !== 0) {
-						yield* this.createIterable(node.index, {
-							...options,
-							rank: rank - 1
-						});
-					}
-				}
-			}
-		}
-	} */
 	private *createIterable(nodeIndex: number, options?: Partial<{ path: Array<Buffer>, rank: number, recursive: boolean }>): Iterable<{ keyBytes: Buffer, index: number, rank: number }> {
 		let rank = options?.rank ?? 0;
 		let recursive = options?.recursive ?? false;
@@ -594,87 +566,6 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			.map<[Value, A]>((node) => [node.keyBytes.toString("binary"), this.getRecord(node.index)])
 			.slice();
 	}
-/*
-	insert(next: A, options?: Partial<{ index: number }>): void {
-		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
-		let resident = new Pointer();
-		let table = new Pointer();
-		let node = new Pointer();
-		let zero = new Pointer();
-		let serializedRecord = Buffer.from(JSON.stringify(next));
-		let key = this.keyProvider(next);
-		let keyBytes = this.serializeKey(key);
-		for (let [keyByteIndex, keyByte] of keyBytes.entries()) {
-			this.blockHandler.readBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
-			this.blockHandler.readBlock(currentNodeIndex, table.buffer, 1 * Pointer.SIZE);
-			if (table.index === 0) {
-				if (resident.index === 0) {
-					break;
-				} else {
-					let residentRecord = this.getRecord(resident.index);
-					let residentKey = this.keyProvider(residentRecord);
-					let residentKeyBytes = this.serializeKey(residentKey);
-					if (residentKey === key) {
-						break;
-					}
-					table.index = this.blockHandler.createBlock(Table.TABLE_SIZE);
-					this.blockHandler.writeBlock(currentNodeIndex, table.buffer, 1 * Pointer.SIZE);
-					let residentKeyByte = residentKeyBytes[keyByteIndex] as number | undefined;
-					if (is.present(residentKeyByte)) {
-						node.index = this.blockHandler.createBlock(Table.NODE_SIZE);
-						this.blockHandler.writeBlock(node.index, resident.buffer, 0 * Pointer.SIZE);
-						this.blockHandler.writeBlock(currentNodeIndex, zero.buffer, 0 * Pointer.SIZE);
-						this.blockHandler.writeBlock(table.index, node.buffer, residentKeyByte * Pointer.SIZE);
-					}
-				}
-			}
-			this.blockHandler.readBlock(table.index, node.buffer, keyByte * Pointer.SIZE);
-			if (node.index === 0) {
-				node.index = this.blockHandler.createBlock(Table.NODE_SIZE);
-				this.blockHandler.writeBlock(table.index, node.buffer, keyByte * Pointer.SIZE);
-			}
-			currentNodeIndex = node.index;
-		}
-		this.blockHandler.readBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
-		if (resident.index === 0) {
-			resident.index = this.blockHandler.createBlock(serializedRecord.length);
-			this.blockHandler.writeBlock(resident.index, serializedRecord);
-			this.blockHandler.writeBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
-			this.route("insert", {
-				key: key,
-				next: next
-			});
-		} else {
-			let last = this.getRecord(resident.index);
-			let lastKey = this.keyProvider(last);
-			let lastKeyBytes = this.serializeKey(lastKey);
-			if (lastKey === key) {
-				this.blockHandler.resizeBlock(resident.index, serializedRecord.length);
-				this.blockHandler.writeBlock(resident.index, serializedRecord);
-				this.route("update", {
-					key: key,
-					last: last,
-					next: next
-				});
-			} else {
-				let lastKeyByte = lastKeyBytes[keyBytes.length] as number | undefined;
-				if (is.present(lastKeyByte)) {
-					table.index = this.blockHandler.createBlock(Table.TABLE_SIZE);
-					this.blockHandler.writeBlock(currentNodeIndex, table.buffer, 1 * Pointer.SIZE);
-					node.index = this.blockHandler.createBlock(Table.NODE_SIZE);
-					this.blockHandler.writeBlock(table.index, node.buffer, lastKeyByte * Pointer.SIZE);
-					this.blockHandler.writeBlock(node.index, resident.buffer, 0 * Pointer.SIZE);
-					resident.index = this.blockHandler.createBlock(serializedRecord.length);
-					this.blockHandler.writeBlock(resident.index, serializedRecord);
-					this.blockHandler.writeBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
-					this.route("insert", {
-						key: key,
-						next: next
-					});
-				}
-			}
-		}
-	} */
 
 	insert(record: A, options?: Partial<{ key: Value, index: number }>): void {
 		let serializedRecord = Buffer.from(JSON.stringify(record));
@@ -750,46 +641,6 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		throw `Expected a record for ${key}!`;
 	}
 
-/* 	remove(last: A, options?: Partial<{ index: number }>): void {
-		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
-		let resident = new Pointer();
-		let table = new Pointer();
-		let node = new Pointer();
-		let zero = new Pointer();
-		let key = this.keyProvider(last);
-		let keyBytes = this.serializeKey(key);
-		for (let [keyByteIndex, keyByte] of keyBytes.entries()) {
-			this.blockHandler.readBlock(currentNodeIndex, table.buffer, 1 * Pointer.SIZE);
-			if (table.index === 0) {
-				this.blockHandler.readBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
-				if (resident.index === 0) {
-					return;
-				} else {
-					break;
-				}
-			}
-			this.blockHandler.readBlock(table.index, node.buffer, keyByte * Pointer.SIZE);
-			if (node.index === 0) {
-				return;
-			}
-			currentNodeIndex = node.index;
-		}
-		this.blockHandler.readBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
-		if (resident.index !== 0) {
-			let record = this.getRecord(resident.index);
-			let recordKey = this.keyProvider(record);
-			if (recordKey === key) {
-				this.blockHandler.deleteBlock(resident.index);
-				resident.index = 0;
-				this.blockHandler.writeBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
-				this.route("remove", {
-					key: key,
-					last: last
-				});
-			}
-		}
-	} */
-
 	remove(record: A, options?: Partial<{ key: Value, index: number }>): void {
 		let key = this.keyProvider?.(record) ?? options?.key;
 		let keyBytes = serializeKey(key);
@@ -831,49 +682,6 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 	}
 
-/* 	private areKeysMatching(recordKeyBytes: Buffer, keyBytes: Buffer, prefix: boolean): boolean {
-		if (prefix) {
-			return recordKeyBytes.slice(0, keyBytes.length).equals(keyBytes);
-		} else {
-			return recordKeyBytes.equals(keyBytes);
-		}
-	} */
-/*
-	search(key: Value, options?: Partial<{ index: number, prefix: boolean }>): StreamIterable<SearchResult<A>> {
-		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
-		let prefix = options?.prefix ?? false;
-		let resident = new Pointer();
-		let table = new Pointer();
-		let node = new Pointer();
-		let zero = new Pointer();
-		let keyBytes = this.serializeKey(key);
-		for (let [keyByteIndex, keyByte] of keyBytes.entries()) {
-			this.blockHandler.readBlock(currentNodeIndex, table.buffer, 1 * Pointer.SIZE);
-			if (table.index === 0) {
-				break;
-			}
-			this.blockHandler.readBlock(table.index, node.buffer, keyByte * Pointer.SIZE);
-			if (node.index === 0) {
-				return StreamIterable.of([]);
-			}
-			currentNodeIndex = node.index;
-		}
-		this.blockHandler.readBlock(currentNodeIndex, resident.buffer, 0 * Pointer.SIZE);
-		if (resident.index !== 0) {
-			let record = this.getRecord(resident.index);
-			let recordKey = this.keyProvider(record);
-			let recordKeyBytes = this.serializeKey(recordKey);
-			if (!this.areKeysMatching(recordKeyBytes, keyBytes, prefix)) {
-				return StreamIterable.of([]);
-			}
-		}
-		return StreamIterable.of(this.createIterable(currentNodeIndex, { prefix }))
-			.map((node) => ({
-				...node,
-				lookup: () => this.getRecord(node.index)
-			}));
-	} */
-
 	search(key: Value, options?: Partial<{ index: number, prefix: boolean }>): StreamIterable<SearchResult<A>> {
 		let keyBytes = serializeKey(key);
 		let keyByteIndex = 0;
@@ -909,26 +717,6 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 				lookup: () => this.getRecord(node.index)
 			}));
 	}
-
-/* 	debug(index: number = Table.ROOT_NODE_INDEX, depth: number = 0): void {
-		let resident = new Pointer();
-		this.blockHandler.readBlock(index, resident.buffer, 0 * Pointer.SIZE);
-		if (resident.index !== 0) {
-			console.log("\t".repeat(depth), this.getRecord(resident.index));
-		}
-		let table = new Pointer();
-		this.blockHandler.readBlock(index, table.buffer, 1 * Pointer.SIZE);
-		if (table.index !== 0) {
-			let node = new Pointer();
-			for (let i = 0; i < 256; i++) {
-				this.blockHandler.readBlock(table.index, node.buffer, i * Pointer.SIZE);
-				if (node.index !== 0) {
-					console.log("\t".repeat(depth), `${i}:`);
-					this.debug(node.index, depth + 1);
-				}
-			}
-		}
-	} */
 
 	debug(index: number = Table.ROOT_NODE_INDEX, depth: number = 0): void {
 		let node = new Node();
