@@ -161,11 +161,11 @@ export class Cache<A extends Value, B> {
 		this.weight = 0;
 	}
 
-	insert(key: A, next: B | undefined): void {
+	insert(key: A, value: B | undefined): void {
 		this.remove(key);
-		if (is.present(next)) {
-			this.weight += this.weightProvider(next);
-			this.map.set(key, next);
+		if (is.present(value)) {
+			this.weight += this.weightProvider(value);
+			this.map.set(key, value);
 			this.purge();
 		}
 	}
@@ -175,12 +175,12 @@ export class Cache<A extends Value, B> {
 	}
 
 	remove(key: A): B | undefined {
-		let last = this.map.get(key);
-		if (is.present(last)) {
-			this.weight -= this.weightProvider(last);
+		let value = this.map.get(key);
+		if (is.present(value)) {
+			this.weight -= this.weightProvider(value);
 			this.map.delete(key);
 		}
-		return last;
+		return value;
 	}
 };
 
@@ -460,16 +460,11 @@ export type SearchResult<A> = {
 export type TableEventMap<A> = {
 	"insert": {
 		key: Value,
-		next: A
+		record: A
 	},
 	"remove": {
 		key: Value,
-		last: A
-	},
-	"update": {
-		key: Value,
-		last: A,
-		next: A
+		record: A
 	}
 };
 
@@ -681,9 +676,9 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 	} */
 
-	insert(next: A, options?: Partial<{ key: Value, index: number }>): void {
-		let serializedRecord = Buffer.from(JSON.stringify(next));
-		let key = this.keyProvider?.(next) ?? options?.key;
+	insert(record: A, options?: Partial<{ key: Value, index: number }>): void {
+		let serializedRecord = Buffer.from(JSON.stringify(record));
+		let key = this.keyProvider?.(record) ?? options?.key;
 		let keyBytes = serializeKey(key);
 		let keyByteIndex = 0;
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
@@ -733,20 +728,14 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			this.blockHandler.writeBlock(pointer.index, serializedRecord);
 			currentNode.residentIndex = pointer.index;
 			this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer);
-			this.route("insert", {
-				key: key,
-				next: next
-			});
 		} else {
-			let last = this.getRecord(currentNode.residentIndex);
 			this.blockHandler.resizeBlock(currentNode.residentIndex, serializedRecord.length);
 			this.blockHandler.writeBlock(currentNode.residentIndex, serializedRecord);
-			this.route("update", {
-				key: key,
-				last: last,
-				next: next
-			});
 		}
+		this.route("insert", {
+			key: key,
+			record: record
+		});
 	}
 
 	lookup(key: Value, options?: Partial<{ index: number }>): A {
@@ -801,8 +790,8 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 	} */
 
-	remove(last: A, options?: Partial<{ key: Value, index: number }>): void {
-		let key = this.keyProvider?.(last) ?? options?.key;
+	remove(record: A, options?: Partial<{ key: Value, index: number }>): void {
+		let key = this.keyProvider?.(record) ?? options?.key;
 		let keyBytes = serializeKey(key);
 		let keyByteIndex = 0;
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
@@ -837,7 +826,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer);
 			this.route("remove", {
 				key: key,
-				last: last
+				record: record
 			});
 		}
 	}
@@ -960,8 +949,8 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 	}
 
-	update(next: A): void {
-		this.insert(next);
+	update(record: A): void {
+		this.insert(record);
 	}
 };
 
@@ -998,8 +987,8 @@ export class Index<A, B> {
 	constructor(blockHandler: BlockHandler, parentTable: Table<A>, childTable: Table<B>, getIndexedValues: ValuesProvider<B>, getTokens: Tokenizer = Index.VALUE_TOKENIZER) {
 		let tokenTable = new Table<number>(blockHandler, autoguard.guards.Number.as);
 		let keyTable = new Table<{}>(blockHandler, autoguard.guards.Object.of({}).as);
-		function insert(key: Value, next: B) {
-			let values = getIndexedValues(next);
+		function insert(key: Value, record: B) {
+			let values = getIndexedValues(record);
 			for (let value of values) {
 				let tokens = getTokens(value);
 				for (let token of tokens) {
@@ -1020,8 +1009,8 @@ export class Index<A, B> {
 				}
 			}
 		}
-		function remove(key: Value, last: B) {
-			let values = getIndexedValues(last);
+		function remove(key: Value, record: B) {
+			let values = getIndexedValues(record);
 			for (let value of values) {
 				let tokens = getTokens(value);
 				for (let token of tokens) {
@@ -1038,18 +1027,11 @@ export class Index<A, B> {
 				}
 			}
 		}
-		function update(key: Value, last: B, next: B) {
-			remove(key, last);
-			insert(key, next);
-		}
 		childTable.addObserver("insert", (event) => {
-			insert(event.key, event.next)
+			insert(event.key, event.record)
 		});
 		childTable.addObserver("remove", (event) => {
-			remove(event.key, event.last);
-		});
-		childTable.addObserver("update", (event) => {
-			update(event.key, event.last, event.next);
+			remove(event.key, event.record);
 		});
 		parentTable.addObserver("remove", (event) => {
 			let token = event.key;
