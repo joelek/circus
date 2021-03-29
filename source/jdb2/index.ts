@@ -1,3 +1,116 @@
+
+
+// store nodes in table
+// restore 64 bit ptrs
+// compress 15 nibbles into at most 16 bytes,
+
+
+
+// use sorted array of indices for index structure
+// support prefix searches
+// use same block handler for all tables
+
+
+
+
+/*
+[8bit branch, 32bit pointers]
+indices:
+tables:
+root case: 256 * 4 för tabellen + 256 * 16 för noderna + 256 * 16 för entries = 9216 B med 256 block
+twig case: 256 * 4 för tabellen +  64 * 16 för noderna +  64 * 16 för entries = 3072 B med 64 block
+leaf case: 256 * 4 för tabellen +   1 * 16 för noderna +   1 * 16 för entries = 1056 B med 1 block
+
+[8bit branch, 32bit pointers, inband]
+indices:
+tables:
+root case: 256 * 16 för tabellen + 0 * 16 för noderna + 1 * 16 för entries = 4112 B med 1 block
+twig case: 256 * 16 för tabellen + 0 * 16 för noderna + 1 * 16 för entries = 4112 B med 1 block
+leaf case: 256 * 16 för tabellen + 0 * 16 för noderna + 1 * 16 för entries = 4112 B med 1 block
+
+[8bit branch, 64bit pointers]
+indices:
+tables:
+root case: 256 * 8 för tabellen + 256 * 32 för noderna + 256 * 16 för entries = 14336 B med 256 block
+twig case: 256 * 8 för tabellen +  64 * 32 för noderna +  64 * 16 för entries = 5120 B med 64 block
+leaf case: 256 * 8 för tabellen +   1 * 32 för noderna +   1 * 16 för entries = 2096 B med 1 block
+
+[8bit branch, 64bit pointers, inband]
+indices:
+tables:
+root case: 256 * 32 för tabellen + 0 * 32 för noderna + 1 * 16 för entries = 8208 B med 1 block
+twig case: 256 * 32 för tabellen + 0 * 32 för noderna + 1 * 16 för entries = 8208 B med 1 block
+leaf case: 256 * 32 för tabellen + 0 * 32 för noderna + 1 * 16 för entries = 8208 B med 1 block
+
+[4bit branch, 32bit pointers]
+latency shows: 800ms
+files table: 7602 kB + 1464 kB
+indices: 44 554 378
+tables: 29 256 160
+root case: 16 * 4 för tabellen + 16 * 16 för noderna + 16 * 16 för entries = 576 B med 16 block
+twig case: 16 * 4 för tabellen +  4 * 16 för noderna +  4 * 16 för entries = 192 B med 4 block
+leaf case: 16 * 4 för tabellen +  1 * 16 för noderna +  1 * 16 för entries = 96 B med 1 block
+
+[4bit branch, 32bit pointers, inband]
+latency shows: 690ms
+files table: 10698 kB + 1088 kB
+indices: 76 537 442
+tables: 41 652 352
+root case: 16 * 16 för tabellen + 0 * 16 för noderna + 1 * 16 för entries = 272 B med 1 block
+twig case: 16 * 16 för tabellen + 0 * 16 för noderna + 1 * 16 för entries = 272 B med 1 block
+leaf case: 16 * 16 för tabellen + 0 * 16 för noderna + 1 * 16 för entries = 272 B med 1 block
+
+[4bit branch, 64bit pointers]
+indices:
+tables:
+root case: 16 * 8 för tabellen + 16 * 32 för noderna + 16 * 16 för entries = 896 B med 16 block
+twig case: 16 * 8 för tabellen +  4 * 32 för noderna +  4 * 16 för entries = 320 B med 4 block
+leaf case: 16 * 8 för tabellen +  1 * 32 för noderna +  1 * 16 för entries = 176 B med 1 block
+
+[4bit branch, 64bit pointers, inband]
+indices:
+tables:
+root case: 16 * 32 för tabellen + 0 * 32 för noderna + 1 * 16 för entries = 528 B med 1 block
+twig case: 16 * 32 för tabellen + 0 * 32 för noderna + 1 * 16 för entries = 528 B med 1 block
+leaf case: 16 * 32 för tabellen + 0 * 32 för noderna + 1 * 16 för entries = 528 B med 1 block
+
+
+
+
+
+
+[1 nibble prefix length][15 nibble prefix]
+[8byte resident pointer]
+[flags]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+[8 byte subtree pointer]
+
+
+
+
+
+
+
+
+
+
+
+*/
+
 import * as libfs from "fs";
 import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
@@ -382,67 +495,54 @@ export class BlockHandler {
 };
 
 export class Node extends Chunk {
-	static MAX_PREFIX_LENGTH = 7;
-	static SIZE = 16;
+	static PREFIX_SIZE = 8;
+	static MAX_PREFIX_LENGTH = Node.PREFIX_SIZE - 1;
+	static COMPACT_SIZE = Node.PREFIX_SIZE + 4;
+	static SIZE = Node.COMPACT_SIZE + 16 * 4;
 
-	get prefixBytes(): Buffer {
-		let length = this.buffer.readUInt8(0);
-		let buffer = Buffer.alloc(length);
-		buffer.set(this.buffer.slice(1, 1 + length), 0);
-		return buffer;
+	prefix(value?: Buffer): Buffer {
+		if (is.present(value)) {
+			let length = value.length;
+			if (DEBUG) IntegerAssert.between(0, length, Node.PREFIX_SIZE - 1);
+			this.buffer.writeUInt8(length, 0);
+			this.buffer.set(value, 1);
+			this.buffer.fill(0, 1 + length, Node.PREFIX_SIZE);
+			return this.buffer;
+		} else {
+			let length = this.buffer.readUInt8(0);
+			let buffer = Buffer.alloc(length);
+			buffer.set(this.buffer.slice(1, 1 + length), 0);
+			return buffer;
+		}
 	}
 
-	set prefixBytes(value: Buffer) {
-		let length = value.length;
-		if (DEBUG) IntegerAssert.between(0, length, Node.MAX_PREFIX_LENGTH);
-		this.buffer.writeUInt8(length, 0);
-		this.buffer.set(value, 1);
-		this.buffer.fill(0, 1 + length, 1 + Node.MAX_PREFIX_LENGTH);
+	resident(value?: number): number {
+		let offset = Node.PREFIX_SIZE;
+		if (is.present(value)) {
+			if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
+			this.buffer.writeUInt32BE(value, offset);
+			return value;
+		} else {
+			return this.buffer.readUInt32BE(offset);
+		}
 	}
 
-	get pointersIndex(): number {
-		return this.buffer.readUInt32BE(8);
-	}
-
-	set pointersIndex(value: number) {
-		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
-		this.buffer.writeUInt32BE(value, 8);
-	}
-
-	get residentIndex(): number {
-		return this.buffer.readUInt32BE(12);
-	}
-
-	set residentIndex(value: number) {
-		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
-		this.buffer.writeUInt32BE(value, 12);
+	subtree(index: number, value?: number): number {
+		if (DEBUG) IntegerAssert.between(0, index, 16 - 1);
+		let offset = Node.COMPACT_SIZE + index * 4;
+		if (is.present(value)) {
+			if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
+			this.buffer.writeUInt32BE(value, offset);
+			return value;
+		} else {
+			return this.buffer.readUInt32BE(offset);
+		}
 	}
 
 	constructor(buffer?: Buffer) {
 		buffer = buffer ?? Buffer.alloc(Node.SIZE);
 		if (DEBUG) IntegerAssert.exactly(buffer.length, Node.SIZE);
 		super(buffer);
-	}
-};
-
-export class Pointers extends Chunk {
-	static SIZE = 16 * Pointer.SIZE;
-
-	constructor(buffer?: Buffer) {
-		buffer = buffer ?? Buffer.alloc(Pointers.SIZE);
-		if (DEBUG) IntegerAssert.exactly(buffer.length, Pointers.SIZE);
-		super(buffer);
-	}
-
-	get(index: number): number {
-		if (DEBUG) IntegerAssert.between(0, index, 16 - 1);
-		return this.buffer.readUInt32BE(index * Pointer.SIZE);
-	}
-
-	set(index: number, value: number): void {
-		if (DEBUG) IntegerAssert.between(0, index, 16 - 1);
-		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
-		this.buffer.writeUInt32BE(value, index * Pointer.SIZE);
 	}
 };
 
@@ -534,26 +634,22 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		let path = options?.path?.slice() ?? new Array<Buffer>();
 		let node = new Node();
 		this.blockHandler.readBlock(nodeIndex, node.buffer);
-		path.push(node.prefixBytes);
-		if (node.residentIndex !== 0) {
+		path.push(node.prefix());
+		if (node.resident() !== 0) {
 			yield {
 				keyBytes: Buffer.concat(path),
-				index: node.residentIndex,
+				index: node.resident(),
 				rank: rank
 			};
 		}
 		if (recursive) {
-			if (node.pointersIndex !== 0) {
-				let pointer = new Pointer();
-				for (let i = 0; i < 16; i++) {
-					this.blockHandler.readBlock(node.pointersIndex, pointer.buffer, i * Pointer.SIZE);
-					if (pointer.index !== 0) {
-						yield* this.createIterable(pointer.index, {
-							...options,
-							path: [...path, Buffer.of(i)],
-							rank: rank - 1
-						});
-					}
+			for (let i = 0; i < 16; i++) {
+				if (node.subtree(i) !== 0) {
+					yield* this.createIterable(node.subtree(i), {
+						...options,
+						path: [...path, Buffer.of(i)],
+						rank: rank - 1
+					});
 				}
 			}
 		}
@@ -578,18 +674,14 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 	debug(index: number = Table.ROOT_NODE_INDEX, depth: number = 0): void {
 		let node = new Node();
 		this.blockHandler.readBlock(index, node.buffer);
-		console.log("\t".repeat(depth), `${node.prefixBytes.toString("hex")}`);
-		if (node.residentIndex !== 0) {
-			console.log("\t".repeat(depth), JSON.stringify(this.getRecord(node.residentIndex)));
+		console.log("\t".repeat(depth), `${node.prefix().toString("hex")}`);
+		if (node.resident() !== 0) {
+			console.log("\t".repeat(depth), JSON.stringify(this.getRecord(node.resident())));
 		}
-		if (node.pointersIndex !== 0) {
-			let pointer = new Pointer();
-			for (let i = 0; i < 16; i++) {
-				this.blockHandler.readBlock(node.pointersIndex, pointer.buffer, i * Pointer.SIZE);
-				if (pointer.index !== 0) {
-					console.log("\t".repeat(depth), `${Buffer.of(i).toString("hex")} =>`);
-					this.debug(pointer.index, depth + 1);
-				}
+		for (let i = 0; i < 16; i++) {
+			if (node.subtree(i) !== 0) {
+				console.log("\t".repeat(depth), `${Buffer.of(i).toString("hex")} =>`);
+				this.debug(node.subtree(i), depth + 1);
 			}
 		}
 	}
@@ -607,54 +699,47 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		let keyByteIndex = 0;
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
 		let currentNode = new Node();
+		let newNodeIndex = 0;
 		let newNode = new Node();
-		let pointer = new Pointer();
 		while (true) {
 			this.blockHandler.readBlock(currentNodeIndex, currentNode.buffer);
-			let prefixBytes = currentNode.prefixBytes;
+			let prefixBytes = currentNode.prefix();
 			let commonPrefixLength = computeCommonPrefixLength(prefixBytes, keyBytes, keyByteIndex);
 			if (commonPrefixLength < prefixBytes.length) {
-				pointer.index = this.blockHandler.createBlock(Node.SIZE);
-				newNode.prefixBytes = prefixBytes.slice(commonPrefixLength + 1);
-				newNode.pointersIndex = currentNode.pointersIndex;
-				newNode.residentIndex = currentNode.residentIndex;
-				this.blockHandler.writeBlock(pointer.index, newNode.buffer);
-				currentNode.prefixBytes = prefixBytes.slice(0, commonPrefixLength);
-				currentNode.pointersIndex = this.blockHandler.createBlock(Pointers.SIZE);
-				currentNode.residentIndex = 0;
+				newNodeIndex = this.blockHandler.createBlock(Node.SIZE);
+				newNode.buffer.set(currentNode.buffer, 0);
+				newNode.prefix(prefixBytes.slice(commonPrefixLength + 1));
+				this.blockHandler.writeBlock(newNodeIndex, newNode.buffer);
+				currentNode.buffer.fill(0);
+				currentNode.prefix(prefixBytes.slice(0, commonPrefixLength));
+				currentNode.subtree(prefixBytes[commonPrefixLength], newNodeIndex);
 				this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer);
-				this.blockHandler.writeBlock(currentNode.pointersIndex, pointer.buffer, prefixBytes[commonPrefixLength] * Pointer.SIZE);
 			}
 			let keyBytesLeft = keyBytes.length - keyByteIndex;
 			if (keyBytesLeft === commonPrefixLength) {
 				break;
 			}
 			keyByteIndex += commonPrefixLength;
-			if (currentNode.pointersIndex === 0) {
-				currentNode.pointersIndex = this.blockHandler.createBlock(Pointers.SIZE);
+			if (currentNode.subtree(keyBytes[keyByteIndex]) === 0) {
+				newNodeIndex = this.blockHandler.createBlock(Node.SIZE);
+				newNode.buffer.fill(0);
+				newNode.prefix(keyBytes.slice(keyByteIndex + 1, keyByteIndex + 1 + Node.MAX_PREFIX_LENGTH));
+				this.blockHandler.writeBlock(newNodeIndex, newNode.buffer);
+				currentNode.subtree(keyBytes[keyByteIndex], newNodeIndex);
 				this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer);
 			}
-			this.blockHandler.readBlock(currentNode.pointersIndex, pointer.buffer, keyBytes[keyByteIndex] * Pointer.SIZE);
-			if (pointer.index === 0) {
-				pointer.index = this.blockHandler.createBlock(Node.SIZE);
-				newNode.prefixBytes = keyBytes.slice(keyByteIndex + 1, keyByteIndex + 1 + Node.MAX_PREFIX_LENGTH);
-				newNode.pointersIndex = 0;
-				newNode.residentIndex = 0;
-				this.blockHandler.writeBlock(pointer.index, newNode.buffer);
-				this.blockHandler.writeBlock(currentNode.pointersIndex, pointer.buffer, keyBytes[keyByteIndex] * Pointer.SIZE);
-			}
+			currentNodeIndex = currentNode.subtree(keyBytes[keyByteIndex]);
 			keyByteIndex += 1;
-			currentNodeIndex = pointer.index;
 		}
 		this.blockHandler.readBlock(currentNodeIndex, currentNode.buffer);
-		if (currentNode.residentIndex === 0) {
-			pointer.index = this.blockHandler.createBlock(serializedRecord.length);
-			this.blockHandler.writeBlock(pointer.index, serializedRecord);
-			currentNode.residentIndex = pointer.index;
+		if (currentNode.resident() === 0) {
+			let recordIndex = this.blockHandler.createBlock(serializedRecord.length);
+			this.blockHandler.writeBlock(recordIndex, serializedRecord);
+			currentNode.resident(recordIndex);
 			this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer);
 		} else {
-			this.blockHandler.resizeBlock(currentNode.residentIndex, serializedRecord.length);
-			this.blockHandler.writeBlock(currentNode.residentIndex, serializedRecord);
+			this.blockHandler.resizeBlock(currentNode.resident(), serializedRecord.length);
+			this.blockHandler.writeBlock(currentNode.resident(), serializedRecord);
 		}
 		this.route("insert", {
 			key: key,
@@ -680,10 +765,9 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		let keyByteIndex = 0;
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
 		let currentNode = new Node();
-		let pointer = new Pointer();
 		while (true) {
 			this.blockHandler.readBlock(currentNodeIndex, currentNode.buffer);
-			let prefixBytes = currentNode.prefixBytes;
+			let prefixBytes = currentNode.prefix();
 			let commonPrefixLength = computeCommonPrefixLength(prefixBytes, keyBytes, keyByteIndex);
 			if (commonPrefixLength < prefixBytes.length) {
 				return;
@@ -693,20 +777,16 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 				break;
 			}
 			keyByteIndex += commonPrefixLength;
-			if (currentNode.pointersIndex === 0) {
+			if (currentNode.subtree(keyBytes[keyByteIndex]) === 0) {
 				return;
 			}
-			this.blockHandler.readBlock(currentNode.pointersIndex, pointer.buffer, keyBytes[keyByteIndex] * Pointer.SIZE);
-			if (pointer.index === 0) {
-				return;
-			}
+			currentNodeIndex = currentNode.subtree(keyBytes[keyByteIndex]);
 			keyByteIndex += 1;
-			currentNodeIndex = pointer.index;
 		}
 		this.blockHandler.readBlock(currentNodeIndex, currentNode.buffer);
-		if (currentNode.residentIndex !== 0) {
-			this.blockHandler.deleteBlock(currentNode.residentIndex);
-			currentNode.residentIndex = 0;
+		if (currentNode.resident() !== 0) {
+			this.blockHandler.deleteBlock(currentNode.resident());
+			currentNode.resident(0);
 			this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer);
 			this.route("remove", {
 				key: key,
@@ -720,10 +800,9 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		let keyByteIndex = 0;
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
 		let currentNode = new Node();
-		let pointer = new Pointer();
 		while (true) {
 			this.blockHandler.readBlock(currentNodeIndex, currentNode.buffer);
-			let prefixBytes = currentNode.prefixBytes;
+			let prefixBytes = currentNode.prefix();
 			let commonPrefixLength = computeCommonPrefixLength(prefixBytes, keyBytes, keyByteIndex);
 			if (commonPrefixLength < prefixBytes.length) {
 				return StreamIterable.of([]);
@@ -733,15 +812,11 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 				break;
 			}
 			keyByteIndex += commonPrefixLength;
-			if (currentNode.pointersIndex === 0) {
+			if (currentNode.subtree(keyBytes[keyByteIndex]) === 0) {
 				return StreamIterable.of([]);
 			}
-			this.blockHandler.readBlock(currentNode.pointersIndex, pointer.buffer, keyBytes[keyByteIndex] * Pointer.SIZE);
-			if (pointer.index === 0) {
-				return StreamIterable.of([]);
-			}
+			currentNodeIndex = currentNode.subtree(keyBytes[keyByteIndex]);
 			keyByteIndex += 1;
-			currentNodeIndex = pointer.index;
 		}
 		let prefix = options?.prefix ?? false;
 		return StreamIterable.of(this.createIterable(currentNodeIndex, { path: [keyBytes.slice(0, keyByteIndex)], recursive: prefix }))
