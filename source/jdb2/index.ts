@@ -252,7 +252,7 @@ export class BlockHandler {
 	constructor(path: Array<string>) {
 		this.bin = open([...path, "bin"]);
 		this.toc = open([...path, "toc"]);
-		this.blockCache = new Cache<number, Buffer>((value) => value.length, 256 * 1024 * 1024);
+		this.blockCache = new Cache<number, Buffer>((value) => value.length, 512 * 1024 * 1024);
 		this.entryCache = new Cache<number, Entry>((value) => 1, 1 * 1000 * 1000);
 		if (this.getCount() === 0) {
 			for (let i = 0; i < BlockHandler.FIRST_APPLICATION_BLOCK; i++) {
