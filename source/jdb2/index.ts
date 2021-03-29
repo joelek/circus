@@ -426,7 +426,7 @@ export class Node extends Chunk {
 };
 
 export class Pointers extends Chunk {
-	static SIZE = 256 * Pointer.SIZE;
+	static SIZE = 16 * Pointer.SIZE;
 
 	constructor(buffer?: Buffer) {
 		buffer = buffer ?? Buffer.alloc(Pointers.SIZE);
@@ -435,12 +435,12 @@ export class Pointers extends Chunk {
 	}
 
 	get(index: number): number {
-		if (DEBUG) IntegerAssert.between(0, index, 255);
+		if (DEBUG) IntegerAssert.between(0, index, 16 - 1);
 		return this.buffer.readUInt32BE(index * Pointer.SIZE);
 	}
 
 	set(index: number, value: number): void {
-		if (DEBUG) IntegerAssert.between(0, index, 255);
+		if (DEBUG) IntegerAssert.between(0, index, 16 - 1);
 		if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
 		this.buffer.writeUInt32BE(value, index * Pointer.SIZE);
 	}
@@ -481,30 +481,42 @@ export function computeCommonPrefixLength(prefixBytes: Buffer, keyBytes: Buffer,
 };
 
 export function serializeKey(key: Value): Buffer {
-	if (typeof key === "boolean") {
-		return Buffer.of(key ? 1 : 0);
-	}
-	if (typeof key === "number") {
-		return Buffer.from(`${key}`);
-	}
-	if (typeof key === "string") {
-		if (/^[0-9a-f]{8,}$/i.test(key)) {
-			return Buffer.from(key, "hex");
-		} else {
-			return Buffer.from(key, "binary");
+	let bytes = (() => {
+		if (typeof key === "boolean") {
+			return Buffer.of(key ? 1 : 0);
 		}
+		if (typeof key === "number") {
+			return Buffer.from(`${key}`);
+		}
+		if (typeof key === "string") {
+			if (/^[0-9a-f]{8,}$/i.test(key)) {
+				return Buffer.from(key, "hex");
+			} else {
+				return Buffer.from(key, "binary");
+			}
+		}
+		return Buffer.alloc(0);
+	})();
+	let nibbles = new Array<number>();
+	for (let byte of bytes) {
+		nibbles.push((byte >> 4) & 0x0F, (byte >> 0) & 0x0F);
 	}
-	return Buffer.alloc(0);
+	return Buffer.from(nibbles);
 };
 
-export function deserializeKey(buffer: Buffer): Value {
-	return buffer.toString("binary");
+export function deserializeKey(nibbles: Buffer): Value {
+	if (DEBUG) IntegerAssert.exactly(nibbles.length % 2, 0);
+	let bytes = new Array<number>();
+	for (let i = 0; i < nibbles.length; i += 2) {
+		bytes.push((nibbles[i + 0] << 4) | (nibbles[i + 1] << 0));
+	}
+	return Buffer.from(bytes).toString("binary");
 };
 
 export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 	static ROOT_NODE_INDEX = BlockHandler.FIRST_APPLICATION_BLOCK;
 	static NODE_SIZE = 8 + Pointer.SIZE * 2;
-	static TABLE_SIZE = Pointer.SIZE * 256;
+	static TABLE_SIZE = Pointer.SIZE * 16;
 
 	private blockHandler: BlockHandler;
 	private recordParser: RecordParser<A>;
@@ -535,7 +547,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		if (recursive) {
 			if (node.pointersIndex !== 0) {
 				let pointer = new Pointer();
-				for (let i = 0; i < 256; i++) {
+				for (let i = 0; i < 16; i++) {
 					this.blockHandler.readBlock(node.pointersIndex, pointer.buffer, i * Pointer.SIZE);
 					if (pointer.index !== 0) {
 						yield* this.createIterable(pointer.index, {
@@ -574,7 +586,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 		if (node.pointersIndex !== 0) {
 			let pointer = new Pointer();
-			for (let i = 0; i < 256; i++) {
+			for (let i = 0; i < 16; i++) {
 				this.blockHandler.readBlock(node.pointersIndex, pointer.buffer, i * Pointer.SIZE);
 				if (pointer.index !== 0) {
 					console.log("\t".repeat(depth), `${Buffer.of(i).toString("hex")} =>`);
