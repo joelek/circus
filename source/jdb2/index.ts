@@ -497,6 +497,10 @@ export function serializeKey(key: Value): Buffer {
 	return Buffer.alloc(0);
 };
 
+export function deserializeKey(buffer: Buffer): Value {
+	return buffer.toString("binary");
+};
+
 export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 	static ROOT_NODE_INDEX = BlockHandler.FIRST_APPLICATION_BLOCK;
 	static NODE_SIZE = 8 + Pointer.SIZE * 2;
@@ -582,7 +586,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 
 	entries(): Iterable<[Value, A]> {
 		return StreamIterable.of(this.createIterable(Table.ROOT_NODE_INDEX, { recursive: true }))
-			.map<[Value, A]>((node) => [node.keyBytes.toString("binary"), this.getRecord(node.index)])
+			.map<[Value, A]>((node) => [deserializeKey(node.keyBytes), this.getRecord(node.index)])
 			.slice();
 	}
 
@@ -828,7 +832,7 @@ export class Index<A, B> {
 				let index = result.lookup();
 				let keyEntries = keyTable.search(undefined, { index, prefix: true });
 				for (let keyEntry of keyEntries) {
-					let child = childTable.lookup(keyEntry.keyBytes.toString("binary"));
+					let child = childTable.lookup(deserializeKey(keyEntry.keyBytes));
 					childTable.remove(child);
 				}
 			}
@@ -869,7 +873,7 @@ export class Index<A, B> {
 				let index = result.lookup();
 				let keyEntries = this.keyTable.search(undefined, { index, prefix: true });
 				for (let keyEntry of keyEntries) {
-					let key = keyEntry.keyBytes.toString("binary");
+					let key = deserializeKey(keyEntry.keyBytes);
 					let rank = map.get(key) ?? (0 - tokens.length);
 					map.set(key, rank + 2);
 				}
