@@ -437,7 +437,7 @@ function indexFile(file: File): void {
 					subtitle_id: subtitle_id,
 					file_id: file.file_id
 				});
-				for (let cue of subtitle_resource.cues) {
+/* 				for (let cue of subtitle_resource.cues) {
 					let cue_id = makeId("cue", subtitle_id, `${cue.start_ms}`);
 					cues.insert({
 						cue_id: cue_id,
@@ -446,7 +446,7 @@ function indexFile(file: File): void {
 						duration_ms: cue.duration_ms,
 						lines: cue.lines.join("\n")
 					});
-				}
+				} */
 			}
 		} else if (file.name.endsWith(".json")) {
 			probe = probes.json.probe(fd);
