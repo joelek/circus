@@ -2,7 +2,7 @@ import * as libfs from "fs";
 import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as is from "../is";
-import { IntegerAssert } from "./asserts";
+import { IntegerAssert } from "./asserts/integer";
 import { StreamIterable } from "../jdb";
 import { sorters } from "../jsondb";
 
