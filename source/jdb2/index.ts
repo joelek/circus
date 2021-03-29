@@ -515,8 +515,6 @@ export function deserializeKey(nibbles: Buffer): Value {
 
 export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 	static ROOT_NODE_INDEX = BlockHandler.FIRST_APPLICATION_BLOCK;
-	static NODE_SIZE = 8 + Pointer.SIZE * 2;
-	static TABLE_SIZE = Pointer.SIZE * 16;
 
 	private blockHandler: BlockHandler;
 	private recordParser: RecordParser<A>;
@@ -567,7 +565,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		this.recordParser = recordParser;
 		this.keyProvider = keyProvider;
 		if (blockHandler.getCount() === Table.ROOT_NODE_INDEX) {
-			blockHandler.createBlock(Table.NODE_SIZE);
+			blockHandler.createBlock(Node.SIZE);
 		}
 	}
 
@@ -801,7 +799,7 @@ export class Index<A, B> {
 						index = tokenTable.lookup(token);
 					} catch (error) {}
 					if (is.absent(index)) {
-						index = blockHandler.createBlock(Table.NODE_SIZE);
+						index = blockHandler.createBlock(Node.SIZE);
 						tokenTable.insert(index, {
 							key: token
 						});
