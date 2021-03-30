@@ -1,5 +1,4 @@
-// restore 64 bit ptrs
-// use sorted array of indices for index structure (allow duplicates until read)
+// restore 64 bit ptrs (fit 17 pointers in 120 bytes)
 // support prefix searches
 // use same block handler for all tables
 // use trie structure only for indices
@@ -21,10 +20,10 @@
 	tables: 35 MB
 
 [4bit branch, 32bit pointers]
-	latency shows: 250 ms
+	latency shows: 240 ms
 	files table: 6482 kB + 807 kB
-	indices: 20 MB
-	tables: 25 MB
+	indices: 23 MB
+	tables: 20 MB
 */
 
 import * as libfs from "fs";
@@ -291,6 +290,9 @@ export class BlockHandler {
 	}
 
 	createBlock(minLength: number): number {
+		if (minLength === 0) {
+			return 0xFFFFFFFF;
+		}
 		try {
 			return this.createOldBlock(minLength);
 		} catch (error) {}
@@ -301,6 +303,9 @@ export class BlockHandler {
 	}
 
 	deleteBlock(index: number): void {
+		if (index === 0xFFFFFFFF) {
+			return;
+		}
 		let entry = new Entry();
 		this.readEntry(index, entry);
 		if (entry.deleted) {
@@ -328,6 +333,9 @@ export class BlockHandler {
 	}
 
 	getBlockSize(index: number): number {
+		if (index === 0xFFFFFFFF) {
+			return 0;
+		}
 		let entry = new Entry();
 		this.readEntry(index, entry);
 		return entry.length;
@@ -340,6 +348,9 @@ export class BlockHandler {
 	}
 
 	readBlock(index: number, buffer?: Buffer, skipLength?: number): Buffer {
+		if (index === 0xFFFFFFFF) {
+			return Buffer.alloc(0);
+		}
 		let entry = new Entry();
 		this.readEntry(index, entry);
 		buffer = buffer ?? Buffer.alloc(entry.length);
@@ -358,6 +369,9 @@ export class BlockHandler {
 	}
 
 	resizeBlock(index: number, minLength: number): void {
+		if (index === 0xFFFFFFFF) {
+			return;
+		}
 		let entry = new Entry();
 		this.readEntry(index, entry);
 		if (this.computePool(minLength) === this.computePool(entry.length)) {
@@ -388,6 +402,9 @@ export class BlockHandler {
 	}
 
 	writeBlock(index: number, buffer?: Buffer, skipLength?: number): Buffer {
+		if (index === 0xFFFFFFFF) {
+			return Buffer.alloc(0);
+		}
 		let entry = new Entry();
 		this.readEntry(index, entry);
 		buffer = buffer ?? Buffer.alloc(entry.length);
@@ -485,11 +502,11 @@ export type SearchResult<A> = {
 export type TableEventMap<A> = {
 	"insert": {
 		key: Value,
-		record: A
+		record: A | undefined
 	},
 	"remove": {
 		key: Value,
-		record: A
+		record: A | undefined
 	}
 };
 
@@ -635,9 +652,9 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			.slice();
 	}
 
-	insert(record: A, options?: Partial<{ key: Value, index: number }>): void {
-		let serializedRecord = Buffer.from(JSON.stringify(record));
-		let key = this.keyProvider?.(record) ?? options?.key;
+	insert(record: A | undefined, options?: Partial<{ key: Value, index: number }>): void {
+		let serializedRecord = Buffer.from(JSON.stringify(record) ?? "");
+		let key = (is.present(record) ? this.keyProvider?.(record) : undefined) ?? options?.key;
 		let keyBytes = serializeKey(key);
 		let keyByteIndex = 0;
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
@@ -722,8 +739,8 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		throw `Expected a record for ${key}!`;
 	}
 
-	remove(record: A, options?: Partial<{ key: Value, index: number }>): void {
-		let key = this.keyProvider?.(record) ?? options?.key;
+	remove(record: A | undefined, options?: Partial<{ key: Value, index: number }>): void {
+		let key = (is.present(record) ? this.keyProvider?.(record) : undefined) ?? options?.key;
 		let keyBytes = serializeKey(key);
 		let keyByteIndex = 0;
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
@@ -838,8 +855,8 @@ export class Index<A, B> {
 	constructor(blockHandler: BlockHandler, parentTable: Table<A>, childTable: Table<B>, getIndexedValues: ValuesProvider<B>, getTokens: Tokenizer = Index.VALUE_TOKENIZER) {
 		let tokenTable = new Table<number>(blockHandler, autoguard.guards.Number.as);
 		let keyTable = new Table<{}>(blockHandler, autoguard.guards.Object.of({}).as);
-		function insert(key: Value, record: B) {
-			let values = getIndexedValues(record);
+		function insert(key: Value, record: B | undefined) {
+			let values = is.present(record) ? getIndexedValues(record) : [];
 			for (let value of values) {
 				let tokens = getTokens(value);
 				for (let token of tokens) {
@@ -853,15 +870,15 @@ export class Index<A, B> {
 							key: token
 						});
 					}
-					keyTable.insert({}, {
+					keyTable.insert(undefined, {
 						index,
 						key: key
 					});
 				}
 			}
 		}
-		function remove(key: Value, record: B) {
-			let values = getIndexedValues(record);
+		function remove(key: Value, record: B | undefined) {
+			let values = is.present(record) ? getIndexedValues(record) : [];
 			for (let value of values) {
 				let tokens = getTokens(value);
 				for (let token of tokens) {
@@ -871,7 +888,7 @@ export class Index<A, B> {
 					} catch (error) {
 						continue;
 					}
-					keyTable.remove({}, {
+					keyTable.remove(undefined, {
 						index,
 						key: key
 					});
