@@ -1,114 +1,43 @@
-
-
-// store nodes in table
 // restore 64 bit ptrs
-// compress 15 nibbles into at most 16 bytes,
-
-
-
-// use sorted array of indices for index structure
+// compress 15 nibbles into at most 16 bytes
+// use sorted array of indices for index structure (allow duplicates until read)
 // support prefix searches
 // use same block handler for all tables
-
+// use trie structure only for indices
+// create the notion of an empty record that can be re-used
 
 
 
 /*
+[v1]
+	latency shows: 160ms
+	files table: 6191 kB + 431 kB
+	indices: 9 125 536
+	tables: 14 923 696
+
 [8bit branch, 32bit pointers]
-indices:
-tables:
-root case: 256 * 4 för tabellen + 256 * 16 för noderna + 256 * 16 för entries = 9216 B med 256 block
-twig case: 256 * 4 för tabellen +  64 * 16 för noderna +  64 * 16 för entries = 3072 B med 64 block
-leaf case: 256 * 4 för tabellen +   1 * 16 för noderna +   1 * 16 för entries = 1056 B med 1 block
+	latency shows:
+	files table:
+	indices:
+	tables:
 
 [8bit branch, 32bit pointers, inband]
-indices:
-tables:
-root case: 256 * 16 för tabellen + 0 * 16 för noderna + 1 * 16 för entries = 4112 B med 1 block
-twig case: 256 * 16 för tabellen + 0 * 16 för noderna + 1 * 16 för entries = 4112 B med 1 block
-leaf case: 256 * 16 för tabellen + 0 * 16 för noderna + 1 * 16 för entries = 4112 B med 1 block
-
-[8bit branch, 64bit pointers]
-indices:
-tables:
-root case: 256 * 8 för tabellen + 256 * 32 för noderna + 256 * 16 för entries = 14336 B med 256 block
-twig case: 256 * 8 för tabellen +  64 * 32 för noderna +  64 * 16 för entries = 5120 B med 64 block
-leaf case: 256 * 8 för tabellen +   1 * 32 för noderna +   1 * 16 för entries = 2096 B med 1 block
-
-[8bit branch, 64bit pointers, inband]
-indices:
-tables:
-root case: 256 * 32 för tabellen + 0 * 32 för noderna + 1 * 16 för entries = 8208 B med 1 block
-twig case: 256 * 32 för tabellen + 0 * 32 för noderna + 1 * 16 för entries = 8208 B med 1 block
-leaf case: 256 * 32 för tabellen + 0 * 32 för noderna + 1 * 16 för entries = 8208 B med 1 block
+	latency shows: ? ms (230ms with cache)
+	files table:  kB +  kB
+	indices: 180 MB
+	tables: 35 MB
 
 [4bit branch, 32bit pointers]
-latency shows: 800ms
-files table: 7602 kB + 1464 kB
-indices: 44 554 378
-tables: 29 256 160
-root case: 16 * 4 för tabellen + 16 * 16 för noderna + 16 * 16 för entries = 576 B med 16 block
-twig case: 16 * 4 för tabellen +  4 * 16 för noderna +  4 * 16 för entries = 192 B med 4 block
-leaf case: 16 * 4 för tabellen +  1 * 16 för noderna +  1 * 16 för entries = 96 B med 1 block
+	latency shows: 800ms
+	files table: 7602 kB + 1464 kB
+	indices: 44 554 378
+	tables: 29 256 160
 
 [4bit branch, 32bit pointers, inband]
-latency shows: 690ms
-files table: 10698 kB + 1088 kB
-indices: 76 537 442
-tables: 41 652 352
-root case: 16 * 16 för tabellen + 0 * 16 för noderna + 1 * 16 för entries = 272 B med 1 block
-twig case: 16 * 16 för tabellen + 0 * 16 för noderna + 1 * 16 för entries = 272 B med 1 block
-leaf case: 16 * 16 för tabellen + 0 * 16 för noderna + 1 * 16 för entries = 272 B med 1 block
-
-[4bit branch, 64bit pointers]
-indices:
-tables:
-root case: 16 * 8 för tabellen + 16 * 32 för noderna + 16 * 16 för entries = 896 B med 16 block
-twig case: 16 * 8 för tabellen +  4 * 32 för noderna +  4 * 16 för entries = 320 B med 4 block
-leaf case: 16 * 8 för tabellen +  1 * 32 för noderna +  1 * 16 för entries = 176 B med 1 block
-
-[4bit branch, 64bit pointers, inband]
-indices:
-tables:
-root case: 16 * 32 för tabellen + 0 * 32 för noderna + 1 * 16 för entries = 528 B med 1 block
-twig case: 16 * 32 för tabellen + 0 * 32 för noderna + 1 * 16 för entries = 528 B med 1 block
-leaf case: 16 * 32 för tabellen + 0 * 32 för noderna + 1 * 16 för entries = 528 B med 1 block
-
-
-
-
-
-
-[1 nibble prefix length][15 nibble prefix]
-[8byte resident pointer]
-[flags]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-[8 byte subtree pointer]
-
-
-
-
-
-
-
-
-
-
-
+	latency shows: 690ms (230ms with cache)
+	files table: 10698 kB + 1088 kB
+	indices: 76 537 442
+	tables: 41 652 352
 */
 
 import * as libfs from "fs";
@@ -453,7 +382,7 @@ export class BlockHandler {
 		let length = Math.min(entry.length, entryTwo.length);
 		let buffer = Buffer.alloc(length);
 		this.readBlock(index, buffer);
-		this.writeBlock(indexTwo, buffer);
+		this.writeBlock(indexTwo, buffer, 0);
 		this.swapBlocks(index, indexTwo);
 		this.deleteBlock(indexTwo);
 	}
@@ -495,18 +424,16 @@ export class BlockHandler {
 };
 
 export class Node extends Chunk {
-	static PREFIX_SIZE = 8;
-	static MAX_PREFIX_LENGTH = Node.PREFIX_SIZE - 1;
-	static COMPACT_SIZE = Node.PREFIX_SIZE + 4;
-	static SIZE = Node.COMPACT_SIZE + 16 * 4;
+	static MAX_PREFIX_LENGTH = 8 - 1;
+	static SIZE = 1 + Node.MAX_PREFIX_LENGTH + 8;
 
 	prefix(value?: Buffer): Buffer {
 		if (is.present(value)) {
 			let length = value.length;
-			if (DEBUG) IntegerAssert.between(0, length, Node.PREFIX_SIZE - 1);
+			if (DEBUG) IntegerAssert.between(0, length, Node.MAX_PREFIX_LENGTH);
 			this.buffer.writeUInt8(length, 0);
 			this.buffer.set(value, 1);
-			this.buffer.fill(0, 1 + length, Node.PREFIX_SIZE);
+			this.buffer.fill(0, 1 + length, 1 + Node.MAX_PREFIX_LENGTH);
 			return this.buffer;
 		} else {
 			let length = this.buffer.readUInt8(0);
@@ -517,19 +444,7 @@ export class Node extends Chunk {
 	}
 
 	resident(value?: number): number {
-		let offset = Node.PREFIX_SIZE;
-		if (is.present(value)) {
-			if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
-			this.buffer.writeUInt32BE(value, offset);
-			return value;
-		} else {
-			return this.buffer.readUInt32BE(offset);
-		}
-	}
-
-	subtree(index: number, value?: number): number {
-		if (DEBUG) IntegerAssert.between(0, index, 16 - 1);
-		let offset = Node.COMPACT_SIZE + index * 4;
+		let offset = 1 + Node.MAX_PREFIX_LENGTH;
 		if (is.present(value)) {
 			if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
 			this.buffer.writeUInt32BE(value, offset);
@@ -542,6 +457,29 @@ export class Node extends Chunk {
 	constructor(buffer?: Buffer) {
 		buffer = buffer ?? Buffer.alloc(Node.SIZE);
 		if (DEBUG) IntegerAssert.exactly(buffer.length, Node.SIZE);
+		super(buffer);
+	}
+};
+
+export class NodeTable extends Chunk {
+	static LENGTH = 16;
+	static SIZE = NodeTable.LENGTH * 4;
+
+	subtree(index: number, value?: number): number {
+		if (DEBUG) IntegerAssert.between(0, index, NodeTable.LENGTH - 1);
+		let offset = index * 4;
+		if (is.present(value)) {
+			if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
+			this.buffer.writeUInt32BE(value, offset);
+			return value;
+		} else {
+			return this.buffer.readUInt32BE(offset);
+		}
+	}
+
+	constructor(buffer?: Buffer) {
+		buffer = buffer ?? Buffer.alloc(NodeTable.SIZE);
+		if (DEBUG) IntegerAssert.exactly(buffer.length, NodeTable.SIZE);
 		super(buffer);
 	}
 };
@@ -643,13 +581,17 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			};
 		}
 		if (recursive) {
-			for (let i = 0; i < 16; i++) {
-				if (node.subtree(i) !== 0) {
-					yield* this.createIterable(node.subtree(i), {
-						...options,
-						path: [...path, Buffer.of(i)],
-						rank: rank - 1
-					});
+			if (this.blockHandler.getBlockSize(nodeIndex) >= Node.SIZE + NodeTable.SIZE) {
+				let table = new NodeTable();
+				this.blockHandler.readBlock(nodeIndex, table.buffer, Node.SIZE);
+				for (let i = 0; i < NodeTable.LENGTH; i++) {
+					if (table.subtree(i) !== 0) {
+						yield* this.createIterable(table.subtree(i), {
+							...options,
+							path: [...path, Buffer.of(i)],
+							rank: rank - 1
+						});
+					}
 				}
 			}
 		}
@@ -676,12 +618,16 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		this.blockHandler.readBlock(index, node.buffer);
 		console.log("\t".repeat(depth), `${node.prefix().toString("hex")}`);
 		if (node.resident() !== 0) {
-			console.log("\t".repeat(depth), JSON.stringify(this.getRecord(node.resident())));
+			console.log("\t".repeat(depth),`@ => #${node.resident()} (${JSON.stringify(this.getRecord(node.resident()))})`);
 		}
-		for (let i = 0; i < 16; i++) {
-			if (node.subtree(i) !== 0) {
-				console.log("\t".repeat(depth), `${Buffer.of(i).toString("hex")} =>`);
-				this.debug(node.subtree(i), depth + 1);
+		if (this.blockHandler.getBlockSize(index) >= Node.SIZE + NodeTable.SIZE) {
+			let table = new NodeTable();
+			this.blockHandler.readBlock(index, table.buffer, Node.SIZE);
+			for (let i = 0; i < NodeTable.LENGTH; i++) {
+				if (table.subtree(i) !== 0) {
+					console.log("\t".repeat(depth), `${Buffer.of(i).toString("hex")} => #${table.subtree(i)}`);
+					this.debug(table.subtree(i), depth + 1);
+				}
 			}
 		}
 	}
@@ -701,6 +647,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		let currentNode = new Node();
 		let newNodeIndex = 0;
 		let newNode = new Node();
+		let table = new NodeTable();
 		while (true) {
 			this.blockHandler.readBlock(currentNodeIndex, currentNode.buffer);
 			let prefixBytes = currentNode.prefix();
@@ -709,26 +656,39 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 				newNodeIndex = this.blockHandler.createBlock(Node.SIZE);
 				newNode.buffer.set(currentNode.buffer, 0);
 				newNode.prefix(prefixBytes.slice(commonPrefixLength + 1));
-				this.blockHandler.writeBlock(newNodeIndex, newNode.buffer);
+				this.blockHandler.writeBlock(newNodeIndex, newNode.buffer, 0);
 				currentNode.buffer.fill(0);
 				currentNode.prefix(prefixBytes.slice(0, commonPrefixLength));
-				currentNode.subtree(prefixBytes[commonPrefixLength], newNodeIndex);
-				this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer);
+				this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer, 0);
+				if (this.blockHandler.getBlockSize(currentNodeIndex) < Node.SIZE + NodeTable.SIZE) {
+					this.blockHandler.resizeBlock(currentNodeIndex, Node.SIZE + NodeTable.SIZE);
+				} else {
+					this.blockHandler.readBlock(currentNodeIndex, table.buffer, Node.SIZE);
+					this.blockHandler.resizeBlock(newNodeIndex, Node.SIZE + NodeTable.SIZE);
+					this.blockHandler.writeBlock(newNodeIndex, table.buffer, Node.SIZE);
+				}
+				table.buffer.fill(0);
+				table.subtree(prefixBytes[commonPrefixLength], newNodeIndex);
+				this.blockHandler.writeBlock(currentNodeIndex, table.buffer, Node.SIZE);
 			}
 			let keyBytesLeft = keyBytes.length - keyByteIndex;
 			if (keyBytesLeft === commonPrefixLength) {
 				break;
 			}
 			keyByteIndex += commonPrefixLength;
-			if (currentNode.subtree(keyBytes[keyByteIndex]) === 0) {
+			if (this.blockHandler.getBlockSize(currentNodeIndex) < Node.SIZE + NodeTable.SIZE) {
+				this.blockHandler.resizeBlock(currentNodeIndex, Node.SIZE + NodeTable.SIZE);
+			}
+			this.blockHandler.readBlock(currentNodeIndex, table.buffer, Node.SIZE);
+			if (table.subtree(keyBytes[keyByteIndex]) === 0) {
 				newNodeIndex = this.blockHandler.createBlock(Node.SIZE);
 				newNode.buffer.fill(0);
 				newNode.prefix(keyBytes.slice(keyByteIndex + 1, keyByteIndex + 1 + Node.MAX_PREFIX_LENGTH));
-				this.blockHandler.writeBlock(newNodeIndex, newNode.buffer);
-				currentNode.subtree(keyBytes[keyByteIndex], newNodeIndex);
-				this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer);
+				this.blockHandler.writeBlock(newNodeIndex, newNode.buffer, 0);
+				table.subtree(keyBytes[keyByteIndex], newNodeIndex);
+				this.blockHandler.writeBlock(currentNodeIndex, table.buffer, Node.SIZE);
 			}
-			currentNodeIndex = currentNode.subtree(keyBytes[keyByteIndex]);
+			currentNodeIndex = table.subtree(keyBytes[keyByteIndex]);
 			keyByteIndex += 1;
 		}
 		this.blockHandler.readBlock(currentNodeIndex, currentNode.buffer);
@@ -736,7 +696,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			let recordIndex = this.blockHandler.createBlock(serializedRecord.length);
 			this.blockHandler.writeBlock(recordIndex, serializedRecord);
 			currentNode.resident(recordIndex);
-			this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer);
+			this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer, 0);
 		} else {
 			this.blockHandler.resizeBlock(currentNode.resident(), serializedRecord.length);
 			this.blockHandler.writeBlock(currentNode.resident(), serializedRecord);
@@ -765,6 +725,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		let keyByteIndex = 0;
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
 		let currentNode = new Node();
+		let table = new NodeTable();
 		while (true) {
 			this.blockHandler.readBlock(currentNodeIndex, currentNode.buffer);
 			let prefixBytes = currentNode.prefix();
@@ -777,17 +738,21 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 				break;
 			}
 			keyByteIndex += commonPrefixLength;
-			if (currentNode.subtree(keyBytes[keyByteIndex]) === 0) {
+			if (this.blockHandler.getBlockSize(currentNodeIndex) < Node.SIZE + NodeTable.SIZE) {
 				return;
 			}
-			currentNodeIndex = currentNode.subtree(keyBytes[keyByteIndex]);
+			this.blockHandler.readBlock(currentNodeIndex, table.buffer, Node.SIZE);
+			if (table.subtree(keyBytes[keyByteIndex]) === 0) {
+				return;
+			}
+			currentNodeIndex = table.subtree(keyBytes[keyByteIndex]);
 			keyByteIndex += 1;
 		}
 		this.blockHandler.readBlock(currentNodeIndex, currentNode.buffer);
 		if (currentNode.resident() !== 0) {
 			this.blockHandler.deleteBlock(currentNode.resident());
 			currentNode.resident(0);
-			this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer);
+			this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer, 0);
 			this.route("remove", {
 				key: key,
 				record: record
@@ -800,6 +765,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		let keyByteIndex = 0;
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
 		let currentNode = new Node();
+		let table = new NodeTable();
 		while (true) {
 			this.blockHandler.readBlock(currentNodeIndex, currentNode.buffer);
 			let prefixBytes = currentNode.prefix();
@@ -812,10 +778,14 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 				break;
 			}
 			keyByteIndex += commonPrefixLength;
-			if (currentNode.subtree(keyBytes[keyByteIndex]) === 0) {
+			if (this.blockHandler.getBlockSize(currentNodeIndex) < Node.SIZE + NodeTable.SIZE) {
 				return StreamIterable.of([]);
 			}
-			currentNodeIndex = currentNode.subtree(keyBytes[keyByteIndex]);
+			this.blockHandler.readBlock(currentNodeIndex, table.buffer, Node.SIZE);
+			if (table.subtree(keyBytes[keyByteIndex]) === 0) {
+				return StreamIterable.of([]);
+			}
+			currentNodeIndex = table.subtree(keyBytes[keyByteIndex]);
 			keyByteIndex += 1;
 		}
 		let prefix = options?.prefix ?? false;
