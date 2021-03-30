@@ -531,7 +531,6 @@ export function nibblesFromBytes(bytes: Buffer): Buffer {
 };
 
 export function bytesFromNibbles(nibbles: Buffer): Buffer {
-	if (DEBUG) IntegerAssert.exactly(nibbles.length % 2, 0);
 	let bytes = new Array<number>();
 	for (let i = 0; i < nibbles.length; i += 2) {
 		bytes.push((nibbles[i + 0] << 4) | (nibbles[i + 1] << 0));
