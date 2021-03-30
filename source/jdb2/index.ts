@@ -554,6 +554,7 @@ export function deserializeKey(nibbles: Buffer): Value {
 export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 	static ROOT_NODE_INDEX = BlockHandler.FIRST_APPLICATION_BLOCK;
 
+	private recordCache: Cache<Value, A>;
 	private blockHandler: BlockHandler;
 	private recordParser: RecordParser<A>;
 	private keyProvider?: ValueProvider<A>;
@@ -599,6 +600,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 
 	constructor(blockHandler: BlockHandler, recordParser: RecordParser<A>, keyProvider?: ValueProvider<A>) {
 		super();
+		this.recordCache = new Cache<Value, A>((record) => 1, 1 * 1000 * 1000);
 		this.blockHandler = blockHandler;
 		this.recordParser = recordParser;
 		this.keyProvider = keyProvider;
@@ -701,6 +703,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			this.blockHandler.resizeBlock(currentNode.resident(), serializedRecord.length);
 			this.blockHandler.writeBlock(currentNode.resident(), serializedRecord);
 		}
+		this.recordCache.insert(key, record);
 		this.route("insert", {
 			key: key,
 			record: record
@@ -708,10 +711,15 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 	}
 
 	lookup(key: Value, options?: Partial<{ index: number }>): A {
+		let record = this.recordCache.lookup(key);
+		if (is.present(record)) {
+			return record;
+		}
 		let results = this.search(key, options);
 		for (let result of results) {
 			let record = result.lookup();
 			if (result.keyBytes.equals(serializeKey(key))) {
+				this.recordCache.insert(key, record);
 				return record;
 			}
 			break;
@@ -753,6 +761,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			this.blockHandler.deleteBlock(currentNode.resident());
 			currentNode.resident(0);
 			this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer, 0);
+			this.recordCache.remove(key);
 			this.route("remove", {
 				key: key,
 				record: record
