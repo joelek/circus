@@ -1,5 +1,4 @@
 // restore 64 bit ptrs
-// compress 15 nibbles into at most 16 bytes
 // use sorted array of indices for index structure (allow duplicates until read)
 // support prefix searches
 // use same block handler for all tables
@@ -10,34 +9,22 @@
 
 /*
 [v1]
-	latency shows: 160ms
+	latency shows: 160 ms
 	files table: 6191 kB + 431 kB
-	indices: 9 125 536
-	tables: 14 923 696
+	indices: 9 MB
+	tables: 15 MB
 
 [8bit branch, 32bit pointers]
-	latency shows:
-	files table:
-	indices:
-	tables:
-
-[8bit branch, 32bit pointers, inband]
-	latency shows: ? ms (230ms with cache)
-	files table:  kB +  kB
-	indices: 180 MB
+	latency shows: 290 ms
+	files table: 10272 kB + 747 kB
+	indices: 178 MB
 	tables: 35 MB
 
 [4bit branch, 32bit pointers]
-	latency shows: 800ms
-	files table: 7602 kB + 1464 kB
-	indices: 44 554 378
-	tables: 29 256 160
-
-[4bit branch, 32bit pointers, inband]
-	latency shows: 690ms (230ms with cache)
-	files table: 10698 kB + 1088 kB
-	indices: 76 537 442
-	tables: 41 652 352
+	latency shows: 250 ms
+	files table: 6482 kB + 807 kB
+	indices: 20 MB
+	tables: 25 MB
 */
 
 import * as libfs from "fs";
@@ -424,27 +411,27 @@ export class BlockHandler {
 };
 
 export class Node extends Chunk {
-	static MAX_PREFIX_LENGTH = 8 - 1;
-	static SIZE = 1 + Node.MAX_PREFIX_LENGTH + 8;
+	static MAX_NIBBLES = 15;
+	static SIZE = 8 + 8;
 
 	prefix(value?: Buffer): Buffer {
 		if (is.present(value)) {
 			let length = value.length;
-			if (DEBUG) IntegerAssert.between(0, length, Node.MAX_PREFIX_LENGTH);
-			this.buffer.writeUInt8(length, 0);
-			this.buffer.set(value, 1);
-			this.buffer.fill(0, 1 + length, 1 + Node.MAX_PREFIX_LENGTH);
+			if (DEBUG) IntegerAssert.between(0, length, Node.MAX_NIBBLES);
+			let bytes = bytesFromNibbles(Buffer.of(length, ...value));
+			this.buffer.set(bytes, 0);
+			this.buffer.fill(0, bytes.length, 8);
 			return this.buffer;
 		} else {
-			let length = this.buffer.readUInt8(0);
-			let buffer = Buffer.alloc(length);
-			buffer.set(this.buffer.slice(1, 1 + length), 0);
-			return buffer;
+			let bytes = this.buffer.slice(0, 8);
+			let nibbles = nibblesFromBytes(bytes);
+			let length = nibbles[0];
+			return nibbles.slice(1, 1 + length);
 		}
 	}
 
 	resident(value?: number): number {
-		let offset = 1 + Node.MAX_PREFIX_LENGTH;
+		let offset = 8;
 		if (is.present(value)) {
 			if (DEBUG) IntegerAssert.between(0, value, 0xFFFFFFFF);
 			this.buffer.writeUInt32BE(value, offset);
@@ -518,6 +505,23 @@ export function computeCommonPrefixLength(prefixBytes: Buffer, keyBytes: Buffer,
 	return length;
 };
 
+export function nibblesFromBytes(bytes: Buffer): Buffer {
+	let nibbles = new Array<number>();
+	for (let byte of bytes) {
+		nibbles.push((byte >> 4) & 0x0F, (byte >> 0) & 0x0F);
+	}
+	return Buffer.from(nibbles);
+};
+
+export function bytesFromNibbles(nibbles: Buffer): Buffer {
+	if (DEBUG) IntegerAssert.exactly(nibbles.length % 2, 0);
+	let bytes = new Array<number>();
+	for (let i = 0; i < nibbles.length; i += 2) {
+		bytes.push((nibbles[i + 0] << 4) | (nibbles[i + 1] << 0));
+	}
+	return Buffer.from(bytes);
+};
+
 export function serializeKey(key: Value): Buffer {
 	let bytes = (() => {
 		if (typeof key === "boolean") {
@@ -535,20 +539,11 @@ export function serializeKey(key: Value): Buffer {
 		}
 		return Buffer.alloc(0);
 	})();
-	let nibbles = new Array<number>();
-	for (let byte of bytes) {
-		nibbles.push((byte >> 4) & 0x0F, (byte >> 0) & 0x0F);
-	}
-	return Buffer.from(nibbles);
+	return nibblesFromBytes(bytes);
 };
 
 export function deserializeKey(nibbles: Buffer): Value {
-	if (DEBUG) IntegerAssert.exactly(nibbles.length % 2, 0);
-	let bytes = new Array<number>();
-	for (let i = 0; i < nibbles.length; i += 2) {
-		bytes.push((nibbles[i + 0] << 4) | (nibbles[i + 1] << 0));
-	}
-	return Buffer.from(bytes).toString("binary");
+	return bytesFromNibbles(nibbles).toString("binary");
 };
 
 export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
@@ -685,7 +680,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			if (table.subtree(keyBytes[keyByteIndex]) === 0) {
 				newNodeIndex = this.blockHandler.createBlock(Node.SIZE);
 				newNode.buffer.fill(0);
-				newNode.prefix(keyBytes.slice(keyByteIndex + 1, keyByteIndex + 1 + Node.MAX_PREFIX_LENGTH));
+				newNode.prefix(keyBytes.slice(keyByteIndex + 1, keyByteIndex + 1 + Node.MAX_NIBBLES));
 				this.blockHandler.writeBlock(newNodeIndex, newNode.buffer, 0);
 				table.subtree(keyBytes[keyByteIndex], newNodeIndex);
 				this.blockHandler.writeBlock(currentNodeIndex, table.buffer, Node.SIZE);
