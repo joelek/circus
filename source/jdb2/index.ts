@@ -280,7 +280,7 @@ export class BlockHandler {
 	constructor(path: Array<string>) {
 		this.bin = open([...path, "bin"]);
 		this.toc = open([...path, "toc"]);
-		this.blockCache = new Cache<number, Buffer>((value) => value.length, 512 * 1024 * 1024);
+		this.blockCache = new Cache<number, Buffer>((value) => value.length, 256 * 1024 * 1024);
 		this.entryCache = new Cache<number, Entry>((value) => 1, 1 * 1000 * 1000);
 		if (this.getCount() === 0) {
 			for (let i = 0; i < BlockHandler.FIRST_APPLICATION_BLOCK; i++) {
@@ -611,7 +611,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 
 	constructor(blockHandler: BlockHandler, recordParser: RecordParser<A>, keyProvider?: ValueProvider<A>) {
 		super();
-		this.recordCache = new Cache<Value, A>((record) => 1, 1 * 1000 * 1000);
+		this.recordCache = new Cache<Value, A>((record) => 1, 100 * 1000);
 		this.blockHandler = blockHandler;
 		this.recordParser = recordParser;
 		this.keyProvider = keyProvider;
@@ -925,12 +925,19 @@ export class Index<A, B> {
 		this.getTokens = getTokens;
 	}
 
-	debug(index?: number): void {
-		if (is.absent(index)) {
-			this.tokenTable.debug();
-		} else {
-			this.keyTable.debug(index);
+	debug(): void {
+		let tokens = 0;
+		let values = 0;
+		let min = Infinity;
+		let max = 0 - Infinity;
+		for (let [key, index] of this.tokenTable.entries()) {
+			let results = this.keyTable.search(undefined, { index: index, prefix: true }).collect();
+			console.log(`${key} => ${results.length}`);
+			values += results.length;
+			min = Math.min(min, results.length);
+			max = Math.min(max, results.length);
 		}
+		console.log({ tokens, values, min, max });
 	}
 
 	lookup(query: Value): StreamIterable<B> {
