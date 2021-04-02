@@ -1,8 +1,11 @@
 // restore 64 bit ptrs (fit 17 pointers in 120 bytes)
 // support prefix searches
 // use same block handler for all tables
-// use trie structure only for indices
-// create the notion of an empty record that can be re-used
+// use trie structure only for tables
+// restore update event, needed for search indices
+// fix nibbles being exposed as key from index search
+// ~ 300 000 words in index, some words have ~ 200 000 occurences
+// every record uses 32 b overhead, ok for tables but not indices
 
 
 
@@ -26,6 +29,7 @@
 	tables: 20 MB
 */
 
+import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as autoguard from "@joelek/ts-autoguard";
 import * as stdlib from "@joelek/ts-stdlib";
@@ -280,13 +284,17 @@ export class BlockHandler {
 	constructor(path: Array<string>) {
 		this.bin = open([...path, "bin"]);
 		this.toc = open([...path, "toc"]);
-		this.blockCache = new Cache<number, Buffer>((value) => value.length, 256 * 1024 * 1024);
+		this.blockCache = new Cache<number, Buffer>((value) => value.length, 512 * 1024 * 1024);
 		this.entryCache = new Cache<number, Entry>((value) => 1, 1 * 1000 * 1000);
 		if (this.getCount() === 0) {
 			for (let i = 0; i < BlockHandler.FIRST_APPLICATION_BLOCK; i++) {
 				this.createNewBlock(16);
 			}
 		}
+	}
+
+	clearBlock(index: number): void {
+		this.writeBlock(index, Buffer.alloc(0));
 	}
 
 	createBlock(minLength: number): number {
@@ -611,7 +619,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 
 	constructor(blockHandler: BlockHandler, recordParser: RecordParser<A>, keyProvider?: ValueProvider<A>) {
 		super();
-		this.recordCache = new Cache<Value, A>((record) => 1, 100 * 1000);
+		this.recordCache = new Cache<Value, A>((record) => 1, 1 * 1000 * 1000);
 		this.blockHandler = blockHandler;
 		this.recordParser = recordParser;
 		this.keyProvider = keyProvider;
@@ -818,6 +826,159 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 
 	update(record: A): void {
 		this.insert(record);
+	}
+};
+
+export class RobinHoodHash {
+	private blockHandler: BlockHandler;
+	private blockIndex: number;
+
+	private readHeader(): { occupiedSlots: number } {
+		let buffer = Buffer.alloc(16);
+		this.blockHandler.readBlock(this.blockIndex, buffer, 0);
+		let occupiedSlots = Number(buffer.readBigUInt64BE(0));
+		return {
+			occupiedSlots
+		};
+	}
+
+	private writeHeader(header: { occupiedSlots: number }): void {
+		let buffer = Buffer.alloc(16);
+		buffer.writeBigUInt64BE(BigInt(header.occupiedSlots), 0);
+		this.blockHandler.writeBlock(this.blockIndex, buffer, 0);
+	}
+
+	private getSlotCount(): number {
+		let blockSize = this.blockHandler.getBlockSize(this.blockIndex);
+		return (blockSize - 16) / 8;
+	}
+
+	private computeOptimalSlot(key: Buffer): number {
+		let hash = libcrypto.createHash("sha256")
+			.update(key)
+			.digest();
+		let slotCount = this.getSlotCount();
+		let optimalSlot = Number(hash.readBigUInt64BE(0) % BigInt(slotCount));
+		return optimalSlot;
+	}
+
+	private loadSlot(slot: number): { probeDistance: number, isOccupied: boolean, value: number } {
+		let buffer = Buffer.alloc(8);
+		this.blockHandler.readBlock(this.blockIndex, buffer, 16 + slot * 8);
+		let probeDistance = buffer.readUInt8(0);
+		let isOccupied = buffer.readUInt8(1) === 0x01;
+		let value = Number(buffer.readBigUInt64BE(0) & 0x0000FFFFFFFFFFFFn);
+		return {
+			probeDistance,
+			isOccupied,
+			value
+		};
+	}
+
+	private saveSlot(slot: number, value: number, probeDistance: number, isOccupied: boolean): void {
+		let buffer = Buffer.alloc(8);
+		buffer.writeBigUInt64BE(BigInt(value), 0);
+		buffer.writeUInt8(probeDistance, 0);
+		buffer.writeUInt8(isOccupied ? 0x01 : 0x00, 1);
+		this.blockHandler.writeBlock(this.blockIndex, buffer, 16 + slot * 8);
+	}
+
+	private resizeIfNeccessary(): void {
+		let iterable = StreamIterable.of(this);
+		let slotCount = this.getSlotCount();
+		let occupiedSlots = this.readHeader().occupiedSlots;
+		let desiredLoadFactor = 0.75;
+		let minLength = 16 + Math.ceil(occupiedSlots / desiredLoadFactor) * 8;
+		this.blockHandler.resizeBlock(this.blockIndex, minLength);
+		let newSlotCount = this.getSlotCount();
+		if (newSlotCount === slotCount) {
+			return;
+		}
+		let values = iterable.collect();
+		this.blockHandler.clearBlock(this.blockIndex);
+		for (let value of values) {
+			this.insert(value);
+		}
+	}
+
+	constructor(blockHandler: BlockHandler, blockIndex: number) {
+		this.blockHandler = blockHandler;
+		this.blockIndex = blockIndex;
+		this.blockHandler.resizeBlock(blockIndex, 16 + 4 * 8);
+	}
+
+	*[Symbol.iterator](): Iterator<number> {
+		let slotCount = this.getSlotCount();
+		for (let slot = 0; slot < slotCount; slot++) {
+			let { isOccupied, value } = this.loadSlot(slot);
+			if (isOccupied) {
+				yield value;
+			}
+		}
+	}
+
+	insert(valueToInsert: number): void {
+		let key = Buffer.alloc(8);
+		key.writeBigUInt64BE(BigInt(valueToInsert), 0);
+		let optimalSlot = this.computeOptimalSlot(key);
+		let slotCount = this.getSlotCount();
+		let currentSlot = optimalSlot;
+		let currentProbeDistance = 0;
+		for (let i = 0; i < slotCount; i++) {
+			let { probeDistance, isOccupied, value } = this.loadSlot(currentSlot);
+			if (!isOccupied) {
+				this.saveSlot(currentSlot, valueToInsert, currentProbeDistance, true);
+				let header = this.readHeader();
+				header.occupiedSlots += 1;
+				this.writeHeader(header);
+				break;
+			}
+			if (value === valueToInsert) {
+				return;
+			}
+			if (currentProbeDistance > probeDistance) {
+				this.saveSlot(currentSlot, valueToInsert, currentProbeDistance, true);
+				valueToInsert = value;
+				currentProbeDistance = probeDistance;
+			}
+			currentSlot = (currentSlot + 1) % slotCount;
+			currentProbeDistance += 1;
+		}
+		this.resizeIfNeccessary();
+	}
+
+	remove(valueToRemove: number): void {
+		if (DEBUG) IntegerAssert.atLeast(0, valueToRemove);
+		let key = Buffer.alloc(8);
+		key.writeBigUInt64BE(BigInt(valueToRemove), 0);
+		let optimalSlot = this.computeOptimalSlot(key);
+		let slotCount = this.getSlotCount();
+		let currentSlot = optimalSlot;
+		let currentProbeDistance = 0;
+		for (let i = 0; i < slotCount; i++) {
+			let { probeDistance, isOccupied, value } = this.loadSlot(currentSlot);
+			if (value === valueToRemove) {
+				this.saveSlot(currentSlot, 0, 0, false);
+				let header = this.readHeader();
+				header.occupiedSlots -= 1;
+				this.writeHeader(header);
+				break;
+			}
+			if (probeDistance > currentProbeDistance) {
+				return;
+			}
+			currentSlot = (currentSlot + 1) % slotCount;
+			currentProbeDistance += 1;
+		}
+		for (let i = 0; i < slotCount; i++) {
+			let { probeDistance, value } = this.loadSlot((currentSlot + 1) % slotCount);
+			if (probeDistance === 0) {
+				return;
+			}
+			this.saveSlot(currentSlot, value, probeDistance, true);
+			currentSlot = (currentSlot + 1) % slotCount;
+		}
+		this.resizeIfNeccessary();
 	}
 };
 
