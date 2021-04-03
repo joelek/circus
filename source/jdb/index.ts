@@ -86,6 +86,12 @@ export class StreamIterable<A> {
 		return new StreamIterable(map(this.values, transform));
 	}
 
+	shift(): A | undefined {
+		for (let value of this.values) {
+			return value;
+		}
+	}
+
 	slice(start?: number, end?: number): StreamIterable<A> {
 		let array = this.collect().slice(start, end);
 		return new StreamIterable(array);

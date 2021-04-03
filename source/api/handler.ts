@@ -721,7 +721,7 @@ export function searchForEntities(query: string, user_id: string, offset: number
 		jsondb.NumericSort.decreasing((value) => value.rank),
 		jsondb.NumericSort.decreasing((value) => value.type_rank)
 	));
-	let cue = is.absent(database.cue_search) ? undefined : database.cue_search.search(query).slice(0, 1).collect().shift();
+	let cue = is.absent(database.cue_search) ? undefined : database.cue_search.search(query).shift();
 	if (is.present(cue)) {
 		let result = results[0];
 		if (is.absent(result) || cue.rank > result.rank) {
