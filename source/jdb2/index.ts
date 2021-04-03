@@ -987,12 +987,14 @@ export class Index<A, B> {
 		let normalized = String(value);
 		normalized = normalized.toLowerCase();
 		normalized = normalized.normalize("NFC");
+		normalized = normalized.replace(/['"`´]+/g, "");
 		return Array.from(normalized.match(/(\p{N}+)/gu) ?? []);
 	};
 	static QUERY_TOKENIZER: Tokenizer = (value) => {
 		let normalized = String(value);
 		normalized = normalized.toLowerCase();
 		normalized = normalized.normalize("NFC");
+		normalized = normalized.replace(/['"`´]+/g, "");
 		return Array.from(normalized.match(/(\p{L}+|\p{N}+)/gu) ?? []);
 	};
 	static VALUE_TOKENIZER: Tokenizer = (value) => {
@@ -1002,6 +1004,7 @@ export class Index<A, B> {
 		let normalized = String(value);
 		normalized = normalized.toLowerCase();
 		normalized = normalized.normalize("NFC");
+		normalized = normalized.replace(/['"`´]+/g, "");
 		return Array.from(normalized.match(/(\p{L}+)/gu) ?? []);
 	};
 
