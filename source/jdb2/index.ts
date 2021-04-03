@@ -61,6 +61,12 @@ reduce number of nodes,
 	files table: 6482 kB + 807 kB
 	indices: 23 MB
 	tables: 20 MB
+
+[4bit branch, 32bit pointers + rhh]
+	latency shows: 220 ms
+	files table: 6482 kB + 807 kB
+	indices: 14 MB
+	tables: 20 MB
 */
 
 import * as libcrypto from "crypto";
@@ -1015,10 +1021,10 @@ export class RobinHoodHash {
 		for (let i = 0; i < slotCount; i++) {
 			let { probeDistance, value } = this.loadSlot((currentSlot + 1) % slotCount);
 			if (probeDistance === 0) {
-				return;
+				break;
 			}
 			this.saveSlot(currentSlot, value, probeDistance - 1, true);
-			this.saveSlot(currentSlot + 1, 0, 0, false);
+			this.saveSlot((currentSlot + 1) % slotCount, 0, 0, false);
 			currentSlot = (currentSlot + 1) % slotCount;
 		}
 		this.resizeIfNeccessary();
