@@ -6,6 +6,40 @@
 // fix nibbles being exposed as key from index search
 // ~ 300 000 words in index, some words have ~ 200 000 occurences
 // every record uses 32 b overhead, ok for tables but not indices
+// use local index structure inside one block
+// with buffer cache, traversal of about 160 000 entries / s
+
+/*
+first fix: create bulk blocks in indices and tables
+
+stop words are needed but suck
+
+
+
+reduce number of nodes,
+
+
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+[prefix8][subtreeptr8][residentptr8]
+24*16=384
+
+
+
+*/
 
 
 
@@ -884,17 +918,26 @@ export class RobinHoodHash {
 	}
 
 	private resizeIfNeccessary(): void {
-		let iterable = StreamIterable.of(this);
 		let slotCount = this.getSlotCount();
 		let occupiedSlots = this.readHeader().occupiedSlots;
-		let desiredLoadFactor = 0.75;
-		let minLength = 16 + Math.ceil(occupiedSlots / desiredLoadFactor) * 8;
+		let currentLoadFactor = occupiedSlots / slotCount;
+		let desiredSlotCount = slotCount;
+		if (currentLoadFactor <= 0.25) {
+			desiredSlotCount = Math.ceil(slotCount / 2);
+		}
+		if (currentLoadFactor >= 0.75) {
+			desiredSlotCount = slotCount * 2;
+		}
+		if (desiredSlotCount === slotCount) {
+			return;
+		}
+		let values = StreamIterable.of(this).collect();
+		let minLength = 16 + desiredSlotCount * 8;
 		this.blockHandler.resizeBlock(this.blockIndex, minLength);
 		let newSlotCount = this.getSlotCount();
 		if (newSlotCount === slotCount) {
 			return;
 		}
-		let values = iterable.collect();
 		this.blockHandler.clearBlock(this.blockIndex);
 		for (let value of values) {
 			this.insert(value);
@@ -904,7 +947,6 @@ export class RobinHoodHash {
 	constructor(blockHandler: BlockHandler, blockIndex: number) {
 		this.blockHandler = blockHandler;
 		this.blockIndex = blockIndex;
-		this.blockHandler.resizeBlock(blockIndex, 16 + 4 * 8);
 	}
 
 	*[Symbol.iterator](): Iterator<number> {
@@ -975,7 +1017,8 @@ export class RobinHoodHash {
 			if (probeDistance === 0) {
 				return;
 			}
-			this.saveSlot(currentSlot, value, probeDistance, true);
+			this.saveSlot(currentSlot, value, probeDistance - 1, true);
+			this.saveSlot(currentSlot + 1, 0, 0, false);
 			currentSlot = (currentSlot + 1) % slotCount;
 		}
 		this.resizeIfNeccessary();
