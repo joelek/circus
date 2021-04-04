@@ -946,26 +946,11 @@ export class RobinHoodHash {
 		}
 		this.blockHandler.clearBlock(this.blockIndex);
 		for (let value of values) {
-			this.insert(value);
+			this.insertWithoutResize(value);
 		}
 	}
 
-	constructor(blockHandler: BlockHandler, blockIndex: number) {
-		this.blockHandler = blockHandler;
-		this.blockIndex = blockIndex;
-	}
-
-	*[Symbol.iterator](): Iterator<number> {
-		let slotCount = this.getSlotCount();
-		for (let slot = 0; slot < slotCount; slot++) {
-			let { isOccupied, value } = this.loadSlot(slot);
-			if (isOccupied) {
-				yield value;
-			}
-		}
-	}
-
-	insert(valueToInsert: number): void {
+	private insertWithoutResize(valueToInsert: number): void {
 		let key = Buffer.alloc(8);
 		key.writeBigUInt64BE(BigInt(valueToInsert), 0);
 		let optimalSlot = this.computeOptimalSlot(key);
@@ -992,6 +977,25 @@ export class RobinHoodHash {
 			currentSlot = (currentSlot + 1) % slotCount;
 			currentProbeDistance += 1;
 		}
+	}
+
+	constructor(blockHandler: BlockHandler, blockIndex: number) {
+		this.blockHandler = blockHandler;
+		this.blockIndex = blockIndex;
+	}
+
+	*[Symbol.iterator](): Iterator<number> {
+		let slotCount = this.getSlotCount();
+		for (let slot = 0; slot < slotCount; slot++) {
+			let { isOccupied, value } = this.loadSlot(slot);
+			if (isOccupied) {
+				yield value;
+			}
+		}
+	}
+
+	insert(valueToInsert: number): void {
+		this.insertWithoutResize(valueToInsert);
 		this.resizeIfNeccessary();
 	}
 
