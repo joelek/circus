@@ -516,6 +516,7 @@ function indexFile(file: File): void {
 function indexFiles(): void {
 	for (let file of files) {
 		if (is.absent(file.index_timestamp)) {
+			console.log(`Indexing ${file.name}...`);
 			indexFile(file);
 		}
 	}
