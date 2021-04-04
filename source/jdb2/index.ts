@@ -505,11 +505,19 @@ export type SearchResult<A> = {
 export type TableEventMap<A> = {
 	"insert": {
 		key: Value,
+		index: number,
 		record: A | undefined
 	},
 	"remove": {
 		key: Value,
+		index: number,
 		record: A | undefined
+	},
+	"update": {
+		key: Value,
+		index: number,
+		last: A | undefined,
+		next: A | undefined
 	}
 };
 
@@ -573,7 +581,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 	private recordParser: RecordParser<A>;
 	private keyProvider?: ValueProvider<A>;
 
-	private getRecord(index: number): A {
+	getRecord(index: number): A {
 		let block = this.blockHandler.readBlock(index);
 		let string = block.toString().replace(/[\0]*$/, "");
 		let json = JSON.parse(string);
@@ -648,9 +656,9 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 	}
 
-	entries(): Iterable<[Value, A]> {
+	entries(): Iterable<[Value, number, A]> {
 		return StreamIterable.of(this.createIterable(Table.ROOT_NODE_INDEX, { recursive: true }))
-			.map<[Value, A]>((node) => [deserializeKey(node.keyBytes), this.getRecord(node.index)])
+			.map<[Value, number, A]>((node) => [deserializeKey(node.keyBytes), node.index, this.getRecord(node.index)])
 			.slice();
 	}
 
@@ -708,20 +716,30 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			keyByteIndex += 1;
 		}
 		this.blockHandler.readBlock(currentNodeIndex, currentNode.buffer);
-		if (currentNode.resident() === 0) {
+		let index = currentNode.resident();
+		if (index === 0) {
 			let recordIndex = this.blockHandler.createBlock(serializedRecord.length);
 			this.blockHandler.writeBlock(recordIndex, serializedRecord);
-			currentNode.resident(recordIndex);
+			index = currentNode.resident(recordIndex);
 			this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer, 0);
+			this.recordCache.insert(key, record);
+			this.route("insert", {
+				key: key,
+				index: index,
+				record: record
+			});
 		} else {
-			this.blockHandler.resizeBlock(currentNode.resident(), serializedRecord.length);
-			this.blockHandler.writeBlock(currentNode.resident(), serializedRecord);
+			let last = this.getRecord(index);
+			this.blockHandler.resizeBlock(index, serializedRecord.length);
+			this.blockHandler.writeBlock(index, serializedRecord);
+			this.recordCache.insert(key, record);
+			this.route("update", {
+				key: key,
+				index: index,
+				next: record,
+				last: last
+			});
 		}
-		this.recordCache.insert(key, record);
-		this.route("insert", {
-			key: key,
-			record: record
-		});
 	}
 
 	lookup(key: Value, options?: Partial<{ index: number }>): A {
@@ -772,12 +790,14 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 		this.blockHandler.readBlock(currentNodeIndex, currentNode.buffer);
 		if (currentNode.resident() !== 0) {
-			this.blockHandler.deleteBlock(currentNode.resident());
+			let index = currentNode.resident();
+			this.blockHandler.deleteBlock(index);
 			currentNode.resident(0);
 			this.blockHandler.writeBlock(currentNodeIndex, currentNode.buffer, 0);
 			this.recordCache.remove(key);
 			this.route("remove", {
 				key: key,
+				index: index,
 				record: record
 			});
 		}
@@ -1017,80 +1037,81 @@ export class Index<A, B> {
 	};
 
 	private tokenTable: Table<number>;
-	private keyTable: Table<{}>;
 	private parentTable: Table<A>;
 	private childTable: Table<B>;
 	private getIndexedValues: ValuesProvider<B>;
 	private getTokens: Tokenizer;
+	private blockHandler: BlockHandler;
 
 	constructor(blockHandler: BlockHandler, parentTable: Table<A>, childTable: Table<B>, getIndexedValues: ValuesProvider<B>, getTokens: Tokenizer = Index.VALUE_TOKENIZER) {
 		let tokenTable = new Table<number>(blockHandler, autoguard.guards.Number.as);
-		let keyTable = new Table<{}>(blockHandler, autoguard.guards.Object.of({}).as);
-		function insert(key: Value, record: B | undefined) {
+		function insert(key: Value, index: number, record: B | undefined) {
 			let values = is.present(record) ? getIndexedValues(record) : [];
 			for (let value of values) {
 				let tokens = getTokens(value);
 				for (let token of tokens) {
-					let index: number | undefined;
+					let rhIndex: number | undefined;
 					try {
-						index = tokenTable.lookup(token);
+						rhIndex = tokenTable.lookup(token);
 					} catch (error) {}
-					if (is.absent(index)) {
-						index = blockHandler.createBlock(Node.SIZE);
-						tokenTable.insert(index, {
+					if (is.absent(rhIndex)) {
+						rhIndex = blockHandler.createBlock(64);
+						tokenTable.insert(rhIndex, {
 							key: token
 						});
 					}
-					keyTable.insert(undefined, {
-						index,
-						key: key
-					});
+					let rhh = new RobinHoodHash(blockHandler, rhIndex);
+					rhh.insert(index);
 				}
 			}
 		}
-		function remove(key: Value, record: B | undefined) {
+		function remove(key: Value, index: number, record: B | undefined) {
 			let values = is.present(record) ? getIndexedValues(record) : [];
 			for (let value of values) {
 				let tokens = getTokens(value);
 				for (let token of tokens) {
-					let index: number | undefined;
+					let rhIndex: number | undefined;
 					try {
-						index = tokenTable.lookup(token);
+						rhIndex = tokenTable.lookup(token);
 					} catch (error) {
 						continue;
 					}
-					keyTable.remove(undefined, {
-						index,
-						key: key
-					});
+					let rhh = new RobinHoodHash(blockHandler, rhIndex);
+					rhh.remove(index);
 				}
 			}
 		}
 		childTable.addObserver("insert", (event) => {
-			insert(event.key, event.record)
+			insert(event.key, event.index, event.record)
 		});
 		childTable.addObserver("remove", (event) => {
-			remove(event.key, event.record);
+			remove(event.key, event.index, event.record);
+		});
+		childTable.addObserver("update", (event) => {
+			remove(event.key, event.index, event.last);
+			insert(event.key, event.index, event.next);
 		});
 		parentTable.addObserver("remove", (event) => {
 			let token = event.key;
 			let results = tokenTable.search(token);
 			for (let result of results) {
-				let index = result.lookup();
-				let keyEntries = keyTable.search(undefined, { index, prefix: true });
-				for (let keyEntry of keyEntries) {
-					let child = childTable.lookup(deserializeKey(keyEntry.keyBytes));
-					childTable.remove(child);
+				let rhIndex = result.lookup();
+				let rhh = new RobinHoodHash(this.blockHandler, rhIndex);
+				for (let index of rhh) {
+					try {
+						let record = childTable.getRecord(index);
+						childTable.remove(record);
+					} catch (error) {}
 				}
 			}
 		});
 		if (blockHandler.getCount() === Table.ROOT_NODE_INDEX + 1) {
-			for (let [key, record] of childTable.entries()) {
-				insert(key, record);
+			for (let [key, index, record] of childTable.entries()) {
+				insert(key, index, record);
 			}
 		}
+		this.blockHandler = blockHandler;
 		this.tokenTable = tokenTable;
-		this.keyTable = keyTable;
 		this.parentTable = parentTable;
 		this.childTable = childTable;
 		this.getIndexedValues = getIndexedValues;
@@ -1098,18 +1119,13 @@ export class Index<A, B> {
 	}
 
 	debug(): void {
-		let tokens = 0;
-		let values = 0;
-		let min = Infinity;
-		let max = 0 - Infinity;
-		for (let [key, index] of this.tokenTable.entries()) {
-			let results = this.keyTable.search(undefined, { index: index, prefix: true }).collect();
-			console.log(`${key} => ${results.length}`);
-			values += results.length;
-			min = Math.min(min, results.length);
-			max = Math.min(max, results.length);
+		for (let [key, index, record] of this.tokenTable.entries()) {
+			let rhh = new RobinHoodHash(this.blockHandler, record);
+			console.log(`${key} => ${index}`);
+			for (let index of rhh) {
+				console.log(`\t${index}`);
+			}
 		}
-		console.log({ tokens, values, min, max });
 	}
 
 	lookup(query: Value): StreamIterable<B> {
@@ -1120,14 +1136,14 @@ export class Index<A, B> {
 
 	search(query: Value): StreamIterable<SearchResult<B>> {
 		let tokens = this.getTokens(query);
-		let map = new Map<Value, number>();
+		let map = new Map<number, number>();
 		for (let token of tokens) {
 			let results = this.tokenTable.search(token);
 			for (let result of results) {
-				let index = result.lookup();
-				let keyEntries = this.keyTable.search(undefined, { index, prefix: true });
-				for (let keyEntry of keyEntries) {
-					let key = deserializeKey(keyEntry.keyBytes);
+				let rhIndex = result.lookup();
+				let rhh = new RobinHoodHash(this.blockHandler, rhIndex);
+				for (let index of rhh) {
+					let key = index;
 					let rank = map.get(key) ?? (0 - tokens.length);
 					map.set(key, rank + 2);
 				}
@@ -1137,9 +1153,9 @@ export class Index<A, B> {
 			.filter((result) => result[1] >= 0)
 			.sort(sorters.NumericSort.decreasing((result) => result[1]))
 			.map((entry) => ({
-				keyBytes: serializeKey(entry[0]),
+				keyBytes: Buffer.alloc(0),
 				rank: entry[1],
-				lookup: () => this.childTable.lookup(entry[0])
+				lookup: () => this.childTable.getRecord(entry[0])
 			}));
 	}
 };
