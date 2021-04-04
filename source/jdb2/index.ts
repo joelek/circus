@@ -1,48 +1,3 @@
-// restore 64 bit ptrs (fit 17 pointers in 120 bytes)
-// support prefix searches
-// use same block handler for all tables
-// use trie structure only for tables
-// restore update event, needed for search indices
-// fix nibbles being exposed as key from index search
-// ~ 300 000 words in index, some words have ~ 200 000 occurences
-// every record uses 32 b overhead, ok for tables but not indices
-// use local index structure inside one block
-// with buffer cache, traversal of about 160 000 entries / s
-
-/*
-first fix: create bulk blocks in indices and tables
-
-stop words are needed but suck
-
-
-
-reduce number of nodes,
-
-
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-[prefix8][subtreeptr8][residentptr8]
-24*16=384
-
-
-
-*/
-
-
-
 /*
 [v1]
 	latency shows: 160 ms
@@ -63,7 +18,7 @@ reduce number of nodes,
 	tables: 20 MB
 
 [4bit branch, 32bit pointers + rhh]
-	latency shows: 220 ms
+	latency shows: 230 ms
 	files table: 6482 kB + 807 kB
 	indices: 14 MB
 	tables: 20 MB
