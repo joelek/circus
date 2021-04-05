@@ -119,16 +119,17 @@ let index = jdb.BlockHandler.FIRST_APPLICATION_BLOCK;
 if (bh.getCount() === jdb.BlockHandler.FIRST_APPLICATION_BLOCK) {
 	bh.createBlock(64);
 }
-let rhh = new jdb.RobinHoodHash(bh, index);
+let rhh = new jdb.RobinHoodHash(bh, index, (index) => index);
 
-rhh.insert(7);
-rhh.insert(5);
-rhh.insert(9);
-rhh.insert(8);
-rhh.insert(3);
-rhh.remove(10);
-rhh.remove(5);
-rhh.remove(8);
+rhh.insert(7, 7);
+rhh.insert(5, 5);
+rhh.insert(9, 9);
+rhh.insert(8, 8);
+rhh.insert(8, 8);
+rhh.insert(3, 3);
+rhh.remove(10, 10);
+rhh.remove(5, 5);
+rhh.remove(8, 8);
 
 for (let value of rhh) {
 	console.log(value);

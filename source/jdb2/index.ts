@@ -161,9 +161,9 @@ export class Entry extends Chunk {
 };
 
 export type WeightProvider<A> = (value: A) => number;
-export type Value = boolean | string | number | null | undefined;
+export type Primitive = boolean | string | number | null | undefined;
 
-export class Cache<A extends Value, B> {
+export class Cache<A extends Primitive, B> {
 	private map: Map<A, B>;
 	private weightProvider: WeightProvider<B>;
 	private maxWeight?: number;
@@ -491,10 +491,10 @@ export class NodeTable extends Chunk {
 	}
 };
 
-export type ValueProvider<A> = (record: A) => Value;
-export type ValuesProvider<A> = (record: A) => Array<Value>;
+export type ValueProvider<A> = (record: A) => Primitive;
+export type ValuesProvider<A> = (record: A) => Array<Primitive>;
 export type RecordParser<A> = (json: any) => A;
-export type Tokenizer = (value: Value) => Array<Value>;
+export type Tokenizer = (value: Primitive) => Array<Primitive>;
 
 export type SearchResult<A> = {
 	keyBytes: Buffer,
@@ -504,17 +504,17 @@ export type SearchResult<A> = {
 
 export type TableEventMap<A> = {
 	"insert": {
-		key: Value,
+		key: Primitive,
 		index: number,
 		record: A | undefined
 	},
 	"remove": {
-		key: Value,
+		key: Primitive,
 		index: number,
 		record: A | undefined
 	},
 	"update": {
-		key: Value,
+		key: Primitive,
 		index: number,
 		last: A | undefined,
 		next: A | undefined
@@ -549,7 +549,7 @@ export function bytesFromNibbles(nibbles: Buffer): Buffer {
 	return Buffer.from(bytes);
 };
 
-export function serializeKey(key: Value): Buffer {
+export function serializeKey(key: Primitive): Buffer {
 	let bytes = (() => {
 		if (typeof key === "boolean") {
 			return Buffer.of(key ? 1 : 0);
@@ -569,14 +569,14 @@ export function serializeKey(key: Value): Buffer {
 	return nibblesFromBytes(bytes);
 };
 
-export function deserializeKey(nibbles: Buffer): Value {
+export function deserializeKey(nibbles: Buffer): Primitive {
 	return bytesFromNibbles(nibbles).toString("binary");
 };
 
 export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 	static ROOT_NODE_INDEX = BlockHandler.FIRST_APPLICATION_BLOCK;
 
-	private recordCache: Cache<Value, A>;
+	private recordCache: Cache<Primitive, A>;
 	private blockHandler: BlockHandler;
 	private recordParser: RecordParser<A>;
 	private keyProvider?: ValueProvider<A>;
@@ -622,7 +622,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 
 	constructor(blockHandler: BlockHandler, recordParser: RecordParser<A>, keyProvider?: ValueProvider<A>) {
 		super();
-		this.recordCache = new Cache<Value, A>((record) => 1, 1 * 1000 * 1000);
+		this.recordCache = new Cache<Primitive, A>((record) => 1, 1 * 1000 * 1000);
 		this.blockHandler = blockHandler;
 		this.recordParser = recordParser;
 		this.keyProvider = keyProvider;
@@ -656,13 +656,13 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 	}
 
-	entries(): Iterable<[Value, number, A]> {
+	entries(): Iterable<[Primitive, number, A]> {
 		return StreamIterable.of(this.createIterable(Table.ROOT_NODE_INDEX, { recursive: true }))
-			.map<[Value, number, A]>((node) => [deserializeKey(node.keyBytes), node.index, this.getRecord(node.index)])
+			.map<[Primitive, number, A]>((node) => [deserializeKey(node.keyBytes), node.index, this.getRecord(node.index)])
 			.slice();
 	}
 
-	insert(record: A | undefined, options?: Partial<{ key: Value, index: number }>): void {
+	insert(record: A | undefined, options?: Partial<{ key: Primitive, index: number }>): void {
 		let serializedRecord = Buffer.from(JSON.stringify(record) ?? "");
 		let key = (is.present(record) ? this.keyProvider?.(record) : undefined) ?? options?.key;
 		let keyBytes = serializeKey(key);
@@ -742,7 +742,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 	}
 
-	lookup(key: Value, options?: Partial<{ index: number }>): A {
+	lookup(key: Primitive, options?: Partial<{ index: number }>): A {
 		let record = this.recordCache.lookup(key);
 		if (is.present(record)) {
 			return record;
@@ -759,7 +759,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		throw `Expected a record for ${key}!`;
 	}
 
-	remove(record: A | undefined, options?: Partial<{ key: Value, index: number }>): void {
+	remove(record: A | undefined, options?: Partial<{ key: Primitive, index: number }>): void {
 		let key = (is.present(record) ? this.keyProvider?.(record) : undefined) ?? options?.key;
 		let keyBytes = serializeKey(key);
 		let keyByteIndex = 0;
@@ -803,7 +803,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 	}
 
-	search(key: Value, options?: Partial<{ index: number, prefix: boolean }>): StreamIterable<SearchResult<A>> {
+	search(key: Primitive, options?: Partial<{ index: number, prefix: boolean }>): StreamIterable<SearchResult<A>> {
 		let keyBytes = serializeKey(key);
 		let keyByteIndex = 0;
 		let currentNodeIndex = options?.index ?? Table.ROOT_NODE_INDEX;
@@ -844,9 +844,20 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 	}
 };
 
+export type KeyFromIndexProvider = (index: number) => Primitive;
+
 export class RobinHoodHash {
+	static INITIAL_SIZE = 16 + 2 * 8;
+
 	private blockHandler: BlockHandler;
 	private blockIndex: number;
+	private keyFromIndexProvider: KeyFromIndexProvider;
+
+	constructor(blockHandler: BlockHandler, blockIndex: number, keyFromIndexProvider: KeyFromIndexProvider) {
+		this.blockHandler = blockHandler;
+		this.blockIndex = blockIndex;
+		this.keyFromIndexProvider = keyFromIndexProvider;
+	}
 
 	private readHeader(): { occupiedSlots: number } {
 		let buffer = Buffer.alloc(16);
@@ -868,34 +879,34 @@ export class RobinHoodHash {
 		return (blockSize - 16) / 8;
 	}
 
-	private computeOptimalSlot(key: Buffer): number {
+	private computeOptimalSlot(serializedKey: Buffer): number {
 		let hash = libcrypto.createHash("sha256")
-			.update(key)
+			.update(serializedKey)
 			.digest();
 		let slotCount = this.getSlotCount();
 		let optimalSlot = Number(hash.readBigUInt64BE(0) % BigInt(slotCount));
 		return optimalSlot;
 	}
 
-	private loadSlot(slot: number): { probeDistance: number, isOccupied: boolean, value: number } {
+	private loadSlot(slotIndex: number): { probeDistance: number, isOccupied: boolean, index: number } {
 		let buffer = Buffer.alloc(8);
-		this.blockHandler.readBlock(this.blockIndex, buffer, 16 + slot * 8);
+		this.blockHandler.readBlock(this.blockIndex, buffer, 16 + slotIndex * 8);
 		let probeDistance = buffer.readUInt8(0);
 		let isOccupied = buffer.readUInt8(1) === 0x01;
-		let value = Number(buffer.readBigUInt64BE(0) & 0x0000FFFFFFFFFFFFn);
+		let index = Number(buffer.readBigUInt64BE(0) & 0x0000FFFFFFFFFFFFn);
 		return {
 			probeDistance,
 			isOccupied,
-			value
+			index
 		};
 	}
 
-	private saveSlot(slot: number, value: number, probeDistance: number, isOccupied: boolean): void {
+	private saveSlot(slotIndex: number, slot: { index: number, probeDistance: number, isOccupied: boolean }): void {
 		let buffer = Buffer.alloc(8);
-		buffer.writeBigUInt64BE(BigInt(value), 0);
-		buffer.writeUInt8(probeDistance, 0);
-		buffer.writeUInt8(isOccupied ? 0x01 : 0x00, 1);
-		this.blockHandler.writeBlock(this.blockIndex, buffer, 16 + slot * 8);
+		buffer.writeBigUInt64BE(BigInt(slot.index), 0);
+		buffer.writeUInt8(slot.probeDistance, 0);
+		buffer.writeUInt8(slot.isOccupied ? 0x01 : 0x00, 1);
+		this.blockHandler.writeBlock(this.blockIndex, buffer, 16 + slotIndex * 8);
 	}
 
 	private resizeIfNeccessary(): void {
@@ -904,7 +915,7 @@ export class RobinHoodHash {
 		let currentLoadFactor = occupiedSlots / slotCount;
 		let desiredSlotCount = slotCount;
 		if (currentLoadFactor <= 0.25) {
-			desiredSlotCount = Math.ceil(slotCount / 2);
+			desiredSlotCount = Math.max(Math.ceil(slotCount / 2), 2);
 		}
 		if (currentLoadFactor >= 0.75) {
 			desiredSlotCount = slotCount * 2;
@@ -921,91 +932,114 @@ export class RobinHoodHash {
 		}
 		this.blockHandler.clearBlock(this.blockIndex);
 		for (let value of values) {
-			this.insertWithoutResize(value);
+			let key = this.keyFromIndexProvider(value);
+			this.insertWithoutResize(key, value);
 		}
 	}
 
-	private insertWithoutResize(valueToInsert: number): void {
-		let key = Buffer.alloc(8);
-		key.writeBigUInt64BE(BigInt(valueToInsert), 0);
-		let optimalSlot = this.computeOptimalSlot(key);
+	private insertWithoutResize(key: Primitive, index: number): void {
+		let serializedKey = serializeKey(key);
+		let optimalSlot = this.computeOptimalSlot(serializedKey);
 		let slotCount = this.getSlotCount();
-		let currentSlot = optimalSlot;
-		let currentProbeDistance = 0;
+		let slotIndex = optimalSlot;
+		let probeDistance = 0;
 		for (let i = 0; i < slotCount; i++) {
-			let { probeDistance, isOccupied, value } = this.loadSlot(currentSlot);
-			if (!isOccupied) {
-				this.saveSlot(currentSlot, valueToInsert, currentProbeDistance, true);
+			let slot = this.loadSlot(slotIndex);
+			if (!slot.isOccupied) {
+				this.saveSlot(slotIndex, {
+					index: index,
+					probeDistance: probeDistance,
+					isOccupied: true
+				});
 				let header = this.readHeader();
 				header.occupiedSlots += 1;
 				this.writeHeader(header);
-				break;
-			}
-			if (value === valueToInsert) {
+				// insert
 				return;
 			}
-			if (currentProbeDistance > probeDistance) {
-				this.saveSlot(currentSlot, valueToInsert, currentProbeDistance, true);
-				valueToInsert = value;
-				currentProbeDistance = probeDistance;
+			if (slot.index === index) {
+				// update
+				return;
 			}
-			currentSlot = (currentSlot + 1) % slotCount;
-			currentProbeDistance += 1;
+			if (probeDistance > slot.probeDistance) {
+				this.saveSlot(slotIndex, {
+					index: index,
+					probeDistance: probeDistance,
+					isOccupied: true
+				});
+				index = slot.index;
+				probeDistance = slot.probeDistance;
+			}
+			slotIndex = (slotIndex + 1) % slotCount;
+			probeDistance += 1;
+		}
+		throw `Expected code to be unreachable!`;
+	}
+
+	private propagateBackwards(slotIndex: number): void {
+		let slotCount = this.getSlotCount();
+		for (let i = 0; i < slotCount; i++) {
+			let slot = this.loadSlot((slotIndex + 1) % slotCount);
+			if (slot.probeDistance === 0) {
+				this.saveSlot(slotIndex, {
+					index: 0,
+					probeDistance: 0,
+					isOccupied: false
+				});
+				break;
+			}
+			this.saveSlot(slotIndex, {
+				index: slot.index,
+				probeDistance: slot.probeDistance - 1,
+				isOccupied: true
+			});
+			slotIndex = (slotIndex + 1) % slotCount;
 		}
 	}
 
-	constructor(blockHandler: BlockHandler, blockIndex: number) {
-		this.blockHandler = blockHandler;
-		this.blockIndex = blockIndex;
+	private removeWithoutResize(key: Primitive, index: number): void {
+		let serializedKey = serializeKey(key);
+		let optimalSlot = this.computeOptimalSlot(serializedKey);
+		let slotCount = this.getSlotCount();
+		let slotIndex = optimalSlot;
+		let probeDistance = 0;
+		for (let i = 0; i < slotCount; i++) {
+			let slot = this.loadSlot(slotIndex);
+			if (!slot.isOccupied || slot.probeDistance > probeDistance) {
+				// not inserted
+				return;
+			}
+			if (slot.index === index) {
+				let header = this.readHeader();
+				header.occupiedSlots -= 1;
+				this.writeHeader(header);
+				this.propagateBackwards(slotIndex);
+				// removed
+				return;
+			}
+			slotIndex = (slotIndex + 1) % slotCount;
+			probeDistance += 1;
+		}
+		throw `Expected code to be unreachable!`;
 	}
 
 	*[Symbol.iterator](): Iterator<number> {
 		let slotCount = this.getSlotCount();
-		for (let slot = 0; slot < slotCount; slot++) {
-			let { isOccupied, value } = this.loadSlot(slot);
-			if (isOccupied) {
-				yield value;
+		for (let slotIndex = 0; slotIndex < slotCount; slotIndex++) {
+			let slot = this.loadSlot(slotIndex);
+			if (slot.isOccupied) {
+				yield slot.index;
 			}
 		}
 	}
 
-	insert(valueToInsert: number): void {
-		this.insertWithoutResize(valueToInsert);
+	insert(key: Primitive, index: number): void {
+		this.insertWithoutResize(key, index);
 		this.resizeIfNeccessary();
 	}
 
-	remove(valueToRemove: number): void {
-		if (DEBUG) IntegerAssert.atLeast(0, valueToRemove);
-		let key = Buffer.alloc(8);
-		key.writeBigUInt64BE(BigInt(valueToRemove), 0);
-		let optimalSlot = this.computeOptimalSlot(key);
-		let slotCount = this.getSlotCount();
-		let currentSlot = optimalSlot;
-		let currentProbeDistance = 0;
-		for (let i = 0; i < slotCount; i++) {
-			let { probeDistance, isOccupied, value } = this.loadSlot(currentSlot);
-			if (value === valueToRemove) {
-				this.saveSlot(currentSlot, 0, 0, false);
-				let header = this.readHeader();
-				header.occupiedSlots -= 1;
-				this.writeHeader(header);
-				break;
-			}
-			if (probeDistance > currentProbeDistance) {
-				return;
-			}
-			currentSlot = (currentSlot + 1) % slotCount;
-			currentProbeDistance += 1;
-		}
-		for (let i = 0; i < slotCount; i++) {
-			let { probeDistance, value } = this.loadSlot((currentSlot + 1) % slotCount);
-			if (probeDistance === 0) {
-				break;
-			}
-			this.saveSlot(currentSlot, value, probeDistance - 1, true);
-			this.saveSlot((currentSlot + 1) % slotCount, 0, 0, false);
-			currentSlot = (currentSlot + 1) % slotCount;
-		}
+	remove(key: Primitive, index: number): void {
+		this.removeWithoutResize(key, index);
 		this.resizeIfNeccessary();
 	}
 };
@@ -1045,7 +1079,7 @@ export class Index<A, B> {
 
 	constructor(blockHandler: BlockHandler, parentTable: Table<A>, childTable: Table<B>, getIndexedValues: ValuesProvider<B>, getTokens: Tokenizer = Index.VALUE_TOKENIZER) {
 		let tokenTable = new Table<number>(blockHandler, autoguard.guards.Number.as);
-		function insert(key: Value, index: number, record: B | undefined) {
+		function insert(key: Primitive, index: number, record: B | undefined) {
 			let values = is.present(record) ? getIndexedValues(record) : [];
 			for (let value of values) {
 				let tokens = getTokens(value);
@@ -1055,17 +1089,17 @@ export class Index<A, B> {
 						rhIndex = tokenTable.lookup(token);
 					} catch (error) {}
 					if (is.absent(rhIndex)) {
-						rhIndex = blockHandler.createBlock(64);
+						rhIndex = blockHandler.createBlock(RobinHoodHash.INITIAL_SIZE);
 						tokenTable.insert(rhIndex, {
 							key: token
 						});
 					}
-					let rhh = new RobinHoodHash(blockHandler, rhIndex);
-					rhh.insert(index);
+					let rhh = new RobinHoodHash(blockHandler, rhIndex, (index) => index);
+					rhh.insert(index, index);
 				}
 			}
 		}
-		function remove(key: Value, index: number, record: B | undefined) {
+		function remove(key: Primitive, index: number, record: B | undefined) {
 			let values = is.present(record) ? getIndexedValues(record) : [];
 			for (let value of values) {
 				let tokens = getTokens(value);
@@ -1076,8 +1110,8 @@ export class Index<A, B> {
 					} catch (error) {
 						continue;
 					}
-					let rhh = new RobinHoodHash(blockHandler, rhIndex);
-					rhh.remove(index);
+					let rhh = new RobinHoodHash(blockHandler, rhIndex, (index) => index);
+					rhh.remove(index, index);
 				}
 			}
 		}
@@ -1096,7 +1130,7 @@ export class Index<A, B> {
 			let results = tokenTable.search(token);
 			for (let result of results) {
 				let rhIndex = result.lookup();
-				let rhh = new RobinHoodHash(this.blockHandler, rhIndex);
+				let rhh = new RobinHoodHash(this.blockHandler, rhIndex, (index) => index);
 				for (let index of rhh) {
 					try {
 						let record = childTable.getRecord(index);
@@ -1120,7 +1154,7 @@ export class Index<A, B> {
 
 	debug(): void {
 		for (let [key, index, record] of this.tokenTable.entries()) {
-			let rhh = new RobinHoodHash(this.blockHandler, record);
+			let rhh = new RobinHoodHash(this.blockHandler, record, (index) => index);
 			console.log(`${key} => ${index}`);
 			for (let index of rhh) {
 				console.log(`\t${index}`);
@@ -1128,20 +1162,20 @@ export class Index<A, B> {
 		}
 	}
 
-	lookup(query: Value): StreamIterable<B> {
+	lookup(query: Primitive): StreamIterable<B> {
 		return this.search(query)
 			.map((result) => result.lookup())
 			.slice();
 	}
 
-	search(query: Value): StreamIterable<SearchResult<B>> {
+	search(query: Primitive): StreamIterable<SearchResult<B>> {
 		let tokens = this.getTokens(query);
 		let map = new Map<number, number>();
 		for (let token of tokens) {
 			let results = this.tokenTable.search(token);
 			for (let result of results) {
 				let rhIndex = result.lookup();
-				let rhh = new RobinHoodHash(this.blockHandler, rhIndex);
+				let rhh = new RobinHoodHash(this.blockHandler, rhIndex, (index) => index);
 				for (let index of rhh) {
 					let key = index;
 					let rank = map.get(key) ?? (0 - tokens.length);
