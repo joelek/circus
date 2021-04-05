@@ -117,7 +117,7 @@ fixed-length 256 byte chunk:
 let bh = new jdb.BlockHandler([".", "private", "testtables", "robin"]);
 let index = jdb.BlockHandler.FIRST_APPLICATION_BLOCK;
 if (bh.getCount() === jdb.BlockHandler.FIRST_APPLICATION_BLOCK) {
-	bh.createBlock(64);
+	bh.createBlock(jdb.RobinHoodHash.INITIAL_SIZE);
 }
 let rhh = new jdb.RobinHoodHash(bh, index, (index) => index);
 

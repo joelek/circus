@@ -1,0 +1,6 @@
+{
+	IndexRecord: {
+		token: boolean | null | number | string | undefined,
+		index: number
+	}
+}
