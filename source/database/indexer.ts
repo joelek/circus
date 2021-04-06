@@ -57,13 +57,13 @@ if (!libfs.existsSync(INDICES_ROOT.join("/"))) {
 }
 
 function loadTable<A>(name: string, guard: autoguard.serialization.MessageGuard<A>, getKey: jdb2.ValueProvider<A>): jdb2.Table<A> {
-	let blockHandler = new jdb2.BlockHandler([".", "private", "tables2", name]);
+	let blockHandler = new jdb2.BlockHandler([".", "private", "tables", name]);
 	let table = new jdb2.Table<A>(blockHandler, (json) => guard.as(json), getKey);
 	return table;
 }
 
 function loadIndex<A, B>(name: string, parent: jdb2.Table<A>, child: jdb2.Table<B>, getGroupKey: jdb2.ValuesProvider<B>, tokenizer: jdb2.Tokenizer = jdb2.Index.VALUE_TOKENIZER): jdb2.Index<A, B> {
-	let blockHandler = new jdb2.BlockHandler([".", "private", "indices2", name]);
+	let blockHandler = new jdb2.BlockHandler([".", "private", "indices", name]);
 	let index = new jdb2.Index<A, B>(blockHandler, parent, child, getGroupKey, tokenizer);
 	return index;
 }
