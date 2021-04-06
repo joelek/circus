@@ -556,27 +556,24 @@ export function bytesFromNibbles(nibbles: Buffer): Buffer {
 };
 
 export function serializeKey(key: Primitive): Buffer {
-	let bytes = (() => {
-		if (typeof key === "boolean") {
-			return Buffer.of(key ? 1 : 0);
+	if (typeof key === "boolean") {
+		return Buffer.of(key ? 1 : 0);
+	}
+	if (typeof key === "number") {
+		return Buffer.from(`${key}`);
+	}
+	if (typeof key === "string") {
+		if (/^[0-9a-f]{8,}$/i.test(key)) {
+			return Buffer.from(key, "hex");
+		} else {
+			return Buffer.from(key, "binary");
 		}
-		if (typeof key === "number") {
-			return Buffer.from(`${key}`);
-		}
-		if (typeof key === "string") {
-			if (/^[0-9a-f]{8,}$/i.test(key)) {
-				return Buffer.from(key, "hex");
-			} else {
-				return Buffer.from(key, "binary");
-			}
-		}
-		return Buffer.alloc(0);
-	})();
-	return nibblesFromBytes(bytes);
+	}
+	return Buffer.alloc(0);
 };
 
-export function deserializeKey(nibbles: Buffer): Primitive {
-	return bytesFromNibbles(nibbles).toString("binary");
+export function deserializeKey(bytes: Buffer): Primitive {
+	return bytes.toString("binary");
 };
 
 export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
