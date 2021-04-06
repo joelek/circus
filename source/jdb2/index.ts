@@ -24,7 +24,7 @@
 	tables: 20 MB
 
 [rhh + rhh]
-	latency shows: 200 ms
+	latency shows: 230 ms
 	files table: 5823 kB + 431 kB
 	indices: 11 MB
 	tables: 16 MB
@@ -580,7 +580,7 @@ export function deserializeKey(nibbles: Buffer): Primitive {
 };
 
 export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
-	private recordCache: Cache<Primitive, A>;
+	private recordCache: Cache<number, A>;
 	private blockHandler: BlockHandler;
 	private recordParser: RecordParser<A>;
 	private keyProvider: ValueProvider<A>;
@@ -595,33 +595,38 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		if (blockHandler.getCount() === BlockHandler.FIRST_APPLICATION_BLOCK) {
 			blockHandler.createBlock(RobinHoodHash.INITIAL_SIZE);
 		}
-		this.recordCache = new Cache<Primitive, A>((record) => 1, 1 * 1000 * 1000);
+		this.recordCache = new Cache<number, A>((record) => 1, 1 * 1000 * 1000);
 		this.blockHandler = blockHandler;
 		this.recordParser = recordParser;
 		this.keyProvider = keyProvider;
 		this.hashTable = new RobinHoodHash(blockHandler, BlockHandler.FIRST_APPLICATION_BLOCK, (index) => {
-			let record = this.deserializeRecord(index);
+			let record = this.getRecord(index);
 			return this.keyProvider(record);
 		});
 	}
 
-	deserializeRecord(index: number): A {
+	*[Symbol.iterator](): Iterator<A> {
+		yield* StreamIterable.of(this.hashTable)
+			.map((value) => this.getRecord(value));
+	}
+
+	getRecord(index: number): A {
+		let record = this.recordCache.lookup(index);
+		if (is.present(record)) {
+			return record;
+		}
 		let block = this.blockHandler.readBlock(index);
 		let string = block.toString().replace(/[\0]*$/, "");
 		let json = JSON.parse(string);
-		let record = this.recordParser(json);
+		record = this.recordParser(json);
+		this.recordCache.insert(index, record);
 		return record;
-	}
-
-	*[Symbol.iterator](): Iterator<A> {
-		yield* StreamIterable.of(this.hashTable)
-			.map((value) => this.deserializeRecord(value));
 	}
 
 	entries(): Iterable<[Primitive, number, A]> {
 		return StreamIterable.of(this.hashTable)
 			.map<[Primitive, number, A]>((index) => {
-				let record = this.deserializeRecord(index);
+				let record = this.getRecord(index);
 				let key = this.keyProvider(record);
 				return [key, index, record];
 			})
@@ -632,20 +637,21 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		let bytes = Buffer.from(JSON.stringify(next));
 		let key = this.keyProvider(next);
 		let index = this.hashTable.lookup(key);
-		this.recordCache.insert(key, next);
 		if (is.absent(index)) {
 			index = this.blockHandler.createBlock(bytes.length);
 			this.blockHandler.writeBlock(index, bytes);
 			this.hashTable.insert(key, index);
+			this.recordCache.insert(index, next);
 			this.route("insert", {
 				key: key,
 				index: index,
 				record: next
 			});
 		} else {
-			let last = this.deserializeRecord(index);
+			let last = this.getRecord(index);
 			this.blockHandler.resizeBlock(index, bytes.length);
 			this.blockHandler.writeBlock(index, bytes);
+			this.recordCache.insert(index, next);
 			this.route("update", {
 				key: key,
 				index: index,
@@ -656,16 +662,11 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 	}
 
 	lookup(key: Primitive): A {
-		let record = this.recordCache.lookup(key);
-		if (is.present(record)) {
-			return record;
-		}
 		let index = this.hashTable.lookup(key);
 		if (is.absent(index)) {
 			throw `Expected a record for ${key}!`;
 		}
-		record = this.deserializeRecord(index);
-		this.recordCache.insert(key, record);
+		let record = this.getRecord(index);
 		return record;
 	}
 
@@ -676,7 +677,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			return;
 		}
 		this.blockHandler.deleteBlock(index);
-		this.recordCache.remove(key);
+		this.recordCache.remove(index);
 		this.route("remove", {
 			key: key,
 			index: index,
@@ -1358,7 +1359,7 @@ export class Index<A, B> {
 			.map((entry) => ({
 				index: entry[0],
 				rank: entry[1],
-				lookup: () => this.childTable.deserializeRecord(entry[0])
+				lookup: () => this.childTable.getRecord(entry[0])
 			}));
 	}
 };
