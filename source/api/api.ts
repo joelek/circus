@@ -60,6 +60,23 @@ function getOptionalInteger(url: liburl.UrlWithParsedQuery, key: string): number
 	} catch (error) {}
 }
 
+function getRequiredBoolean(url: liburl.UrlWithParsedQuery, key: string): boolean {
+	let value = getRequiredString(url, key);
+	if (value === "false") {
+		return false;
+	}
+	if (value === "true") {
+		return true;
+	}
+	throw `Expected a boolean!`;
+}
+
+function getOptionalBoolean(url: liburl.UrlWithParsedQuery, key: string): boolean | undefined {
+	try {
+		return getRequiredBoolean(url, key);
+	} catch (error) {}
+}
+
 function getUserId(request: libhttp.IncomingMessage): string {
 	var url = liburl.parse(request.url || "/", true);
 	return auth.getUserId(url.query.token as string);
@@ -598,9 +615,10 @@ class SearchRoute implements Route<{}, response.SearchResponse> {
 		let parts = /^[/]api[/]search[/]([^/?]*)/.exec(request.url ?? "/") as RegExpExecArray;
 		let query = decodeURIComponent(parts[1]);
 		let url = liburl.parse(request.url ?? "/", true);
+		let cues = getOptionalBoolean(url, "cues") ?? false;
 		let offset = getOptionalInteger(url, "offset") ?? 0;
 		let length = getOptionalInteger(url, "length") ?? 24;
-		let entities = handler.searchForEntities(query, user_id, offset, length);
+		let entities = handler.searchForEntities(query, user_id, offset, length, { cues });
 		let payload: response.SearchResponse = {
 			entities
 		};

@@ -2685,12 +2685,13 @@ let updateviewforuri = (uri: string): void => {
 		let query = new ObservableClass(decodeURIComponent(parts[1]));
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
+		let cues = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let entities = new ArrayObservable<Entity>([]);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
-				let response = await preq<{}, api_response.SearchResponse>(`/api/search/${encodeURIComponent(query.getState())}?offset=${offset}&token=${token}`, {});
+				let response = await preq<{}, api_response.SearchResponse>(`/api/search/${encodeURIComponent(query.getState())}?cues=${cues.getState()}&offset=${offset}&token=${token}`, {});
 				for (let entity of response.entities) {
 					entities.append(entity);
 				}

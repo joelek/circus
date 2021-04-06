@@ -703,7 +703,7 @@ export function searchForYears(query: string, offset: number, length: number, us
 	}
 };
 
-export function searchForEntities(query: string, user_id: string, offset: number, limit: number): schema.objects.Entity[] {
+export function searchForEntities(query: string, user_id: string, offset: number, limit: number, options?: Partial<{ cues: boolean }>): schema.objects.Entity[] {
 	let results = [
 		...database.actor_search.search(query).map((result) => ({ ...result, type: "ACTOR", type_rank: 1 })),
 		...database.album_search.search(query).map((result) => ({ ...result, type: "ALBUM", type_rank: 9 })),
@@ -721,11 +721,13 @@ export function searchForEntities(query: string, user_id: string, offset: number
 		jsondb.NumericSort.decreasing((value) => value.rank),
 		jsondb.NumericSort.decreasing((value) => value.type_rank)
 	));
-	let cue = is.absent(database.cue_search) ? undefined : database.cue_search.search(query).shift();
-	if (is.present(cue)) {
-		let result = results[0];
-		if (is.absent(result) || cue.rank > result.rank) {
-			results.unshift({ ...cue, type: "CUE", type_rank: 11 });
+	if (options?.cues) {
+		let cue = is.absent(database.cue_search) ? undefined : database.cue_search.search(query).shift();
+		if (is.present(cue)) {
+			let result = results[0];
+			if (is.absent(result) || cue.rank > result.rank) {
+				results.unshift({ ...cue, type: "CUE", type_rank: 11 });
+			}
 		}
 	}
 	let entities = results.slice(offset, offset + limit)
