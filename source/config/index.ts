@@ -16,7 +16,6 @@ let config: schema.Config = {
 	http_port: 80,
 	https_port: 443,
 	media_path: [ ".", "private", "media" ],
-	use_cue_index: false,
 	use_demo_mode: false
 };
 
@@ -38,9 +37,6 @@ try {
 		}
 		if (autoguard.Array.of(autoguard.String).is(json.media_path)) {
 			config.media_path = json.media_path;
-		}
-		if (autoguard.Boolean.is(json.use_cue_index)) {
-			config.use_cue_index = json.use_cue_index;
 		}
 		if (autoguard.Boolean.is(json.use_demo_mode)) {
 			config.use_demo_mode = json.use_demo_mode;

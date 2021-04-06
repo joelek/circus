@@ -161,7 +161,7 @@ if (getKeysFromUser.lookup(undefined).collect().length === 0) {
 
 export const album_search = loadIndex("search_albums", albums, albums, (entry) => [entry.title, entry.year].filter(is.present), jdb2.Index.QUERY_TOKENIZER);
 export const artist_search = loadIndex("search_artists", artists, artists, (entry) => [entry.name], jdb2.Index.QUERY_TOKENIZER);
-export const cue_search = !config.use_cue_index ? undefined : loadIndex("search_cues", cues, cues, (entry) => [entry.lines], jdb2.Index.QUERY_TOKENIZER);
+export const cue_search = loadIndex("search_cues", cues, cues, (entry) => [entry.lines], jdb2.Index.QUERY_TOKENIZER);
 export const episode_search = loadIndex("search_episodes", episodes, episodes, (entry) => [entry.title, entry.year].filter(is.present), jdb2.Index.QUERY_TOKENIZER);
 export const genre_search = loadIndex("search_genres", genres, genres, (entry) => [entry.name], jdb2.Index.QUERY_TOKENIZER);
 export const movie_search = loadIndex("search_movies", movies, movies, (entry) => [entry.title, entry.year].filter(is.present), jdb2.Index.QUERY_TOKENIZER);

@@ -5,7 +5,6 @@
 		http_port: number,
 		https_port: number,
 		media_path: string[],
-		use_cue_index: boolean,
 		use_demo_mode: boolean
 	}
 }
