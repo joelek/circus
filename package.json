@@ -27,5 +27,5 @@
 		"postversion": "git push && git push --tags",
 		"start": "node ."
 	},
-	"version": "0.0.117"
+	"version": "0.0.118"
 }
