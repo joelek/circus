@@ -258,6 +258,19 @@ export class IconFactory {
 			);
 	}
 
+	makeQuotationMark(options?: Options): xnode.XElement {
+		return xnode.element("svg")
+			.set("class", getClass(options?.direction))
+			.set("width", "12px")
+			.set("height", "12px")
+			.set("viewBox", "0 0 24 24")
+			.add(xnode.element("path")
+				.set("d", "M8,4H2C0.9,4,0,4.9,0,6v4c0,1.1,0.9,2,2,2h3.7c-1,2.9-4.1,4.1-4.3,4.1c-1,0.3-1.6,1.5-1.3,2.5C0.4,19.5,1.2,20,2,20c0.2,0,0.4,0,0.6-0.1C2.9,19.8,10,17.4,10,10V6C10,4.9,9.1,4,8,4z")
+			).add(xnode.element("path")
+				.set("d", "M22,4h-6c-1.1,0-2,0.9-2,2v4c0,1.1,0.9,2,2,2h3.7c-1,2.9-4.1,4.1-4.3,4.1c-1,0.3-1.6,1.5-1.3,2.5c0.3,0.8,1.1,1.4,1.9,1.4c0.2,0,0.4,0,0.6-0.1c0.3-0.1,7.4-2.5,7.4-9.9V6C24,4.9,23.1,4,22,4z")
+			);
+	}
+
 	makeReload(options?: Options): xnode.XElement {
 		return xnode.element("svg")
 			.set("class", getClass(options?.direction))

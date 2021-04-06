@@ -2728,26 +2728,36 @@ let updateviewforuri = (uri: string): void => {
 		});
 		mount.appendChild(xml.element("div.content")
 			.add(xml.element("div")
-				.set("style", "position: relative;")
-				.add(xml.element("input")
-					.set("type", "text")
-					.set("spellcheck", "false")
-					.set("placeholder", "Search...")
-					.bind2("value", query)
-					.on("keyup", (event) => {
-						let target = event.target as HTMLInputElement;
-						if (event.code === "Enter") {
-							target.blur();
-						}
-					})
-					.on("blur", () => {
-						let uri = `search/${encodeURIComponent(query.getState())}`;
-						window.history.replaceState({ ...window.history.state, uri }, "", uri);
-						reset();
-					})
+				.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr auto;")
+				.add(xml.element("div")
+					.set("style", "position: relative;")
+					.add(xml.element("input")
+						.set("type", "text")
+						.set("spellcheck", "false")
+						.set("placeholder", "Search...")
+						.bind2("value", query)
+						.on("keyup", (event) => {
+							let target = event.target as HTMLInputElement;
+							if (event.code === "Enter") {
+								target.blur();
+							}
+						})
+						.on("blur", () => {
+							let uri = `search/${encodeURIComponent(query.getState())}`;
+							window.history.replaceState({ ...window.history.state, uri }, "", uri);
+							reset();
+						})
+					)
+					.add(Icon.makeMagnifyingGlass()
+						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+					)
 				)
-				.add(Icon.makeMagnifyingGlass()
-					.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+				.add(makeButton()
+					.bind("data-active", cues.addObserver(a => a))
+					.add(Icon.makeQuotationMark())
+					.on("click", () => {
+						cues.updateState(!cues.getState());
+					})
 				)
 			)
 			.add(xml.element("div")
