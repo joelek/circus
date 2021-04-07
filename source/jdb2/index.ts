@@ -224,6 +224,7 @@ export class BlockHandler {
 	private toc: number;
 	private blockCache: Cache<number, Buffer>;
 	private entryCache: Cache<number, Entry>;
+	private inBatchOperation: Set<number>;
 
 	private computePool(minLength: number): number {
 		if (DEBUG) IntegerAssert.atLeast(0, minLength);
@@ -287,11 +288,28 @@ export class BlockHandler {
 		this.toc = open([...path, "toc"]);
 		this.blockCache = new Cache<number, Buffer>((value) => value.length, 512 * 1024 * 1024);
 		this.entryCache = new Cache<number, Entry>((value) => 1, 1 * 1000 * 1000);
+		this.inBatchOperation = new Set<number>();
 		if (this.getCount() === 0) {
 			for (let i = 0; i < BlockHandler.FIRST_APPLICATION_BLOCK; i++) {
 				this.createNewBlock(16);
 			}
 		}
+	}
+
+	batchOperation(index: number, operation: () => void): void {
+		if (this.inBatchOperation.has(index)) {
+			throw `Expected block ${index} to be in normal operation!`;
+		}
+		this.inBatchOperation.add(index);
+		try {
+			operation();
+		} catch (error) {
+			this.inBatchOperation.delete(index);
+			throw error;
+		}
+		this.inBatchOperation.delete(index);
+		let buffer = this.readBlock(index);
+		this.writeBlock(index, buffer);
 	}
 
 	clearBlock(index: number): void {
@@ -339,6 +357,7 @@ export class BlockHandler {
 		entry.deleted = true;
 		this.writeEntry(index, entry);
 		this.blockCache.remove(index);
+		this.inBatchOperation.delete(index);
 	}
 
 	getBlockSize(index: number): number {
@@ -421,15 +440,19 @@ export class BlockHandler {
 		let length = buffer.length;
 		if (DEBUG) IntegerAssert.between(0, offset, entry.length - 1);
 		if (DEBUG) IntegerAssert.between(0, length, entry.length - offset);
-		write(this.bin, buffer, entry.offset + offset);
-		if (is.absent(skipLength)) {
-			write(this.bin, Buffer.alloc(entry.length - buffer.length), entry.offset + buffer.length);
-		}
 		let cached = this.blockCache.lookup(index);
-		if (is.present(cached)) {
-			cached.set(buffer, offset);
+		if (is.absent(cached)) {
+			cached = this.readBlock(index);
+			this.blockCache.insert(index, cached);
+		}
+		cached.set(buffer, offset);
+		if (is.absent(skipLength)) {
+			cached.set(Buffer.alloc(entry.length - buffer.length), buffer.length);
+		}
+		if (!this.inBatchOperation.has(index)) {
+			write(this.bin, buffer, entry.offset + offset);
 			if (is.absent(skipLength)) {
-				cached.set(Buffer.alloc(entry.length - buffer.length), buffer.length);
+				write(this.bin, Buffer.alloc(entry.length - buffer.length), entry.offset + buffer.length);
 			}
 		}
 		return buffer
@@ -1025,8 +1048,8 @@ export class RobinHoodHash {
 
 	private resizeIfNeccessary(): void {
 		let slotCount = this.getSlotCount();
-		let occupiedSlots = this.readHeader().occupiedSlots;
-		let currentLoadFactor = occupiedSlots / slotCount;
+		let header = this.readHeader();
+		let currentLoadFactor = header.occupiedSlots / slotCount;
 		let desiredSlotCount = slotCount;
 		if (currentLoadFactor <= 0.25) {
 			desiredSlotCount = Math.max(Math.ceil(slotCount / 2), 2);
@@ -1044,22 +1067,22 @@ export class RobinHoodHash {
 		if (newSlotCount === slotCount) {
 			return;
 		}
-		this.blockHandler.clearBlock(this.blockIndex);
-		for (let value of values) {
-			let key = this.keyFromIndexProvider(value);
-			this.insertWithoutResize(key, value);
-		}
+		this.blockHandler.batchOperation(this.blockIndex, () => {
+			this.blockHandler.clearBlock(this.blockIndex);
+			for (let value of values) {
+				let key = this.keyFromIndexProvider(value);
+				this.doInsert(key, value);
+			}
+			this.writeHeader(header);
+		});
 	}
 
-	private insertWithoutResize(key: Primitive, index: number): void {
+	private doInsert(key: Primitive, index: number): number | undefined {
 		let serializedKey = serializeKey(key);
 		let optimalSlot = this.computeOptimalSlot(serializedKey);
 		let slotCount = this.getSlotCount();
 		let slotIndex = optimalSlot;
 		let probeDistance = 0;
-/* 		if (key === "6ceb78a4cc7210af") {
-			console.log("insert", {optimalSlot, slotCount})
-		} */
 		for (let i = 0; i < slotCount; i++) {
 			let slot = this.loadSlot(slotIndex);
 			if (!slot.isOccupied) {
@@ -1068,18 +1091,9 @@ export class RobinHoodHash {
 					probeDistance: probeDistance,
 					isOccupied: true
 				});
-				let header = this.readHeader();
-				header.occupiedSlots += 1;
-				this.writeHeader(header);
-/* 		if (key === "6ceb78a4cc7210af") {
-			console.log("insert new", {slotIndex, probeDistance})
-		} */
-				return;
+				return slotIndex;
 			}
 			if (slot.index === index) {
-/* 		if (key === "6ceb78a4cc7210af") {
-			console.log("insert update", {slotIndex, probeDistance})
-		} */
 				return;
 			}
 			if (probeDistance > slot.probeDistance) {
@@ -1118,7 +1132,7 @@ export class RobinHoodHash {
 		}
 	}
 
-	private removeWithoutResize(key: Primitive, index: number): void {
+	private doRemove(key: Primitive, index: number): number | undefined {
 		let serializedKey = serializeKey(key);
 		let optimalSlot = this.computeOptimalSlot(serializedKey);
 		let slotCount = this.getSlotCount();
@@ -1127,16 +1141,15 @@ export class RobinHoodHash {
 		for (let i = 0; i < slotCount; i++) {
 			let slot = this.loadSlot(slotIndex);
 			if (!slot.isOccupied || probeDistance > slot.probeDistance) {
-				// not inserted
 				return;
 			}
 			if (slot.index === index) {
-				let header = this.readHeader();
-				header.occupiedSlots -= 1;
-				this.writeHeader(header);
-				this.propagateBackwards(slotIndex);
-				// removed
-				return;
+				this.saveSlot(slotIndex, {
+					index: 0,
+					probeDistance: 0,
+					isOccupied: false
+				});
+				return slotIndex;
 			}
 			slotIndex = (slotIndex + 1) % slotCount;
 			probeDistance += 1;
@@ -1167,8 +1180,13 @@ export class RobinHoodHash {
 	}
 
 	insert(key: Primitive, index: number): void {
-		this.insertWithoutResize(key, index);
-		this.resizeIfNeccessary();
+		let slotIndex = this.doInsert(key, index);
+		if (is.present(slotIndex)) {
+			let header = this.readHeader();
+			header.occupiedSlots += 1;
+			this.writeHeader(header);
+			this.resizeIfNeccessary();
+		}
 	}
 
 	lookup(key: Primitive): number | undefined {
@@ -1179,14 +1197,7 @@ export class RobinHoodHash {
 		let probeDistance = 0;
 		for (let i = 0; i < slotCount; i++) {
 			let slot = this.loadSlot(slotIndex);
-/* 		if (key === "6ceb78a4cc7210af") {
-
-			console.log({serializedKey, optimalSlot, slotIndex, slot, key, probeDistance });
-		} */
 			if (!slot.isOccupied || probeDistance > slot.probeDistance) {
-/* 		if (key === "6ceb78a4cc7210af") {
-			this.debug();
-		} */
 				return;
 			}
 			if (this.keyFromIndexProvider(slot.index) === key) {
@@ -1199,8 +1210,14 @@ export class RobinHoodHash {
 	}
 
 	remove(key: Primitive, index: number): void {
-		this.removeWithoutResize(key, index);
-		this.resizeIfNeccessary();
+		let slotIndex = this.doRemove(key, index);
+		if (is.present(slotIndex)) {
+			let header = this.readHeader();
+			header.occupiedSlots -= 1;
+			this.writeHeader(header);
+			this.propagateBackwards(slotIndex);
+			this.resizeIfNeccessary();
+		}
 	}
 
 	debug(): void {
