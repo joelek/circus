@@ -112,7 +112,7 @@ The server is started using `node .` and should ideally be configured to run aut
 
 Visit the domain or IP-address of the server in any web browser and register your user using the registration key displayed when launching the server. The registration key is consumed upon successful registration.
 
-Circus technically supports multiple users although there is currently no way of generating additional registration keys. This will likely change in the future.
+Circus generates additional registration keys as soon as all registration keys have been consumed. You may use additional registration keys to register mutiple users.
 
 Ports, paths and other settings can be configured through altering the config file located in the "./private/config/" directory. The config file is written to disk as Circus is launched.
 
@@ -157,8 +157,6 @@ Ports, paths and other settings can be configured through altering the config fi
 * Index content at regular one hour intervals when inactive.
 * Add statistics page.
 * Verify external track metadata functionality.
-* Add way of generating additional registration keys.
-* Add additional entity pages.
 * Add filter to entity pages.
 * Change line heights to make umlauts fit.
 * Fix crash on playback of empty contexts.
