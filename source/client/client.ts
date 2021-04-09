@@ -323,6 +323,7 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 						.set("placeholder", "Title...")
 						.on("keyup", async (event) => {
 							if (event.code === "Enter") {
+								(event.target as HTMLInputElement).blur();
 								await doCreate();
 							}
 						})
@@ -1550,6 +1551,7 @@ let modals = xml.element("div.modal-container")
 							.set("placeholder", "Password...")
 							.on("keyup", async (event) => {
 								if (event.code === "Enter") {
+									(event.target as HTMLInputElement).blur();
 									await doLogin();
 								}
 							})
@@ -1591,6 +1593,7 @@ let modals = xml.element("div.modal-container")
 							.set("placeholder", "Registration key...")
 							.on("keyup", async (event) => {
 								if (event.code === "Enter") {
+									(event.target as HTMLInputElement).blur();
 									await doRegister();
 								}
 							})
@@ -2737,9 +2740,8 @@ let updateviewforuri = (uri: string): void => {
 						.set("placeholder", "Search...")
 						.bind2("value", query)
 						.on("keyup", (event) => {
-							let target = event.target as HTMLInputElement;
 							if (event.code === "Enter") {
-								target.blur();
+								(event.target as HTMLInputElement).blur();
 							}
 						})
 						.on("blur", () => {
