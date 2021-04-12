@@ -191,15 +191,15 @@ player.currentEntry.addObserver((currentEntry) => {
 		isLoading.updateState(true);
 		let currentLocalEntry = player.currentLocalEntry.getState();
 		let token = player.token.getState();
+		while (is.present(currentVideo.lastChild)) {
+			currentVideo.removeChild(currentVideo.lastChild);
+		}
 		if (is.absent(currentLocalEntry) || is.absent(token)) {
 			currentVideo.src = ``;
 			return;
 		} else {
 			currentVideo.src = `/files/${currentLocalEntry.media.file_id}/?token=${token}`;
 			currentVideo.load();
-		}
-		while (currentVideo.lastChild != null) {
-			currentVideo.removeChild(currentVideo.lastChild);
 		}
 		if (Movie.is(currentLocalEntry) || Episode.is(currentLocalEntry)) {
 			let subtitles = currentLocalEntry.subtitles;
