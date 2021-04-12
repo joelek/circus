@@ -50,9 +50,9 @@ export class PlaybackButtonFactory {
 				.bind("data-hide", isPlaying.addObserver((isPlaying) => !isPlaying))
 			)
 			.on("click", () => {
-				let pause = controller.pause ?? this.player.pause;
-				let play = controller.play ?? this.player.play;
-				let resume = controller.resume ?? this.player.resume;
+				let pause = controller.pause ?? (() => this.player.pause());
+				let play = controller.play ?? (() => this.player.play());
+				let resume = controller.resume ?? (() => this.player.resume());
 				if (isPlaying.getState()) {
 					pause();
 				} else {
