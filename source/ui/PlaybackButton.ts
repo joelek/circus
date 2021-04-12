@@ -167,7 +167,7 @@ export class PlaybackButtonFactory {
 	}
 
 	forCue(cue: api.Cue): xnode.XElement {
-		let start_s = Math.max(0, cue.start_ms / 1000 - 0.5);
+		let start_s = Math.max(0, cue.start_ms / 1000 - 0.25);
 		if (false) {
 		} else if (api.Episode.is(cue.media)) {
 			let episode = cue.media;
