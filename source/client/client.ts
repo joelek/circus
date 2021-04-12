@@ -266,10 +266,25 @@ savedToken.addObserver(async (savedToken) => {
 	}
 });
 
-const contextMenuEntity = new ObservableClass(undefined as apischema.objects.EntityBase | undefined);
+const contextMenuEntity = new ObservableClass(undefined as apischema.objects.Entity | apischema.objects.EntityBase | undefined);
 const showContextMenu = new ObservableClass(false);
 const contextMenuItems = new ArrayObservable(new Array<xml.XElement>());
 contextMenuEntity.addObserver(async (contextMenuEntity) => {
+	contextMenuItems.update([]);
+	contextMenuItems.append(
+		xml.element("div")
+			.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr min-content;")
+			.add(renderTextHeader(xml.text("Context menu")))
+			.add(makeButton()
+				.on("click", () => {
+					showContextMenu.updateState(false);
+				})
+				.add(Icon.makeCross())
+			)
+	);
+	if (apischema.objects.Entity.is(contextMenuEntity)) {
+		contextMenuItems.append(EntityRow.forEntity(contextMenuEntity));
+	}
 	if (apischema.objects.Track.is(contextMenuEntity)) {
 		let title = new ObservableClass("");
 		let canCreate = computed((title) => {
@@ -301,17 +316,7 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 				showContextMenu.updateState(false);
 			}
 		};
-		contextMenuItems.update([
-			xml.element("div")
-				.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr min-content;")
-				.add(renderTextHeader(xml.text("Track menu")))
-				.add(makeButton()
-					.on("click", () => {
-						showContextMenu.updateState(false);
-					})
-					.add(Icon.makeCross())
-				),
-			EntityRow.forTrack(contextMenuEntity),
+		contextMenuItems.append(
 			xml.element("div")
 				.set("style", "display: grid; gap: 16px;")
 				.add(xml.element("div")
@@ -338,7 +343,9 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 					.on("click", async () => {
 						await doCreate();
 					})
-				),
+				)
+		);
+		contextMenuItems.append(
 			xml.element("div")
 				.set("style", "display: grid; gap: 16px;")
 				.bind("data-hide", playlists.playlists.compute((playlists) => playlists.length === 0))
@@ -357,8 +364,7 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 						showContextMenu.updateState(false);
 					})
 				)
-		]);
-		showContextMenu.updateState(true);
+		);
 	} else if (apischema.objects.Playlist.is(contextMenuEntity)) {
 		let hasWritePermission = (await playlists.getPermissions({
 			playlist: {
@@ -388,17 +394,7 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 				showContextMenu.updateState(false);
 			}
 		};
-		contextMenuItems.update([
-			xml.element("div")
-				.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr auto;")
-				.add(renderTextHeader(xml.text("Playlist menu")))
-				.add(makeButton()
-					.on("click", () => {
-						showContextMenu.updateState(false);
-					})
-					.add(Icon.makeCross())
-				),
-			EntityRow.forPlaylist(contextMenuEntity),
+		contextMenuItems.append(
 			xml.element("div")
 				.set("data-hide", `${!hasWritePermission}`)
 				.set("style", "display: grid; gap: 16px;")
@@ -432,7 +428,9 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 					.on("click", async () => {
 						await doUpdate();
 					})
-				),
+				)
+		);
+		contextMenuItems.append(
 			xml.element("button")
 				.add(xml.text("Delete playlist"))
 				.on("click", async () => {
@@ -446,11 +444,9 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 					}
 					showContextMenu.updateState(false);
 				})
-		]);
-		showContextMenu.updateState(true);
-	} else {
-		showContextMenu.updateState(false);
+		);
 	}
+	showContextMenu.updateState(true);
 });
 
 const Grid = new GridFactory();
