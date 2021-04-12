@@ -28,7 +28,11 @@ const CSS = `
 	}
 `;
 
-type Controller = () => void;
+type Controller = Partial<{
+	pause: () => void,
+	play: () => void,
+	resume: () => void
+}>;
 
 export class PlaybackButtonFactory {
 	private player: context.client.ContextClient;
@@ -46,13 +50,16 @@ export class PlaybackButtonFactory {
 				.bind("data-hide", isPlaying.addObserver((isPlaying) => !isPlaying))
 			)
 			.on("click", () => {
+				let pause = controller.pause ?? this.player.pause;
+				let play = controller.play ?? this.player.play;
+				let resume = controller.resume ?? this.player.resume;
 				if (isPlaying.getState()) {
-					this.player.pause();
+					pause();
 				} else {
 					if (isContext.getState()) {
-						this.player.resume();
+						resume();
 					} else {
-						controller();
+						play();
 					}
 				}
 			});
@@ -120,7 +127,9 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, () => this.player.playAlbum(album, discIndex, trackIndex));
+		return this.make(isContext, {
+			play: () => this.player.playAlbum(album, discIndex, trackIndex)
+		});
 	}
 
 	forArtist(artist: api.Artist, albumIndex?: number, discIndex?: number, trackIndex?: number): xnode.XElement {
@@ -152,10 +161,13 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, () => this.player.playArtist(artist, albumIndex, discIndex, trackIndex));
+		return this.make(isContext, {
+			play: () => this.player.playArtist(artist, albumIndex, discIndex, trackIndex)
+		});
 	}
 
 	forCue(cue: api.Cue): xnode.XElement {
+		let start_s = Math.max(0, cue.start_ms / 1000 - 0.5);
 		if (false) {
 		} else if (api.Episode.is(cue.media)) {
 			let episode = cue.media;
@@ -168,9 +180,16 @@ export class PlaybackButtonFactory {
 				}
 				return true;
 			}, this.player.contextPath);
-			return this.make(isContext, () => {
-				this.player.playEpisode(episode);
-				this.player.seek(cue.start_ms / 1000);
+			return this.make(isContext, {
+				play: () => {
+					this.player.playEpisode(episode);
+					this.player.seek(start_s);
+				},
+				resume: () => {
+					this.player.seek(0);
+					this.player.seek(start_s);
+					this.player.resume();
+				}
 			});
 		} else if (api.Movie.is(cue.media)) {
 			let movie = cue.media;
@@ -183,9 +202,16 @@ export class PlaybackButtonFactory {
 				}
 				return true;
 			}, this.player.contextPath);
-			return this.make(isContext, () => {
-				this.player.playMovie(movie);
-				this.player.seek(cue.start_ms / 1000);
+			return this.make(isContext, {
+				play: () => {
+					this.player.playMovie(movie);
+					this.player.seek(start_s);
+				},
+				resume: () => {
+					this.player.seek(0);
+					this.player.seek(start_s);
+					this.player.resume();
+				}
 			});
 		}
 		throw `Expected code to be unreachable!`;
@@ -208,7 +234,9 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, () => this.player.playDisc(disc, trackIndex));
+		return this.make(isContext, {
+			play: () => this.player.playDisc(disc, trackIndex)
+		});
 	}
 
 	forEpisode(episode: api.Episode): xnode.XElement {
@@ -221,7 +249,9 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, () => this.player.playEpisode(episode));
+		return this.make(isContext, {
+			play: () => this.player.playEpisode(episode)
+		});
 	}
 
 	forMovie(movie: api.Movie): xnode.XElement {
@@ -234,7 +264,9 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, () => this.player.playMovie(movie));
+		return this.make(isContext, {
+			play: () => this.player.playMovie(movie)
+		});
 	}
 
 	forPlaylist(playlist: api.Playlist, trackIndex?: number): xnode.XElement {
@@ -254,7 +286,9 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, () => this.player.playPlaylist(playlist, trackIndex));
+		return this.make(isContext, {
+			play: () => this.player.playPlaylist(playlist, trackIndex)
+		});
 	}
 
 	forSeason(season: api.Season, episodeIndex?: number): xnode.XElement {
@@ -274,7 +308,9 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, () => this.player.playSeason(season, episodeIndex));
+		return this.make(isContext, {
+			play: () => this.player.playSeason(season, episodeIndex)
+		});
 	}
 
 	forShow(show: api.Show, seasonIndex?: number, episodeIndex?: number): xnode.XElement {
@@ -300,7 +336,9 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, () => this.player.playShow(show, seasonIndex, episodeIndex));
+		return this.make(isContext, {
+			play: () => this.player.playShow(show, seasonIndex, episodeIndex)
+		});
 	}
 
 	forTrack(track: api.Track): xnode.XElement {
@@ -313,7 +351,9 @@ export class PlaybackButtonFactory {
 			}
 			return true;
 		}, this.player.contextPath);
-		return this.make(isContext, () => this.player.playTrack(track));
+		return this.make(isContext, {
+			play: () => this.player.playTrack(track)
+		});
 	}
 
 	static makeStyle(): xnode.XElement {

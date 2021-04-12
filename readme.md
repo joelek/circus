@@ -161,5 +161,4 @@ Ports, paths and other settings can be configured through altering the config fi
 * Change line heights to make umlauts fit.
 * Fix crash on playback of empty contexts.
 * Gracefully handle absence of FFMPEG.
-* Make cue playback reset to start.
 * Support downloading of images.

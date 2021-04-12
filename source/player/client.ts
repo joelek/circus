@@ -34,7 +34,7 @@ export class ContextClient {
 	readonly isCurrentEntryVideo = new observers.ObservableClass(false);
 	readonly isOnline = new observers.ObservableClass(false);
 
-	private play(context: schema.objects.Context, index: number): void {
+	private sendPlay(context: schema.objects.Context, index: number): void {
 		this.isCurrentEntryVideo.updateState(false);
 		this.tsc.send("SetContext", {
 			context
@@ -453,6 +453,10 @@ export class ContextClient {
 		});
 	}
 
+	play(): void {
+		this.resume();
+	}
+
 	playAlbum(album: schema.objects.ContextAlbum, discIndex?: number, trackIndex?: number): void {
 		let index = 0;
 		if (is.present(discIndex)) {
@@ -469,7 +473,7 @@ export class ContextClient {
 				index += trackIndex;
 			}
 		}
-		return this.play(album, index);
+		return this.sendPlay(album, index);
 	}
 
 	playArtist(artist: schema.objects.ContextArtist, albumIndex?: number, discIndex?: number, trackIndex?: number): void {
@@ -495,7 +499,7 @@ export class ContextClient {
 				}
 			}
 		}
-		return this.play(artist, index);
+		return this.sendPlay(artist, index);
 	}
 
 	playDisc(disc: schema.objects.ContextDisc, trackIndex?: number): void {
@@ -507,15 +511,15 @@ export class ContextClient {
 			}
 			index += trackIndex;
 		}
-		return this.play(disc, index);
+		return this.sendPlay(disc, index);
 	}
 
 	playEpisode(episode: schema.objects.ContextEpisode): void {
-		this.play(episode, 0);
+		this.sendPlay(episode, 0);
 	}
 
 	playMovie(movie: schema.objects.ContextMovie): void {
-		this.play(movie, 0);
+		this.sendPlay(movie, 0);
 	}
 
 	playPlaylist(playlist: schema.objects.ContextPlaylist, itemIndex?: number): void {
@@ -527,7 +531,7 @@ export class ContextClient {
 			}
 			index += itemIndex;
 		}
-		return this.play(playlist, index);
+		return this.sendPlay(playlist, index);
 	}
 
 	playSeason(season: schema.objects.ContextSeason, episodeIndex?: number): void {
@@ -539,7 +543,7 @@ export class ContextClient {
 			}
 			index += episodeIndex;
 		}
-		return this.play(season, index);
+		return this.sendPlay(season, index);
 	}
 
 	playShow(show: schema.objects.ContextShow, seasonIndex?: number, episodeIndex?: number): void {
@@ -558,11 +562,11 @@ export class ContextClient {
 				index += episodeIndex;
 			}
 		}
-		return this.play(show, index);
+		return this.sendPlay(show, index);
 	}
 
 	playTrack(track: schema.objects.ContextTrack): void {
-		this.play(track, 0);
+		this.sendPlay(track, 0);
 	}
 
 	reconnect(): void {
