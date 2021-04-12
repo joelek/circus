@@ -247,7 +247,6 @@ player.currentEntry.addObserver((currentEntry) => {
 
 
 
-
 const savedToken = new ObservableClass(localStorage.getItem("token") ?? undefined);
 const verifiedToken = new ObservableClass(undefined as string | undefined);
 savedToken.addObserver((savedToken) => {
@@ -267,22 +266,70 @@ savedToken.addObserver(async (savedToken) => {
 });
 
 const contextMenuEntity = new ObservableClass(undefined as apischema.objects.Entity | apischema.objects.EntityBase | undefined);
+
+
+
+
+const Grid = new GridFactory();
+document.head.appendChild(GridFactory.makeStyle().render())
+
+const Icon = new IconFactory();
+document.head.appendChild(IconFactory.makeStyle().render())
+
+const carouselFactory = new CarouselFactory(Icon);
+document.head.appendChild(CarouselFactory.makeStyle().render())
+
+const PlaybackButton = new PlaybackButtonFactory(player, Icon);
+document.head.appendChild(PlaybackButtonFactory.makeStyle().render())
+
+const ImageBox = new ImageBoxFactory(verifiedToken);
+document.head.appendChild(ImageBoxFactory.makeStyle().render())
+
+const EntityLink = new EntityLinkFactory(navigate, contextMenuEntity);
+document.head.appendChild(EntityLinkFactory.makeStyle().render())
+
+const entityTitleFactory = new EntityTitleFactory(EntityLink);
+document.head.appendChild(EntityTitleFactory.makeStyle().render())
+
+const EntityCard = new EntityCardFactory(entityTitleFactory, EntityLink, ImageBox, PlaybackButton);
+document.head.appendChild(EntityCardFactory.makeStyle().render())
+
+const EntityRow = new EntityRowFactory(entityTitleFactory, EntityLink, ImageBox, PlaybackButton);
+document.head.appendChild(EntityRowFactory.makeStyle().render())
+
+const entityNavLinkFactory = new EntityNavLinkFactory(Icon, EntityLink);
+document.head.appendChild(EntityNavLinkFactory.makeStyle().render())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const showContextMenu = new ObservableClass(false);
 const contextMenuItems = new ArrayObservable(new Array<xml.XElement>());
 contextMenuEntity.addObserver(async (contextMenuEntity) => {
 	contextMenuItems.update([]);
-	contextMenuItems.append(
-		xml.element("div")
-			.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr min-content;")
-			.add(renderTextHeader(xml.text("Select action")))
-			.add(makeButton()
-				.on("click", () => {
-					showContextMenu.updateState(false);
-				})
-				.add(Icon.makeCross())
-			)
-	);
 	if (apischema.objects.Entity.is(contextMenuEntity)) {
+		contextMenuItems.append(
+			xml.element("div")
+				.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr min-content;")
+				.add(renderTextHeader(xml.text("Select action")))
+				.add(makeButton()
+					.on("click", () => {
+						showContextMenu.updateState(false);
+					})
+					.add(Icon.makeCross())
+				)
+		);
 		contextMenuItems.append(EntityRow.forEntity(contextMenuEntity));
 	}
 	if (apischema.objects.Track.is(contextMenuEntity)) {
@@ -446,38 +493,8 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 				})
 		);
 	}
-	showContextMenu.updateState(true);
+	showContextMenu.updateState(contextMenuItems.getState().length > 0);
 });
-
-const Grid = new GridFactory();
-document.head.appendChild(GridFactory.makeStyle().render())
-
-const Icon = new IconFactory();
-document.head.appendChild(IconFactory.makeStyle().render())
-
-const carouselFactory = new CarouselFactory(Icon);
-document.head.appendChild(CarouselFactory.makeStyle().render())
-
-const PlaybackButton = new PlaybackButtonFactory(player, Icon);
-document.head.appendChild(PlaybackButtonFactory.makeStyle().render())
-
-const ImageBox = new ImageBoxFactory(verifiedToken);
-document.head.appendChild(ImageBoxFactory.makeStyle().render())
-
-const EntityLink = new EntityLinkFactory(navigate, contextMenuEntity);
-document.head.appendChild(EntityLinkFactory.makeStyle().render())
-
-const entityTitleFactory = new EntityTitleFactory(EntityLink);
-document.head.appendChild(EntityTitleFactory.makeStyle().render())
-
-const EntityCard = new EntityCardFactory(entityTitleFactory, EntityLink, ImageBox, PlaybackButton);
-document.head.appendChild(EntityCardFactory.makeStyle().render())
-
-const EntityRow = new EntityRowFactory(entityTitleFactory, EntityLink, ImageBox, PlaybackButton);
-document.head.appendChild(EntityRowFactory.makeStyle().render())
-
-const entityNavLinkFactory = new EntityNavLinkFactory(Icon, EntityLink);
-document.head.appendChild(EntityNavLinkFactory.makeStyle().render())
 
 
 
@@ -1214,10 +1231,10 @@ function makeIconLink(icon: xml.XElement, title: string, url: string): xml.XElem
 		.on("click", () => navigate(url));
 }
 
-const makeButton = (options?: Partial<{ style: "flat" | "normal" }>) => {
+function makeButton(options?: Partial<{ style: "flat" | "normal" }>): xml.XElement {
 	let style = options?.style ?? "normal";
 	return xml.element(`div.icon-button${style === "normal" ? "" : ".icon-button--flat"}`);
-};
+}
 
 interface ReqCallback<T extends api_response.ApiResponse> {
 	(status: number, value: T): void;
