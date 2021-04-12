@@ -274,7 +274,7 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 	contextMenuItems.append(
 		xml.element("div")
 			.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr min-content;")
-			.add(renderTextHeader(xml.text("Context menu")))
+			.add(renderTextHeader(xml.text("Select action")))
 			.add(makeButton()
 				.on("click", () => {
 					showContextMenu.updateState(false);
