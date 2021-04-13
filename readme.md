@@ -161,5 +161,6 @@ Ports, paths and other settings can be configured through altering the config fi
 * Change line heights to make umlauts fit.
 * Fix crash on playback of empty contexts.
 * Support downloading of images.
-* Consolidate context menu into single view.
 * Stop sending tokens for every request.
+* Add already watched feature.
+* Add like feature for content.

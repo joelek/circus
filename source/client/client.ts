@@ -1287,20 +1287,32 @@ const showVideo = new ObservableClass(false);
 	player.isCurrentEntryVideo.addObserver(computer);
 	player.localPlayback.addObserver(computer);
 }
-const showModal = computed((token, showContextMenu, showDevices) => {
-	if (is.absent(token)) {
-		return "login";
-	}
+
+const showModal = new ObservableClass(undefined as "context" | "devices" | "login" | undefined);
+
+showContextMenu.addObserver((showContextMenu) => {
 	if (showContextMenu) {
-		return "context";
+		showModal.updateState("context");
+	} else {
+		showModal.updateState(undefined);
 	}
+});
+
+showDevices.addObserver((showDevices) => {
 	if (showDevices) {
-		return "devices";
+		showModal.updateState("devices");
+	} else {
+		showModal.updateState(undefined);
 	}
-},
-verifiedToken,
-showContextMenu,
-showDevices);
+});
+
+verifiedToken.addObserver((verifiedToken) => {
+	if (is.absent(verifiedToken)) {
+		showModal.updateState("login");
+	} else {
+		showModal.updateState(undefined);
+	}
+});
 
 let token: string | undefined;
 verifiedToken.addObserver((verifiedToken) => {
