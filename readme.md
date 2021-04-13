@@ -159,7 +159,6 @@ Ports, paths and other settings can be configured through altering the config fi
 * Verify external track metadata functionality.
 * Add filter to entity pages.
 * Change line heights to make umlauts fit.
-* Fix crash on playback of empty contexts.
 * Support downloading of images.
 * Stop sending tokens for every request.
 * Add already watched feature.

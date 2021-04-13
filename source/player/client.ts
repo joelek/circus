@@ -133,9 +133,9 @@ export class ContextClient {
 						}
 						return this.contextPath.updateState([
 							context.album_id,
-							context.discs[discIndex].disc_id,
-							context.discs[discIndex].tracks[trackIndex].track_id
-						]);
+							context.discs[discIndex]?.disc_id,
+							context.discs[discIndex]?.tracks[trackIndex]?.track_id
+						].filter(is.present));
 					} else if (schema.objects.ContextArtist.is(context)) {
 						let albumIndex = 0;
 						let discIndex = 0;
@@ -158,24 +158,24 @@ export class ContextClient {
 						}
 						return this.contextPath.updateState([
 							context.artist_id,
-							context.albums[albumIndex].album_id,
-							context.albums[albumIndex].discs[discIndex].disc_id,
-							context.albums[albumIndex].discs[discIndex].tracks[trackIndex].track_id
-						]);
+							context.albums[albumIndex]?.album_id,
+							context.albums[albumIndex]?.discs[discIndex]?.disc_id,
+							context.albums[albumIndex]?.discs[discIndex]?.tracks[trackIndex]?.track_id
+						].filter(is.present));
 					} else if (schema.objects.ContextEpisode.is(context)) {
 						return this.contextPath.updateState([
 							context.episode_id
-						]);
+						].filter(is.present));
 					} else if (schema.objects.ContextMovie.is(context)) {
 						return this.contextPath.updateState([
 							context.movie_id
-						]);
+						].filter(is.present));
 					} else if (schema.objects.ContextPlaylist.is(context)) {
 						let itemIndex = currentIndex;
 						return this.contextPath.updateState([
 							context.playlist_id,
-							context.items[itemIndex].track.track_id
-						]);
+							context.items[itemIndex]?.track.track_id
+						].filter(is.present));
 					} else if (schema.objects.ContextShow.is(context)) {
 						let seasonIndex = 0;
 						let episodeIndex = currentIndex;
@@ -192,19 +192,19 @@ export class ContextClient {
 						}
 						return this.contextPath.updateState([
 							context.show_id,
-							context.seasons[seasonIndex].season_id,
-							context.seasons[seasonIndex].episodes[episodeIndex].episode_id
-						]);
+							context.seasons[seasonIndex]?.season_id,
+							context.seasons[seasonIndex]?.episodes[episodeIndex]?.episode_id
+						].filter(is.present));
 					} else if (schema.objects.ContextSeason.is(context)) {
 						let episodeIndex = currentIndex;
 						return this.contextPath.updateState([
 							context.season_id,
-							context.episodes[episodeIndex].episode_id
-						]);
+							context.episodes[episodeIndex]?.episode_id
+						].filter(is.present));
 					} else if (schema.objects.ContextTrack.is(context)) {
 						return this.contextPath.updateState([
 							context.track_id
-						]);
+						].filter(is.present));
 					} else {
 						throw `Expected code to be unreachable!`;
 					}
