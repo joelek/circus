@@ -104,7 +104,7 @@ Circus features a custom playback protocol for playback and synchronization betw
 
 ## Installation
 
-Circus can be installed on a wide range of server infrastructure since it's built almost entirely using NodeJS. Extra features become available when the FFMPEG tool suite is installed on the server.
+Circus can be installed on a wide range of server infrastructure since it's built almost entirely using NodeJS. Extra features such as preview images become available when the FFMPEG tool suite is installed on the server.
 
 Download the latest release package from https://github.com/joelek/circus/releases and unpack it. Advanced users may clone the repository using git and gain a convenient way of upgrading whenever new releases become available.
 
@@ -160,7 +160,6 @@ Ports, paths and other settings can be configured through altering the config fi
 * Add filter to entity pages.
 * Change line heights to make umlauts fit.
 * Fix crash on playback of empty contexts.
-* Gracefully handle absence of FFMPEG.
 * Support downloading of images.
 * Consolidate context menu into single view.
 * Stop sending tokens for every request.

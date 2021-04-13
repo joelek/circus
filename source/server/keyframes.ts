@@ -73,6 +73,9 @@ export async function getKeyframeOffsets(paths: Array<string>, streamIndex: numb
 		ffprobe.stdout.on("data", (chunk) => {
 			chunks.push(chunk);
 		});
+		ffprobe.on("error", (error) => {
+			reject(error);
+		});
 		ffprobe.on("exit", () => {
 			let string = Buffer.concat(chunks).toString();
 			try {
