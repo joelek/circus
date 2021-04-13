@@ -162,5 +162,5 @@ Ports, paths and other settings can be configured through altering the config fi
 * Fix crash on playback of empty contexts.
 * Gracefully handle absence of FFMPEG.
 * Support downloading of images.
-* Persist cue search setting on search page.
 * Consolidate context menu into single view.
+* Stop sending tokens for every request.

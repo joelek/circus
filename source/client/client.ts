@@ -2697,11 +2697,21 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 		.render());
-	} else if ((parts = /^search[/]([^/]*)/.exec(uri)) !== null) {
+	} else if ((parts = /^search[/]([^/?]*)/.exec(uri)) !== null) {
+		function getBoolean(uri: string, key: string): boolean | undefined {
+			let url = new URL(uri, window.location.origin);
+			let value = url.searchParams.get(key);
+			if (value === "true") {
+				return true;
+			}
+			if (value === "false") {
+				return false;
+			}
+		}
 		let query = new ObservableClass(decodeURIComponent(parts[1]));
+		let cues = new ObservableClass(getBoolean(uri, "cues") ?? false);
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
-		let cues = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let entities = new ArrayObservable<Entity>([]);
 		async function load(): Promise<void> {
@@ -2718,7 +2728,9 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		function reset() {
+		function doSearch() {
+			let uri = `search/${encodeURIComponent(query.getState())}?cues=${cues.getState()}`;
+			window.history.replaceState({ ...window.history.state, uri }, "", uri);
 			offset = 0;
 			reachedEnd.updateState(false);
 			entities.update([]);
@@ -2758,9 +2770,7 @@ let updateviewforuri = (uri: string): void => {
 							}
 						})
 						.on("blur", () => {
-							let uri = `search/${encodeURIComponent(query.getState())}`;
-							window.history.replaceState({ ...window.history.state, uri }, "", uri);
-							reset();
+							doSearch();
 						})
 					)
 					.add(Icon.makeMagnifyingGlass()
@@ -2772,6 +2782,7 @@ let updateviewforuri = (uri: string): void => {
 					.add(Icon.makeQuotationMark())
 					.on("click", () => {
 						cues.updateState(!cues.getState());
+						doSearch();
 					})
 				)
 			)
@@ -2813,7 +2824,7 @@ let updateviewforuri = (uri: string): void => {
 				)
 			.render());
 		});
-	} else if ((parts = /^years[/]([^/]*)/.exec(uri)) !== null) {
+	} else if ((parts = /^years[/]([^/?]*)/.exec(uri)) !== null) {
 		let encodedQuery = parts[1];
 		preq<{}, api_response.YearsResponse>(`/api/years/${encodedQuery}?length=100&token=${token}`, {}).then((response) => {
 			let years = response.years;
@@ -2894,7 +2905,7 @@ let get_route = (pathname: string = window.location.pathname, basehref: string =
 	while (i < pn.length && i < bh.length && pn[i] === bh[i]) {
 		i++;
 	}
-	let uri = pn.slice(i).join('/');
+	let uri = pn.slice(i).join('/') + window.location.search;
 	//return uri === '' ? './' : uri;
 	return uri;
 };
