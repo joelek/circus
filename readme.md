@@ -158,8 +158,10 @@ Ports, paths and other settings can be configured through altering the config fi
 * Add statistics page.
 * Verify external track metadata functionality.
 * Add filter to entity pages.
-* Change line heights to make umlauts fit.
-* Support downloading of images.
+* Change line heights to prevent the truncation of capital letters with umlauts.
+* Support downloading of images or copying of image urls.
 * Stop sending tokens for every request.
 * Add already watched feature.
 * Add like feature for content.
+* Index keyframes.
+* Make show playback start at next episode.
