@@ -1,7 +1,5 @@
-{
-	Envelope: {
-		type: string,
-		data: any,
-		id?: string
-	}
-}
+guard Envelope: {
+	"type": string,
+	"data": any,
+	"id"?: string
+};

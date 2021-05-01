@@ -1,234 +1,232 @@
-{
-	Directory: {
-		directory_id: string,
-		name: string,
-		parent_directory_id?: string
-	},
+guard Directory: {
+	"directory_id": string,
+	"name": string,
+	"parent_directory_id"?: string
+};
 
-	File: {
-		file_id: string,
-		name: string,
-		parent_directory_id?: string,
-		index_timestamp?: number
-	},
+guard File: {
+	"file_id": string,
+	"name": string,
+	"parent_directory_id"?: string,
+	"index_timestamp"?: number
+};
 
-	AudioFile: {
-		file_id: string,
-		mime: "audio/mp4" | "audio/mp3",
-		duration_ms: number
-	},
+guard AudioFile: {
+	"file_id": string,
+	"mime": "audio/mp4" | "audio/mp3",
+	"duration_ms": number
+};
 
-	ImageFile: {
-		file_id: string,
-		mime: "image/jpeg",
-		width: number,
-		height: number
-	},
+guard ImageFile: {
+	"file_id": string,
+	"mime": "image/jpeg",
+	"width": number,
+	"height": number
+};
 
-	MetadataFile: {
-		file_id: string,
-		mime: "application/json"
-	},
+guard MetadataFile: {
+	"file_id": string,
+	"mime": "application/json"
+};
 
-	SubtitleFile: {
-		file_id: string,
-		mime: "text/vtt",
-		duration_ms: number,
-		language?: string
-	},
+guard SubtitleFile: {
+	"file_id": string,
+	"mime": "text/vtt",
+	"duration_ms": number,
+	"language"?: string
+};
 
-	VideoFile: {
-		file_id: string,
-		mime: "video/mp4",
-		duration_ms: number,
-		width: number,
-		height: number
-	},
+guard VideoFile: {
+	"file_id": string,
+	"mime": "video/mp4",
+	"duration_ms": number,
+	"width": number,
+	"height": number
+};
 
-	VideoSubtitle: {
-		video_file_id: string,
-		subtitle_file_id: string
-	},
+guard VideoSubtitle: {
+	"video_file_id": string,
+	"subtitle_file_id": string
+};
 
-	Artist: {
-		artist_id: string,
-		name: string
-	},
+guard Artist: {
+	"artist_id": string,
+	"name": string
+};
 
-	Album: {
-		album_id: string,
-		title: string,
-		year?: number
-	},
+guard Album: {
+	"album_id": string,
+	"title": string,
+	"year"?: number
+};
 
-	AlbumFile: {
-		album_id: string,
-		file_id: string
-	},
+guard AlbumFile: {
+	"album_id": string,
+	"file_id": string
+};
 
-	Disc: {
-		disc_id: string,
-		album_id: string,
-		number: number
-	},
+guard Disc: {
+	"disc_id": string,
+	"album_id": string,
+	"number": number
+};
 
-	Track: {
-		track_id: string,
-		disc_id: string,
-		title: string,
-		number: number
-	},
+guard Track: {
+	"track_id": string,
+	"disc_id": string,
+	"title": string,
+	"number": number
+};
 
-	TrackFile: {
-		track_id: string,
-		file_id: string
-	},
+guard TrackFile: {
+	"track_id": string,
+	"file_id": string
+};
 
-	AlbumArtist: {
-		album_id: string,
-		artist_id: string,
-		order: number
-	},
+guard AlbumArtist: {
+	"album_id": string,
+	"artist_id": string,
+	"order": number
+};
 
-	TrackArtist: {
-		track_id: string,
-		artist_id: string,
-		order: number
-	},
+guard TrackArtist: {
+	"track_id": string,
+	"artist_id": string,
+	"order": number
+};
 
-	Show: {
-		show_id: string,
-		name: string,
-		summary?: string
-	},
+guard Show: {
+	"show_id": string,
+	"name": string,
+	"summary"?: string
+};
 
-	ShowFile: {
-		show_id: string,
-		file_id: string
-	},
+guard ShowFile: {
+	"show_id": string,
+	"file_id": string
+};
 
-	Season: {
-		season_id: string,
-		show_id: string,
-		number: number
-	},
+guard Season: {
+	"season_id": string,
+	"show_id": string,
+	"number": number
+};
 
-	Episode: {
-		episode_id: string,
-		season_id: string,
-		title: string,
-		number: number,
-		year?: number,
-		summary?: string
-	},
+guard Episode: {
+	"episode_id": string,
+	"season_id": string,
+	"title": string,
+	"number": number,
+	"year"?: number,
+	"summary"?: string
+};
 
-	EpisodeFile: {
-		episode_id: string,
-		file_id: string
-	},
+guard EpisodeFile: {
+	"episode_id": string,
+	"file_id": string
+};
 
-	Movie: {
-		movie_id: string,
-		title: string,
-		year?: number,
-		summary?: string
-	},
+guard Movie: {
+	"movie_id": string,
+	"title": string,
+	"year"?: number,
+	"summary"?: string
+};
 
-	MovieFile: {
-		movie_id: string,
-		file_id: string
-	},
+guard MovieFile: {
+	"movie_id": string,
+	"file_id": string
+};
 
-	Actor: {
-		actor_id: string,
-		name: string
-	},
+guard Actor: {
+	"actor_id": string,
+	"name": string
+};
 
-	MovieActor: {
-		movie_id: string,
-		actor_id: string,
-		order: number
-	},
+guard MovieActor: {
+	"movie_id": string,
+	"actor_id": string,
+	"order": number
+};
 
-	ShowActor: {
-		show_id: string,
-		actor_id: string,
-		order: number
-	},
+guard ShowActor: {
+	"show_id": string,
+	"actor_id": string,
+	"order": number
+};
 
-	Genre: {
-		genre_id: string,
-		name: string
-	},
+guard Genre: {
+	"genre_id": string,
+	"name": string
+};
 
-	MovieGenre: {
-		movie_id: string,
-		genre_id: string,
-		order: number
-	},
+guard MovieGenre: {
+	"movie_id": string,
+	"genre_id": string,
+	"order": number
+};
 
-	ShowGenre: {
-		show_id: string,
-		genre_id: string,
-		order: number
-	},
+guard ShowGenre: {
+	"show_id": string,
+	"genre_id": string,
+	"order": number
+};
 
-	Subtitle: {
-		subtitle_id: string,
-		file_id: string
-	},
+guard Subtitle: {
+	"subtitle_id": string,
+	"file_id": string
+};
 
-	Cue: {
-		cue_id: string,
-		subtitle_id: string,
-		start_ms: number,
-		duration_ms: number,
-		lines: string
-	},
+guard Cue: {
+	"cue_id": string,
+	"subtitle_id": string,
+	"start_ms": number,
+	"duration_ms": number,
+	"lines": string
+};
 
-	User: {
-		user_id: string,
-		name: string,
-		username: string,
-		password: string
-	},
+guard User: {
+	"user_id": string,
+	"name": string,
+	"username": string,
+	"password": string
+};
 
-	Key: {
-		key_id: string,
-		user_id?: string
-	},
+guard Key: {
+	"key_id": string,
+	"user_id"?: string
+};
 
-	Token: {
-		token_id: string,
-		user_id: string,
-		hash: string,
-		expires_ms: number
-	},
+guard Token: {
+	"token_id": string,
+	"user_id": string,
+	"hash": string,
+	"expires_ms": number
+};
 
-	Stream: {
-		stream_id: string,
-		user_id: string,
-		file_id: string,
-		timestamp_ms: number
-	},
+guard Stream: {
+	"stream_id": string,
+	"user_id": string,
+	"file_id": string,
+	"timestamp_ms": number
+};
 
-	Playlist: {
-		playlist_id: string,
-		title: string,
-		description: string,
-		user_id: string
-	},
+guard Playlist: {
+	"playlist_id": string,
+	"title": string,
+	"description": string,
+	"user_id": string
+};
 
-	PlaylistItem: {
-		playlist_item_id: string,
-		playlist_id: string,
-		track_id: string,
-		number: number,
-		added_ms: number
-	},
+guard PlaylistItem: {
+	"playlist_item_id": string,
+	"playlist_id": string,
+	"track_id": string,
+	"number": number,
+	"added_ms": number
+};
 
-	Year: {
-		year_id: string,
-		year: number
-	}
-}
+guard Year: {
+	"year_id": string,
+	"year": number
+};

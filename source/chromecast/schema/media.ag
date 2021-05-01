@@ -1,88 +1,86 @@
-{
-	LOAD: {
-		requestId: number,
-		type: "LOAD",
-		media: ./objects/MediaInformation,
-		autoplay?: boolean,
-		currentTime?: number,
-		customData?: { any },
-		activeTrackIds?: number[]
-	},
+guard LOAD: {
+	"requestId": number,
+	"type": "LOAD",
+	"media": ./objects/MediaInformation,
+	"autoplay"?: boolean,
+	"currentTime"?: number,
+	"customData"?: { any },
+	"activeTrackIds"?: number[]
+};
 
-	PAUSE: {
-		mediaSessionId: number,
-		requestId: number,
-		type: "PAUSE",
-		customData?: { any }
-	},
+guard PAUSE: {
+	"mediaSessionId": number,
+	"requestId": number,
+	"type": "PAUSE",
+	"customData"?: { any }
+};
 
-	SEEK: {
-		mediaSessionId: number,
-		requestId: number,
-		type: "SEEK",
-		resumeState?: "PLAYBACK_START" | "PLAYBACK_PAUSE",
-		currentTime?: number,
-		customData?: { any }
-	},
+guard SEEK: {
+	"mediaSessionId": number,
+	"requestId": number,
+	"type": "SEEK",
+	"resumeState"?: "PLAYBACK_START" | "PLAYBACK_PAUSE",
+	"currentTime"?: number,
+	"customData"?: { any }
+};
 
-	STOP: {
-		mediaSessionId: number,
-		requestId: number,
-		type: "STOP",
-		customData?: { any }
-	},
+guard STOP: {
+	"mediaSessionId": number,
+	"requestId": number,
+	"type": "STOP",
+	"customData"?: { any }
+};
 
-	PLAY: {
-		mediaSessionId: number,
-		requestId: number,
-		type: "PLAY",
-		customData?: { any }
-	},
+guard PLAY: {
+	"mediaSessionId": number,
+	"requestId": number,
+	"type": "PLAY",
+	"customData"?: { any }
+};
 
-	GET_STATUS: {
-		mediaSessionId?: number,
-		requestId: number,
-		type: "GET_STATUS",
-		customData?: { any }
-	},
+guard GET_STATUS: {
+	"mediaSessionId"?: number,
+	"requestId": number,
+	"type": "GET_STATUS",
+	"customData"?: { any }
+};
 
-	VOLUME: {
-		mediaSessionId: number,
-		requestId: number,
-		type: "VOLUME",
-		volume: ./objects/Volume,
-		customData?: { any }
-	},
+guard VOLUME: {
+	"mediaSessionId": number,
+	"requestId": number,
+	"type": "VOLUME",
+	"volume": ./objects/Volume,
+	"customData"?: { any }
+};
 
-	INVALID_PLAYER_STATE: {
-		requestId: number,
-		type: "INVALID_PLAYER_STATE",
-		customData?: { any }
-	},
+guard INVALID_PLAYER_STATE: {
+	"requestId": number,
+	"type": "INVALID_PLAYER_STATE",
+	"customData"?: { any }
+};
 
-	LOAD_FAILED: {
-		requestId: number,
-		type: "LOAD_FAILED",
-		customData?: { any }
-	},
+guard LOAD_FAILED: {
+	"requestId": number,
+	"type": "LOAD_FAILED",
+	"customData"?: { any }
+};
 
-	LOAD_CANCELLED: {
-		requestId: number,
-		type: "LOAD_CANCELLED",
-		customData?: { any }
-	},
+guard LOAD_CANCELLED: {
+	"requestId": number,
+	"type": "LOAD_CANCELLED",
+	"customData"?: { any }
+};
 
-	INVALID_REQUEST: {
-		requestId: number,
-		type: "INVALID_REQUEST",
-		reason: "INVALID_COMMAND" | "DUPLICATE_REQUESTID",
-		customData?: { any }
-	},
+guard INVALID_REQUEST: {
+	"requestId": number,
+	"type": "INVALID_REQUEST",
+	"reason": "INVALID_COMMAND" | "DUPLICATE_REQUESTID",
+	"customData"?: { any }
+};
 
-	MEDIA_STATUS: {
-		requestId: number,
-		type: "MEDIA_STATUS",
-		status: ./objects/MediaStatus[],
-		customData?: { any }
-	}
-}
+guard MEDIA_STATUS: {
+	"requestId": number,
+	"type": "MEDIA_STATUS",
+	"status": ./objects/MediaStatus[],
+	"customData"?: { any }
+};

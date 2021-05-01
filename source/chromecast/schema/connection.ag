@@ -1,9 +1,7 @@
-{
-	CONNECT: {
-		"type": "CONNECT"
-	},
+guard CONNECT: {
+	"type": "CONNECT"
+};
 
-	CLOSE: {
-		"type": "CLOSE"
-	}
-}
+guard CLOSE: {
+	"type": "CLOSE"
+};

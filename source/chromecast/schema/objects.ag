@@ -1,99 +1,97 @@
-{
-	Image: {
-		url: string,
-		height?: number,
-		width?: number
-	},
+guard Image: {
+	"url": string,
+	"height"?: number,
+	"width"?: number
+};
 
-	Volume: {
-		level?: number,
-		muted?: boolean
-	},
+guard Volume: {
+	"level"?: number,
+	"muted"?: boolean
+};
 
-	MediaInformation: {
-		contentId: string,
-		streamType: "NONE" | "BUFFERED" | "LIVE",
-		contentType: string,
-		metadata?: GenericMediaMetadata | MovieMediaMetadata | TvShowMediaMetadata | MusicTrackMediaMetadata | PhotoMediaMetadata,
-		duration?: number,
-		customData?: { any },
-		tracks?: ({
-			trackId: number,
-			type: string
-		} | {
-			trackId: number,
-			type: "TEXT",
-			trackType: "TEXT",
-			trackContentId: string,
-			trackContentType: string,
-			subtype: "SUBTITLES",
-			language: string,
-			name?: string,
-			customData?: { any }
-		})[]
-	},
+guard MediaInformation: {
+	"contentId": string,
+	"streamType": "NONE" | "BUFFERED" | "LIVE",
+	"contentType": string,
+	"metadata"?: GenericMediaMetadata | MovieMediaMetadata | TvShowMediaMetadata | MusicTrackMediaMetadata | PhotoMediaMetadata,
+	"duration"?: number,
+	"customData"?: { any },
+	"tracks"?: ({
+		"trackId": number,
+		"type": string
+	} | {
+		"trackId": number,
+		"type": "TEXT",
+		"trackType": "TEXT",
+		"trackContentId": string,
+		"trackContentType": string,
+		"subtype": "SUBTITLES",
+		"language": string,
+		"name"?: string,
+		"customData"?: { any }
+	})[]
+};
 
-	GenericMediaMetadata: {
-		metadataType: 0,
-		title?: string,
-		subtitle?: string,
-		images?: Image[],
-		releaseDate?: string
-	},
+guard GenericMediaMetadata: {
+	"metadataType": 0,
+	"title"?: string,
+	"subtitle"?: string,
+	"images"?: Image[],
+	"releaseDate"?: string
+};
 
-	MovieMediaMetadata: {
-		metadataType: 1,
-		title?: string,
-		subtitle?: string,
-		studio?: string,
-		images?: Image[],
-		releaseDate?: string
-	},
+guard MovieMediaMetadata: {
+	"metadataType": 1,
+	"title"?: string,
+	"subtitle"?: string,
+	"studio"?: string,
+	"images"?: Image[],
+	"releaseDate"?: string
+};
 
-	TvShowMediaMetadata: {
-		metadataType: 2,
-		seriesTitle?: string,
-		subtitle?: string,
-		season?: number,
-		episode?: number,
-		images?: Image[],
-		originalAirDate?: string
-	},
+guard TvShowMediaMetadata: {
+	"metadataType": 2,
+	"seriesTitle"?: string,
+	"subtitle"?: string,
+	"season"?: number,
+	"episode"?: number,
+	"images"?: Image[],
+	"originalAirDate"?: string
+};
 
-	MusicTrackMediaMetadata: {
-		metadataType: 3,
-		albumName?: string,
-		title?: string,
-		albumArtist?: string,
-		artist?: string,
-		composer?: string,
-		trackNumber?: number,
-		discNumber?: number,
-		images?: Image[],
-		releaseDate?: string
-	},
+guard MusicTrackMediaMetadata: {
+	"metadataType": 3,
+	"albumName"?: string,
+	"title"?: string,
+	"albumArtist"?: string,
+	"artist"?: string,
+	"composer"?: string,
+	"trackNumber"?: number,
+	"discNumber"?: number,
+	"images"?: Image[],
+	"releaseDate"?: string
+};
 
-	PhotoMediaMetadata: {
-		metadataType: 4,
-		title?: string,
-		artist?: string,
-		location?: string,
-		latitude?: number,
-		longitude?: number,
-		width?: number,
-		height?: number,
-		creationDateTime?: string
-	},
+guard PhotoMediaMetadata: {
+	"metadataType": 4,
+	"title"?: string,
+	"artist"?: string,
+	"location"?: string,
+	"latitude"?: number,
+	"longitude"?: number,
+	"width"?: number,
+	"height"?: number,
+	"creationDateTime"?: string
+};
 
-	MediaStatus: {
-		mediaSessionId: number,
-		media?: MediaInformation | {},
-		playbackRate: number,
-		playerState: "IDLE" | "PLAYING" | "BUFFERING" | "PAUSED",
-		idleReason?: "CANCELLED" | "INTERRUPTED" | "FINISHED" | "ERROR",
-		currentTime: number,
-		supportedMediaCommands: number,
-		volume: Volume,
-		customData?: { any }
-	}
-}
+guard MediaStatus: {
+	"mediaSessionId": number,
+	"media"?: MediaInformation | {},
+	"playbackRate": number,
+	"playerState": "IDLE" | "PLAYING" | "BUFFERING" | "PAUSED",
+	"idleReason"?: "CANCELLED" | "INTERRUPTED" | "FINISHED" | "ERROR",
+	"currentTime": number,
+	"supportedMediaCommands": number,
+	"volume": Volume,
+	"customData"?: { any }
+};

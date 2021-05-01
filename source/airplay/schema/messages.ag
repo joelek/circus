@@ -1,22 +1,20 @@
-{
-	LoadingEvent: {
-		sessionID: number,
-		state: "loading"
-	},
+guard LoadingEvent: {
+	"sessionID": number,
+	"state": "loading"
+};
 
-	PlayingEvent: {
-		sessionID: number,
-		state: "playing"
-	},
+guard PlayingEvent: {
+	"sessionID": number,
+	"state": "playing"
+};
 
-	PausedEvent: {
-		sessionID: number,
-		state: "paused"
-	},
+guard PausedEvent: {
+	"sessionID": number,
+	"state": "paused"
+};
 
-	StoppedEvent: {
-		sessionID: number,
-		state: "stopped",
-		reason: string
-	}
-}
+guard StoppedEvent: {
+	"sessionID": number,
+	"state": "stopped",
+	"reason": string
+};

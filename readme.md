@@ -144,7 +144,6 @@ Ports, paths and other settings can be configured through altering the config fi
 
 ## Future plans
 
-* Create typed REST API.
 * Set document title based on page.
 * Create and use layout components with standard spacing.
 * Put languages in database.

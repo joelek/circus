@@ -1,66 +1,64 @@
-{
-	VideoFrame: {
-		pkt_pts_time: string
-	},
+guard VideoFrame: {
+	"pkt_pts_time": string
+};
 
-	FramesResult: {
-		frames: VideoFrame[]
-	},
+guard FramesResult: {
+	"frames": VideoFrame[]
+};
 
-	StreamCommon: {
-		codec_name: string
-	},
+guard StreamCommon: {
+	"codec_name": string
+};
 
-	AudioStream: StreamCommon & {
-		codec_type: "audio",
-		start_time: string,
-		duration: string
-	},
+guard AudioStream: StreamCommon & {
+	"codec_type": "audio",
+	"start_time": string,
+	"duration": string
+};
 
-	ImageStream: StreamCommon & {
-		codec_type: "video",
-		codec_time_base: "0/1",
-		width: number,
-		height: number
-	},
+guard ImageStream: StreamCommon & {
+	"codec_type": "video",
+	"codec_time_base": "0/1",
+	"width": number,
+	"height": number
+};
 
-	SubtitleStream: StreamCommon & {
-		codec_type: "subtitle"
-	},
+guard SubtitleStream: StreamCommon & {
+	"codec_type": "subtitle"
+};
 
-	VideoStream: StreamCommon & {
-		codec_type: "video",
-		start_time: string,
-		duration: string,
-		width: number,
-		height: number
-	},
+guard VideoStream: StreamCommon & {
+	"codec_type": "video",
+	"start_time": string,
+	"duration": string,
+	"width": number,
+	"height": number
+};
 
-	Stream: AudioStream | ImageStream | SubtitleStream | VideoStream,
+guard Stream: AudioStream | ImageStream | SubtitleStream | VideoStream;
 
-	StreamsResult: {
-		streams: Stream[]
-	},
+guard StreamsResult: {
+	"streams": Stream[]
+};
 
-	Format: {
-		format_name: string,
-		tags?: {
-			title?: string,
-			date?: string,
-			comment?: string,
-			show?: string,
-			episode_id?: string,
-			episode_sort?: string,
-			season_number?: string,
-			track?: string,
-			artist?: string,
-			album_artist?: string,
-			album?: string,
-			disc?: string
-		}
-	},
-
-	FormatResult: {
-		format: Format
+guard Format: {
+	"format_name": string,
+	"tags"?: {
+		"title"?: string,
+		"date"?: string,
+		"comment"?: string,
+		"show"?: string,
+		"episode_id"?: string,
+		"episode_sort"?: string,
+		"season_number"?: string,
+		"track"?: string,
+		"artist"?: string,
+		"album_artist"?: string,
+		"album"?: string,
+		"disc"?: string
 	}
-}
+};
+
+guard FormatResult: {
+	"format": Format
+};

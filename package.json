@@ -2,11 +2,11 @@
 	"bin": {},
 	"dependencies": {},
 	"devDependencies": {
-		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^4",
+		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^5",
 		"@joelek/ts-bundle": "github:joelek/ts-bundle#semver:^0",
 		"@joelek/ts-sockets": "github:joelek/ts-sockets#semver:^2",
-		"@types/node": "^14",
-		"typescript": "^4"
+		"@types/node": "^14.14.44",
+		"typescript": "^4.2.4"
 	},
 	"license": "UNLICENSED",
 	"main": "./dist/server.min.js",
@@ -21,7 +21,7 @@
 		"bundle:server": "tsb --entry=./build/server/server.js --bundle=./dist/server.min.js",
 		"bundle": "rm -rf ./dist/ && npm run bundle:client && npm run bundle:server",
 		"clean": "rm -rf ./build/ ./node_modules/",
-		"codegen": "npx autoguard --standalone=false",
+		"codegen": "npx autoguard",
 		"compile": "rm -rf ./build/ && npx tsc --build",
 		"preversion": "npm run build && git add ./",
 		"postversion": "git push && git push --tags",

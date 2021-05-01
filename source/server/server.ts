@@ -1,12 +1,8 @@
-import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as libhttp from "http";
 import * as libhttps from "https";
 import * as libos from "os";
-import * as libpath from "path";
-import * as liburl from "url";
 import * as api from "../api/api";
-import * as auth from "./auth";
 import * as indexer from "../database/indexer";
 import * as subsearch from "./subsearch";
 import * as context from "../player/";
@@ -15,102 +11,7 @@ import * as chromecasts from "../chromecast/chromecasts";
 import * as airplay from "../airplay/";
 import * as is from "../is";
 import { default as config } from "../config";
-
-let send_data = (file_id: string, request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void => {
-	if (request.url === undefined) {
-		throw new Error();
-	}
-	let user_id = "";
-	try {
-		var url = liburl.parse(request.url, true);
-		user_id = auth.getUserId(url.query.token as string);
-	} catch (error) {
-		response.writeHead(401, {});
-		return response.end();
-	}
-	let file = indexer.files.lookup(file_id);
-	let path = indexer.getPath(file);
-	let mime = "application/octet-stream";
-	try {
-		mime = indexer.audio_files.lookup(file.file_id).mime;
-	} catch (error) {}
-	try {
-		mime = indexer.image_files.lookup(file.file_id).mime;
-	} catch (error) {}
-	try {
-		mime = indexer.metadata_files.lookup(file.file_id).mime;
-	} catch (error) {}
-	try {
-		mime = indexer.subtitle_files.lookup(file.file_id).mime;
-	} catch (error) {}
-	try {
-		mime = indexer.video_files.lookup(file.file_id).mime;
-	} catch (error) {}
-	let filename = path.join(libpath.sep);
-	let fd = libfs.openSync(filename, 'r');
-	let size = libfs.fstatSync(fd).size;
-	libfs.closeSync(fd);
-	let parts2;
-	let range = request.headers.range;
-	if (range !== undefined && (parts2 = /^bytes\=((?:[0-9])|(?:[1-9][0-9]+))\-((?:[0-9])|(?:[1-9][0-9]+))?$/.exec(range)) != null) {
-		let offset = parseInt(parts2[1]);
-		let offset2 = parts2[2] ? parseInt(parts2[2]) : null;
-		if (offset2 === null) {
-			offset2 = size - 1;
-		}
-		if (offset >= size || offset2 >= size || offset2 < offset) {
-			response.writeHead(416);
-			response.end();
-			return;
-		}
-		let length = offset2 - offset + 1;
-		response.writeHead(206, {
-			'Access-Control-Allow-Origin': '*',
-			'Accept-Ranges': `bytes`,
-			"Cache-Control": "private, max-age=86400",
-			'Content-Range': `bytes ${offset}-${offset2}/${size}`,
-			'Content-Type': mime,
-			'Content-Length': `${length}`
-		});
-		var s = libfs.createReadStream(filename, {
-			start: offset,
-			end: offset2
-		});
-		s.addListener("close", () => {
-			if (offset + s.bytesRead === size) {
-				let timestamp_ms = Date.now();
-				indexer.streams.insert({
-					stream_id: libcrypto.randomBytes(8).toString("hex"),
-					user_id,
-					file_id,
-					timestamp_ms
-				});
-			}
-		});
-		s.on('open', function () {
-			s.pipe(response);
-		});
-		s.on('error', function (error) {
-			response.end();
-		});
-	} else {
-		var s = libfs.createReadStream(filename);
-		s.on('open', function () {
-			response.writeHead(200, {
-				'Access-Control-Allow-Origin': '*',
-				'Accept-Ranges': `bytes`,
-				"Cache-Control": "private, max-age=86400",
-				'Content-Type': mime,
-				'Content-Length': `${size}`
-			});
-			s.pipe(response);
-		});
-		s.on('error', function (error) {
-			response.writeHead(404);
-			response.end();
-		});
-	}
-};
+import { resolve } from "path";
 
 const contextServer = new context.server.ContextServer();
 const playlistsServer = new playlists.server.PlaylistsServer();
@@ -127,7 +28,7 @@ function setupIndexTimer(): void {
 	}, 60 * 60 * 1000);
 }
 
-function requestHandler(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): void {
+async function requestHandler(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): Promise<void> {
 	let host = request.headers["host"] || "";
 	let method = request.method || "";
 	let path = request.url || "";
@@ -159,10 +60,6 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 		chromecasts.discover();
 		response.writeHead(200);
 		return response.end("{}");
-	}
-	if (method === 'GET' && (parts = /^[/]files[/]([0-9a-f]{16})[/]/.exec(path)) !== null) {
-		let file_id = parts[1];
-		return send_data(file_id, request, response);
 	}
 	if (/^[/]media[/]/.test(path)) {
 		if ((parts = /^[/]media[/]stills[/]([0-9a-f]{16})[/]/.exec(path)) != null) {
@@ -220,7 +117,8 @@ function requestHandler(request: libhttp.IncomingMessage, response: libhttp.Serv
 		}
 	}
 	if (/^[/]api[/]/.test(path)) {
-		return api.handleRequest(request, response);
+		request.url = (request.url ?? "").slice("/api".length);
+		return api.server(request, response);
 	}
 	if (path === "/manifest.json") {
 		response.writeHead(200, {

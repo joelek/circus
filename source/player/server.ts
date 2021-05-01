@@ -35,7 +35,7 @@ type Session = schema.objects.Session & {
 
 export class ContextServer {
 	private chromecasts: observers.ObservableClass<Array<schema.objects.Device>>;
-	private tss: typesockets.TypeSocketServer<schema.messages.Autoguard>;
+	private tss: typesockets.TypeSocketServer<schema.messages.Autoguard.Guards>;
 	private tokens = new Map<string, string>();
 	private sessions = new Map<string, Session>();
 
@@ -134,7 +134,7 @@ export class ContextServer {
 
 	constructor() {
 		this.chromecasts = new observers.ObservableClass<Array<schema.objects.Device>>([]);
-		this.tss = new typesockets.TypeSocketServer(schema.messages.Autoguard);
+		this.tss = new typesockets.TypeSocketServer(schema.messages.Autoguard.Guards);
 		this.tss.addEventListener("sys", "connect", (message) => {
 			console.log("connect: " + message.connection_url);
 			let device = makeDevice(message.connection_id, message.connection_url);

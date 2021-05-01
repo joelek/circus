@@ -1,38 +1,36 @@
-{
-	ContextAlbum: ../../api/schema/objects/Album,
+guard ContextAlbum: ../../api/schema/objects/Album;
 
-	ContextArtist: ../../api/schema/objects/Artist,
+guard ContextArtist: ../../api/schema/objects/Artist;
 
-	ContextDisc: ../../api/schema/objects/Disc,
+guard ContextDisc: ../../api/schema/objects/Disc;
 
-	ContextTrack: ../../api/schema/objects/Track,
+guard ContextTrack: ../../api/schema/objects/Track;
 
-	ContextPlaylist: ../../api/schema/objects/Playlist,
+guard ContextPlaylist: ../../api/schema/objects/Playlist;
 
-	ContextMovie: ../../api/schema/objects/Movie,
+guard ContextMovie: ../../api/schema/objects/Movie;
 
-	ContextShow: ../../api/schema/objects/Show,
+guard ContextShow: ../../api/schema/objects/Show;
 
-	ContextSeason: ../../api/schema/objects/Season,
+guard ContextSeason: ../../api/schema/objects/Season;
 
-	ContextEpisode: ../../api/schema/objects/Episode,
+guard ContextEpisode: ../../api/schema/objects/Episode;
 
-	Context: ContextAlbum | ContextArtist | ContextDisc | ContextTrack | ContextPlaylist | ContextMovie | ContextShow | ContextSeason | ContextEpisode,
+guard Context: ContextAlbum | ContextArtist | ContextDisc | ContextTrack | ContextPlaylist | ContextMovie | ContextShow | ContextSeason | ContextEpisode;
 
-	ContextItem: ContextTrack | ContextMovie | ContextEpisode,
+guard ContextItem: ContextTrack | ContextMovie | ContextEpisode;
 
-	Device: {
-		id: string,
-		protocol: string,
-		name: string,
-		type: string
-	},
+guard Device: {
+	"id": string,
+	"protocol": string,
+	"name": string,
+	"type": string
+};
 
-	Session: {
-		context?: Context,
-		device?: Device,
-		index?: number,
-		playback: boolean,
-		progress?: number
-	}
-}
+guard Session: {
+	"context"?: Context,
+	"device"?: Device,
+	"index"?: number,
+	"playback": boolean,
+	"progress"?: number
+};

@@ -13,7 +13,7 @@ type Session = {
 };
 
 export class PlaylistsServer {
-	private tss: typesockets.TypeSocketServer<schema.messages.Autoguard>;
+	private tss: typesockets.TypeSocketServer<schema.messages.Autoguard.Guards>;
 	private tokens = new Map<string, string>();
 	private sessions = new Map<string, Session>();
 
@@ -43,7 +43,7 @@ export class PlaylistsServer {
 	}
 
 	constructor() {
-		this.tss = new typesockets.TypeSocketServer(schema.messages.Autoguard);
+		this.tss = new typesockets.TypeSocketServer(schema.messages.Autoguard.Guards);
 		this.tss.addEventListener("sys", "connect", (message) => {
 		});
 		this.tss.addEventListener("sys", "disconnect", (message) => {

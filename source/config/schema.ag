@@ -1,10 +1,8 @@
-{
-	Config: {
-		certificate_key_path: string[],
-		certificate_path: string[],
-		http_port: number,
-		https_port: number,
-		media_path: string[],
-		use_demo_mode: boolean
-	}
-}
+guard Config: {
+	"certificate_key_path": string[],
+	"certificate_path": string[],
+	"http_port": number,
+	"https_port": number,
+	"media_path": string[],
+	"use_demo_mode": boolean
+};

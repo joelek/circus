@@ -1,183 +1,171 @@
-{
-	ActorBase: {
-		actor_id: string,
-		name: string
-	},
+guard ActorBase: {
+	"actor_id": string,
+	"name": string
+};
 
-	Actor: ActorBase & {
+guard Actor: ActorBase & {};
 
-	},
+guard ArtistBase: {
+	"artist_id": string,
+	"title": string
+};
 
-	ArtistBase: {
-		artist_id: string,
-		title: string
-	},
+guard Artist: ArtistBase & {
+	"albums": Album[]
+};
 
-	Artist: ArtistBase & {
-		albums: Album[]
-	},
+guard AlbumBase: {
+	"album_id": string,
+	"title": string,
+	"artwork": ../../database/schema/ImageFile[]
+};
 
-	AlbumBase: {
-		album_id: string,
-		title: string,
-		artwork: ../../database/schema/ImageFile[]
-	},
+guard Album: AlbumBase & {
+	"artists": ArtistBase[],
+	"discs": Disc[],
+	"year"?: number
+};
 
-	Album: AlbumBase & {
-		artists: ArtistBase[],
-		discs: Disc[],
-		year?: number
-	},
+guard DiscBase: {
+	"disc_id": string,
+	"album": AlbumBase,
+	"number": number
+};
 
-	DiscBase: {
-		disc_id: string,
-		album: AlbumBase,
-		number: number
-	},
+guard Disc: DiscBase & {
+	"tracks": Track[]
+};
 
-	Disc: DiscBase & {
-		tracks: Track[]
-	},
+guard TrackBase: {
+	"track_id": string,
+	"title": string,
+	"disc": DiscBase,
+	"number": number
+};
 
-	TrackBase: {
-		track_id: string,
-		title: string,
-		disc: DiscBase,
-		number: number
-	},
+guard Track: TrackBase & {
+	"artists": ArtistBase[],
+	"last_stream_date"?: number,
+	"media": ../../database/schema/AudioFile
+};
 
-	Track: TrackBase & {
-		artists: ArtistBase[],
-		last_stream_date?: number,
-		media: ../../database/schema/AudioFile
-	},
+guard UserBase: {
+	"user_id": string,
+	"name": string,
+	"username": string
+};
 
-	UserBase: {
-		user_id: string,
-		name: string,
-		username: string
-	},
+guard User: UserBase & {};
 
-	User: UserBase & {
+guard PlaylistBase: {
+	"playlist_id": string,
+	"title": string,
+	"description": string,
+	"user": UserBase
+};
 
-	},
+guard Playlist: PlaylistBase & {
+	"items": PlaylistItem[]
+};
 
-	PlaylistBase: {
-		playlist_id: string,
-		title: string,
-		description: string,
-		user: UserBase
-	},
+guard PlaylistItemBase: {
+	"playlist_item_id": string,
+	"number": number,
+	"playlist": PlaylistBase,
+	"track": Track
+};
 
-	Playlist: PlaylistBase & {
-		items: PlaylistItem[]
-	},
+guard PlaylistItem: PlaylistItemBase & {};
 
-	PlaylistItemBase: {
-		playlist_item_id: string,
-		number: number,
-		playlist: PlaylistBase,
-		track: Track
-	},
+guard GenreBase: {
+	"genre_id": string,
+	"title": string
+};
 
-	PlaylistItem: PlaylistItemBase & {
+guard Genre: GenreBase & {};
 
-	},
+guard MovieBase: {
+	"movie_id": string,
+	"title": string,
+	"artwork": ../../database/schema/ImageFile[]
+};
 
-	GenreBase: {
-		genre_id: string,
-		title: string
-	},
+guard Movie: MovieBase & {
+	"year"?: number,
+	"summary"?: string,
+	"genres": Genre[],
+	"actors": Actor[],
+	"last_stream_date"?: number,
+	"media": ../../database/schema/VideoFile,
+	"subtitles": ../../database/schema/SubtitleFile[]
+};
 
-	Genre: GenreBase & {
+guard ShowBase: {
+	"show_id": string,
+	"title": string,
+	"artwork": ../../database/schema/ImageFile[]
+};
 
-	},
+guard Show: ShowBase & {
+	"summary"?: string,
+	"genres": Genre[],
+	"actors": Actor[],
+	"seasons": Season[]
+};
 
-	MovieBase: {
-		movie_id: string,
-		title: string,
-		artwork: ../../database/schema/ImageFile[]
-	},
+guard SeasonBase: {
+	"season_id": string,
+	"number": number,
+	"show": ShowBase
+};
 
-	Movie: MovieBase & {
-		year?: number,
-		summary?: string,
-		genres: Genre[],
-		actors: Actor[],
-		last_stream_date?: number,
-		media: ../../database/schema/VideoFile,
-		subtitles: ../../database/schema/SubtitleFile[]
-	},
+guard Season: SeasonBase & {
+	"episodes": Episode[]
+};
 
-	ShowBase: {
-		show_id: string,
-		title: string,
-		artwork: ../../database/schema/ImageFile[]
-	},
+guard EpisodeBase: {
+	"episode_id": string,
+	"title": string,
+	"number": number,
+	"season": SeasonBase
+};
 
-	Show: ShowBase & {
-		summary?: string,
-		genres: Genre[],
-		actors: Actor[],
-		seasons: Season[]
-	},
+guard Episode: EpisodeBase & {
+	"year"?: number,
+	"summary"?: string,
+	"last_stream_date"?: number,
+	"media": ../../database/schema/VideoFile,
+	"subtitles": ../../database/schema/SubtitleFile[]
+};
 
-	SeasonBase: {
-		season_id: string,
-		number: number,
-		show: ShowBase
-	},
+guard SubtitleBase: {
+	"subtitle_id": string,
+	"subtitle": ../../database/schema/SubtitleFile
+};
 
-	Season: SeasonBase & {
-		episodes: Episode[]
-	},
+guard Subtitle: SubtitleBase & {
+	"cues": Cue[]
+};
 
-	EpisodeBase: {
-		episode_id: string,
-		title: string,
-		number: number,
-		season: SeasonBase
-	},
+guard CueBase: {
+	"cue_id": string,
+	"subtitle": SubtitleBase,
+	"start_ms": number,
+	"duration_ms": number,
+	"lines": string[]
+};
 
-	Episode: EpisodeBase & {
-		year?: number,
-		summary?: string,
-		last_stream_date?: number,
-		media: ../../database/schema/VideoFile,
-		subtitles: ../../database/schema/SubtitleFile[]
-	},
+guard Cue: CueBase & {
+	"media": Episode | Movie
+};
 
-	SubtitleBase: {
-		subtitle_id: string,
-		subtitle: ../../database/schema/SubtitleFile
-	},
+guard YearBase: {
+	"year_id": string,
+	"year": number
+};
 
-	Subtitle: SubtitleBase & {
-		cues: Cue[]
-	},
+guard Year: YearBase & {};
 
-	CueBase: {
-		cue_id: string,
-		subtitle: SubtitleBase,
-		start_ms: number,
-		duration_ms: number,
-		lines: string[]
-	},
+guard EntityBase: ActorBase | AlbumBase | ArtistBase | CueBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase;
 
-	Cue: CueBase & {
-		media: Episode | Movie
-	},
-
-	YearBase: {
-		year_id: string,
-		year: number
-	},
-
-	Year: YearBase & {
-
-	},
-
-	EntityBase: ActorBase | AlbumBase | ArtistBase | CueBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase,
-
-	Entity: Actor | Album | Artist | Cue | Disc | Episode | Genre | Movie | Playlist | Season | Show | Track | User | Year
-}
+guard Entity: Actor | Album | Artist | Cue | Disc | Episode | Genre | Movie | Playlist | Season | Show | Track | User | Year;

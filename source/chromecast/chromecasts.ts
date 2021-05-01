@@ -31,7 +31,7 @@ function makeMediaInformation(item: Episode | Movie | Track, media_server_host: 
 		let season = episode.season;
 		let show = season.show;
 		return {
-			contentId: `${media_server_host}/files/${item.media.file_id}/?token=${token}`,
+			contentId: `${media_server_host}/api/files/${item.media.file_id}/?token=${token}`,
 			contentType: episode.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
@@ -44,7 +44,7 @@ function makeMediaInformation(item: Episode | Movie | Track, media_server_host: 
 				trackId: subtitleIndex,
 				type: "TEXT",
 				trackType: "TEXT",
-				trackContentId: `${media_server_host}/files/${subtitle.file_id}/?token=${token}`,
+				trackContentId: `${media_server_host}/api/files/${subtitle.file_id}/?token=${token}`,
 				trackContentType: subtitle.mime,
 				subtype: "SUBTITLES"
 			}))
@@ -52,14 +52,14 @@ function makeMediaInformation(item: Episode | Movie | Track, media_server_host: 
 	} else if (Movie.is(item)) {
 		let movie = item;
 		return {
-			contentId: `${media_server_host}/files/${item.media.file_id}/?token=${token}`,
+			contentId: `${media_server_host}/api/files/${item.media.file_id}/?token=${token}`,
 			contentType: movie.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
 				metadataType: 0,
 				title: movie.title,
 				images: movie.artwork.map((image) => ({
-					url: `${media_server_host}/files/${image.file_id}/?token=${token}`
+					url: `${media_server_host}/api/files/${image.file_id}/?token=${token}`
 				}))
 			},
 			tracks: movie.subtitles.map((subtitle, subtitleIndex) => ({
@@ -67,7 +67,7 @@ function makeMediaInformation(item: Episode | Movie | Track, media_server_host: 
 				trackId: subtitleIndex,
 				type: "TEXT",
 				trackType: "TEXT",
-				trackContentId: `${media_server_host}/files/${subtitle.file_id}/?token=${token}`,
+				trackContentId: `${media_server_host}/api/files/${subtitle.file_id}/?token=${token}`,
 				trackContentType: subtitle.mime,
 				subtype: "SUBTITLES"
 			}))
@@ -77,7 +77,7 @@ function makeMediaInformation(item: Episode | Movie | Track, media_server_host: 
 		let disc = track.disc;
 		let album = disc.album;
 		return {
-			contentId: `${media_server_host}/files/${item.media.file_id}/?token=${token}`,
+			contentId: `${media_server_host}/api/files/${item.media.file_id}/?token=${token}`,
 			contentType: item.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
@@ -85,7 +85,7 @@ function makeMediaInformation(item: Episode | Movie | Track, media_server_host: 
 				title: track.title,
 				subtitle: track.artists.map((artist) => artist.title).join(" \u00b7 "),
 				images: album.artwork.map((image) => ({
-					url: `${media_server_host}/files/${image.file_id}/?token=${token}`
+					url: `${media_server_host}/api/files/${image.file_id}/?token=${token}`
 				}))
 			}
 		};
@@ -225,13 +225,13 @@ class ConnectionHandler {
 	static readonly NAMESPACE = "urn:x-cast:com.google.cast.tp.connection";
 
 	private messageHandler: MessageHandler;
-	private serializer: autoguard.serialization.MessageSerializer<schema.connection.Autoguard>;
-	readonly listeners: stdlib.routing.MessageRouter<schema.connection.Autoguard>;
+	private serializer: autoguard.serialization.MessageSerializer<schema.connection.Autoguard.Guards>;
+	readonly listeners: stdlib.routing.MessageRouter<schema.connection.Autoguard.Guards>;
 
 	constructor(messageHandler: MessageHandler) {
 		this.messageHandler = messageHandler;
-		this.serializer = new autoguard.serialization.MessageSerializer(schema.connection.Autoguard);
-		this.listeners = new stdlib.routing.MessageRouter<schema.connection.Autoguard>();
+		this.serializer = new autoguard.serialization.MessageSerializer(schema.connection.Autoguard.Guards);
+		this.listeners = new stdlib.routing.MessageRouter<schema.connection.Autoguard.Guards>();
 	}
 
 	handle(message: cast_message.CastMessage): void {
@@ -242,7 +242,7 @@ class ConnectionHandler {
 		});
 	}
 
-	send<A extends keyof schema.connection.Autoguard>(type: A, data: schema.connection.Autoguard[A], transportId?: string): void {
+	send<A extends keyof schema.connection.Autoguard.Guards>(type: A, data: schema.connection.Autoguard.Guards[A], transportId?: string): void {
 		this.messageHandler.send({
 			namespace: ConnectionHandler.NAMESPACE,
 			destination_id: transportId,
@@ -255,13 +255,13 @@ class HearbeatHandler {
 	static readonly NAMESPACE = "urn:x-cast:com.google.cast.tp.heartbeat";
 
 	private messageHandler: MessageHandler;
-	private serializer: autoguard.serialization.MessageSerializer<schema.heartbeat.Autoguard>;
-	readonly listeners: stdlib.routing.MessageRouter<schema.heartbeat.Autoguard>;
+	private serializer: autoguard.serialization.MessageSerializer<schema.heartbeat.Autoguard.Guards>;
+	readonly listeners: stdlib.routing.MessageRouter<schema.heartbeat.Autoguard.Guards>;
 
 	constructor(messageHandler: MessageHandler) {
 		this.messageHandler = messageHandler;
-		this.serializer = new autoguard.serialization.MessageSerializer(schema.heartbeat.Autoguard);
-		this.listeners = new stdlib.routing.MessageRouter<schema.heartbeat.Autoguard>();
+		this.serializer = new autoguard.serialization.MessageSerializer(schema.heartbeat.Autoguard.Guards);
+		this.listeners = new stdlib.routing.MessageRouter<schema.heartbeat.Autoguard.Guards>();
 	}
 
 	handle(message: cast_message.CastMessage): void {
@@ -272,7 +272,7 @@ class HearbeatHandler {
 		});
 	}
 
-	send<A extends keyof schema.heartbeat.Autoguard>(type: A, data: schema.heartbeat.Autoguard[A]): void {
+	send<A extends keyof schema.heartbeat.Autoguard.Guards>(type: A, data: schema.heartbeat.Autoguard.Guards[A]): void {
 		this.messageHandler.send({
 			namespace: HearbeatHandler.NAMESPACE,
 			payload_utf8: JSON.stringify(data)
@@ -280,23 +280,23 @@ class HearbeatHandler {
 	}
 }
 
-type MediaCallback = (message: schema.media.Autoguard[keyof schema.media.Autoguard]) => void;
+type MediaCallback = (message: schema.media.Autoguard.Guards[keyof schema.media.Autoguard.Guards]) => void;
 
 class MediaHandler {
 	static readonly NAMESPACE = "urn:x-cast:com.google.cast.media";
 
 	private messageHandler: MessageHandler;
-	private serializer: autoguard.serialization.MessageSerializer<schema.media.Autoguard>;
+	private serializer: autoguard.serialization.MessageSerializer<schema.media.Autoguard.Guards>;
 	private callbacks: Map<number, MediaCallback>;
-	readonly listeners: stdlib.routing.MessageRouter<schema.media.Autoguard>;
+	readonly listeners: stdlib.routing.MessageRouter<schema.media.Autoguard.Guards>;
 	readonly transportId = new observers.ObservableClass(undefined as string | undefined);
 	readonly mediaSessionId = new observers.ObservableClass(undefined as number | undefined);
 
 	constructor(messageHandler: MessageHandler) {
 		this.messageHandler = messageHandler;
-		this.serializer = new autoguard.serialization.MessageSerializer(schema.media.Autoguard);
+		this.serializer = new autoguard.serialization.MessageSerializer(schema.media.Autoguard.Guards);
 		this.callbacks = new Map<number, MediaCallback>();
-		this.listeners = new stdlib.routing.MessageRouter<schema.media.Autoguard>();
+		this.listeners = new stdlib.routing.MessageRouter<schema.media.Autoguard.Guards>();
 	}
 
 	handle(message: cast_message.CastMessage): void {
@@ -316,7 +316,7 @@ class MediaHandler {
 		}
 	}
 
-	send<A extends keyof schema.media.Autoguard>(type: A, data: schema.media.Autoguard[A], callback?: MediaCallback): void {
+	send<A extends keyof schema.media.Autoguard.Guards>(type: A, data: schema.media.Autoguard.Guards[A], callback?: MediaCallback): void {
 		data.requestId = this.messageHandler.getRequestId();
 		if (is.present(callback)) {
 			this.callbacks.set(data.requestId, callback);
@@ -329,21 +329,21 @@ class MediaHandler {
 	}
 }
 
-type ReceiverCallback = (message: schema.receiver.Autoguard[keyof schema.receiver.Autoguard]) => void;
+type ReceiverCallback = (message: schema.receiver.Autoguard.Guards[keyof schema.receiver.Autoguard.Guards]) => void;
 
 class ReceiverHandler {
 	static readonly NAMESPACE = "urn:x-cast:com.google.cast.receiver";
 
 	private messageHandler: MessageHandler;
-	private serializer: autoguard.serialization.MessageSerializer<schema.receiver.Autoguard>;
+	private serializer: autoguard.serialization.MessageSerializer<schema.receiver.Autoguard.Guards>;
 	private callbacks: Map<number, ReceiverCallback>;
-	readonly listeners: stdlib.routing.MessageRouter<schema.receiver.Autoguard>;
+	readonly listeners: stdlib.routing.MessageRouter<schema.receiver.Autoguard.Guards>;
 
 	constructor(messageHandler: MessageHandler) {
 		this.messageHandler = messageHandler;
-		this.serializer = new autoguard.serialization.MessageSerializer(schema.receiver.Autoguard);
+		this.serializer = new autoguard.serialization.MessageSerializer(schema.receiver.Autoguard.Guards);
 		this.callbacks = new Map<number, ReceiverCallback>();
-		this.listeners = new stdlib.routing.MessageRouter<schema.receiver.Autoguard>();
+		this.listeners = new stdlib.routing.MessageRouter<schema.receiver.Autoguard.Guards>();
 	}
 
 	handle(message: cast_message.CastMessage): void {
@@ -359,7 +359,7 @@ class ReceiverHandler {
 		});
 	}
 
-	send<A extends keyof schema.receiver.Autoguard>(type: A, data: schema.receiver.Autoguard[A], callback?: ReceiverCallback): void {
+	send<A extends keyof schema.receiver.Autoguard.Guards>(type: A, data: schema.receiver.Autoguard.Guards[A], callback?: ReceiverCallback): void {
 		data.requestId = this.messageHandler.getRequestId();
 		if (is.present(callback)) {
 			this.callbacks.set(data.requestId, callback);

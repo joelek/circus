@@ -1,9 +1,7 @@
-{
-	PING: {
-		"type": "PING"
-	},
+guard PING: {
+	"type": "PING"
+};
 
-	PONG: {
-		"type": "PONG"
-	}
-}
+guard PONG: {
+	"type": "PONG"
+};

@@ -1,61 +1,59 @@
-{
-	LAUNCH: {
-		type: "LAUNCH",
-		requestId: number,
-		appId: string
-	},
+guard LAUNCH: {
+	"type": "LAUNCH",
+	"requestId": number,
+	"appId": string
+};
 
-	STOP: {
-		type: "STOP",
-		requestId: number,
-		sessionId: string
-	},
+guard STOP: {
+	"type": "STOP",
+	"requestId": number,
+	"sessionId": string
+};
 
-	GET_STATUS: {
-		type: "GET_STATUS",
-		requestId: number
-	},
+guard GET_STATUS: {
+	"type": "GET_STATUS",
+	"requestId": number
+};
 
-	GET_APP_AVAILABILITY: {
-		type: "GET_APP_AVAILABILITY",
-		requestId: number,
-		appId: string[]
-	},
+guard GET_APP_AVAILABILITY: {
+	"type": "GET_APP_AVAILABILITY",
+	"requestId": number,
+	"appId": string[]
+};
 
-	SET_VOLUME: {
-		type: "SET_VOLUME",
-		requestId: number,
-		volume: ({
-			level: number
-		} | {
-			muted: boolean
-		})
-	},
+guard SET_VOLUME: {
+	"type": "SET_VOLUME",
+	"requestId": number,
+	"volume": ({
+		"level": number
+	} | {
+		"muted": boolean
+	})
+};
 
-	RECEIVER_STATUS: {
-		type: "RECEIVER_STATUS",
-		requestId: number,
-		status: {
-			applications?: {
-				appId: string,
-				displayName: string,
-				iconUrl: string,
-				isIdleScreen: boolean,
-				launchedFromCloud: boolean,
-				namespaces: {
-					name: string
-				}[],
-				sessionId: string,
-				statusText: string,
-				transportId: string
+guard RECEIVER_STATUS: {
+	"type": "RECEIVER_STATUS",
+	"requestId": number,
+	"status": {
+		"applications"?: {
+			"appId": string,
+			"displayName": string,
+			"iconUrl": string,
+			"isIdleScreen": boolean,
+			"launchedFromCloud": boolean,
+			"namespaces": {
+				"name": string
 			}[],
-			userEq: {},
-			volume: {
-				controlType: string,
-				level: number,
-				muted: boolean,
-				stepInterval: number
-			}
+			"sessionId": string,
+			"statusText": string,
+			"transportId": string
+		}[],
+		"userEq": {},
+		"volume": {
+			"controlType": string,
+			"level": number,
+			"muted": boolean,
+			"stepInterval": number
 		}
 	}
-}
+};

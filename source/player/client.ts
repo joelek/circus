@@ -4,7 +4,7 @@ import * as schema from "./schema/";
 import * as typesockets from "../typesockets/client";
 
 export class ContextClient {
-	private tsc: typesockets.TypeSocketClient<schema.messages.Autoguard>;
+	private tsc: typesockets.TypeSocketClient<schema.messages.Autoguard.Guards>;
 	readonly estimatedProgress = new observers.ObservableClass(undefined as number | undefined);
 	readonly estimatedProgressTimestamp = new observers.ObservableClass(undefined as number | undefined);
 	readonly token = new observers.ObservableClass(undefined as string | undefined);
@@ -48,7 +48,7 @@ export class ContextClient {
 	}
 
 	constructor(url: string, factory: typesockets.WebSocketFactory = (url) => new WebSocket(url)) {
-		this.tsc = new typesockets.TypeSocketClient(url, factory, schema.messages.Autoguard);
+		this.tsc = new typesockets.TypeSocketClient(url, factory, schema.messages.Autoguard.Guards);
 		this.tsc.addEventListener("sys", "connect", () => {
 			this.isOnline.updateState(true);
 		});

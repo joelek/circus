@@ -1,106 +1,104 @@
-{
-	SetToken: {
-		token?: string
-	},
+guard SetToken: {
+	"token"?: string
+};
 
-	PermissionsRequest: {
-		playlist: {
-			playlist_id: string
-		}
-	},
-
-	PermissionsResponse: {
-		permissions: "read" | "write"
-	},
-
-	CreatePlaylistRequest: {
-		playlist: {
-			title: string,
-			description: string
-		}
-	},
-
-	CreatePlaylistResponse: {
-		errors: string[],
-		playlist_id: string
-	},
-
-	CreatePlaylist: {
-		playlist: ../../api/schema/objects/PlaylistBase
-	},
-
-	DeletePlaylistRequest: {
-		playlist: {
-			playlist_id: string
-		}
-	},
-
-	DeletePlaylistResponse: {
-		errors: string[]
-	},
-
-	DeletePlaylist: {
-		playlist: ../../api/schema/objects/PlaylistBase
-	},
-
-	UpdatePlaylistRequest: {
-		playlist: {
-			playlist_id: string,
-			title: string,
-			description: string
-		}
-	},
-
-	UpdatePlaylistResponse: {
-		errors: string[]
-	},
-
-	UpdatePlaylist: {
-		playlist: ../../api/schema/objects/PlaylistBase
-	},
-
-	CreatePlaylistItemRequest: {
-		playlist_item: {
-			playlist_id: string,
-			track_id: string
-		}
-	},
-
-	CreatePlaylistItemResponse: {
-		errors: string[],
-		playlist_item_id: string
-	},
-
-	CreatePlaylistItem: {
-		playlist_item: ../../api/schema/objects/PlaylistItemBase
-	},
-
-	DeletePlaylistItemRequest: {
-		playlist_item: {
-			playlist_item_id: string
-		}
-	},
-
-	DeletePlaylistItemResponse: {
-		errors: string[]
-	},
-
-	DeletePlaylistItem: {
-		playlist_item: ../../api/schema/objects/PlaylistItemBase
-	},
-
-	UpdatePlaylistItemRequest: {
-		playlist_item: {
-			playlist_item_id: string,
-			number: number
-		}
-	},
-
-	UpdatePlaylistItemResponse: {
-		errors: string[]
-	},
-
-	UpdatePlaylistItem: {
-		playlist_item: ../../api/schema/objects/PlaylistItemBase
+guard PermissionsRequest: {
+	"playlist": {
+		"playlist_id": string
 	}
-}
+};
+
+guard PermissionsResponse: {
+	"permissions": "read" | "write"
+};
+
+guard CreatePlaylistRequest: {
+	"playlist": {
+		"title": string,
+		"description": string
+	}
+};
+
+guard CreatePlaylistResponse: {
+	"errors": string[],
+	"playlist_id": string
+};
+
+guard CreatePlaylist: {
+	"playlist": ../../api/schema/objects/PlaylistBase
+};
+
+guard DeletePlaylistRequest: {
+	"playlist": {
+		"playlist_id": string
+	}
+};
+
+guard DeletePlaylistResponse: {
+	"errors": string[]
+};
+
+guard DeletePlaylist: {
+	"playlist": ../../api/schema/objects/PlaylistBase
+};
+
+guard UpdatePlaylistRequest: {
+	"playlist": {
+		"playlist_id": string,
+		"title": string,
+		"description": string
+	}
+};
+
+guard UpdatePlaylistResponse: {
+	"errors": string[]
+};
+
+guard UpdatePlaylist: {
+	"playlist": ../../api/schema/objects/PlaylistBase
+};
+
+guard CreatePlaylistItemRequest: {
+	"playlist_item": {
+		"playlist_id": string,
+		"track_id": string
+	}
+};
+
+guard CreatePlaylistItemResponse: {
+	"errors": string[],
+	"playlist_item_id": string
+};
+
+guard CreatePlaylistItem: {
+	"playlist_item": ../../api/schema/objects/PlaylistItemBase
+};
+
+guard DeletePlaylistItemRequest: {
+	"playlist_item": {
+		"playlist_item_id": string
+	}
+};
+
+guard DeletePlaylistItemResponse: {
+	"errors": string[]
+};
+
+guard DeletePlaylistItem: {
+	"playlist_item": ../../api/schema/objects/PlaylistItemBase
+};
+
+guard UpdatePlaylistItemRequest: {
+	"playlist_item": {
+		"playlist_item_id": string,
+		"number": number
+	}
+};
+
+guard UpdatePlaylistItemResponse: {
+	"errors": string[]
+};
+
+guard UpdatePlaylistItem: {
+	"playlist_item": ../../api/schema/objects/PlaylistItemBase
+};

@@ -7,12 +7,40 @@ import * as is from "../is";
 import * as schema from "./schema/";
 import { default as config } from "../config";
 import { SearchResult } from "../jdb2";
-import { Actor, Album, Artist, Cue, Episode, Genre, Movie, Playlist, Show, Track, User, Year } from "../database/schema";
+import { Actor, Album, Artist, Cue, Episode, File, Genre, Movie, Playlist, Show, Stream, Track, User, Year } from "../database/schema";
 
 export function getStreamWeight(timestamp_ms: number): number {
 	let ms = Date.now() - timestamp_ms;
 	let weeks = ms / (1000 * 60 * 60 * 24 * 7);
 	return Math.pow(0.5, weeks);
+};
+
+export function lookupFile(file_id: string, user_id: string): File & { mime: string } {
+	let file = database.files.lookup(file_id);
+	let mime = "application/octet-stream";
+	try {
+		mime = database.audio_files.lookup(file.file_id).mime;
+	} catch (error) {}
+	try {
+		mime = database.image_files.lookup(file.file_id).mime;
+	} catch (error) {}
+	try {
+		mime = database.metadata_files.lookup(file.file_id).mime;
+	} catch (error) {}
+	try {
+		mime = database.subtitle_files.lookup(file.file_id).mime;
+	} catch (error) {}
+	try {
+		mime = database.video_files.lookup(file.file_id).mime;
+	} catch (error) {}
+	return {
+		...file,
+		mime
+	};
+};
+
+export function createStream(stream: Stream): void {
+	database.streams.insert(stream);
 };
 
 export function createUser(request: schema.messages.RegisterRequest): schema.messages.RegisterResponse | schema.messages.ErrorMessage {
@@ -307,7 +335,7 @@ export function lookupPlaylistBase(playlist_id: string, user_id: string, user?: 
 		playlist_id: playlist.playlist_id,
 		title: playlist.title,
 		description: playlist.description,
-		user: is.present(user) ? user : lookupUserBase(playlist.user_id)
+		user: is.present(user) ? user : lookupUserBase(playlist.user_id, user_id)
 	};
 };
 
@@ -455,7 +483,7 @@ export function lookupTrack(track_id: string, user_id: string, disc?: schema.obj
 	};
 };
 
-export function lookupUserBase(user_id: string): schema.objects.UserBase {
+export function lookupUserBase(user_id: string, api_user_id: string): schema.objects.UserBase {
 	let user = database.users.lookup(user_id);
 	return {
 		user_id: user.user_id,
@@ -464,8 +492,8 @@ export function lookupUserBase(user_id: string): schema.objects.UserBase {
 	};
 };
 
-export function lookupUser(user_id: string): schema.objects.User {
-	let user = lookupUserBase(user_id);
+export function lookupUser(user_id: string, api_user_id: string): schema.objects.User {
+	let user = lookupUserBase(user_id, api_user_id);
 	return {
 		...user
 	};
@@ -678,12 +706,12 @@ export function searchForUsers(query: string, offset: number, length: number, us
 		return Array.from(database.users)
 			.sort(jsondb.LexicalSort.increasing((record) => record.name))
 			.slice(offset, offset + length)
-			.map((record) => lookupUser(record.user_id));
+			.map((record) => lookupUser(record.user_id, user_id));
 	} else {
 		return database.user_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().user_id)
-			.map((id) => lookupUser(id))
+			.map((id) => lookupUser(id, user_id))
 			.collect();
 	}
 };
@@ -755,7 +783,7 @@ export function searchForEntities(query: string, user_id: string, offset: number
 		} else if (type === "TRACK") {
 			return lookupTrack((result.lookup() as Track).track_id, user_id);
 		} else if (type === "USER") {
-			return lookupUser((result.lookup() as User).user_id);
+			return lookupUser((result.lookup() as User).user_id, user_id);
 		} else if (type === "YEAR") {
 			return lookupYear((result.lookup() as Year).year_id, user_id);
 		}
@@ -886,9 +914,10 @@ export function getShowsFromActor(actor_id: string, user_id: string, offset: num
 		.collect();
 };
 
-export function getUserPlaylists(subject_user_id: string, user_id: string): schema.objects.Playlist[] {
+export function getUserPlaylists(subject_user_id: string, user_id: string, offset: number, length: number): schema.objects.Playlist[] {
 	return database.getPlaylistsFromUser.lookup(subject_user_id)
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
+		.slice(offset, offset + length)
 		.map((entry) => lookupPlaylist(entry.playlist_id, user_id))
 		.collect();
 };

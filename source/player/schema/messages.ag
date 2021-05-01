@@ -1,33 +1,31 @@
-{
-	SetContext: {
-		context?: ./objects/Context
-	},
+guard SetContext: {
+	"context"?: ./objects/Context
+};
 
-	SetDevice: {
-		device?: ./objects/Device
-	},
+guard SetDevice: {
+	"device"?: ./objects/Device
+};
 
-	SetDevices: {
-		devices: ./objects/Device[]
-	},
+guard SetDevices: {
+	"devices": ./objects/Device[]
+};
 
-	SetIndex: {
-		index?: number
-	},
+guard SetIndex: {
+	"index"?: number
+};
 
-	SetLocalDevice: {
-		device: ./objects/Device
-	},
+guard SetLocalDevice: {
+	"device": ./objects/Device
+};
 
-	SetPlayback: {
-		playback: boolean
-	},
+guard SetPlayback: {
+	"playback": boolean
+};
 
-	SetProgress: {
-		progress?: number
-	},
+guard SetProgress: {
+	"progress"?: number
+};
 
-	SetToken: {
-		token?: string
-	}
-}
+guard SetToken: {
+	"token"?: string
+};

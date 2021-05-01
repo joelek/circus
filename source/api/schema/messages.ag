@@ -1,16 +1,14 @@
-{
-	ErrorMessage: {
-		errors: string[]
-	},
+guard ErrorMessage: {
+	"errors": string[]
+};
 
-	RegisterRequest: {
-		username: string,
-		password: string,
-		name: string,
-		key_id: string
-	},
+guard RegisterRequest: {
+	"username": string,
+	"password": string,
+	"name": string,
+	"key_id": string
+};
 
-	RegisterResponse: {
-		token: string
-	}
-}
+guard RegisterResponse: {
+	"token": string
+};

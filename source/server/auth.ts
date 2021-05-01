@@ -21,10 +21,10 @@ export function createToken(username: string, password: string): string {
 	let users = indexer.getUsersFromUsername.lookup(username).collect();
 	let user = users.shift();
 	if (!user) {
-		throw ``;
+		throw 401;
 	}
 	if (!passwords.verify(password, user.password)) {
-		throw `Expected a valid password!`;
+		throw 401;
 	}
 	return generate_token(user.user_id);
 }
@@ -38,13 +38,13 @@ export function getUserId(chunk: string): string {
 	let validator = parts[2];
 	let token = indexer.tokens.lookup(selector);
 	if (token.expires_ms < Date.now()) {
-		throw `Token has expired!`;
+		throw 401;
 	}
 	let hash = libcrypto.createHash('sha256');
 	hash.update(Buffer.from(validator, 'hex'));
 	let validator_hash = hash.digest();
 	if (!libcrypto.timingSafeEqual(Buffer.from(token.hash, 'hex'), validator_hash)) {
-		throw new Error();
+		throw 401;
 	}
 	let expires_ms = Date.now() + (7 * 24 * 60 * 60 * 1000);
 	indexer.tokens.update({

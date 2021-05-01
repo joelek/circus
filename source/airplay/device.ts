@@ -63,7 +63,7 @@ export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
 			let context = new player.ContextClient(url, (url) => new sockets.WebSocketClient(url));
 			observers.computed(async (currentLocalEntry, token) => {
 				if (is.present(currentLocalEntry) && is.present(token)) {
-					let url = `${media_server_host}/files/${currentLocalEntry.media.file_id}/?token=${token}`;
+					let url = `${media_server_host}/api/files/${currentLocalEntry.media.file_id}/?token=${token}`;
 					await api.play(outbound, correlation_id, url, 0.0);
 				} else {
 					await api.stop(outbound, correlation_id);

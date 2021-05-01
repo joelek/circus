@@ -226,7 +226,7 @@ export class EntityCardFactory {
 			}
 		}
 		let link = this.entityLinkFactory.forAlbum(album);
-		let image = this.ImageBox.forSquare(album.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forSquare(album.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forAlbum(album)
 		];
@@ -250,7 +250,7 @@ export class EntityCardFactory {
 			}
 		}
 		let link = this.entityLinkFactory.forArtist(artist);
-		let image = this.ImageBox.forSquare(artist.albums[0]?.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forSquare(artist.albums[0]?.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forArtist(artist)
 		];
@@ -282,7 +282,7 @@ export class EntityCardFactory {
 			duration_ms += track.media.duration_ms;
 		}
 		let link = this.entityLinkFactory.forDisc(disc);
-		let image = this.ImageBox.forSquare(disc.album.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forSquare(disc.album.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forDisc(disc)
 		];
@@ -341,7 +341,7 @@ export class EntityCardFactory {
 		let duration_ms = 0;
 		duration_ms += movie.media.duration_ms;
 		let link = this.entityLinkFactory.forMovie(movie);
-		let image = this.ImageBox.forPoster(movie.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forPoster(movie.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forMovie(movie)
 		];
@@ -367,7 +367,7 @@ export class EntityCardFactory {
 			duration_ms += item.track.media.duration_ms;
 		}
 		let link = this.entityLinkFactory.forPlaylist(playlist);
-		let image = this.ImageBox.forSquare(playlist.items[0]?.track.disc.album.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forSquare(playlist.items[0]?.track.disc.album.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forPlaylist(playlist)
 		];
@@ -388,7 +388,7 @@ export class EntityCardFactory {
 			duration_ms += episode.media.duration_ms;
 		}
 		let link = this.entityLinkFactory.forSeason(season);
-		let image = this.ImageBox.forPoster(season.show.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forPoster(season.show.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forSeason(season)
 		];
@@ -411,7 +411,7 @@ export class EntityCardFactory {
 			}
 		}
 		let link = this.entityLinkFactory.forShow(show);
-		let image = this.ImageBox.forPoster(show.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forPoster(show.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forShow(show)
 		];
@@ -428,7 +428,7 @@ export class EntityCardFactory {
 		let duration_ms = 0;
 		duration_ms += track.media.duration_ms;
 		let link = this.entityLinkFactory.forTrack(track);
-		let image = this.ImageBox.forSquare(track.disc.album.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forSquare(track.disc.album.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forTrack(track)
 		];

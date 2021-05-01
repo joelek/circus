@@ -1,84 +1,82 @@
-{
-	EpisodeMetadata: {
-		type: "episode",
-		title: string,
-		season: number,
-		episode: number,
-		year?: number,
-		summary?: string,
-		show: {
-			title: string,
-			summary?: string,
-			genres: string[],
-			actors: string[]
-		}
-	},
-
-	MovieMetadata: {
-		type: "movie",
-		title: string,
-		year?: number,
-		summary?: string,
-		genres: string[],
-		actors: string[]
-	},
-
-	TrackMetadata: {
-		type: "track",
-		title: string,
-		disc: number,
-		track: number,
-		album: {
-			title: string,
-			year?: number,
-			artists: {
-				title: string
-			}[]
-		},
-		artists: {
-			title: string
-		}[]
-	},
-
-	Metadata: EpisodeMetadata | MovieMetadata | TrackMetadata,
-
-	AudioResource: {
-		type: "audio",
-		duration_ms: number
-	},
-
-	ImageResource: {
-		type: "image",
-		width: number,
-		height: number
-	},
-
-	MetadataResource: {
-		type: "metadata"
-	},
-
-	SubtitleResource: {
-		type: "subtitle",
-		duration_ms: number,
-		language?: string,
-		cues: {
-			start_ms: number,
-			duration_ms: number,
-			lines: string[]
-		}[]
-	},
-
-	VideoResource: {
-		type: "video",
-		duration_ms: number,
-		width: number,
-		height: number
-	},
-
-	Resource: AudioResource | ImageResource | MetadataResource | SubtitleResource | VideoResource,
-
-	Probe: {
-		metadata?: Metadata,
-		resources: Resource[]
+guard EpisodeMetadata: {
+	"type": "episode",
+	"title": string,
+	"season": number,
+	"episode": number,
+	"year"?: number,
+	"summary"?: string,
+	"show": {
+		"title": string,
+		"summary"?: string,
+		"genres": string[],
+		"actors": string[]
 	}
-}
+};
+
+guard MovieMetadata: {
+	"type": "movie",
+	"title": string,
+	"year"?: number,
+	"summary"?: string,
+	"genres": string[],
+	"actors": string[]
+};
+
+guard TrackMetadata: {
+	"type": "track",
+	"title": string,
+	"disc": number,
+	"track": number,
+	"album": {
+		"title": string,
+		"year"?: number,
+		"artists": {
+			"title": string
+		}[]
+	},
+	"artists": {
+		"title": string
+	}[]
+};
+
+guard Metadata: EpisodeMetadata | MovieMetadata | TrackMetadata;
+
+guard AudioResource: {
+	"type": "audio",
+	"duration_ms": number
+};
+
+guard ImageResource: {
+	"type": "image",
+	"width": number,
+	"height": number
+};
+
+guard MetadataResource: {
+	"type": "metadata"
+};
+
+guard SubtitleResource: {
+	"type": "subtitle",
+	"duration_ms": number,
+	"language"?: string,
+	"cues": {
+		"start_ms": number,
+		"duration_ms": number,
+		"lines": string[]
+	}[]
+};
+
+guard VideoResource: {
+	"type": "video",
+	"duration_ms": number,
+	"width": number,
+	"height": number
+};
+
+guard Resource: AudioResource | ImageResource | MetadataResource | SubtitleResource | VideoResource;
+
+guard Probe: {
+	"metadata"?: Metadata,
+	"resources": Resource[]
+};

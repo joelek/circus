@@ -6,13 +6,13 @@ import * as typesockets from "../typesockets/client";
 import * as api from "../api/schema/objects";
 
 export class PlaylistsClient {
-	private tsc: typesockets.TypeSocketClient<messages.Autoguard>;
+	private tsc: typesockets.TypeSocketClient<messages.Autoguard.Guards>;
 	private token = new observers.ObservableClass(undefined as string | undefined);
 	private online = new observers.ObservableClass(false);
 	readonly playlists = new observers.ArrayObservable(new Array<observers.ObservableClass<api.Playlist>>());
 
 	constructor(url: string, factory: typesockets.WebSocketFactory = (url) => new WebSocket(url)) {
-		this.tsc = new typesockets.TypeSocketClient(url, factory, messages.Autoguard);
+		this.tsc = new typesockets.TypeSocketClient(url, factory, messages.Autoguard.Guards);
 		this.tsc.addEventListener("sys", "connect", () => {
 			this.online.updateState(true);
 		});

@@ -1,6 +1,4 @@
-{
-	IndexRecord: {
-		token: boolean | null | number | string | undefined,
-		index: number
-	}
-}
+guard IndexRecord: {
+	"token"?: boolean | null | number | string | undefined,
+	"index": number
+};

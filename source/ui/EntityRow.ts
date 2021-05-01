@@ -150,7 +150,7 @@ export class EntityRowFactory {
 
 	forAlbum(album: api.Album, playbackButton: xnode.XElement = this.PlaybackButton.forAlbum(album)): xnode.XElement {
 		let link = this.entityLinkFactory.forAlbum(album);
-		let image = this.ImageBox.forSquare(album.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forSquare(album.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forAlbum(album)
 		];
@@ -160,7 +160,7 @@ export class EntityRowFactory {
 
 	forArtist(artist: api.Artist, playbackButton: xnode.XElement = this.PlaybackButton.forArtist(artist)): xnode.XElement {
 		let link = this.entityLinkFactory.forArtist(artist);
-		let image = this.ImageBox.forSquare(artist.albums[0]?.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forSquare(artist.albums[0]?.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forArtist(artist)
 		];
@@ -181,7 +181,7 @@ export class EntityRowFactory {
 
 	forDisc(disc: api.Disc, playbackButton: xnode.XElement = this.PlaybackButton.forDisc(disc)): xnode.XElement {
 		let link = this.entityLinkFactory.forDisc(disc);
-		let image = this.ImageBox.forSquare(disc.album.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forSquare(disc.album.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forDisc(disc)
 		];
@@ -216,7 +216,7 @@ export class EntityRowFactory {
 
 	forMovie(movie: api.Movie, playbackButton: xnode.XElement = this.PlaybackButton.forMovie(movie)): xnode.XElement {
 		let link = this.entityLinkFactory.forMovie(movie);
-		let image = this.ImageBox.forSquare(movie.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forSquare(movie.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forMovie(movie)
 		];
@@ -226,7 +226,7 @@ export class EntityRowFactory {
 
 	forPlaylist(playlist: api.Playlist, playbackButton: xnode.XElement = this.PlaybackButton.forPlaylist(playlist)): xnode.XElement {
 		let link = this.entityLinkFactory.forPlaylist(playlist);
-		let image = this.ImageBox.forSquare(playlist.items[0]?.track.disc.album.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forSquare(playlist.items[0]?.track.disc.album.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forPlaylist(playlist)
 		];
@@ -238,7 +238,7 @@ export class EntityRowFactory {
 
 	forSeason(season: api.Season, playbackButton: xnode.XElement = this.PlaybackButton.forSeason(season)): xnode.XElement {
 		let link = this.entityLinkFactory.forSeason(season);
-		let image = this.ImageBox.forSquare(season.show.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forSquare(season.show.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forSeason(season)
 		];
@@ -250,7 +250,7 @@ export class EntityRowFactory {
 
 	forShow(show: api.Show, playbackButton: xnode.XElement = this.PlaybackButton.forShow(show)): xnode.XElement {
 		let link = this.entityLinkFactory.forShow(show);
-		let image = this.ImageBox.forSquare(show.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forSquare(show.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forShow(show)
 		];
@@ -260,7 +260,7 @@ export class EntityRowFactory {
 
 	forTrack(track: api.Track, playbackButton: xnode.XElement = this.PlaybackButton.forTrack(track)): xnode.XElement {
 		let link = this.entityLinkFactory.forTrack(track);
-		let image = this.ImageBox.forSquare(track.disc.album.artwork.map((image) => `/files/${image.file_id}/`).shift());
+		let image = this.ImageBox.forSquare(track.disc.album.artwork.map((image) => `/api/files/${image.file_id}/`).shift());
 		let titles = [
 			this.entityTitleFactory.forTrack(track)
 		];
