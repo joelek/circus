@@ -74,6 +74,10 @@ export namespace Autoguard {
 					"limit": autoguard.guards.Union.of(
 						autoguard.guards.Undefined,
 						autoguard.guards.Number
+					),
+					"cues": autoguard.guards.Union.of(
+						autoguard.guards.Undefined,
+						autoguard.guards.Boolean
 					)
 				})
 			),

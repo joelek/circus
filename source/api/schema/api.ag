@@ -2,7 +2,7 @@ route POST:/auth/ <= <{ "X-Circus-Username": string, "X-Circus-Password": string
 
 route POST:/users/ <= ./messages/RegisterRequest => ./messages/RegisterResponse | ./messages/ErrorMessage;
 
-route GET:/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
+route GET:/<query:string> ? <{ token: string, offset?: number, limit?: number, cues?: boolean }> => {
 	entities: ./objects/Entity[]
 };
 

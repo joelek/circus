@@ -117,7 +117,6 @@ async function requestHandler(request: libhttp.IncomingMessage, response: libhtt
 		}
 	}
 	if (/^[/]api[/]/.test(path)) {
-		request.url = (request.url ?? "").slice("/api".length);
 		return api.server(request, response);
 	}
 	if (path === "/manifest.json") {

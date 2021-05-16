@@ -1,89 +1,11 @@
+import * as autoguard from "@joelek/ts-autoguard";
 import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as libauth from "../server/auth";
 import * as auth from "../server/auth";
 import * as handler from "./handler";
-import * as is from "../is";
 import * as database from "../database/indexer";
 import * as apiv2 from "./schema/api/server";
-
-type RangeResponse = {
-	status: number,
-	offset: number,
-	length: number
-	size: number
-};
-
-function parseRange(header: boolean | number | string | undefined, size: number): RangeResponse {
-	if (is.absent(header)) {
-		return {
-			status: 200,
-			offset: 0,
-			length: size,
-			size: size
-		};
-	}
-	let s416 = {
-		status: 416,
-		offset: 0,
-		length: 0,
-		size: size
-	};
-	let parts: RegExpExecArray | undefined;
-	parts = /^bytes[=]([0-9]+)[-]$/.exec(String(header)) ?? undefined;
-	if (is.present(parts)) {
-		let one = Number.parseInt(parts[1], 10);
-		if (one >= size) {
-			return s416;
-		}
-		return {
-			status: 206,
-			offset: one,
-			length: size - one,
-			size: size
-		};
-	}
-	parts = /^bytes[=]([0-9]+)[-]([0-9]+)$/.exec(String(header)) ?? undefined;
-	if (is.present(parts)) {
-		let one = Number.parseInt(parts[1], 10);
-		let two = Number.parseInt(parts[2], 10);
-		if (two < one) {
-			return s416;
-		}
-		if (one >= size) {
-			return s416;
-		}
-		if (two >= size) {
-			two = size - 1;
-		}
-		return {
-			status: 206,
-			offset: one,
-			length: two - one + 1,
-			size: size
-		};
-	}
-	parts = /^bytes[=][-]([0-9]+)$/.exec(String(header)) ?? undefined;
-	if (is.present(parts)) {
-		let one = Number.parseInt(parts[1], 10);
-		if (one < 1) {
-			return s416;
-		}
-		if (size < 1) {
-			return s416;
-		}
-		if (one > size) {
-			one = size;
-		}
-		return {
-			status: 206,
-			offset: size - one,
-			length: one,
-			size: size
-		};
-	}
-	return s416;
-}
 
 export const server = apiv2.makeServer({
 	"POST:/auth/": async (request) => {
@@ -514,7 +436,7 @@ export const server = apiv2.makeServer({
 		let user_id = auth.getUserId(options.token);
 		let file = handler.lookupFile(options.file_id, user_id);
 		let path = database.getPath(file).join("/");
-		let range = parseRange(request.headers().range, libfs.statSync(path).size);
+		let range = autoguard.api.parseRangeHeader(request.headers().range, libfs.statSync(path).size);
 		let stream = libfs.createReadStream(path, {
 			start: range.offset,
 			end: range.offset + range.length
@@ -536,10 +458,10 @@ export const server = apiv2.makeServer({
 				"Accept-Ranges": "bytes",
 				"Cache-Control": "private,max-age=86400",
 				"Content-Length": `${range.length}`,
-				"Content-Range": `bytes ${range.offset}-${range.offset+range.length-1}/${range.size}`,
+				"Content-Range": range.length > 0 ? `bytes ${range.offset}-${range.offset+range.length-1}/${range.size}` : `bytes */${range.size}`,
 				"Content-Type": file.mime
 			},
 			payload: stream
 		};
 	}
-});
+}, { urlPrefix: "/api" });

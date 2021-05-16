@@ -3,7 +3,7 @@
 import * as autoguard from "@joelek/ts-autoguard";
 import * as shared from "./index";
 
-export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Requests, shared.Autoguard.Responses>, options?: Partial<{}>): autoguard.api.RequestListener => {
+export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Requests, shared.Autoguard.Responses>, options?: Partial<{ urlPrefix: string }>): autoguard.api.RequestListener => {
 	let endpoints = new Array<autoguard.api.Endpoint>();
 	endpoints.push((raw) => {
 		let method = "POST";
@@ -13,7 +13,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				let headers = autoguard.api.combineKeyValuePairs(raw.headers);
 				headers["x-circus-username"] = autoguard.api.getStringOption(raw.headers, "x-circus-username");
@@ -24,9 +24,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["POST:/auth/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["POST:/auth/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["POST:/auth/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -40,7 +44,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				let headers = autoguard.api.combineKeyValuePairs(raw.headers);
 				let payload = await autoguard.api.deserializePayload(raw.payload);
@@ -49,9 +53,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["POST:/users/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["POST:/users/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["POST:/users/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -64,12 +72,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
 				options["offset"] = autoguard.api.getNumberOption(raw.parameters, "offset");
 				options["limit"] = autoguard.api.getNumberOption(raw.parameters, "limit");
+				options["cues"] = autoguard.api.getBooleanOption(raw.parameters, "cues");
 				let headers = autoguard.api.combineKeyValuePairs(raw.headers);
 				let payload = await autoguard.api.deserializePayload(raw.payload);
 				let guard = shared.Autoguard.Requests["GET:/<query>"];
@@ -77,9 +86,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -93,7 +106,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -106,9 +119,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/actors/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/actors/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/actors/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -123,7 +140,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["actor_id"] = autoguard.api.getStringOption(components, "actor_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -134,9 +151,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/actors/<actor_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/actors/<actor_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/actors/<actor_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -152,7 +173,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["actor_id"] = autoguard.api.getStringOption(components, "actor_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -165,9 +186,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/actors/<actor_id>/movies/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/actors/<actor_id>/movies/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/actors/<actor_id>/movies/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -183,7 +208,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["actor_id"] = autoguard.api.getStringOption(components, "actor_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -196,9 +221,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/actors/<actor_id>/shows/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/actors/<actor_id>/shows/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/actors/<actor_id>/shows/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -212,7 +241,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -225,9 +254,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/albums/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/albums/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/albums/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -242,7 +275,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["album_id"] = autoguard.api.getStringOption(components, "album_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -253,9 +286,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/albums/<album_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/albums/<album_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/albums/<album_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -269,7 +306,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -282,9 +319,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/artists/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/artists/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/artists/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -299,7 +340,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["artist_id"] = autoguard.api.getStringOption(components, "artist_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -310,9 +351,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/artists/<artist_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/artists/<artist_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/artists/<artist_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -326,7 +371,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -339,9 +384,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/discs/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/discs/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/discs/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -356,7 +405,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["disc_id"] = autoguard.api.getStringOption(components, "disc_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -367,9 +416,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/discs/<disc_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/discs/<disc_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/discs/<disc_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -383,7 +436,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -396,9 +449,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/episodes/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/episodes/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/episodes/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -413,7 +470,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["episode_id"] = autoguard.api.getStringOption(components, "episode_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -424,9 +481,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/episodes/<episode_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/episodes/<episode_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/episodes/<episode_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -440,7 +501,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -453,9 +514,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/genres/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/genres/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/genres/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -470,7 +535,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["genre_id"] = autoguard.api.getStringOption(components, "genre_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -481,9 +546,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/genres/<genre_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/genres/<genre_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/genres/<genre_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -499,7 +568,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["genre_id"] = autoguard.api.getStringOption(components, "genre_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -512,9 +581,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/genres/<genre_id>/movies/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/genres/<genre_id>/movies/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/genres/<genre_id>/movies/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -530,7 +603,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["genre_id"] = autoguard.api.getStringOption(components, "genre_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -543,9 +616,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/genres/<genre_id>/shows/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/genres/<genre_id>/shows/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/genres/<genre_id>/shows/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -559,7 +636,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -572,9 +649,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/movies/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/movies/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/movies/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -589,7 +670,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["movie_id"] = autoguard.api.getStringOption(components, "movie_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -600,9 +681,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/movies/<movie_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/movies/<movie_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/movies/<movie_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -618,7 +703,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["movie_id"] = autoguard.api.getStringOption(components, "movie_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -631,9 +716,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/movies/<movie_id>/suggestions/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/movies/<movie_id>/suggestions/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/movies/<movie_id>/suggestions/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -647,7 +736,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -660,9 +749,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/playlists/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/playlists/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/playlists/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -677,7 +770,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["playlist_id"] = autoguard.api.getStringOption(components, "playlist_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -688,9 +781,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/playlists/<playlist_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/playlists/<playlist_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/playlists/<playlist_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -704,7 +801,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -717,9 +814,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/seasons/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/seasons/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/seasons/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -734,7 +835,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["season_id"] = autoguard.api.getStringOption(components, "season_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -745,9 +846,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/seasons/<season_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/seasons/<season_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/seasons/<season_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -761,7 +866,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -774,9 +879,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/shows/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/shows/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/shows/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -791,7 +900,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["show_id"] = autoguard.api.getStringOption(components, "show_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -802,9 +911,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/shows/<show_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/shows/<show_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/shows/<show_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -818,7 +931,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -831,9 +944,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/tracks/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/tracks/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/tracks/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -848,7 +965,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["track_id"] = autoguard.api.getStringOption(components, "track_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -859,9 +976,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/tracks/<track_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/tracks/<track_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/tracks/<track_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -877,7 +998,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["track_id"] = autoguard.api.getStringOption(components, "track_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -890,9 +1011,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/tracks/<track_id>/playlists/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/tracks/<track_id>/playlists/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/tracks/<track_id>/playlists/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -906,7 +1031,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -919,9 +1044,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/users/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/users/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/users/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -936,7 +1065,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["user_id"] = autoguard.api.getStringOption(components, "user_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -947,9 +1076,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/users/<user_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/users/<user_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/users/<user_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -965,7 +1098,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["user_id"] = autoguard.api.getStringOption(components, "user_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -978,9 +1111,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/users/<user_id>/albums/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/users/<user_id>/albums/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/users/<user_id>/albums/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -996,7 +1133,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["user_id"] = autoguard.api.getStringOption(components, "user_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -1009,9 +1146,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/users/<user_id>/playlists/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/users/<user_id>/playlists/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/users/<user_id>/playlists/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -1027,7 +1168,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["user_id"] = autoguard.api.getStringOption(components, "user_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -1040,9 +1181,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/users/<user_id>/shows/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/users/<user_id>/shows/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/users/<user_id>/shows/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -1056,7 +1201,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["query"] = autoguard.api.getStringOption(components, "query");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -1069,9 +1214,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/years/<query>"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/years/<query>"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/years/<query>"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -1086,7 +1235,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["year_id"] = autoguard.api.getStringOption(components, "year_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -1097,9 +1246,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/years/<year_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/years/<year_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/years/<year_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -1115,7 +1268,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["year_id"] = autoguard.api.getStringOption(components, "year_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -1128,9 +1281,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/years/<year_id>/albums/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/years/<year_id>/albums/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/years/<year_id>/albums/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -1146,7 +1303,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["year_id"] = autoguard.api.getStringOption(components, "year_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -1159,9 +1316,13 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/years/<year_id>/movies/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/years/<year_id>/movies/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/years/<year_id>/movies/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
@@ -1176,7 +1337,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
 			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
-			prepareRequest: async () => {
+			validateRequest: async () => {
 				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
 				options["file_id"] = autoguard.api.getStringOption(components, "file_id");
 				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
@@ -1187,13 +1348,17 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				return {
 					handleRequest: async () => {
 						let response = await routes["GET:/files/<file_id>/"](new autoguard.api.ClientRequest(request));
-						let guard = shared.Autoguard.Responses["GET:/files/<file_id>/"];
-						guard.as(response, "SERVER:response");
-						return response;
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/files/<file_id>/"];
+								guard.as(response, "SERVER:response");
+								return response;
+							}
+						};
 					}
 				};
 			}
 		};
 	});
-	return (request, response) => autoguard.api.route(endpoints, request, response);
+	return (request, response) => autoguard.api.route(endpoints, request, response, options?.urlPrefix);
 };
