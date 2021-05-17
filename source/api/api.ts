@@ -26,7 +26,9 @@ export const server = apiv2.makeServer({
 	"GET:/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let entities = handler.searchForEntities(options.query, user_id, options.offset ?? 0, options.limit ?? 24);
+		let entities = options.cues
+			? handler.searchForCues(options.query, options.offset ?? 0, options.limit ?? 24, user_id)
+			: handler.searchForEntities(options.query, user_id, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				entities

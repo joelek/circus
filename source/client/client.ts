@@ -2915,7 +2915,8 @@ let updateviewforuri = (uri: string): void => {
 					options: {
 						query: query.getState(),
 						token: token ?? "",
-						offset
+						offset,
+						cues: cues.getState()
 					}
 				});
 				let payload = await response.payload();

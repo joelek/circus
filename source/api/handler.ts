@@ -750,7 +750,7 @@ export function searchForEntities(query: string, user_id: string, offset: number
 		jsondb.NumericSort.decreasing((value) => value.type_rank)
 	));
 	if (options?.cues) {
-		let cue = is.absent(database.cue_search) ? undefined : database.cue_search.search(query).shift();
+		let cue = database.cue_search.search(query).shift();
 		if (is.present(cue)) {
 			let result = results[0];
 			if (is.absent(result) || cue.rank > result.rank) {
@@ -758,8 +758,7 @@ export function searchForEntities(query: string, user_id: string, offset: number
 			}
 		}
 	}
-	let entities = results.slice(offset, offset + limit)
-		.map((result) => {
+	let entities = results.slice(offset, offset + limit).map((result) => {
 		let type = result.type;
 		if (false) {
 		} else if (type === "ACTOR") {
@@ -770,7 +769,7 @@ export function searchForEntities(query: string, user_id: string, offset: number
 			return lookupArtist((result.lookup() as Artist).artist_id, user_id);
 		} else if (type === "CUE") {
 			return lookupCue((result.lookup() as Cue).cue_id, user_id);
-		}else if (type === "EPISODE") {
+		} else if (type === "EPISODE") {
 			return lookupEpisode((result.lookup() as Episode).episode_id, user_id);
 		} else if (type === "GENRE") {
 			return lookupGenre((result.lookup() as Genre).genre_id, user_id);
