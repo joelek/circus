@@ -22,6 +22,7 @@ import { EntityNavLinkFactory } from "../ui/EntityNavLinkFactory";
 import { PlaylistsClient } from "../playlists/client";
 import { encode } from "../database/vtt/vtt";
 import * as apiv2 from "../api/schema/api/client";
+import * as utils from "../utils";
 
 const apiclient = apiv2.makeClient({ urlPrefix: "/api" });
 import * as autoguard from "@joelek/ts-autoguard";
@@ -2539,45 +2540,7 @@ let updateviewforuri = (uri: string): void => {
 			)
 		.render());
 	} else if ((parts = /^video[/]shows[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
-		function getNextEpisode(show: Show): undefined | { seasonIndex: number, episodeIndex: number } {
-			let indices: undefined | {
-				seasonIndex: number,
-				episodeIndex: number;
-			};
-			show.seasons.forEach((season, seasonIndex) => {
-				season.episodes.forEach((episode, episodeIndex) => {
-					if (is.present(episode.last_stream_date)) {
-						if (is.present(indices)) {
-							if (episode.last_stream_date < (show.seasons[indices.seasonIndex].episodes[indices.episodeIndex].last_stream_date ?? 0)) {
-								return;
-							}
-						}
-						indices = {
-							seasonIndex,
-							episodeIndex
-						};
-					}
-				});
-			});
-			if (is.present(indices)) {
-				indices.episodeIndex += 1;
-				if (indices.episodeIndex === show.seasons[indices.seasonIndex].episodes.length) {
-					indices.episodeIndex = 0;
-					indices.seasonIndex += 1;
-					if (indices.seasonIndex === show.seasons.length) {
-						indices.seasonIndex = 0;
-					}
-				}
-			} else {
-				if (show.seasons.length > 0 && show.seasons[0].episodes.length > 0) {
-					indices = {
-						seasonIndex: 0,
-						episodeIndex: 0
-					};
-				}
-			}
-			return indices;
-		}
+
 		let show_id = decodeURIComponent(parts[1]);
 		apiclient["GET:/shows/<show_id>/"]({
 			options: {
@@ -2587,7 +2550,7 @@ let updateviewforuri = (uri: string): void => {
 		}).then(async (response) => {
 			let payload = await response.payload();
 			let show = payload.show;
-			let indices = getNextEpisode(show);
+			let indices = utils.getNextEpisode(show);
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forShow(show, { compactDescription: false }))
@@ -2599,7 +2562,7 @@ let updateviewforuri = (uri: string): void => {
 				)
 				.add(is.absent(indices) ? undefined : xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
-					.add(renderTextHeader(xml.text("Suggested episode")))
+					.add(renderTextHeader(xml.text("Next episode")))
 					.add(EntityCard.forEpisode(show.seasons[indices.seasonIndex].episodes[indices.episodeIndex], {
 						playbackButton: PlaybackButton.forShow(show, indices.seasonIndex, indices.episodeIndex)
 					}))

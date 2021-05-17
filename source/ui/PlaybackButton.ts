@@ -4,6 +4,7 @@ import * as xnode from "../xnode";
 import * as theme from "./theme";
 import * as is from "../is";
 import * as context from "../player";
+import * as utils from "../utils";
 import { IconFactory } from "./Icon";
 
 const CSS = `
@@ -314,6 +315,11 @@ export class PlaybackButtonFactory {
 	}
 
 	forShow(show: api.Show, seasonIndex?: number, episodeIndex?: number): xnode.XElement {
+		if (is.absent(seasonIndex)) {
+			let indices = utils.getNextEpisode(show);
+			seasonIndex = indices?.seasonIndex;
+			episodeIndex = indices?.episodeIndex;
+		}
 		let isContext = observables.computed((contextPath) => {
 			if (!is.present(contextPath)) {
 				return false;
