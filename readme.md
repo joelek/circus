@@ -144,6 +144,7 @@ Ports, paths and other settings can be configured through altering the config fi
 
 ## Future plans
 
+* Build supercut feature based on cue search results.
 * Set document title based on page.
 * Create and use layout components with standard spacing.
 * Put languages in database.
