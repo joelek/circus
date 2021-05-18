@@ -1,4 +1,4 @@
-import { is } from "@joelek/ts-autoguard";
+import * as is from "./is";
 import { Show } from "./api/schema/objects";
 
 function join(...parameters: any): string {
