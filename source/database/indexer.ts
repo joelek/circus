@@ -7,7 +7,6 @@ import * as is from "../is";
 import * as probes from "./probes";
 import { Directory, File } from "./schema";
 import { default as config } from "../config";
-import * as jdb from "../jdb";
 import * as jdb2 from "../jdb2";
 
 function wordify(string: string | number): Array<string> {
@@ -199,6 +198,10 @@ function checkFile(root: File): void {
 		let stats = libfs.statSync(path);
 		if (stats.isFile()) {
 			if (stats.mtime.valueOf() === root.index_timestamp) {
+				files.update({
+					...root,
+					size: stats.size
+				});
 				return;
 			}
 		}
@@ -510,6 +513,7 @@ function indexFile(file: File): void {
 	libfs.closeSync(fd);
 	let stats = libfs.statSync(path.join("/"));
 	file.index_timestamp = stats.mtime.valueOf();
+	file.size = stats.size;
 	files.update(file);
 }
 

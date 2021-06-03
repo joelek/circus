@@ -8,7 +8,8 @@ guard File: {
 	"file_id": string,
 	"name": string,
 	"parent_directory_id"?: string,
-	"index_timestamp"?: number
+	"index_timestamp"?: number,
+	"size"?: number
 };
 
 guard AudioFile: {

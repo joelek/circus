@@ -23,6 +23,10 @@ export const File = autoguard.guards.Object.of({
 	"index_timestamp": autoguard.guards.Union.of(
 		autoguard.guards.Undefined,
 		autoguard.guards.Number
+	),
+	"size": autoguard.guards.Union.of(
+		autoguard.guards.Undefined,
+		autoguard.guards.Number
 	)
 });
 
