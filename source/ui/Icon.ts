@@ -282,6 +282,17 @@ export class IconFactory {
 			);
 	}
 
+	makeSettings(options?: Options): xnode.XElement {
+		return xnode.element("svg")
+			.set("class", getClass(options?.direction))
+			.set("width", "12px")
+			.set("height", "12px")
+			.set("viewBox", "0 0 24 24")
+			.add(xnode.element("path")
+				.set("d", "M22,10h-1.2c-0.2-1-0.6-1.9-1.2-2.8l0.9-0.9c0.8-0.8,0.8-2.1,0-2.8c-0.8-0.8-2.1-0.8-2.8,0l-0.9,0.9C15.9,3.9,15,3.5,14,3.2V2c0-1.1-0.9-2-2-2c-1.1,0-2,0.9-2,2v1.2C9,3.5,8.1,3.9,7.2,4.4L6.3,3.5c-0.8-0.8-2.1-0.8-2.8,0c-0.8,0.8-0.8,2.1,0,2.8l0.9,0.9C3.9,8.1,3.5,9,3.2,10H2c-1.1,0-2,0.9-2,2c0,1.1,0.9,2,2,2h1.2c0.2,1,0.6,1.9,1.2,2.8l-0.9,0.9c-0.8,0.8-0.8,2,0,2.8c0.8,0.8,2.1,0.8,2.8,0l0.9-0.9c0.8,0.5,1.8,0.9,2.8,1.2V22c0,1.1,0.9,2,2,2c1.1,0,2-0.9,2-2v-1.2c1-0.2,1.9-0.6,2.8-1.2l0.9,0.9c0.8,0.8,2,0.8,2.8,0c0.8-0.8,0.8-2.1,0-2.8l-0.9-0.9c0.5-0.8,0.9-1.8,1.2-2.8H22c1.1,0,2-0.9,2-2S23.1,10,22,10z M12,17c-2.8,0-5-2.2-5-5s2.2-5,5-5s5,2.2,5,5S14.8,17,12,17z")
+			);
+	}
+
 	makeSkip(options?: Options): xnode.XElement {
 		return xnode.element("svg")
 			.set("class", getClass(options?.direction))
@@ -290,7 +301,8 @@ export class IconFactory {
 			.set("viewBox", "0 0 24 24")
 			.add(xnode.element("path")
 				.set("d", "M19.1,11L1.7,1C0.8,0.5,0,0.9,0,2v20c0,1.1,0.8,1.5,1.7,1l17.3-10C20,12.5,20,11.5,19.1,11z")
-			).add(xnode.element("path")
+			)
+			.add(xnode.element("path")
 				.set("d", "M22,0c-1.1,0-2,0.9-2,2v20c0,1.1,0.9,2,2,2s2-0.9,2-2V2C24,0.9,23.1,0,22,0z")
 			);
 	}
