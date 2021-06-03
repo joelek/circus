@@ -1005,6 +1005,24 @@ export namespace Autoguard {
 			"payload": autoguard.guards.Union.of(
 				autoguard.guards.Undefined
 			)
+		}),
+		"GET:/statistics/": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.api.Options,
+				autoguard.guards.Object.of({
+					"token": autoguard.guards.String
+				})
+			),
+			"headers": autoguard.guards.Union.of(
+				autoguard.guards.Undefined,
+				autoguard.guards.Intersection.of(
+					autoguard.api.Headers,
+					autoguard.guards.Object.of({})
+				)
+			),
+			"payload": autoguard.guards.Union.of(
+				autoguard.guards.Undefined
+			)
 		})
 	};
 
@@ -1698,6 +1716,32 @@ export namespace Autoguard {
 				)
 			),
 			"payload": autoguard.api.Binary
+		}),
+		"GET:/statistics/": autoguard.guards.Object.of({
+			"status": autoguard.guards.Union.of(
+				autoguard.guards.Undefined,
+				autoguard.guards.Number
+			),
+			"headers": autoguard.guards.Union.of(
+				autoguard.guards.Undefined,
+				autoguard.guards.Intersection.of(
+					autoguard.api.Headers,
+					autoguard.guards.Object.of({})
+				)
+			),
+			"payload": autoguard.guards.Object.of({
+				"statistics": autoguard.guards.Array.of(autoguard.guards.Object.of({
+					"title": autoguard.guards.String,
+					"value": autoguard.guards.Number,
+					"unit": autoguard.guards.Union.of(
+						autoguard.guards.Undefined,
+						autoguard.guards.Union.of(
+							autoguard.guards.StringLiteral.of("BYTES"),
+							autoguard.guards.StringLiteral.of("MILLISECONDS")
+						)
+					)
+				}))
+			})
 		})
 	};
 

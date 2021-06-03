@@ -155,7 +155,6 @@ Ports, paths and other settings can be configured through altering the config fi
 * Add synchronization to playback protocol.
 * Add shuffle and repeat features to player.
 * Index content at regular one hour intervals when inactive.
-* Add statistics page.
 * Verify external track metadata functionality.
 * Add filter to entity pages.
 * Change line heights to prevent the truncation of capital letters with umlauts.

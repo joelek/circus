@@ -1,3 +1,22 @@
+export function formatSize(b: number, options?: Partial<{ format: Intl.NumberFormat }>): string {
+	let format = options?.format ?? new Intl.NumberFormat();
+	let kb = b / 1024**1;
+	let mb = b / 1024**2;
+	let gb = b / 1024**3;
+	let tb = b / 1024**4;
+	if (tb > 1) {
+		return `${tb.toFixed(2)}TB`;
+	} else if (gb > 1) {
+		return `${gb.toFixed(2)}GB`;
+	} else if (mb > 1) {
+		return `${gb.toFixed(2)}MB`;
+	} else if (kb > 1) {
+		return `${mb.toFixed(2)}kB`;
+	} else {
+		return `${format.format(b)}B`;
+	}
+};
+
 type Duration = {
 	ms: number,
 	s: number,

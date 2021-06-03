@@ -465,5 +465,60 @@ export const server = apiv2.makeServer({
 			},
 			payload: stream
 		};
+	},
+	"GET:/statistics/": async (request) => {
+		let options = request.options();
+		let user_id = auth.getUserId(options.token);
+		let files =  Array.from(database.files);
+		let audio_files = Array.from(database.audio_files);
+		let image_files = Array.from(database.image_files);
+		let metadata_files = Array.from(database.metadata_files);
+		let subtitle_files = Array.from(database.subtitle_files);
+		let video_files =  Array.from(database.video_files);
+		return {
+			payload: {
+				statistics: [
+					{
+						title: "Library Size",
+						value: files.reduce((sum, item) => sum + (item?.size ?? 0), 0),
+						unit: "BYTES"
+					},
+					{
+						title: "Audio Content",
+						value: audio_files.reduce((sum, item) => sum + item.duration_ms, 0),
+						unit: "MILLISECONDS"
+					},
+					{
+						title: "Video Content",
+						value: video_files.reduce((sum, item) => sum + item.duration_ms, 0),
+						unit: "MILLISECONDS"
+					},
+					{
+						title: "Files",
+						value: files.length
+					},
+					{
+						title: "Audio Files",
+						value: audio_files.length
+					},
+					{
+						title: "Image Files",
+						value: image_files.length
+					},
+					{
+						title: "Metadata Files",
+						value: metadata_files.length
+					},
+					{
+						title: "Subtitle Files",
+						value: subtitle_files.length
+					},
+					{
+						title: "Video Files",
+						value: video_files.length
+					}
+				]
+			}
+		};
 	}
 }, { urlPrefix: "/api" });

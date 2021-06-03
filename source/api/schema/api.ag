@@ -165,3 +165,11 @@ route GET:/years/<year_id:string>/movies/ ? <{ token: string, offset?: number, l
 };
 
 route GET:/files/<file_id:string>/ ? <{ token: string }> => binary;
+
+route GET:/statistics/ ? <{ token: string }> => {
+	statistics: {
+		title: string,
+		value: number,
+		unit?: "BYTES" | "MILLISECONDS"
+	}[]
+};

@@ -1360,5 +1360,35 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 			}
 		};
 	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let components = new Array<[string, string]>();
+		components.push(["", decodeURIComponent("statistics")]);
+		components.push(["", decodeURIComponent("")]);
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
+				options["token"] = autoguard.api.getStringOption(raw.parameters, "token");
+				let headers = autoguard.api.combineKeyValuePairs(raw.headers);
+				let payload = await autoguard.api.deserializePayload(raw.payload);
+				let guard = shared.Autoguard.Requests["GET:/statistics/"];
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["GET:/statistics/"](new autoguard.api.ClientRequest(request, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["GET:/statistics/"];
+								guard.as(response, "response");
+								return response;
+							}
+						};
+					}
+				};
+			}
+		};
+	});
 	return (request, response) => autoguard.api.route(endpoints, request, response, options?.urlPrefix);
 };

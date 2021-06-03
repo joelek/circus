@@ -904,4 +904,25 @@ export const makeClient = (options?: Partial<{
 			return new autoguard.api.ServerResponse(response);
 		}
 	},
+	"GET:/statistics/": async (request) => {
+		let guard = shared.Autoguard.Requests["GET:/statistics/"];
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push(decodeURIComponent("statistics"));
+		components.push(decodeURIComponent(""));
+		let parameters = autoguard.api.extractKeyValuePairs(request.options ?? {}, []);
+		let headers = autoguard.api.extractKeyValuePairs(request.headers ?? {});
+		let payload = autoguard.api.serializePayload(request.payload);
+		let requestHandler = options?.requestHandler ?? autoguard.api.xhr;
+		let raw = await requestHandler({ method, components, parameters, headers, payload }, options?.urlPrefix);
+		{
+			let status = raw.status;
+			let headers = autoguard.api.combineKeyValuePairs(raw.headers);
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = shared.Autoguard.Responses["GET:/statistics/"];
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response);
+		}
+	},
 });

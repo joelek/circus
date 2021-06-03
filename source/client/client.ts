@@ -6,7 +6,7 @@ import * as is from "../is";
 import {  ContextAlbum, ContextArtist, Device } from "../player/schema/objects";
 import { Actor, Album, Artist, Cue, Disc, Entity, Episode, Movie, Playlist, Season, Show, Track, User } from "../api/schema/objects";
 import * as xml from "../xnode";
-import { formatDuration as format_duration } from "../ui/metadata";
+import { formatDuration as format_duration, formatSize } from "../ui/metadata";
 import * as apischema from "../api/schema";
 
 import { EntityTitleFactory } from "../ui/EntityTitleFactory";
@@ -1156,23 +1156,22 @@ style.innerText = `
 
 
 
-	.access-token {
+	.statistic {
 		display: grid;
 		gap: 8px;
 	}
 
-	.access-token__title {
+	.statistic__title {
 		color: rgb(255, 255, 255);
-		font-family: "Space Mono", monospace;
 		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
-	.access-token__subtitle {
+	.statistic__subtitle {
 		color: rgb(159, 159, 159);
-		font-size: 12px;
+		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -1228,6 +1227,15 @@ style.innerText = `
 `;
 document.head.appendChild(style);
 
+function makeStatistic(title: string, subtitle: string): xml.XElement {
+	return xml.element("div.statistic")
+		.add(xml.element("div.statistic__title")
+			.add(xml.text(title))
+		)
+		.add(xml.element("div.statistic__subtitle")
+			.add(xml.text(subtitle))
+		);
+}
 
 function makeIconLink(icon: xml.XElement, title: string, url: string): xml.XElement {
 	return xml.element("div.icon-link")
@@ -1390,6 +1398,15 @@ let appheader = xml.element("div.app__header")
 						if (is.present(nextHistoryIndex)) {
 							window.history.forward();
 						}
+					})
+				)
+				.add(makeButton({ style: "flat" })
+					.add(Icon.makeSettings()
+						.set("width", "16px")
+						.set("height", "16px")
+					)
+					.on("click", () => {
+						navigate(`settings/`);
 					})
 				)
 			)
@@ -3035,6 +3052,36 @@ let updateviewforuri = (uri: string): void => {
 				)
 			.render());
 		});
+	} else if ((parts = /^settings[/]/.exec(uri)) !== null) {
+		(async () => {
+			let response = await apiclient["GET:/statistics/"]({
+				options: {
+					token: token ?? ""
+				}
+			});
+			let payload = await response.payload();
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
+					.add(renderTextHeader(xml.text(`Settings`)))
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 16px;")
+						.set("data-hide", `${payload.statistics.length === 0}`)
+						.add(...payload.statistics.map((setting) => {
+							let title = setting.title;
+							let subtitle = "";
+							if (setting.unit === "BYTES") {
+								subtitle = formatSize(setting.value);
+							} else if (setting.unit === "MILLISECONDS") {
+								subtitle = format_duration(setting.value);
+							} else {
+								subtitle = new Intl.NumberFormat().format(setting.value);
+							}
+							return makeStatistic(title, subtitle);
+						}))
+					)
+				)
+			.render());
+		})();
 	} else {
 		let shows = new ArrayObservable<apischema.objects.Show>([]);
 		let albums = new ArrayObservable<apischema.objects.Album>([]);
