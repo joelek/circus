@@ -57,6 +57,14 @@ window.addEventListener("focus", () => {
 	//req<{}, {}>("/discover", {}, () => {});
 });
 
+function hideModalMenu(): void {
+	showDevices.updateState(false);
+	showContextMenu.updateState(false);
+	showPage.updateState(false);
+	modalPageElements.update([]);
+	showModal.updateState(undefined);
+}
+
 window.addEventListener("keydown", (event) => {
 	if (event.code === "Space") {
 		if (event.target instanceof HTMLInputElement) {
@@ -68,9 +76,7 @@ window.addEventListener("keydown", (event) => {
 	} else if (event.code === "Escape") {
 		event.preventDefault();
 		event.stopPropagation();
-		showDevices.updateState(false);
-		showContextMenu.updateState(false);
-		showPage.updateState(false);
+		hideModalMenu();
 	}
 });
 
@@ -3203,6 +3209,7 @@ type CacheEntry = {
 let mount_cache = new Array<CacheEntry>();
 let mounted_uri: string | undefined;
 function navigate(uri: string, use_cache: boolean = false): void {
+	hideModalMenu();
 	if (is.absent(verifiedToken.getState())) {
 		return;
 	}
