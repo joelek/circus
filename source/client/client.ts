@@ -3211,6 +3211,27 @@ let mounted_uri: string | undefined;
 function navigate(uri: string, use_cache: boolean = false): void {
 	hideModalMenu();
 	if (is.absent(verifiedToken.getState())) {
+		while (is.present(mount.lastChild)) {
+			mount.lastChild.remove();
+		}
+		mount.appendChild(xml.element("div.content.content--narrow")
+			.add(xml.element("div")
+				.set("style", "display: grid; gap: 24px;")
+				.add(renderTextHeader(
+					xml.text("Not logged in"))
+				)
+				.add(renderTextParagraph(
+					xml.text("Please login using your credentials or register a new user using a registration key. Registration keys can be obtained from the circus manager and are consumed upon successful registration."))
+				)
+			)
+			.add(xml.element("button")
+				.add(xml.text("Login or register"))
+				.on("click", async () => {
+					showModal.updateState("login");
+				})
+			)
+			.render()
+		);
 		return;
 	}
 	if (is.present(mounted_uri)) {
@@ -3259,12 +3280,8 @@ function setupRouting(): void {
 		let uri: string = event.state.uri;
 		navigate(uri, true);
 	});
-	let run = false;
 	verifiedToken.addObserver((verifiedToken) => {
-		if (is.present(verifiedToken) && !run) {
-			run = true;
-			navigate(get_route());
-		}
+		navigate(get_route());
 	});
 }
 setupRouting();
