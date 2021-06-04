@@ -990,26 +990,12 @@ style.innerText = `
 		z-index: 1;
 	}
 
-	@keyframes progress {
-		0% {
-			transform: translate(-100%, 0%);
-		}
-		100% {
-			transform: translate(0%, 0%);
-		}
-	}
-
 	.media-player__progress-track {
-		animation-delay: 0s;
-		animation-duration: 0s;
-		animation-name: progress;
-		animation-play-state: paused;
-		animation-timing-function: linear;
 		background-color: ${ACCENT_COLOR};
 		height: 100%;
 		width: 100%;
-		transform: translate(-100%, 0%);
 		position: absolute;
+		transform-origin: left;
 		z-index: 0;
 	}
 
@@ -1691,36 +1677,25 @@ let mpw = xml.element("div.app__navigation")
 
 
 
-
 let progress = xml.element("div.media-player__progress");
 let progresscontainer = xml.element("div.media-player__progress-container");
 let progresstrack = xml.element("div.media-player__progress-track");
-player.progress.addObserver(async (progress) => {
-	let ref = await progresstrack.ref() as HTMLElement;
-	ref.style.setProperty("animation-name", "none");
-	window.requestAnimationFrame(() => {
-		window.requestAnimationFrame(() => {
-			ref.style.setProperty("animation-delay", `-${progress ?? 0}s`);
-			ref.style.setProperty("animation-name", "progress");
-		});
-	});
+
+window.requestAnimationFrame(async function computer() {
+	let currentEntry = player.currentEntry.getState();
+	let estimatedProgress = player.estimatedProgress.getState();
+	let estimatedProgressTimestamp = player.estimatedProgressTimestamp.getState();
+	let scale = 0;
+	if (is.present(currentEntry) && is.present(estimatedProgress) && is.present(estimatedProgressTimestamp)) {
+		let now = Date.now();
+		let progress = estimatedProgress + (now - estimatedProgressTimestamp) / 1000
+		scale = progress / (currentEntry.media.duration_ms / 1000);
+	}
+	let ref = await progresstrack.ref() as HTMLDivElement;
+	ref.style.setProperty("transform", `scale(${scale}, 1.0)`);
+	window.requestAnimationFrame(computer);
 });
-player.playback.addObserver(async (playback) => {
-	let ref = await progresstrack.ref() as HTMLElement;
-	let state = playback ? "running" : "paused";
-	ref.style.setProperty("animation-play-state", state);
-});
-player.currentEntry.addObserver(async (currentEntry) => {
-	let ref = await progresstrack.ref() as HTMLElement;
-	let duration = currentEntry?.media.duration_ms ?? 1;
-	ref.style.setProperty("animation-name", "none");
-	window.requestAnimationFrame(() => {
-		window.requestAnimationFrame(() => {
-			ref.style.setProperty("animation-duration", `${duration}ms`);
-			ref.style.setProperty("animation-name", "progress");
-		});
-	});
-});
+
 async function progressupdate(page_x: number): Promise<void> {
 	let ref = await progresscontainer.ref() as HTMLElement;
 	let x = page_x - ref.offsetLeft;
