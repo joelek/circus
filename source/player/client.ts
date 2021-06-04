@@ -239,7 +239,7 @@ export class ContextClient {
 			this.estimatedProgressTimestamp.updateState(now);
 		});
 		this.estimatedProgress.addObserver((estimatedProgress) => {
-			console.log(`Estimated progress to ${estimatedProgress ?? 0}`);
+			console.log(`Estimated progress to ${estimatedProgress}`);
 		});
 		{
 			let computer = () => {
@@ -392,6 +392,7 @@ export class ContextClient {
 			this.playback.updateState(message.playback);
 		});
 		this.tsc.addEventListener("app", "SetProgress", (message) => {
+			this.progress.updateState(undefined);
 			this.progress.updateState(message.progress);
 		});
 		this.tsc.addEventListener("app", "SetToken", (message) => {
