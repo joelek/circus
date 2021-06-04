@@ -142,8 +142,9 @@ Ports, paths and other settings can be configured through altering the config fi
 
 > The page of a year.
 
-## Future plans
+## Roadmap
 
+* Create full screen player with additional controls and graphics.
 * Build supercut feature based on cue search results.
 * Set document title based on page.
 * Create and use layout components with standard spacing.
@@ -160,7 +161,4 @@ Ports, paths and other settings can be configured through altering the config fi
 * Change line heights to prevent the truncation of capital letters with umlauts.
 * Support downloading of images or copying of image urls.
 * Stop sending tokens for every request.
-* Add already watched feature.
-* Add like feature for content.
 * Index keyframes.
-* Make show playback start at next episode.
