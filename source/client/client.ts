@@ -70,6 +70,7 @@ window.addEventListener("keydown", (event) => {
 		event.stopPropagation();
 		showDevices.updateState(false);
 		showContextMenu.updateState(false);
+		showPage.updateState(false);
 	}
 });
 
@@ -1243,6 +1244,7 @@ function makeButton(options?: Partial<{ style: "flat" | "normal" }>): xml.XEleme
 	return xml.element(`div.icon-button${style === "normal" ? "" : ".icon-button--flat"}`);
 }
 
+const showPage = new ObservableClass(false);
 const showDevices = new ObservableClass(false);
 player.devices.addObserver({
 	onappend: () => {
@@ -1269,7 +1271,7 @@ const showVideo = new ObservableClass(false);
 	player.localPlayback.addObserver(computer);
 }
 
-const showModal = new ObservableClass(undefined as "context" | "devices" | "login" | undefined);
+const showModal = new ObservableClass(undefined as "context" | "devices" | "login" | "page" | undefined);
 
 showContextMenu.addObserver((showContextMenu) => {
 	if (showContextMenu) {
@@ -1282,6 +1284,14 @@ showContextMenu.addObserver((showContextMenu) => {
 showDevices.addObserver((showDevices) => {
 	if (showDevices) {
 		showModal.updateState("devices");
+	} else {
+		showModal.updateState(undefined);
+	}
+});
+
+showPage.addObserver((showPage) => {
+	if (showPage) {
+		showModal.updateState("page");
 	} else {
 		showModal.updateState(undefined);
 	}
@@ -1387,12 +1397,48 @@ let appheader = xml.element("div.app__header")
 					})
 				)
 				.add(makeButton({ style: "flat" })
+					.bind("data-enabled", verifiedToken.addObserver(is.present))
 					.add(Icon.makeSettings()
 						.set("width", "16px")
 						.set("height", "16px")
 					)
-					.on("click", () => {
-						navigate(`settings/`);
+					.on("click", async () => {
+						if (is.present(verifiedToken.getState())) {
+							let response = await apiclient["GET:/statistics/"]({
+								options: {
+									token: token ?? ""
+								}
+							});
+							let payload = await response.payload();
+							let modalPage = xml.element("div.content.content--narrow")
+								.add(xml.element("div")
+									.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr min-content;")
+									.add(renderTextHeader(xml.text("Change settings")))
+									.add(makeButton()
+										.on("click", () => {
+											modalPageElements.update([]);
+										})
+										.add(Icon.makeCross())
+									)
+								)
+								.add(xml.element("div")
+									.set("style", "display: grid; gap: 16px;")
+									.set("data-hide", `${payload.statistics.length === 0}`)
+									.add(...payload.statistics.map((setting) => {
+										let title = setting.title;
+										let subtitle = "";
+										if (setting.unit === "BYTES") {
+											subtitle = formatSize(setting.value);
+										} else if (setting.unit === "MILLISECONDS") {
+											subtitle = format_duration(setting.value);
+										} else {
+											subtitle = new Intl.NumberFormat().format(setting.value);
+										}
+										return makeStatistic(title, subtitle);
+									}))
+								);
+							modalPageElements.update([modalPage]);
+						}
 					})
 				)
 			)
@@ -1502,8 +1548,23 @@ async function doRegister(): Promise<void> {
 		}
 	}
 }
+
+let modalPageElements = new ArrayObservable<xml.XElement>([]);
+modalPageElements.addObserver({
+	onappend: (state) => {
+		showPage.updateState(modalPageElements.getState().length > 0);
+	},
+	onsplice: (state, index) => {
+		showPage.updateState(modalPageElements.getState().length > 0);
+	}
+});
+
 let modals = xml.element("div.modal-container")
 	.bind("data-hide", showModal.addObserver(is.absent))
+	.add(xml.element("div.scroll-container")
+		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "page"))
+		.repeat(modalPageElements, (v) => v)
+	)
 	.add(xml.element("div.scroll-container")
 		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "devices"))
 		.add(xml.element("div.content.content--narrow")
@@ -3030,36 +3091,6 @@ let updateviewforuri = (uri: string): void => {
 				)
 			.render());
 		});
-	} else if ((parts = /^settings[/]/.exec(uri)) !== null) {
-		(async () => {
-			let response = await apiclient["GET:/statistics/"]({
-				options: {
-					token: token ?? ""
-				}
-			});
-			let payload = await response.payload();
-			mount.appendChild(xml.element("div")
-				.add(xml.element("div.content")
-					.add(renderTextHeader(xml.text(`Settings`)))
-					.add(xml.element("div")
-						.set("style", "display: grid; gap: 16px;")
-						.set("data-hide", `${payload.statistics.length === 0}`)
-						.add(...payload.statistics.map((setting) => {
-							let title = setting.title;
-							let subtitle = "";
-							if (setting.unit === "BYTES") {
-								subtitle = formatSize(setting.value);
-							} else if (setting.unit === "MILLISECONDS") {
-								subtitle = format_duration(setting.value);
-							} else {
-								subtitle = new Intl.NumberFormat().format(setting.value);
-							}
-							return makeStatistic(title, subtitle);
-						}))
-					)
-				)
-			.render());
-		})();
 	} else {
 		let shows = new ArrayObservable<apischema.objects.Show>([]);
 		let albums = new ArrayObservable<apischema.objects.Album>([]);
