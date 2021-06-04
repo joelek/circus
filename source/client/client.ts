@@ -1683,12 +1683,15 @@ let progresstrack = xml.element("div.media-player__progress-track");
 
 window.requestAnimationFrame(async function computer() {
 	let currentEntry = player.currentEntry.getState();
+	let playback = player.playback.getState();
 	let estimatedProgress = player.estimatedProgress.getState();
 	let estimatedProgressTimestamp = player.estimatedProgressTimestamp.getState();
 	let scale = 0;
 	if (is.present(currentEntry) && is.present(estimatedProgress) && is.present(estimatedProgressTimestamp)) {
-		let now = Date.now();
-		let progress = estimatedProgress + (now - estimatedProgressTimestamp) / 1000
+		let progress = estimatedProgress;
+		if (playback) {
+			progress += (Date.now() - estimatedProgressTimestamp) / 1000;
+		}
 		scale = progress / (currentEntry.media.duration_ms / 1000);
 	}
 	let ref = await progresstrack.ref() as HTMLDivElement;
