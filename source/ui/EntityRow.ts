@@ -278,7 +278,9 @@ export class EntityRowFactory {
 			this.entityTitleFactory.forUser(user)
 		];
 		let subtitles = [
-			xnode.element("span").add(xnode.text(user.username))
+			this.entityTitleFactory.forUser(user, {
+				title: user.username
+			})
 		];
 		return this.make(link, image, undefined, titles, subtitles);
 	}

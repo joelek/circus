@@ -99,8 +99,8 @@ export class EntityTitleFactory {
 		return this.make(this.entityLinkFactory.forTrack(track), track.title);
 	}
 
-	forUser(user: api.UserBase): xnode.XElement {
-		return this.make(this.entityLinkFactory.forUser(user), user.name);
+	forUser(user: api.UserBase, options?: Partial<{ title: string }>): xnode.XElement {
+		return this.make(this.entityLinkFactory.forUser(user), options?.title ?? user.name);
 	}
 
 	forYear(year: api.YearBase): xnode.XElement {

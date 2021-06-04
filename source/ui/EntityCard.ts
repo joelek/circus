@@ -450,7 +450,9 @@ export class EntityCardFactory {
 			this.entityTitleFactory.forUser(user)
 		];
 		let subtitles = [
-			xnode.element("span").add(xnode.text(user.username))
+			this.entityTitleFactory.forUser(user, {
+				title: user.username
+			})
 		];
 		let tags = [
 			"User"
