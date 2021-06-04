@@ -1404,6 +1404,12 @@ let appheader = xml.element("div.app__header")
 					)
 					.on("click", async () => {
 						if (is.present(verifiedToken.getState())) {
+							let user = await (await apiclient["GET:/users/<user_id>/"]({
+								options: {
+									user_id: "",
+									token: token ?? ""
+								}
+							})).payload();
 							let response = await apiclient["GET:/statistics/"]({
 								options: {
 									token: token ?? ""
@@ -1420,6 +1426,13 @@ let appheader = xml.element("div.app__header")
 										})
 										.add(Icon.makeCross())
 									)
+								)
+								.add(EntityRow.forUser(user.user))
+								.add(xml.element("button")
+									.add(xml.text("Logout"))
+									.on("click", async () => {
+										savedToken.updateState(undefined);
+									})
 								)
 								.add(xml.element("div")
 									.set("style", "display: grid; gap: 16px;")
