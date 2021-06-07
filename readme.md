@@ -144,6 +144,9 @@ Ports, paths and other settings can be configured through altering the config fi
 
 ## Roadmap
 
+* Create separate login and register forms.
+* Grant admin privileges to the very first account created.
+* Add account tiers to keys and users.
 * Create full screen player with additional controls and graphics.
 * Build supercut feature based on cue search results.
 * Set document title based on page.
