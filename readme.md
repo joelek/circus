@@ -1,6 +1,6 @@
 # @joelek/circus
 
-System for streaming audio and video content.
+Progressive web app and system for streaming audio and video content.
 
 ![](./public/images/start.png)
 
