@@ -144,6 +144,8 @@ Ports, paths and other settings can be configured through altering the config fi
 
 ## Roadmap
 
+* Store create and update timestamps for entities.
+* Add transactional capabilities to database.
 * Create separate login and register forms.
 * Grant admin privileges to the very first account created.
 * Add account tiers to keys and users.
