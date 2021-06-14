@@ -57,6 +57,10 @@ persons.insert({
 	name: "Child C",
 	parent_person_id: "2"
 });
+persons.remove({
+	person_id: "1",
+	name: "Parent A",
+});
 
 console.log(persons.lookup("5"));
 console.log(children.lookup(undefined).collect());

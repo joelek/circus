@@ -1325,12 +1325,13 @@ export class Index<A, B> {
 			insert(event.key, event.index, event.next);
 		});
 		parentTable.addObserver("remove", (event) => {
-			let token = event.key;
+			// Deletion is already performed when parent and child reference the same table.
 			try {
+				let token = event.key;
 				let indexRecord = tokenTable.lookup(token);
 				let rhh = new RobinHoodHash(this.blockHandler, indexRecord.index, (index) => index);
 				for (let entry of rhh.entries()) {
-					let record = childTable.lookup(entry.key);
+					let record = childTable.getRecord(entry.index);
 					childTable.remove(record);
 				}
 			} catch (error) {}
