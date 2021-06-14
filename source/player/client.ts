@@ -226,7 +226,7 @@ export class ContextClient {
 		this.progress.addObserver((progress) => {
 			this.estimatedProgress.updateState(progress);
 			this.estimatedProgressTimestamp.updateState(Date.now());
-		});
+		}, true);
 		this.playback.addObserver((playback) => {
 			let estimatedProgress = this.estimatedProgress.getState();
 			let estimatedProgressTimestamp = this.estimatedProgressTimestamp.getState();
@@ -238,8 +238,11 @@ export class ContextClient {
 			}
 			this.estimatedProgressTimestamp.updateState(now);
 		});
+		this.progress.addObserver((progress) => {
+			console.log(`Progress: ${progress}`);
+		});
 		this.estimatedProgress.addObserver((estimatedProgress) => {
-			console.log(`Estimated progress to ${estimatedProgress}`);
+			console.log(`Estimated progress: ${estimatedProgress}`);
 		});
 		{
 			let computer = () => {
@@ -392,7 +395,6 @@ export class ContextClient {
 			this.playback.updateState(message.playback);
 		});
 		this.tsc.addEventListener("app", "SetProgress", (message) => {
-			this.progress.updateState(undefined);
 			this.progress.updateState(message.progress);
 		});
 		this.tsc.addEventListener("app", "SetToken", (message) => {

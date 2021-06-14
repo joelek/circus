@@ -144,7 +144,6 @@ Ports, paths and other settings can be configured through altering the config fi
 
 ## Roadmap
 
-* Fix seek issue in movies.
 * Show recently added content.
 * Create separate login and register forms.
 * Grant admin privileges to the very first account created.

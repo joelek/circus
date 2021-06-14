@@ -4,17 +4,20 @@ export type Observable<A> = <B>(observer: Observer<A, B>) => Observable<B>;
 
 export class ObservableClass<A> {
 	private state: A;
-	private observers: Array<Observer<A, any>>;
+	private observers: Array<{ observer: Observer<A, any>, alwaysNotify?: boolean }>;
 
 	constructor(state: A) {
 		this.state = state;
-		this.observers = new Array<Observer<A, any>>();
+		this.observers = new Array<{ observer: Observer<A, any>, alwaysNotify?: boolean }>();
 	}
 
-	addObserver<B>(observer: Observer<A, B>): Observable<B> {
+	addObserver<B>(observer: Observer<A, B>, alwaysNotify?: boolean): Observable<B> {
 		let observable = new ObservableClass<B>(observer(this.state));
-		this.observers.push((state) => {
-			observable.updateState(observer(state));
+		this.observers.push({
+			observer: (state) => {
+				observable.updateState(observer(state));
+			},
+			alwaysNotify
 		});
 		return observable.addObserver.bind(observable);
 	}
@@ -24,12 +27,12 @@ export class ObservableClass<A> {
 	}
 
 	updateState(state: A): void {
-		if (state === this.state) {
-			return;
-		}
+		let didChange = state !== this.state;
 		this.state = state;
 		for (let observer of this.observers) {
-			observer(this.state);
+			if (didChange || observer.alwaysNotify) {
+				observer.observer(this.state);
+			}
 		}
 	}
 }
