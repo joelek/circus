@@ -144,7 +144,6 @@ Ports, paths and other settings can be configured through altering the config fi
 
 ## Roadmap
 
-* Show recently added content.
 * Create separate login and register forms.
 * Grant admin privileges to the very first account created.
 * Add account tiers to keys and users.

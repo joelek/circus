@@ -2604,6 +2604,30 @@ let updateviewforuri = (uri: string): void => {
 			.render());
 		});
 	} else if ((parts = /^audio[/]/.exec(uri)) !== null) {
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let albums = new ArrayObservable<apischema.objects.Album>([]);
+		async function load(): Promise<void> {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				let response = await apiclient.getNewAlbums({
+					options: {
+						token: token ?? "",
+						offset
+					}
+				});
+				let payload = await response.payload();
+				for (let album of payload.albums) {
+					albums.append(album);
+				}
+				offset += payload.albums.length;
+				if (payload.albums.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
+			}
+		};
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
 				.add(Grid.make({ mini: true })
@@ -2612,8 +2636,17 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeIconLink(Icon.makeBulletList(), "Playlists", "audio/playlists/"))
 					.add(makeIconLink(Icon.makeNote(), "Tracks", "audio/tracks/"))
 				)
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 24px")
+					.bind("data-hide", albums.compute((albums) => albums.length === 0))
+					.add(renderTextHeader(xml.text("Recently added albums")))
+					.add(Grid.make()
+						.repeat(albums, (album) => EntityCard.forAlbum(album))
+					)
+				)
 			)
-		.render());
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+			.render());
 	} else if ((parts = /^video[/]shows[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 
 		let show_id = decodeURIComponent(parts[1]);
@@ -2919,6 +2952,30 @@ let updateviewforuri = (uri: string): void => {
 			);
 		});
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let movies = new ArrayObservable<apischema.objects.Movie>([]);
+		async function load(): Promise<void> {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				let response = await apiclient.getNewMovies({
+					options: {
+						token: token ?? "",
+						offset
+					}
+				});
+				let payload = await response.payload();
+				for (let movie of payload.movies) {
+					movies.append(movie);
+				}
+				offset += payload.movies.length;
+				if (payload.movies.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
+			}
+		};
 		mount.appendChild(xml.element("div")
 			.add(xml.element("div.content")
 				.add(Grid.make({ mini: true })
@@ -2927,8 +2984,17 @@ let updateviewforuri = (uri: string): void => {
 					.add(makeIconLink(Icon.makePieChart(), "Genres", "video/genres/"))
 					.add(makeIconLink(Icon.makePerson(), "Actors", "actors/"))
 				)
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 24px")
+					.bind("data-hide", movies.compute((movies) => movies.length === 0))
+					.add(renderTextHeader(xml.text("Recently added movies")))
+					.add(Grid.make()
+						.repeat(movies, (movie) => EntityCard.forMovie(movie))
+					)
+				)
 			)
-		.render());
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+			.render());
 	} else if ((parts = /^search[/]([^/?]*)/.exec(uri)) !== null) {
 		function getBoolean(uri: string, key: string): boolean | undefined {
 			let url = new URL(uri, window.location.origin);

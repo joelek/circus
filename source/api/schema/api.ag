@@ -26,6 +26,10 @@ route GET:/albums/<query:string> ? <{ token: string, offset?: number, limit?: nu
 	albums: ./objects/Album[]
 };
 
+route getNewAlbums(): GET:/albums/new/ ? <{ token: plain, offset?: number, limit?: number }> => {
+	albums: ./objects/Album[]
+};
+
 route GET:/albums/<album_id:string>/ ? <{ token: string }> => {
 	album: ./objects/Album
 };
@@ -77,6 +81,10 @@ route GET:/genres/<genre_id:string>/shows/ ? <{ token: string, offset?: number, 
 };
 
 route GET:/movies/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
+	movies: ./objects/Movie[]
+};
+
+route getNewMovies(): GET:/movies/new/ ? <{ token: plain, offset?: number, limit?: number }> => {
 	movies: ./objects/Movie[]
 };
 

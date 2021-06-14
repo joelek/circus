@@ -303,6 +303,43 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		let method = "GET";
 		let components = new Array<[string, string]>();
 		components.push(["", decodeURIComponent("albums")]);
+		components.push(["", decodeURIComponent("new")]);
+		components.push(["", decodeURIComponent("")]);
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
+				options["token"] = autoguard.api.getValue(raw.parameters, "token", true);
+				options["offset"] = autoguard.api.getValue(raw.parameters, "offset", false);
+				options["limit"] = autoguard.api.getValue(raw.parameters, "limit", false);
+				let headers = autoguard.api.combineKeyValuePairs(raw.headers);
+				let payload = await autoguard.api.deserializePayload(raw.payload);
+				let guard = shared.Autoguard.Requests["getNewAlbums"];
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getNewAlbums"](new autoguard.api.ClientRequest(request, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["getNewAlbums"];
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.extractKeyValuePairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = autoguard.api.serializePayload(response.payload);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, "application/json; charset=utf-8");
+							}
+						};
+					}
+				};
+			}
+		};
+	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let components = new Array<[string, string]>();
+		components.push(["", decodeURIComponent("albums")]);
 		components.push(["album_id", raw.components[1]]);
 		components.push(["", decodeURIComponent("")]);
 		return {
@@ -729,6 +766,43 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 						return {
 							validateResponse: async () => {
 								let guard = shared.Autoguard.Responses["GET:/movies/<query>"];
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.extractKeyValuePairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = autoguard.api.serializePayload(response.payload);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, "application/json; charset=utf-8");
+							}
+						};
+					}
+				};
+			}
+		};
+	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let components = new Array<[string, string]>();
+		components.push(["", decodeURIComponent("movies")]);
+		components.push(["", decodeURIComponent("new")]);
+		components.push(["", decodeURIComponent("")]);
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, components),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options = autoguard.api.combineKeyValuePairs(raw.parameters);
+				options["token"] = autoguard.api.getValue(raw.parameters, "token", true);
+				options["offset"] = autoguard.api.getValue(raw.parameters, "offset", false);
+				options["limit"] = autoguard.api.getValue(raw.parameters, "limit", false);
+				let headers = autoguard.api.combineKeyValuePairs(raw.headers);
+				let payload = await autoguard.api.deserializePayload(raw.payload);
+				let guard = shared.Autoguard.Requests["getNewMovies"];
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getNewMovies"](new autoguard.api.ClientRequest(request, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = shared.Autoguard.Responses["getNewMovies"];
 								guard.as(response, "response");
 								let status = response.status ?? 200;
 								let headers = new Array<[string, string]>();

@@ -514,6 +514,54 @@ export function lookupYear(year_id: string, user_id: string): schema.objects.Yea
 	};
 };
 
+export function getNewAlbums(user_id: string, offset: number, length: number): schema.objects.Album[] {
+	let albums = new Map<string, number>();
+	for (let album of database.albums) {
+		for (let disc of database.getDiscsFromAlbum.lookup(album.album_id)) {
+			for (let track of database.getTracksFromDisc.lookup(disc.disc_id)) {
+				for (let track_file of database.getFilesFromTrack.lookup(track.track_id)) {
+					let file = database.files.lookup(track_file.file_id);
+					if (is.present(file.index_timestamp)) {
+						let index_timestamp = albums.get(album.album_id);
+						if (is.absent(index_timestamp)) {
+							index_timestamp = file.index_timestamp
+						} else {
+							index_timestamp = Math.max(index_timestamp, file.index_timestamp);
+						}
+						albums.set(album.album_id, index_timestamp);
+					}
+				}
+			}
+		}
+	}
+	return Array.from(albums.entries())
+		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
+		.slice(offset, offset + length)
+		.map((entry) => lookupAlbum(entry[0], user_id));
+};
+
+export function getNewMovies(user_id: string, offset: number, length: number): schema.objects.Movie[] {
+	let movies = new Map<string, number>();
+	for (let movie of database.movies) {
+		for (let movie_file of database.getFilesFromMovie.lookup(movie.movie_id)) {
+			let file = database.files.lookup(movie_file.file_id);
+			if (is.present(file.index_timestamp)) {
+				let index_timestamp = movies.get(movie.movie_id);
+				if (is.absent(index_timestamp)) {
+					index_timestamp = file.index_timestamp
+				} else {
+					index_timestamp = Math.max(index_timestamp, file.index_timestamp);
+				}
+				movies.set(movie.movie_id, index_timestamp);
+			}
+		}
+	}
+	return Array.from(movies.entries())
+		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
+		.slice(offset, offset + length)
+		.map((entry) => lookupMovie(entry[0], user_id));
+};
+
 export function searchForAlbums(query: string, offset: number, length: number, user_id: string): schema.objects.Album[] {
 	if (query === "") {
 		return Array.from(database.albums)

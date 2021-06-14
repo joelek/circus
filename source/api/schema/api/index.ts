@@ -219,6 +219,32 @@ export namespace Autoguard {
 				autoguard.guards.Undefined
 			)
 		}),
+		"getNewAlbums": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.api.Options,
+				autoguard.guards.Object.of({
+					"token": autoguard.guards.String,
+					"offset": autoguard.guards.Union.of(
+						autoguard.guards.Undefined,
+						autoguard.guards.Number
+					),
+					"limit": autoguard.guards.Union.of(
+						autoguard.guards.Undefined,
+						autoguard.guards.Number
+					)
+				})
+			),
+			"headers": autoguard.guards.Union.of(
+				autoguard.guards.Undefined,
+				autoguard.guards.Intersection.of(
+					autoguard.api.Headers,
+					autoguard.guards.Object.of({})
+				)
+			),
+			"payload": autoguard.guards.Union.of(
+				autoguard.guards.Undefined
+			)
+		}),
 		"GET:/albums/<album_id>/": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.api.Options,
@@ -481,6 +507,32 @@ export namespace Autoguard {
 				autoguard.api.Options,
 				autoguard.guards.Object.of({
 					"query": autoguard.guards.String,
+					"token": autoguard.guards.String,
+					"offset": autoguard.guards.Union.of(
+						autoguard.guards.Undefined,
+						autoguard.guards.Number
+					),
+					"limit": autoguard.guards.Union.of(
+						autoguard.guards.Undefined,
+						autoguard.guards.Number
+					)
+				})
+			),
+			"headers": autoguard.guards.Union.of(
+				autoguard.guards.Undefined,
+				autoguard.guards.Intersection.of(
+					autoguard.api.Headers,
+					autoguard.guards.Object.of({})
+				)
+			),
+			"payload": autoguard.guards.Union.of(
+				autoguard.guards.Undefined
+			)
+		}),
+		"getNewMovies": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.api.Options,
+				autoguard.guards.Object.of({
 					"token": autoguard.guards.String,
 					"offset": autoguard.guards.Union.of(
 						autoguard.guards.Undefined,
@@ -1157,6 +1209,22 @@ export namespace Autoguard {
 				"albums": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Album))
 			})
 		}),
+		"getNewAlbums": autoguard.guards.Object.of({
+			"status": autoguard.guards.Union.of(
+				autoguard.guards.Undefined,
+				autoguard.guards.Number
+			),
+			"headers": autoguard.guards.Union.of(
+				autoguard.guards.Undefined,
+				autoguard.guards.Intersection.of(
+					autoguard.api.Headers,
+					autoguard.guards.Object.of({})
+				)
+			),
+			"payload": autoguard.guards.Object.of({
+				"albums": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Album))
+			})
+		}),
 		"GET:/albums/<album_id>/": autoguard.guards.Object.of({
 			"status": autoguard.guards.Union.of(
 				autoguard.guards.Undefined,
@@ -1352,6 +1420,22 @@ export namespace Autoguard {
 			})
 		}),
 		"GET:/movies/<query>": autoguard.guards.Object.of({
+			"status": autoguard.guards.Union.of(
+				autoguard.guards.Undefined,
+				autoguard.guards.Number
+			),
+			"headers": autoguard.guards.Union.of(
+				autoguard.guards.Undefined,
+				autoguard.guards.Intersection.of(
+					autoguard.api.Headers,
+					autoguard.guards.Object.of({})
+				)
+			),
+			"payload": autoguard.guards.Object.of({
+				"movies": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Movie))
+			})
+		}),
+		"getNewMovies": autoguard.guards.Object.of({
 			"status": autoguard.guards.Union.of(
 				autoguard.guards.Undefined,
 				autoguard.guards.Number

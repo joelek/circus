@@ -215,6 +215,33 @@ export const makeClient = (options?: Partial<{
 			return new autoguard.api.ServerResponse(response);
 		}
 	},
+	"getNewAlbums": async (request) => {
+		let guard = shared.Autoguard.Requests["getNewAlbums"];
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push(decodeURIComponent("albums"));
+		components.push(decodeURIComponent("new"));
+		components.push(decodeURIComponent(""));
+		let parameters = new Array<[string, string]>();
+		autoguard.api.appendKeyValuePair(parameters, "token", request.options?.["token"], true);
+		autoguard.api.appendKeyValuePair(parameters, "offset", request.options?.["offset"], false);
+		autoguard.api.appendKeyValuePair(parameters, "limit", request.options?.["limit"], false);
+		parameters.push(...autoguard.api.extractKeyValuePairs(request.options ?? {}, [...[], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.extractKeyValuePairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = autoguard.api.serializePayload(request.payload);
+		let requestHandler = options?.requestHandler ?? autoguard.api.xhr;
+		let raw = await requestHandler({ method, components, parameters, headers, payload }, options?.urlPrefix);
+		{
+			let status = raw.status;
+			let headers = autoguard.api.combineKeyValuePairs(raw.headers);
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = shared.Autoguard.Responses["getNewAlbums"];
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response);
+		}
+	},
 	"GET:/albums/<album_id>/": async (request) => {
 		let guard = shared.Autoguard.Requests["GET:/albums/<album_id>/"];
 		guard.as(request, "request");
@@ -522,6 +549,33 @@ export const makeClient = (options?: Partial<{
 			let headers = autoguard.api.combineKeyValuePairs(raw.headers);
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/movies/<query>"];
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response);
+		}
+	},
+	"getNewMovies": async (request) => {
+		let guard = shared.Autoguard.Requests["getNewMovies"];
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push(decodeURIComponent("movies"));
+		components.push(decodeURIComponent("new"));
+		components.push(decodeURIComponent(""));
+		let parameters = new Array<[string, string]>();
+		autoguard.api.appendKeyValuePair(parameters, "token", request.options?.["token"], true);
+		autoguard.api.appendKeyValuePair(parameters, "offset", request.options?.["offset"], false);
+		autoguard.api.appendKeyValuePair(parameters, "limit", request.options?.["limit"], false);
+		parameters.push(...autoguard.api.extractKeyValuePairs(request.options ?? {}, [...[], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.extractKeyValuePairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = autoguard.api.serializePayload(request.payload);
+		let requestHandler = options?.requestHandler ?? autoguard.api.xhr;
+		let raw = await requestHandler({ method, components, parameters, headers, payload }, options?.urlPrefix);
+		{
+			let status = raw.status;
+			let headers = autoguard.api.combineKeyValuePairs(raw.headers);
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = shared.Autoguard.Responses["getNewMovies"];
 			let response = guard.as({ status, headers, payload }, "response");
 			return new autoguard.api.ServerResponse(response);
 		}

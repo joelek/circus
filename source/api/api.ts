@@ -85,6 +85,16 @@ export const server = apiv2.makeServer({
 			}
 		};
 	},
+	getNewAlbums: async (request) => {
+		let options = request.options();
+		let user_id = auth.getUserId(options.token);
+		let albums = handler.getNewAlbums(user_id, options.offset ?? 0, options.limit ?? 24);
+		return {
+			payload: {
+				albums
+			}
+		};
+	},
 	"GET:/albums/<album_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
@@ -215,6 +225,16 @@ export const server = apiv2.makeServer({
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
 		let movies = handler.searchForMovies(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		return {
+			payload: {
+				movies
+			}
+		};
+	},
+	getNewMovies: async (request) => {
+		let options = request.options();
+		let user_id = auth.getUserId(options.token);
+		let movies = handler.getNewMovies(user_id, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				movies
