@@ -621,6 +621,27 @@ function associateSubtitles(): void {
 	}
 }
 
+function removeBrokenEntities(): void {
+	for (let track of tracks) {
+		let track_files = getFilesFromTrack.lookup(track.track_id);
+		if (track_files.collect().length === 0) {
+			tracks.remove(track);
+		}
+	}
+	for (let movie of movies) {
+		let movie_files = getFilesFromMovie.lookup(movie.movie_id);
+		if (movie_files.collect().length === 0) {
+			movies.remove(movie);
+		}
+	}
+	for (let episode of episodes) {
+		let episode_files = getFilesFromEpisode.lookup(episode.episode_id);
+		if (episode_files.collect().length === 0) {
+			episodes.remove(episode);
+		}
+	}
+}
+
 export function runIndexer(): void {
 	console.log(`Running indexer...`);
 	for (let directory of getDirectoriesFromDirectory.lookup(undefined)) {
@@ -634,6 +655,7 @@ export function runIndexer(): void {
 	associateMetadata();
 	associateImages();
 	associateSubtitles();
+	removeBrokenEntities();
 	for (let token of tokens) {
 		if (token.expires_ms <= Date.now()) {
 			tokens.remove(token);
