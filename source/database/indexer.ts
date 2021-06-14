@@ -670,3 +670,13 @@ export function runIndexer(): void {
 };
 
 runIndexer();
+
+process.on("SIGTERM", () => {
+	console.log("SIGTERM");
+	process.exit(0);
+});
+
+process.on("SIGINT", () => {
+	console.log("SIGINT");
+	process.exit(0);
+});
