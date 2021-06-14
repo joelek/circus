@@ -696,14 +696,14 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		if (is.absent(index)) {
 			return;
 		}
-		this.hashTable.remove(key, index);
-		this.blockHandler.deleteBlock(index);
-		this.recordCache.remove(index);
 		this.route("remove", {
 			key: key,
 			index: index,
 			record: next
 		});
+		this.hashTable.remove(key, index);
+		this.blockHandler.deleteBlock(index);
+		this.recordCache.remove(index);
 	}
 
 	update(next: A): void {
