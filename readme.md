@@ -144,6 +144,8 @@ Ports, paths and other settings can be configured through altering the config fi
 
 ## Roadmap
 
+* Fix seek issue in movies.
+* Show recently added content.
 * Create separate login and register forms.
 * Grant admin privileges to the very first account created.
 * Add account tiers to keys and users.
@@ -164,4 +166,4 @@ Ports, paths and other settings can be configured through altering the config fi
 * Change line heights to prevent the truncation of capital letters with umlauts.
 * Support downloading of images or copying of image urls.
 * Stop sending tokens for every request.
-* Index keyframes.
+* Index keyframes and create movie and episode subpage with list.
