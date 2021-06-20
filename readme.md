@@ -144,6 +144,7 @@ Ports, paths and other settings can be configured through altering the config fi
 
 ## Roadmap
 
+* Clear player state when the user logs out.
 * Store create and update timestamps for entities.
 * Add transactional capabilities to database.
 * Create separate login and register forms.
