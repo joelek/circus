@@ -6,8 +6,8 @@ import { PlaylistItemBase } from "../../../api/schema/objects";
 
 export const SetToken = autoguard.guards.Object.of({
 	"token": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 

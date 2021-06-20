@@ -10,20 +10,20 @@ export const LOAD = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("LOAD"),
 	"media": autoguard.guards.Reference.of(() => MediaInformation),
 	"autoplay": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Boolean
+		autoguard.guards.Boolean,
+		autoguard.guards.Undefined
 	),
 	"currentTime": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	),
 	"activeTrackIds": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Array.of(autoguard.guards.Number)
+		autoguard.guards.Array.of(autoguard.guards.Number),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -34,8 +34,8 @@ export const PAUSE = autoguard.guards.Object.of({
 	"requestId": autoguard.guards.Number,
 	"type": autoguard.guards.StringLiteral.of("PAUSE"),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -46,19 +46,19 @@ export const SEEK = autoguard.guards.Object.of({
 	"requestId": autoguard.guards.Number,
 	"type": autoguard.guards.StringLiteral.of("SEEK"),
 	"resumeState": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
 		autoguard.guards.Union.of(
 			autoguard.guards.StringLiteral.of("PLAYBACK_START"),
 			autoguard.guards.StringLiteral.of("PLAYBACK_PAUSE")
-		)
+		),
+		autoguard.guards.Undefined
 	),
 	"currentTime": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -69,8 +69,8 @@ export const STOP = autoguard.guards.Object.of({
 	"requestId": autoguard.guards.Number,
 	"type": autoguard.guards.StringLiteral.of("STOP"),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -81,8 +81,8 @@ export const PLAY = autoguard.guards.Object.of({
 	"requestId": autoguard.guards.Number,
 	"type": autoguard.guards.StringLiteral.of("PLAY"),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -90,14 +90,14 @@ export type PLAY = ReturnType<typeof PLAY["as"]>;
 
 export const GET_STATUS = autoguard.guards.Object.of({
 	"mediaSessionId": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"requestId": autoguard.guards.Number,
 	"type": autoguard.guards.StringLiteral.of("GET_STATUS"),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -109,8 +109,8 @@ export const VOLUME = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("VOLUME"),
 	"volume": autoguard.guards.Reference.of(() => Volume),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -120,8 +120,8 @@ export const INVALID_PLAYER_STATE = autoguard.guards.Object.of({
 	"requestId": autoguard.guards.Number,
 	"type": autoguard.guards.StringLiteral.of("INVALID_PLAYER_STATE"),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -131,8 +131,8 @@ export const LOAD_FAILED = autoguard.guards.Object.of({
 	"requestId": autoguard.guards.Number,
 	"type": autoguard.guards.StringLiteral.of("LOAD_FAILED"),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -142,8 +142,8 @@ export const LOAD_CANCELLED = autoguard.guards.Object.of({
 	"requestId": autoguard.guards.Number,
 	"type": autoguard.guards.StringLiteral.of("LOAD_CANCELLED"),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -157,8 +157,8 @@ export const INVALID_REQUEST = autoguard.guards.Object.of({
 		autoguard.guards.StringLiteral.of("DUPLICATE_REQUESTID")
 	),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -169,8 +169,8 @@ export const MEDIA_STATUS = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("MEDIA_STATUS"),
 	"status": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => MediaStatus)),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	)
 });
 

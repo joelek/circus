@@ -6,8 +6,8 @@ import { Device } from ".././objects";
 
 export const SetContext = autoguard.guards.Object.of({
 	"context": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Reference.of(() => Context)
+		autoguard.guards.Reference.of(() => Context),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -15,8 +15,8 @@ export type SetContext = ReturnType<typeof SetContext["as"]>;
 
 export const SetDevice = autoguard.guards.Object.of({
 	"device": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Reference.of(() => Device)
+		autoguard.guards.Reference.of(() => Device),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -30,8 +30,8 @@ export type SetDevices = ReturnType<typeof SetDevices["as"]>;
 
 export const SetIndex = autoguard.guards.Object.of({
 	"index": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -51,8 +51,8 @@ export type SetPlayback = ReturnType<typeof SetPlayback["as"]>;
 
 export const SetProgress = autoguard.guards.Object.of({
 	"progress": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -60,8 +60,8 @@ export type SetProgress = ReturnType<typeof SetProgress["as"]>;
 
 export const SetToken = autoguard.guards.Object.of({
 	"token": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 

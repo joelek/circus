@@ -83,57 +83,57 @@ export type StreamsResult = ReturnType<typeof StreamsResult["as"]>;
 export const Format = autoguard.guards.Object.of({
 	"format_name": autoguard.guards.String,
 	"tags": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
 		autoguard.guards.Object.of({
 			"title": autoguard.guards.Union.of(
-				autoguard.guards.Undefined,
-				autoguard.guards.String
+				autoguard.guards.String,
+				autoguard.guards.Undefined
 			),
 			"date": autoguard.guards.Union.of(
-				autoguard.guards.Undefined,
-				autoguard.guards.String
+				autoguard.guards.String,
+				autoguard.guards.Undefined
 			),
 			"comment": autoguard.guards.Union.of(
-				autoguard.guards.Undefined,
-				autoguard.guards.String
+				autoguard.guards.String,
+				autoguard.guards.Undefined
 			),
 			"show": autoguard.guards.Union.of(
-				autoguard.guards.Undefined,
-				autoguard.guards.String
+				autoguard.guards.String,
+				autoguard.guards.Undefined
 			),
 			"episode_id": autoguard.guards.Union.of(
-				autoguard.guards.Undefined,
-				autoguard.guards.String
+				autoguard.guards.String,
+				autoguard.guards.Undefined
 			),
 			"episode_sort": autoguard.guards.Union.of(
-				autoguard.guards.Undefined,
-				autoguard.guards.String
+				autoguard.guards.String,
+				autoguard.guards.Undefined
 			),
 			"season_number": autoguard.guards.Union.of(
-				autoguard.guards.Undefined,
-				autoguard.guards.String
+				autoguard.guards.String,
+				autoguard.guards.Undefined
 			),
 			"track": autoguard.guards.Union.of(
-				autoguard.guards.Undefined,
-				autoguard.guards.String
+				autoguard.guards.String,
+				autoguard.guards.Undefined
 			),
 			"artist": autoguard.guards.Union.of(
-				autoguard.guards.Undefined,
-				autoguard.guards.String
+				autoguard.guards.String,
+				autoguard.guards.Undefined
 			),
 			"album_artist": autoguard.guards.Union.of(
-				autoguard.guards.Undefined,
-				autoguard.guards.String
+				autoguard.guards.String,
+				autoguard.guards.Undefined
 			),
 			"album": autoguard.guards.Union.of(
-				autoguard.guards.Undefined,
-				autoguard.guards.String
+				autoguard.guards.String,
+				autoguard.guards.Undefined
 			),
 			"disc": autoguard.guards.Union.of(
-				autoguard.guards.Undefined,
-				autoguard.guards.String
+				autoguard.guards.String,
+				autoguard.guards.Undefined
 			)
-		})
+		}),
+		autoguard.guards.Undefined
 	)
 });
 

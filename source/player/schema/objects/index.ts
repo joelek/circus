@@ -80,21 +80,21 @@ export type Device = ReturnType<typeof Device["as"]>;
 
 export const Session = autoguard.guards.Object.of({
 	"context": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Reference.of(() => Context)
+		autoguard.guards.Reference.of(() => Context),
+		autoguard.guards.Undefined
 	),
 	"device": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Reference.of(() => Device)
+		autoguard.guards.Reference.of(() => Device),
+		autoguard.guards.Undefined
 	),
 	"index": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"playback": autoguard.guards.Boolean,
 	"progress": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	)
 });
 

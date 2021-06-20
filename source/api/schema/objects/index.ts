@@ -50,8 +50,8 @@ export const Album = autoguard.guards.Intersection.of(
 		"artists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ArtistBase)),
 		"discs": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Disc)),
 		"year": autoguard.guards.Union.of(
-			autoguard.guards.Undefined,
-			autoguard.guards.Number
+			autoguard.guards.Number,
+			autoguard.guards.Undefined
 		)
 	})
 );
@@ -89,8 +89,8 @@ export const Track = autoguard.guards.Intersection.of(
 	autoguard.guards.Object.of({
 		"artists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ArtistBase)),
 		"last_stream_date": autoguard.guards.Union.of(
-			autoguard.guards.Undefined,
-			autoguard.guards.Number
+			autoguard.guards.Number,
+			autoguard.guards.Undefined
 		),
 		"media": autoguard.guards.Reference.of(() => AudioFile)
 	})
@@ -173,18 +173,18 @@ export const Movie = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => MovieBase),
 	autoguard.guards.Object.of({
 		"year": autoguard.guards.Union.of(
-			autoguard.guards.Undefined,
-			autoguard.guards.Number
+			autoguard.guards.Number,
+			autoguard.guards.Undefined
 		),
 		"summary": autoguard.guards.Union.of(
-			autoguard.guards.Undefined,
-			autoguard.guards.String
+			autoguard.guards.String,
+			autoguard.guards.Undefined
 		),
 		"genres": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Genre)),
 		"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor)),
 		"last_stream_date": autoguard.guards.Union.of(
-			autoguard.guards.Undefined,
-			autoguard.guards.Number
+			autoguard.guards.Number,
+			autoguard.guards.Undefined
 		),
 		"media": autoguard.guards.Reference.of(() => VideoFile),
 		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile))
@@ -205,8 +205,8 @@ export const Show = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => ShowBase),
 	autoguard.guards.Object.of({
 		"summary": autoguard.guards.Union.of(
-			autoguard.guards.Undefined,
-			autoguard.guards.String
+			autoguard.guards.String,
+			autoguard.guards.Undefined
 		),
 		"genres": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Genre)),
 		"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor)),
@@ -246,16 +246,16 @@ export const Episode = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => EpisodeBase),
 	autoguard.guards.Object.of({
 		"year": autoguard.guards.Union.of(
-			autoguard.guards.Undefined,
-			autoguard.guards.Number
+			autoguard.guards.Number,
+			autoguard.guards.Undefined
 		),
 		"summary": autoguard.guards.Union.of(
-			autoguard.guards.Undefined,
-			autoguard.guards.String
+			autoguard.guards.String,
+			autoguard.guards.Undefined
 		),
 		"last_stream_date": autoguard.guards.Union.of(
-			autoguard.guards.Undefined,
-			autoguard.guards.Number
+			autoguard.guards.Number,
+			autoguard.guards.Undefined
 		),
 		"media": autoguard.guards.Reference.of(() => VideoFile),
 		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile))

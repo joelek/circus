@@ -6,8 +6,8 @@ export const Envelope = autoguard.guards.Object.of({
 	"type": autoguard.guards.String,
 	"data": autoguard.guards.Any,
 	"id": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 

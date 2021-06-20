@@ -36,14 +36,14 @@ export type GET_APP_AVAILABILITY = ReturnType<typeof GET_APP_AVAILABILITY["as"]>
 export const SET_VOLUME = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("SET_VOLUME"),
 	"requestId": autoguard.guards.Number,
-	"volume": autoguard.guards.Union.of(
+	"volume": autoguard.guards.Group.of(autoguard.guards.Union.of(
 		autoguard.guards.Object.of({
 			"level": autoguard.guards.Number
 		}),
 		autoguard.guards.Object.of({
 			"muted": autoguard.guards.Boolean
 		})
-	)
+	))
 });
 
 export type SET_VOLUME = ReturnType<typeof SET_VOLUME["as"]>;
@@ -53,7 +53,6 @@ export const RECEIVER_STATUS = autoguard.guards.Object.of({
 	"requestId": autoguard.guards.Number,
 	"status": autoguard.guards.Object.of({
 		"applications": autoguard.guards.Union.of(
-			autoguard.guards.Undefined,
 			autoguard.guards.Array.of(autoguard.guards.Object.of({
 				"appId": autoguard.guards.String,
 				"displayName": autoguard.guards.String,
@@ -66,7 +65,8 @@ export const RECEIVER_STATUS = autoguard.guards.Object.of({
 				"sessionId": autoguard.guards.String,
 				"statusText": autoguard.guards.String,
 				"transportId": autoguard.guards.String
-			}))
+			})),
+			autoguard.guards.Undefined
 		),
 		"userEq": autoguard.guards.Object.of({}),
 		"volume": autoguard.guards.Object.of({

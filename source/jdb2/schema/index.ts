@@ -4,14 +4,14 @@ import * as autoguard from "@joelek/ts-autoguard";
 
 export const IndexRecord = autoguard.guards.Object.of({
 	"token": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
 		autoguard.guards.Union.of(
 			autoguard.guards.Boolean,
 			autoguard.guards.Null,
 			autoguard.guards.Number,
 			autoguard.guards.String,
 			autoguard.guards.Undefined
-		)
+		),
+		autoguard.guards.Undefined
 	),
 	"index": autoguard.guards.Number
 });

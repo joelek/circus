@@ -6,8 +6,8 @@ export const Directory = autoguard.guards.Object.of({
 	"directory_id": autoguard.guards.String,
 	"name": autoguard.guards.String,
 	"parent_directory_id": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -17,16 +17,16 @@ export const File = autoguard.guards.Object.of({
 	"file_id": autoguard.guards.String,
 	"name": autoguard.guards.String,
 	"parent_directory_id": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"index_timestamp": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"size": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -64,8 +64,8 @@ export const SubtitleFile = autoguard.guards.Object.of({
 	"mime": autoguard.guards.StringLiteral.of("text/vtt"),
 	"duration_ms": autoguard.guards.Number,
 	"language": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -99,8 +99,8 @@ export const Album = autoguard.guards.Object.of({
 	"album_id": autoguard.guards.String,
 	"title": autoguard.guards.String,
 	"year": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -157,8 +157,8 @@ export const Show = autoguard.guards.Object.of({
 	"show_id": autoguard.guards.String,
 	"name": autoguard.guards.String,
 	"summary": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -185,12 +185,12 @@ export const Episode = autoguard.guards.Object.of({
 	"title": autoguard.guards.String,
 	"number": autoguard.guards.Number,
 	"year": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"summary": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -207,12 +207,12 @@ export const Movie = autoguard.guards.Object.of({
 	"movie_id": autoguard.guards.String,
 	"title": autoguard.guards.String,
 	"year": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"summary": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -300,8 +300,8 @@ export type User = ReturnType<typeof User["as"]>;
 export const Key = autoguard.guards.Object.of({
 	"key_id": autoguard.guards.String,
 	"user_id": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 

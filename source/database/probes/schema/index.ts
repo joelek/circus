@@ -8,18 +8,18 @@ export const EpisodeMetadata = autoguard.guards.Object.of({
 	"season": autoguard.guards.Number,
 	"episode": autoguard.guards.Number,
 	"year": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"summary": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"show": autoguard.guards.Object.of({
 		"title": autoguard.guards.String,
 		"summary": autoguard.guards.Union.of(
-			autoguard.guards.Undefined,
-			autoguard.guards.String
+			autoguard.guards.String,
+			autoguard.guards.Undefined
 		),
 		"genres": autoguard.guards.Array.of(autoguard.guards.String),
 		"actors": autoguard.guards.Array.of(autoguard.guards.String)
@@ -32,12 +32,12 @@ export const MovieMetadata = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("movie"),
 	"title": autoguard.guards.String,
 	"year": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"summary": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"genres": autoguard.guards.Array.of(autoguard.guards.String),
 	"actors": autoguard.guards.Array.of(autoguard.guards.String)
@@ -53,8 +53,8 @@ export const TrackMetadata = autoguard.guards.Object.of({
 	"album": autoguard.guards.Object.of({
 		"title": autoguard.guards.String,
 		"year": autoguard.guards.Union.of(
-			autoguard.guards.Undefined,
-			autoguard.guards.Number
+			autoguard.guards.Number,
+			autoguard.guards.Undefined
 		),
 		"artists": autoguard.guards.Array.of(autoguard.guards.Object.of({
 			"title": autoguard.guards.String
@@ -100,8 +100,8 @@ export const SubtitleResource = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("subtitle"),
 	"duration_ms": autoguard.guards.Number,
 	"language": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"cues": autoguard.guards.Array.of(autoguard.guards.Object.of({
 		"start_ms": autoguard.guards.Number,
@@ -133,8 +133,8 @@ export type Resource = ReturnType<typeof Resource["as"]>;
 
 export const Probe = autoguard.guards.Object.of({
 	"metadata": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Reference.of(() => Metadata)
+		autoguard.guards.Reference.of(() => Metadata),
+		autoguard.guards.Undefined
 	),
 	"resources": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Resource))
 });

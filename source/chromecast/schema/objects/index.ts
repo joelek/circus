@@ -5,12 +5,12 @@ import * as autoguard from "@joelek/ts-autoguard";
 export const Image = autoguard.guards.Object.of({
 	"url": autoguard.guards.String,
 	"height": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"width": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -18,12 +18,12 @@ export type Image = ReturnType<typeof Image["as"]>;
 
 export const Volume = autoguard.guards.Object.of({
 	"level": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"muted": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Boolean
+		autoguard.guards.Boolean,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -38,26 +38,25 @@ export const MediaInformation = autoguard.guards.Object.of({
 	),
 	"contentType": autoguard.guards.String,
 	"metadata": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
 		autoguard.guards.Union.of(
 			autoguard.guards.Reference.of(() => GenericMediaMetadata),
 			autoguard.guards.Reference.of(() => MovieMediaMetadata),
 			autoguard.guards.Reference.of(() => TvShowMediaMetadata),
 			autoguard.guards.Reference.of(() => MusicTrackMediaMetadata),
 			autoguard.guards.Reference.of(() => PhotoMediaMetadata)
-		)
+		),
+		autoguard.guards.Undefined
 	),
 	"duration": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	),
 	"tracks": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Array.of(autoguard.guards.Union.of(
+		autoguard.guards.Array.of(autoguard.guards.Group.of(autoguard.guards.Union.of(
 			autoguard.guards.Object.of({
 				"trackId": autoguard.guards.Number,
 				"type": autoguard.guards.String
@@ -71,15 +70,16 @@ export const MediaInformation = autoguard.guards.Object.of({
 				"subtype": autoguard.guards.StringLiteral.of("SUBTITLES"),
 				"language": autoguard.guards.String,
 				"name": autoguard.guards.Union.of(
-					autoguard.guards.Undefined,
-					autoguard.guards.String
+					autoguard.guards.String,
+					autoguard.guards.Undefined
 				),
 				"customData": autoguard.guards.Union.of(
-					autoguard.guards.Undefined,
-					autoguard.guards.Record.of(autoguard.guards.Any)
+					autoguard.guards.Record.of(autoguard.guards.Any),
+					autoguard.guards.Undefined
 				)
 			})
-		))
+		))),
+		autoguard.guards.Undefined
 	)
 });
 
@@ -88,20 +88,20 @@ export type MediaInformation = ReturnType<typeof MediaInformation["as"]>;
 export const GenericMediaMetadata = autoguard.guards.Object.of({
 	"metadataType": autoguard.guards.NumberLiteral.of(0),
 	"title": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"subtitle": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"images": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Image))
+		autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Image)),
+		autoguard.guards.Undefined
 	),
 	"releaseDate": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -110,24 +110,24 @@ export type GenericMediaMetadata = ReturnType<typeof GenericMediaMetadata["as"]>
 export const MovieMediaMetadata = autoguard.guards.Object.of({
 	"metadataType": autoguard.guards.NumberLiteral.of(1),
 	"title": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"subtitle": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"studio": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"images": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Image))
+		autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Image)),
+		autoguard.guards.Undefined
 	),
 	"releaseDate": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -136,28 +136,28 @@ export type MovieMediaMetadata = ReturnType<typeof MovieMediaMetadata["as"]>;
 export const TvShowMediaMetadata = autoguard.guards.Object.of({
 	"metadataType": autoguard.guards.NumberLiteral.of(2),
 	"seriesTitle": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"subtitle": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"season": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"episode": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"images": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Image))
+		autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Image)),
+		autoguard.guards.Undefined
 	),
 	"originalAirDate": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -166,40 +166,40 @@ export type TvShowMediaMetadata = ReturnType<typeof TvShowMediaMetadata["as"]>;
 export const MusicTrackMediaMetadata = autoguard.guards.Object.of({
 	"metadataType": autoguard.guards.NumberLiteral.of(3),
 	"albumName": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"title": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"albumArtist": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"artist": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"composer": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"trackNumber": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"discNumber": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"images": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Image))
+		autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Image)),
+		autoguard.guards.Undefined
 	),
 	"releaseDate": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -208,36 +208,36 @@ export type MusicTrackMediaMetadata = ReturnType<typeof MusicTrackMediaMetadata[
 export const PhotoMediaMetadata = autoguard.guards.Object.of({
 	"metadataType": autoguard.guards.NumberLiteral.of(4),
 	"title": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"artist": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"location": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	),
 	"latitude": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"longitude": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"width": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"height": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Number
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
 	),
 	"creationDateTime": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.String
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -246,11 +246,11 @@ export type PhotoMediaMetadata = ReturnType<typeof PhotoMediaMetadata["as"]>;
 export const MediaStatus = autoguard.guards.Object.of({
 	"mediaSessionId": autoguard.guards.Number,
 	"media": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
 		autoguard.guards.Union.of(
 			autoguard.guards.Reference.of(() => MediaInformation),
 			autoguard.guards.Object.of({})
-		)
+		),
+		autoguard.guards.Undefined
 	),
 	"playbackRate": autoguard.guards.Number,
 	"playerState": autoguard.guards.Union.of(
@@ -260,20 +260,20 @@ export const MediaStatus = autoguard.guards.Object.of({
 		autoguard.guards.StringLiteral.of("PAUSED")
 	),
 	"idleReason": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
 		autoguard.guards.Union.of(
 			autoguard.guards.StringLiteral.of("CANCELLED"),
 			autoguard.guards.StringLiteral.of("INTERRUPTED"),
 			autoguard.guards.StringLiteral.of("FINISHED"),
 			autoguard.guards.StringLiteral.of("ERROR")
-		)
+		),
+		autoguard.guards.Undefined
 	),
 	"currentTime": autoguard.guards.Number,
 	"supportedMediaCommands": autoguard.guards.Number,
 	"volume": autoguard.guards.Reference.of(() => Volume),
 	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Undefined,
-		autoguard.guards.Record.of(autoguard.guards.Any)
+		autoguard.guards.Record.of(autoguard.guards.Any),
+		autoguard.guards.Undefined
 	)
 });
 
