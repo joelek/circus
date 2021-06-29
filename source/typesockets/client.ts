@@ -8,7 +8,7 @@ export interface WebSocketLike {
 	addEventListener<A extends keyof WebSocketEventMap>(type: A, listener: (event: WebSocketEventMap[A]) => void): void;
 	close(status?: sockets.StatusCode): void;
 	removeEventListener<A extends keyof WebSocketEventMap>(type: A, listener: (event: WebSocketEventMap[A]) => void): void;
-	send(payload: string | Buffer): void;
+	send(payload: string | ArrayBuffer): void;
 	readonly readyState: sockets.ReadyState;
 };
 
