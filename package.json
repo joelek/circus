@@ -25,8 +25,7 @@
 		"package:server": "tsb --entry=./build/server/server.js --bundle=./dist/server.min.js",
 		"package": "rm -rf ./dist/ && npm run package:client && npm run package:server",
 		"preversion": "npm run build && git add ./",
-		"postversion": "git push && git push --tags",
-		"start": "node ."
+		"postversion": "git push && git push --tags"
 	},
 	"version": "0.0.127"
 }
