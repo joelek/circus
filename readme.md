@@ -102,6 +102,14 @@ The media probing system associates metadata on a folder basis meaning that exte
 
 Circus features a custom playback protocol for playback and synchronization between devices. The protocol is simplistically designed and built using websocket technology.
 
+## Sponsorship
+
+The continued development of this software depends on your sponsorship. Please consider sponsoring this project if you find that the software creates value for you and your organization.
+
+The sponsor button can be used to view the different sponsoring options. Contributions of all sizes are welcome.
+
+Thank you for your support!
+
 ## Installation
 
 Circus can be installed on a wide range of server infrastructure since it's built almost entirely using NodeJS. Extra features such as preview images become available when the FFMPEG tool suite is installed on the server.
