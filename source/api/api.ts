@@ -1,4 +1,4 @@
-import * as autoguard from "@joelek/ts-autoguard";
+import * as autoguard from "@joelek/ts-autoguard/dist/lib-server";
 import * as libcrypto from "crypto";
 import * as libfs from "fs";
 import * as libauth from "../server/auth";
