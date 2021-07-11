@@ -1,6 +1,10 @@
 {
 	"compilerOptions": {
 		"declaration": false,
+		"lib": [
+			"dom",
+			"esnext"
+		],
 		"module": "commonjs",
 		"outDir": "./build/",
 		"rootDir": "./source/",
