@@ -7,6 +7,28 @@ import * as handler from "./handler";
 import * as database from "../database/indexer";
 import * as apiv2 from "./schema/api/server";
 
+function getVersion(): {
+	major: number,
+	minor: number,
+	patch: number
+} | undefined {
+	try {
+		let pack = libfs.readFileSync("./package.json", "utf8");
+		let json = JSON.parse(pack);
+		let parts = /^([0-9]+)[.]([0-9]+)[.]([0-9]+)$/.exec(String(json?.version));
+		if (parts != null) {
+			let major = Number.parseInt(parts[1], 10);
+			let minor = Number.parseInt(parts[2], 10);
+			let patch = Number.parseInt(parts[3], 10);
+			return {
+				major,
+				minor,
+				patch
+			};
+		}
+	} catch (error) {}
+}
+
 export const server = apiv2.makeServer({
 	"POST:/auth/": async (request) => {
 		let headers = request.headers();
@@ -495,9 +517,22 @@ export const server = apiv2.makeServer({
 		let metadata_files = Array.from(database.metadata_files);
 		let subtitle_files = Array.from(database.subtitle_files);
 		let video_files =  Array.from(database.video_files);
+		let version = getVersion();
 		return {
 			payload: {
 				statistics: [
+					{
+						title: "Major version",
+						value: version?.major ?? 0
+					},
+					{
+						title: "Minor version",
+						value: version?.minor ?? 0
+					},
+					{
+						title: "Patch version",
+						value: version?.patch ?? 0
+					},
 					{
 						title: "Library Size",
 						value: files.reduce((sum, item) => sum + (item?.size ?? 0), 0),
