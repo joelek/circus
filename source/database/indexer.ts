@@ -371,10 +371,10 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 			});
 		}
 		for (let [index, artist] of metadata.album.artists.entries()) {
-			let artist_id = makeId("artist", artist.title);
+			let artist_id = makeId("artist", artist);
 			artists.insert({
 				artist_id: artist_id,
-				name: artist.title
+				name: artist
 			});
 			album_artists.insert({
 				album_id: album_id,
@@ -402,10 +402,10 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 			});
 		}
 		for (let [index, artist] of metadata.artists.entries()) {
-			let artist_id = makeId("artist", artist.title);
+			let artist_id = makeId("artist", artist);
 			artists.insert({
 				artist_id: artist_id,
-				name: artist.title
+				name: artist
 			});
 			track_artists.insert({
 				track_id: track_id,

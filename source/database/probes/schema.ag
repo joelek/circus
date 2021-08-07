@@ -30,13 +30,9 @@ guard TrackMetadata: {
 	"album": {
 		"title": string,
 		"year"?: number,
-		"artists": {
-			"title": string
-		}[]
+		"artists": string[]
 	},
-	"artists": {
-		"title": string
-	}[]
+	"artists": string[]
 };
 
 guard Metadata: EpisodeMetadata | MovieMetadata | TrackMetadata;

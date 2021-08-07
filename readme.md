@@ -83,15 +83,11 @@ External image and metadata files may be used to supply additional information t
 		"title": "Album title",
 		"year": 2000, // Optional
 		"artists": [
-			{
-				"title": "Artist name"
-			}
+			"Artist name"
 		]
 	},
 	"artists": [
-		{
-			"title": "Artist name"
-		}
+		"Artist name"
 	]
 }
 ```

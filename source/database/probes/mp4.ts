@@ -232,13 +232,9 @@ export function probe(fd: number): schema.Probe {
 					album: {
 						title: tags.album,
 						year: tags.year,
-						artists: is.absent(tags.album_artist) ? [] : tags.album_artist.split(";").map((artist) => artist.trim()).map((artist) => ({
-							title: artist
-						}))
+						artists: is.absent(tags.album_artist) ? [] : tags.album_artist.split(";").map((artist) => artist.trim())
 					},
-					artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()).map((artist) => ({
-						title: artist
-					}))
+					artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim())
 				};
 				result.metadata = metadata;
 			}

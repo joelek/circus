@@ -56,13 +56,9 @@ export const TrackMetadata = autoguard.guards.Object.of({
 			autoguard.guards.Number,
 			autoguard.guards.Undefined
 		),
-		"artists": autoguard.guards.Array.of(autoguard.guards.Object.of({
-			"title": autoguard.guards.String
-		}))
+		"artists": autoguard.guards.Array.of(autoguard.guards.String)
 	}),
-	"artists": autoguard.guards.Array.of(autoguard.guards.Object.of({
-		"title": autoguard.guards.String
-	}))
+	"artists": autoguard.guards.Array.of(autoguard.guards.String)
 });
 
 export type TrackMetadata = ReturnType<typeof TrackMetadata["as"]>;
