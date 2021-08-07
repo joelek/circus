@@ -76,7 +76,8 @@ guard Track: {
 	"track_id": string,
 	"disc_id": string,
 	"title": string,
-	"number": number
+	"number": number,
+	"copyright"?: string
 };
 
 guard TrackFile: {
@@ -119,7 +120,8 @@ guard Episode: {
 	"title": string,
 	"number": number,
 	"year"?: number,
-	"summary"?: string
+	"summary"?: string,
+	"copyright"?: string
 };
 
 guard EpisodeFile: {
@@ -131,7 +133,8 @@ guard Movie: {
 	"movie_id": string,
 	"title": string,
 	"year"?: number,
-	"summary"?: string
+	"summary"?: string,
+	"copyright"?: string
 };
 
 guard MovieFile: {

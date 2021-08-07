@@ -125,7 +125,11 @@ export const Track = autoguard.guards.Object.of({
 	"track_id": autoguard.guards.String,
 	"disc_id": autoguard.guards.String,
 	"title": autoguard.guards.String,
-	"number": autoguard.guards.Number
+	"number": autoguard.guards.Number,
+	"copyright": autoguard.guards.Union.of(
+		autoguard.guards.String,
+		autoguard.guards.Undefined
+	)
 });
 
 export type Track = ReturnType<typeof Track["as"]>;
@@ -191,6 +195,10 @@ export const Episode = autoguard.guards.Object.of({
 	"summary": autoguard.guards.Union.of(
 		autoguard.guards.String,
 		autoguard.guards.Undefined
+	),
+	"copyright": autoguard.guards.Union.of(
+		autoguard.guards.String,
+		autoguard.guards.Undefined
 	)
 });
 
@@ -211,6 +219,10 @@ export const Movie = autoguard.guards.Object.of({
 		autoguard.guards.Undefined
 	),
 	"summary": autoguard.guards.Union.of(
+		autoguard.guards.String,
+		autoguard.guards.Undefined
+	),
+	"copyright": autoguard.guards.Union.of(
 		autoguard.guards.String,
 		autoguard.guards.Undefined
 	)
