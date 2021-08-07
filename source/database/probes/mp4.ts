@@ -239,7 +239,8 @@ export function probe(fd: number): schema.Probe {
 						year: tags.year,
 						artists: is.absent(tags.album_artist) ? [] : tags.album_artist.split(";").map((artist) => artist.trim())
 					},
-					artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim())
+					artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
+					copyright: tags.copyright
 				};
 				result.metadata = metadata;
 			}
