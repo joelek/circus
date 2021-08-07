@@ -37,17 +37,17 @@ Stream information and metadata is extracted from all supported files. The infor
 
 External image and metadata files may be used to supply additional information that cannot be stored within a specific container. The external metadata files must use one of the structures listed below.
 
-```json
+```
 {
 	"type": "episode",
 	"title": "Episode title",
 	"season": 1,
 	"episode": 1,
-	"year": 2000, // Optional
-	"summary": "Episode summary.", // Optional
+	"year"?: 2000,
+	"summary"?: "Episode summary.",
 	"show": {
 		"title": "Show title",
-		"summary": "Show summary.", // Optional
+		"summary"?: "Show summary.",
 		"genres": [
 			"Genre name"
 		],
@@ -58,12 +58,12 @@ External image and metadata files may be used to supply additional information t
 }
 ```
 
-```json
+```
 {
 	"type": "movie",
 	"title": "Movie title",
-	"year": 2000, // Optional
-	"summary": "Movie summary.", // Optional
+	"year"?: 2000,
+	"summary"?: "Movie summary.",
 	"genres": [
 		"Genre name"
 	],
@@ -73,7 +73,7 @@ External image and metadata files may be used to supply additional information t
 }
 ```
 
-```json
+```
 {
 	"type": "track",
 	"title": "Track title",
@@ -81,7 +81,7 @@ External image and metadata files may be used to supply additional information t
 	"track": 1,
 	"album": {
 		"title": "Album title",
-		"year": 2000, // Optional
+		"year"?: 2000,
 		"artists": [
 			"Artist name"
 		]
@@ -92,12 +92,12 @@ External image and metadata files may be used to supply additional information t
 }
 ```
 
-```json
+```
 {
 	"type": "album",
 	"title": "Album title",
 	"disc": 1,
-	"year": 2000, // Optional
+	"year"?: 2000,
 	"artists": [
 		"Artist name"
 	],
