@@ -92,6 +92,26 @@ External image and metadata files may be used to supply additional information t
 }
 ```
 
+```json
+{
+	"type": "album",
+	"title": "Album title",
+	"disc": 1,
+	"year": 2000, // Optional
+	"artists": [
+		"Artist name"
+	],
+	"tracks": [
+		{
+			"title": "Track title",
+			"artists": [
+				"Artist name"
+			]
+		}
+	]
+}
+```
+
 The media probing system associates metadata on a folder basis meaning that external image and metadata files associate with every media file contained in the same directory.
 
 ## Playback protocol

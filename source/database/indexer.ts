@@ -413,6 +413,66 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 				order: index
 			});
 		}
+	} else if (probes.schema.AlbumMetadata.is(metadata)) {
+		let album_id = makeId("album", metadata.title, metadata.year);
+		albums.insert({
+			album_id: album_id,
+			title: metadata.title,
+			year: metadata.year
+		});
+		if (is.present(metadata.year)) {
+			let year_id = makeId("year", metadata.year);
+			years.insert({
+				year_id: year_id,
+				year: metadata.year
+			});
+		}
+		for (let [index, artist] of metadata.artists.entries()) {
+			let artist_id = makeId("artist", artist);
+			artists.insert({
+				artist_id: artist_id,
+				name: artist
+			});
+			album_artists.insert({
+				album_id: album_id,
+				artist_id: artist_id,
+				order: index
+			});
+		}
+		let disc_id = makeId("disc", album_id, `${metadata.disc}`);
+		discs.insert({
+			disc_id: disc_id,
+			album_id: album_id,
+			number: metadata.disc
+		});
+		if (metadata.tracks.length === file_ids.length) {
+			for (let [index, file_id] of file_ids.entries()) {
+				let track = metadata.tracks[index];
+				let track_id = makeId("track", disc_id, `${index}`);
+				tracks.insert({
+					track_id: track_id,
+					disc_id: disc_id,
+					title: track.title,
+					number: index + 1
+				});
+				track_files.insert({
+					track_id: track_id,
+					file_id: file_id
+				});
+				for (let [index, artist] of track.artists.entries()) {
+					let artist_id = makeId("artist", artist);
+					artists.insert({
+						artist_id: artist_id,
+						name: artist
+					});
+					track_artists.insert({
+						track_id: track_id,
+						artist_id: artist_id,
+						order: index
+					});
+				}
+			}
+		}
 	}
 }
 
@@ -506,6 +566,7 @@ function indexFile(file: File): void {
 				});
 			}
 		}
+		// TODO: Only index actual media files and not the metadata files themselves.
 		indexMetadata(probe, file_id);
 	} catch (error) {
 		console.log(`Indexing failed for "${path.join("/")}"!`);

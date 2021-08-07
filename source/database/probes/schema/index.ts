@@ -63,10 +63,28 @@ export const TrackMetadata = autoguard.guards.Object.of({
 
 export type TrackMetadata = ReturnType<typeof TrackMetadata["as"]>;
 
+export const AlbumMetadata = autoguard.guards.Object.of({
+	"type": autoguard.guards.StringLiteral.of("album"),
+	"title": autoguard.guards.String,
+	"disc": autoguard.guards.Number,
+	"year": autoguard.guards.Union.of(
+		autoguard.guards.Number,
+		autoguard.guards.Undefined
+	),
+	"artists": autoguard.guards.Array.of(autoguard.guards.String),
+	"tracks": autoguard.guards.Array.of(autoguard.guards.Object.of({
+		"title": autoguard.guards.String,
+		"artists": autoguard.guards.Array.of(autoguard.guards.String)
+	}))
+});
+
+export type AlbumMetadata = ReturnType<typeof AlbumMetadata["as"]>;
+
 export const Metadata = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => EpisodeMetadata),
 	autoguard.guards.Reference.of(() => MovieMetadata),
-	autoguard.guards.Reference.of(() => TrackMetadata)
+	autoguard.guards.Reference.of(() => TrackMetadata),
+	autoguard.guards.Reference.of(() => AlbumMetadata)
 );
 
 export type Metadata = ReturnType<typeof Metadata["as"]>;
@@ -142,6 +160,7 @@ export namespace Autoguard {
 		"EpisodeMetadata": autoguard.guards.Reference.of(() => EpisodeMetadata),
 		"MovieMetadata": autoguard.guards.Reference.of(() => MovieMetadata),
 		"TrackMetadata": autoguard.guards.Reference.of(() => TrackMetadata),
+		"AlbumMetadata": autoguard.guards.Reference.of(() => AlbumMetadata),
 		"Metadata": autoguard.guards.Reference.of(() => Metadata),
 		"AudioResource": autoguard.guards.Reference.of(() => AudioResource),
 		"ImageResource": autoguard.guards.Reference.of(() => ImageResource),

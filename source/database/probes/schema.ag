@@ -35,7 +35,19 @@ guard TrackMetadata: {
 	"artists": string[]
 };
 
-guard Metadata: EpisodeMetadata | MovieMetadata | TrackMetadata;
+guard AlbumMetadata: {
+	"type": "album",
+	"title": string,
+	"disc": number,
+	"year"?: number,
+	"artists": string[],
+	"tracks": {
+		"title": string,
+		"artists": string[]
+	}[]
+};
+
+guard Metadata: EpisodeMetadata | MovieMetadata | TrackMetadata | AlbumMetadata;
 
 guard AudioResource: {
 	"type": "audio",
