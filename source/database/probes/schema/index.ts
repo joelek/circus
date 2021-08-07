@@ -24,7 +24,7 @@ export const EpisodeMetadata = autoguard.guards.Object.of({
 		"genres": autoguard.guards.Array.of(autoguard.guards.String),
 		"actors": autoguard.guards.Array.of(autoguard.guards.String)
 	}),
-	"license": autoguard.guards.Union.of(
+	"copyright": autoguard.guards.Union.of(
 		autoguard.guards.String,
 		autoguard.guards.Undefined
 	)
@@ -45,7 +45,7 @@ export const MovieMetadata = autoguard.guards.Object.of({
 	),
 	"genres": autoguard.guards.Array.of(autoguard.guards.String),
 	"actors": autoguard.guards.Array.of(autoguard.guards.String),
-	"license": autoguard.guards.Union.of(
+	"copyright": autoguard.guards.Union.of(
 		autoguard.guards.String,
 		autoguard.guards.Undefined
 	)
@@ -67,7 +67,7 @@ export const TrackMetadata = autoguard.guards.Object.of({
 		"artists": autoguard.guards.Array.of(autoguard.guards.String)
 	}),
 	"artists": autoguard.guards.Array.of(autoguard.guards.String),
-	"license": autoguard.guards.Union.of(
+	"copyright": autoguard.guards.Union.of(
 		autoguard.guards.String,
 		autoguard.guards.Undefined
 	)
@@ -88,7 +88,7 @@ export const AlbumMetadata = autoguard.guards.Object.of({
 		"title": autoguard.guards.String,
 		"artists": autoguard.guards.Array.of(autoguard.guards.String)
 	})),
-	"license": autoguard.guards.Union.of(
+	"copyright": autoguard.guards.Union.of(
 		autoguard.guards.String,
 		autoguard.guards.Undefined
 	)

@@ -11,7 +11,7 @@ guard EpisodeMetadata: {
 		"genres": string[],
 		"actors": string[]
 	},
-	"license"?: string
+	"copyright"?: string
 };
 
 guard MovieMetadata: {
@@ -21,7 +21,7 @@ guard MovieMetadata: {
 	"summary"?: string,
 	"genres": string[],
 	"actors": string[],
-	"license"?: string
+	"copyright"?: string
 };
 
 guard TrackMetadata: {
@@ -35,7 +35,7 @@ guard TrackMetadata: {
 		"artists": string[]
 	},
 	"artists": string[],
-	"license"?: string
+	"copyright"?: string
 };
 
 guard AlbumMetadata: {
@@ -48,7 +48,7 @@ guard AlbumMetadata: {
 		"title": string,
 		"artists": string[]
 	}[],
-	"license"?: string
+	"copyright"?: string
 };
 
 guard Metadata: EpisodeMetadata | MovieMetadata | TrackMetadata | AlbumMetadata;
