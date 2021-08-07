@@ -102,7 +102,8 @@ type Tags = {
 	artist?: string,
 	album_artist?: string,
 	disc_number?: number,
-	track_number?: number
+	track_number?: number,
+	copyright?: string
 };
 
 export function probe(fd: number): schema.Probe {
@@ -173,6 +174,10 @@ export function probe(fd: number): schema.Probe {
 		try {
 			let buffer = ilst.getChild("\u00A9cmt").getChild("data").readBody();
 			tags.comment = buffer.slice(8).toString();
+		} catch (error) {}
+		try {
+			let buffer = ilst.getChild("\u00A9cpy").getChild("data").readBody();
+			tags.copyright = buffer.slice(8).toString();
 		} catch (error) {}
 		try {
 			let buffer = ilst.getChild("\u00A9ART").getChild("data").readBody();

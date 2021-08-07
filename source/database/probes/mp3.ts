@@ -10,7 +10,8 @@ type Tags = {
 	track_number?: number,
 	disc_number?: number,
 	artist?: string,
-	album_artist?: string
+	album_artist?: string,
+	copyright?: string
 };
 
 function decodeSyncSafeInteger(buffer: Buffer): number {
@@ -41,6 +42,8 @@ function parseID3v2Header(reader: readers.Binary): Tags {
 			offset += 10 + length;
 			if (type === "\0\0\0\0") {
 				break;
+			} else if (type === "TCOP") {
+				tags.copyright = data.slice(1, -1).toString();
 			} else if (type === "TIT2") {
 				tags.title = data.slice(1, -1).toString();
 			} else if (type === "TALB") {
