@@ -10,7 +10,8 @@ guard EpisodeMetadata: {
 		"summary"?: string,
 		"genres": string[],
 		"actors": string[]
-	}
+	},
+	"license"?: string
 };
 
 guard MovieMetadata: {
@@ -19,7 +20,8 @@ guard MovieMetadata: {
 	"year"?: number,
 	"summary"?: string,
 	"genres": string[],
-	"actors": string[]
+	"actors": string[],
+	"license"?: string
 };
 
 guard TrackMetadata: {
@@ -32,7 +34,8 @@ guard TrackMetadata: {
 		"year"?: number,
 		"artists": string[]
 	},
-	"artists": string[]
+	"artists": string[],
+	"license"?: string
 };
 
 guard AlbumMetadata: {
@@ -44,7 +47,8 @@ guard AlbumMetadata: {
 	"tracks": {
 		"title": string,
 		"artists": string[]
-	}[]
+	}[],
+	"license"?: string
 };
 
 guard Metadata: EpisodeMetadata | MovieMetadata | TrackMetadata | AlbumMetadata;

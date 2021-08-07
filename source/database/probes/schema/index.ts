@@ -23,7 +23,11 @@ export const EpisodeMetadata = autoguard.guards.Object.of({
 		),
 		"genres": autoguard.guards.Array.of(autoguard.guards.String),
 		"actors": autoguard.guards.Array.of(autoguard.guards.String)
-	})
+	}),
+	"license": autoguard.guards.Union.of(
+		autoguard.guards.String,
+		autoguard.guards.Undefined
+	)
 });
 
 export type EpisodeMetadata = ReturnType<typeof EpisodeMetadata["as"]>;
@@ -40,7 +44,11 @@ export const MovieMetadata = autoguard.guards.Object.of({
 		autoguard.guards.Undefined
 	),
 	"genres": autoguard.guards.Array.of(autoguard.guards.String),
-	"actors": autoguard.guards.Array.of(autoguard.guards.String)
+	"actors": autoguard.guards.Array.of(autoguard.guards.String),
+	"license": autoguard.guards.Union.of(
+		autoguard.guards.String,
+		autoguard.guards.Undefined
+	)
 });
 
 export type MovieMetadata = ReturnType<typeof MovieMetadata["as"]>;
@@ -58,7 +66,11 @@ export const TrackMetadata = autoguard.guards.Object.of({
 		),
 		"artists": autoguard.guards.Array.of(autoguard.guards.String)
 	}),
-	"artists": autoguard.guards.Array.of(autoguard.guards.String)
+	"artists": autoguard.guards.Array.of(autoguard.guards.String),
+	"license": autoguard.guards.Union.of(
+		autoguard.guards.String,
+		autoguard.guards.Undefined
+	)
 });
 
 export type TrackMetadata = ReturnType<typeof TrackMetadata["as"]>;
@@ -75,7 +87,11 @@ export const AlbumMetadata = autoguard.guards.Object.of({
 	"tracks": autoguard.guards.Array.of(autoguard.guards.Object.of({
 		"title": autoguard.guards.String,
 		"artists": autoguard.guards.Array.of(autoguard.guards.String)
-	}))
+	})),
+	"license": autoguard.guards.Union.of(
+		autoguard.guards.String,
+		autoguard.guards.Undefined
+	)
 });
 
 export type AlbumMetadata = ReturnType<typeof AlbumMetadata["as"]>;
