@@ -16,7 +16,8 @@ let config: schema.Config = {
 	http_port: 80,
 	https_port: 443,
 	media_path: [ ".", "private", "media" ],
-	use_demo_mode: false
+	use_demo_mode: false,
+	use_registration_keys: true
 };
 
 try {
@@ -40,6 +41,9 @@ try {
 		}
 		if (autoguard.Boolean.is(json.use_demo_mode)) {
 			config.use_demo_mode = json.use_demo_mode;
+		}
+		if (autoguard.Boolean.is(json.use_registration_keys)) {
+			config.use_registration_keys = json.use_registration_keys;
 		}
 	}
 } catch (error) {}

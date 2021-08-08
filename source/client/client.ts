@@ -1513,7 +1513,7 @@ let repeat_password = new ObservableClass("");
 let display_name = new ObservableClass("");
 let registration_key = new ObservableClass("");
 let loginErrors = new ArrayObservable(new Array<string>());
-let canRegister = computed((username, password, repeat_password, display_name, registration_key) => {
+let canRegister = computed((username, password, repeat_password, display_name) => {
 	if (username === "") {
 		return false;
 	}
@@ -1526,14 +1526,11 @@ let canRegister = computed((username, password, repeat_password, display_name, r
 	if (display_name === "") {
 		return false;
 	}
-	if (registration_key === "") {
-		return false;
-	}
 	if (password !== repeat_password) {
 		return false;
 	}
 	return true;
-}, username, password, repeat_password, display_name, registration_key);
+}, username, password, repeat_password, display_name);
 async function doLogin(): Promise<void> {
 	if (canLogin.getState()) {
 		loginErrors.update([]);
@@ -3287,7 +3284,7 @@ function navigate(uri: string, use_cache: boolean = false): void {
 					xml.text("Not logged in"))
 				)
 				.add(renderTextParagraph(
-					xml.text("Please login using your credentials or register a new user using a registration key. Registration keys can be obtained from the circus manager and are consumed upon successful registration."))
+					xml.text("Please login using your credentials or register a new user with the credentials desired. Registration keys can when requested be obtained from the circus manager and are consumed upon successful registration."))
 				)
 			)
 			.add(xml.element("button")

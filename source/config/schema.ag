@@ -4,5 +4,6 @@ guard Config: {
 	"http_port": number,
 	"https_port": number,
 	"media_path": string[],
-	"use_demo_mode": boolean
+	"use_demo_mode": boolean,
+	"use_registration_keys": boolean
 };

@@ -49,13 +49,15 @@ export function createUser(request: schema.messages.RegisterRequest): schema.mes
 	if (database.getUsersFromUsername.lookup(username).collect().length > 0) {
 		errors.push(`The requested username is not available.`);
 	}
-	try {
-		let key = database.keys.lookup(key_id);
-		if (is.present(key.user_id)) {
-			errors.push(`The registration key has already been used.`);
+	if (config.use_registration_keys) {
+		try {
+			let key = database.keys.lookup(key_id);
+			if (is.present(key.user_id)) {
+				errors.push(`The registration key has already been used.`);
+			}
+		} catch (error) {
+			errors.push(`The registration key is not valid.`);
 		}
-	} catch (error) {
-		errors.push(`The registration key is not valid.`);
 	}
 	if (Buffer.from(username).length >= 256) {
 		errors.push(`The username is too long!`);
@@ -75,11 +77,13 @@ export function createUser(request: schema.messages.RegisterRequest): schema.mes
 		name,
 		password: passwords.generate(password)
 	});
-	let key = database.keys.lookup(key_id);
-	database.keys.update({
-		...key,
-		user_id
-	});
+	if (config.use_registration_keys) {
+		let key = database.keys.lookup(key_id);
+		database.keys.update({
+			...key,
+			user_id
+		});
+	}
 	let token = auth.createToken(username, password);
 	return {
 		token

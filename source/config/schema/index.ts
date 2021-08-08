@@ -8,7 +8,8 @@ export const Config = autoguard.guards.Object.of({
 	"http_port": autoguard.guards.Number,
 	"https_port": autoguard.guards.Number,
 	"media_path": autoguard.guards.Array.of(autoguard.guards.String),
-	"use_demo_mode": autoguard.guards.Boolean
+	"use_demo_mode": autoguard.guards.Boolean,
+	"use_registration_keys": autoguard.guards.Boolean
 });
 
 export type Config = ReturnType<typeof Config["as"]>;
