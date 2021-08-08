@@ -9,9 +9,9 @@ export function formatSize(b: number, options?: Partial<{ format: Intl.NumberFor
 	} else if (gb > 1) {
 		return `${gb.toFixed(2)}GB`;
 	} else if (mb > 1) {
-		return `${gb.toFixed(2)}MB`;
+		return `${mb.toFixed(2)}MB`;
 	} else if (kb > 1) {
-		return `${mb.toFixed(2)}kB`;
+		return `${kb.toFixed(2)}kB`;
 	} else {
 		return `${format.format(b)}B`;
 	}
