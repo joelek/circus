@@ -838,7 +838,7 @@ style.innerText = `
 
 	.login-modal {
 		display: grid;
-		gap: 64px;
+		gap: 48px;
 	}
 
 	.login-modal__form {
@@ -886,7 +886,7 @@ style.innerText = `
 
 	.device-selector {
 		display: grid;
-		gap: 64px;
+		gap: 48px;
 	}
 
 	.device-selector__devices {
@@ -2326,7 +2326,7 @@ let updateviewforuri = (uri: string): void => {
 					let payload = await response.payload();
 					let movies = payload.movies;
 					mount.appendChild(xml.element("div.content")
-						.set("style", "display: grid; gap: 64px;")
+						.set("style", "display: grid; gap: 48px;")
 						.add(renderTextHeader(xml.text(actor.name)))
 						.add(xml.element("div")
 							.set("style", "display: grid; gap: 24px;")
