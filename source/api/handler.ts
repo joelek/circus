@@ -238,7 +238,8 @@ export function lookupEpisode(episode_id: string, user_id: string, season?: sche
 		summary: config.use_demo_mode ? "Episode summary." : record.summary,
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media,
-		subtitles: subtitles
+		subtitles: subtitles,
+		copyright: record.copyright
 	};
 };
 
@@ -310,7 +311,8 @@ export function lookupMovie(movie_id: string, user_id: string): schema.objects.M
 			.collect(),
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media,
-		subtitles: subtitles
+		subtitles: subtitles,
+		copyright: record.copyright
 	};
 };
 
@@ -456,6 +458,7 @@ export function lookupTrackBase(track_id: string, user_id: string, disc?: schema
 
 export function lookupTrack(track_id: string, user_id: string, disc?: schema.objects.DiscBase): schema.objects.Track {
 	let track = lookupTrackBase(track_id, user_id, disc);
+	let record = database.tracks.lookup(track_id);
 	let files = database.getFilesFromTrack.lookup(track_id)
 		.map((record) => {
 			try {
@@ -479,7 +482,8 @@ export function lookupTrack(track_id: string, user_id: string, disc?: schema.obj
 			.map((record) => lookupArtistBase(record.artist_id, user_id))
 			.collect(),
 		last_stream_date: streams.pop()?.timestamp_ms,
-		media: media
+		media: media,
+		copyright: record.copyright
 	};
 };
 

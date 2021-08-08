@@ -92,7 +92,11 @@ export const Track = autoguard.guards.Intersection.of(
 			autoguard.guards.Number,
 			autoguard.guards.Undefined
 		),
-		"media": autoguard.guards.Reference.of(() => AudioFile)
+		"media": autoguard.guards.Reference.of(() => AudioFile),
+		"copyright": autoguard.guards.Union.of(
+			autoguard.guards.String,
+			autoguard.guards.Undefined
+		)
 	})
 );
 
@@ -187,7 +191,11 @@ export const Movie = autoguard.guards.Intersection.of(
 			autoguard.guards.Undefined
 		),
 		"media": autoguard.guards.Reference.of(() => VideoFile),
-		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile))
+		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile)),
+		"copyright": autoguard.guards.Union.of(
+			autoguard.guards.String,
+			autoguard.guards.Undefined
+		)
 	})
 );
 
@@ -258,7 +266,11 @@ export const Episode = autoguard.guards.Intersection.of(
 			autoguard.guards.Undefined
 		),
 		"media": autoguard.guards.Reference.of(() => VideoFile),
-		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile))
+		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile)),
+		"copyright": autoguard.guards.Union.of(
+			autoguard.guards.String,
+			autoguard.guards.Undefined
+		)
 	})
 );
 

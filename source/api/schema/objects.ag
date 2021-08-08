@@ -46,7 +46,8 @@ guard TrackBase: {
 guard Track: TrackBase & {
 	"artists": ArtistBase[],
 	"last_stream_date"?: number,
-	"media": ../../database/schema/AudioFile
+	"media": ../../database/schema/AudioFile,
+	"copyright"?: string
 };
 
 guard UserBase: {
@@ -97,7 +98,8 @@ guard Movie: MovieBase & {
 	"actors": Actor[],
 	"last_stream_date"?: number,
 	"media": ../../database/schema/VideoFile,
-	"subtitles": ../../database/schema/SubtitleFile[]
+	"subtitles": ../../database/schema/SubtitleFile[],
+	"copyright"?: string
 };
 
 guard ShowBase: {
@@ -135,7 +137,8 @@ guard Episode: EpisodeBase & {
 	"summary"?: string,
 	"last_stream_date"?: number,
 	"media": ../../database/schema/VideoFile,
-	"subtitles": ../../database/schema/SubtitleFile[]
+	"subtitles": ../../database/schema/SubtitleFile[],
+	"copyright"?: string
 };
 
 guard SubtitleBase: {
