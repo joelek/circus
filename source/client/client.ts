@@ -3326,7 +3326,7 @@ function navigate(uri: string, use_cache: boolean = false): void {
 					xml.text("Not logged in"))
 				)
 				.add(renderTextParagraph(
-					xml.text("Please login using your credentials or register a new user with the credentials desired. Registration keys can when requested be obtained from the circus manager and are consumed upon successful registration."))
+					xml.text("Please login using your credentials or register a new user with your user information. The server operator, a.k.a. the circus manager, might require that you provide a valid registration key in order to register. Registration keys can be obtained from the circus manager and are consumed upon successful registration."))
 				)
 			)
 			.add(xml.element("div")
