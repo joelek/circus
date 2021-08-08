@@ -46,7 +46,8 @@ guard AlbumMetadata: {
 	"artists": string[],
 	"tracks": {
 		"title": string,
-		"artists": string[]
+		"artists": string[],
+		"copyright"?: string
 	}[],
 	"copyright"?: string
 };

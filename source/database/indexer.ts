@@ -457,7 +457,7 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 					disc_id: disc_id,
 					title: track.title,
 					number: index + 1,
-					copyright: metadata.copyright
+					copyright: track.copyright ?? metadata.copyright
 				});
 				track_files.insert({
 					track_id: track_id,

@@ -86,7 +86,11 @@ export const AlbumMetadata = autoguard.guards.Object.of({
 	"artists": autoguard.guards.Array.of(autoguard.guards.String),
 	"tracks": autoguard.guards.Array.of(autoguard.guards.Object.of({
 		"title": autoguard.guards.String,
-		"artists": autoguard.guards.Array.of(autoguard.guards.String)
+		"artists": autoguard.guards.Array.of(autoguard.guards.String),
+		"copyright": autoguard.guards.Union.of(
+			autoguard.guards.String,
+			autoguard.guards.Undefined
+		)
 	})),
 	"copyright": autoguard.guards.Union.of(
 		autoguard.guards.String,

@@ -109,7 +109,8 @@ External image and metadata files may be used to supply additional information t
 			"title": "Track title",
 			"artists": [
 				"Artist name"
-			]
+			],
+			"copyright"?: string
 		}
 	],
 	"copyright"?: string
