@@ -1277,7 +1277,7 @@ const showVideo = new ObservableClass(false);
 	player.localPlayback.addObserver(computer);
 }
 
-const showModal = new ObservableClass(undefined as "context" | "devices" | "login" | "page" | undefined);
+const showModal = new ObservableClass(undefined as "context" | "devices" | "login" | "register" | "page" | undefined);
 
 showContextMenu.addObserver((showContextMenu) => {
 	if (showContextMenu) {
@@ -1659,6 +1659,55 @@ let modals = xml.element("div.modal-container")
 							.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
 						)
 					)
+				)
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 16px;")
+					.bind("data-hide", loginErrors.compute((loginErrors) => loginErrors.length === 0))
+					.repeat(loginErrors, (loginError) => renderTextParagraph(xml.text(loginError)))
+				)
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 16px;")
+					.add(xml.element("button")
+						.bind2("data-enabled", computed((canLogin) => "" + canLogin, canLogin))
+						.add(xml.text("Login"))
+						.on("click", async () => {
+							await doLogin();
+						})
+					)
+				)
+			)
+		)
+	)
+	.add(xml.element("div.scroll-container")
+		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "register"))
+		.add(xml.element("div.content.content--narrow")
+			.add(xml.element("div.login-modal")
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 16px;")
+					.add(xml.element("div")
+						.set("style", "position: relative;")
+						.add(xml.element("input.login-modal__username")
+							.bind2("value", username)
+							.set("type", "text")
+							.set("spellcheck", "false")
+							.set("placeholder", "Username...")
+						)
+						.add(Icon.makePerson()
+							.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+						)
+					)
+					.add(xml.element("div")
+						.set("style", "position: relative;")
+						.add(xml.element("input.login-modal__password")
+							.bind2("value", password)
+							.set("type", "password")
+							.set("spellcheck", "false")
+							.set("placeholder", "Password...")
+						)
+						.add(Icon.makePadlock()
+							.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+						)
+					)
 					.add(xml.element("div")
 						.set("style", "position: relative;")
 						.add(xml.element("input.login-modal__password")
@@ -1714,13 +1763,6 @@ let modals = xml.element("div.modal-container")
 						.add(xml.text("Register"))
 						.on("click", async () => {
 							await doRegister();
-						})
-					)
-					.add(xml.element("button")
-						.bind2("data-enabled", computed((canLogin) => "" + canLogin, canLogin))
-						.add(xml.text("Login"))
-						.on("click", async () => {
-							await doLogin();
 						})
 					)
 				)
@@ -3287,11 +3329,20 @@ function navigate(uri: string, use_cache: boolean = false): void {
 					xml.text("Please login using your credentials or register a new user with the credentials desired. Registration keys can when requested be obtained from the circus manager and are consumed upon successful registration."))
 				)
 			)
-			.add(xml.element("button")
-				.add(xml.text("Login or register"))
-				.on("click", async () => {
-					showModal.updateState("login");
-				})
+			.add(xml.element("div")
+				.set("style", "display: grid; gap: 16px;")
+				.add(xml.element("button")
+					.add(xml.text("Login"))
+					.on("click", async () => {
+						showModal.updateState("login");
+					})
+				)
+				.add(xml.element("button")
+					.add(xml.text("Register"))
+					.on("click", async () => {
+						showModal.updateState("register");
+					})
+				)
 			)
 			.render()
 		);
