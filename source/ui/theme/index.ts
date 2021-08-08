@@ -6,4 +6,5 @@ export const BACKGROUND_4 = "rgb(63, 63, 63)";
 export const BACKGROUND_ACCENT = "rgb(223, 79, 127)";
 export const TEXT_0 = "rgb(255, 255, 255)";
 export const TEXT_1 = "rgb(159, 159, 159)";
+export const TEXT_2 = "rgb(95, 95, 95)";
 export const TEXT_ACCENT = "rgb(255, 255, 255)";
