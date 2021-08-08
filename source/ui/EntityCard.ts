@@ -247,7 +247,18 @@ export class EntityCardFactory {
 			is.present(album.year) ? `${album.year}` : undefined,
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		return this.make(link, image, titles, subtitles, tags, undefined, undefined, options);
+		let copyrights = new Array<string>();
+		for (let disc of album.discs) {
+			for (let track of disc.tracks) {
+				let copyright = track.copyright;
+				if (is.present(copyright)) {
+					copyrights.push(copyright);
+				}
+			}
+		}
+		copyrights = Array.from(new Set<string>(copyrights));
+		let footer = copyrights.length > 1 ? "See individual tracks for copyright information." : copyrights.length === 1 ? copyrights[0] : undefined;
+		return this.make(link, image, titles, subtitles, tags, undefined, footer, options);
 	}
 
 	forArtist(artist: api.Artist, options: Options = {}): xnode.XElement {
