@@ -9,8 +9,8 @@ Progressive web app and system for streaming audio and video content.
 ## Device support
 
 * Devices with a modern web browser
-* Devices implementing the Cast protocol
-* Devices implementing the AirPlay (v1) protocol
+* Devices visible to the server implementing the Cast protocol
+* Devices visible to the server implementing the AirPlay (v1) protocol
 
 ## Media support
 
@@ -122,6 +122,8 @@ The media probing system associates metadata on a folder basis meaning that exte
 ## Playback protocol
 
 Circus features a custom playback protocol for playback and synchronization between devices. The protocol is simplistically designed and built using websocket technology.
+
+This allows using one device for playback while using another device for controlling the playback.
 
 ## Sponsorship
 
