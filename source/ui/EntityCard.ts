@@ -102,8 +102,9 @@ const CSS = `
 	.entity-card__footer {
 		color: ${theme.TEXT_2};
 		font-size: 12px;
-		line-height: 1.25;
-		word-break: break-word;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 `;
 
