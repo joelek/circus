@@ -55,7 +55,7 @@ External image and metadata files may be used to supply additional information t
 			"Actor name"
 		]
 	},
-	"copyright"?: string
+	"copyright"?: "Copyright information"
 }
 ```
 
@@ -71,7 +71,7 @@ External image and metadata files may be used to supply additional information t
 	"actors": [
 		"Actor name"
 	],
-	"copyright"?: string
+	"copyright"?: "Copyright information"
 }
 ```
 
@@ -91,7 +91,7 @@ External image and metadata files may be used to supply additional information t
 	"artists": [
 		"Artist name"
 	],
-	"copyright"?: string
+	"copyright"?: "Copyright information"
 }
 ```
 
@@ -110,10 +110,10 @@ External image and metadata files may be used to supply additional information t
 			"artists": [
 				"Artist name"
 			],
-			"copyright"?: string
+			"copyright"?: "Copyright information"
 		}
 	],
-	"copyright"?: string
+	"copyright"?: "Copyright information"
 }
 ```
 
