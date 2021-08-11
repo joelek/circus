@@ -175,7 +175,6 @@ Ports, paths and other settings can be configured through altering the config fi
 
 ## Roadmap
 
-* Make chromecast and airplay use ports from configuration.
 * Structure code using subprojects.
 * Clear player state when the user logs out.
 * Store create and update timestamps for entities.
@@ -198,5 +197,4 @@ Ports, paths and other settings can be configured through altering the config fi
 * Add filter to entity pages.
 * Change line heights to prevent the truncation of capital letters with umlauts.
 * Support downloading of images or copying of image urls.
-* Stop sending tokens for every request.
 * Index keyframes and create movie and episode subpage with list.
