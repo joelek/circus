@@ -54,8 +54,8 @@ type Question = {
 	kind: number
 };
 
-async function parseQuestion(packet: Buffer, offset: number): Promise<Question & { offset: number }> {
-	let name = await parseName(packet, offset);
+function parseQuestion(packet: Buffer, offset: number): Question & { offset: number } {
+	let name = parseName(packet, offset);
 	offset = name.offset;
 	let type = packet.readUInt16BE(offset);
 	offset += 2;
@@ -169,7 +169,7 @@ type Packet = {
 	additionals: Array<Answer>
 };
 
-async function parsePacket(buffer: Buffer): Promise<Packet> {
+function parsePacket(buffer: Buffer): Packet {
 	let offset = 0;
 	let header = buffer.slice(offset, offset + 12);
 	offset += 12;
@@ -181,25 +181,25 @@ async function parsePacket(buffer: Buffer): Promise<Packet> {
 	let arcount = header.readUInt16BE(10);
 	let questions = new Array<Question>();
 	for (let i = 0; i < qdcount; i++) {
-		let result = await parseQuestion(buffer, offset);
+		let result = parseQuestion(buffer, offset);
 		questions.push(result);
 		offset = result.offset;
 	}
 	let answers = new Array<Answer>();
 	for (let i = 0; i < ancount; i++) {
-		let result = await parseAnswer(buffer, offset);
+		let result = parseAnswer(buffer, offset);
 		answers.push(result);
 		offset = result.data_offset + result.data_length;
 	}
 	let authorities = new Array<Answer>();
 	for (let i = 0; i < nscount; i++) {
-		let result = await parseAnswer(buffer, offset);
+		let result = parseAnswer(buffer, offset);
 		authorities.push(result);
 		offset = result.data_offset + result.data_length;
 	}
 	let additionals = new Array<Answer>();
 	for (let i = 0; i < arcount; i++) {
-		let result = await parseAnswer(buffer, offset);
+		let result = parseAnswer(buffer, offset);
 		additionals.push(result);
 		offset = result.data_offset + result.data_length;
 	}
@@ -276,13 +276,12 @@ socket.on("listening", () => {
 	socket.addMembership(MDNS_ADDRESS, "0.0.0.0");
 });
 
-socket.on("message", async (buffer) => {
+socket.on("message", (buffer) => {
 	try {
-		let packet = await parsePacket(buffer);
+		let packet = parsePacket(buffer);
 		notifyObservers(packet);
 	} catch (error) {
 		console.log(`Expected a valid DNS packet!`);
-		console.log(error);
 	}
 });
 
