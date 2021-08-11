@@ -1,183 +1,229 @@
-route POST:/auth/ <= <{ "X-Circus-Username": string, "X-Circus-Password": string }> => <{ "X-Circus-Token": string }>;
+route POST:/auth/
+	<= <{ "X-Circus-Username": string, "X-Circus-Password": string }>
+	=> <{ "X-Circus-Token": string }>;
 
-route POST:/users/ <= ./messages/RegisterRequest => ./messages/RegisterResponse | ./messages/ErrorMessage;
+route POST:/users/
+	<= ./messages/RegisterRequest
+	=> ./messages/RegisterResponse | ./messages/ErrorMessage;
 
-route GET:/<query:string> ? <{ token: string, offset?: number, limit?: number, cues?: boolean }> => {
-	entities: ./objects/Entity[]
-};
+route GET:/<query:string> ? <{ token: string, offset?: number, limit?: number, cues?: boolean }>
+	=> {
+		entities: ./objects/Entity[]
+	};
 
-route GET:/actors/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
-	actors: ./objects/Actor[]
-};
+route GET:/actors/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		actors: ./objects/Actor[]
+	};
 
-route GET:/actors/<actor_id:string>/ ? <{ token: string }> => {
-	actor: ./objects/Actor
-};
+route GET:/actors/<actor_id:string>/ ? <{ token: string }>
+	=> {
+		actor: ./objects/Actor
+	};
 
-route GET:/actors/<actor_id:string>/movies/ ? <{ token: string, offset?: number, limit?: number }> => {
-	movies: ./objects/Movie[]
-};
+route GET:/actors/<actor_id:string>/movies/ ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		movies: ./objects/Movie[]
+	};
 
-route GET:/actors/<actor_id:string>/shows/ ? <{ token: string, offset?: number, limit?: number }> => {
-	shows: ./objects/Show[]
-};
+route GET:/actors/<actor_id:string>/shows/ ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		shows: ./objects/Show[]
+	};
 
-route GET:/albums/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
-	albums: ./objects/Album[]
-};
+route GET:/albums/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		albums: ./objects/Album[]
+	};
 
-route getNewAlbums(): GET:/albums/new/ ? <{ token: plain, offset?: number, limit?: number }> => {
-	albums: ./objects/Album[]
-};
+route getNewAlbums(): GET:/albums/new/ ? <{ token: plain, offset?: number, limit?: number }>
+	=> {
+		albums: ./objects/Album[]
+	};
 
-route GET:/albums/<album_id:string>/ ? <{ token: string }> => {
-	album: ./objects/Album
-};
+route GET:/albums/<album_id:string>/ ? <{ token: string }>
+	=> {
+		album: ./objects/Album
+	};
 
-route GET:/artists/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
-	artists: ./objects/Artist[]
-};
+route GET:/artists/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		artists: ./objects/Artist[]
+	};
 
-route GET:/artists/<artist_id:string>/ ? <{ token: string }> => {
-	artist: ./objects/Artist,
-	tracks: ./objects/Track[],
-	appearances: ./objects/Album[]
-};
+route GET:/artists/<artist_id:string>/ ? <{ token: string }>
+	=> {
+		artist: ./objects/Artist,
+		tracks: ./objects/Track[],
+		appearances: ./objects/Album[]
+	};
 
-route GET:/discs/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
-	discs: ./objects/Disc[]
-};
+route GET:/discs/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		discs: ./objects/Disc[]
+	};
 
-route GET:/discs/<disc_id:string>/ ? <{ token: string }> => {
-	disc: ./objects/Disc,
-	last?: ./objects/Disc,
-	next?: ./objects/Disc
-};
+route GET:/discs/<disc_id:string>/ ? <{ token: string }>
+	=> {
+		disc: ./objects/Disc,
+		last?: ./objects/Disc,
+		next?: ./objects/Disc
+	};
 
-route GET:/episodes/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
-	episodes: ./objects/Episode[]
-};
+route GET:/episodes/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		episodes: ./objects/Episode[]
+	};
 
-route GET:/episodes/<episode_id:string>/ ? <{ token: string }> => {
-	episode: ./objects/Episode,
-	last?: ./objects/Episode,
-	next?: ./objects/Episode
-};
+route GET:/episodes/<episode_id:string>/ ? <{ token: string }>
+	=> {
+		episode: ./objects/Episode,
+		last?: ./objects/Episode,
+		next?: ./objects/Episode
+	};
 
-route GET:/genres/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
-	genres: ./objects/Genre[]
-};
+route GET:/genres/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		genres: ./objects/Genre[]
+	};
 
-route GET:/genres/<genre_id:string>/ ? <{ token: string }> => {
-	genre: ./objects/Genre
-};
+route GET:/genres/<genre_id:string>/ ? <{ token: string }>
+	=> {
+		genre: ./objects/Genre
+	};
 
-route GET:/genres/<genre_id:string>/movies/ ? <{ token: string, offset?: number, limit?: number }> => {
-	movies: ./objects/Movie[]
-};
+route GET:/genres/<genre_id:string>/movies/ ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		movies: ./objects/Movie[]
+	};
 
-route GET:/genres/<genre_id:string>/shows/ ? <{ token: string, offset?: number, limit?: number }> => {
-	shows: ./objects/Show[]
-};
+route GET:/genres/<genre_id:string>/shows/ ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		shows: ./objects/Show[]
+	};
 
-route GET:/movies/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
-	movies: ./objects/Movie[]
-};
+route GET:/movies/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		movies: ./objects/Movie[]
+	};
 
-route getNewMovies(): GET:/movies/new/ ? <{ token: plain, offset?: number, limit?: number }> => {
-	movies: ./objects/Movie[]
-};
+route getNewMovies(): GET:/movies/new/ ? <{ token: plain, offset?: number, limit?: number }>
+	=> {
+		movies: ./objects/Movie[]
+	};
 
-route GET:/movies/<movie_id:string>/ ? <{ token: string }> => {
-	movie: ./objects/Movie
-};
+route GET:/movies/<movie_id:string>/ ? <{ token: string }>
+	=> {
+		movie: ./objects/Movie
+	};
 
-route GET:/movies/<movie_id:string>/suggestions/ ? <{ token: string, offset?: number, limit?: number }> => {
-	movies: ./objects/Movie[]
-};
+route GET:/movies/<movie_id:string>/suggestions/ ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		movies: ./objects/Movie[]
+	};
 
-route GET:/playlists/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
-	playlists: ./objects/Playlist[]
-};
+route GET:/playlists/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		playlists: ./objects/Playlist[]
+	};
 
-route GET:/playlists/<playlist_id:string>/ ? <{ token: string }> => {
-	playlist: ./objects/Playlist
-};
+route GET:/playlists/<playlist_id:string>/ ? <{ token: string }>
+	=> {
+		playlist: ./objects/Playlist
+	};
 
-route GET:/seasons/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
-	seasons: ./objects/Season[]
-};
+route GET:/seasons/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		seasons: ./objects/Season[]
+	};
 
-route GET:/seasons/<season_id:string>/ ? <{ token: string }> => {
-	season: ./objects/Season,
-	last?: ./objects/Season,
-	next?: ./objects/Season
-};
+route GET:/seasons/<season_id:string>/ ? <{ token: string }>
+	=> {
+		season: ./objects/Season,
+		last?: ./objects/Season,
+		next?: ./objects/Season
+	};
 
-route GET:/shows/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
-	shows: ./objects/Show[]
-};
+route GET:/shows/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		shows: ./objects/Show[]
+	};
 
-route GET:/shows/<show_id:string>/ ? <{ token: string }> => {
-	show: ./objects/Show
-};
+route GET:/shows/<show_id:string>/ ? <{ token: string }>
+	=> {
+		show: ./objects/Show
+	};
 
-route GET:/tracks/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
-	tracks: ./objects/Track[]
-};
+route GET:/tracks/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		tracks: ./objects/Track[]
+	};
 
-route GET:/tracks/<track_id:string>/ ? <{ token: string }> => {
-	track: ./objects/Track,
-	last?: ./objects/Track,
-	next?: ./objects/Track
-};
+route GET:/tracks/<track_id:string>/ ? <{ token: string }>
+	=> {
+		track: ./objects/Track,
+		last?: ./objects/Track,
+		next?: ./objects/Track
+	};
 
-route GET:/tracks/<track_id:string>/playlists/ ? <{ token: string, offset?: number, limit?: number }> => {
-	playlists: ./objects/Playlist[]
-};
+route GET:/tracks/<track_id:string>/playlists/ ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		playlists: ./objects/Playlist[]
+	};
 
-route GET:/users/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
-	users: ./objects/User[]
-};
+route GET:/users/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		users: ./objects/User[]
+	};
 
-route GET:/users/<user_id:string>/ ? <{ token: string }> => {
-	user: ./objects/User
-};
+route GET:/users/<user_id:string>/ ? <{ token: string }>
+	=> {
+		user: ./objects/User
+	};
 
-route GET:/users/<user_id:string>/albums/ ? <{ token: string, offset?: number, limit?: number }> => {
-	albums: ./objects/Album[]
-};
+route GET:/users/<user_id:string>/albums/ ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		albums: ./objects/Album[]
+	};
 
-route GET:/users/<user_id:string>/playlists/ ? <{ token: string, offset?: number, limit?: number }> => {
-	playlists: ./objects/Playlist[]
-};
+route GET:/users/<user_id:string>/playlists/ ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		playlists: ./objects/Playlist[]
+	};
 
-route GET:/users/<user_id:string>/shows/ ? <{ token: string, offset?: number, limit?: number }> => {
-	shows: ./objects/Show[]
-};
+route GET:/users/<user_id:string>/shows/ ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		shows: ./objects/Show[]
+	};
 
-route GET:/years/<query:string> ? <{ token: string, offset?: number, limit?: number }> => {
-	years: ./objects/Year[]
-};
+route GET:/years/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		years: ./objects/Year[]
+	};
 
-route GET:/years/<year_id:string>/ ? <{ token: string }> => {
-	year: ./objects/Year
-};
+route GET:/years/<year_id:string>/ ? <{ token: string }>
+	=> {
+		year: ./objects/Year
+	};
 
-route GET:/years/<year_id:string>/albums/ ? <{ token: string, offset?: number, limit?: number }> => {
-	albums: ./objects/Album[]
-};
+route GET:/years/<year_id:string>/albums/ ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		albums: ./objects/Album[]
+	};
 
-route GET:/years/<year_id:string>/movies/ ? <{ token: string, offset?: number, limit?: number }> => {
-	movies: ./objects/Movie[]
-};
+route GET:/years/<year_id:string>/movies/ ? <{ token: string, offset?: number, limit?: number }>
+	=> {
+		movies: ./objects/Movie[]
+	};
 
-route GET:/files/<file_id:string>/ ? <{ token: string }> => binary;
+route GET:/files/<file_id:string>/ ? <{ token: string }>
+	=> binary;
 
-route GET:/statistics/ ? <{ token: string }> => {
-	statistics: {
-		title: string,
-		value: number,
-		unit?: "BYTES" | "MILLISECONDS"
-	}[]
-};
+route GET:/statistics/ ? <{ token: string }>
+	=> {
+		statistics: {
+			title: string,
+			value: number,
+			unit?: "BYTES" | "MILLISECONDS"
+		}[]
+	};
