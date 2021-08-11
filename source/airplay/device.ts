@@ -26,7 +26,7 @@ type DeviceEventMap = {
 };
 
 export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
-	constructor(host: string, wss: boolean, media_server_host: string, device_name: string, device_type: string) {
+	constructor(host: string, websocket_host: string, media_server_host: string, device_name: string, device_type: string) {
 		super();
 		let correlation_id = makeCorrelationID();
 		let outbound = new http.OutboundSocket({ host: host, port: PORT });
@@ -59,7 +59,7 @@ export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
 			inbound.addObserver("close", () => {
 				this.route("close", {});
 			});
-			let url = `${wss ? "wss:" : "ws:"}//127.0.0.1/sockets/context/?protocol=airplay&name=${encodeURIComponent(device_name)}&type=${encodeURIComponent(device_type)}`;
+			let url = `${websocket_host}/sockets/context/?protocol=airplay&name=${encodeURIComponent(device_name)}&type=${encodeURIComponent(device_type)}`;
 			let context = new player.ContextClient(url, (url) => new sockets.WebSocketClient(url));
 			observers.computed(async (currentLocalEntry, token) => {
 				if (is.present(currentLocalEntry) && is.present(token)) {

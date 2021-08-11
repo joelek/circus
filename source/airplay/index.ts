@@ -41,7 +41,7 @@ function isProtocolSupported(service_info: Array<string>): boolean {
 	return true;
 }
 
-export function observe(wss: boolean, media_server_host: string): void {
+export function observe(websocket_host: string, media_server_host: string): void {
 	mdns.observe("_airplay._tcp.local", async (service_device) => {
 		try {
 			let { hostname, service_info } = { ...service_device };
@@ -49,7 +49,7 @@ export function observe(wss: boolean, media_server_host: string): void {
 			if (is.absent(device) && isProtocolSupported(service_info ?? [])) {
 				let device_name = getDeviceName(service_info ?? []);
 				let device_type = getDeviceType(service_info ?? []);
-				let device = new Device(hostname, wss, media_server_host, device_name, device_type);
+				let device = new Device(hostname, websocket_host, media_server_host, device_name, device_type);
 				devices.set(hostname, device);
 				device.addObserver("close", function onclose() {
 					device.removeObserver("close", onclose);

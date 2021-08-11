@@ -122,7 +122,7 @@ function getDeviceType(service_info: Array<string>): string {
 
 const connections = new Map<string, libnet.Socket>();
 
-export function observe(wss: boolean, media_server_host: string): void {
+export function observe(websocket_host: string, media_server_host: string): void {
 	mdns.observe("_googlecast._tcp.local", async (service_device) => {
 		try {
 			let { hostname, service_info } = { ...service_device };
@@ -138,7 +138,7 @@ export function observe(wss: boolean, media_server_host: string): void {
 					console.log(`Connected to Cast device at ${hostname}.`);
 					let deviceName = getDeviceName(service_info ?? []);
 					let deviceType = getDeviceType(service_info ?? []);
-					new ChromecastPlayer(socket, wss, media_server_host, deviceName, deviceType);
+					new ChromecastPlayer(socket, websocket_host, media_server_host, deviceName, deviceType);
 				});
 				socket.on("close", () => {
 					console.log(`Disconnected from Cast device at ${hostname}.`);
@@ -398,7 +398,7 @@ class ChromecastPlayer {
 		}, 5000);
 	}
 
-	constructor(socket: libnet.Socket, wss: boolean, media_server_host: string, device_name: string, device_type: string) {
+	constructor(socket: libnet.Socket, websocket_host: string, media_server_host: string, device_name: string, device_type: string) {
 		let messageHandler = new MessageHandler(socket, (message) => {
 			let namespace = message.namespace;
 			if (namespace === ConnectionHandler.NAMESPACE) {
@@ -416,7 +416,7 @@ class ChromecastPlayer {
 		this.connectionHandler = new ConnectionHandler(messageHandler);
 		this.mediaHandler = new MediaHandler(messageHandler);
 		this.receiverHandler = new ReceiverHandler(messageHandler);
-		let url = `${wss ? "wss:" : "ws:"}//127.0.0.1/sockets/context/?protocol=cast&name=${encodeURIComponent(device_name)}&type=${encodeURIComponent(device_type)}`;
+		let url = `${websocket_host}/sockets/context/?protocol=cast&name=${encodeURIComponent(device_name)}&type=${encodeURIComponent(device_type)}`;
 		this.context = new libcontext.ContextClient(url, (url) => new sockets.WebSocketClient(url));
 		this.timer = undefined;
 		socket.on("close", () => {

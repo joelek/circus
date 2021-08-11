@@ -207,11 +207,13 @@ if (full_chain && certificate_key) {
 		console.log(`https://${hostname}:${config.https_port}`);
 	});
 	https_server.keepAliveTimeout = 60 * 1000;
-	airplay.observe(true, media_server_host);
-	chromecasts.observe(true, media_server_host);
+	let websocket_host = `wss://${hostname}:${config.https_port}`;
+	airplay.observe(websocket_host, media_server_host);
+	chromecasts.observe(websocket_host, media_server_host);
 } else {
-	airplay.observe(false, media_server_host);
-	chromecasts.observe(false, media_server_host);
+	let websocket_host = `ws://${hostname}:${config.http_port}`;
+	airplay.observe(websocket_host, media_server_host);
+	chromecasts.observe(websocket_host, media_server_host);
 }
 
 for (let key of indexer.getKeysFromUser.lookup(undefined)) {
