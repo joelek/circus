@@ -1,4 +1,5 @@
 import * as libdgram from "dgram";
+import * as libos from "os";
 import * as is from "../is";
 
 const MDNS_ADDRESS = "224.0.0.251";
@@ -269,14 +270,59 @@ function notifyObservers(packet: Packet): void {
 	}
 };
 
+function getNetworkInterfaces(): Array<libos.NetworkInterfaceInfo> {
+	let networkInterfaces = libos.networkInterfaces();
+	return Object.values(networkInterfaces)
+		.filter(is.present)
+		.flat()
+		.filter((networkInterface) => {
+			return !networkInterface.internal;
+		});
+}
+
 const socket = libdgram.createSocket({ type: "udp4", reuseAddr: true });
+const networkInterfaces = getNetworkInterfaces()
+	.filter((networkInterface) => {
+		return networkInterface.family === "IPv4";
+	});
 
 socket.on("listening", () => {
 	socket.setMulticastLoopback(false);
-	socket.addMembership(MDNS_ADDRESS, "0.0.0.0");
+	for (let networkInterface of networkInterfaces) {
+		socket.addMembership(MDNS_ADDRESS, networkInterface.address);
+	}
 });
 
-socket.on("message", (buffer) => {
+function isAddressLocal(string: string): boolean {
+	let remotes = string.split(".")
+		.map((part) => {
+			return Number.parseInt(part, 10);
+		});
+	outer: for (let networkInterface of networkInterfaces) {
+		let locals = networkInterface.address.split(".")
+			.map((part) => {
+				return Number.parseInt(part, 10);
+			});
+		let masks = networkInterface.netmask.split(".")
+			.map((part) => {
+				return Number.parseInt(part, 10);
+			});
+		inner: for (let [index, mask] of masks.entries()) {
+			if ((remotes[index] & mask) !== (locals[index] & mask)) {
+				continue outer;
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+socket.on("message", (buffer, rinfo) => {
+	let address = rinfo.address;
+	if (!isAddressLocal(address)) {
+		console.log(`Unexpected DNS packet from ${address}!`);
+		return;
+	}
 	try {
 		let packet = parsePacket(buffer);
 		notifyObservers(packet);
