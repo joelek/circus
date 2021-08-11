@@ -191,7 +191,7 @@ let certificate_key = read(config.certificate_key_path.join("/"));
 
 // TODO: Use hostname from certificate.
 let hostname = getLocalIp();
-let media_server_host = `http://${hostname}`;
+let media_server_host = `http://${hostname}:${config.http_port}`;
 let http_server = libhttp.createServer({}, requestHandler);
 http_server.listen(config.http_port, () => {
 	console.log(`http://${hostname}:${config.http_port}`);
