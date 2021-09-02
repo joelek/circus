@@ -2,7 +2,7 @@
 	"bin": {},
 	"dependencies": {},
 	"devDependencies": {
-		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^5",
+		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^5.8.0",
 		"@joelek/ts-bundle": "github:joelek/ts-bundle#semver:^0",
 		"@joelek/ts-sockets": "github:joelek/ts-sockets#semver:^2",
 		"@joelek/ts-stdlib": "github:joelek/ts-stdlib#semver:^1",
