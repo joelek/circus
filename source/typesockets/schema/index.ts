@@ -2,16 +2,19 @@
 
 import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 
-export const Envelope = autoguard.guards.Object.of({
+export const Envelope: autoguard.serialization.MessageGuard<Envelope> = autoguard.guards.Object.of({
 	"type": autoguard.guards.String,
-	"data": autoguard.guards.Any,
-	"id": autoguard.guards.Union.of(
-		autoguard.guards.String,
-		autoguard.guards.Undefined
-	)
+	"data": autoguard.guards.Any
+}, {
+	"id": autoguard.guards.String
 });
 
-export type Envelope = ReturnType<typeof Envelope["as"]>;
+export type Envelope = autoguard.guards.Object<{
+	"type": autoguard.guards.String,
+	"data": autoguard.guards.Any
+}, {
+	"id": autoguard.guards.String
+}>;
 
 export namespace Autoguard {
 	export const Guards = {

@@ -27,7 +27,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
 			headers["x-circus-token"] = autoguard.api.decodeHeaderValue(raw.headers, "x-circus-token", true);
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = raw.payload;
 			let guard = shared.Autoguard.Responses["POST:/auth/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -54,7 +54,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["POST:/users/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -84,7 +84,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -114,7 +114,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/actors/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -143,7 +143,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/actors/<actor_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -175,7 +175,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/actors/<actor_id>/movies/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -207,7 +207,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/actors/<actor_id>/shows/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -237,7 +237,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/albums/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -268,7 +268,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["getNewAlbums"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -297,7 +297,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/albums/<album_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -327,7 +327,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/artists/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -356,7 +356,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/artists/<artist_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -386,7 +386,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/discs/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -415,7 +415,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/discs/<disc_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -445,7 +445,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/episodes/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -474,7 +474,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/episodes/<episode_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -504,7 +504,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/genres/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -533,7 +533,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/genres/<genre_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -565,7 +565,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/genres/<genre_id>/movies/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -597,7 +597,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/genres/<genre_id>/shows/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -627,7 +627,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/movies/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -658,7 +658,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["getNewMovies"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -687,7 +687,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/movies/<movie_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -719,7 +719,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/movies/<movie_id>/suggestions/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -749,7 +749,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/playlists/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -778,7 +778,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/playlists/<playlist_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -808,7 +808,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/seasons/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -837,7 +837,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/seasons/<season_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -867,7 +867,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/shows/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -896,7 +896,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/shows/<show_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -926,7 +926,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/tracks/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -955,7 +955,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/tracks/<track_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -987,7 +987,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/tracks/<track_id>/playlists/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -1017,7 +1017,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/users/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -1046,7 +1046,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/users/<user_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -1078,7 +1078,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/users/<user_id>/albums/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -1110,7 +1110,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/users/<user_id>/playlists/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -1142,7 +1142,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/users/<user_id>/shows/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -1172,7 +1172,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/years/<query>"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -1201,7 +1201,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/years/<year_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -1233,7 +1233,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/years/<year_id>/albums/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -1265,7 +1265,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/years/<year_id>/movies/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -1294,7 +1294,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = raw.payload;
 			let guard = shared.Autoguard.Responses["GET:/files/<file_id>/"];
 			let response = guard.as({ status, headers, payload }, "response");
@@ -1322,7 +1322,7 @@ export const makeClient = (clientOptions?: autoguard.api.MakeClientOptions): aut
 		{
 			let status = raw.status;
 			let headers: Record<string, autoguard.api.JSON> = {};
-			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers ?? {}, Object.keys(headers)) };
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = shared.Autoguard.Responses["GET:/statistics/"];
 			let response = guard.as({ status, headers, payload }, "response");

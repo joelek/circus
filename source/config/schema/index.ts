@@ -2,7 +2,7 @@
 
 import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 
-export const Config = autoguard.guards.Object.of({
+export const Config: autoguard.serialization.MessageGuard<Config> = autoguard.guards.Object.of({
 	"certificate_key_path": autoguard.guards.Array.of(autoguard.guards.String),
 	"certificate_path": autoguard.guards.Array.of(autoguard.guards.String),
 	"http_port": autoguard.guards.Number,
@@ -10,9 +10,17 @@ export const Config = autoguard.guards.Object.of({
 	"media_path": autoguard.guards.Array.of(autoguard.guards.String),
 	"use_demo_mode": autoguard.guards.Boolean,
 	"use_registration_keys": autoguard.guards.Boolean
-});
+}, {});
 
-export type Config = ReturnType<typeof Config["as"]>;
+export type Config = autoguard.guards.Object<{
+	"certificate_key_path": autoguard.guards.Array<autoguard.guards.String>,
+	"certificate_path": autoguard.guards.Array<autoguard.guards.String>,
+	"http_port": autoguard.guards.Number,
+	"https_port": autoguard.guards.Number,
+	"media_path": autoguard.guards.Array<autoguard.guards.String>,
+	"use_demo_mode": autoguard.guards.Boolean,
+	"use_registration_keys": autoguard.guards.Boolean
+}, {}>;
 
 export namespace Autoguard {
 	export const Guards = {

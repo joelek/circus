@@ -5,176 +5,215 @@ import { MediaInformation } from ".././objects";
 import { MediaStatus } from ".././objects";
 import { Volume } from ".././objects";
 
-export const LOAD = autoguard.guards.Object.of({
+export const LOAD: autoguard.serialization.MessageGuard<LOAD> = autoguard.guards.Object.of({
 	"requestId": autoguard.guards.Number,
 	"type": autoguard.guards.StringLiteral.of("LOAD"),
-	"media": autoguard.guards.Reference.of(() => MediaInformation),
-	"autoplay": autoguard.guards.Union.of(
-		autoguard.guards.Boolean,
-		autoguard.guards.Undefined
-	),
-	"currentTime": autoguard.guards.Union.of(
-		autoguard.guards.Number,
-		autoguard.guards.Undefined
-	),
-	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Record.of(autoguard.guards.Any),
-		autoguard.guards.Undefined
-	),
-	"activeTrackIds": autoguard.guards.Union.of(
-		autoguard.guards.Array.of(autoguard.guards.Number),
-		autoguard.guards.Undefined
-	)
+	"media": autoguard.guards.Reference.of(() => MediaInformation)
+}, {
+	"autoplay": autoguard.guards.Boolean,
+	"currentTime": autoguard.guards.Number,
+	"customData": autoguard.guards.Record.of(autoguard.guards.Any),
+	"activeTrackIds": autoguard.guards.Array.of(autoguard.guards.Number)
 });
 
-export type LOAD = ReturnType<typeof LOAD["as"]>;
+export type LOAD = autoguard.guards.Object<{
+	"requestId": autoguard.guards.Number,
+	"type": autoguard.guards.StringLiteral<"LOAD">,
+	"media": autoguard.guards.Reference<MediaInformation>
+}, {
+	"autoplay": autoguard.guards.Boolean,
+	"currentTime": autoguard.guards.Number,
+	"customData": autoguard.guards.Record<autoguard.guards.Any>,
+	"activeTrackIds": autoguard.guards.Array<autoguard.guards.Number>
+}>;
 
-export const PAUSE = autoguard.guards.Object.of({
+export const PAUSE: autoguard.serialization.MessageGuard<PAUSE> = autoguard.guards.Object.of({
 	"mediaSessionId": autoguard.guards.Number,
 	"requestId": autoguard.guards.Number,
-	"type": autoguard.guards.StringLiteral.of("PAUSE"),
-	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Record.of(autoguard.guards.Any),
-		autoguard.guards.Undefined
-	)
+	"type": autoguard.guards.StringLiteral.of("PAUSE")
+}, {
+	"customData": autoguard.guards.Record.of(autoguard.guards.Any)
 });
 
-export type PAUSE = ReturnType<typeof PAUSE["as"]>;
-
-export const SEEK = autoguard.guards.Object.of({
+export type PAUSE = autoguard.guards.Object<{
 	"mediaSessionId": autoguard.guards.Number,
 	"requestId": autoguard.guards.Number,
-	"type": autoguard.guards.StringLiteral.of("SEEK"),
+	"type": autoguard.guards.StringLiteral<"PAUSE">
+}, {
+	"customData": autoguard.guards.Record<autoguard.guards.Any>
+}>;
+
+export const SEEK: autoguard.serialization.MessageGuard<SEEK> = autoguard.guards.Object.of({
+	"mediaSessionId": autoguard.guards.Number,
+	"requestId": autoguard.guards.Number,
+	"type": autoguard.guards.StringLiteral.of("SEEK")
+}, {
 	"resumeState": autoguard.guards.Union.of(
-		autoguard.guards.Union.of(
-			autoguard.guards.StringLiteral.of("PLAYBACK_START"),
-			autoguard.guards.StringLiteral.of("PLAYBACK_PAUSE")
-		),
-		autoguard.guards.Undefined
+		autoguard.guards.StringLiteral.of("PLAYBACK_START"),
+		autoguard.guards.StringLiteral.of("PLAYBACK_PAUSE")
 	),
-	"currentTime": autoguard.guards.Union.of(
-		autoguard.guards.Number,
-		autoguard.guards.Undefined
-	),
-	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Record.of(autoguard.guards.Any),
-		autoguard.guards.Undefined
-	)
+	"currentTime": autoguard.guards.Number,
+	"customData": autoguard.guards.Record.of(autoguard.guards.Any)
 });
 
-export type SEEK = ReturnType<typeof SEEK["as"]>;
-
-export const STOP = autoguard.guards.Object.of({
+export type SEEK = autoguard.guards.Object<{
 	"mediaSessionId": autoguard.guards.Number,
 	"requestId": autoguard.guards.Number,
-	"type": autoguard.guards.StringLiteral.of("STOP"),
-	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Record.of(autoguard.guards.Any),
-		autoguard.guards.Undefined
-	)
-});
+	"type": autoguard.guards.StringLiteral<"SEEK">
+}, {
+	"resumeState": autoguard.guards.Union<[
+		autoguard.guards.StringLiteral<"PLAYBACK_START">,
+		autoguard.guards.StringLiteral<"PLAYBACK_PAUSE">
+	]>,
+	"currentTime": autoguard.guards.Number,
+	"customData": autoguard.guards.Record<autoguard.guards.Any>
+}>;
 
-export type STOP = ReturnType<typeof STOP["as"]>;
-
-export const PLAY = autoguard.guards.Object.of({
+export const STOP: autoguard.serialization.MessageGuard<STOP> = autoguard.guards.Object.of({
 	"mediaSessionId": autoguard.guards.Number,
 	"requestId": autoguard.guards.Number,
-	"type": autoguard.guards.StringLiteral.of("PLAY"),
-	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Record.of(autoguard.guards.Any),
-		autoguard.guards.Undefined
-	)
+	"type": autoguard.guards.StringLiteral.of("STOP")
+}, {
+	"customData": autoguard.guards.Record.of(autoguard.guards.Any)
 });
 
-export type PLAY = ReturnType<typeof PLAY["as"]>;
-
-export const GET_STATUS = autoguard.guards.Object.of({
-	"mediaSessionId": autoguard.guards.Union.of(
-		autoguard.guards.Number,
-		autoguard.guards.Undefined
-	),
+export type STOP = autoguard.guards.Object<{
+	"mediaSessionId": autoguard.guards.Number,
 	"requestId": autoguard.guards.Number,
-	"type": autoguard.guards.StringLiteral.of("GET_STATUS"),
-	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Record.of(autoguard.guards.Any),
-		autoguard.guards.Undefined
-	)
+	"type": autoguard.guards.StringLiteral<"STOP">
+}, {
+	"customData": autoguard.guards.Record<autoguard.guards.Any>
+}>;
+
+export const PLAY: autoguard.serialization.MessageGuard<PLAY> = autoguard.guards.Object.of({
+	"mediaSessionId": autoguard.guards.Number,
+	"requestId": autoguard.guards.Number,
+	"type": autoguard.guards.StringLiteral.of("PLAY")
+}, {
+	"customData": autoguard.guards.Record.of(autoguard.guards.Any)
 });
 
-export type GET_STATUS = ReturnType<typeof GET_STATUS["as"]>;
+export type PLAY = autoguard.guards.Object<{
+	"mediaSessionId": autoguard.guards.Number,
+	"requestId": autoguard.guards.Number,
+	"type": autoguard.guards.StringLiteral<"PLAY">
+}, {
+	"customData": autoguard.guards.Record<autoguard.guards.Any>
+}>;
 
-export const VOLUME = autoguard.guards.Object.of({
+export const GET_STATUS: autoguard.serialization.MessageGuard<GET_STATUS> = autoguard.guards.Object.of({
+	"requestId": autoguard.guards.Number,
+	"type": autoguard.guards.StringLiteral.of("GET_STATUS")
+}, {
+	"mediaSessionId": autoguard.guards.Number,
+	"customData": autoguard.guards.Record.of(autoguard.guards.Any)
+});
+
+export type GET_STATUS = autoguard.guards.Object<{
+	"requestId": autoguard.guards.Number,
+	"type": autoguard.guards.StringLiteral<"GET_STATUS">
+}, {
+	"mediaSessionId": autoguard.guards.Number,
+	"customData": autoguard.guards.Record<autoguard.guards.Any>
+}>;
+
+export const VOLUME: autoguard.serialization.MessageGuard<VOLUME> = autoguard.guards.Object.of({
 	"mediaSessionId": autoguard.guards.Number,
 	"requestId": autoguard.guards.Number,
 	"type": autoguard.guards.StringLiteral.of("VOLUME"),
-	"volume": autoguard.guards.Reference.of(() => Volume),
-	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Record.of(autoguard.guards.Any),
-		autoguard.guards.Undefined
-	)
+	"volume": autoguard.guards.Reference.of(() => Volume)
+}, {
+	"customData": autoguard.guards.Record.of(autoguard.guards.Any)
 });
 
-export type VOLUME = ReturnType<typeof VOLUME["as"]>;
-
-export const INVALID_PLAYER_STATE = autoguard.guards.Object.of({
+export type VOLUME = autoguard.guards.Object<{
+	"mediaSessionId": autoguard.guards.Number,
 	"requestId": autoguard.guards.Number,
-	"type": autoguard.guards.StringLiteral.of("INVALID_PLAYER_STATE"),
-	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Record.of(autoguard.guards.Any),
-		autoguard.guards.Undefined
-	)
-});
+	"type": autoguard.guards.StringLiteral<"VOLUME">,
+	"volume": autoguard.guards.Reference<Volume>
+}, {
+	"customData": autoguard.guards.Record<autoguard.guards.Any>
+}>;
 
-export type INVALID_PLAYER_STATE = ReturnType<typeof INVALID_PLAYER_STATE["as"]>;
-
-export const LOAD_FAILED = autoguard.guards.Object.of({
+export const INVALID_PLAYER_STATE: autoguard.serialization.MessageGuard<INVALID_PLAYER_STATE> = autoguard.guards.Object.of({
 	"requestId": autoguard.guards.Number,
-	"type": autoguard.guards.StringLiteral.of("LOAD_FAILED"),
-	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Record.of(autoguard.guards.Any),
-		autoguard.guards.Undefined
-	)
+	"type": autoguard.guards.StringLiteral.of("INVALID_PLAYER_STATE")
+}, {
+	"customData": autoguard.guards.Record.of(autoguard.guards.Any)
 });
 
-export type LOAD_FAILED = ReturnType<typeof LOAD_FAILED["as"]>;
-
-export const LOAD_CANCELLED = autoguard.guards.Object.of({
+export type INVALID_PLAYER_STATE = autoguard.guards.Object<{
 	"requestId": autoguard.guards.Number,
-	"type": autoguard.guards.StringLiteral.of("LOAD_CANCELLED"),
-	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Record.of(autoguard.guards.Any),
-		autoguard.guards.Undefined
-	)
+	"type": autoguard.guards.StringLiteral<"INVALID_PLAYER_STATE">
+}, {
+	"customData": autoguard.guards.Record<autoguard.guards.Any>
+}>;
+
+export const LOAD_FAILED: autoguard.serialization.MessageGuard<LOAD_FAILED> = autoguard.guards.Object.of({
+	"requestId": autoguard.guards.Number,
+	"type": autoguard.guards.StringLiteral.of("LOAD_FAILED")
+}, {
+	"customData": autoguard.guards.Record.of(autoguard.guards.Any)
 });
 
-export type LOAD_CANCELLED = ReturnType<typeof LOAD_CANCELLED["as"]>;
+export type LOAD_FAILED = autoguard.guards.Object<{
+	"requestId": autoguard.guards.Number,
+	"type": autoguard.guards.StringLiteral<"LOAD_FAILED">
+}, {
+	"customData": autoguard.guards.Record<autoguard.guards.Any>
+}>;
 
-export const INVALID_REQUEST = autoguard.guards.Object.of({
+export const LOAD_CANCELLED: autoguard.serialization.MessageGuard<LOAD_CANCELLED> = autoguard.guards.Object.of({
+	"requestId": autoguard.guards.Number,
+	"type": autoguard.guards.StringLiteral.of("LOAD_CANCELLED")
+}, {
+	"customData": autoguard.guards.Record.of(autoguard.guards.Any)
+});
+
+export type LOAD_CANCELLED = autoguard.guards.Object<{
+	"requestId": autoguard.guards.Number,
+	"type": autoguard.guards.StringLiteral<"LOAD_CANCELLED">
+}, {
+	"customData": autoguard.guards.Record<autoguard.guards.Any>
+}>;
+
+export const INVALID_REQUEST: autoguard.serialization.MessageGuard<INVALID_REQUEST> = autoguard.guards.Object.of({
 	"requestId": autoguard.guards.Number,
 	"type": autoguard.guards.StringLiteral.of("INVALID_REQUEST"),
 	"reason": autoguard.guards.Union.of(
 		autoguard.guards.StringLiteral.of("INVALID_COMMAND"),
 		autoguard.guards.StringLiteral.of("DUPLICATE_REQUESTID")
-	),
-	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Record.of(autoguard.guards.Any),
-		autoguard.guards.Undefined
 	)
+}, {
+	"customData": autoguard.guards.Record.of(autoguard.guards.Any)
 });
 
-export type INVALID_REQUEST = ReturnType<typeof INVALID_REQUEST["as"]>;
+export type INVALID_REQUEST = autoguard.guards.Object<{
+	"requestId": autoguard.guards.Number,
+	"type": autoguard.guards.StringLiteral<"INVALID_REQUEST">,
+	"reason": autoguard.guards.Union<[
+		autoguard.guards.StringLiteral<"INVALID_COMMAND">,
+		autoguard.guards.StringLiteral<"DUPLICATE_REQUESTID">
+	]>
+}, {
+	"customData": autoguard.guards.Record<autoguard.guards.Any>
+}>;
 
-export const MEDIA_STATUS = autoguard.guards.Object.of({
+export const MEDIA_STATUS: autoguard.serialization.MessageGuard<MEDIA_STATUS> = autoguard.guards.Object.of({
 	"requestId": autoguard.guards.Number,
 	"type": autoguard.guards.StringLiteral.of("MEDIA_STATUS"),
-	"status": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => MediaStatus)),
-	"customData": autoguard.guards.Union.of(
-		autoguard.guards.Record.of(autoguard.guards.Any),
-		autoguard.guards.Undefined
-	)
+	"status": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => MediaStatus))
+}, {
+	"customData": autoguard.guards.Record.of(autoguard.guards.Any)
 });
 
-export type MEDIA_STATUS = ReturnType<typeof MEDIA_STATUS["as"]>;
+export type MEDIA_STATUS = autoguard.guards.Object<{
+	"requestId": autoguard.guards.Number,
+	"type": autoguard.guards.StringLiteral<"MEDIA_STATUS">,
+	"status": autoguard.guards.Array<autoguard.guards.Reference<MediaStatus>>
+}, {
+	"customData": autoguard.guards.Record<autoguard.guards.Any>
+}>;
 
 export namespace Autoguard {
 	export const Guards = {

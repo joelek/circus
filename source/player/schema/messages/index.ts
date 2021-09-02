@@ -4,68 +4,69 @@ import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 import { Context } from ".././objects";
 import { Device } from ".././objects";
 
-export const SetContext = autoguard.guards.Object.of({
-	"context": autoguard.guards.Union.of(
-		autoguard.guards.Reference.of(() => Context),
-		autoguard.guards.Undefined
-	)
+export const SetContext: autoguard.serialization.MessageGuard<SetContext> = autoguard.guards.Object.of({}, {
+	"context": autoguard.guards.Reference.of(() => Context)
 });
 
-export type SetContext = ReturnType<typeof SetContext["as"]>;
+export type SetContext = autoguard.guards.Object<{}, {
+	"context": autoguard.guards.Reference<Context>
+}>;
 
-export const SetDevice = autoguard.guards.Object.of({
-	"device": autoguard.guards.Union.of(
-		autoguard.guards.Reference.of(() => Device),
-		autoguard.guards.Undefined
-	)
-});
-
-export type SetDevice = ReturnType<typeof SetDevice["as"]>;
-
-export const SetDevices = autoguard.guards.Object.of({
-	"devices": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Device))
-});
-
-export type SetDevices = ReturnType<typeof SetDevices["as"]>;
-
-export const SetIndex = autoguard.guards.Object.of({
-	"index": autoguard.guards.Union.of(
-		autoguard.guards.Number,
-		autoguard.guards.Undefined
-	)
-});
-
-export type SetIndex = ReturnType<typeof SetIndex["as"]>;
-
-export const SetLocalDevice = autoguard.guards.Object.of({
+export const SetDevice: autoguard.serialization.MessageGuard<SetDevice> = autoguard.guards.Object.of({}, {
 	"device": autoguard.guards.Reference.of(() => Device)
 });
 
-export type SetLocalDevice = ReturnType<typeof SetLocalDevice["as"]>;
+export type SetDevice = autoguard.guards.Object<{}, {
+	"device": autoguard.guards.Reference<Device>
+}>;
 
-export const SetPlayback = autoguard.guards.Object.of({
+export const SetDevices: autoguard.serialization.MessageGuard<SetDevices> = autoguard.guards.Object.of({
+	"devices": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Device))
+}, {});
+
+export type SetDevices = autoguard.guards.Object<{
+	"devices": autoguard.guards.Array<autoguard.guards.Reference<Device>>
+}, {}>;
+
+export const SetIndex: autoguard.serialization.MessageGuard<SetIndex> = autoguard.guards.Object.of({}, {
+	"index": autoguard.guards.Number
+});
+
+export type SetIndex = autoguard.guards.Object<{}, {
+	"index": autoguard.guards.Number
+}>;
+
+export const SetLocalDevice: autoguard.serialization.MessageGuard<SetLocalDevice> = autoguard.guards.Object.of({
+	"device": autoguard.guards.Reference.of(() => Device)
+}, {});
+
+export type SetLocalDevice = autoguard.guards.Object<{
+	"device": autoguard.guards.Reference<Device>
+}, {}>;
+
+export const SetPlayback: autoguard.serialization.MessageGuard<SetPlayback> = autoguard.guards.Object.of({
 	"playback": autoguard.guards.Boolean
+}, {});
+
+export type SetPlayback = autoguard.guards.Object<{
+	"playback": autoguard.guards.Boolean
+}, {}>;
+
+export const SetProgress: autoguard.serialization.MessageGuard<SetProgress> = autoguard.guards.Object.of({}, {
+	"progress": autoguard.guards.Number
 });
 
-export type SetPlayback = ReturnType<typeof SetPlayback["as"]>;
+export type SetProgress = autoguard.guards.Object<{}, {
+	"progress": autoguard.guards.Number
+}>;
 
-export const SetProgress = autoguard.guards.Object.of({
-	"progress": autoguard.guards.Union.of(
-		autoguard.guards.Number,
-		autoguard.guards.Undefined
-	)
+export const SetToken: autoguard.serialization.MessageGuard<SetToken> = autoguard.guards.Object.of({}, {
+	"token": autoguard.guards.String
 });
 
-export type SetProgress = ReturnType<typeof SetProgress["as"]>;
-
-export const SetToken = autoguard.guards.Object.of({
-	"token": autoguard.guards.Union.of(
-		autoguard.guards.String,
-		autoguard.guards.Undefined
-	)
-});
-
-export type SetToken = ReturnType<typeof SetToken["as"]>;
+export type SetToken = autoguard.guards.Object<{}, {
+	"token": autoguard.guards.String
+}>;
 
 export namespace Autoguard {
 	export const Guards = {

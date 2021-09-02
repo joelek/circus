@@ -4,158 +4,221 @@ import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 import { PlaylistBase } from "../../../api/schema/objects";
 import { PlaylistItemBase } from "../../../api/schema/objects";
 
-export const SetToken = autoguard.guards.Object.of({
-	"token": autoguard.guards.Union.of(
-		autoguard.guards.String,
-		autoguard.guards.Undefined
-	)
+export const SetToken: autoguard.serialization.MessageGuard<SetToken> = autoguard.guards.Object.of({}, {
+	"token": autoguard.guards.String
 });
 
-export type SetToken = ReturnType<typeof SetToken["as"]>;
+export type SetToken = autoguard.guards.Object<{}, {
+	"token": autoguard.guards.String
+}>;
 
-export const PermissionsRequest = autoguard.guards.Object.of({
+export const PermissionsRequest: autoguard.serialization.MessageGuard<PermissionsRequest> = autoguard.guards.Object.of({
 	"playlist": autoguard.guards.Object.of({
 		"playlist_id": autoguard.guards.String
-	})
-});
+	}, {})
+}, {});
 
-export type PermissionsRequest = ReturnType<typeof PermissionsRequest["as"]>;
+export type PermissionsRequest = autoguard.guards.Object<{
+	"playlist": autoguard.guards.Object<{
+		"playlist_id": autoguard.guards.String
+	}, {}>
+}, {}>;
 
-export const PermissionsResponse = autoguard.guards.Object.of({
+export const PermissionsResponse: autoguard.serialization.MessageGuard<PermissionsResponse> = autoguard.guards.Object.of({
 	"permissions": autoguard.guards.Union.of(
 		autoguard.guards.StringLiteral.of("read"),
 		autoguard.guards.StringLiteral.of("write")
 	)
-});
+}, {});
 
-export type PermissionsResponse = ReturnType<typeof PermissionsResponse["as"]>;
+export type PermissionsResponse = autoguard.guards.Object<{
+	"permissions": autoguard.guards.Union<[
+		autoguard.guards.StringLiteral<"read">,
+		autoguard.guards.StringLiteral<"write">
+	]>
+}, {}>;
 
-export const CreatePlaylistRequest = autoguard.guards.Object.of({
+export const CreatePlaylistRequest: autoguard.serialization.MessageGuard<CreatePlaylistRequest> = autoguard.guards.Object.of({
 	"playlist": autoguard.guards.Object.of({
 		"title": autoguard.guards.String,
 		"description": autoguard.guards.String
-	})
-});
+	}, {})
+}, {});
 
-export type CreatePlaylistRequest = ReturnType<typeof CreatePlaylistRequest["as"]>;
+export type CreatePlaylistRequest = autoguard.guards.Object<{
+	"playlist": autoguard.guards.Object<{
+		"title": autoguard.guards.String,
+		"description": autoguard.guards.String
+	}, {}>
+}, {}>;
 
-export const CreatePlaylistResponse = autoguard.guards.Object.of({
+export const CreatePlaylistResponse: autoguard.serialization.MessageGuard<CreatePlaylistResponse> = autoguard.guards.Object.of({
 	"errors": autoguard.guards.Array.of(autoguard.guards.String),
 	"playlist_id": autoguard.guards.String
-});
+}, {});
 
-export type CreatePlaylistResponse = ReturnType<typeof CreatePlaylistResponse["as"]>;
+export type CreatePlaylistResponse = autoguard.guards.Object<{
+	"errors": autoguard.guards.Array<autoguard.guards.String>,
+	"playlist_id": autoguard.guards.String
+}, {}>;
 
-export const CreatePlaylist = autoguard.guards.Object.of({
+export const CreatePlaylist: autoguard.serialization.MessageGuard<CreatePlaylist> = autoguard.guards.Object.of({
 	"playlist": autoguard.guards.Reference.of(() => PlaylistBase)
-});
+}, {});
 
-export type CreatePlaylist = ReturnType<typeof CreatePlaylist["as"]>;
+export type CreatePlaylist = autoguard.guards.Object<{
+	"playlist": autoguard.guards.Reference<PlaylistBase>
+}, {}>;
 
-export const DeletePlaylistRequest = autoguard.guards.Object.of({
+export const DeletePlaylistRequest: autoguard.serialization.MessageGuard<DeletePlaylistRequest> = autoguard.guards.Object.of({
 	"playlist": autoguard.guards.Object.of({
 		"playlist_id": autoguard.guards.String
-	})
-});
+	}, {})
+}, {});
 
-export type DeletePlaylistRequest = ReturnType<typeof DeletePlaylistRequest["as"]>;
+export type DeletePlaylistRequest = autoguard.guards.Object<{
+	"playlist": autoguard.guards.Object<{
+		"playlist_id": autoguard.guards.String
+	}, {}>
+}, {}>;
 
-export const DeletePlaylistResponse = autoguard.guards.Object.of({
+export const DeletePlaylistResponse: autoguard.serialization.MessageGuard<DeletePlaylistResponse> = autoguard.guards.Object.of({
 	"errors": autoguard.guards.Array.of(autoguard.guards.String)
-});
+}, {});
 
-export type DeletePlaylistResponse = ReturnType<typeof DeletePlaylistResponse["as"]>;
+export type DeletePlaylistResponse = autoguard.guards.Object<{
+	"errors": autoguard.guards.Array<autoguard.guards.String>
+}, {}>;
 
-export const DeletePlaylist = autoguard.guards.Object.of({
+export const DeletePlaylist: autoguard.serialization.MessageGuard<DeletePlaylist> = autoguard.guards.Object.of({
 	"playlist": autoguard.guards.Reference.of(() => PlaylistBase)
-});
+}, {});
 
-export type DeletePlaylist = ReturnType<typeof DeletePlaylist["as"]>;
+export type DeletePlaylist = autoguard.guards.Object<{
+	"playlist": autoguard.guards.Reference<PlaylistBase>
+}, {}>;
 
-export const UpdatePlaylistRequest = autoguard.guards.Object.of({
+export const UpdatePlaylistRequest: autoguard.serialization.MessageGuard<UpdatePlaylistRequest> = autoguard.guards.Object.of({
 	"playlist": autoguard.guards.Object.of({
 		"playlist_id": autoguard.guards.String,
 		"title": autoguard.guards.String,
 		"description": autoguard.guards.String
-	})
-});
+	}, {})
+}, {});
 
-export type UpdatePlaylistRequest = ReturnType<typeof UpdatePlaylistRequest["as"]>;
+export type UpdatePlaylistRequest = autoguard.guards.Object<{
+	"playlist": autoguard.guards.Object<{
+		"playlist_id": autoguard.guards.String,
+		"title": autoguard.guards.String,
+		"description": autoguard.guards.String
+	}, {}>
+}, {}>;
 
-export const UpdatePlaylistResponse = autoguard.guards.Object.of({
+export const UpdatePlaylistResponse: autoguard.serialization.MessageGuard<UpdatePlaylistResponse> = autoguard.guards.Object.of({
 	"errors": autoguard.guards.Array.of(autoguard.guards.String)
-});
+}, {});
 
-export type UpdatePlaylistResponse = ReturnType<typeof UpdatePlaylistResponse["as"]>;
+export type UpdatePlaylistResponse = autoguard.guards.Object<{
+	"errors": autoguard.guards.Array<autoguard.guards.String>
+}, {}>;
 
-export const UpdatePlaylist = autoguard.guards.Object.of({
+export const UpdatePlaylist: autoguard.serialization.MessageGuard<UpdatePlaylist> = autoguard.guards.Object.of({
 	"playlist": autoguard.guards.Reference.of(() => PlaylistBase)
-});
+}, {});
 
-export type UpdatePlaylist = ReturnType<typeof UpdatePlaylist["as"]>;
+export type UpdatePlaylist = autoguard.guards.Object<{
+	"playlist": autoguard.guards.Reference<PlaylistBase>
+}, {}>;
 
-export const CreatePlaylistItemRequest = autoguard.guards.Object.of({
+export const CreatePlaylistItemRequest: autoguard.serialization.MessageGuard<CreatePlaylistItemRequest> = autoguard.guards.Object.of({
 	"playlist_item": autoguard.guards.Object.of({
 		"playlist_id": autoguard.guards.String,
 		"track_id": autoguard.guards.String
-	})
-});
+	}, {})
+}, {});
 
-export type CreatePlaylistItemRequest = ReturnType<typeof CreatePlaylistItemRequest["as"]>;
+export type CreatePlaylistItemRequest = autoguard.guards.Object<{
+	"playlist_item": autoguard.guards.Object<{
+		"playlist_id": autoguard.guards.String,
+		"track_id": autoguard.guards.String
+	}, {}>
+}, {}>;
 
-export const CreatePlaylistItemResponse = autoguard.guards.Object.of({
+export const CreatePlaylistItemResponse: autoguard.serialization.MessageGuard<CreatePlaylistItemResponse> = autoguard.guards.Object.of({
 	"errors": autoguard.guards.Array.of(autoguard.guards.String),
 	"playlist_item_id": autoguard.guards.String
-});
+}, {});
 
-export type CreatePlaylistItemResponse = ReturnType<typeof CreatePlaylistItemResponse["as"]>;
+export type CreatePlaylistItemResponse = autoguard.guards.Object<{
+	"errors": autoguard.guards.Array<autoguard.guards.String>,
+	"playlist_item_id": autoguard.guards.String
+}, {}>;
 
-export const CreatePlaylistItem = autoguard.guards.Object.of({
+export const CreatePlaylistItem: autoguard.serialization.MessageGuard<CreatePlaylistItem> = autoguard.guards.Object.of({
 	"playlist_item": autoguard.guards.Reference.of(() => PlaylistItemBase)
-});
+}, {});
 
-export type CreatePlaylistItem = ReturnType<typeof CreatePlaylistItem["as"]>;
+export type CreatePlaylistItem = autoguard.guards.Object<{
+	"playlist_item": autoguard.guards.Reference<PlaylistItemBase>
+}, {}>;
 
-export const DeletePlaylistItemRequest = autoguard.guards.Object.of({
+export const DeletePlaylistItemRequest: autoguard.serialization.MessageGuard<DeletePlaylistItemRequest> = autoguard.guards.Object.of({
 	"playlist_item": autoguard.guards.Object.of({
 		"playlist_item_id": autoguard.guards.String
-	})
-});
+	}, {})
+}, {});
 
-export type DeletePlaylistItemRequest = ReturnType<typeof DeletePlaylistItemRequest["as"]>;
+export type DeletePlaylistItemRequest = autoguard.guards.Object<{
+	"playlist_item": autoguard.guards.Object<{
+		"playlist_item_id": autoguard.guards.String
+	}, {}>
+}, {}>;
 
-export const DeletePlaylistItemResponse = autoguard.guards.Object.of({
+export const DeletePlaylistItemResponse: autoguard.serialization.MessageGuard<DeletePlaylistItemResponse> = autoguard.guards.Object.of({
 	"errors": autoguard.guards.Array.of(autoguard.guards.String)
-});
+}, {});
 
-export type DeletePlaylistItemResponse = ReturnType<typeof DeletePlaylistItemResponse["as"]>;
+export type DeletePlaylistItemResponse = autoguard.guards.Object<{
+	"errors": autoguard.guards.Array<autoguard.guards.String>
+}, {}>;
 
-export const DeletePlaylistItem = autoguard.guards.Object.of({
+export const DeletePlaylistItem: autoguard.serialization.MessageGuard<DeletePlaylistItem> = autoguard.guards.Object.of({
 	"playlist_item": autoguard.guards.Reference.of(() => PlaylistItemBase)
-});
+}, {});
 
-export type DeletePlaylistItem = ReturnType<typeof DeletePlaylistItem["as"]>;
+export type DeletePlaylistItem = autoguard.guards.Object<{
+	"playlist_item": autoguard.guards.Reference<PlaylistItemBase>
+}, {}>;
 
-export const UpdatePlaylistItemRequest = autoguard.guards.Object.of({
+export const UpdatePlaylistItemRequest: autoguard.serialization.MessageGuard<UpdatePlaylistItemRequest> = autoguard.guards.Object.of({
 	"playlist_item": autoguard.guards.Object.of({
 		"playlist_item_id": autoguard.guards.String,
 		"number": autoguard.guards.Number
-	})
-});
+	}, {})
+}, {});
 
-export type UpdatePlaylistItemRequest = ReturnType<typeof UpdatePlaylistItemRequest["as"]>;
+export type UpdatePlaylistItemRequest = autoguard.guards.Object<{
+	"playlist_item": autoguard.guards.Object<{
+		"playlist_item_id": autoguard.guards.String,
+		"number": autoguard.guards.Number
+	}, {}>
+}, {}>;
 
-export const UpdatePlaylistItemResponse = autoguard.guards.Object.of({
+export const UpdatePlaylistItemResponse: autoguard.serialization.MessageGuard<UpdatePlaylistItemResponse> = autoguard.guards.Object.of({
 	"errors": autoguard.guards.Array.of(autoguard.guards.String)
-});
+}, {});
 
-export type UpdatePlaylistItemResponse = ReturnType<typeof UpdatePlaylistItemResponse["as"]>;
+export type UpdatePlaylistItemResponse = autoguard.guards.Object<{
+	"errors": autoguard.guards.Array<autoguard.guards.String>
+}, {}>;
 
-export const UpdatePlaylistItem = autoguard.guards.Object.of({
+export const UpdatePlaylistItem: autoguard.serialization.MessageGuard<UpdatePlaylistItem> = autoguard.guards.Object.of({
 	"playlist_item": autoguard.guards.Reference.of(() => PlaylistItemBase)
-});
+}, {});
 
-export type UpdatePlaylistItem = ReturnType<typeof UpdatePlaylistItem["as"]>;
+export type UpdatePlaylistItem = autoguard.guards.Object<{
+	"playlist_item": autoguard.guards.Reference<PlaylistItemBase>
+}, {}>;
 
 export namespace Autoguard {
 	export const Guards = {

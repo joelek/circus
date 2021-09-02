@@ -6,329 +6,461 @@ import { ImageFile } from "../../../database/schema";
 import { SubtitleFile } from "../../../database/schema";
 import { VideoFile } from "../../../database/schema";
 
-export const ActorBase = autoguard.guards.Object.of({
+export const ActorBase: autoguard.serialization.MessageGuard<ActorBase> = autoguard.guards.Object.of({
 	"actor_id": autoguard.guards.String,
 	"name": autoguard.guards.String
-});
+}, {});
 
-export type ActorBase = ReturnType<typeof ActorBase["as"]>;
+export type ActorBase = autoguard.guards.Object<{
+	"actor_id": autoguard.guards.String,
+	"name": autoguard.guards.String
+}, {}>;
 
-export const Actor = autoguard.guards.Intersection.of(
+export const Actor: autoguard.serialization.MessageGuard<Actor> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => ActorBase),
-	autoguard.guards.Object.of({})
+	autoguard.guards.Object.of({}, {})
 );
 
-export type Actor = ReturnType<typeof Actor["as"]>;
+export type Actor = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<ActorBase>,
+	autoguard.guards.Object<{}, {}>
+]>;
 
-export const ArtistBase = autoguard.guards.Object.of({
+export const ArtistBase: autoguard.serialization.MessageGuard<ArtistBase> = autoguard.guards.Object.of({
 	"artist_id": autoguard.guards.String,
 	"title": autoguard.guards.String
-});
+}, {});
 
-export type ArtistBase = ReturnType<typeof ArtistBase["as"]>;
+export type ArtistBase = autoguard.guards.Object<{
+	"artist_id": autoguard.guards.String,
+	"title": autoguard.guards.String
+}, {}>;
 
-export const Artist = autoguard.guards.Intersection.of(
+export const Artist: autoguard.serialization.MessageGuard<Artist> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => ArtistBase),
 	autoguard.guards.Object.of({
 		"albums": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Album))
-	})
+	}, {})
 );
 
-export type Artist = ReturnType<typeof Artist["as"]>;
+export type Artist = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<ArtistBase>,
+	autoguard.guards.Object<{
+		"albums": autoguard.guards.Array<autoguard.guards.Reference<Album>>
+	}, {}>
+]>;
 
-export const AlbumBase = autoguard.guards.Object.of({
+export const AlbumBase: autoguard.serialization.MessageGuard<AlbumBase> = autoguard.guards.Object.of({
 	"album_id": autoguard.guards.String,
 	"title": autoguard.guards.String,
 	"artwork": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ImageFile))
-});
+}, {});
 
-export type AlbumBase = ReturnType<typeof AlbumBase["as"]>;
+export type AlbumBase = autoguard.guards.Object<{
+	"album_id": autoguard.guards.String,
+	"title": autoguard.guards.String,
+	"artwork": autoguard.guards.Array<autoguard.guards.Reference<ImageFile>>
+}, {}>;
 
-export const Album = autoguard.guards.Intersection.of(
+export const Album: autoguard.serialization.MessageGuard<Album> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => AlbumBase),
 	autoguard.guards.Object.of({
 		"artists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ArtistBase)),
-		"discs": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Disc)),
-		"year": autoguard.guards.Union.of(
-			autoguard.guards.Number,
-			autoguard.guards.Undefined
-		)
+		"discs": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Disc))
+	}, {
+		"year": autoguard.guards.Number
 	})
 );
 
-export type Album = ReturnType<typeof Album["as"]>;
+export type Album = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<AlbumBase>,
+	autoguard.guards.Object<{
+		"artists": autoguard.guards.Array<autoguard.guards.Reference<ArtistBase>>,
+		"discs": autoguard.guards.Array<autoguard.guards.Reference<Disc>>
+	}, {
+		"year": autoguard.guards.Number
+	}>
+]>;
 
-export const DiscBase = autoguard.guards.Object.of({
+export const DiscBase: autoguard.serialization.MessageGuard<DiscBase> = autoguard.guards.Object.of({
 	"disc_id": autoguard.guards.String,
 	"album": autoguard.guards.Reference.of(() => AlbumBase),
 	"number": autoguard.guards.Number
-});
+}, {});
 
-export type DiscBase = ReturnType<typeof DiscBase["as"]>;
+export type DiscBase = autoguard.guards.Object<{
+	"disc_id": autoguard.guards.String,
+	"album": autoguard.guards.Reference<AlbumBase>,
+	"number": autoguard.guards.Number
+}, {}>;
 
-export const Disc = autoguard.guards.Intersection.of(
+export const Disc: autoguard.serialization.MessageGuard<Disc> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => DiscBase),
 	autoguard.guards.Object.of({
 		"tracks": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Track))
-	})
+	}, {})
 );
 
-export type Disc = ReturnType<typeof Disc["as"]>;
+export type Disc = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<DiscBase>,
+	autoguard.guards.Object<{
+		"tracks": autoguard.guards.Array<autoguard.guards.Reference<Track>>
+	}, {}>
+]>;
 
-export const TrackBase = autoguard.guards.Object.of({
+export const TrackBase: autoguard.serialization.MessageGuard<TrackBase> = autoguard.guards.Object.of({
 	"track_id": autoguard.guards.String,
 	"title": autoguard.guards.String,
 	"disc": autoguard.guards.Reference.of(() => DiscBase),
 	"number": autoguard.guards.Number
-});
+}, {});
 
-export type TrackBase = ReturnType<typeof TrackBase["as"]>;
+export type TrackBase = autoguard.guards.Object<{
+	"track_id": autoguard.guards.String,
+	"title": autoguard.guards.String,
+	"disc": autoguard.guards.Reference<DiscBase>,
+	"number": autoguard.guards.Number
+}, {}>;
 
-export const Track = autoguard.guards.Intersection.of(
+export const Track: autoguard.serialization.MessageGuard<Track> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => TrackBase),
 	autoguard.guards.Object.of({
 		"artists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ArtistBase)),
-		"last_stream_date": autoguard.guards.Union.of(
-			autoguard.guards.Number,
-			autoguard.guards.Undefined
-		),
-		"media": autoguard.guards.Reference.of(() => AudioFile),
-		"copyright": autoguard.guards.Union.of(
-			autoguard.guards.String,
-			autoguard.guards.Undefined
-		)
+		"media": autoguard.guards.Reference.of(() => AudioFile)
+	}, {
+		"last_stream_date": autoguard.guards.Number,
+		"copyright": autoguard.guards.String
 	})
 );
 
-export type Track = ReturnType<typeof Track["as"]>;
+export type Track = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<TrackBase>,
+	autoguard.guards.Object<{
+		"artists": autoguard.guards.Array<autoguard.guards.Reference<ArtistBase>>,
+		"media": autoguard.guards.Reference<AudioFile>
+	}, {
+		"last_stream_date": autoguard.guards.Number,
+		"copyright": autoguard.guards.String
+	}>
+]>;
 
-export const UserBase = autoguard.guards.Object.of({
+export const UserBase: autoguard.serialization.MessageGuard<UserBase> = autoguard.guards.Object.of({
 	"user_id": autoguard.guards.String,
 	"name": autoguard.guards.String,
 	"username": autoguard.guards.String
-});
+}, {});
 
-export type UserBase = ReturnType<typeof UserBase["as"]>;
+export type UserBase = autoguard.guards.Object<{
+	"user_id": autoguard.guards.String,
+	"name": autoguard.guards.String,
+	"username": autoguard.guards.String
+}, {}>;
 
-export const User = autoguard.guards.Intersection.of(
+export const User: autoguard.serialization.MessageGuard<User> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => UserBase),
-	autoguard.guards.Object.of({})
+	autoguard.guards.Object.of({}, {})
 );
 
-export type User = ReturnType<typeof User["as"]>;
+export type User = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<UserBase>,
+	autoguard.guards.Object<{}, {}>
+]>;
 
-export const PlaylistBase = autoguard.guards.Object.of({
+export const PlaylistBase: autoguard.serialization.MessageGuard<PlaylistBase> = autoguard.guards.Object.of({
 	"playlist_id": autoguard.guards.String,
 	"title": autoguard.guards.String,
 	"description": autoguard.guards.String,
 	"user": autoguard.guards.Reference.of(() => UserBase)
-});
+}, {});
 
-export type PlaylistBase = ReturnType<typeof PlaylistBase["as"]>;
+export type PlaylistBase = autoguard.guards.Object<{
+	"playlist_id": autoguard.guards.String,
+	"title": autoguard.guards.String,
+	"description": autoguard.guards.String,
+	"user": autoguard.guards.Reference<UserBase>
+}, {}>;
 
-export const Playlist = autoguard.guards.Intersection.of(
+export const Playlist: autoguard.serialization.MessageGuard<Playlist> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => PlaylistBase),
 	autoguard.guards.Object.of({
 		"items": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => PlaylistItem))
-	})
+	}, {})
 );
 
-export type Playlist = ReturnType<typeof Playlist["as"]>;
+export type Playlist = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<PlaylistBase>,
+	autoguard.guards.Object<{
+		"items": autoguard.guards.Array<autoguard.guards.Reference<PlaylistItem>>
+	}, {}>
+]>;
 
-export const PlaylistItemBase = autoguard.guards.Object.of({
+export const PlaylistItemBase: autoguard.serialization.MessageGuard<PlaylistItemBase> = autoguard.guards.Object.of({
 	"playlist_item_id": autoguard.guards.String,
 	"number": autoguard.guards.Number,
 	"playlist": autoguard.guards.Reference.of(() => PlaylistBase),
 	"track": autoguard.guards.Reference.of(() => Track)
-});
+}, {});
 
-export type PlaylistItemBase = ReturnType<typeof PlaylistItemBase["as"]>;
+export type PlaylistItemBase = autoguard.guards.Object<{
+	"playlist_item_id": autoguard.guards.String,
+	"number": autoguard.guards.Number,
+	"playlist": autoguard.guards.Reference<PlaylistBase>,
+	"track": autoguard.guards.Reference<Track>
+}, {}>;
 
-export const PlaylistItem = autoguard.guards.Intersection.of(
+export const PlaylistItem: autoguard.serialization.MessageGuard<PlaylistItem> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => PlaylistItemBase),
-	autoguard.guards.Object.of({})
+	autoguard.guards.Object.of({}, {})
 );
 
-export type PlaylistItem = ReturnType<typeof PlaylistItem["as"]>;
+export type PlaylistItem = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<PlaylistItemBase>,
+	autoguard.guards.Object<{}, {}>
+]>;
 
-export const GenreBase = autoguard.guards.Object.of({
+export const GenreBase: autoguard.serialization.MessageGuard<GenreBase> = autoguard.guards.Object.of({
 	"genre_id": autoguard.guards.String,
 	"title": autoguard.guards.String
-});
+}, {});
 
-export type GenreBase = ReturnType<typeof GenreBase["as"]>;
+export type GenreBase = autoguard.guards.Object<{
+	"genre_id": autoguard.guards.String,
+	"title": autoguard.guards.String
+}, {}>;
 
-export const Genre = autoguard.guards.Intersection.of(
+export const Genre: autoguard.serialization.MessageGuard<Genre> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => GenreBase),
-	autoguard.guards.Object.of({})
+	autoguard.guards.Object.of({}, {})
 );
 
-export type Genre = ReturnType<typeof Genre["as"]>;
+export type Genre = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<GenreBase>,
+	autoguard.guards.Object<{}, {}>
+]>;
 
-export const MovieBase = autoguard.guards.Object.of({
+export const MovieBase: autoguard.serialization.MessageGuard<MovieBase> = autoguard.guards.Object.of({
 	"movie_id": autoguard.guards.String,
 	"title": autoguard.guards.String,
 	"artwork": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ImageFile))
-});
+}, {});
 
-export type MovieBase = ReturnType<typeof MovieBase["as"]>;
+export type MovieBase = autoguard.guards.Object<{
+	"movie_id": autoguard.guards.String,
+	"title": autoguard.guards.String,
+	"artwork": autoguard.guards.Array<autoguard.guards.Reference<ImageFile>>
+}, {}>;
 
-export const Movie = autoguard.guards.Intersection.of(
+export const Movie: autoguard.serialization.MessageGuard<Movie> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => MovieBase),
 	autoguard.guards.Object.of({
-		"year": autoguard.guards.Union.of(
-			autoguard.guards.Number,
-			autoguard.guards.Undefined
-		),
-		"summary": autoguard.guards.Union.of(
-			autoguard.guards.String,
-			autoguard.guards.Undefined
-		),
 		"genres": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Genre)),
 		"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor)),
-		"last_stream_date": autoguard.guards.Union.of(
-			autoguard.guards.Number,
-			autoguard.guards.Undefined
-		),
 		"media": autoguard.guards.Reference.of(() => VideoFile),
-		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile)),
-		"copyright": autoguard.guards.Union.of(
-			autoguard.guards.String,
-			autoguard.guards.Undefined
-		)
+		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile))
+	}, {
+		"year": autoguard.guards.Number,
+		"summary": autoguard.guards.String,
+		"last_stream_date": autoguard.guards.Number,
+		"copyright": autoguard.guards.String
 	})
 );
 
-export type Movie = ReturnType<typeof Movie["as"]>;
+export type Movie = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<MovieBase>,
+	autoguard.guards.Object<{
+		"genres": autoguard.guards.Array<autoguard.guards.Reference<Genre>>,
+		"actors": autoguard.guards.Array<autoguard.guards.Reference<Actor>>,
+		"media": autoguard.guards.Reference<VideoFile>,
+		"subtitles": autoguard.guards.Array<autoguard.guards.Reference<SubtitleFile>>
+	}, {
+		"year": autoguard.guards.Number,
+		"summary": autoguard.guards.String,
+		"last_stream_date": autoguard.guards.Number,
+		"copyright": autoguard.guards.String
+	}>
+]>;
 
-export const ShowBase = autoguard.guards.Object.of({
+export const ShowBase: autoguard.serialization.MessageGuard<ShowBase> = autoguard.guards.Object.of({
 	"show_id": autoguard.guards.String,
 	"title": autoguard.guards.String,
 	"artwork": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ImageFile))
-});
+}, {});
 
-export type ShowBase = ReturnType<typeof ShowBase["as"]>;
+export type ShowBase = autoguard.guards.Object<{
+	"show_id": autoguard.guards.String,
+	"title": autoguard.guards.String,
+	"artwork": autoguard.guards.Array<autoguard.guards.Reference<ImageFile>>
+}, {}>;
 
-export const Show = autoguard.guards.Intersection.of(
+export const Show: autoguard.serialization.MessageGuard<Show> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => ShowBase),
 	autoguard.guards.Object.of({
-		"summary": autoguard.guards.Union.of(
-			autoguard.guards.String,
-			autoguard.guards.Undefined
-		),
 		"genres": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Genre)),
 		"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor)),
 		"seasons": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Season))
+	}, {
+		"summary": autoguard.guards.String
 	})
 );
 
-export type Show = ReturnType<typeof Show["as"]>;
+export type Show = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<ShowBase>,
+	autoguard.guards.Object<{
+		"genres": autoguard.guards.Array<autoguard.guards.Reference<Genre>>,
+		"actors": autoguard.guards.Array<autoguard.guards.Reference<Actor>>,
+		"seasons": autoguard.guards.Array<autoguard.guards.Reference<Season>>
+	}, {
+		"summary": autoguard.guards.String
+	}>
+]>;
 
-export const SeasonBase = autoguard.guards.Object.of({
+export const SeasonBase: autoguard.serialization.MessageGuard<SeasonBase> = autoguard.guards.Object.of({
 	"season_id": autoguard.guards.String,
 	"number": autoguard.guards.Number,
 	"show": autoguard.guards.Reference.of(() => ShowBase)
-});
+}, {});
 
-export type SeasonBase = ReturnType<typeof SeasonBase["as"]>;
+export type SeasonBase = autoguard.guards.Object<{
+	"season_id": autoguard.guards.String,
+	"number": autoguard.guards.Number,
+	"show": autoguard.guards.Reference<ShowBase>
+}, {}>;
 
-export const Season = autoguard.guards.Intersection.of(
+export const Season: autoguard.serialization.MessageGuard<Season> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => SeasonBase),
 	autoguard.guards.Object.of({
 		"episodes": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Episode))
-	})
+	}, {})
 );
 
-export type Season = ReturnType<typeof Season["as"]>;
+export type Season = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<SeasonBase>,
+	autoguard.guards.Object<{
+		"episodes": autoguard.guards.Array<autoguard.guards.Reference<Episode>>
+	}, {}>
+]>;
 
-export const EpisodeBase = autoguard.guards.Object.of({
+export const EpisodeBase: autoguard.serialization.MessageGuard<EpisodeBase> = autoguard.guards.Object.of({
 	"episode_id": autoguard.guards.String,
 	"title": autoguard.guards.String,
 	"number": autoguard.guards.Number,
 	"season": autoguard.guards.Reference.of(() => SeasonBase)
-});
+}, {});
 
-export type EpisodeBase = ReturnType<typeof EpisodeBase["as"]>;
+export type EpisodeBase = autoguard.guards.Object<{
+	"episode_id": autoguard.guards.String,
+	"title": autoguard.guards.String,
+	"number": autoguard.guards.Number,
+	"season": autoguard.guards.Reference<SeasonBase>
+}, {}>;
 
-export const Episode = autoguard.guards.Intersection.of(
+export const Episode: autoguard.serialization.MessageGuard<Episode> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => EpisodeBase),
 	autoguard.guards.Object.of({
-		"year": autoguard.guards.Union.of(
-			autoguard.guards.Number,
-			autoguard.guards.Undefined
-		),
-		"summary": autoguard.guards.Union.of(
-			autoguard.guards.String,
-			autoguard.guards.Undefined
-		),
-		"last_stream_date": autoguard.guards.Union.of(
-			autoguard.guards.Number,
-			autoguard.guards.Undefined
-		),
 		"media": autoguard.guards.Reference.of(() => VideoFile),
-		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile)),
-		"copyright": autoguard.guards.Union.of(
-			autoguard.guards.String,
-			autoguard.guards.Undefined
-		)
+		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile))
+	}, {
+		"year": autoguard.guards.Number,
+		"summary": autoguard.guards.String,
+		"last_stream_date": autoguard.guards.Number,
+		"copyright": autoguard.guards.String
 	})
 );
 
-export type Episode = ReturnType<typeof Episode["as"]>;
+export type Episode = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<EpisodeBase>,
+	autoguard.guards.Object<{
+		"media": autoguard.guards.Reference<VideoFile>,
+		"subtitles": autoguard.guards.Array<autoguard.guards.Reference<SubtitleFile>>
+	}, {
+		"year": autoguard.guards.Number,
+		"summary": autoguard.guards.String,
+		"last_stream_date": autoguard.guards.Number,
+		"copyright": autoguard.guards.String
+	}>
+]>;
 
-export const SubtitleBase = autoguard.guards.Object.of({
+export const SubtitleBase: autoguard.serialization.MessageGuard<SubtitleBase> = autoguard.guards.Object.of({
 	"subtitle_id": autoguard.guards.String,
 	"subtitle": autoguard.guards.Reference.of(() => SubtitleFile)
-});
+}, {});
 
-export type SubtitleBase = ReturnType<typeof SubtitleBase["as"]>;
+export type SubtitleBase = autoguard.guards.Object<{
+	"subtitle_id": autoguard.guards.String,
+	"subtitle": autoguard.guards.Reference<SubtitleFile>
+}, {}>;
 
-export const Subtitle = autoguard.guards.Intersection.of(
+export const Subtitle: autoguard.serialization.MessageGuard<Subtitle> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => SubtitleBase),
 	autoguard.guards.Object.of({
 		"cues": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Cue))
-	})
+	}, {})
 );
 
-export type Subtitle = ReturnType<typeof Subtitle["as"]>;
+export type Subtitle = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<SubtitleBase>,
+	autoguard.guards.Object<{
+		"cues": autoguard.guards.Array<autoguard.guards.Reference<Cue>>
+	}, {}>
+]>;
 
-export const CueBase = autoguard.guards.Object.of({
+export const CueBase: autoguard.serialization.MessageGuard<CueBase> = autoguard.guards.Object.of({
 	"cue_id": autoguard.guards.String,
 	"subtitle": autoguard.guards.Reference.of(() => SubtitleBase),
 	"start_ms": autoguard.guards.Number,
 	"duration_ms": autoguard.guards.Number,
 	"lines": autoguard.guards.Array.of(autoguard.guards.String)
-});
+}, {});
 
-export type CueBase = ReturnType<typeof CueBase["as"]>;
+export type CueBase = autoguard.guards.Object<{
+	"cue_id": autoguard.guards.String,
+	"subtitle": autoguard.guards.Reference<SubtitleBase>,
+	"start_ms": autoguard.guards.Number,
+	"duration_ms": autoguard.guards.Number,
+	"lines": autoguard.guards.Array<autoguard.guards.String>
+}, {}>;
 
-export const Cue = autoguard.guards.Intersection.of(
+export const Cue: autoguard.serialization.MessageGuard<Cue> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => CueBase),
 	autoguard.guards.Object.of({
 		"media": autoguard.guards.Union.of(
 			autoguard.guards.Reference.of(() => Episode),
 			autoguard.guards.Reference.of(() => Movie)
 		)
-	})
+	}, {})
 );
 
-export type Cue = ReturnType<typeof Cue["as"]>;
+export type Cue = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<CueBase>,
+	autoguard.guards.Object<{
+		"media": autoguard.guards.Union<[
+			autoguard.guards.Reference<Episode>,
+			autoguard.guards.Reference<Movie>
+		]>
+	}, {}>
+]>;
 
-export const YearBase = autoguard.guards.Object.of({
+export const YearBase: autoguard.serialization.MessageGuard<YearBase> = autoguard.guards.Object.of({
 	"year_id": autoguard.guards.String,
 	"year": autoguard.guards.Number
-});
+}, {});
 
-export type YearBase = ReturnType<typeof YearBase["as"]>;
+export type YearBase = autoguard.guards.Object<{
+	"year_id": autoguard.guards.String,
+	"year": autoguard.guards.Number
+}, {}>;
 
-export const Year = autoguard.guards.Intersection.of(
+export const Year: autoguard.serialization.MessageGuard<Year> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => YearBase),
-	autoguard.guards.Object.of({})
+	autoguard.guards.Object.of({}, {})
 );
 
-export type Year = ReturnType<typeof Year["as"]>;
+export type Year = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<YearBase>,
+	autoguard.guards.Object<{}, {}>
+]>;
 
-export const EntityBase = autoguard.guards.Union.of(
+export const EntityBase: autoguard.serialization.MessageGuard<EntityBase> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => ActorBase),
 	autoguard.guards.Reference.of(() => AlbumBase),
 	autoguard.guards.Reference.of(() => ArtistBase),
@@ -345,9 +477,24 @@ export const EntityBase = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => YearBase)
 );
 
-export type EntityBase = ReturnType<typeof EntityBase["as"]>;
+export type EntityBase = autoguard.guards.Union<[
+	autoguard.guards.Reference<ActorBase>,
+	autoguard.guards.Reference<AlbumBase>,
+	autoguard.guards.Reference<ArtistBase>,
+	autoguard.guards.Reference<CueBase>,
+	autoguard.guards.Reference<DiscBase>,
+	autoguard.guards.Reference<EpisodeBase>,
+	autoguard.guards.Reference<GenreBase>,
+	autoguard.guards.Reference<MovieBase>,
+	autoguard.guards.Reference<PlaylistBase>,
+	autoguard.guards.Reference<SeasonBase>,
+	autoguard.guards.Reference<ShowBase>,
+	autoguard.guards.Reference<TrackBase>,
+	autoguard.guards.Reference<UserBase>,
+	autoguard.guards.Reference<YearBase>
+]>;
 
-export const Entity = autoguard.guards.Union.of(
+export const Entity: autoguard.serialization.MessageGuard<Entity> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => Actor),
 	autoguard.guards.Reference.of(() => Album),
 	autoguard.guards.Reference.of(() => Artist),
@@ -364,7 +511,22 @@ export const Entity = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => Year)
 );
 
-export type Entity = ReturnType<typeof Entity["as"]>;
+export type Entity = autoguard.guards.Union<[
+	autoguard.guards.Reference<Actor>,
+	autoguard.guards.Reference<Album>,
+	autoguard.guards.Reference<Artist>,
+	autoguard.guards.Reference<Cue>,
+	autoguard.guards.Reference<Disc>,
+	autoguard.guards.Reference<Episode>,
+	autoguard.guards.Reference<Genre>,
+	autoguard.guards.Reference<Movie>,
+	autoguard.guards.Reference<Playlist>,
+	autoguard.guards.Reference<Season>,
+	autoguard.guards.Reference<Show>,
+	autoguard.guards.Reference<Track>,
+	autoguard.guards.Reference<User>,
+	autoguard.guards.Reference<Year>
+]>;
 
 export namespace Autoguard {
 	export const Guards = {

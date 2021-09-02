@@ -2,34 +2,47 @@
 
 import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 
-export const LoadingEvent = autoguard.guards.Object.of({
+export const LoadingEvent: autoguard.serialization.MessageGuard<LoadingEvent> = autoguard.guards.Object.of({
 	"sessionID": autoguard.guards.Number,
 	"state": autoguard.guards.StringLiteral.of("loading")
-});
+}, {});
 
-export type LoadingEvent = ReturnType<typeof LoadingEvent["as"]>;
+export type LoadingEvent = autoguard.guards.Object<{
+	"sessionID": autoguard.guards.Number,
+	"state": autoguard.guards.StringLiteral<"loading">
+}, {}>;
 
-export const PlayingEvent = autoguard.guards.Object.of({
+export const PlayingEvent: autoguard.serialization.MessageGuard<PlayingEvent> = autoguard.guards.Object.of({
 	"sessionID": autoguard.guards.Number,
 	"state": autoguard.guards.StringLiteral.of("playing")
-});
+}, {});
 
-export type PlayingEvent = ReturnType<typeof PlayingEvent["as"]>;
+export type PlayingEvent = autoguard.guards.Object<{
+	"sessionID": autoguard.guards.Number,
+	"state": autoguard.guards.StringLiteral<"playing">
+}, {}>;
 
-export const PausedEvent = autoguard.guards.Object.of({
+export const PausedEvent: autoguard.serialization.MessageGuard<PausedEvent> = autoguard.guards.Object.of({
 	"sessionID": autoguard.guards.Number,
 	"state": autoguard.guards.StringLiteral.of("paused")
-});
+}, {});
 
-export type PausedEvent = ReturnType<typeof PausedEvent["as"]>;
+export type PausedEvent = autoguard.guards.Object<{
+	"sessionID": autoguard.guards.Number,
+	"state": autoguard.guards.StringLiteral<"paused">
+}, {}>;
 
-export const StoppedEvent = autoguard.guards.Object.of({
+export const StoppedEvent: autoguard.serialization.MessageGuard<StoppedEvent> = autoguard.guards.Object.of({
 	"sessionID": autoguard.guards.Number,
 	"state": autoguard.guards.StringLiteral.of("stopped"),
 	"reason": autoguard.guards.String
-});
+}, {});
 
-export type StoppedEvent = ReturnType<typeof StoppedEvent["as"]>;
+export type StoppedEvent = autoguard.guards.Object<{
+	"sessionID": autoguard.guards.Number,
+	"state": autoguard.guards.StringLiteral<"stopped">,
+	"reason": autoguard.guards.String
+}, {}>;
 
 export namespace Autoguard {
 	export const Guards = {

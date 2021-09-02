@@ -2,17 +2,21 @@
 
 import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 
-export const PING = autoguard.guards.Object.of({
+export const PING: autoguard.serialization.MessageGuard<PING> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("PING")
-});
+}, {});
 
-export type PING = ReturnType<typeof PING["as"]>;
+export type PING = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"PING">
+}, {}>;
 
-export const PONG = autoguard.guards.Object.of({
+export const PONG: autoguard.serialization.MessageGuard<PONG> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("PONG")
-});
+}, {});
 
-export type PONG = ReturnType<typeof PONG["as"]>;
+export type PONG = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"PONG">
+}, {}>;
 
 export namespace Autoguard {
 	export const Guards = {

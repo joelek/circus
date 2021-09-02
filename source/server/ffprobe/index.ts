@@ -2,57 +2,83 @@
 
 import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 
-export const VideoFrame = autoguard.guards.Object.of({
+export const VideoFrame: autoguard.serialization.MessageGuard<VideoFrame> = autoguard.guards.Object.of({
 	"pkt_pts_time": autoguard.guards.String
-});
+}, {});
 
-export type VideoFrame = ReturnType<typeof VideoFrame["as"]>;
+export type VideoFrame = autoguard.guards.Object<{
+	"pkt_pts_time": autoguard.guards.String
+}, {}>;
 
-export const FramesResult = autoguard.guards.Object.of({
+export const FramesResult: autoguard.serialization.MessageGuard<FramesResult> = autoguard.guards.Object.of({
 	"frames": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => VideoFrame))
-});
+}, {});
 
-export type FramesResult = ReturnType<typeof FramesResult["as"]>;
+export type FramesResult = autoguard.guards.Object<{
+	"frames": autoguard.guards.Array<autoguard.guards.Reference<VideoFrame>>
+}, {}>;
 
-export const StreamCommon = autoguard.guards.Object.of({
+export const StreamCommon: autoguard.serialization.MessageGuard<StreamCommon> = autoguard.guards.Object.of({
 	"codec_name": autoguard.guards.String
-});
+}, {});
 
-export type StreamCommon = ReturnType<typeof StreamCommon["as"]>;
+export type StreamCommon = autoguard.guards.Object<{
+	"codec_name": autoguard.guards.String
+}, {}>;
 
-export const AudioStream = autoguard.guards.Intersection.of(
+export const AudioStream: autoguard.serialization.MessageGuard<AudioStream> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => StreamCommon),
 	autoguard.guards.Object.of({
 		"codec_type": autoguard.guards.StringLiteral.of("audio"),
 		"start_time": autoguard.guards.String,
 		"duration": autoguard.guards.String
-	})
+	}, {})
 );
 
-export type AudioStream = ReturnType<typeof AudioStream["as"]>;
+export type AudioStream = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<StreamCommon>,
+	autoguard.guards.Object<{
+		"codec_type": autoguard.guards.StringLiteral<"audio">,
+		"start_time": autoguard.guards.String,
+		"duration": autoguard.guards.String
+	}, {}>
+]>;
 
-export const ImageStream = autoguard.guards.Intersection.of(
+export const ImageStream: autoguard.serialization.MessageGuard<ImageStream> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => StreamCommon),
 	autoguard.guards.Object.of({
 		"codec_type": autoguard.guards.StringLiteral.of("video"),
 		"codec_time_base": autoguard.guards.StringLiteral.of("0/1"),
 		"width": autoguard.guards.Number,
 		"height": autoguard.guards.Number
-	})
+	}, {})
 );
 
-export type ImageStream = ReturnType<typeof ImageStream["as"]>;
+export type ImageStream = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<StreamCommon>,
+	autoguard.guards.Object<{
+		"codec_type": autoguard.guards.StringLiteral<"video">,
+		"codec_time_base": autoguard.guards.StringLiteral<"0/1">,
+		"width": autoguard.guards.Number,
+		"height": autoguard.guards.Number
+	}, {}>
+]>;
 
-export const SubtitleStream = autoguard.guards.Intersection.of(
+export const SubtitleStream: autoguard.serialization.MessageGuard<SubtitleStream> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => StreamCommon),
 	autoguard.guards.Object.of({
 		"codec_type": autoguard.guards.StringLiteral.of("subtitle")
-	})
+	}, {})
 );
 
-export type SubtitleStream = ReturnType<typeof SubtitleStream["as"]>;
+export type SubtitleStream = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<StreamCommon>,
+	autoguard.guards.Object<{
+		"codec_type": autoguard.guards.StringLiteral<"subtitle">
+	}, {}>
+]>;
 
-export const VideoStream = autoguard.guards.Intersection.of(
+export const VideoStream: autoguard.serialization.MessageGuard<VideoStream> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => StreamCommon),
 	autoguard.guards.Object.of({
 		"codec_type": autoguard.guards.StringLiteral.of("video"),
@@ -60,90 +86,87 @@ export const VideoStream = autoguard.guards.Intersection.of(
 		"duration": autoguard.guards.String,
 		"width": autoguard.guards.Number,
 		"height": autoguard.guards.Number
-	})
+	}, {})
 );
 
-export type VideoStream = ReturnType<typeof VideoStream["as"]>;
+export type VideoStream = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<StreamCommon>,
+	autoguard.guards.Object<{
+		"codec_type": autoguard.guards.StringLiteral<"video">,
+		"start_time": autoguard.guards.String,
+		"duration": autoguard.guards.String,
+		"width": autoguard.guards.Number,
+		"height": autoguard.guards.Number
+	}, {}>
+]>;
 
-export const Stream = autoguard.guards.Union.of(
+export const Stream: autoguard.serialization.MessageGuard<Stream> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => AudioStream),
 	autoguard.guards.Reference.of(() => ImageStream),
 	autoguard.guards.Reference.of(() => SubtitleStream),
 	autoguard.guards.Reference.of(() => VideoStream)
 );
 
-export type Stream = ReturnType<typeof Stream["as"]>;
+export type Stream = autoguard.guards.Union<[
+	autoguard.guards.Reference<AudioStream>,
+	autoguard.guards.Reference<ImageStream>,
+	autoguard.guards.Reference<SubtitleStream>,
+	autoguard.guards.Reference<VideoStream>
+]>;
 
-export const StreamsResult = autoguard.guards.Object.of({
+export const StreamsResult: autoguard.serialization.MessageGuard<StreamsResult> = autoguard.guards.Object.of({
 	"streams": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Stream))
+}, {});
+
+export type StreamsResult = autoguard.guards.Object<{
+	"streams": autoguard.guards.Array<autoguard.guards.Reference<Stream>>
+}, {}>;
+
+export const Format: autoguard.serialization.MessageGuard<Format> = autoguard.guards.Object.of({
+	"format_name": autoguard.guards.String
+}, {
+	"tags": autoguard.guards.Object.of({}, {
+		"title": autoguard.guards.String,
+		"date": autoguard.guards.String,
+		"comment": autoguard.guards.String,
+		"show": autoguard.guards.String,
+		"episode_id": autoguard.guards.String,
+		"episode_sort": autoguard.guards.String,
+		"season_number": autoguard.guards.String,
+		"track": autoguard.guards.String,
+		"artist": autoguard.guards.String,
+		"album_artist": autoguard.guards.String,
+		"album": autoguard.guards.String,
+		"disc": autoguard.guards.String
+	})
 });
 
-export type StreamsResult = ReturnType<typeof StreamsResult["as"]>;
+export type Format = autoguard.guards.Object<{
+	"format_name": autoguard.guards.String
+}, {
+	"tags": autoguard.guards.Object<{}, {
+		"title": autoguard.guards.String,
+		"date": autoguard.guards.String,
+		"comment": autoguard.guards.String,
+		"show": autoguard.guards.String,
+		"episode_id": autoguard.guards.String,
+		"episode_sort": autoguard.guards.String,
+		"season_number": autoguard.guards.String,
+		"track": autoguard.guards.String,
+		"artist": autoguard.guards.String,
+		"album_artist": autoguard.guards.String,
+		"album": autoguard.guards.String,
+		"disc": autoguard.guards.String
+	}>
+}>;
 
-export const Format = autoguard.guards.Object.of({
-	"format_name": autoguard.guards.String,
-	"tags": autoguard.guards.Union.of(
-		autoguard.guards.Object.of({
-			"title": autoguard.guards.Union.of(
-				autoguard.guards.String,
-				autoguard.guards.Undefined
-			),
-			"date": autoguard.guards.Union.of(
-				autoguard.guards.String,
-				autoguard.guards.Undefined
-			),
-			"comment": autoguard.guards.Union.of(
-				autoguard.guards.String,
-				autoguard.guards.Undefined
-			),
-			"show": autoguard.guards.Union.of(
-				autoguard.guards.String,
-				autoguard.guards.Undefined
-			),
-			"episode_id": autoguard.guards.Union.of(
-				autoguard.guards.String,
-				autoguard.guards.Undefined
-			),
-			"episode_sort": autoguard.guards.Union.of(
-				autoguard.guards.String,
-				autoguard.guards.Undefined
-			),
-			"season_number": autoguard.guards.Union.of(
-				autoguard.guards.String,
-				autoguard.guards.Undefined
-			),
-			"track": autoguard.guards.Union.of(
-				autoguard.guards.String,
-				autoguard.guards.Undefined
-			),
-			"artist": autoguard.guards.Union.of(
-				autoguard.guards.String,
-				autoguard.guards.Undefined
-			),
-			"album_artist": autoguard.guards.Union.of(
-				autoguard.guards.String,
-				autoguard.guards.Undefined
-			),
-			"album": autoguard.guards.Union.of(
-				autoguard.guards.String,
-				autoguard.guards.Undefined
-			),
-			"disc": autoguard.guards.Union.of(
-				autoguard.guards.String,
-				autoguard.guards.Undefined
-			)
-		}),
-		autoguard.guards.Undefined
-	)
-});
-
-export type Format = ReturnType<typeof Format["as"]>;
-
-export const FormatResult = autoguard.guards.Object.of({
+export const FormatResult: autoguard.serialization.MessageGuard<FormatResult> = autoguard.guards.Object.of({
 	"format": autoguard.guards.Reference.of(() => Format)
-});
+}, {});
 
-export type FormatResult = ReturnType<typeof FormatResult["as"]>;
+export type FormatResult = autoguard.guards.Object<{
+	"format": autoguard.guards.Reference<Format>
+}, {}>;
 
 export namespace Autoguard {
 	export const Guards = {

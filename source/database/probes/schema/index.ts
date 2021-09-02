@@ -2,160 +2,211 @@
 
 import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 
-export const EpisodeMetadata = autoguard.guards.Object.of({
+export const EpisodeMetadata: autoguard.serialization.MessageGuard<EpisodeMetadata> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("episode"),
 	"title": autoguard.guards.String,
 	"season": autoguard.guards.Number,
 	"episode": autoguard.guards.Number,
-	"year": autoguard.guards.Union.of(
-		autoguard.guards.Number,
-		autoguard.guards.Undefined
-	),
-	"summary": autoguard.guards.Union.of(
-		autoguard.guards.String,
-		autoguard.guards.Undefined
-	),
 	"show": autoguard.guards.Object.of({
 		"title": autoguard.guards.String,
-		"summary": autoguard.guards.Union.of(
-			autoguard.guards.String,
-			autoguard.guards.Undefined
-		),
 		"genres": autoguard.guards.Array.of(autoguard.guards.String),
 		"actors": autoguard.guards.Array.of(autoguard.guards.String)
-	}),
-	"copyright": autoguard.guards.Union.of(
-		autoguard.guards.String,
-		autoguard.guards.Undefined
-	)
+	}, {
+		"summary": autoguard.guards.String
+	})
+}, {
+	"year": autoguard.guards.Number,
+	"summary": autoguard.guards.String,
+	"copyright": autoguard.guards.String
 });
 
-export type EpisodeMetadata = ReturnType<typeof EpisodeMetadata["as"]>;
+export type EpisodeMetadata = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"episode">,
+	"title": autoguard.guards.String,
+	"season": autoguard.guards.Number,
+	"episode": autoguard.guards.Number,
+	"show": autoguard.guards.Object<{
+		"title": autoguard.guards.String,
+		"genres": autoguard.guards.Array<autoguard.guards.String>,
+		"actors": autoguard.guards.Array<autoguard.guards.String>
+	}, {
+		"summary": autoguard.guards.String
+	}>
+}, {
+	"year": autoguard.guards.Number,
+	"summary": autoguard.guards.String,
+	"copyright": autoguard.guards.String
+}>;
 
-export const MovieMetadata = autoguard.guards.Object.of({
+export const MovieMetadata: autoguard.serialization.MessageGuard<MovieMetadata> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("movie"),
 	"title": autoguard.guards.String,
-	"year": autoguard.guards.Union.of(
-		autoguard.guards.Number,
-		autoguard.guards.Undefined
-	),
-	"summary": autoguard.guards.Union.of(
-		autoguard.guards.String,
-		autoguard.guards.Undefined
-	),
 	"genres": autoguard.guards.Array.of(autoguard.guards.String),
-	"actors": autoguard.guards.Array.of(autoguard.guards.String),
-	"copyright": autoguard.guards.Union.of(
-		autoguard.guards.String,
-		autoguard.guards.Undefined
-	)
+	"actors": autoguard.guards.Array.of(autoguard.guards.String)
+}, {
+	"year": autoguard.guards.Number,
+	"summary": autoguard.guards.String,
+	"copyright": autoguard.guards.String
 });
 
-export type MovieMetadata = ReturnType<typeof MovieMetadata["as"]>;
+export type MovieMetadata = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"movie">,
+	"title": autoguard.guards.String,
+	"genres": autoguard.guards.Array<autoguard.guards.String>,
+	"actors": autoguard.guards.Array<autoguard.guards.String>
+}, {
+	"year": autoguard.guards.Number,
+	"summary": autoguard.guards.String,
+	"copyright": autoguard.guards.String
+}>;
 
-export const TrackMetadata = autoguard.guards.Object.of({
+export const TrackMetadata: autoguard.serialization.MessageGuard<TrackMetadata> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("track"),
 	"title": autoguard.guards.String,
 	"disc": autoguard.guards.Number,
 	"track": autoguard.guards.Number,
 	"album": autoguard.guards.Object.of({
 		"title": autoguard.guards.String,
-		"year": autoguard.guards.Union.of(
-			autoguard.guards.Number,
-			autoguard.guards.Undefined
-		),
 		"artists": autoguard.guards.Array.of(autoguard.guards.String)
+	}, {
+		"year": autoguard.guards.Number
 	}),
-	"artists": autoguard.guards.Array.of(autoguard.guards.String),
-	"copyright": autoguard.guards.Union.of(
-		autoguard.guards.String,
-		autoguard.guards.Undefined
-	)
+	"artists": autoguard.guards.Array.of(autoguard.guards.String)
+}, {
+	"copyright": autoguard.guards.String
 });
 
-export type TrackMetadata = ReturnType<typeof TrackMetadata["as"]>;
+export type TrackMetadata = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"track">,
+	"title": autoguard.guards.String,
+	"disc": autoguard.guards.Number,
+	"track": autoguard.guards.Number,
+	"album": autoguard.guards.Object<{
+		"title": autoguard.guards.String,
+		"artists": autoguard.guards.Array<autoguard.guards.String>
+	}, {
+		"year": autoguard.guards.Number
+	}>,
+	"artists": autoguard.guards.Array<autoguard.guards.String>
+}, {
+	"copyright": autoguard.guards.String
+}>;
 
-export const AlbumMetadata = autoguard.guards.Object.of({
+export const AlbumMetadata: autoguard.serialization.MessageGuard<AlbumMetadata> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("album"),
 	"title": autoguard.guards.String,
 	"disc": autoguard.guards.Number,
-	"year": autoguard.guards.Union.of(
-		autoguard.guards.Number,
-		autoguard.guards.Undefined
-	),
 	"artists": autoguard.guards.Array.of(autoguard.guards.String),
 	"tracks": autoguard.guards.Array.of(autoguard.guards.Object.of({
 		"title": autoguard.guards.String,
-		"artists": autoguard.guards.Array.of(autoguard.guards.String),
-		"copyright": autoguard.guards.Union.of(
-			autoguard.guards.String,
-			autoguard.guards.Undefined
-		)
-	})),
-	"copyright": autoguard.guards.Union.of(
-		autoguard.guards.String,
-		autoguard.guards.Undefined
-	)
+		"artists": autoguard.guards.Array.of(autoguard.guards.String)
+	}, {
+		"copyright": autoguard.guards.String
+	}))
+}, {
+	"year": autoguard.guards.Number,
+	"copyright": autoguard.guards.String
 });
 
-export type AlbumMetadata = ReturnType<typeof AlbumMetadata["as"]>;
+export type AlbumMetadata = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"album">,
+	"title": autoguard.guards.String,
+	"disc": autoguard.guards.Number,
+	"artists": autoguard.guards.Array<autoguard.guards.String>,
+	"tracks": autoguard.guards.Array<autoguard.guards.Object<{
+		"title": autoguard.guards.String,
+		"artists": autoguard.guards.Array<autoguard.guards.String>
+	}, {
+		"copyright": autoguard.guards.String
+	}>>
+}, {
+	"year": autoguard.guards.Number,
+	"copyright": autoguard.guards.String
+}>;
 
-export const Metadata = autoguard.guards.Union.of(
+export const Metadata: autoguard.serialization.MessageGuard<Metadata> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => EpisodeMetadata),
 	autoguard.guards.Reference.of(() => MovieMetadata),
 	autoguard.guards.Reference.of(() => TrackMetadata),
 	autoguard.guards.Reference.of(() => AlbumMetadata)
 );
 
-export type Metadata = ReturnType<typeof Metadata["as"]>;
+export type Metadata = autoguard.guards.Union<[
+	autoguard.guards.Reference<EpisodeMetadata>,
+	autoguard.guards.Reference<MovieMetadata>,
+	autoguard.guards.Reference<TrackMetadata>,
+	autoguard.guards.Reference<AlbumMetadata>
+]>;
 
-export const AudioResource = autoguard.guards.Object.of({
+export const AudioResource: autoguard.serialization.MessageGuard<AudioResource> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("audio"),
 	"duration_ms": autoguard.guards.Number
-});
+}, {});
 
-export type AudioResource = ReturnType<typeof AudioResource["as"]>;
+export type AudioResource = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"audio">,
+	"duration_ms": autoguard.guards.Number
+}, {}>;
 
-export const ImageResource = autoguard.guards.Object.of({
+export const ImageResource: autoguard.serialization.MessageGuard<ImageResource> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("image"),
 	"width": autoguard.guards.Number,
 	"height": autoguard.guards.Number
-});
+}, {});
 
-export type ImageResource = ReturnType<typeof ImageResource["as"]>;
+export type ImageResource = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"image">,
+	"width": autoguard.guards.Number,
+	"height": autoguard.guards.Number
+}, {}>;
 
-export const MetadataResource = autoguard.guards.Object.of({
+export const MetadataResource: autoguard.serialization.MessageGuard<MetadataResource> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("metadata")
-});
+}, {});
 
-export type MetadataResource = ReturnType<typeof MetadataResource["as"]>;
+export type MetadataResource = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"metadata">
+}, {}>;
 
-export const SubtitleResource = autoguard.guards.Object.of({
+export const SubtitleResource: autoguard.serialization.MessageGuard<SubtitleResource> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("subtitle"),
 	"duration_ms": autoguard.guards.Number,
-	"language": autoguard.guards.Union.of(
-		autoguard.guards.String,
-		autoguard.guards.Undefined
-	),
 	"cues": autoguard.guards.Array.of(autoguard.guards.Object.of({
 		"start_ms": autoguard.guards.Number,
 		"duration_ms": autoguard.guards.Number,
 		"lines": autoguard.guards.Array.of(autoguard.guards.String)
-	}))
+	}, {}))
+}, {
+	"language": autoguard.guards.String
 });
 
-export type SubtitleResource = ReturnType<typeof SubtitleResource["as"]>;
+export type SubtitleResource = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"subtitle">,
+	"duration_ms": autoguard.guards.Number,
+	"cues": autoguard.guards.Array<autoguard.guards.Object<{
+		"start_ms": autoguard.guards.Number,
+		"duration_ms": autoguard.guards.Number,
+		"lines": autoguard.guards.Array<autoguard.guards.String>
+	}, {}>>
+}, {
+	"language": autoguard.guards.String
+}>;
 
-export const VideoResource = autoguard.guards.Object.of({
+export const VideoResource: autoguard.serialization.MessageGuard<VideoResource> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("video"),
 	"duration_ms": autoguard.guards.Number,
 	"width": autoguard.guards.Number,
 	"height": autoguard.guards.Number
-});
+}, {});
 
-export type VideoResource = ReturnType<typeof VideoResource["as"]>;
+export type VideoResource = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"video">,
+	"duration_ms": autoguard.guards.Number,
+	"width": autoguard.guards.Number,
+	"height": autoguard.guards.Number
+}, {}>;
 
-export const Resource = autoguard.guards.Union.of(
+export const Resource: autoguard.serialization.MessageGuard<Resource> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => AudioResource),
 	autoguard.guards.Reference.of(() => ImageResource),
 	autoguard.guards.Reference.of(() => MetadataResource),
@@ -163,17 +214,25 @@ export const Resource = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => VideoResource)
 );
 
-export type Resource = ReturnType<typeof Resource["as"]>;
+export type Resource = autoguard.guards.Union<[
+	autoguard.guards.Reference<AudioResource>,
+	autoguard.guards.Reference<ImageResource>,
+	autoguard.guards.Reference<MetadataResource>,
+	autoguard.guards.Reference<SubtitleResource>,
+	autoguard.guards.Reference<VideoResource>
+]>;
 
-export const Probe = autoguard.guards.Object.of({
-	"metadata": autoguard.guards.Union.of(
-		autoguard.guards.Reference.of(() => Metadata),
-		autoguard.guards.Undefined
-	),
+export const Probe: autoguard.serialization.MessageGuard<Probe> = autoguard.guards.Object.of({
 	"resources": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Resource))
+}, {
+	"metadata": autoguard.guards.Reference.of(() => Metadata)
 });
 
-export type Probe = ReturnType<typeof Probe["as"]>;
+export type Probe = autoguard.guards.Object<{
+	"resources": autoguard.guards.Array<autoguard.guards.Reference<Resource>>
+}, {
+	"metadata": autoguard.guards.Reference<Metadata>
+}>;
 
 export namespace Autoguard {
 	export const Guards = {

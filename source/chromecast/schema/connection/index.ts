@@ -2,17 +2,21 @@
 
 import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 
-export const CONNECT = autoguard.guards.Object.of({
+export const CONNECT: autoguard.serialization.MessageGuard<CONNECT> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("CONNECT")
-});
+}, {});
 
-export type CONNECT = ReturnType<typeof CONNECT["as"]>;
+export type CONNECT = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"CONNECT">
+}, {}>;
 
-export const CLOSE = autoguard.guards.Object.of({
+export const CLOSE: autoguard.serialization.MessageGuard<CLOSE> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("CLOSE")
-});
+}, {});
 
-export type CLOSE = ReturnType<typeof CLOSE["as"]>;
+export type CLOSE = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"CLOSE">
+}, {}>;
 
 export namespace Autoguard {
 	export const Guards = {

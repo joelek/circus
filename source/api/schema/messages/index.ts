@@ -2,26 +2,35 @@
 
 import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 
-export const ErrorMessage = autoguard.guards.Object.of({
+export const ErrorMessage: autoguard.serialization.MessageGuard<ErrorMessage> = autoguard.guards.Object.of({
 	"errors": autoguard.guards.Array.of(autoguard.guards.String)
-});
+}, {});
 
-export type ErrorMessage = ReturnType<typeof ErrorMessage["as"]>;
+export type ErrorMessage = autoguard.guards.Object<{
+	"errors": autoguard.guards.Array<autoguard.guards.String>
+}, {}>;
 
-export const RegisterRequest = autoguard.guards.Object.of({
+export const RegisterRequest: autoguard.serialization.MessageGuard<RegisterRequest> = autoguard.guards.Object.of({
 	"username": autoguard.guards.String,
 	"password": autoguard.guards.String,
 	"name": autoguard.guards.String,
 	"key_id": autoguard.guards.String
-});
+}, {});
 
-export type RegisterRequest = ReturnType<typeof RegisterRequest["as"]>;
+export type RegisterRequest = autoguard.guards.Object<{
+	"username": autoguard.guards.String,
+	"password": autoguard.guards.String,
+	"name": autoguard.guards.String,
+	"key_id": autoguard.guards.String
+}, {}>;
 
-export const RegisterResponse = autoguard.guards.Object.of({
+export const RegisterResponse: autoguard.serialization.MessageGuard<RegisterResponse> = autoguard.guards.Object.of({
 	"token": autoguard.guards.String
-});
+}, {});
 
-export type RegisterResponse = ReturnType<typeof RegisterResponse["as"]>;
+export type RegisterResponse = autoguard.guards.Object<{
+	"token": autoguard.guards.String
+}, {}>;
 
 export namespace Autoguard {
 	export const Guards = {

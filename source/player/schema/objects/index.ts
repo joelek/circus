@@ -11,43 +11,43 @@ import { Season } from "../../../api/schema/objects";
 import { Show } from "../../../api/schema/objects";
 import { Track } from "../../../api/schema/objects";
 
-export const ContextAlbum = autoguard.guards.Reference.of(() => Album);
+export const ContextAlbum: autoguard.serialization.MessageGuard<ContextAlbum> = autoguard.guards.Reference.of(() => Album);
 
-export type ContextAlbum = ReturnType<typeof ContextAlbum["as"]>;
+export type ContextAlbum = autoguard.guards.Reference<Album>;
 
-export const ContextArtist = autoguard.guards.Reference.of(() => Artist);
+export const ContextArtist: autoguard.serialization.MessageGuard<ContextArtist> = autoguard.guards.Reference.of(() => Artist);
 
-export type ContextArtist = ReturnType<typeof ContextArtist["as"]>;
+export type ContextArtist = autoguard.guards.Reference<Artist>;
 
-export const ContextDisc = autoguard.guards.Reference.of(() => Disc);
+export const ContextDisc: autoguard.serialization.MessageGuard<ContextDisc> = autoguard.guards.Reference.of(() => Disc);
 
-export type ContextDisc = ReturnType<typeof ContextDisc["as"]>;
+export type ContextDisc = autoguard.guards.Reference<Disc>;
 
-export const ContextTrack = autoguard.guards.Reference.of(() => Track);
+export const ContextTrack: autoguard.serialization.MessageGuard<ContextTrack> = autoguard.guards.Reference.of(() => Track);
 
-export type ContextTrack = ReturnType<typeof ContextTrack["as"]>;
+export type ContextTrack = autoguard.guards.Reference<Track>;
 
-export const ContextPlaylist = autoguard.guards.Reference.of(() => Playlist);
+export const ContextPlaylist: autoguard.serialization.MessageGuard<ContextPlaylist> = autoguard.guards.Reference.of(() => Playlist);
 
-export type ContextPlaylist = ReturnType<typeof ContextPlaylist["as"]>;
+export type ContextPlaylist = autoguard.guards.Reference<Playlist>;
 
-export const ContextMovie = autoguard.guards.Reference.of(() => Movie);
+export const ContextMovie: autoguard.serialization.MessageGuard<ContextMovie> = autoguard.guards.Reference.of(() => Movie);
 
-export type ContextMovie = ReturnType<typeof ContextMovie["as"]>;
+export type ContextMovie = autoguard.guards.Reference<Movie>;
 
-export const ContextShow = autoguard.guards.Reference.of(() => Show);
+export const ContextShow: autoguard.serialization.MessageGuard<ContextShow> = autoguard.guards.Reference.of(() => Show);
 
-export type ContextShow = ReturnType<typeof ContextShow["as"]>;
+export type ContextShow = autoguard.guards.Reference<Show>;
 
-export const ContextSeason = autoguard.guards.Reference.of(() => Season);
+export const ContextSeason: autoguard.serialization.MessageGuard<ContextSeason> = autoguard.guards.Reference.of(() => Season);
 
-export type ContextSeason = ReturnType<typeof ContextSeason["as"]>;
+export type ContextSeason = autoguard.guards.Reference<Season>;
 
-export const ContextEpisode = autoguard.guards.Reference.of(() => Episode);
+export const ContextEpisode: autoguard.serialization.MessageGuard<ContextEpisode> = autoguard.guards.Reference.of(() => Episode);
 
-export type ContextEpisode = ReturnType<typeof ContextEpisode["as"]>;
+export type ContextEpisode = autoguard.guards.Reference<Episode>;
 
-export const Context = autoguard.guards.Union.of(
+export const Context: autoguard.serialization.MessageGuard<Context> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => ContextAlbum),
 	autoguard.guards.Reference.of(() => ContextArtist),
 	autoguard.guards.Reference.of(() => ContextDisc),
@@ -59,46 +59,61 @@ export const Context = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => ContextEpisode)
 );
 
-export type Context = ReturnType<typeof Context["as"]>;
+export type Context = autoguard.guards.Union<[
+	autoguard.guards.Reference<ContextAlbum>,
+	autoguard.guards.Reference<ContextArtist>,
+	autoguard.guards.Reference<ContextDisc>,
+	autoguard.guards.Reference<ContextTrack>,
+	autoguard.guards.Reference<ContextPlaylist>,
+	autoguard.guards.Reference<ContextMovie>,
+	autoguard.guards.Reference<ContextShow>,
+	autoguard.guards.Reference<ContextSeason>,
+	autoguard.guards.Reference<ContextEpisode>
+]>;
 
-export const ContextItem = autoguard.guards.Union.of(
+export const ContextItem: autoguard.serialization.MessageGuard<ContextItem> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => ContextTrack),
 	autoguard.guards.Reference.of(() => ContextMovie),
 	autoguard.guards.Reference.of(() => ContextEpisode)
 );
 
-export type ContextItem = ReturnType<typeof ContextItem["as"]>;
+export type ContextItem = autoguard.guards.Union<[
+	autoguard.guards.Reference<ContextTrack>,
+	autoguard.guards.Reference<ContextMovie>,
+	autoguard.guards.Reference<ContextEpisode>
+]>;
 
-export const Device = autoguard.guards.Object.of({
+export const Device: autoguard.serialization.MessageGuard<Device> = autoguard.guards.Object.of({
 	"id": autoguard.guards.String,
 	"protocol": autoguard.guards.String,
 	"name": autoguard.guards.String,
 	"type": autoguard.guards.String
+}, {});
+
+export type Device = autoguard.guards.Object<{
+	"id": autoguard.guards.String,
+	"protocol": autoguard.guards.String,
+	"name": autoguard.guards.String,
+	"type": autoguard.guards.String
+}, {}>;
+
+export const Session: autoguard.serialization.MessageGuard<Session> = autoguard.guards.Object.of({
+	"playback": autoguard.guards.Boolean
+}, {
+	"context": autoguard.guards.Reference.of(() => Context),
+	"device": autoguard.guards.Reference.of(() => Device),
+	"index": autoguard.guards.Number,
+	"progress": autoguard.guards.Number
 });
 
-export type Device = ReturnType<typeof Device["as"]>;
-
-export const Session = autoguard.guards.Object.of({
-	"context": autoguard.guards.Union.of(
-		autoguard.guards.Reference.of(() => Context),
-		autoguard.guards.Undefined
-	),
-	"device": autoguard.guards.Union.of(
-		autoguard.guards.Reference.of(() => Device),
-		autoguard.guards.Undefined
-	),
-	"index": autoguard.guards.Union.of(
-		autoguard.guards.Number,
-		autoguard.guards.Undefined
-	),
-	"playback": autoguard.guards.Boolean,
-	"progress": autoguard.guards.Union.of(
-		autoguard.guards.Number,
-		autoguard.guards.Undefined
-	)
-});
-
-export type Session = ReturnType<typeof Session["as"]>;
+export type Session = autoguard.guards.Object<{
+	"playback": autoguard.guards.Boolean
+}, {
+	"context": autoguard.guards.Reference<Context>,
+	"device": autoguard.guards.Reference<Device>,
+	"index": autoguard.guards.Number,
+	"progress": autoguard.guards.Number
+}>;
 
 export namespace Autoguard {
 	export const Guards = {

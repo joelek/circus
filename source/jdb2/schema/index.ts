@@ -2,21 +2,29 @@
 
 import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 
-export const IndexRecord = autoguard.guards.Object.of({
-	"token": autoguard.guards.Union.of(
-		autoguard.guards.Union.of(
-			autoguard.guards.Boolean,
-			autoguard.guards.Null,
-			autoguard.guards.Number,
-			autoguard.guards.String,
-			autoguard.guards.Undefined
-		),
-		autoguard.guards.Undefined
-	),
+export const IndexRecord: autoguard.serialization.MessageGuard<IndexRecord> = autoguard.guards.Object.of({
 	"index": autoguard.guards.Number
+}, {
+	"token": autoguard.guards.Union.of(
+		autoguard.guards.Boolean,
+		autoguard.guards.Null,
+		autoguard.guards.Number,
+		autoguard.guards.String,
+		autoguard.guards.Undefined
+	)
 });
 
-export type IndexRecord = ReturnType<typeof IndexRecord["as"]>;
+export type IndexRecord = autoguard.guards.Object<{
+	"index": autoguard.guards.Number
+}, {
+	"token": autoguard.guards.Union<[
+		autoguard.guards.Boolean,
+		autoguard.guards.Null,
+		autoguard.guards.Number,
+		autoguard.guards.String,
+		autoguard.guards.Undefined
+	]>
+}>;
 
 export namespace Autoguard {
 	export const Guards = {
