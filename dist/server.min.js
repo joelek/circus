@@ -1366,7 +1366,7 @@ define("node_modules/@joelek/ts-autoguard/dist/lib-server/api", ["require", "exp
                     }
                 }
                 catch (error) {
-                    if (Number.isInteger(error) && error >= 100 && error <= 999) {
+                    if (typeof error === "number" && Number.isInteger(error) && error >= 100 && error <= 999) {
                         return respond(httpResponse, {
                             status: error
                         });
