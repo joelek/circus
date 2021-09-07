@@ -6,6 +6,8 @@ Progressive web app and system for streaming audio and video content.
 
 > The start page.
 
+Example application running at https://circus.joelek.se.
+
 ## Device support
 
 * Devices with a modern web browser
