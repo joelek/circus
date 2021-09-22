@@ -8,7 +8,7 @@
 		"@types/node": "^16.7",
 		"typescript": "^4.4"
 	},
-	"license": "UNLICENSED",
+	"license": "MIT",
 	"main": "./dist/server.min.js",
 	"name": "@joelek/circus",
 	"repository": {
