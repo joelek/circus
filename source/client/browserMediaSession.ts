@@ -24,12 +24,13 @@ export interface MediaHandler {
 }
 
 export interface MediaHandlers {
-	play?: MediaHandler,
-	pause?: MediaHandler,
-	seekbackward?: MediaHandler,
-	seekforward?: MediaHandler,
-	previoustrack?: MediaHandler,
-	nexttrack?: MediaHandler
+	play?: (() => void) | null,
+	pause?: (() => void) | null,
+	seekbackward?: ((details: { seekOffset?: number }) => void) | null,
+	seekforward?: ((details: { seekOffset?: number }) => void) | null,
+	seekto?: ((details: { fastSeek?: boolean, seekTime: number }) => void) | null,
+	previoustrack?: (() => void) | null,
+	nexttrack?: (() => void) | null
 }
 
 export function setHandlers(handlers: MediaHandlers) {

@@ -123,10 +123,13 @@ currentVideo.addEventListener("playing", () => {
 		let canPlayCurrent = player.canPlayCurrent.getState();
 		let canPlayNext = player.canPlayNext.getState();
 		session.setHandlers({
-			play: canPlayCurrent ? player.resume.bind(player) : undefined,
-			pause: canPlayCurrent ? player.pause.bind(player) : undefined,
-			previoustrack: canPlayLast ? player.last.bind(player) : undefined,
-			nexttrack: canPlayNext ? player.next.bind(player) : undefined
+			play: canPlayCurrent ? player.resume.bind(player) : null,
+			pause: canPlayCurrent ? player.pause.bind(player) : null,
+			previoustrack: canPlayLast ? player.last.bind(player) : null,
+			seekto: (details) => {
+				player.seek(details.seekTime);
+			},
+			nexttrack: canPlayNext ? player.next.bind(player) : null
 		});
 	};
 	player.canPlayLast.addObserver(computer);
