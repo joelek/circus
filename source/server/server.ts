@@ -2,6 +2,7 @@ import * as libfs from "fs";
 import * as libhttp from "http";
 import * as libhttps from "https";
 import * as libos from "os";
+import * as libtls from "tls";
 import * as api from "../api/api";
 import * as indexer from "../database/indexer";
 import * as subsearch from "./subsearch";
@@ -161,13 +162,6 @@ if (!libfs.existsSync("./private/certs/")) {
 	libfs.mkdirSync("./private/certs/", { recursive: true });
 }
 
-function read(path: string): Buffer | undefined {
-	if (libfs.existsSync(path)) {
-		return libfs.readFileSync(path);
-	}
-	return undefined;
-}
-
 function getLocalIp(family: string = "ipv4"): string {
 	let networkInterfaces = libos.networkInterfaces();
 	for (let interfaceInfos of Object.values(networkInterfaces)) {
@@ -185,10 +179,6 @@ function getLocalIp(family: string = "ipv4"): string {
 	throw `Expected a local interface!`;
 }
 
-let full_chain = read(config.certificate_path.join("/"));
-let dhparam = read("./private/certs/dhparam.pem");
-let certificate_key = read(config.certificate_key_path.join("/"));
-
 // TODO: Use hostname from certificate.
 let hostname = getLocalIp();
 let media_server_host = `http://${hostname}:${config.http_port}`;
@@ -197,11 +187,19 @@ http_server.listen(config.http_port, () => {
 	console.log(`http://${hostname}:${config.http_port}`);
 });
 http_server.keepAliveTimeout = 60 * 1000;
-if (full_chain && certificate_key) {
+if (libfs.existsSync(config.certificate_path.join("/")) && libfs.existsSync(config.certificate_key_path.join("/"))) {
 	let https_server = libhttps.createServer({
-		cert: full_chain,
-		dhparam: dhparam,
-		key: certificate_key
+		SNICallback: (servername, callback) => {
+			let secureContext = libtls.createSecureContext({
+				key: libfs.readFileSync(config.certificate_key_path.join("/")),
+				cert: libfs.readFileSync(config.certificate_path.join("/")),
+				dhparam: libfs.existsSync("./private/certs/dhparam.pem") ? libfs.readFileSync("./private/certs/dhparam.pem") : undefined
+			});
+			callback(null, secureContext);
+		},
+		key: libfs.readFileSync(config.certificate_key_path.join("/")),
+		cert: libfs.readFileSync(config.certificate_path.join("/")),
+		dhparam: libfs.existsSync("./private/certs/dhparam.pem") ? libfs.readFileSync("./private/certs/dhparam.pem") : undefined
 	}, requestHandler);
 	https_server.listen(config.https_port, () => {
 		console.log(`https://${hostname}:${config.https_port}`);
