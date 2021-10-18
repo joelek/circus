@@ -481,7 +481,7 @@ export class Node extends Chunk {
 			let bytes = bytesFromNibbles(Buffer.of(length, ...value));
 			this.buffer.set(bytes, 0);
 			this.buffer.fill(0, bytes.length, 8);
-			return this.buffer;
+			return value;
 		} else {
 			let bytes = this.buffer.slice(0, 8);
 			let nibbles = nibblesFromBytes(bytes);
