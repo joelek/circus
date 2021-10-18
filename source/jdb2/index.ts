@@ -744,7 +744,7 @@ export class RobinHoodHash {
 	private readHeader(): { occupiedSlots: number } {
 		let buffer = Buffer.alloc(16);
 		this.blockHandler.readBlock(this.blockIndex, buffer, 0);
-		let occupiedSlots = Number(buffer.readBigUInt64BE(0));
+		let occupiedSlots = buffer.readUIntBE(2, 6);
 		return {
 			occupiedSlots
 		};
@@ -775,7 +775,7 @@ export class RobinHoodHash {
 		this.blockHandler.readBlock(this.blockIndex, buffer, 16 + slotIndex * 8);
 		let probeDistance = buffer.readUInt8(0);
 		let isOccupied = buffer.readUInt8(1) === 0x01;
-		let index = Number(buffer.readBigUInt64BE(0) & 0x0000FFFFFFFFFFFFn);
+		let index = buffer.readUIntBE(2, 6);
 		return {
 			probeDistance,
 			isOccupied,
@@ -785,9 +785,9 @@ export class RobinHoodHash {
 
 	private saveSlot(slotIndex: number, slot: { index: number, probeDistance: number, isOccupied: boolean }): void {
 		let buffer = Buffer.alloc(8);
-		buffer.writeBigUInt64BE(BigInt(slot.index), 0);
 		buffer.writeUInt8(slot.probeDistance, 0);
 		buffer.writeUInt8(slot.isOccupied ? 0x01 : 0x00, 1);
+		buffer.writeUIntBE(slot.index, 2, 6);
 		this.blockHandler.writeBlock(this.blockIndex, buffer, 16 + slotIndex * 8);
 	}
 
