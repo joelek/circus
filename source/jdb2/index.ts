@@ -692,6 +692,10 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 		}
 	}
 
+	length(): number {
+		return this.hashTable.length();
+	}
+
 	lookup(key: Primitive): A {
 		let index = this.hashTable.lookup(key);
 		if (is.absent(index)) {
