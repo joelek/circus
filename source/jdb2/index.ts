@@ -716,7 +716,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			index: index,
 			record: next
 		});
-		this.hashTable.remove(key, index);
+		this.hashTable.remove(key);
 		this.blockHandler.deleteBlock(index);
 		this.recordCache.remove(index);
 	}
@@ -877,7 +877,7 @@ export class RobinHoodHash {
 		}
 	}
 
-	private doRemove(key: Primitive, index: number): number | undefined {
+	private doRemove(key: Primitive): number | undefined {
 		let serializedKey = serializeKey(key);
 		let optimalSlot = this.computeOptimalSlot(serializedKey);
 		let slotCount = this.getSlotCount();
@@ -888,7 +888,7 @@ export class RobinHoodHash {
 			if (!slot.isOccupied || probeDistance > slot.probeDistance) {
 				return;
 			}
-			if (slot.index === index) {
+			if (this.keyFromIndexProvider(slot.index) === key) {
 				this.saveSlot(slotIndex, {
 					index: 0,
 					probeDistance: 0,
@@ -954,8 +954,8 @@ export class RobinHoodHash {
 		throw `Expected code to be unreachable!`;
 	}
 
-	remove(key: Primitive, index: number): void {
-		let slotIndex = this.doRemove(key, index);
+	remove(key: Primitive): void {
+		let slotIndex = this.doRemove(key);
 		if (is.present(slotIndex)) {
 			let header = this.readHeader();
 			header.occupiedSlots -= 1;
@@ -1054,7 +1054,7 @@ export class Index<A, B> {
 						continue;
 					}
 					let rhh = new RobinHoodHash(blockHandler, indexRecord.index, (index) => index);
-					rhh.remove(index, index);
+					rhh.remove(index);
 				}
 			}
 		}

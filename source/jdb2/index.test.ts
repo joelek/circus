@@ -131,9 +131,9 @@ rhh.insert(9, 9);
 rhh.insert(8, 8);
 rhh.insert(8, 8);
 rhh.insert(3, 3);
-rhh.remove(10, 10);
-rhh.remove(5, 5);
-rhh.remove(8, 8);
+rhh.remove(10);
+rhh.remove(5);
+rhh.remove(8);
 
 for (let value of rhh) {
 	console.log(value);
