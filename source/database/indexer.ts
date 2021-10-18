@@ -574,6 +574,7 @@ function indexFile(file: File): void {
 		indexMetadata(probe, file_id);
 	} catch (error) {
 		console.log(`Indexing failed for "${path.join("/")}"!`);
+		console.log(error);
 	}
 	libfs.closeSync(fd);
 	let stats = libfs.statSync(path.join("/"));
@@ -717,6 +718,7 @@ export function runIndexer(): void {
 	}
 	visitDirectory(config.media_path);
 	indexFiles();
+	console.log(`Associating...`);
 	associateMetadata();
 	associateImages();
 	associateSubtitles();
