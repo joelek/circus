@@ -203,6 +203,10 @@ export class Cache<A extends Primitive, B> {
 		}
 	}
 
+	length(): number {
+		return this.map.size;
+	}
+
 	lookup(key: A): B | undefined {
 		return this.map.get(key);
 	}
