@@ -320,6 +320,13 @@ export class BlockHandler {
 		this.writeBlock(index, Buffer.alloc(0));
 	}
 
+	cloneBlock(index: number): number {
+		let buffer = this.readBlock(index);
+		let indexTwo = this.createBlock(buffer.length);
+		this.writeBlock(indexTwo, buffer);
+		return indexTwo;
+	}
+
 	createBlock(minLength: number): number {
 		if (minLength === 0) {
 			return 0xFFFFFFFF;
