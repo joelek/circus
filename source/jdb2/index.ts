@@ -729,7 +729,7 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 export type KeyFromIndexProvider = (index: number) => Primitive;
 
 export class RobinHoodHash {
-	static INITIAL_SIZE = 16 + 2 * 8;
+	static INITIAL_SIZE = 16 + (2 * 8);
 
 	private blockHandler: BlockHandler;
 	private blockIndex: number;
@@ -752,13 +752,13 @@ export class RobinHoodHash {
 
 	private writeHeader(header: { occupiedSlots: number }): void {
 		let buffer = Buffer.alloc(16);
-		buffer.writeBigUInt64BE(BigInt(header.occupiedSlots), 0);
+		buffer.writeUIntBE(header.occupiedSlots, 2, 6);
 		this.blockHandler.writeBlock(this.blockIndex, buffer, 0);
 	}
 
 	private getSlotCount(): number {
 		let blockSize = this.blockHandler.getBlockSize(this.blockIndex);
-		return (blockSize - 16) / 8;
+		return Math.floor((blockSize - 16) / 8);
 	}
 
 	private computeOptimalSlot(serializedKey: Buffer): number {
