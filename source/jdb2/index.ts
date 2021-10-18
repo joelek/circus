@@ -934,6 +934,10 @@ export class RobinHoodHash {
 		}
 	}
 
+	length(): number {
+		return this.readHeader().occupiedSlots;
+	}
+
 	lookup(key: Primitive): number | undefined {
 		let serializedKey = serializeKey(key);
 		let optimalSlot = this.computeOptimalSlot(serializedKey);
