@@ -177,6 +177,7 @@ Ports, paths and other settings can be configured through altering the config fi
 
 ## Roadmap
 
+* Make color scheme and project name configurable.
 * Structure code using subprojects.
 * Clear player state when the user logs out.
 * Store create and update timestamps for entities.
