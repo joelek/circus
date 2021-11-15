@@ -1,8 +1,8 @@
 {
 	"bin": {},
 	"devDependencies": {
-		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^5.8",
-		"@joelek/ts-bundle": "github:joelek/ts-bundle#semver:^0.1",
+		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^5.11",
+		"@joelek/ts-bundle": "github:joelek/ts-bundle#semver:^1.0",
 		"@joelek/ts-sockets": "github:joelek/ts-sockets#semver:^2.2",
 		"@joelek/ts-stdlib": "github:joelek/ts-stdlib#semver:^1.0",
 		"@types/node": "^16.7",
