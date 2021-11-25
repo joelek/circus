@@ -135,6 +135,12 @@ The sponsor button can be used to view the different sponsoring options. Contrib
 
 Thank you for your support!
 
+### Ethereum
+
+Ethereum contributions can be made to address `0xf1B63d95BEfEdAf70B3623B1A4Ba0D9CE7F2fE6D`.
+
+![](./eth.png)
+
 ## Installation
 
 Circus can be installed on a wide range of server infrastructure since it's built almost entirely using NodeJS. Extra features such as preview images become available when the FFMPEG tool suite is installed on the server.
