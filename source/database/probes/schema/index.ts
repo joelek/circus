@@ -12,12 +12,14 @@ export const EpisodeMetadata: autoguard.serialization.MessageGuard<EpisodeMetada
 		"genres": autoguard.guards.Array.of(autoguard.guards.String),
 		"actors": autoguard.guards.Array.of(autoguard.guards.String)
 	}, {
-		"summary": autoguard.guards.String
+		"summary": autoguard.guards.String,
+		"imdb": autoguard.guards.String
 	})
 }, {
 	"year": autoguard.guards.Number,
 	"summary": autoguard.guards.String,
-	"copyright": autoguard.guards.String
+	"copyright": autoguard.guards.String,
+	"imdb": autoguard.guards.String
 });
 
 export type EpisodeMetadata = autoguard.guards.Object<{
@@ -30,12 +32,14 @@ export type EpisodeMetadata = autoguard.guards.Object<{
 		"genres": autoguard.guards.Array<autoguard.guards.String>,
 		"actors": autoguard.guards.Array<autoguard.guards.String>
 	}, {
-		"summary": autoguard.guards.String
+		"summary": autoguard.guards.String,
+		"imdb": autoguard.guards.String
 	}>
 }, {
 	"year": autoguard.guards.Number,
 	"summary": autoguard.guards.String,
-	"copyright": autoguard.guards.String
+	"copyright": autoguard.guards.String,
+	"imdb": autoguard.guards.String
 }>;
 
 export const MovieMetadata: autoguard.serialization.MessageGuard<MovieMetadata> = autoguard.guards.Object.of({
@@ -46,7 +50,8 @@ export const MovieMetadata: autoguard.serialization.MessageGuard<MovieMetadata> 
 }, {
 	"year": autoguard.guards.Number,
 	"summary": autoguard.guards.String,
-	"copyright": autoguard.guards.String
+	"copyright": autoguard.guards.String,
+	"imdb": autoguard.guards.String
 });
 
 export type MovieMetadata = autoguard.guards.Object<{
@@ -57,7 +62,8 @@ export type MovieMetadata = autoguard.guards.Object<{
 }, {
 	"year": autoguard.guards.Number,
 	"summary": autoguard.guards.String,
-	"copyright": autoguard.guards.String
+	"copyright": autoguard.guards.String,
+	"imdb": autoguard.guards.String
 }>;
 
 export const TrackMetadata: autoguard.serialization.MessageGuard<TrackMetadata> = autoguard.guards.Object.of({

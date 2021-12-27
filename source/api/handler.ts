@@ -243,7 +243,8 @@ export function lookupEpisode(episode_id: string, user_id: string, season?: sche
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media,
 		subtitles: subtitles,
-		copyright: record.copyright
+		copyright: record.copyright,
+		imdb: record.imdb
 	};
 };
 
@@ -316,7 +317,8 @@ export function lookupMovie(movie_id: string, user_id: string): schema.objects.M
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media,
 		subtitles: subtitles,
-		copyright: record.copyright
+		copyright: record.copyright,
+		imdb: record.imdb
 	};
 };
 
@@ -427,7 +429,8 @@ export function lookupShow(show_id: string, user_id: string): schema.objects.Sho
 		seasons: database.getSeasonsFromShow.lookup(show_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
 			.map((record) => lookupSeason(record.season_id, user_id, show))
-			.collect()
+			.collect(),
+		imdb: record.imdb
 	};
 };
 

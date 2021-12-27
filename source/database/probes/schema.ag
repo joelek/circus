@@ -9,9 +9,11 @@ guard EpisodeMetadata: {
 		"title": string,
 		"summary"?: string,
 		"genres": string[],
-		"actors": string[]
+		"actors": string[],
+		"imdb"?: string
 	},
-	"copyright"?: string
+	"copyright"?: string,
+	"imdb"?: string
 };
 
 guard MovieMetadata: {
@@ -21,7 +23,8 @@ guard MovieMetadata: {
 	"summary"?: string,
 	"genres": string[],
 	"actors": string[],
-	"copyright"?: string
+	"copyright"?: string,
+	"imdb"?: string
 };
 
 guard TrackMetadata: {

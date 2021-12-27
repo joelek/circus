@@ -264,7 +264,8 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 		shows.insert({
 			show_id: show_id,
 			name: metadata.show.title,
-			summary: metadata.show.summary
+			summary: metadata.show.summary,
+			imdb: metadata.show.imdb
 		});
 		let season_id = makeId("season", show_id, `${metadata.season}`);
 		seasons.insert({
@@ -280,7 +281,8 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 			number: metadata.episode,
 			year: metadata.year,
 			summary: metadata.summary,
-			copyright: metadata.copyright
+			copyright: metadata.copyright,
+			imdb: metadata.imdb
 		});
 		for (let file_id of file_ids) {
 			episode_files.insert({
@@ -319,7 +321,8 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 			title: metadata.title,
 			year: metadata.year,
 			summary: metadata.summary,
-			copyright: metadata.copyright
+			copyright: metadata.copyright,
+			imdb: metadata.imdb
 		});
 		if (is.present(metadata.year)) {
 			let year_id = makeId("year", metadata.year);

@@ -99,7 +99,8 @@ guard Movie: MovieBase & {
 	"last_stream_date"?: number,
 	"media": ../../database/schema/VideoFile,
 	"subtitles": ../../database/schema/SubtitleFile[],
-	"copyright"?: string
+	"copyright"?: string,
+	"imdb"?: string
 };
 
 guard ShowBase: {
@@ -112,7 +113,8 @@ guard Show: ShowBase & {
 	"summary"?: string,
 	"genres": Genre[],
 	"actors": Actor[],
-	"seasons": Season[]
+	"seasons": Season[],
+	"imdb"?: string
 };
 
 guard SeasonBase: {
@@ -138,7 +140,8 @@ guard Episode: EpisodeBase & {
 	"last_stream_date"?: number,
 	"media": ../../database/schema/VideoFile,
 	"subtitles": ../../database/schema/SubtitleFile[],
-	"copyright"?: string
+	"copyright"?: string,
+	"imdb"?: string
 };
 
 guard SubtitleBase: {

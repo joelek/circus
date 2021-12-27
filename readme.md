@@ -55,9 +55,11 @@ External image and metadata files may be used to supply additional information t
 		],
 		"actors": [
 			"Actor name"
-		]
+		],
+		"imdb"?: "tt0000000"
 	},
-	"copyright"?: "Copyright information"
+	"copyright"?: "Copyright information",
+	"imdb"?: "tt0000000"
 }
 ```
 
@@ -73,7 +75,8 @@ External image and metadata files may be used to supply additional information t
 	"actors": [
 		"Actor name"
 	],
-	"copyright"?: "Copyright information"
+	"copyright"?: "Copyright information",
+	"imdb"?: "tt0000000"
 }
 ```
 

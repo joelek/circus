@@ -261,7 +261,8 @@ export const Movie: autoguard.serialization.MessageGuard<Movie> = autoguard.guar
 		"year": autoguard.guards.Number,
 		"summary": autoguard.guards.String,
 		"last_stream_date": autoguard.guards.Number,
-		"copyright": autoguard.guards.String
+		"copyright": autoguard.guards.String,
+		"imdb": autoguard.guards.String
 	})
 );
 
@@ -276,7 +277,8 @@ export type Movie = autoguard.guards.Intersection<[
 		"year": autoguard.guards.Number,
 		"summary": autoguard.guards.String,
 		"last_stream_date": autoguard.guards.Number,
-		"copyright": autoguard.guards.String
+		"copyright": autoguard.guards.String,
+		"imdb": autoguard.guards.String
 	}>
 ]>;
 
@@ -299,7 +301,8 @@ export const Show: autoguard.serialization.MessageGuard<Show> = autoguard.guards
 		"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor)),
 		"seasons": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Season))
 	}, {
-		"summary": autoguard.guards.String
+		"summary": autoguard.guards.String,
+		"imdb": autoguard.guards.String
 	})
 );
 
@@ -310,7 +313,8 @@ export type Show = autoguard.guards.Intersection<[
 		"actors": autoguard.guards.Array<autoguard.guards.Reference<Actor>>,
 		"seasons": autoguard.guards.Array<autoguard.guards.Reference<Season>>
 	}, {
-		"summary": autoguard.guards.String
+		"summary": autoguard.guards.String,
+		"imdb": autoguard.guards.String
 	}>
 ]>;
 
@@ -363,7 +367,8 @@ export const Episode: autoguard.serialization.MessageGuard<Episode> = autoguard.
 		"year": autoguard.guards.Number,
 		"summary": autoguard.guards.String,
 		"last_stream_date": autoguard.guards.Number,
-		"copyright": autoguard.guards.String
+		"copyright": autoguard.guards.String,
+		"imdb": autoguard.guards.String
 	})
 );
 
@@ -376,7 +381,8 @@ export type Episode = autoguard.guards.Intersection<[
 		"year": autoguard.guards.Number,
 		"summary": autoguard.guards.String,
 		"last_stream_date": autoguard.guards.Number,
-		"copyright": autoguard.guards.String
+		"copyright": autoguard.guards.String,
+		"imdb": autoguard.guards.String
 	}>
 ]>;
 

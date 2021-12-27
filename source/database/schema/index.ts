@@ -220,14 +220,16 @@ export const Show: autoguard.serialization.MessageGuard<Show> = autoguard.guards
 	"show_id": autoguard.guards.String,
 	"name": autoguard.guards.String
 }, {
-	"summary": autoguard.guards.String
+	"summary": autoguard.guards.String,
+	"imdb": autoguard.guards.String
 });
 
 export type Show = autoguard.guards.Object<{
 	"show_id": autoguard.guards.String,
 	"name": autoguard.guards.String
 }, {
-	"summary": autoguard.guards.String
+	"summary": autoguard.guards.String,
+	"imdb": autoguard.guards.String
 }>;
 
 export const ShowFile: autoguard.serialization.MessageGuard<ShowFile> = autoguard.guards.Object.of({
@@ -260,7 +262,8 @@ export const Episode: autoguard.serialization.MessageGuard<Episode> = autoguard.
 }, {
 	"year": autoguard.guards.Number,
 	"summary": autoguard.guards.String,
-	"copyright": autoguard.guards.String
+	"copyright": autoguard.guards.String,
+	"imdb": autoguard.guards.String
 });
 
 export type Episode = autoguard.guards.Object<{
@@ -271,7 +274,8 @@ export type Episode = autoguard.guards.Object<{
 }, {
 	"year": autoguard.guards.Number,
 	"summary": autoguard.guards.String,
-	"copyright": autoguard.guards.String
+	"copyright": autoguard.guards.String,
+	"imdb": autoguard.guards.String
 }>;
 
 export const EpisodeFile: autoguard.serialization.MessageGuard<EpisodeFile> = autoguard.guards.Object.of({
@@ -290,7 +294,8 @@ export const Movie: autoguard.serialization.MessageGuard<Movie> = autoguard.guar
 }, {
 	"year": autoguard.guards.Number,
 	"summary": autoguard.guards.String,
-	"copyright": autoguard.guards.String
+	"copyright": autoguard.guards.String,
+	"imdb": autoguard.guards.String
 });
 
 export type Movie = autoguard.guards.Object<{
@@ -299,7 +304,8 @@ export type Movie = autoguard.guards.Object<{
 }, {
 	"year": autoguard.guards.Number,
 	"summary": autoguard.guards.String,
-	"copyright": autoguard.guards.String
+	"copyright": autoguard.guards.String,
+	"imdb": autoguard.guards.String
 }>;
 
 export const MovieFile: autoguard.serialization.MessageGuard<MovieFile> = autoguard.guards.Object.of({

@@ -100,7 +100,8 @@ guard TrackArtist: {
 guard Show: {
 	"show_id": string,
 	"name": string,
-	"summary"?: string
+	"summary"?: string,
+	"imdb"?: string
 };
 
 guard ShowFile: {
@@ -121,7 +122,8 @@ guard Episode: {
 	"number": number,
 	"year"?: number,
 	"summary"?: string,
-	"copyright"?: string
+	"copyright"?: string,
+	"imdb"?: string
 };
 
 guard EpisodeFile: {
@@ -134,7 +136,8 @@ guard Movie: {
 	"title": string,
 	"year"?: number,
 	"summary"?: string,
-	"copyright"?: string
+	"copyright"?: string,
+	"imdb"?: string
 };
 
 guard MovieFile: {
