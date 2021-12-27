@@ -515,6 +515,42 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 					showContextMenu.updateState(false);
 				})
 		);
+	} else if (apischema.objects.Movie.is(contextMenuEntity)) {
+		let imdb = contextMenuEntity.imdb;
+		if (is.present(imdb)) {
+			contextMenuItems.append(
+				xml.element("button")
+					.add(xml.text("IMDB"))
+					.on("click", async () => {
+						window.open(`https://www.imdb.com/title/${imdb}`);
+						showContextMenu.updateState(false);
+					})
+			);
+		}
+	} else if (apischema.objects.Show.is(contextMenuEntity)) {
+		let imdb = contextMenuEntity.imdb;
+		if (is.present(imdb)) {
+			contextMenuItems.append(
+				xml.element("button")
+					.add(xml.text("IMDB"))
+					.on("click", async () => {
+						window.open(`https://www.imdb.com/title/${imdb}`);
+						showContextMenu.updateState(false);
+					})
+			);
+		}
+	} else if (apischema.objects.Episode.is(contextMenuEntity)) {
+		let imdb = contextMenuEntity.imdb;
+		if (is.present(imdb)) {
+			contextMenuItems.append(
+				xml.element("button")
+					.add(xml.text("IMDB"))
+					.on("click", async () => {
+						window.open(`https://www.imdb.com/title/${imdb}`);
+						showContextMenu.updateState(false);
+					})
+			);
+		}
 	}
 	showContextMenu.updateState(contextMenuItems.getState().length > 0);
 });
