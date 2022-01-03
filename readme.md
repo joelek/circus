@@ -190,15 +190,11 @@ Ports, paths and other settings can be configured through altering the config fi
 * Structure code using subprojects.
 * Clear player state when the user logs out.
 * Store create and update timestamps for entities.
-* Add transactional capabilities to database.
-* Grant admin privileges to the very first account created.
 * Add account tiers to keys and users.
 * Create full screen player with additional controls and graphics.
-* Build supercut feature based on cue search results.
 * Set document title based on page.
 * Create and use layout components with standard spacing.
 * Put languages in database.
-* Add offline functionality with service workers.
 * Improve stream detection algorithm.
 * Index generated images.
 * Move authentication to typesockets.
@@ -208,5 +204,4 @@ Ports, paths and other settings can be configured through altering the config fi
 * Verify external track metadata functionality.
 * Add filter to entity pages.
 * Change line heights to prevent the truncation of capital letters with umlauts.
-* Support downloading of images or copying of image urls.
 * Index keyframes and create movie and episode subpage with list.
