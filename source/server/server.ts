@@ -60,7 +60,8 @@ async function requestHandler(request: libhttp.IncomingMessage, response: libhtt
 		airplay.discover();
 		chromecasts.discover();
 		response.writeHead(200);
-		return response.end("{}");
+		response.end("{}");
+		return;
 	}
 	if (/^[/]media[/]/.test(path)) {
 		if ((parts = /^[/]media[/]stills[/]([0-9a-f]{16})[/]/.exec(path)) != null) {
@@ -79,7 +80,8 @@ async function requestHandler(request: libhttp.IncomingMessage, response: libhtt
 				});
 			} else {
 				response.writeHead(404);
-				return response.end();
+				response.end();
+				return;
 			}
 			return;
 		}
@@ -124,7 +126,7 @@ async function requestHandler(request: libhttp.IncomingMessage, response: libhtt
 		response.writeHead(200, {
 			"Content-Type": "application/json"
 		});
-		return response.end(JSON.stringify({
+		response.end(JSON.stringify({
 			"name": "Circus",
 			"start_url": "/",
 			"display": "standalone",
@@ -132,6 +134,7 @@ async function requestHandler(request: libhttp.IncomingMessage, response: libhtt
 			"background_color":"#1f1f1f",
 			"icons": []
 		}));
+		return;
 	}
 	if (path === "/logo.png") {
 		response.writeHead(200, {
