@@ -221,10 +221,6 @@ async function checkFile(queue: WritableQueue, root: File): Promise<void> {
 		let stats = libfs.statSync(path);
 		if (stats.isFile()) {
 			if (stats.mtime.valueOf() === root.index_timestamp) {
-				await stores.files.update(queue, {
-					...root,
-					size: stats.size
-				});
 				return;
 			}
 		}
@@ -272,8 +268,9 @@ async function visitDirectory(queue: WritableQueue, path: Array<string>, parent_
 			try {
 				await stores.files.lookup(queue, { file_id });
 			} catch (error) {
+				let stats = libfs.statSync(path.join("/"));
 				let index_timestamp = null;
-				let size = libfs.statSync(path.join("/")).size
+				let size = stats.size;
 				await stores.files.insert(queue, {
 					file_id,
 					name,
@@ -510,12 +507,13 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			}
 		}
 	}
-}
+};
 
-function indexFile(file: File): void {
+async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 	let file_id = file.file_id;
-	let path = getFilePath(file);
-	let fd = libfs.openSync(path.join("/"), "r");
+	let paths = await getFilePath(queue, file);
+	let path = paths.join("/");
+	let fd = libfs.openSync(path, "r");
 	try {
 		let probe: probes.schema.Probe = {
 			resources: []
@@ -525,34 +523,34 @@ function indexFile(file: File): void {
 			let subtitle_resources = probe.resources.filter((resource): resource is probes.schema.SubtitleResource => resource.type === "subtitle");
 			let subtitle_resource = subtitle_resources.shift();
 			if (is.present(subtitle_resource)) {
-				subtitle_files.insert({
+				await stores.subtitle_files.insert(queue, {
 					file_id: file_id,
 					mime: "text/vtt",
 					duration_ms: subtitle_resource.duration_ms,
-					language: subtitle_resource.language
+					language: subtitle_resource.language ?? null
 				});
-				let subtitle_id = makeId("subtitle", file.file_id);
-				subtitles.insert({
+				let subtitle_id = makeBinaryId("subtitle", file.file_id);
+				await stores.subtitles.insert(queue, {
 					subtitle_id: subtitle_id,
 					file_id: file.file_id
 				});
-/* 				for (let cue of subtitle_resource.cues) {
-					let cue_id = makeId("cue", subtitle_id, `${cue.start_ms}`);
-					cues.insert({
+				for (let cue of subtitle_resource.cues) {
+					let cue_id = makeBinaryId("cue", subtitle_id, `${cue.start_ms}`);
+					await stores.cues.insert(queue, {
 						cue_id: cue_id,
 						subtitle_id: subtitle_id,
 						start_ms: cue.start_ms,
 						duration_ms: cue.duration_ms,
 						lines: cue.lines.join("\n")
 					});
-				} */
+				}
 			}
 		} else if (file.name.endsWith(".json")) {
 			probe = probes.json.probe(fd);
 			let metadata_resources = probe.resources.filter((resource): resource is probes.schema.MetadataResource => resource.type === "metadata");
 			let metadata_resource = metadata_resources.shift();
 			if (is.present(metadata_resource)) {
-				metadata_files.insert({
+				await stores.metadata_files.insert(queue, {
 					file_id: file_id,
 					mime: "application/json"
 				});
@@ -562,7 +560,7 @@ function indexFile(file: File): void {
 			let audio_resources = probe.resources.filter((resource): resource is probes.schema.AudioResource => resource.type === "audio");
 			let audio_resource = audio_resources.shift();
 			if (is.present(audio_resource)) {
-				audio_files.insert({
+				await stores.audio_files.insert(queue, {
 					file_id: file_id,
 					mime: "audio/mp3",
 					duration_ms: audio_resource.duration_ms
@@ -575,7 +573,7 @@ function indexFile(file: File): void {
 			let audio_resource = audio_resources.shift();
 			let video_resource = video_resources.shift();
 			if (is.present(video_resource)) {
-				video_files.insert({
+				await stores.video_files.insert(queue, {
 					file_id: file_id,
 					mime: "video/mp4",
 					duration_ms: video_resource.duration_ms,
@@ -583,7 +581,7 @@ function indexFile(file: File): void {
 					height: video_resource.height
 				});
 			} else if (is.present(audio_resource)) {
-				audio_files.insert({
+				await stores.audio_files.insert(queue, {
 					file_id: file_id,
 					mime: "audio/mp4",
 					duration_ms: audio_resource.duration_ms
@@ -594,7 +592,7 @@ function indexFile(file: File): void {
 			let image_resources = probe.resources.filter((resource): resource is probes.schema.ImageResource => resource.type === "image");
 			let image_resource = image_resources.shift();
 			if (is.present(image_resource)) {
-				image_files.insert({
+				await stores.image_files.insert(queue, {
 					file_id: file_id,
 					mime: "image/jpeg",
 					width: image_resource.width,
@@ -603,42 +601,43 @@ function indexFile(file: File): void {
 			}
 		}
 		// TODO: Only index actual media files and not the metadata files themselves.
-		indexMetadata(probe, file_id);
+		indexMetadata(queue, probe, file_id);
 	} catch (error) {
-		console.log(`Indexing failed for "${path.join("/")}"!`);
+		console.log(`Indexing failed for "${path}"!`);
 		console.log(error);
 	}
 	libfs.closeSync(fd);
-	let stats = libfs.statSync(path.join("/"));
+	let stats = libfs.statSync(path);
 	file.index_timestamp = stats.mtime.valueOf();
 	file.size = stats.size;
-	files.update(file);
-}
+	await stores.files.update(queue, file);
+};
 
-function indexFiles(): void {
-	for (let file of files) {
+async function indexFiles(queue: WritableQueue): Promise<void> {
+	for (let file of await stores.files.filter(queue)) {
 		if (is.absent(file.index_timestamp)) {
 			console.log(`Indexing ${file.name}...`);
-			indexFile(file);
+			await indexFile(queue, file);
 		}
 	}
-}
+};
 
-function getSiblingFiles(subject: File): Array<File> {
-	let candidates_in_directory = getFilesFromDirectory.lookup(subject.parent_directory_id)
-		.sort(indices.LexicalSort.increasing((file) => file.name))
-		.map((file) => {
-			try {
-				audio_files.lookup(file.file_id);
-				return file;
-			} catch (error) {}
-			try {
-				video_files.lookup(file.file_id);
-				return file;
-			} catch (error) {}
-		})
-		.include(is.present)
-		.collect();
+async function getSiblingFiles(queue: ReadableQueue, subject: File): Promise<Array<File>> {
+	let parent_directory = await links.directory_files.lookup(queue, subject);
+	let candidates_in_directory = [] as Array<File>;
+	for (let file of await links.directory_files.filter(queue, parent_directory)) {
+		try {
+			await stores.audio_files.lookup(queue, file);
+			candidates_in_directory.push(file);
+			continue;
+		} catch (error) {}
+		try {
+			await stores.video_files.lookup(queue, file);
+			candidates_in_directory.push(file);
+			continue;
+		} catch (error) {}
+	}
+	candidates_in_directory.sort(indices.LexicalSort.increasing((file) => file.name));
 	let basename = subject.name.split(".")[0];
 	let candidates_sharing_basename = candidates_in_directory
 		.filter((file) => file.name.split(".")[0] === basename);
@@ -647,26 +646,26 @@ function getSiblingFiles(subject: File): Array<File> {
 	} else {
 		return candidates_in_directory;
 	}
-}
+};
 
-function associateMetadata(): void {
-	for (let metadata_file of metadata_files) {
-		let file = files.lookup(metadata_file.file_id);
-		let path = getFilePath(file);
+async function associateMetadata(queue: WritableQueue): Promise<void> {
+	for (let metadata_file of await stores.metadata_files.filter(queue)) {
+		let file = await stores.files.lookup(queue, metadata_file);
+		let path = await getFilePath(queue, file);
 		let fd = libfs.openSync(path.join("/"), "r");
 		let probe = probes.json.probe(fd);
 		libfs.closeSync(fd);
-		let siblings = getSiblingFiles(file);
-		indexMetadata(probe, ...siblings.map((file) => file.file_id));
+		let siblings = await getSiblingFiles(queue, file);
+		await indexMetadata(queue, probe, ...siblings.map((file) => file.file_id));
 	}
-}
+};
 
-function associateImages(): void {
-	for (let image_file of image_files) {
-		let file = files.lookup(image_file.file_id);
-		let siblings = getSiblingFiles(file);
+async function associateImages(queue: WritableQueue): Promise<void> {
+	for (let image_file of await stores.image_files.filter(queue)) {
+		let file = await stores.files.lookup(queue, image_file);
+		let siblings = await getSiblingFiles(queue, file);
 		for (let sibling of siblings) {
-			let track_files = getTracksFromFile.lookup(sibling.file_id)
+			let track_files = (await links.file_track_files.filter(queue, sibling))
 				.filter((track_file) => track_file.file_id !== image_file.file_id);
 			for (let track_file of track_files) {
 				try {
@@ -702,7 +701,7 @@ function associateImages(): void {
 			}
 		}
 	}
-}
+};
 
 function associateSubtitles(): void {
 	for (let subtitle_file of subtitle_files) {
@@ -717,7 +716,7 @@ function associateSubtitles(): void {
 			});
 		}
 	}
-}
+};
 
 function removeBrokenEntities(): void {
 	for (let track of tracks) {
@@ -738,7 +737,7 @@ function removeBrokenEntities(): void {
 			episodes.remove(episode);
 		}
 	}
-}
+};
 
 export async function runIndexer(): Promise<void> {
 	console.log(`Running indexer...`);
