@@ -5,6 +5,7 @@ import * as schema from "./schema";
 import * as indices from "../jsondb/";
 import * as is from "../is";
 import * as probes from "./probes";
+import { Directory as LegacyDirectory, File as LegacyFile } from "./schema"
 import { default as config } from "../config";
 import * as jdb2 from "../jdb2";
 import { transactionManager, stores, links, Directory, File } from "./atlas";
@@ -186,6 +187,19 @@ export const shows_search = loadIndex("search_shows", shows, shows, (entry) => [
 export const track_search = loadIndex("search_tracks", tracks, tracks, (entry) => [entry.title], jdb2.Index.QUERY_TOKENIZER);
 export const user_search = loadIndex("search_users", users, users, (entry) => [entry.name, entry.username], jdb2.Index.QUERY_TOKENIZER);
 export const year_search = loadIndex("search_years", years, years, (entry) => [entry.year], jdb2.Index.QUERY_TOKENIZER);
+
+export function getLegacyPath(entry: LegacyDirectory | LegacyFile): Array<string> {
+	let path = new Array<string>();
+	while (true) {
+		path.unshift(entry.name);
+		let parent_directory_id = entry.parent_directory_id;
+		if (is.absent(parent_directory_id)) {
+			break;
+		}
+		entry = directories.lookup(parent_directory_id);
+	}
+	return [...config.media_path, ...path];
+};
 
 export async function getPath(queue: ReadableQueue, entry: Directory | File): Promise<Array<string>> {
 	let path = new Array<string>();
@@ -743,21 +757,21 @@ export async function runIndexer(): Promise<void> {
 	console.log(`Running indexer...`);
 	await transactionManager.enqueueWritableTransaction(async (queue) => {
 		for (let directory of await links.directory_directories.filter(queue)) {
-			checkDirectory(queue, directory);
+			await checkDirectory(queue, directory);
 		}
 		for (let file of await links.directory_files.filter(queue)) {
-			checkFile(queue, file);
+			await checkFile(queue, file);
 		}
-		visitDirectory(queue, config.media_path, null);
-		indexFiles(queue);
+		await visitDirectory(queue, config.media_path, null);
+		await indexFiles(queue);
 		console.log(`Associating...`);
-		associateMetadata(queue);
-		associateImages(queue);
-		associateSubtitles(queue);
-		removeBrokenEntities(queue);
+		await associateMetadata(queue);
+		await associateImages(queue);
+		await associateSubtitles(queue);
+		await removeBrokenEntities(queue);
 		for (let token of await stores.tokens.filter(queue)) {
 			if (token.expires_ms <= Date.now()) {
-				stores.tokens.remove(queue, token);
+				await stores.tokens.remove(queue, token);
 			}
 		}
 	});
@@ -769,7 +783,8 @@ export async function runIndexer(): Promise<void> {
 	}
 };
 
-runIndexer();
+runIndexer()
+	.catch((error) => console.log(error));
 
 process.on("SIGTERM", () => {
 	console.log("SIGTERM");

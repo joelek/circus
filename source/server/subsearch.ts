@@ -38,7 +38,7 @@ function deleteTree(root: string): void {
 }
 
 async function generateStill(target: string[], file: dbschema.File): Promise<void> {
-	let path = indexer.getPath(file);
+	let path = indexer.getLegacyPath(file);
 	let offsets = await keyframes.getKeyframeOffsets(path, 0);
 	let offset = offsets[Math.floor(offsets.length / 2)];
 	return new Promise( (resolve, reject) => {
@@ -82,7 +82,7 @@ function generateMeme(target: string[], cue: dbschema.Cue, cb: { (): void }): vo
 			let cp = libcp.spawn("ffmpeg", [
 				"-ss", utils.formatTimestamp(cue.start_ms),
 				"-t", utils.formatTimestamp(Math.min(cue.duration_ms, 5000)),
-				"-i", indexer.getPath(file_subtitle).join("/"),
+				"-i", indexer.getLegacyPath(file_subtitle).join("/"),
 				subtitle.join("/"),
 				"-y"
 			]);
@@ -95,7 +95,7 @@ function generateMeme(target: string[], cue: dbschema.Cue, cb: { (): void }): vo
 				let cp = libcp.spawn("ffmpeg", [
 					"-ss", utils.formatTimestamp(cue.start_ms),
 					"-t", utils.formatTimestamp(Math.min(cue.duration_ms, 5000)),
-					"-i", indexer.getPath(file_media).join("/"),
+					"-i", indexer.getLegacyPath(file_media).join("/"),
 					"-vf", "fps=15,scale=w=384:h=216:force_original_aspect_ratio=decrease,pad=384:216:-1:-1,subtitles=" + subtitle.join("/") + ":force_style='Bold=1,Fontsize=24,Outline=2',palettegen",
 					palette.join("/"),
 					"-y"
@@ -104,7 +104,7 @@ function generateMeme(target: string[], cue: dbschema.Cue, cb: { (): void }): vo
 					let cp = libcp.spawn("ffmpeg", [
 						"-ss", utils.formatTimestamp(cue.start_ms),
 						"-t", utils.formatTimestamp(Math.min(cue.duration_ms, 5000)),
-						"-i", indexer.getPath(file_media).join("/"),
+						"-i", indexer.getLegacyPath(file_media).join("/"),
 						"-i", palette.join("/"),
 						"-filter_complex", "fps=15,scale=w=384:h=216:force_original_aspect_ratio=decrease,pad=384:216:-1:-1,subtitles=" + subtitle.join("/") + ":force_style='Bold=1,Fontsize=24,Outline=2'[x];[x][1:v]paletteuse",
 						"-map_metadata", "-1",

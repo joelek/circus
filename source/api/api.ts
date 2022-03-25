@@ -479,7 +479,7 @@ export const server = apiv2.makeServer({
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
 		let file = handler.lookupFile(options.file_id, user_id);
-		let path = database.getPath(file).join("/");
+		let path = database.getLegacyPath(file).join("/");
 		let range = autoguard.api.parseRangeHeader(request.headers().range, libfs.statSync(path).size);
 		let stream = libfs.createReadStream(path, {
 			start: range.offset,
