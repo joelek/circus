@@ -502,7 +502,7 @@ const getAlbumsFromYear = context.createQuery(albums, {
 	year: context.createEqualityOperator()
 });
 
-export const transactionManager = context.createTransactionManager("./private/db/", {
+export const { transactionManager } = context.createTransactionManager("./private/db/", {
 	directories,
 	files,
 	audio_files,
@@ -590,3 +590,7 @@ export const transactionManager = context.createTransactionManager("./private/db
 	getMoviesFromYear,
 	getAlbumsFromYear
 });
+
+export const stores = transactionManager.createTransactionalStores();
+export const links = transactionManager.createTransactionalLinks();
+export const queries = transactionManager.createTransactionalQueries();
