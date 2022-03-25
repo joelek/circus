@@ -669,31 +669,31 @@ async function associateImages(queue: WritableQueue): Promise<void> {
 				.filter((track_file) => track_file.file_id !== image_file.file_id);
 			for (let track_file of track_files) {
 				try {
-					let track = tracks.lookup(track_file.track_id);
-					let disc = discs.lookup(track.disc_id);
-					let album = albums.lookup(disc.album_id);
-					album_files.insert({
+					let track = await stores.tracks.lookup(queue, track_file);
+					let disc = await stores.discs.lookup(queue, track);
+					let album = await stores.albums.lookup(queue, disc);
+					await stores.album_files.insert(queue, {
 						album_id: album.album_id,
 						file_id: image_file.file_id
 					});
 				} catch (error) {}
 			}
-			let movies = getMoviesFromFile.lookup(sibling.file_id)
+			let movies = (await links.file_movie_files.filter(queue, sibling))
 				.filter((movie_file) => movie_file.file_id !== image_file.file_id);
 			for (let movie of movies) {
-				movie_files.insert({
+				await stores.movie_files.insert(queue, {
 					movie_id: movie.movie_id,
 					file_id: image_file.file_id
 				});
 			}
-			let episode_files = getEpisodesFromFile.lookup(sibling.file_id)
+			let episode_files = (await links.file_episode_files.filter(queue, sibling))
 				.filter((episode_file) => episode_file.file_id !== image_file.file_id);
 			for (let episode_file of episode_files) {
 				try {
-					let episode = episodes.lookup(episode_file.episode_id);
-					let season = seasons.lookup(episode.season_id);
-					let show = shows.lookup(season.show_id);
-					show_files.insert({
+					let episode = await stores.episodes.lookup(queue, episode_file);
+					let season = await stores.seasons.lookup(queue, episode);
+					let show = await stores.shows.lookup(queue, season);
+					await stores.show_files.insert(queue, {
 						show_id: show.show_id,
 						file_id: image_file.file_id
 					});
@@ -703,14 +703,14 @@ async function associateImages(queue: WritableQueue): Promise<void> {
 	}
 };
 
-function associateSubtitles(): void {
-	for (let subtitle_file of subtitle_files) {
-		let file = files.lookup(subtitle_file.file_id);
+async function associateSubtitles(queue: WritableQueue): Promise<void> {
+	for (let subtitle_file of await stores.subtitle_files.filter(queue)) {
+		let file = await stores.files.lookup(queue, subtitle_file);
 		let basename = file.name.split(".")[0];
-		let siblings = getSiblingFiles(file)
+		let siblings = (await getSiblingFiles(queue, file))
 			.filter((file) => file.name.split(".")[0] === basename);
 		for (let sibling of siblings) {
-			video_subtitles.insert({
+			await stores.video_subtitles.insert(queue, {
 				video_file_id: sibling.file_id,
 				subtitle_file_id: file.file_id
 			});
@@ -718,23 +718,23 @@ function associateSubtitles(): void {
 	}
 };
 
-function removeBrokenEntities(): void {
-	for (let track of tracks) {
-		let track_files = getFilesFromTrack.lookup(track.track_id);
-		if (track_files.collect().length === 0) {
-			tracks.remove(track);
+async function removeBrokenEntities(queue: WritableQueue): Promise<void> {
+	for (let track of await stores.tracks.filter(queue)) {
+		let track_files = await links.track_track_files.filter(queue, track);
+		if (track_files.length === 0) {
+			await stores.tracks.remove(queue, track);
 		}
 	}
-	for (let movie of movies) {
-		let movie_files = getFilesFromMovie.lookup(movie.movie_id);
-		if (movie_files.collect().length === 0) {
-			movies.remove(movie);
+	for (let movie of await stores.movies.filter(queue)) {
+		let movie_files = await links.movie_movie_files.filter(queue, movie);
+		if (movie_files.length === 0) {
+			await stores.movies.remove(queue, movie);
 		}
 	}
-	for (let episode of episodes) {
-		let episode_files = getFilesFromEpisode.lookup(episode.episode_id);
-		if (episode_files.collect().length === 0) {
-			episodes.remove(episode);
+	for (let episode of await stores.episodes.filter(queue)) {
+		let episode_files = await links.episode_episode_files.filter(queue, episode);
+		if (episode_files.length === 0) {
+			await stores.episodes.remove(queue, episode);
 		}
 	}
 };
@@ -749,15 +749,15 @@ export async function runIndexer(): Promise<void> {
 			checkFile(queue, file);
 		}
 		visitDirectory(queue, config.media_path, null);
-		indexFiles();
+		indexFiles(queue);
 		console.log(`Associating...`);
-		associateMetadata();
-		associateImages();
-		associateSubtitles();
-		removeBrokenEntities();
+		associateMetadata(queue);
+		associateImages(queue);
+		associateSubtitles(queue);
+		removeBrokenEntities(queue);
 		for (let token of await stores.tokens.filter(queue)) {
 			if (token.expires_ms <= Date.now()) {
-				tokens.remove(token);
+				stores.tokens.remove(queue, token);
 			}
 		}
 	});
