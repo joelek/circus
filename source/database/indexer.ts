@@ -5,9 +5,10 @@ import * as schema from "./schema";
 import * as indices from "../jsondb/";
 import * as is from "../is";
 import * as probes from "./probes";
-import { Directory, File } from "./schema";
 import { default as config } from "../config";
 import * as jdb2 from "../jdb2";
+import { transactionManager, stores, links, Directory, File } from "./atlas";
+import { ReadableQueue, WritableQueue } from "@joelek/atlas";
 
 function wordify(string: string | number): Array<string> {
 	return String(string)
@@ -29,6 +30,21 @@ function makeId(...components: Array<string | number | undefined>): string {
 		.update(components.join("\0"))
 		.digest("hex")
 		.slice(0, 16);
+}
+
+function makeBinaryId(...components: Array<Uint8Array | string | number | undefined | null>): Uint8Array {
+	components = components
+		.map((component) => {
+			if (component instanceof Uint8Array) {
+				component = Buffer.from(component).toString("hex");
+			}
+			return wordify(component ?? "").join(" ");
+		});
+	let buffer = libcrypto.createHash("sha256")
+		.update(components.join("\0"))
+		.digest()
+		.slice(0, 8);
+	return Uint8Array.from(buffer);
 }
 
 if (!libfs.existsSync(config.media_path.join("/"))) {
@@ -171,7 +187,7 @@ export const track_search = loadIndex("search_tracks", tracks, tracks, (entry) =
 export const user_search = loadIndex("search_users", users, users, (entry) => [entry.name, entry.username], jdb2.Index.QUERY_TOKENIZER);
 export const year_search = loadIndex("search_years", years, years, (entry) => [entry.year], jdb2.Index.QUERY_TOKENIZER);
 
-export function getPath(entry: Directory | File): Array<string> {
+export async function getPath(queue: ReadableQueue, entry: Directory | File): Promise<Array<string>> {
 	let path = new Array<string>();
 	while (true) {
 		path.unshift(entry.name);
@@ -179,26 +195,33 @@ export function getPath(entry: Directory | File): Array<string> {
 		if (is.absent(parent_directory_id)) {
 			break;
 		}
-		entry = directories.lookup(parent_directory_id);
+		let newEntry = await links.directory_directories.lookup(queue, {
+			parent_directory_id
+		});
+		if (is.absent(newEntry)) {
+			break;
+		}
+		entry = newEntry;
 	}
 	return [...config.media_path, ...path];
 };
 
-function getDirectoryPath(directory: Directory): Array<string> {
-	return getPath(directory);
-}
+function getDirectoryPath(queue: ReadableQueue, directory: Directory): Promise<Array<string>> {
+	return getPath(queue, directory);
+};
 
-function getFilePath(file: File): Array<string> {
-	return getPath(file);
-}
+function getFilePath(queue: ReadableQueue, file: File): Promise<Array<string>> {
+	return getPath(queue, file);
+};
 
-function checkFile(root: File): void {
-	let path = getFilePath(root).join("/");
+async function checkFile(queue: WritableQueue, root: File): Promise<void> {
+	let paths = await getFilePath(queue, root);
+	let path = paths.join("/");
 	if (libfs.existsSync(path)) {
 		let stats = libfs.statSync(path);
 		if (stats.isFile()) {
 			if (stats.mtime.valueOf() === root.index_timestamp) {
-				files.update({
+				await stores.files.update(queue, {
 					...root,
 					size: stats.size
 				});
@@ -206,247 +229,253 @@ function checkFile(root: File): void {
 			}
 		}
 	}
-	files.remove(root);
-}
+	await stores.files.remove(queue, root);
+};
 
-function checkDirectory(root: Directory): void {
-	let path = getDirectoryPath(root).join("/");
+async function checkDirectory(queue: WritableQueue, root: Directory): Promise<void> {
+	let paths = await getDirectoryPath(queue, root);
+	let path = paths.join("/");
 	if (libfs.existsSync(path)) {
 		let stats = libfs.statSync(path);
 		if (stats.isDirectory()) {
-			for (let directory of getDirectoriesFromDirectory.lookup(root.directory_id)) {
-				checkDirectory(directory);
+			let directory_id = root.directory_id;
+			for (let directory of await links.directory_directories.filter(queue, { directory_id })) {
+				checkDirectory(queue, directory);
 			}
-			for (let file of getFilesFromDirectory.lookup(root.directory_id)) {
-				checkFile(file);
+			for (let file of await links.directory_files.filter(queue, { directory_id })) {
+				checkFile(queue, file);
 			}
 			return;
 		}
 	}
-	directories.remove(root);
-}
+	await stores.directories.remove(queue, root);
+};
 
-function visitDirectory(path: Array<string>, parent_directory_id?: string): void {
+async function visitDirectory(queue: WritableQueue, path: Array<string>, parent_directory_id: Uint8Array | null): Promise<void> {
 	let dirents = libfs.readdirSync(path.join("/"), { withFileTypes: true });
 	for (let dirent of dirents) {
 		let name = dirent.name;
 		if (dirent.isDirectory()) {
-			let directory_id = makeId("directory", parent_directory_id, name);
+			let directory_id = makeBinaryId("directory", parent_directory_id, name);
 			try {
-				directories.lookup(directory_id);
+				await stores.directories.lookup(queue, { directory_id });
 			} catch (error) {
-				directories.insert({
+				await stores.directories.insert(queue, {
 					directory_id,
 					name,
 					parent_directory_id
 				});
 			}
-			visitDirectory([...path, dirent.name], directory_id);
+			await visitDirectory(queue, [...path, dirent.name], directory_id);
 		} else if (dirent.isFile()) {
-			let file_id = makeId("file", parent_directory_id, name);
+			let file_id = makeBinaryId("file", parent_directory_id, name);
 			try {
-				files.lookup(file_id);
+				await stores.files.lookup(queue, { file_id });
 			} catch (error) {
-				files.insert({
+				let index_timestamp = null;
+				let size = libfs.statSync(path.join("/")).size
+				await stores.files.insert(queue, {
 					file_id,
 					name,
-					parent_directory_id
+					parent_directory_id,
+					index_timestamp,
+					size
 				});
 			}
 		}
 	}
-}
+};
 
-function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): void {
+async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, ...file_ids: Array<Uint8Array>): Promise<void> {
 	let metadata = probe.metadata;
 	if (probes.schema.EpisodeMetadata.is(metadata)) {
-		let show_id = makeId("show", metadata.show.title);
-		shows.insert({
+		let show_id = makeBinaryId("show", metadata.show.title);
+		await stores.shows.insert(queue, {
 			show_id: show_id,
 			name: metadata.show.title,
-			summary: metadata.show.summary,
-			imdb: metadata.show.imdb
+			summary: metadata.show.summary ?? null,
+			imdb: metadata.show.imdb ?? null
 		});
-		let season_id = makeId("season", show_id, `${metadata.season}`);
-		seasons.insert({
+		let season_id = makeBinaryId("season", show_id, `${metadata.season}`);
+		await stores.seasons.insert(queue, {
 			season_id: season_id,
 			show_id: show_id,
 			number: metadata.season
 		});
-		let episode_id = makeId("episode", season_id, `${metadata.episode}`);
-		episodes.insert({
+		let episode_id = makeBinaryId("episode", season_id, `${metadata.episode}`);
+		await stores.episodes.insert(queue, {
 			episode_id: episode_id,
 			season_id: season_id,
 			title: metadata.title,
 			number: metadata.episode,
-			year: metadata.year,
-			summary: metadata.summary,
-			copyright: metadata.copyright,
-			imdb: metadata.imdb
+			year: metadata.year ?? null,
+			summary: metadata.summary ?? null,
+			copyright: metadata.copyright ?? null,
+			imdb: metadata.imdb ?? null
 		});
 		for (let file_id of file_ids) {
-			episode_files.insert({
+			await stores.episode_files.insert(queue, {
 				episode_id: episode_id,
 				file_id: file_id
 			});
 		}
 		for (let [index, actor] of metadata.show.actors.entries()) {
-			let actor_id = makeId("actor", actor);
-			actors.insert({
+			let actor_id = makeBinaryId("actor", actor);
+			await stores.actors.insert(queue, {
 				actor_id: actor_id,
 				name: actor
 			});
-			show_actors.insert({
+			await stores.show_actors.insert(queue, {
 				actor_id: actor_id,
 				show_id: show_id,
 				order: index
 			});
 		}
 		for (let [index, genre] of metadata.show.genres.entries()) {
-			let genre_id = makeId("genre", genre);
-			genres.insert({
+			let genre_id = makeBinaryId("genre", genre);
+			await stores.genres.insert(queue, {
 				genre_id: genre_id,
 				name: genre
 			});
-			show_genres.insert({
+			await stores.show_genres.insert(queue, {
 				genre_id: genre_id,
 				show_id: show_id,
 				order: index
 			});
 		}
 	} else if (probes.schema.MovieMetadata.is(metadata)) {
-		let movie_id = makeId("movie", metadata.title, metadata.year);
-		movies.insert({
+		let movie_id = makeBinaryId("movie", metadata.title, metadata.year);
+		await stores.movies.insert(queue, {
 			movie_id: movie_id,
 			title: metadata.title,
-			year: metadata.year,
-			summary: metadata.summary,
-			copyright: metadata.copyright,
-			imdb: metadata.imdb
+			year: metadata.year ?? null,
+			summary: metadata.summary ?? null,
+			copyright: metadata.copyright ?? null,
+			imdb: metadata.imdb ?? null
 		});
 		if (is.present(metadata.year)) {
-			let year_id = makeId("year", metadata.year);
-			years.insert({
+			let year_id = makeBinaryId("year", metadata.year);
+			await stores.years.insert(queue, {
 				year_id: year_id,
 				year: metadata.year
 			});
 		}
 		for (let file_id of file_ids) {
-			movie_files.insert({
+			await stores.movie_files.insert(queue, {
 				movie_id: movie_id,
 				file_id: file_id
 			});
 		}
 		for (let [index, actor] of metadata.actors.entries()) {
-			let actor_id = makeId("actor", actor);
-			actors.insert({
+			let actor_id = makeBinaryId("actor", actor);
+			await stores.actors.insert(queue, {
 				actor_id: actor_id,
 				name: actor
 			});
-			movie_actors.insert({
+			await stores.movie_actors.insert(queue, {
 				actor_id: actor_id,
 				movie_id: movie_id,
 				order: index
 			});
 		}
 		for (let [index, genre] of metadata.genres.entries()) {
-			let genre_id = makeId("genre", genre);
-			genres.insert({
+			let genre_id = makeBinaryId("genre", genre);
+			await stores.genres.insert(queue, {
 				genre_id: genre_id,
 				name: genre
 			});
-			movie_genres.insert({
+			await stores.movie_genres.insert(queue, {
 				genre_id: genre_id,
 				movie_id: movie_id,
 				order: index
 			});
 		}
 	} else if (probes.schema.TrackMetadata.is(metadata)) {
-		let album_id = makeId("album", metadata.album.title, metadata.album.year);
-		albums.insert({
+		let album_id = makeBinaryId("album", metadata.album.title, metadata.album.year);
+		await stores.albums.insert(queue, {
 			album_id: album_id,
 			title: metadata.album.title,
-			year: metadata.album.year
+			year: metadata.album.year ?? null
 		});
 		if (is.present(metadata.album.year)) {
-			let year_id = makeId("year", metadata.album.year);
-			years.insert({
+			let year_id = makeBinaryId("year", metadata.album.year);
+			await stores.years.insert(queue, {
 				year_id: year_id,
 				year: metadata.album.year
 			});
 		}
 		for (let [index, artist] of metadata.album.artists.entries()) {
-			let artist_id = makeId("artist", artist);
-			artists.insert({
+			let artist_id = makeBinaryId("artist", artist);
+			await stores.artists.insert(queue, {
 				artist_id: artist_id,
 				name: artist
 			});
-			album_artists.insert({
+			await stores.album_artists.insert(queue, {
 				album_id: album_id,
 				artist_id: artist_id,
 				order: index
 			});
 		}
-		let disc_id = makeId("disc", album_id, `${metadata.disc}`);
-		discs.insert({
+		let disc_id = makeBinaryId("disc", album_id, `${metadata.disc}`);
+		await stores.discs.insert(queue, {
 			disc_id: disc_id,
 			album_id: album_id,
 			number: metadata.disc
 		});
-		let track_id = makeId("track", disc_id, `${metadata.track}`);
-		tracks.insert({
+		let track_id = makeBinaryId("track", disc_id, `${metadata.track}`);
+		await stores.tracks.insert(queue, {
 			track_id: track_id,
 			disc_id: disc_id,
 			title: metadata.title,
 			number: metadata.track,
-			copyright: metadata.copyright
+			copyright: metadata.copyright ?? null
 		});
 		for (let file_id of file_ids) {
-			track_files.insert({
+			await stores.track_files.insert(queue, {
 				track_id: track_id,
 				file_id: file_id
 			});
 		}
 		for (let [index, artist] of metadata.artists.entries()) {
-			let artist_id = makeId("artist", artist);
-			artists.insert({
+			let artist_id = makeBinaryId("artist", artist);
+			await stores.artists.insert(queue, {
 				artist_id: artist_id,
 				name: artist
 			});
-			track_artists.insert({
+			await stores.track_artists.insert(queue, {
 				track_id: track_id,
 				artist_id: artist_id,
 				order: index
 			});
 		}
 	} else if (probes.schema.AlbumMetadata.is(metadata)) {
-		let album_id = makeId("album", metadata.title, metadata.year);
-		albums.insert({
+		let album_id = makeBinaryId("album", metadata.title, metadata.year);
+		await stores.albums.insert(queue, {
 			album_id: album_id,
 			title: metadata.title,
-			year: metadata.year
+			year: metadata.year ?? null
 		});
 		if (is.present(metadata.year)) {
-			let year_id = makeId("year", metadata.year);
-			years.insert({
+			let year_id = makeBinaryId("year", metadata.year);
+			await stores.years.insert(queue, {
 				year_id: year_id,
 				year: metadata.year
 			});
 		}
 		for (let [index, artist] of metadata.artists.entries()) {
-			let artist_id = makeId("artist", artist);
-			artists.insert({
+			let artist_id = makeBinaryId("artist", artist);
+			await stores.artists.insert(queue, {
 				artist_id: artist_id,
 				name: artist
 			});
-			album_artists.insert({
+			await stores.album_artists.insert(queue, {
 				album_id: album_id,
 				artist_id: artist_id,
 				order: index
 			});
 		}
-		let disc_id = makeId("disc", album_id, `${metadata.disc}`);
-		discs.insert({
+		let disc_id = makeBinaryId("disc", album_id, `${metadata.disc}`);
+		await stores.discs.insert(queue, {
 			disc_id: disc_id,
 			album_id: album_id,
 			number: metadata.disc
@@ -454,25 +483,25 @@ function indexMetadata(probe: probes.schema.Probe, ...file_ids: Array<string>): 
 		if (metadata.tracks.length === file_ids.length) {
 			for (let [index, file_id] of file_ids.entries()) {
 				let track = metadata.tracks[index];
-				let track_id = makeId("track", disc_id, `${index}`);
-				tracks.insert({
+				let track_id = makeBinaryId("track", disc_id, `${index}`);
+				await stores.tracks.insert(queue, {
 					track_id: track_id,
 					disc_id: disc_id,
 					title: track.title,
 					number: index + 1,
-					copyright: track.copyright ?? metadata.copyright
+					copyright: track.copyright ?? metadata.copyright ?? null
 				});
-				track_files.insert({
+				await stores.track_files.insert(queue, {
 					track_id: track_id,
 					file_id: file_id
 				});
 				for (let [index, artist] of track.artists.entries()) {
-					let artist_id = makeId("artist", artist);
-					artists.insert({
+					let artist_id = makeBinaryId("artist", artist);
+					await stores.artists.insert(queue, {
 						artist_id: artist_id,
 						name: artist
 					});
-					track_artists.insert({
+					await stores.track_artists.insert(queue, {
 						track_id: track_id,
 						artist_id: artist_id,
 						order: index
@@ -711,26 +740,28 @@ function removeBrokenEntities(): void {
 	}
 }
 
-export function runIndexer(): void {
+export async function runIndexer(): Promise<void> {
 	console.log(`Running indexer...`);
-	for (let directory of getDirectoriesFromDirectory.lookup(undefined)) {
-		checkDirectory(directory);
-	}
-	for (let file of getFilesFromDirectory.lookup(undefined)) {
-		checkFile(file);
-	}
-	visitDirectory(config.media_path);
-	indexFiles();
-	console.log(`Associating...`);
-	associateMetadata();
-	associateImages();
-	associateSubtitles();
-	removeBrokenEntities();
-	for (let token of tokens) {
-		if (token.expires_ms <= Date.now()) {
-			tokens.remove(token);
+	await transactionManager.enqueueWritableTransaction(async (queue) => {
+		for (let directory of await links.directory_directories.filter(queue)) {
+			checkDirectory(queue, directory);
 		}
-	}
+		for (let file of await links.directory_files.filter(queue)) {
+			checkFile(queue, file);
+		}
+		visitDirectory(queue, config.media_path, null);
+		indexFiles();
+		console.log(`Associating...`);
+		associateMetadata();
+		associateImages();
+		associateSubtitles();
+		removeBrokenEntities();
+		for (let token of await stores.tokens.filter(queue)) {
+			if (token.expires_ms <= Date.now()) {
+				tokens.remove(token);
+			}
+		}
+	});
 	console.log(`Indexing finished.`);
 	if (global.gc) {
 		global.gc();
