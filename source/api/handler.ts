@@ -10,6 +10,16 @@ import { SearchResult } from "../jdb2";
 import { Actor, Album, Artist, Cue, Episode, File, Genre, Movie, Playlist, Show, Stream, Track, User, Year } from "../database/schema";
 import { ReadableQueue, WritableQueue } from "@joelek/atlas";
 import * as atlas from "../database/atlas";
+import { string } from "../jdb2/asserts";
+import { ArtistBase } from "./schema/objects";
+
+export function hexid(buffer: Uint8Array): string {
+	return Buffer.from(buffer).toString("hex");
+};
+
+export function binid(string: string): Uint8Array {
+	return Uint8Array.from(Buffer.from(string, "hex"));
+};
 
 export function getStreamWeight(timestamp_ms: number): number {
 	let ms = Date.now() - timestamp_ms;
@@ -456,52 +466,56 @@ export async function lookupSubtitle(queue: ReadableQueue, subtitle_id: string, 
 };
 
 export async function lookupTrackBase(queue: ReadableQueue, track_id: string, user_id: string, disc?: schema.objects.DiscBase): Promise<schema.objects.TrackBase> {
-	let track = database.tracks.lookup(track_id);
+	let record = await atlas.stores.tracks.lookup(queue, { track_id: binid(track_id) });
 	return {
-		track_id: track.track_id,
-		title: config.use_demo_mode ? "Track title" : track.title,
-		disc: is.present(disc) ? disc : await lookupDiscBase(queue, track.disc_id, user_id),
-		number: track.number
+		track_id: hexid(record.track_id),
+		title: config.use_demo_mode ? "Track title" : record.title,
+		disc: is.present(disc) ? disc : await lookupDiscBase(queue, hexid(record.track_id), user_id),
+		number: record.number
 	};
 };
 
 export async function lookupTrack(queue: ReadableQueue, track_id: string, user_id: string, disc?: schema.objects.DiscBase): Promise<schema.objects.Track> {
 	let track = await lookupTrackBase(queue, track_id, user_id, disc);
-	let record = database.tracks.lookup(track_id);
-	let files = database.getFilesFromTrack.lookup(track_id)
-		.map((record) => {
-			try {
-				return database.audio_files.lookup(record.file_id);
-			} catch (error) {}
-		})
-		.include(is.present)
-		.collect();
-	let media = files.shift();
-	if (is.absent(media)) {
+	let record = await atlas.stores.tracks.lookup(queue, { track_id: binid(track_id) });
+	let track_files = await atlas.links.track_track_files.filter(queue, record);
+	let media: atlas.AudioFile | undefined;
+	for (let track_file of track_files) {
+		try {
+			media = await atlas.stores.audio_files.lookup(queue, track_file);
+			break;
+		} catch (error) {}
+	}
+	if (media == null) {
 		throw `Expected a valid audio file!`;
 	}
-	let streams = database.getStreamsFromFile.lookup(media.file_id)
-		.filter((stream) => stream.user_id === user_id)
-		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)))
-		.collect();
+	let artists = [] as Array<ArtistBase>;
+	let track_artists = await atlas.links.track_track_artists.filter(queue, record);
+	for (let track_artist of track_artists) {
+		artists.push(await lookupArtistBase(queue, hexid(track_artist.artist_id), user_id));
+	}
+	// TODO: Use query.
+	let streams = (await atlas.links.file_streams.filter(queue, media))
+		.filter((stream) => hexid(stream.user_id) === user_id)
+		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
 	return {
 		...track,
-		artists: await Promise.all(database.getArtistsFromTrack.lookup(track_id)
-			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupArtistBase(queue, record.artist_id, user_id))
-			.collect()),
+		artists: artists,
 		last_stream_date: streams.pop()?.timestamp_ms,
-		media: media,
-		copyright: record.copyright
+		media: {
+			...media,
+			file_id: hexid(media.file_id)
+		},
+		copyright: record.copyright ?? undefined
 	};
 };
 
 export async function lookupUserBase(queue: ReadableQueue, user_id: string, api_user_id: string): Promise<schema.objects.UserBase> {
-	let user = database.users.lookup(user_id);
+	let record = await atlas.stores.users.lookup(queue, { user_id: binid(user_id) });
 	return {
-		user_id: user.user_id,
-		name: user.name,
-		username: user.username
+		user_id: hexid(record.user_id),
+		name: record.name,
+		username: record.username
 	};
 };
 
@@ -513,10 +527,10 @@ export async function lookupUser(queue: ReadableQueue, user_id: string, api_user
 };
 
 export async function lookupYearBase(queue: ReadableQueue, year_id: string, user_id: string): Promise<schema.objects.YearBase> {
-	let year = database.years.lookup(year_id);
+	let record = await atlas.stores.years.lookup(queue, { year_id: binid(year_id) });
 	return {
-		year_id: year.year_id,
-		year: year.year
+		year_id: hexid(record.year_id),
+		year: record.year
 	};
 };
 
@@ -528,51 +542,55 @@ export async function lookupYear(queue: ReadableQueue, year_id: string, user_id:
 };
 
 export async function getNewAlbums(queue: ReadableQueue, user_id: string, offset: number, length: number): Promise<schema.objects.Album[]> {
-	let albums = new Map<string, number>();
-	for (let album of database.albums) {
-		for (let disc of database.getDiscsFromAlbum.lookup(album.album_id)) {
-			for (let track of database.getTracksFromDisc.lookup(disc.disc_id)) {
-				for (let track_file of database.getFilesFromTrack.lookup(track.track_id)) {
-					let file = database.files.lookup(track_file.file_id);
-					if (is.present(file.index_timestamp)) {
-						let index_timestamp = albums.get(album.album_id);
-						if (is.absent(index_timestamp)) {
-							index_timestamp = file.index_timestamp
-						} else {
-							index_timestamp = Math.max(index_timestamp, file.index_timestamp);
-						}
-						albums.set(album.album_id, index_timestamp);
+	let map = new Map<string, number>();
+	let albums = await atlas.stores.albums.filter(queue);
+	for (let album of albums) {
+		let key = hexid(album.album_id);
+		let discs = await atlas.links.album_discs.filter(queue, album);
+		for (let disc of discs) {
+			let tracks = await atlas.links.disc_tracks.filter(queue, disc);
+			for (let track of tracks) {
+				let track_files = await atlas.links.track_track_files.filter(queue, track);
+				for (let track_file of track_files) {
+					let file = await atlas.stores.files.lookup(queue, track_file);
+					if (file.index_timestamp == null) {
+						continue;
 					}
+					let value = map.get(key) ?? 0;
+					value = Math.max(value, file.index_timestamp);
+					map.set(key, value);
 				}
 			}
 		}
 	}
-	return await Promise.all(Array.from(albums.entries())
+	return await Promise.all(Array.from(map.entries())
 		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
-		.map((entry) => lookupAlbum(queue, entry[0], user_id)));
+		.map((entry) => entry[0])
+		.map((album_id) => lookupAlbum(queue, album_id, user_id)));
 };
 
 export async function getNewMovies(queue: ReadableQueue, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
-	let movies = new Map<string, number>();
-	for (let movie of database.movies) {
-		for (let movie_file of database.getFilesFromMovie.lookup(movie.movie_id)) {
-			let file = database.files.lookup(movie_file.file_id);
-			if (is.present(file.index_timestamp)) {
-				let index_timestamp = movies.get(movie.movie_id);
-				if (is.absent(index_timestamp)) {
-					index_timestamp = file.index_timestamp
-				} else {
-					index_timestamp = Math.max(index_timestamp, file.index_timestamp);
-				}
-				movies.set(movie.movie_id, index_timestamp);
+	let map = new Map<string, number>();
+	let movies = await atlas.stores.movies.filter(queue);
+	for (let movie of movies) {
+		let key = hexid(movie.movie_id);
+		let movie_files = await atlas.links.movie_movie_files.filter(queue, movie);
+		for (let movie_file of movie_files) {
+			let file = await atlas.stores.files.lookup(queue, movie_file);
+			if (file.index_timestamp == null) {
+				continue;
 			}
+			let value = map.get(key) ?? 0;
+			value = Math.max(value, file.index_timestamp);
+			map.set(key, value);
 		}
 	}
-	return await Promise.all(Array.from(movies.entries())
+	return await Promise.all(Array.from(map.entries())
 		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
-		.map((entry) => lookupMovie(queue, entry[0], user_id)));
+		.map((entry) => entry[0])
+		.map((movie_id) => lookupMovie(queue, movie_id, user_id)));
 };
 
 export async function searchForAlbums(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
@@ -582,11 +600,12 @@ export async function searchForAlbums(queue: ReadableQueue, query: string, offse
 			.slice(offset, offset + length)
 			.map((record) => lookupAlbum(queue, record.album_id, user_id)));
 	} else {
-		return await Promise.all(database.album_search.search(query)
+		return [];
+/* 		return await Promise.all(database.album_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().album_id)
 			.map((id) => lookupAlbum(queue, id, user_id))
-			.collect());
+			.collect()); */
 	}
 };
 
@@ -605,11 +624,12 @@ export async function searchForArtists(queue: ReadableQueue, query: string, offs
 			.slice(offset, offset + length)
 			.map((record) => lookupArtist(queue, record.artist_id, user_id)));
 	} else {
-		return await Promise.all(database.artist_search.search(query)
+		return [];
+/* 		return await Promise.all(database.artist_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().artist_id)
 			.map((id) => lookupArtist(queue, id, user_id))
-			.collect());
+			.collect()); */
 	}
 };
 
@@ -635,11 +655,12 @@ export async function searchForEpisodes(queue: ReadableQueue, query: string, off
 			.slice(offset, offset + length)
 			.map((record) => lookupEpisode(queue, record.episode_id, user_id)));
 	} else {
-		return await Promise.all(database.episode_search.search(query)
+		return [];
+/* 		return await Promise.all(database.episode_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().episode_id)
 			.map((id) => lookupEpisode(queue, id, user_id))
-			.collect());
+			.collect()); */
 	}
 };
 
@@ -649,11 +670,12 @@ export async function searchForGenres(queue: ReadableQueue, query: string, offse
 			.sort(jsondb.LexicalSort.increasing((record) => record.name))
 			.map((record) => lookupGenre(queue, record.genre_id, user_id)));
 	} else {
-		return await Promise.all(database.genre_search.search(query)
+		return [];
+/* 		return await Promise.all(database.genre_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().genre_id)
 			.map((id) => lookupGenre(queue, id, user_id))
-			.collect());
+			.collect()); */
 	}
 };
 
@@ -664,11 +686,12 @@ export async function searchForMovies(queue: ReadableQueue, query: string, offse
 			.slice(offset, offset + length)
 			.map((record) => lookupMovie(queue, record.movie_id, user_id)));
 	} else {
-		return await Promise.all(database.movie_search.search(query)
+		return [];
+/* 		return await Promise.all(database.movie_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().movie_id)
 			.map((id) => lookupMovie(queue, id, user_id))
-			.collect());
+			.collect()); */
 	}
 };
 
@@ -679,11 +702,12 @@ export async function searchForActors(queue: ReadableQueue, query: string, offse
 			.slice(offset, offset + length)
 			.map((record) => lookupActor(queue, record.actor_id, user_id)));
 	} else {
-		return await Promise.all(database.actor_search.search(query)
+		return [];
+/* 		return await Promise.all(database.actor_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().actor_id)
 			.map((id) => lookupActor(queue, id, user_id))
-			.collect());
+			.collect()); */
 	}
 };
 
@@ -694,11 +718,12 @@ export async function searchForPlaylists(queue: ReadableQueue, query: string, of
 			.slice(offset, offset + length)
 			.map((record) => lookupPlaylist(queue, record.playlist_id, user_id)));
 	} else {
-		return await Promise.all(database.playlist_search.search(query)
+		return [];
+/* 		return await Promise.all(database.playlist_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().playlist_id)
 			.map((id) => lookupPlaylist(queue, id, user_id))
-			.collect());
+			.collect()); */
 	}
 };
 
@@ -716,11 +741,12 @@ export async function searchForShows(queue: ReadableQueue, query: string, offset
 			.slice(offset, offset + length)
 			.map((record) => lookupShow(queue, record.show_id, user_id)));
 	} else {
-		return await Promise.all(database.shows_search.search(query)
+		return [];
+/* 		return await Promise.all(database.shows_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().show_id)
 			.map((id) => lookupShow(queue, id, user_id))
-			.collect());
+			.collect()); */
 	}
 };
 
@@ -731,11 +757,12 @@ export async function searchForTracks(queue: ReadableQueue, query: string, offse
 			.slice(offset, offset + length)
 			.map((record) => lookupTrack(queue, record.track_id, user_id)));
 	} else {
-		return await Promise.all(database.track_search.search(query)
+		return [];
+/* 		return await Promise.all(database.track_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().track_id)
 			.map((id) => lookupTrack(queue, id, user_id))
-			.collect());
+			.collect()); */
 	}
 };
 
@@ -746,11 +773,12 @@ export async function searchForUsers(queue: ReadableQueue, query: string, offset
 			.slice(offset, offset + length)
 			.map((record) => lookupUser(queue, record.user_id, user_id)));
 	} else {
-		return await Promise.all(database.user_search.search(query)
+		return [];
+/* 		return await Promise.all(database.user_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().user_id)
 			.map((id) => lookupUser(queue, id, user_id))
-			.collect());
+			.collect()); */
 	}
 };
 
@@ -761,16 +789,18 @@ export async function searchForYears(queue: ReadableQueue, query: string, offset
 			.slice(offset, offset + length)
 			.map((record) => lookupYear(queue, record.year_id, user_id)));
 	} else {
-		return await Promise.all(database.year_search.search(query)
+		return [];
+/* 		return await Promise.all(database.year_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().year_id)
 			.map((id) => lookupYear(queue, id, user_id))
-			.collect());
+			.collect()); */
 	}
 };
 
 export async function searchForEntities(queue: ReadableQueue, query: string, user_id: string, offset: number, limit: number, options?: Partial<{ cues: boolean }>): Promise<schema.objects.Entity[]> {
-	let results = [
+	return [];
+/* 	let results = [
 		...database.actor_search.search(query).map((result) => ({ ...result, type: "ACTOR", type_rank: 1 })),
 		...database.album_search.search(query).map((result) => ({ ...result, type: "ALBUM", type_rank: 9 })),
 		...database.artist_search.search(query).map((result) => ({ ...result, type: "ARTIST", type_rank: 6 })),
@@ -826,55 +856,54 @@ export async function searchForEntities(queue: ReadableQueue, query: string, use
 		}
 		throw `Expected code to be unreachable!`;
 	}));
-	return entities;
+	return entities; */
 };
 
-export async function getArtistAppearances(queue: ReadableQueue, artist_id: string, user_id: string): Promise<schema.objects.Album[]> {
-	let track_artists = database.getTracksFromArtist.lookup(artist_id);
-	let tracks = track_artists.map((track_artist) => {
-		return database.tracks.lookup(track_artist.track_id);
-	});
-	let disc_ids = tracks.map((track) => {
-		return track.disc_id;
-	})
-	.collect();
-	disc_ids = Array.from(new Set<string>(disc_ids));
-	let discs = disc_ids.map((disc_id) => {
-		return database.discs.lookup(disc_id);
-	});
-	let album_ids = discs.map((disc) => {
-		return disc.album_id;
-	});
-	album_ids = Array.from(new Set<string>(album_ids));
-	let result = new Array<string>();
-	for (let album_id of album_ids) {
-		let album_artists = database.getArtistsFromAlbum.lookup(album_id);
-		if (album_artists.find((album_artist) => album_artist.artist_id === artist_id) == null) {
-			result.push(album_id);
-		}
+export async function getArtistAppearances(queue: ReadableQueue, artist_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
+	let artist = await atlas.stores.artists.lookup(queue, { artist_id: binid(artist_id) });
+	let map = new Map<string, number>();
+	let track_artists = await atlas.links.artist_track_artists.filter(queue, artist);
+	for (let track_artist of track_artists) {
+		let track = await atlas.stores.tracks.lookup(queue, track_artist);
+		let disc = await atlas.stores.discs.lookup(queue, track);
+		let key = hexid(disc.album_id);
+		let value = map.get(key) ?? 0;
+		value += 1;
+		map.set(key, value);
 	}
-	return await Promise.all(result
-		.map((entry) => database.albums.lookup(entry))
-		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
-		.map((entry) => {
-			return lookupAlbum(queue, entry.album_id, user_id);
-		}));
-};
-
-export async function getArtistTracks(queue: ReadableQueue, artist_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Track[]> {
-	let track_weights = new Map<string, number>();
-	for (let track_artist of database.getTracksFromArtist.lookup(artist_id)) {
-		let track_id = track_artist.track_id;
-		for (let file of database.getFilesFromTrack.lookup(track_id)) {
-			let streams = database.getStreamsFromFile.lookup(file.file_id);
-			for (let stream of streams) {
-				let weight = track_weights.get(track_id) ?? 0;
-				weight += getStreamWeight(stream.timestamp_ms);
-				track_weights.set(track_id, weight);
+	for (let entry of map.entries()) {
+		let album = await atlas.stores.albums.lookup(queue, { album_id: binid(entry[0]) });
+		let album_artists = await atlas.links.album_album_artists.filter(queue, album);
+		for (let album_artist of album_artists) {
+			if (hexid(album_artist.album_id) === entry[0]) {
+				map.delete(entry[0]);
 			}
 		}
 	}
-	return await Promise.all(Array.from(track_weights.entries())
+	return await Promise.all(Array.from(map.entries())
+		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
+		.slice(offset, offset + length)
+		.map((entry) => entry[0])
+		.map((album_id) => lookupAlbum(queue, album_id, user_id)));
+};
+
+export async function getArtistTracks(queue: ReadableQueue, artist_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Track[]> {
+	let artist = await atlas.stores.artists.lookup(queue, { artist_id: binid(artist_id) });
+	let map = new Map<string, number>();
+	let track_artists = await atlas.links.artist_track_artists.filter(queue, artist);
+	for (let track_artist of track_artists) {
+		let track_files = await atlas.links.track_track_files.filter(queue, track_artist);
+		for (let track_file of track_files) {
+			let streams = await atlas.links.file_streams.filter(queue, track_file);
+			for (let stream of streams) {
+				let key = hexid(track_file.track_id);
+				let value = map.get(key) ?? 0;
+				value += getStreamWeight(stream.timestamp_ms);
+				map.set(key, value);
+			}
+		}
+	}
+	return await Promise.all(Array.from(map.entries())
 		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
 		.map((entry) => entry[0])
@@ -882,30 +911,37 @@ export async function getArtistTracks(queue: ReadableQueue, artist_id: string, o
 }
 
 export async function getPlaylistAppearances(queue: ReadableQueue, track_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Playlist[]> {
-	let playlist_ids = new Set<string>();
-	for (let playlist_item of database.getPlaylistItemsFromTrack.lookup(track_id)) {
-		playlist_ids.add(playlist_item.playlist_id);
+	let track = await atlas.stores.tracks.lookup(queue, { track_id: binid(track_id) });
+	let map = new Map<string, number>();
+	let playlist_items = await atlas.links.track_playlist_items.filter(queue, track);
+	for (let playlist_item of playlist_items) {
+		let key = hexid(playlist_item.playlist_id);
+		let value = map.get(key) ?? 0;
+		map.set(key, value + 2);
 	}
-	return await Promise.all(Array.from(playlist_ids)
-		.map((playlist_id) => database.playlists.lookup(playlist_id))
-		.sort(jsondb.LexicalSort.increasing((playlist) => playlist.title))
+	return await Promise.all(Array.from(map.entries())
+		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
-		.map((playlist) => lookupPlaylist(queue, playlist.playlist_id, user_id)));
+		.map((entry) => entry[0])
+		.map((playlist_id) => lookupPlaylist(queue, playlist_id, user_id)));
 };
 
 export async function getMovieSuggestions(queue: ReadableQueue, movie_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Movie[]> {
-	let genres = database.getGenresFromMovie.lookup(movie_id);
+	let movie = await atlas.stores.movies.lookup(queue, { movie_id: binid(movie_id) });
 	let map = new Map<string, number>();
-	for (let genre of genres) {
-		let movie_genres = database.getMoviesFromGenre.lookup(genre.genre_id);
+	let movie_genres = await atlas.links.movie_movie_genres.filter(queue, movie);
+	for (let movie_genre of movie_genres) {
+		let movie_genres = await atlas.links.genre_movie_genres.filter(queue, movie_genre);
 		for (let movie_genre of movie_genres) {
-			let value = map.get(movie_genre.movie_id) ?? 0;
-			map.set(movie_genre.movie_id, value + 2);
+			let key = hexid(movie_genre.movie_id);
+			let value = map.get(key) ?? 0;
+			value += 2;
+			map.set(key, value);
 		}
 	}
 	for (let entry of map) {
-		let video_genres = database.getGenresFromMovie.lookup(entry[0]).collect();
-		map.set(entry[0], entry[1] - video_genres.length);
+		let movie_genres = await atlas.links.movie_movie_genres.filter(queue, { movie_id: binid(entry[0]) });
+		map.set(entry[0], entry[1] - movie_genres.length);
 	}
 	map.delete(movie_id);
 	return await Promise.all(Array.from(map.entries())
@@ -915,66 +951,68 @@ export async function getMovieSuggestions(queue: ReadableQueue, movie_id: string
 		.map((movie_id) => lookupMovie(queue, movie_id, user_id)));
 };
 
-export async function getMoviesFromGenre(queue: ReadableQueue, video_genre_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
-	return await Promise.all(database.getMoviesFromGenre.lookup(video_genre_id)
-		.map((entry) => database.movies.lookup(entry.movie_id))
-		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
-		.slice(offset, offset + length)
-		.map((entry) => lookupMovie(queue, entry.movie_id, user_id))
-		.collect());
+export async function getMoviesFromGenre(queue: ReadableQueue, genre_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
+	let genre = await atlas.stores.genres.lookup(queue, { genre_id: binid(genre_id) });
+	let movies = [] as Array<schema.objects.Movie>;
+	for (let entry of await atlas.links.genre_movie_genres.filter(queue, genre)) {
+		movies.push(await lookupMovie(queue, hexid(entry.movie_id), user_id));
+	}
+	return movies.slice(offset, offset + length);
 };
 
 export async function getMoviesFromActor(queue: ReadableQueue, actor_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
-	return await Promise.all(database.getMoviesFromActor.lookup(actor_id)
-		.map((entry) => database.movies.lookup(entry.movie_id))
-		.sort(jsondb.LexicalSort.increasing((movie) => movie.title))
-		.slice(offset, offset + length)
-		.map((entry) => lookupMovie(queue, entry.movie_id, user_id))
-		.collect());
+	let actor = await atlas.stores.actors.lookup(queue, { actor_id: binid(actor_id) });
+	let movies = [] as Array<schema.objects.Movie>;
+	for (let entry of await atlas.links.actor_movie_actors.filter(queue, actor)) {
+		movies.push(await lookupMovie(queue, hexid(entry.movie_id), user_id));
+	}
+	return movies.slice(offset, offset + length);
 };
 
-export async function getShowsFromGenre(queue: ReadableQueue, video_genre_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Show[]> {
-	return await Promise.all(database.getShowsFromGenre.lookup(video_genre_id)
-		.map((entry) => database.shows.lookup(entry.show_id))
-		.sort(jsondb.LexicalSort.increasing((entry) => entry.name))
-		.slice(offset, offset + length)
-		.map((entry) => lookupShow(queue, entry.show_id, user_id))
-		.collect());
+export async function getShowsFromGenre(queue: ReadableQueue, genre_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Show[]> {
+	let genre = await atlas.stores.genres.lookup(queue, { genre_id: binid(genre_id) });
+	let shows = [] as Array<schema.objects.Show>;
+	for (let entry of await atlas.links.genre_show_genres.filter(queue, genre)) {
+		shows.push(await lookupShow(queue, hexid(entry.show_id), user_id));
+	}
+	return shows.slice(offset, offset + length);
 };
 
 export async function getShowsFromActor(queue: ReadableQueue, actor_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Show[]> {
-	return await Promise.all(database.getShowsFromActor.lookup(actor_id)
-		.map((entry) => database.shows.lookup(entry.show_id))
-		.sort(jsondb.LexicalSort.increasing((entry) => entry.name))
-		.slice(offset, offset + length)
-		.map((entry) => lookupShow(queue, entry.show_id, user_id))
-		.collect());
+	let actor = await atlas.stores.actors.lookup(queue, { actor_id: binid(actor_id) });
+	let shows = [] as Array<schema.objects.Show>;
+	for (let entry of await atlas.links.actor_show_actors.filter(queue, actor)) {
+		shows.push(await lookupShow(queue, hexid(entry.show_id), user_id));
+	}
+	return shows.slice(offset, offset + length);
 };
 
 export async function getUserPlaylists(queue: ReadableQueue, subject_user_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Playlist[]> {
-	return await Promise.all(database.getPlaylistsFromUser.lookup(subject_user_id)
-		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
-		.slice(offset, offset + length)
-		.map((entry) => lookupPlaylist(queue, entry.playlist_id, user_id))
-		.collect());
+	let user = await atlas.stores.users.lookup(queue, { user_id: binid(subject_user_id) });
+	let playlists = [] as Array<schema.objects.Playlist>;
+	for (let entry of await atlas.links.user_playlists.filter(queue, user)) {
+		playlists.push(await lookupPlaylist(queue, hexid(entry.playlist_id), user_id));
+	}
+	return playlists.slice(offset, offset + length);
 };
 
 export async function getUserAlbums(queue: ReadableQueue, subject_user_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
-	let album_weights = new Map<string, number>();
-	let streams = database.getStreamsFromUser.lookup(subject_user_id);
+	let user = await atlas.stores.users.lookup(queue, { user_id: binid(subject_user_id) });
+	let map = new Map<string, number>();
+	let streams = await atlas.links.user_streams.filter(queue, user);
 	for (let stream of streams) {
-		let track_files = database.getTracksFromFile.lookup(stream.file_id);
+		let track_files = await atlas.links.file_track_files.filter(queue, stream);
 		for (let track_file of track_files) {
-			let track = database.tracks.lookup(track_file.track_id);
-			let disc = database.discs.lookup(track.disc_id);
-			let album = database.albums.lookup(disc.album_id);
-			let album_id = album.album_id;
-			let weight = album_weights.get(album_id) ?? 0;
-			weight += getStreamWeight(stream.timestamp_ms);
-			album_weights.set(album_id, weight);
+			let track = await atlas.stores.tracks.lookup(queue, track_file);
+			let disc = await atlas.stores.discs.lookup(queue, track);
+			let album = await atlas.stores.albums.lookup(queue, disc);
+			let key = hexid(album.album_id);
+			let value = map.get(key) ?? 0;
+			value += getStreamWeight(stream.timestamp_ms);
+			map.set(key, value);
 		}
 	}
-	return await Promise.all(Array.from(album_weights.entries())
+	return await Promise.all(Array.from(map.entries())
 		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
 		.map((entry) => entry[0])
@@ -982,41 +1020,42 @@ export async function getUserAlbums(queue: ReadableQueue, subject_user_id: strin
 };
 
 export async function getUserShows(queue: ReadableQueue, subject_user_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Show[]> {
-	let show_weights = new Map<string, number>();
-	let streams = database.getStreamsFromUser.lookup(subject_user_id);
+	let user = await atlas.stores.users.lookup(queue, { user_id: binid(subject_user_id) });
+	let map = new Map<string, number>();
+	let streams = await atlas.links.user_streams.filter(queue, user);
 	for (let stream of streams) {
-		let episode_files = database.getEpisodesFromFile.lookup(stream.file_id);
+		let episode_files = await atlas.links.file_episode_files.filter(queue, stream);
 		for (let episode_file of episode_files) {
-			let episode = database.episodes.lookup(episode_file.episode_id);
-			let season = database.seasons.lookup(episode.season_id);
-			let show = database.shows.lookup(season.show_id);
-			let show_id = show.show_id;
-			let weight = show_weights.get(show_id) ?? 0;
-			weight += getStreamWeight(stream.timestamp_ms);
-			show_weights.set(show_id, weight);
+			let episode = await atlas.stores.episodes.lookup(queue, episode_file);
+			let season = await atlas.stores.seasons.lookup(queue, episode);
+			let show = await atlas.stores.shows.lookup(queue, season);
+			let key = hexid(show.show_id);
+			let value = map.get(key) ?? 0;
+			value += getStreamWeight(stream.timestamp_ms);
+			map.set(key, value);
 		}
 	}
-	return await Promise.all(Array.from(show_weights.entries())
+	return await Promise.all(Array.from(map.entries())
 		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
 		.map((entry) => entry[0])
-		.map((artist_id) => lookupShow(queue, artist_id, user_id)));
+		.map((show_id) => lookupShow(queue, show_id, user_id)));
 };
 
 export async function getMoviesFromYear(queue: ReadableQueue, year_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
-	return await Promise.all(database.getMoviesFromYear.lookup((await lookupYearBase(queue, year_id, user_id)).year)
-		.map((entry) => database.movies.lookup(entry.movie_id))
-		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
-		.slice(offset, offset + length)
-		.map((entry) => lookupMovie(queue, entry.movie_id, user_id))
-		.collect());
+	let year = await lookupYearBase(queue, year_id, user_id);
+	let movies = [] as Array<schema.objects.Movie>;
+	for (let entry of await atlas.queries.getMoviesFromYear.filter(queue, { year: year.year })) {
+		movies.push(await lookupMovie(queue, hexid(entry.movie_id), user_id));
+	}
+	return movies.slice(offset, offset + length);
 };
 
 export async function getAlbumsFromYear(queue: ReadableQueue, year_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Album[]> {
-	return await Promise.all(database.getAlbumsFromYear.lookup((await lookupYearBase(queue, year_id, user_id)).year)
-		.map((entry) => database.albums.lookup(entry.album_id))
-		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
-		.slice(offset, offset + length)
-		.map((entry) => lookupAlbum(queue, entry.album_id, user_id))
-		.collect());
+	let year = await lookupYearBase(queue, year_id, user_id);
+	let albums = [] as Array<schema.objects.Album>;
+	for (let entry of await atlas.queries.getAlbumsFromYear.filter(queue, { year: year.year })) {
+		albums.push(await lookupAlbum(queue, hexid(entry.album_id), user_id));
+	}
+	return albums.slice(offset, offset + length);
 };

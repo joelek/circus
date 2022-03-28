@@ -80,7 +80,7 @@ export type Artist = atlas.RecordOf<typeof artists>;
 const albums = context.createStore({
 	album_id: context.createBinaryField(),
 	title: context.createStringField(),
-	year: context.createNullableIntegerField()
+	year: context.createNullableIntegerField() // TODO: Promote to entity.
 }, ["album_id"]);
 
 export type Album = atlas.RecordOf<typeof albums>;
@@ -162,7 +162,7 @@ const episodes = context.createStore({
 	season_id: context.createBinaryField(),
 	title: context.createStringField(),
 	number: context.createIntegerField(),
-	year: context.createNullableIntegerField(),
+	year: context.createNullableIntegerField(), // TODO: Promote to entity.
 	summary: context.createNullableStringField(),
 	copyright: context.createNullableStringField(),
 	imdb: context.createNullableStringField()
@@ -180,7 +180,7 @@ export type EpisodeFile = atlas.RecordOf<typeof episode_files>;
 const movies = context.createStore({
 	movie_id: context.createBinaryField(),
 	title: context.createStringField(),
-	year: context.createNullableIntegerField(),
+	year: context.createNullableIntegerField(), // TODO: Promote to entity.
 	summary: context.createNullableStringField(),
 	copyright: context.createNullableStringField(),
 	imdb: context.createNullableStringField()

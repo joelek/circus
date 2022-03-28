@@ -143,7 +143,7 @@ export const server = apiv2.makeServer({
 		let user_id = auth.getUserId(options.token);
 		let artist = await handler.lookupArtist(queue, options.artist_id, user_id);
 		let tracks = await handler.getArtistTracks(queue, options.artist_id, 0, 3, user_id);
-		let appearances = await handler.getArtistAppearances(queue, options.artist_id, user_id);
+		let appearances = await handler.getArtistAppearances(queue, options.artist_id, 0, 24, user_id);
 		return {
 			payload: {
 				artist,
@@ -512,12 +512,12 @@ export const server = apiv2.makeServer({
 	"GET:/statistics/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let files =  Array.from(database.files);
-		let audio_files = Array.from(database.audio_files);
-		let image_files = Array.from(database.image_files);
-		let metadata_files = Array.from(database.metadata_files);
-		let subtitle_files = Array.from(database.subtitle_files);
-		let video_files =  Array.from(database.video_files);
+		let files = await atlas.stores.files.filter(queue);
+		let audio_files = await atlas.stores.audio_files.filter(queue);
+		let image_files = await atlas.stores.image_files.filter(queue);
+		let metadata_files = await atlas.stores.metadata_files.filter(queue);
+		let subtitle_files = await atlas.stores.subtitle_files.filter(queue);
+		let video_files =  await atlas.stores.video_files.filter(queue);
 		let version = getVersion();
 		return {
 			payload: {
