@@ -37,6 +37,7 @@ export type File = autoguard.guards.Object<{
 export const AudioFile: autoguard.serialization.MessageGuard<AudioFile> = autoguard.guards.Object.of({
 	"file_id": autoguard.guards.String,
 	"mime": autoguard.guards.Union.of(
+		autoguard.guards.String,
 		autoguard.guards.StringLiteral.of("audio/mp4"),
 		autoguard.guards.StringLiteral.of("audio/mp3")
 	),
@@ -46,6 +47,7 @@ export const AudioFile: autoguard.serialization.MessageGuard<AudioFile> = autogu
 export type AudioFile = autoguard.guards.Object<{
 	"file_id": autoguard.guards.String,
 	"mime": autoguard.guards.Union<[
+		autoguard.guards.String,
 		autoguard.guards.StringLiteral<"audio/mp4">,
 		autoguard.guards.StringLiteral<"audio/mp3">
 	]>,
@@ -54,31 +56,46 @@ export type AudioFile = autoguard.guards.Object<{
 
 export const ImageFile: autoguard.serialization.MessageGuard<ImageFile> = autoguard.guards.Object.of({
 	"file_id": autoguard.guards.String,
-	"mime": autoguard.guards.StringLiteral.of("image/jpeg"),
+	"mime": autoguard.guards.Union.of(
+		autoguard.guards.String,
+		autoguard.guards.StringLiteral.of("image/jpeg")
+	),
 	"width": autoguard.guards.Number,
 	"height": autoguard.guards.Number
 }, {});
 
 export type ImageFile = autoguard.guards.Object<{
 	"file_id": autoguard.guards.String,
-	"mime": autoguard.guards.StringLiteral<"image/jpeg">,
+	"mime": autoguard.guards.Union<[
+		autoguard.guards.String,
+		autoguard.guards.StringLiteral<"image/jpeg">
+	]>,
 	"width": autoguard.guards.Number,
 	"height": autoguard.guards.Number
 }, {}>;
 
 export const MetadataFile: autoguard.serialization.MessageGuard<MetadataFile> = autoguard.guards.Object.of({
 	"file_id": autoguard.guards.String,
-	"mime": autoguard.guards.StringLiteral.of("application/json")
+	"mime": autoguard.guards.Union.of(
+		autoguard.guards.String,
+		autoguard.guards.StringLiteral.of("application/json")
+	)
 }, {});
 
 export type MetadataFile = autoguard.guards.Object<{
 	"file_id": autoguard.guards.String,
-	"mime": autoguard.guards.StringLiteral<"application/json">
+	"mime": autoguard.guards.Union<[
+		autoguard.guards.String,
+		autoguard.guards.StringLiteral<"application/json">
+	]>
 }, {}>;
 
 export const SubtitleFile: autoguard.serialization.MessageGuard<SubtitleFile> = autoguard.guards.Object.of({
 	"file_id": autoguard.guards.String,
-	"mime": autoguard.guards.StringLiteral.of("text/vtt"),
+	"mime": autoguard.guards.Union.of(
+		autoguard.guards.String,
+		autoguard.guards.StringLiteral.of("text/vtt")
+	),
 	"duration_ms": autoguard.guards.Number
 }, {
 	"language": autoguard.guards.String
@@ -86,7 +103,10 @@ export const SubtitleFile: autoguard.serialization.MessageGuard<SubtitleFile> = 
 
 export type SubtitleFile = autoguard.guards.Object<{
 	"file_id": autoguard.guards.String,
-	"mime": autoguard.guards.StringLiteral<"text/vtt">,
+	"mime": autoguard.guards.Union<[
+		autoguard.guards.String,
+		autoguard.guards.StringLiteral<"text/vtt">
+	]>,
 	"duration_ms": autoguard.guards.Number
 }, {
 	"language": autoguard.guards.String
@@ -94,7 +114,10 @@ export type SubtitleFile = autoguard.guards.Object<{
 
 export const VideoFile: autoguard.serialization.MessageGuard<VideoFile> = autoguard.guards.Object.of({
 	"file_id": autoguard.guards.String,
-	"mime": autoguard.guards.StringLiteral.of("video/mp4"),
+	"mime": autoguard.guards.Union.of(
+		autoguard.guards.String,
+		autoguard.guards.StringLiteral.of("video/mp4")
+	),
 	"duration_ms": autoguard.guards.Number,
 	"width": autoguard.guards.Number,
 	"height": autoguard.guards.Number
@@ -102,7 +125,10 @@ export const VideoFile: autoguard.serialization.MessageGuard<VideoFile> = autogu
 
 export type VideoFile = autoguard.guards.Object<{
 	"file_id": autoguard.guards.String,
-	"mime": autoguard.guards.StringLiteral<"video/mp4">,
+	"mime": autoguard.guards.Union<[
+		autoguard.guards.String,
+		autoguard.guards.StringLiteral<"video/mp4">
+	]>,
 	"duration_ms": autoguard.guards.Number,
 	"width": autoguard.guards.Number,
 	"height": autoguard.guards.Number

@@ -14,32 +14,32 @@ guard File: {
 
 guard AudioFile: {
 	"file_id": string,
-	"mime": "audio/mp4" | "audio/mp3",
+	"mime": string | "audio/mp4" | "audio/mp3",
 	"duration_ms": number
 };
 
 guard ImageFile: {
 	"file_id": string,
-	"mime": "image/jpeg",
+	"mime": string | "image/jpeg",
 	"width": number,
 	"height": number
 };
 
 guard MetadataFile: {
 	"file_id": string,
-	"mime": "application/json"
+	"mime": string | "application/json"
 };
 
 guard SubtitleFile: {
 	"file_id": string,
-	"mime": "text/vtt",
+	"mime": string | "text/vtt",
 	"duration_ms": number,
 	"language"?: string
 };
 
 guard VideoFile: {
 	"file_id": string,
-	"mime": "video/mp4",
+	"mime": string | "video/mp4",
 	"duration_ms": number,
 	"width": number,
 	"height": number
