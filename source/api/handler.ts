@@ -8,6 +8,8 @@ import * as schema from "./schema/";
 import { default as config } from "../config";
 import { SearchResult } from "../jdb2";
 import { Actor, Album, Artist, Cue, Episode, File, Genre, Movie, Playlist, Show, Stream, Track, User, Year } from "../database/schema";
+import { ReadableQueue, WritableQueue } from "@joelek/atlas";
+import * as atlas from "../database/atlas";
 
 export function getStreamWeight(timestamp_ms: number): number {
 	let ms = Date.now() - timestamp_ms;
@@ -15,7 +17,7 @@ export function getStreamWeight(timestamp_ms: number): number {
 	return Math.pow(0.5, weeks);
 };
 
-export async function lookupFile(file_id: string, user_id: string): Promise<File & { mime: string }> {
+export async function lookupFile(queue: ReadableQueue, file_id: string, user_id: string): Promise<File & { mime: string }> {
 	let file = database.files.lookup(file_id);
 	let mime = "application/octet-stream";
 	try {
@@ -39,11 +41,11 @@ export async function lookupFile(file_id: string, user_id: string): Promise<File
 	};
 };
 
-export async function createStream(stream: Stream): Promise<void> {
+export async function createStream(queue: WritableQueue, stream: Stream): Promise<void> {
 	database.streams.insert(stream);
 };
 
-export async function createUser(request: schema.messages.RegisterRequest): Promise<schema.messages.RegisterResponse | schema.messages.ErrorMessage> {
+export async function createUser(queue: WritableQueue, request: schema.messages.RegisterRequest): Promise<schema.messages.RegisterResponse | schema.messages.ErrorMessage> {
 	let { username, password, name, key_id } = { ...request };
 	let errors = new Array<string>();
 	if (database.getUsersFromUsername.lookup(username).collect().length > 0) {
@@ -90,7 +92,7 @@ export async function createUser(request: schema.messages.RegisterRequest): Prom
 	};
 };
 
-export async function lookupAlbumBase(album_id: string, user_id: string): Promise<schema.objects.AlbumBase> {
+export async function lookupAlbumBase(queue: ReadableQueue, album_id: string, user_id: string): Promise<schema.objects.AlbumBase> {
 	let album = database.albums.lookup(album_id);
 	return {
 		album_id: album.album_id,
@@ -106,24 +108,24 @@ export async function lookupAlbumBase(album_id: string, user_id: string): Promis
 	};
 };
 
-export async function lookupAlbum(album_id: string, user_id: string): Promise<schema.objects.Album> {
+export async function lookupAlbum(queue: ReadableQueue, album_id: string, user_id: string): Promise<schema.objects.Album> {
 	let record = database.albums.lookup(album_id);
-	let album = await lookupAlbumBase(album_id, user_id);
+	let album = await lookupAlbumBase(queue, album_id, user_id);
 	return {
 		...album,
 		artists: await Promise.all(database.getArtistsFromAlbum.lookup(album_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupArtistBase(record.artist_id, user_id))
+			.map((record) => lookupArtistBase(queue, record.artist_id, user_id))
 			.collect()),
 		year: record.year,
 		discs: await Promise.all(database.getDiscsFromAlbum.lookup(album_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
-			.map((record) => lookupDisc(record.disc_id, user_id, album))
+			.map((record) => lookupDisc(queue, record.disc_id, user_id, album))
 			.collect())
 	};
 };
 
-export async function lookupArtistBase(artist_id: string, user_id: string): Promise<schema.objects.ArtistBase> {
+export async function lookupArtistBase(queue: ReadableQueue, artist_id: string, user_id: string): Promise<schema.objects.ArtistBase> {
 	let artist = database.artists.lookup(artist_id);
 	return {
 		artist_id: artist.artist_id,
@@ -131,43 +133,43 @@ export async function lookupArtistBase(artist_id: string, user_id: string): Prom
 	};
 };
 
-export async function lookupArtist(artist_id: string, user_id: string): Promise<schema.objects.Artist> {
-	let artist = await lookupArtistBase(artist_id, user_id);
+export async function lookupArtist(queue: ReadableQueue, artist_id: string, user_id: string): Promise<schema.objects.Artist> {
+	let artist = await lookupArtistBase(queue, artist_id, user_id);
 	return {
 		...artist,
 		albums: await Promise.all(database.getAlbumsFromArtist.lookup(artist_id)
 			.map((record) => database.albums.lookup(record.album_id))
 			.sort(jsondb.NumericSort.decreasing((record) => record.year))
-			.map((record) => lookupAlbum(record.album_id, user_id))
+			.map((record) => lookupAlbum(queue, record.album_id, user_id))
 			.collect())
 	};
 };
 
-export async function lookupCueBase(cue_id: string, user_id: string, subtitle?: schema.objects.SubtitleBase): Promise<schema.objects.CueBase> {
+export async function lookupCueBase(queue: ReadableQueue, cue_id: string, user_id: string, subtitle?: schema.objects.SubtitleBase): Promise<schema.objects.CueBase> {
 	let cue = database.cues.lookup(cue_id);
 	return {
 		cue_id: cue.cue_id,
-		subtitle: is.present(subtitle) ? subtitle : await lookupSubtitleBase(cue.subtitle_id, user_id),
+		subtitle: is.present(subtitle) ? subtitle : await lookupSubtitleBase(queue, cue.subtitle_id, user_id),
 		start_ms: cue.start_ms,
 		duration_ms: cue.duration_ms,
 		lines: cue.lines.split("\n")
 	};
 };
 
-export async function lookupCue(cue_id: string, user_id: string, subtitle?: schema.objects.SubtitleBase): Promise<schema.objects.Cue> {
-	let cue = await lookupCueBase(cue_id, user_id, subtitle);
+export async function lookupCue(queue: ReadableQueue, cue_id: string, user_id: string, subtitle?: schema.objects.SubtitleBase): Promise<schema.objects.Cue> {
+	let cue = await lookupCueBase(queue, cue_id, user_id, subtitle);
 	let medias = await Promise.all(database.getVideoFilesFromSubtitleFile.lookup(cue.subtitle.subtitle.file_id)
 		.map((video_subtitle) => {
 			try {
 				let episode_files = database.getEpisodesFromFile.lookup(video_subtitle.video_file_id);
 				for (let episode_file of episode_files) {
-					return lookupEpisode(episode_file.episode_id, user_id);
+					return lookupEpisode(queue, episode_file.episode_id, user_id);
 				}
 			} catch (error) {}
 			try {
 				let movie_files = database.getMoviesFromFile.lookup(video_subtitle.video_file_id);
 				for (let movie_file of movie_files) {
-					return lookupMovie(movie_file.movie_id, user_id);
+					return lookupMovie(queue, movie_file.movie_id, user_id);
 				}
 			} catch (error) {}
 		})
@@ -183,38 +185,38 @@ export async function lookupCue(cue_id: string, user_id: string, subtitle?: sche
 	};
 };
 
-export async function lookupDiscBase(disc_id: string, user_id: string, album?: schema.objects.AlbumBase): Promise<schema.objects.DiscBase> {
+export async function lookupDiscBase(queue: ReadableQueue, disc_id: string, user_id: string, album?: schema.objects.AlbumBase): Promise<schema.objects.DiscBase> {
 	let disc = database.discs.lookup(disc_id);
 	return {
 		disc_id: disc.disc_id,
-		album: is.present(album) ? album : await lookupAlbumBase(disc.album_id, user_id),
+		album: is.present(album) ? album : await lookupAlbumBase(queue, disc.album_id, user_id),
 		number: disc.number
 	};
 };
 
-export async function lookupDisc(disc_id: string, user_id: string, album?: schema.objects.AlbumBase): Promise<schema.objects.Disc> {
-	let disc = await lookupDiscBase(disc_id, user_id, album);
+export async function lookupDisc(queue: ReadableQueue, disc_id: string, user_id: string, album?: schema.objects.AlbumBase): Promise<schema.objects.Disc> {
+	let disc = await lookupDiscBase(queue, disc_id, user_id, album);
 	return {
 		...disc,
 		tracks: await Promise.all(database.getTracksFromDisc.lookup(disc_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
-			.map((record) => lookupTrack(record.track_id, user_id, disc))
+			.map((record) => lookupTrack(queue, record.track_id, user_id, disc))
 			.collect())
 	};
 };
 
-export async function lookupEpisodeBase(episode_id: string, user_id: string, season?: schema.objects.SeasonBase): Promise<schema.objects.EpisodeBase> {
+export async function lookupEpisodeBase(queue: ReadableQueue, episode_id: string, user_id: string, season?: schema.objects.SeasonBase): Promise<schema.objects.EpisodeBase> {
 	let episode = database.episodes.lookup(episode_id);
 	return {
 		episode_id: episode.episode_id,
 		title: config.use_demo_mode ? "Episode title" : episode.title,
 		number: episode.number,
-		season: is.present(season) ? season : await lookupSeasonBase(episode.season_id, user_id)
+		season: is.present(season) ? season : await lookupSeasonBase(queue, episode.season_id, user_id)
 	};
 };
 
-export async function lookupEpisode(episode_id: string, user_id: string, season?: schema.objects.SeasonBase): Promise<schema.objects.Episode> {
-	let episode = await lookupEpisodeBase(episode_id, user_id, season);
+export async function lookupEpisode(queue: ReadableQueue, episode_id: string, user_id: string, season?: schema.objects.SeasonBase): Promise<schema.objects.Episode> {
+	let episode = await lookupEpisodeBase(queue, episode_id, user_id, season);
 	let record = database.episodes.lookup(episode_id);
 	let files = database.getFilesFromEpisode.lookup(episode_id)
 		.map((record) => {
@@ -248,7 +250,7 @@ export async function lookupEpisode(episode_id: string, user_id: string, season?
 	};
 };
 
-export async function lookupGenreBase(genre_id: string, user_id: string): Promise<schema.objects.GenreBase> {
+export async function lookupGenreBase(queue: ReadableQueue, genre_id: string, user_id: string): Promise<schema.objects.GenreBase> {
 	let genre = database.genres.lookup(genre_id);
 	return {
 		genre_id: genre.genre_id,
@@ -256,14 +258,14 @@ export async function lookupGenreBase(genre_id: string, user_id: string): Promis
 	};
 };
 
-export async function lookupGenre(genre_id: string, user_id: string): Promise<schema.objects.Genre> {
-	let genre = await lookupGenreBase(genre_id, user_id);
+export async function lookupGenre(queue: ReadableQueue, genre_id: string, user_id: string): Promise<schema.objects.Genre> {
+	let genre = await lookupGenreBase(queue, genre_id, user_id);
 	return {
 		...genre
 	};
 };
 
-export async function lookupMovieBase(movie_id: string, user_id: string): Promise<schema.objects.MovieBase> {
+export async function lookupMovieBase(queue: ReadableQueue, movie_id: string, user_id: string): Promise<schema.objects.MovieBase> {
 	let movie = database.movies.lookup(movie_id);
 	return {
 		movie_id: movie.movie_id,
@@ -279,8 +281,8 @@ export async function lookupMovieBase(movie_id: string, user_id: string): Promis
 	};
 };
 
-export async function lookupMovie(movie_id: string, user_id: string): Promise<schema.objects.Movie> {
-	let movie = await lookupMovieBase(movie_id, user_id);
+export async function lookupMovie(queue: ReadableQueue, movie_id: string, user_id: string): Promise<schema.objects.Movie> {
+	let movie = await lookupMovieBase(queue, movie_id, user_id);
 	let record = database.movies.lookup(movie_id);
 	let files = database.getFilesFromMovie.lookup(movie_id)
 		.map((record) => {
@@ -308,11 +310,11 @@ export async function lookupMovie(movie_id: string, user_id: string): Promise<sc
 		summary: config.use_demo_mode ? "Movie summary." : record.summary,
 		genres: await Promise.all(database.getGenresFromMovie.lookup(movie_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupGenreBase(record.genre_id, user_id))
+			.map((record) => lookupGenreBase(queue, record.genre_id, user_id))
 			.collect()),
 		actors: await Promise.all(database.getActorsFromMovie.lookup(movie_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupActor(record.actor_id, user_id))
+			.map((record) => lookupActor(queue, record.actor_id, user_id))
 			.collect()),
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media,
@@ -322,7 +324,7 @@ export async function lookupMovie(movie_id: string, user_id: string): Promise<sc
 	};
 };
 
-export async function lookupActorBase(actor_id: string, user_id: string): Promise<schema.objects.ActorBase> {
+export async function lookupActorBase(queue: ReadableQueue, actor_id: string, user_id: string): Promise<schema.objects.ActorBase> {
 	let actor = database.actors.lookup(actor_id);
 	return {
 		actor_id: actor.actor_id,
@@ -330,72 +332,72 @@ export async function lookupActorBase(actor_id: string, user_id: string): Promis
 	};
 };
 
-export async function lookupActor(actor_id: string, user_id: string): Promise<schema.objects.Actor> {
-	let actor = await lookupActorBase(actor_id, user_id);
+export async function lookupActor(queue: ReadableQueue, actor_id: string, user_id: string): Promise<schema.objects.Actor> {
+	let actor = await lookupActorBase(queue, actor_id, user_id);
 	return {
 		...actor
 	};
 };
 
-export async function lookupPlaylistBase(playlist_id: string, user_id: string, user?: schema.objects.UserBase): Promise<schema.objects.PlaylistBase> {
+export async function lookupPlaylistBase(queue: ReadableQueue, playlist_id: string, user_id: string, user?: schema.objects.UserBase): Promise<schema.objects.PlaylistBase> {
 	let playlist = database.playlists.lookup(playlist_id);
 	return {
 		playlist_id: playlist.playlist_id,
 		title: playlist.title,
 		description: playlist.description,
-		user: is.present(user) ? user : await lookupUserBase(playlist.user_id, user_id)
+		user: is.present(user) ? user : await lookupUserBase(queue, playlist.user_id, user_id)
 	};
 };
 
-export async function lookupPlaylist(playlist_id: string, user_id: string, user?: schema.objects.UserBase): Promise<schema.objects.Playlist> {
-	let playlist = await lookupPlaylistBase(playlist_id, user_id, user);
+export async function lookupPlaylist(queue: ReadableQueue, playlist_id: string, user_id: string, user?: schema.objects.UserBase): Promise<schema.objects.Playlist> {
+	let playlist = await lookupPlaylistBase(queue, playlist_id, user_id, user);
 	return {
 		...playlist,
 		items: await Promise.all(database.getPlaylistsItemsFromPlaylist.lookup(playlist_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
-			.map((record) => lookupPlaylistItem(record.playlist_item_id, user_id, playlist))
+			.map((record) => lookupPlaylistItem(queue, record.playlist_item_id, user_id, playlist))
 			.collect())
 	};
 };
 
-export async function lookupPlaylistItemBase(playlist_item_id: string, user_id: string, playlist?: schema.objects.PlaylistBase): Promise<schema.objects.PlaylistItemBase> {
+export async function lookupPlaylistItemBase(queue: ReadableQueue, playlist_item_id: string, user_id: string, playlist?: schema.objects.PlaylistBase): Promise<schema.objects.PlaylistItemBase> {
 	let playlist_item = database.playlist_items.lookup(playlist_item_id);
 	return {
 		playlist_item_id: playlist_item.playlist_item_id,
 		number: playlist_item.number,
-		playlist: is.present(playlist) ? playlist : await lookupPlaylistBase(playlist_item.playlist_id, user_id),
-		track: await lookupTrack(playlist_item.track_id, user_id)
+		playlist: is.present(playlist) ? playlist : await lookupPlaylistBase(queue, playlist_item.playlist_id, user_id),
+		track: await lookupTrack(queue, playlist_item.track_id, user_id)
 	};
 };
 
-export async function lookupPlaylistItem(playlist_item_id: string, user_id: string, playlist?: schema.objects.PlaylistBase): Promise<schema.objects.PlaylistItem> {
-	let playlist_item = await lookupPlaylistItemBase(playlist_item_id, user_id, playlist);
+export async function lookupPlaylistItem(queue: ReadableQueue, playlist_item_id: string, user_id: string, playlist?: schema.objects.PlaylistBase): Promise<schema.objects.PlaylistItem> {
+	let playlist_item = await lookupPlaylistItemBase(queue, playlist_item_id, user_id, playlist);
 	return {
 		...playlist_item
 	};
 };
 
-export async function lookupSeasonBase(season_id: string, user_id: string, show?: schema.objects.ShowBase): Promise<schema.objects.SeasonBase> {
+export async function lookupSeasonBase(queue: ReadableQueue, season_id: string, user_id: string, show?: schema.objects.ShowBase): Promise<schema.objects.SeasonBase> {
 	let season = database.seasons.lookup(season_id);
 	return {
 		season_id: season.season_id,
 		number: season.number,
-		show: is.present(show) ? show : await lookupShowBase(season.show_id, user_id)
+		show: is.present(show) ? show : await lookupShowBase(queue, season.show_id, user_id)
 	};
 };
 
-export async function lookupSeason(season_id: string, user_id: string, show?: schema.objects.ShowBase): Promise<schema.objects.Season> {
-	let season = await lookupSeasonBase(season_id, user_id, show);
+export async function lookupSeason(queue: ReadableQueue, season_id: string, user_id: string, show?: schema.objects.ShowBase): Promise<schema.objects.Season> {
+	let season = await lookupSeasonBase(queue, season_id, user_id, show);
 	return {
 		...season,
 		episodes: await Promise.all(database.getEpisodesFromSeason.lookup(season_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
-			.map((record) => lookupEpisode(record.episode_id, user_id, season))
+			.map((record) => lookupEpisode(queue, record.episode_id, user_id, season))
 			.collect())
 	}
 };
 
-export async function lookupShowBase(show_id: string, user_id: string): Promise<schema.objects.ShowBase> {
+export async function lookupShowBase(queue: ReadableQueue, show_id: string, user_id: string): Promise<schema.objects.ShowBase> {
 	let show = database.shows.lookup(show_id);
 	return {
 		show_id: show.show_id,
@@ -412,29 +414,29 @@ export async function lookupShowBase(show_id: string, user_id: string): Promise<
 	};
 };
 
-export async function lookupShow(show_id: string, user_id: string): Promise<schema.objects.Show> {
-	let show = await lookupShowBase(show_id, user_id);
+export async function lookupShow(queue: ReadableQueue, show_id: string, user_id: string): Promise<schema.objects.Show> {
+	let show = await lookupShowBase(queue, show_id, user_id);
 	let record = database.shows.lookup(show_id);
 	return {
 		...show,
 		summary: config.use_demo_mode ? "Show summary." : record.summary,
 		genres: await Promise.all(database.getGenresFromShow.lookup(show_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupGenreBase(record.genre_id, user_id))
+			.map((record) => lookupGenreBase(queue, record.genre_id, user_id))
 			.collect()),
 		actors: await Promise.all(database.getActorsFromShow.lookup(show_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupActorBase(record.actor_id, user_id))
+			.map((record) => lookupActorBase(queue, record.actor_id, user_id))
 			.collect()),
 		seasons: await Promise.all(database.getSeasonsFromShow.lookup(show_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.number))
-			.map((record) => lookupSeason(record.season_id, user_id, show))
+			.map((record) => lookupSeason(queue, record.season_id, user_id, show))
 			.collect()),
 		imdb: record.imdb
 	};
 };
 
-export async function lookupSubtitleBase(subtitle_id: string, user_id: string): Promise<schema.objects.SubtitleBase> {
+export async function lookupSubtitleBase(queue: ReadableQueue, subtitle_id: string, user_id: string): Promise<schema.objects.SubtitleBase> {
 	let subtitle = database.subtitles.lookup(subtitle_id);
 	return {
 		subtitle_id: subtitle.subtitle_id,
@@ -442,29 +444,29 @@ export async function lookupSubtitleBase(subtitle_id: string, user_id: string): 
 	};
 };
 
-export async function lookupSubtitle(subtitle_id: string, user_id: string): Promise<schema.objects.Subtitle> {
-	let subtitle = await lookupSubtitleBase(subtitle_id, user_id);
+export async function lookupSubtitle(queue: ReadableQueue, subtitle_id: string, user_id: string): Promise<schema.objects.Subtitle> {
+	let subtitle = await lookupSubtitleBase(queue, subtitle_id, user_id);
 	return {
 		...subtitle,
 		cues: await Promise.all(database.getCuesFromSubtitle.lookup(subtitle_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.start_ms))
-			.map((record) => lookupCue(record.cue_id, user_id))
+			.map((record) => lookupCue(queue, record.cue_id, user_id))
 			.collect())
 	};
 };
 
-export async function lookupTrackBase(track_id: string, user_id: string, disc?: schema.objects.DiscBase): Promise<schema.objects.TrackBase> {
+export async function lookupTrackBase(queue: ReadableQueue, track_id: string, user_id: string, disc?: schema.objects.DiscBase): Promise<schema.objects.TrackBase> {
 	let track = database.tracks.lookup(track_id);
 	return {
 		track_id: track.track_id,
 		title: config.use_demo_mode ? "Track title" : track.title,
-		disc: is.present(disc) ? disc : await lookupDiscBase(track.disc_id, user_id),
+		disc: is.present(disc) ? disc : await lookupDiscBase(queue, track.disc_id, user_id),
 		number: track.number
 	};
 };
 
-export async function lookupTrack(track_id: string, user_id: string, disc?: schema.objects.DiscBase): Promise<schema.objects.Track> {
-	let track = await lookupTrackBase(track_id, user_id, disc);
+export async function lookupTrack(queue: ReadableQueue, track_id: string, user_id: string, disc?: schema.objects.DiscBase): Promise<schema.objects.Track> {
+	let track = await lookupTrackBase(queue, track_id, user_id, disc);
 	let record = database.tracks.lookup(track_id);
 	let files = database.getFilesFromTrack.lookup(track_id)
 		.map((record) => {
@@ -486,7 +488,7 @@ export async function lookupTrack(track_id: string, user_id: string, disc?: sche
 		...track,
 		artists: await Promise.all(database.getArtistsFromTrack.lookup(track_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupArtistBase(record.artist_id, user_id))
+			.map((record) => lookupArtistBase(queue, record.artist_id, user_id))
 			.collect()),
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: media,
@@ -494,7 +496,7 @@ export async function lookupTrack(track_id: string, user_id: string, disc?: sche
 	};
 };
 
-export async function lookupUserBase(user_id: string, api_user_id: string): Promise<schema.objects.UserBase> {
+export async function lookupUserBase(queue: ReadableQueue, user_id: string, api_user_id: string): Promise<schema.objects.UserBase> {
 	let user = database.users.lookup(user_id);
 	return {
 		user_id: user.user_id,
@@ -503,14 +505,14 @@ export async function lookupUserBase(user_id: string, api_user_id: string): Prom
 	};
 };
 
-export async function lookupUser(user_id: string, api_user_id: string): Promise<schema.objects.User> {
-	let user = await lookupUserBase(user_id, api_user_id);
+export async function lookupUser(queue: ReadableQueue, user_id: string, api_user_id: string): Promise<schema.objects.User> {
+	let user = await lookupUserBase(queue, user_id, api_user_id);
 	return {
 		...user
 	};
 };
 
-export async function lookupYearBase(year_id: string, user_id: string): Promise<schema.objects.YearBase> {
+export async function lookupYearBase(queue: ReadableQueue, year_id: string, user_id: string): Promise<schema.objects.YearBase> {
 	let year = database.years.lookup(year_id);
 	return {
 		year_id: year.year_id,
@@ -518,14 +520,14 @@ export async function lookupYearBase(year_id: string, user_id: string): Promise<
 	};
 };
 
-export async function lookupYear(year_id: string, user_id: string): Promise<schema.objects.Year> {
-	let year = await lookupYearBase(year_id, user_id);
+export async function lookupYear(queue: ReadableQueue, year_id: string, user_id: string): Promise<schema.objects.Year> {
+	let year = await lookupYearBase(queue, year_id, user_id);
 	return {
 		...year
 	};
 };
 
-export async function getNewAlbums(user_id: string, offset: number, length: number): Promise<schema.objects.Album[]> {
+export async function getNewAlbums(queue: ReadableQueue, user_id: string, offset: number, length: number): Promise<schema.objects.Album[]> {
 	let albums = new Map<string, number>();
 	for (let album of database.albums) {
 		for (let disc of database.getDiscsFromAlbum.lookup(album.album_id)) {
@@ -548,10 +550,10 @@ export async function getNewAlbums(user_id: string, offset: number, length: numb
 	return await Promise.all(Array.from(albums.entries())
 		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
-		.map((entry) => lookupAlbum(entry[0], user_id)));
+		.map((entry) => lookupAlbum(queue, entry[0], user_id)));
 };
 
-export async function getNewMovies(user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
+export async function getNewMovies(queue: ReadableQueue, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
 	let movies = new Map<string, number>();
 	for (let movie of database.movies) {
 		for (let movie_file of database.getFilesFromMovie.lookup(movie.movie_id)) {
@@ -570,25 +572,25 @@ export async function getNewMovies(user_id: string, offset: number, length: numb
 	return await Promise.all(Array.from(movies.entries())
 		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
-		.map((entry) => lookupMovie(entry[0], user_id)));
+		.map((entry) => lookupMovie(queue, entry[0], user_id)));
 };
 
-export async function searchForAlbums(query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
+export async function searchForAlbums(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
 	if (query === "") {
 		return await Promise.all(Array.from(database.albums)
 			.sort(jsondb.LexicalSort.increasing((record) => record.title))
 			.slice(offset, offset + length)
-			.map((record) => lookupAlbum(record.album_id, user_id)));
+			.map((record) => lookupAlbum(queue, record.album_id, user_id)));
 	} else {
 		return await Promise.all(database.album_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().album_id)
-			.map((id) => lookupAlbum(id, user_id))
+			.map((id) => lookupAlbum(queue, id, user_id))
 			.collect());
 	}
 };
 
-export async function searchForArtists(query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Artist[]> {
+export async function searchForArtists(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Artist[]> {
 	if (query === "") {
 		return await Promise.all(Array.from(database.artists)
 			.map((artist) => ({
@@ -601,173 +603,173 @@ export async function searchForArtists(query: string, offset: number, length: nu
 			))
 			.map((entry) => entry.artist)
 			.slice(offset, offset + length)
-			.map((record) => lookupArtist(record.artist_id, user_id)));
+			.map((record) => lookupArtist(queue, record.artist_id, user_id)));
 	} else {
 		return await Promise.all(database.artist_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().artist_id)
-			.map((id) => lookupArtist(id, user_id))
+			.map((id) => lookupArtist(queue, id, user_id))
 			.collect());
 	}
 };
 
-export async function searchForCues(query: string, offset: number, limit: number, user_id: string): Promise<(schema.objects.Cue & { media: schema.objects.Episode | schema.objects.Movie })[]> {
+export async function searchForCues(queue: ReadableQueue, query: string, offset: number, limit: number, user_id: string): Promise<(schema.objects.Cue & { media: schema.objects.Episode | schema.objects.Movie })[]> {
 	return is.absent(database.cue_search) ? [] : await Promise.all(database.cue_search.search(query)
 		.slice(offset, offset + limit)
-		.map((record) => lookupCue(record.lookup().cue_id, user_id))
+		.map((record) => lookupCue(queue, record.lookup().cue_id, user_id))
 		.include(is.present)
 		.collect());
 };
 
-export async function searchForDiscs(query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Disc[]> {
+export async function searchForDiscs(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Disc[]> {
 	return await Promise.all(Array.from(database.discs)
 		.sort(jsondb.LexicalSort.increasing((record) => record.disc_id))
 		.slice(offset, offset + length)
-		.map((record) => lookupDisc(record.disc_id, user_id)));
+		.map((record) => lookupDisc(queue, record.disc_id, user_id)));
 };
 
-export async function searchForEpisodes(query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Episode[]> {
+export async function searchForEpisodes(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Episode[]> {
 	if (query === "") {
 		return await Promise.all(Array.from(database.episodes)
 			.sort(jsondb.LexicalSort.increasing((record) => record.title))
 			.slice(offset, offset + length)
-			.map((record) => lookupEpisode(record.episode_id, user_id)));
+			.map((record) => lookupEpisode(queue, record.episode_id, user_id)));
 	} else {
 		return await Promise.all(database.episode_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().episode_id)
-			.map((id) => lookupEpisode(id, user_id))
+			.map((id) => lookupEpisode(queue, id, user_id))
 			.collect());
 	}
 };
 
-export async function searchForGenres(query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Genre[]> {
+export async function searchForGenres(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Genre[]> {
 	if (query === "") {
 		return await Promise.all(Array.from(database.genres)
 			.sort(jsondb.LexicalSort.increasing((record) => record.name))
-			.map((record) => lookupGenre(record.genre_id, user_id)));
+			.map((record) => lookupGenre(queue, record.genre_id, user_id)));
 	} else {
 		return await Promise.all(database.genre_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().genre_id)
-			.map((id) => lookupGenre(id, user_id))
+			.map((id) => lookupGenre(queue, id, user_id))
 			.collect());
 	}
 };
 
-export async function searchForMovies(query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Movie[]> {
+export async function searchForMovies(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Movie[]> {
 	if (query === "") {
 		return await Promise.all(Array.from(database.movies)
 			.sort(jsondb.LexicalSort.increasing((record) => record.title))
 			.slice(offset, offset + length)
-			.map((record) => lookupMovie(record.movie_id, user_id)));
+			.map((record) => lookupMovie(queue, record.movie_id, user_id)));
 	} else {
 		return await Promise.all(database.movie_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().movie_id)
-			.map((id) => lookupMovie(id, user_id))
+			.map((id) => lookupMovie(queue, id, user_id))
 			.collect());
 	}
 };
 
-export async function searchForActors(query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Actor[]> {
+export async function searchForActors(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Actor[]> {
 	if (query === "") {
 		return await Promise.all(Array.from(database.actors)
 			.sort(jsondb.LexicalSort.increasing((record) => record.name))
 			.slice(offset, offset + length)
-			.map((record) => lookupActor(record.actor_id, user_id)));
+			.map((record) => lookupActor(queue, record.actor_id, user_id)));
 	} else {
 		return await Promise.all(database.actor_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().actor_id)
-			.map((id) => lookupActor(id, user_id))
+			.map((id) => lookupActor(queue, id, user_id))
 			.collect());
 	}
 };
 
-export async function searchForPlaylists(query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Playlist[]> {
+export async function searchForPlaylists(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Playlist[]> {
 	if (query === "") {
 		return await Promise.all(Array.from(database.playlists)
 			.sort(jsondb.LexicalSort.increasing((record) => record.title))
 			.slice(offset, offset + length)
-			.map((record) => lookupPlaylist(record.playlist_id, user_id)));
+			.map((record) => lookupPlaylist(queue, record.playlist_id, user_id)));
 	} else {
 		return await Promise.all(database.playlist_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().playlist_id)
-			.map((id) => lookupPlaylist(id, user_id))
+			.map((id) => lookupPlaylist(queue, id, user_id))
 			.collect());
 	}
 };
 
-export async function searchForSeasons(query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Season[]> {
+export async function searchForSeasons(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Season[]> {
 	return await Promise.all(Array.from(database.seasons)
 		.sort(jsondb.LexicalSort.increasing((record) => record.season_id))
 		.slice(offset, offset + length)
-		.map((record) => lookupSeason(record.season_id, user_id)));
+		.map((record) => lookupSeason(queue, record.season_id, user_id)));
 };
 
-export async function searchForShows(query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Show[]> {
+export async function searchForShows(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Show[]> {
 	if (query === "") {
 		return await Promise.all(Array.from(database.shows)
 			.sort(jsondb.LexicalSort.increasing((record) => record.name))
 			.slice(offset, offset + length)
-			.map((record) => lookupShow(record.show_id, user_id)));
+			.map((record) => lookupShow(queue, record.show_id, user_id)));
 	} else {
 		return await Promise.all(database.shows_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().show_id)
-			.map((id) => lookupShow(id, user_id))
+			.map((id) => lookupShow(queue, id, user_id))
 			.collect());
 	}
 };
 
-export async function searchForTracks(query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Track[]> {
+export async function searchForTracks(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Track[]> {
 	if (query === "") {
 		return await Promise.all(Array.from(database.tracks)
 			.sort(jsondb.LexicalSort.increasing((record) => record.title))
 			.slice(offset, offset + length)
-			.map((record) => lookupTrack(record.track_id, user_id)));
+			.map((record) => lookupTrack(queue, record.track_id, user_id)));
 	} else {
 		return await Promise.all(database.track_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().track_id)
-			.map((id) => lookupTrack(id, user_id))
+			.map((id) => lookupTrack(queue, id, user_id))
 			.collect());
 	}
 };
 
-export async function searchForUsers(query: string, offset: number, length: number, user_id: string): Promise<schema.objects.User[]> {
+export async function searchForUsers(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.User[]> {
 	if (query === "") {
 		return await Promise.all(Array.from(database.users)
 			.sort(jsondb.LexicalSort.increasing((record) => record.name))
 			.slice(offset, offset + length)
-			.map((record) => lookupUser(record.user_id, user_id)));
+			.map((record) => lookupUser(queue, record.user_id, user_id)));
 	} else {
 		return await Promise.all(database.user_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().user_id)
-			.map((id) => lookupUser(id, user_id))
+			.map((id) => lookupUser(queue, id, user_id))
 			.collect());
 	}
 };
 
-export async function searchForYears(query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Year[]> {
+export async function searchForYears(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Year[]> {
 	if (query === "") {
 		return await Promise.all(Array.from(database.years)
 			.sort(jsondb.NumericSort.decreasing((record) => record.year))
 			.slice(offset, offset + length)
-			.map((record) => lookupYear(record.year_id, user_id)));
+			.map((record) => lookupYear(queue, record.year_id, user_id)));
 	} else {
 		return await Promise.all(database.year_search.search(query)
 			.slice(offset, offset + length)
 			.map((record) => record.lookup().year_id)
-			.map((id) => lookupYear(id, user_id))
+			.map((id) => lookupYear(queue, id, user_id))
 			.collect());
 	}
 };
 
-export async function searchForEntities(query: string, user_id: string, offset: number, limit: number, options?: Partial<{ cues: boolean }>): Promise<schema.objects.Entity[]> {
+export async function searchForEntities(queue: ReadableQueue, query: string, user_id: string, offset: number, limit: number, options?: Partial<{ cues: boolean }>): Promise<schema.objects.Entity[]> {
 	let results = [
 		...database.actor_search.search(query).map((result) => ({ ...result, type: "ACTOR", type_rank: 1 })),
 		...database.album_search.search(query).map((result) => ({ ...result, type: "ALBUM", type_rank: 9 })),
@@ -798,36 +800,36 @@ export async function searchForEntities(query: string, user_id: string, offset: 
 		let type = result.type;
 		if (false) {
 		} else if (type === "ACTOR") {
-			return lookupActor((result.lookup() as Actor).actor_id, user_id);
+			return lookupActor(queue, (result.lookup() as Actor).actor_id, user_id);
 		} else if (type === "ALBUM") {
-			return lookupAlbum((result.lookup() as Album).album_id, user_id);
+			return lookupAlbum(queue, (result.lookup() as Album).album_id, user_id);
 		} else if (type === "ARTIST") {
-			return lookupArtist((result.lookup() as Artist).artist_id, user_id);
+			return lookupArtist(queue, (result.lookup() as Artist).artist_id, user_id);
 		} else if (type === "CUE") {
-			return lookupCue((result.lookup() as Cue).cue_id, user_id);
+			return lookupCue(queue, (result.lookup() as Cue).cue_id, user_id);
 		} else if (type === "EPISODE") {
-			return lookupEpisode((result.lookup() as Episode).episode_id, user_id);
+			return lookupEpisode(queue, (result.lookup() as Episode).episode_id, user_id);
 		} else if (type === "GENRE") {
-			return lookupGenre((result.lookup() as Genre).genre_id, user_id);
+			return lookupGenre(queue, (result.lookup() as Genre).genre_id, user_id);
 		} else if (type === "MOVIE") {
-			return lookupMovie((result.lookup() as Movie).movie_id, user_id);
+			return lookupMovie(queue, (result.lookup() as Movie).movie_id, user_id);
 		} else if (type === "PLAYLIST") {
-			return lookupPlaylist((result.lookup() as Playlist).playlist_id, user_id);
+			return lookupPlaylist(queue, (result.lookup() as Playlist).playlist_id, user_id);
 		} else if (type === "SHOW") {
-			return lookupShow((result.lookup() as Show).show_id, user_id);
+			return lookupShow(queue, (result.lookup() as Show).show_id, user_id);
 		} else if (type === "TRACK") {
-			return lookupTrack((result.lookup() as Track).track_id, user_id);
+			return lookupTrack(queue, (result.lookup() as Track).track_id, user_id);
 		} else if (type === "USER") {
-			return lookupUser((result.lookup() as User).user_id, user_id);
+			return lookupUser(queue, (result.lookup() as User).user_id, user_id);
 		} else if (type === "YEAR") {
-			return lookupYear((result.lookup() as Year).year_id, user_id);
+			return lookupYear(queue, (result.lookup() as Year).year_id, user_id);
 		}
 		throw `Expected code to be unreachable!`;
 	}));
 	return entities;
 };
 
-export async function getArtistAppearances(artist_id: string, user_id: string): Promise<schema.objects.Album[]> {
+export async function getArtistAppearances(queue: ReadableQueue, artist_id: string, user_id: string): Promise<schema.objects.Album[]> {
 	let track_artists = database.getTracksFromArtist.lookup(artist_id);
 	let tracks = track_artists.map((track_artist) => {
 		return database.tracks.lookup(track_artist.track_id);
@@ -855,11 +857,11 @@ export async function getArtistAppearances(artist_id: string, user_id: string): 
 		.map((entry) => database.albums.lookup(entry))
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
 		.map((entry) => {
-			return lookupAlbum(entry.album_id, user_id);
+			return lookupAlbum(queue, entry.album_id, user_id);
 		}));
 };
 
-export async function getArtistTracks(artist_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Track[]> {
+export async function getArtistTracks(queue: ReadableQueue, artist_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Track[]> {
 	let track_weights = new Map<string, number>();
 	for (let track_artist of database.getTracksFromArtist.lookup(artist_id)) {
 		let track_id = track_artist.track_id;
@@ -876,10 +878,10 @@ export async function getArtistTracks(artist_id: string, offset: number, length:
 		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
 		.map((entry) => entry[0])
-		.map((track_id) => lookupTrack(track_id, user_id)));
+		.map((track_id) => lookupTrack(queue, track_id, user_id)));
 }
 
-export async function getPlaylistAppearances(track_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Playlist[]> {
+export async function getPlaylistAppearances(queue: ReadableQueue, track_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Playlist[]> {
 	let playlist_ids = new Set<string>();
 	for (let playlist_item of database.getPlaylistItemsFromTrack.lookup(track_id)) {
 		playlist_ids.add(playlist_item.playlist_id);
@@ -888,10 +890,10 @@ export async function getPlaylistAppearances(track_id: string, offset: number, l
 		.map((playlist_id) => database.playlists.lookup(playlist_id))
 		.sort(jsondb.LexicalSort.increasing((playlist) => playlist.title))
 		.slice(offset, offset + length)
-		.map((playlist) => lookupPlaylist(playlist.playlist_id, user_id)));
+		.map((playlist) => lookupPlaylist(queue, playlist.playlist_id, user_id)));
 };
 
-export async function getMovieSuggestions(movie_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Movie[]> {
+export async function getMovieSuggestions(queue: ReadableQueue, movie_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Movie[]> {
 	let genres = database.getGenresFromMovie.lookup(movie_id);
 	let map = new Map<string, number>();
 	for (let genre of genres) {
@@ -910,54 +912,54 @@ export async function getMovieSuggestions(movie_id: string, offset: number, leng
 		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
 		.map((entry) => entry[0])
-		.map((movie_id) => lookupMovie(movie_id, user_id)));
+		.map((movie_id) => lookupMovie(queue, movie_id, user_id)));
 };
 
-export async function getMoviesFromGenre(video_genre_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
+export async function getMoviesFromGenre(queue: ReadableQueue, video_genre_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
 	return await Promise.all(database.getMoviesFromGenre.lookup(video_genre_id)
 		.map((entry) => database.movies.lookup(entry.movie_id))
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
 		.slice(offset, offset + length)
-		.map((entry) => lookupMovie(entry.movie_id, user_id))
+		.map((entry) => lookupMovie(queue, entry.movie_id, user_id))
 		.collect());
 };
 
-export async function getMoviesFromActor(actor_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
+export async function getMoviesFromActor(queue: ReadableQueue, actor_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
 	return await Promise.all(database.getMoviesFromActor.lookup(actor_id)
 		.map((entry) => database.movies.lookup(entry.movie_id))
 		.sort(jsondb.LexicalSort.increasing((movie) => movie.title))
 		.slice(offset, offset + length)
-		.map((entry) => lookupMovie(entry.movie_id, user_id))
+		.map((entry) => lookupMovie(queue, entry.movie_id, user_id))
 		.collect());
 };
 
-export async function getShowsFromGenre(video_genre_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Show[]> {
+export async function getShowsFromGenre(queue: ReadableQueue, video_genre_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Show[]> {
 	return await Promise.all(database.getShowsFromGenre.lookup(video_genre_id)
 		.map((entry) => database.shows.lookup(entry.show_id))
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.name))
 		.slice(offset, offset + length)
-		.map((entry) => lookupShow(entry.show_id, user_id))
+		.map((entry) => lookupShow(queue, entry.show_id, user_id))
 		.collect());
 };
 
-export async function getShowsFromActor(actor_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Show[]> {
+export async function getShowsFromActor(queue: ReadableQueue, actor_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Show[]> {
 	return await Promise.all(database.getShowsFromActor.lookup(actor_id)
 		.map((entry) => database.shows.lookup(entry.show_id))
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.name))
 		.slice(offset, offset + length)
-		.map((entry) => lookupShow(entry.show_id, user_id))
+		.map((entry) => lookupShow(queue, entry.show_id, user_id))
 		.collect());
 };
 
-export async function getUserPlaylists(subject_user_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Playlist[]> {
+export async function getUserPlaylists(queue: ReadableQueue, subject_user_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Playlist[]> {
 	return await Promise.all(database.getPlaylistsFromUser.lookup(subject_user_id)
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
 		.slice(offset, offset + length)
-		.map((entry) => lookupPlaylist(entry.playlist_id, user_id))
+		.map((entry) => lookupPlaylist(queue, entry.playlist_id, user_id))
 		.collect());
 };
 
-export async function getUserAlbums(subject_user_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
+export async function getUserAlbums(queue: ReadableQueue, subject_user_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
 	let album_weights = new Map<string, number>();
 	let streams = database.getStreamsFromUser.lookup(subject_user_id);
 	for (let stream of streams) {
@@ -976,10 +978,10 @@ export async function getUserAlbums(subject_user_id: string, offset: number, len
 		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
 		.map((entry) => entry[0])
-		.map((album_id) => lookupAlbum(album_id, user_id)));
+		.map((album_id) => lookupAlbum(queue, album_id, user_id)));
 };
 
-export async function getUserShows(subject_user_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Show[]> {
+export async function getUserShows(queue: ReadableQueue, subject_user_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Show[]> {
 	let show_weights = new Map<string, number>();
 	let streams = database.getStreamsFromUser.lookup(subject_user_id);
 	for (let stream of streams) {
@@ -998,23 +1000,23 @@ export async function getUserShows(subject_user_id: string, offset: number, leng
 		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
 		.map((entry) => entry[0])
-		.map((artist_id) => lookupShow(artist_id, user_id)));
+		.map((artist_id) => lookupShow(queue, artist_id, user_id)));
 };
 
-export async function getMoviesFromYear(year_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
-	return await Promise.all(database.getMoviesFromYear.lookup((await lookupYearBase(year_id, user_id)).year)
+export async function getMoviesFromYear(queue: ReadableQueue, year_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
+	return await Promise.all(database.getMoviesFromYear.lookup((await lookupYearBase(queue, year_id, user_id)).year)
 		.map((entry) => database.movies.lookup(entry.movie_id))
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
 		.slice(offset, offset + length)
-		.map((entry) => lookupMovie(entry.movie_id, user_id))
+		.map((entry) => lookupMovie(queue, entry.movie_id, user_id))
 		.collect());
 };
 
-export async function getAlbumsFromYear(year_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Album[]> {
-	return await Promise.all(database.getAlbumsFromYear.lookup((await lookupYearBase(year_id, user_id)).year)
+export async function getAlbumsFromYear(queue: ReadableQueue, year_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Album[]> {
+	return await Promise.all(database.getAlbumsFromYear.lookup((await lookupYearBase(queue, year_id, user_id)).year)
 		.map((entry) => database.albums.lookup(entry.album_id))
 		.sort(jsondb.LexicalSort.increasing((entry) => entry.title))
 		.slice(offset, offset + length)
-		.map((entry) => lookupAlbum(entry.album_id, user_id))
+		.map((entry) => lookupAlbum(queue, entry.album_id, user_id))
 		.collect());
 };

@@ -60,11 +60,11 @@ export class PlaylistsServer {
 				session.connections.add(message.connection_id);
 				for (let playlist of database.getPlaylistsFromUser.lookup(user_id)) {
 					this.tss.send("CreatePlaylist", message.connection_id, {
-						playlist: await api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
+						playlist: await api.handler.lookupPlaylistBase(queue, playlist.playlist_id, user_id)
 					});
 					for (let playlist_item of database.getPlaylistsItemsFromPlaylist.lookup(playlist.playlist_id)) {
 						this.tss.send("CreatePlaylistItem", message.connection_id, {
-							playlist_item: await api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
+							playlist_item: await api.handler.lookupPlaylistItemBase(queue, playlist_item.playlist_item_id, user_id)
 						});
 					}
 				}
@@ -116,7 +116,7 @@ export class PlaylistsServer {
 				database.playlists.insert(playlist);
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("CreatePlaylist", Array.from(session.connections), {
-					playlist: await api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
+					playlist: await api.handler.lookupPlaylistBase(queue, playlist.playlist_id, user_id)
 				});
 			}
 		}));
@@ -138,7 +138,7 @@ export class PlaylistsServer {
 				}
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("DeletePlaylist", Array.from(session.connections), {
-					playlist: await api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
+					playlist: await api.handler.lookupPlaylistBase(queue, playlist.playlist_id, user_id)
 				});
 				database.playlists.remove(playlist);
 			}
@@ -173,7 +173,7 @@ export class PlaylistsServer {
 				});
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("UpdatePlaylist", Array.from(session.connections), {
-					playlist: await api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
+					playlist: await api.handler.lookupPlaylistBase(queue, playlist.playlist_id, user_id)
 				});
 			}
 		}));
@@ -210,7 +210,7 @@ export class PlaylistsServer {
 				database.playlist_items.insert(playlist_item);
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("CreatePlaylistItem", Array.from(session.connections), {
-					playlist_item: await api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
+					playlist_item: await api.handler.lookupPlaylistItemBase(queue, playlist_item.playlist_item_id, user_id)
 				});
 			}
 		}));
@@ -242,7 +242,7 @@ export class PlaylistsServer {
 				}
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("DeletePlaylistItem", Array.from(session.connections), {
-					playlist_item: await api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
+					playlist_item: await api.handler.lookupPlaylistItemBase(queue, playlist_item.playlist_item_id, user_id)
 				});
 				database.playlist_items.remove(playlist_item);
 			}
@@ -293,7 +293,7 @@ export class PlaylistsServer {
 				});
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("UpdatePlaylistItem", Array.from(session.connections), {
-					playlist_item: await api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
+					playlist_item: await api.handler.lookupPlaylistItemBase(queue, playlist_item.playlist_item_id, user_id)
 				});
 			}
 		}));
