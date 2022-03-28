@@ -44,12 +44,12 @@ export class PlaylistsServer {
 
 	constructor() {
 		this.tss = new typesockets.TypeSocketServer(schema.messages.Autoguard.Guards);
-		this.tss.addEventListener("sys", "connect", (message) => {
+		this.tss.addEventListener("sys", "connect", async (message) => {
 		});
-		this.tss.addEventListener("sys", "disconnect", (message) => {
+		this.tss.addEventListener("sys", "disconnect", async (message) => {
 			this.revokeAuthentication(message.connection_id);
 		});
-		this.tss.addEventListener("app", "SetToken", (message) => {
+		this.tss.addEventListener("app", "SetToken", async (message) => {
 			this.revokeAuthentication(message.connection_id);
 			let token = message.data.token;
 			if (is.present(token)) {
@@ -59,17 +59,17 @@ export class PlaylistsServer {
 				session.connections.add(message.connection_id);
 				for (let playlist of database.getPlaylistsFromUser.lookup(user_id)) {
 					this.tss.send("CreatePlaylist", message.connection_id, {
-						playlist: api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
+						playlist: await api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
 					});
 					for (let playlist_item of database.getPlaylistsItemsFromPlaylist.lookup(playlist.playlist_id)) {
 						this.tss.send("CreatePlaylistItem", message.connection_id, {
-							playlist_item: api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
+							playlist_item: await api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
 						});
 					}
 				}
 			}
 		});
-		this.tss.addEventListener("app", "PermissionsRequest", (message) => {
+		this.tss.addEventListener("app", "PermissionsRequest", async (message) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -85,7 +85,7 @@ export class PlaylistsServer {
 				}
 			}
 		});
-		this.tss.addEventListener("app", "CreatePlaylistRequest", (message) => {
+		this.tss.addEventListener("app", "CreatePlaylistRequest", async (message) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -115,11 +115,11 @@ export class PlaylistsServer {
 				database.playlists.insert(playlist);
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("CreatePlaylist", Array.from(session.connections), {
-					playlist: api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
+					playlist: await api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
 				});
 			}
 		});
-		this.tss.addEventListener("app", "DeletePlaylistRequest", (message) => {
+		this.tss.addEventListener("app", "DeletePlaylistRequest", async (message) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -137,12 +137,12 @@ export class PlaylistsServer {
 				}
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("DeletePlaylist", Array.from(session.connections), {
-					playlist: api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
+					playlist: await api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
 				});
 				database.playlists.remove(playlist);
 			}
 		});
-		this.tss.addEventListener("app", "UpdatePlaylistRequest", (message) => {
+		this.tss.addEventListener("app", "UpdatePlaylistRequest", async (message) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -172,11 +172,11 @@ export class PlaylistsServer {
 				});
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("UpdatePlaylist", Array.from(session.connections), {
-					playlist: api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
+					playlist: await api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
 				});
 			}
 		});
-		this.tss.addEventListener("app", "CreatePlaylistItemRequest", (message) => {
+		this.tss.addEventListener("app", "CreatePlaylistItemRequest", async (message) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -209,11 +209,11 @@ export class PlaylistsServer {
 				database.playlist_items.insert(playlist_item);
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("CreatePlaylistItem", Array.from(session.connections), {
-					playlist_item: api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
+					playlist_item: await api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
 				});
 			}
 		});
-		this.tss.addEventListener("app", "DeletePlaylistItemRequest", (message) => {
+		this.tss.addEventListener("app", "DeletePlaylistItemRequest", async (message) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -241,12 +241,12 @@ export class PlaylistsServer {
 				}
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("DeletePlaylistItem", Array.from(session.connections), {
-					playlist_item: api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
+					playlist_item: await api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
 				});
 				database.playlist_items.remove(playlist_item);
 			}
 		});
-		this.tss.addEventListener("app", "UpdatePlaylistItemRequest", (message) => {
+		this.tss.addEventListener("app", "UpdatePlaylistItemRequest", async (message) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -292,7 +292,7 @@ export class PlaylistsServer {
 				});
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("UpdatePlaylistItem", Array.from(session.connections), {
-					playlist_item: api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
+					playlist_item: await api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
 				});
 			}
 		});

@@ -40,7 +40,7 @@ export const server = apiv2.makeServer({
 		}
 	},
 	"POST:/users/": async (request) => {
-		let payload = handler.createUser(await request.payload());
+		let payload = await handler.createUser(await request.payload());
 		return {
 			payload
 		};
@@ -49,8 +49,8 @@ export const server = apiv2.makeServer({
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
 		let entities = options.cues
-			? handler.searchForCues(options.query, options.offset ?? 0, options.limit ?? 24, user_id)
-			: handler.searchForEntities(options.query, user_id, options.offset ?? 0, options.limit ?? 24);
+			? await handler.searchForCues(options.query, options.offset ?? 0, options.limit ?? 24, user_id)
+			: await handler.searchForEntities(options.query, user_id, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				entities
@@ -60,7 +60,7 @@ export const server = apiv2.makeServer({
 	"GET:/actors/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let actors = handler.searchForActors(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		let actors = await handler.searchForActors(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				actors
@@ -70,7 +70,7 @@ export const server = apiv2.makeServer({
 	"GET:/actors/<actor_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let actor = handler.lookupActor(options.actor_id, user_id);
+		let actor = await handler.lookupActor(options.actor_id, user_id);
 		return {
 			payload: {
 				actor
@@ -80,7 +80,7 @@ export const server = apiv2.makeServer({
 	"GET:/actors/<actor_id>/movies/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let movies = handler.getMoviesFromActor(options.actor_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let movies = await handler.getMoviesFromActor(options.actor_id, user_id, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				movies
@@ -90,7 +90,7 @@ export const server = apiv2.makeServer({
 	"GET:/actors/<actor_id>/shows/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let shows = handler.getShowsFromActor(options.actor_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let shows = await handler.getShowsFromActor(options.actor_id, user_id, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				shows
@@ -100,7 +100,7 @@ export const server = apiv2.makeServer({
 	"GET:/albums/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let albums = handler.searchForAlbums(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		let albums = await handler.searchForAlbums(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				albums
@@ -110,7 +110,7 @@ export const server = apiv2.makeServer({
 	getNewAlbums: async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let albums = handler.getNewAlbums(user_id, options.offset ?? 0, options.limit ?? 24);
+		let albums = await handler.getNewAlbums(user_id, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				albums
@@ -120,7 +120,7 @@ export const server = apiv2.makeServer({
 	"GET:/albums/<album_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let album = handler.lookupAlbum(options.album_id, user_id);
+		let album = await handler.lookupAlbum(options.album_id, user_id);
 		return {
 			payload: {
 				album
@@ -130,7 +130,7 @@ export const server = apiv2.makeServer({
 	"GET:/artists/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let artists = handler.searchForArtists(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		let artists = await handler.searchForArtists(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				artists
@@ -140,9 +140,9 @@ export const server = apiv2.makeServer({
 	"GET:/artists/<artist_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let artist = handler.lookupArtist(options.artist_id, user_id);
-		let tracks = handler.getArtistTracks(options.artist_id, 0, 3, user_id);
-		let appearances = handler.getArtistAppearances(options.artist_id, user_id);
+		let artist = await handler.lookupArtist(options.artist_id, user_id);
+		let tracks = await handler.getArtistTracks(options.artist_id, 0, 3, user_id);
+		let appearances = await handler.getArtistAppearances(options.artist_id, user_id);
 		return {
 			payload: {
 				artist,
@@ -154,7 +154,7 @@ export const server = apiv2.makeServer({
 	"GET:/discs/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let discs = handler.searchForDiscs(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		let discs = await handler.searchForDiscs(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				discs
@@ -164,8 +164,8 @@ export const server = apiv2.makeServer({
 	"GET:/discs/<disc_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let disc = handler.lookupDisc(options.disc_id, user_id);
-		let discs = handler.lookupAlbum(disc.album.album_id, user_id).discs;
+		let disc = await handler.lookupDisc(options.disc_id, user_id);
+		let discs = (await handler.lookupAlbum(disc.album.album_id, user_id)).discs;
 		let index = discs.findIndex((other) => other.disc_id === disc.disc_id);
 		let last = discs[index - 1];
 		let next = discs[index + 1];
@@ -180,7 +180,7 @@ export const server = apiv2.makeServer({
 	"GET:/episodes/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let episodes = handler.searchForEpisodes(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		let episodes = await handler.searchForEpisodes(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				episodes
@@ -190,8 +190,8 @@ export const server = apiv2.makeServer({
 	"GET:/episodes/<episode_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let episode = handler.lookupEpisode(options.episode_id, user_id);
-		let episodes = handler.lookupSeason(episode.season.season_id, user_id).episodes;
+		let episode = await handler.lookupEpisode(options.episode_id, user_id);
+		let episodes = (await handler.lookupSeason(episode.season.season_id, user_id)).episodes;
 		let index = episodes.findIndex((other) => other.episode_id === episode.episode_id);
 		let last = episodes[index - 1];
 		let next = episodes[index + 1];
@@ -206,7 +206,7 @@ export const server = apiv2.makeServer({
 	"GET:/genres/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let genres = handler.searchForGenres(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		let genres = await handler.searchForGenres(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				genres
@@ -216,7 +216,7 @@ export const server = apiv2.makeServer({
 	"GET:/genres/<genre_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let genre = handler.lookupGenre(options.genre_id, user_id);
+		let genre = await handler.lookupGenre(options.genre_id, user_id);
 		return {
 			payload: {
 				genre
@@ -226,7 +226,7 @@ export const server = apiv2.makeServer({
 	"GET:/genres/<genre_id>/movies/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let movies = handler.getMoviesFromGenre(options.genre_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let movies = await handler.getMoviesFromGenre(options.genre_id, user_id, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				movies
@@ -236,7 +236,7 @@ export const server = apiv2.makeServer({
 	"GET:/genres/<genre_id>/shows/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let shows = handler.getShowsFromGenre(options.genre_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let shows = await handler.getShowsFromGenre(options.genre_id, user_id, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				shows
@@ -246,7 +246,7 @@ export const server = apiv2.makeServer({
 	"GET:/movies/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let movies = handler.searchForMovies(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		let movies = await handler.searchForMovies(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				movies
@@ -256,7 +256,7 @@ export const server = apiv2.makeServer({
 	getNewMovies: async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let movies = handler.getNewMovies(user_id, options.offset ?? 0, options.limit ?? 24);
+		let movies = await handler.getNewMovies(user_id, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				movies
@@ -266,7 +266,7 @@ export const server = apiv2.makeServer({
 	"GET:/movies/<movie_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let movie = handler.lookupMovie(options.movie_id, user_id);
+		let movie = await handler.lookupMovie(options.movie_id, user_id);
 		return {
 			payload: {
 				movie
@@ -276,7 +276,7 @@ export const server = apiv2.makeServer({
 	"GET:/movies/<movie_id>/suggestions/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let movies = handler.getMovieSuggestions(options.movie_id, options.offset ?? 0, options.limit ?? 24, user_id);
+		let movies = await handler.getMovieSuggestions(options.movie_id, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				movies
@@ -286,7 +286,7 @@ export const server = apiv2.makeServer({
 	"GET:/playlists/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let playlists = handler.searchForPlaylists(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		let playlists = await handler.searchForPlaylists(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				playlists
@@ -296,7 +296,7 @@ export const server = apiv2.makeServer({
 	"GET:/playlists/<playlist_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let playlist = handler.lookupPlaylist(options.playlist_id, user_id);
+		let playlist = await handler.lookupPlaylist(options.playlist_id, user_id);
 		return {
 			payload: {
 				playlist
@@ -306,7 +306,7 @@ export const server = apiv2.makeServer({
 	"GET:/seasons/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let seasons = handler.searchForSeasons(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		let seasons = await handler.searchForSeasons(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				seasons
@@ -316,8 +316,8 @@ export const server = apiv2.makeServer({
 	"GET:/seasons/<season_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let season = handler.lookupSeason(options.season_id, user_id);
-		let seasons = handler.lookupShow(season.show.show_id, user_id).seasons;
+		let season = await handler.lookupSeason(options.season_id, user_id);
+		let seasons = (await handler.lookupShow(season.show.show_id, user_id)).seasons;
 		let index = seasons.findIndex((other) => other.season_id === season.season_id);
 		let last = seasons[index - 1];
 		let next = seasons[index + 1];
@@ -332,7 +332,7 @@ export const server = apiv2.makeServer({
 	"GET:/shows/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let shows = handler.searchForShows(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		let shows = await handler.searchForShows(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				shows
@@ -342,7 +342,7 @@ export const server = apiv2.makeServer({
 	"GET:/shows/<show_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let show = handler.lookupShow(options.show_id, user_id);
+		let show = await handler.lookupShow(options.show_id, user_id);
 		return {
 			payload: {
 				show
@@ -352,7 +352,7 @@ export const server = apiv2.makeServer({
 	"GET:/tracks/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let tracks = handler.searchForTracks(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		let tracks = await handler.searchForTracks(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				tracks
@@ -362,8 +362,8 @@ export const server = apiv2.makeServer({
 	"GET:/tracks/<track_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let track = handler.lookupTrack(options.track_id, user_id);
-		let tracks = handler.lookupDisc(track.disc.disc_id, user_id).tracks;
+		let track = await handler.lookupTrack(options.track_id, user_id);
+		let tracks = (await handler.lookupDisc(track.disc.disc_id, user_id)).tracks;
 		let index = tracks.findIndex((other) => other.track_id === track.track_id);
 		let last = tracks[index - 1];
 		let next = tracks[index + 1];
@@ -378,7 +378,7 @@ export const server = apiv2.makeServer({
 	"GET:/tracks/<track_id>/playlists/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let playlists = handler.getPlaylistAppearances(options.track_id, options.offset ?? 0, options.limit ?? 24, user_id);
+		let playlists = await handler.getPlaylistAppearances(options.track_id, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				playlists
@@ -388,7 +388,7 @@ export const server = apiv2.makeServer({
 	"GET:/users/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let users = handler.searchForUsers(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		let users = await handler.searchForUsers(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				users
@@ -398,7 +398,7 @@ export const server = apiv2.makeServer({
 	"GET:/users/<user_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let user = handler.lookupUser(options.user_id || user_id, user_id);
+		let user = await handler.lookupUser(options.user_id || user_id, user_id);
 		return {
 			payload: {
 				user
@@ -408,7 +408,7 @@ export const server = apiv2.makeServer({
 	"GET:/users/<user_id>/albums/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let albums = handler.getUserAlbums(options.user_id || user_id, options.offset ?? 0, options.limit ?? 24, user_id);
+		let albums = await handler.getUserAlbums(options.user_id || user_id, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				albums
@@ -418,7 +418,7 @@ export const server = apiv2.makeServer({
 	"GET:/users/<user_id>/playlists/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let playlists = handler.getUserPlaylists(options.user_id || user_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let playlists = await handler.getUserPlaylists(options.user_id || user_id, user_id, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				playlists
@@ -428,7 +428,7 @@ export const server = apiv2.makeServer({
 	"GET:/users/<user_id>/shows/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let shows = handler.getUserShows(options.user_id || user_id, options.offset ?? 0, options.limit ?? 24, user_id);
+		let shows = await handler.getUserShows(options.user_id || user_id, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				shows
@@ -438,7 +438,7 @@ export const server = apiv2.makeServer({
 	"GET:/years/<query>": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let years = handler.searchForYears(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
+		let years = await handler.searchForYears(options.query, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				years
@@ -448,7 +448,7 @@ export const server = apiv2.makeServer({
 	"GET:/years/<year_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let year = handler.lookupYear(options.year_id, user_id);
+		let year = await handler.lookupYear(options.year_id, user_id);
 		return {
 			payload: {
 				year
@@ -458,7 +458,7 @@ export const server = apiv2.makeServer({
 	"GET:/years/<year_id>/albums/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let albums = handler.getAlbumsFromYear(options.year_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let albums = await handler.getAlbumsFromYear(options.year_id, user_id, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				albums
@@ -468,7 +468,7 @@ export const server = apiv2.makeServer({
 	"GET:/years/<year_id>/movies/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let movies = handler.getMoviesFromYear(options.year_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let movies = await handler.getMoviesFromYear(options.year_id, user_id, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				movies
@@ -478,7 +478,7 @@ export const server = apiv2.makeServer({
 	"GET:/files/<file_id>/": async (request) => {
 		let options = request.options();
 		let user_id = auth.getUserId(options.token);
-		let file = handler.lookupFile(options.file_id, user_id);
+		let file = await handler.lookupFile(options.file_id, user_id);
 		let path = database.getLegacyPath(file).join("/");
 		let range = autoguard.api.parseRangeHeader(request.headers().range, libfs.statSync(path).size);
 		let stream = libfs.createReadStream(path, {
