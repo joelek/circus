@@ -320,186 +320,278 @@ export type Year = atlas.RecordOf<typeof years>;
 
 const directory_directories = context.createLink(directories, directories, {
 	directory_id: "parent_directory_id"
+}, {
+	name: context.createIncreasingOrder()
 });
 
 const directory_files = context.createLink(directories, files, {
 	directory_id: "parent_directory_id"
+}, {
+	name: context.createIncreasingOrder()
 });
 
 const file_audio_files = context.createLink(files, audio_files, {
 	file_id: "file_id"
+}, {
+
 });
 
 const file_image_files = context.createLink(files, image_files, {
 	file_id: "file_id"
+}, {
+
 });
 
 const file_metadata_files = context.createLink(files, metadata_files, {
 	file_id: "file_id"
+}, {
+
 });
 
 const file_subtitle_files = context.createLink(files, subtitle_files, {
 	file_id: "file_id"
+}, {
+
 });
 
 const file_video_files = context.createLink(files, video_files, {
 	file_id: "file_id"
+}, {
+
 });
 
 const video_file_video_subtitles = context.createLink(video_files, video_subtitles, {
 	file_id: "video_file_id"
+}, {
+
 });
 
 const subtitle_file_video_subtitles = context.createLink(subtitle_files, video_subtitles, {
 	file_id: "subtitle_file_id"
+}, {
+
 });
 
 const file_album_files = context.createLink(files, album_files, {
 	file_id: "file_id"
+}, {
+
 });
 
 const album_album_files = context.createLink(albums, album_files, {
 	album_id: "album_id"
+}, {
+
 });
 
 const album_discs = context.createLink(albums, discs, {
 	album_id: "album_id"
+}, {
+	number: context.createIncreasingOrder()
 });
 
 const disc_tracks = context.createLink(discs, tracks, {
 	disc_id: "disc_id"
+}, {
+	number: context.createIncreasingOrder()
 });
 
 const file_track_files = context.createLink(files, track_files, {
 	file_id: "file_id"
+}, {
+
 });
 
 const track_track_files = context.createLink(tracks, track_files, {
 	track_id: "track_id"
+}, {
+
 });
 
 const album_album_artists = context.createLink(albums, album_artists, {
 	album_id: "album_id"
+}, {
+	order: context.createIncreasingOrder()
 });
 
 const artist_album_artists = context.createLink(artists, album_artists, {
 	artist_id: "artist_id"
+}, {
+
 });
 
 const track_track_artists = context.createLink(tracks, track_artists, {
 	track_id: "track_id"
+}, {
+	order: context.createIncreasingOrder()
 });
 
 const artist_track_artists = context.createLink(artists, track_artists, {
 	artist_id: "artist_id"
+}, {
+
 });
 
 const file_show_files = context.createLink(files, show_files, {
 	file_id: "file_id"
+}, {
+
 });
 
 const show_show_files = context.createLink(shows, show_files, {
 	show_id: "show_id"
+}, {
+
 });
 
 const show_seasons = context.createLink(shows, seasons, {
 	show_id: "show_id"
+}, {
+	number: context.createIncreasingOrder()
 });
 
 const season_episodes = context.createLink(seasons, episodes, {
 	season_id: "season_id"
+}, {
+	number: context.createIncreasingOrder()
 });
 
 const file_episode_files = context.createLink(files, episode_files, {
 	file_id: "file_id"
+}, {
+
 });
 
 const episode_episode_files = context.createLink(episodes, episode_files, {
 	episode_id: "episode_id"
+}, {
+
 });
 
 const file_movie_files = context.createLink(files, movie_files, {
 	file_id: "file_id"
+}, {
+
 });
 
 const movie_movie_files = context.createLink(movies, movie_files, {
 	movie_id: "movie_id"
+}, {
+
 });
 
 const actor_movie_actors = context.createLink(actors, movie_actors, {
 	actor_id: "actor_id"
+}, {
+
 });
 
 const movie_movie_actors = context.createLink(movies, movie_actors, {
 	movie_id: "movie_id"
+}, {
+	order: context.createIncreasingOrder()
 });
 
 const actor_show_actors = context.createLink(actors, show_actors, {
 	actor_id: "actor_id"
+}, {
+
 });
 
 const show_show_actors = context.createLink(shows, show_actors, {
 	show_id: "show_id"
+}, {
+	order: context.createIncreasingOrder()
 });
 
 const genre_movie_genres = context.createLink(genres, movie_genres, {
 	genre_id: "genre_id"
+}, {
+
 });
 
 const movie_movie_genres = context.createLink(movies, movie_genres, {
 	movie_id: "movie_id"
+}, {
+	order: context.createIncreasingOrder()
 });
 
 const genre_show_genres = context.createLink(genres, show_genres, {
 	genre_id: "genre_id"
+}, {
+
 });
 
 const show_show_genres = context.createLink(shows, show_genres, {
 	show_id: "show_id"
+}, {
+	order: context.createIncreasingOrder()
 });
 
 const subtitle_cues = context.createLink(subtitles, cues, {
 	subtitle_id: "subtitle_id"
+}, {
+	start_ms: context.createIncreasingOrder()
 });
 
 const user_keys = context.createLink(users, keys, {
 	user_id: "user_id"
+}, {
+
 });
 
 const user_tokens = context.createLink(users, tokens, {
 	user_id: "user_id"
+}, {
+
 });
 
 const user_streams = context.createLink(users, streams, {
 	user_id: "user_id"
+}, {
+	timestamp_ms: context.createDecreasingOrder()
 });
 
 const file_streams = context.createLink(files, streams, {
 	file_id: "file_id"
+}, {
+	timestamp_ms: context.createDecreasingOrder()
 });
 
 const user_playlists = context.createLink(users, playlists, {
 	user_id: "user_id"
+}, {
+	title: context.createIncreasingOrder()
 });
 
 const playlist_playlist_items = context.createLink(playlists, playlist_items, {
 	playlist_id: "playlist_id"
+}, {
+	number: context.createIncreasingOrder()
 });
 
 const track_playlist_items = context.createLink(tracks, playlist_items, {
 	track_id: "track_id"
+}, {
+
 });
 
 const getUsersFromUsername = context.createQuery(users, {
 	username: context.createEqualityOperator()
+}, {
+
 });
 
 const getMoviesFromYear = context.createQuery(movies, {
 	year: context.createEqualityOperator()
+}, {
+	title: context.createIncreasingOrder()
 });
 
 const getAlbumsFromYear = context.createQuery(albums, {
 	year: context.createEqualityOperator()
+}, {
+	title: context.createIncreasingOrder()
 });
 
 export const { transactionManager } = context.createTransactionManager("./private/db/", {
