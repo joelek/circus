@@ -7,6 +7,7 @@ import * as database from "../database/indexer";
 import * as typesockets from "../typesockets/";
 import * as jsondb from "../jsondb/";
 import * as api from "../api/";
+import * as atlas from "../database/atlas";
 
 type Session = {
 	connections: Set<string>
@@ -49,7 +50,7 @@ export class PlaylistsServer {
 		this.tss.addEventListener("sys", "disconnect", async (message) => {
 			this.revokeAuthentication(message.connection_id);
 		});
-		this.tss.addEventListener("app", "SetToken", async (message) => {
+		this.tss.addEventListener("app", "SetToken", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 			this.revokeAuthentication(message.connection_id);
 			let token = message.data.token;
 			if (is.present(token)) {
@@ -68,8 +69,8 @@ export class PlaylistsServer {
 					}
 				}
 			}
-		});
-		this.tss.addEventListener("app", "PermissionsRequest", async (message) => {
+		}));
+		this.tss.addEventListener("app", "PermissionsRequest", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -84,8 +85,8 @@ export class PlaylistsServer {
 					});
 				}
 			}
-		});
-		this.tss.addEventListener("app", "CreatePlaylistRequest", async (message) => {
+		}));
+		this.tss.addEventListener("app", "CreatePlaylistRequest", (message) => atlas.transactionManager.enqueueWritableTransaction(async (queue) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -118,8 +119,8 @@ export class PlaylistsServer {
 					playlist: await api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
 				});
 			}
-		});
-		this.tss.addEventListener("app", "DeletePlaylistRequest", async (message) => {
+		}));
+		this.tss.addEventListener("app", "DeletePlaylistRequest", (message) => atlas.transactionManager.enqueueWritableTransaction(async (queue) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -141,8 +142,8 @@ export class PlaylistsServer {
 				});
 				database.playlists.remove(playlist);
 			}
-		});
-		this.tss.addEventListener("app", "UpdatePlaylistRequest", async (message) => {
+		}));
+		this.tss.addEventListener("app", "UpdatePlaylistRequest", (message) => atlas.transactionManager.enqueueWritableTransaction(async (queue) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -175,8 +176,8 @@ export class PlaylistsServer {
 					playlist: await api.handler.lookupPlaylistBase(playlist.playlist_id, user_id)
 				});
 			}
-		});
-		this.tss.addEventListener("app", "CreatePlaylistItemRequest", async (message) => {
+		}));
+		this.tss.addEventListener("app", "CreatePlaylistItemRequest", (message) => atlas.transactionManager.enqueueWritableTransaction(async (queue) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -212,8 +213,8 @@ export class PlaylistsServer {
 					playlist_item: await api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
 				});
 			}
-		});
-		this.tss.addEventListener("app", "DeletePlaylistItemRequest", async (message) => {
+		}));
+		this.tss.addEventListener("app", "DeletePlaylistItemRequest", (message) => atlas.transactionManager.enqueueWritableTransaction(async (queue) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -245,8 +246,8 @@ export class PlaylistsServer {
 				});
 				database.playlist_items.remove(playlist_item);
 			}
-		});
-		this.tss.addEventListener("app", "UpdatePlaylistItemRequest", async (message) => {
+		}));
+		this.tss.addEventListener("app", "UpdatePlaylistItemRequest", (message) => atlas.transactionManager.enqueueWritableTransaction(async (queue) => {
 			let token = this.tokens.get(message.connection_id);
 			if (is.present(token)) {
 				let user_id = auth.getUserId(token);
@@ -295,7 +296,7 @@ export class PlaylistsServer {
 					playlist_item: await api.handler.lookupPlaylistItemBase(playlist_item.playlist_item_id, user_id)
 				});
 			}
-		});
+		}));
 	}
 
 	getRequestHandler(): libhttp.RequestListener {
