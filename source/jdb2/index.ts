@@ -230,6 +230,11 @@ export class BlockHandler {
 	private entryCache: Cache<number, Entry>;
 	private inBatchOperation: Set<number>;
 
+	close(): void {
+		libfs.closeSync(this.bin);
+		libfs.closeSync(this.toc);
+	}
+
 	private computePool(minLength: number): number {
 		if (DEBUG) IntegerAssert.atLeast(0, minLength);
 		let lengthLog2 = Math.ceil(Math.log2(Math.max(1, minLength)));
@@ -634,6 +639,10 @@ export class Table<A> extends stdlib.routing.MessageRouter<TableEventMap<A>> {
 			let record = this.getRecord(index);
 			return this.keyProvider(record);
 		});
+	}
+
+	close(): void {
+		this.blockHandler.close();
 	}
 
 	*[Symbol.iterator](): Iterator<A> {

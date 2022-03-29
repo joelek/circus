@@ -7,7 +7,7 @@ import * as is from "../is";
 import * as probes from "./probes";
 import { default as config } from "../config";
 import * as jdb2 from "../jdb2";
-import { transactionManager, stores, links, Directory, File, queries } from "./atlas";
+import { transactionManager, stores, links, Directory, File } from "./atlas";
 import { ReadableQueue, WritableQueue } from "@joelek/atlas";
 import { binid, hexid } from "../utils";
 
@@ -58,129 +58,17 @@ const TABLES_ROOT = [
 	"tables"
 ];
 
-if (!libfs.existsSync(TABLES_ROOT.join("/"))) {
-	libfs.mkdirSync(TABLES_ROOT.join("/"));
-}
-
 const INDICES_ROOT = [
 	".",
 	"private",
 	"indices"
 ];
 
-if (!libfs.existsSync(INDICES_ROOT.join("/"))) {
-	libfs.mkdirSync(INDICES_ROOT.join("/"));
-}
-
 function loadTable<A>(name: string, guard: autoguard.serialization.MessageGuard<A>, getKey: jdb2.ValueProvider<A>): jdb2.Table<A> {
 	let blockHandler = new jdb2.BlockHandler([".", "private", "tables", name]);
 	let table = new jdb2.Table<A>(blockHandler, (json) => guard.as(json), getKey);
 	return table;
 }
-
-function loadIndex<A, B>(name: string, parent: jdb2.Table<A>, child: jdb2.Table<B>, getGroupKey: jdb2.ValuesProvider<B>, tokenizer: jdb2.Tokenizer = jdb2.Index.VALUE_TOKENIZER): jdb2.Index<A, B> {
-	let blockHandler = new jdb2.BlockHandler([".", "private", "indices", name]);
-	let index = new jdb2.Index<A, B>(blockHandler, parent, child, getGroupKey, tokenizer);
-	return index;
-}
-
-export const directories = loadTable("directories", schema.Directory, (record) => record.directory_id);
-export const getDirectoriesFromDirectory = loadIndex("directory_directories", directories, directories, (record) => [record.parent_directory_id]);
-export const files = loadTable("files", schema.File, (record) => record.file_id);
-export const getFilesFromDirectory = loadIndex("directory_files", directories, files, (record) => [record.parent_directory_id]);
-export const audio_files = loadTable("audio_files", schema.AudioFile, (record) => record.file_id);
-export const getAudioFiles = loadIndex("file_audio_files", files, audio_files, (record) => [record.file_id]);
-export const image_files = loadTable("image_files", schema.ImageFile, (record) => record.file_id);
-export const getImageFilesFromFile = loadIndex("file_image_files", files, image_files, (record) => [record.file_id]);
-export const metadata_files = loadTable("metadata_files", schema.MetadataFile, (record) => record.file_id);
-export const getMetadataFilesFromFile = loadIndex("file_metadata_files", files, metadata_files, (record) => [record.file_id]);
-export const subtitle_files = loadTable("subtitle_files", schema.SubtitleFile, (record) => record.file_id);
-export const getSubtitleFilesFromFile = loadIndex("file_subtitle_files", files, subtitle_files, (record) => [record.file_id]);
-export const video_files = loadTable("video_files", schema.VideoFile, (record) => record.file_id);
-export const getVideoFilesFromFile = loadIndex("file_video_files", files, video_files, (record) => [record.file_id]);
-export const video_subtitles = loadTable("video_subtitles", schema.VideoSubtitle, (record) => makeId(record.video_file_id, record.subtitle_file_id));
-export const getSubtitleFilesFromVideoFile = loadIndex("video_file_video_subtitles", video_files, video_subtitles, (record) => [record.video_file_id]);
-export const getVideoFilesFromSubtitleFile = loadIndex("subtitle_file_video_subtitles", subtitle_files, video_subtitles, (record) => [record.subtitle_file_id]);
-export const artists = loadTable("artists", schema.Artist, (record) => record.artist_id);
-export const albums = loadTable("albums", schema.Album, (record) => record.album_id);
-export const album_files = loadTable("album_files", schema.AlbumFile, (record) => makeId(record.album_id, record.file_id));
-export const getAlbumsFromFile = loadIndex("file_album_files", files, album_files, (record) => [record.file_id]);
-export const getFilesFromAlbum = loadIndex("album_album_files", albums, album_files, (record) => [record.album_id]);
-export const discs = loadTable("discs", schema.Disc, (record) => record.disc_id);
-export const getDiscsFromAlbum = loadIndex("album_discs", albums, discs, (record) => [record.album_id]);
-export const tracks = loadTable("tracks", schema.Track, (record) => record.track_id);
-export const getTracksFromDisc = loadIndex("disc_tracks", discs, tracks, (record) => [record.disc_id]);
-export const track_files = loadTable("track_files", schema.TrackFile, (record) => makeId(record.track_id, record.file_id));
-export const getTracksFromFile = loadIndex("file_track_files", files, track_files, (record) => [record.file_id]);
-export const getFilesFromTrack = loadIndex("track_track_files", tracks, track_files, (record) => [record.track_id]);
-export const album_artists = loadTable("album_artists", schema.AlbumArtist, (record) => makeId(record.album_id, record.artist_id));
-export const getArtistsFromAlbum = loadIndex("album_album_artists", albums, album_artists, (record) => [record.album_id]);
-export const getAlbumsFromArtist = loadIndex("artist_album_artists", artists, album_artists, (record) => [record.artist_id]);
-export const track_artists = loadTable("track_artists", schema.TrackArtist, (record) => makeId(record.track_id, record.artist_id));
-export const getArtistsFromTrack = loadIndex("track_track_artists", tracks, track_artists, (record) => [record.track_id]);
-export const getTracksFromArtist = loadIndex("artist_track_artists", artists, track_artists, (record) => [record.artist_id]);
-export const shows = loadTable("shows", schema.Show, (record) => record.show_id);
-export const show_files = loadTable("show_files", schema.ShowFile, (record) => makeId(record.show_id, record.file_id));
-export const getShowsFromFile = loadIndex("file_show_files", files, show_files, (record) => [record.file_id]);
-export const getFilesFromShow = loadIndex("show_show_files", shows, show_files, (record) => [record.show_id]);
-export const seasons = loadTable("seasons", schema.Season, (record) => record.season_id);
-export const getSeasonsFromShow = loadIndex("show_seasons", shows, seasons, (record) => [record.show_id]);
-export const episodes = loadTable("episodes", schema.Episode, (record) => record.episode_id);
-export const getEpisodesFromSeason = loadIndex("season_episodes", seasons, episodes, (record) => [record.season_id]);
-export const episode_files = loadTable("episode_files", schema.EpisodeFile, (record) => makeId(record.episode_id, record.file_id));
-export const getEpisodesFromFile = loadIndex("file_episode_files", files, episode_files, (record) => [record.file_id]);
-export const getFilesFromEpisode = loadIndex("episode_episode_files", episodes, episode_files, (record) => [record.episode_id]);
-export const movies = loadTable("movies", schema.Movie, (record) => record.movie_id);
-export const movie_files = loadTable("movie_files", schema.MovieFile, (record) => makeId(record.movie_id, record.file_id));
-export const getMoviesFromFile = loadIndex("file_movie_files", files, movie_files, (record) => [record.file_id]);
-export const getFilesFromMovie = loadIndex("movie_movie_files", movies, movie_files, (record) => [record.movie_id]);
-export const actors = loadTable("actors", schema.Actor, (record) => record.actor_id);
-export const movie_actors = loadTable("movie_actors", schema.MovieActor, (record) => makeId(record.movie_id, record.actor_id));
-export const getMoviesFromActor = loadIndex("actor_movie_actors", actors, movie_actors, (record) => [record.actor_id]);
-export const getActorsFromMovie = loadIndex("movie_movie_actors", movies, movie_actors, (record) => [record.movie_id]);
-export const show_actors = loadTable("show_actors", schema.ShowActor, (record) => makeId(record.show_id, record.actor_id));
-export const getShowsFromActor = loadIndex("actor_show_actors", actors, show_actors, (record) => [record.actor_id]);
-export const getActorsFromShow = loadIndex("show_show_actors", shows, show_actors, (record) => [record.show_id]);
-export const genres = loadTable("genres", schema.Genre, (record) => record.genre_id);
-export const movie_genres = loadTable("movie_genres", schema.MovieGenre, (record) => makeId(record.movie_id, record.genre_id));
-export const getMoviesFromGenre = loadIndex("genre_movie_genres", genres, movie_genres, (record) => [record.genre_id]);
-export const getGenresFromMovie = loadIndex("movie_movie_genres", movies, movie_genres, (record) => [record.movie_id]);
-export const show_genres = loadTable("show_genres", schema.ShowGenre, (record) => makeId(record.show_id, record.genre_id));
-export const getShowsFromGenre = loadIndex("genre_show_genres", genres, show_genres, (record) => [record.genre_id]);
-export const getGenresFromShow = loadIndex("show_show_genres", shows, show_genres, (record) => [record.show_id]);
-export const subtitles = loadTable("subtitles", schema.Subtitle, (record) => record.subtitle_id);
-export const cues = loadTable("cues", schema.Cue, (record) => record.cue_id);
-export const getCuesFromSubtitle = loadIndex("subtitle_cues", subtitles, cues, (record) => [record.subtitle_id]);
-export const users = loadTable("users", schema.User, (record) => record.user_id);
-export const getUsersFromUsername = loadIndex("user_users", users, users, (record) => [record.username]);
-export const keys = loadTable("keys", schema.Key, (record) => record.key_id);
-export const getKeysFromUser = loadIndex("user_keys", users, keys, (record) => [record.user_id]);
-export const tokens = loadTable("tokens", schema.Token, (record) => record.token_id);
-export const getTokensFromUser = loadIndex("user_tokens", users, tokens, (record) => [record.user_id]);
-export const streams = loadTable("streams", schema.Stream, (record) => record.stream_id);
-export const getStreamsFromUser = loadIndex("user_streams", users, streams, (record) => [record.user_id]);
-export const getStreamsFromFile = loadIndex("file_streams", files, streams, (record) => [record.file_id]);
-export const playlists = loadTable("playlists", schema.Playlist, (record) => record.playlist_id);
-export const getPlaylistsFromUser = loadIndex("user_playlists", users, playlists, (record) => [record.user_id]);
-export const playlist_items = loadTable("playlist_items", schema.PlaylistItem, (record) => record.playlist_item_id);
-export const getPlaylistsItemsFromPlaylist = loadIndex("playlist_playlist_items", playlists, playlist_items, (record) => [record.playlist_id]);
-export const getPlaylistItemsFromTrack = loadIndex("track_playlist_items", tracks, playlist_items, (record) => [record.track_id]);
-export const years = loadTable("years", schema.Year, (record) => record.year_id);
-export const getMoviesFromYear = loadIndex("year_movies", years, movies, (record) => [record.year]);
-export const getAlbumsFromYear = loadIndex("year_albums", years, albums, (record) => [record.year]);
-
-export const album_search = loadIndex("search_albums", albums, albums, (entry) => [entry.title, entry.year].filter(is.present), jdb2.Index.QUERY_TOKENIZER);
-export const artist_search = loadIndex("search_artists", artists, artists, (entry) => [entry.name], jdb2.Index.QUERY_TOKENIZER);
-export const cue_search = loadIndex("search_cues", cues, cues, (entry) => [entry.lines], jdb2.Index.QUERY_TOKENIZER);
-export const episode_search = loadIndex("search_episodes", episodes, episodes, (entry) => [entry.title, entry.year].filter(is.present), jdb2.Index.QUERY_TOKENIZER);
-export const genre_search = loadIndex("search_genres", genres, genres, (entry) => [entry.name], jdb2.Index.QUERY_TOKENIZER);
-export const movie_search = loadIndex("search_movies", movies, movies, (entry) => [entry.title, entry.year].filter(is.present), jdb2.Index.QUERY_TOKENIZER);
-export const actor_search = loadIndex("search_actors", actors, actors, (entry) => [entry.name], jdb2.Index.QUERY_TOKENIZER);
-export const playlist_search = loadIndex("search_playlists", playlists, playlists, (entry) => [entry.title], jdb2.Index.QUERY_TOKENIZER);
-export const shows_search = loadIndex("search_shows", shows, shows, (entry) => [entry.name], jdb2.Index.QUERY_TOKENIZER);
-export const track_search = loadIndex("search_tracks", tracks, tracks, (entry) => [entry.title], jdb2.Index.QUERY_TOKENIZER);
-export const user_search = loadIndex("search_users", users, users, (entry) => [entry.name, entry.username], jdb2.Index.QUERY_TOKENIZER);
-export const year_search = loadIndex("search_years", years, years, (entry) => [entry.year], jdb2.Index.QUERY_TOKENIZER);
 
 export async function getPath(queue: ReadableQueue, entry: Directory | File): Promise<Array<string>> {
 	let path = new Array<string>();
@@ -798,6 +686,103 @@ async function removeBrokenEntities(queue: WritableQueue): Promise<void> {
 	}
 };
 
+export async function migrateLegacyData(queue: WritableQueue): Promise<void> {
+	if (libfs.existsSync(TABLES_ROOT.join("/"))) {
+		console.log(`Migrating legacy user data...`);
+		let users = loadTable("users", schema.User, (record) => record.user_id);
+		for (let user of users) {
+			try {
+				await stores.users.insert(queue, {
+					...user,
+					user_id: binid(user.user_id)
+				});
+			} catch (error) {}
+		}
+		users.close();
+		let keys = loadTable("keys", schema.Key, (record) => record.key_id);
+		for (let key of keys) {
+			try {
+				await stores.keys.insert(queue, {
+					...key,
+					key_id: binid(key.key_id),
+					user_id: key.user_id != null ? binid(key.user_id) : null
+				});
+			} catch (error) {}
+		}
+		keys.close();
+		let tokens = loadTable("tokens", schema.Token, (record) => record.token_id);
+		for (let token of tokens) {
+			try {
+				await stores.tokens.insert(queue, {
+					...token,
+					token_id: binid(token.token_id),
+					user_id: binid(token.user_id),
+					hash: binid(token.hash)
+				});
+			} catch (error) {}
+		}
+		tokens.close();
+		let streams = loadTable("streams", schema.Stream, (record) => record.stream_id);
+		for (let stream of streams) {
+			try {
+				let file = await stores.files.lookup(queue, { file_id: binid(stream.file_id) });
+				let mime = "application/octet-stream";
+				try {
+					mime = (await stores.audio_files.lookup(queue, file)).mime;
+				} catch (error) {}
+				try {
+					mime = (await stores.image_files.lookup(queue, file)).mime;
+				} catch (error) {}
+				try {
+					mime = (await stores.metadata_files.lookup(queue, file)).mime;
+				} catch (error) {}
+				try {
+					mime = (await stores.subtitle_files.lookup(queue, file)).mime;
+				} catch (error) {}
+				try {
+					mime = (await stores.video_files.lookup(queue, file)).mime;
+				} catch (error) {}
+				if (mime.startsWith("audio/") || mime.startsWith("video/")) {
+					await stores.streams.insert(queue, {
+						...stream,
+						stream_id: binid(stream.stream_id),
+						user_id: binid(stream.user_id),
+						file_id: binid(stream.file_id)
+					});
+				}
+			} catch (error) {}
+		}
+		streams.close();
+		let playlists = loadTable("playlists", schema.Playlist, (record) => record.playlist_id);
+		for (let playlist of playlists) {
+			try {
+				await stores.playlists.insert(queue, {
+					...playlist,
+					playlist_id: binid(playlist.playlist_id),
+					user_id: binid(playlist.user_id)
+				});
+			} catch (error) {}
+		}
+		playlists.close();
+		let playlist_items = loadTable("playlist_items", schema.PlaylistItem, (record) => record.playlist_item_id);
+		for (let playlist_item of playlist_items) {
+			try {
+				await stores.playlist_items.insert(queue, {
+					...playlist_item,
+					playlist_item_id: binid(playlist_item.playlist_item_id),
+					playlist_id: binid(playlist_item.playlist_id),
+					track_id: binid(playlist_item.track_id)
+				});
+			} catch (error) {}
+		}
+		playlist_items.close();
+		libfs.rmSync(TABLES_ROOT.join("/"), { force: true, recursive: true });
+	}
+	if (libfs.existsSync(INDICES_ROOT.join("/"))) {
+		libfs.rmSync(INDICES_ROOT.join("/"), { force: true, recursive: true });
+	}
+};
+
 export async function runIndexer(): Promise<void> {
 	await transactionManager.enqueueWritableTransaction(async (queue) => {
 		console.log(`Running indexer...`);
@@ -815,6 +800,7 @@ export async function runIndexer(): Promise<void> {
 		await associateSubtitles(queue);
 		console.log(`Cleaning up...`);
 		await removeBrokenEntities(queue);
+		await migrateLegacyData(queue);
 		for (let token of await stores.tokens.filter(queue)) {
 			if (token.expires_ms <= Date.now()) {
 				await stores.tokens.remove(queue, token);
