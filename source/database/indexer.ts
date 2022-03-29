@@ -10,7 +10,7 @@ import { default as config } from "../config";
 import * as jdb2 from "../jdb2";
 import { transactionManager, stores, links, Directory, File } from "./atlas";
 import { ReadableQueue, WritableQueue } from "@joelek/atlas";
-import { hexid } from "../api/handler";
+import { binid, hexid } from "../utils";
 
 function wordify(string: string | number): Array<string> {
 	return String(string)
@@ -169,12 +169,6 @@ export const getPlaylistItemsFromTrack = loadIndex("track_playlist_items", track
 export const years = loadTable("years", schema.Year, (record) => record.year_id);
 export const getMoviesFromYear = loadIndex("year_movies", years, movies, (record) => [record.year]);
 export const getAlbumsFromYear = loadIndex("year_albums", years, albums, (record) => [record.year]);
-
-if (getKeysFromUser.lookup(undefined).collect().length === 0) {
-	keys.insert({
-		key_id: makeId("key", libcrypto.randomBytes(8).toString("hex"))
-	});
-}
 
 export const album_search = loadIndex("search_albums", albums, albums, (entry) => [entry.title, entry.year].filter(is.present), jdb2.Index.QUERY_TOKENIZER);
 export const artist_search = loadIndex("search_artists", artists, artists, (entry) => [entry.name], jdb2.Index.QUERY_TOKENIZER);
@@ -774,6 +768,12 @@ export async function runIndexer(): Promise<void> {
 			if (token.expires_ms <= Date.now()) {
 				await stores.tokens.remove(queue, token);
 			}
+		}
+		if ((await links.user_keys.filter(queue)).length === 0) {
+			await stores.keys.insert(queue, {
+				key_id: binid(makeId("key", libcrypto.randomBytes(8).toString("hex"))),
+				user_id: null
+			});
 		}
 		for (let key of await links.user_keys.filter(queue)) {
 			console.log(`Registration key available: ${hexid(key.key_id)}`);

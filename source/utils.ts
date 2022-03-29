@@ -1,6 +1,14 @@
 import * as is from "./is";
 import { Show } from "./api/schema/objects";
 
+export function hexid(buffer: Uint8Array): string {
+	return Buffer.from(buffer).toString("hex");
+};
+
+export function binid(string: string): Uint8Array {
+	return Uint8Array.from(Buffer.from(string, "hex"));
+};
+
 function join(...parameters: any): string {
 	return parameters.map((parameter: any) => {
 		return String(parameter);

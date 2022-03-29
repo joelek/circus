@@ -9,7 +9,7 @@ import * as jsondb from "../jsondb/";
 import * as api from "../api/";
 import * as atlas from "../database/atlas";
 import { ReadableQueue } from "@joelek/atlas";
-import { binid, hexid } from "../api/handler";
+import { binid, hexid } from "../utils";
 
 type Session = {
 	connections: Set<string>

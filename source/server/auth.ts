@@ -2,7 +2,7 @@ import * as libcrypto from "crypto";
 import * as passwords from "./passwords";
 import * as atlas from "../database/atlas";
 import { ReadableQueue, WritableQueue } from "@joelek/atlas";
-import { binid, hexid } from "../api/handler";
+import { binid, hexid } from "../utils";
 
 // TODO: Move to handler.
 

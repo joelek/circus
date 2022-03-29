@@ -10,14 +10,7 @@ import { File,  ImageFile, Stream } from "../database/schema";
 import { ReadableQueue, WritableQueue } from "@joelek/atlas";
 import * as atlas from "../database/atlas";
 import { ArtistBase } from "./schema/objects";
-
-export function hexid(buffer: Uint8Array): string {
-	return Buffer.from(buffer).toString("hex");
-};
-
-export function binid(string: string): Uint8Array {
-	return Uint8Array.from(Buffer.from(string, "hex"));
-};
+import { binid, hexid } from "../utils";
 
 export function getStreamWeight(timestamp_ms: number): number {
 	let ms = Date.now() - timestamp_ms;
@@ -88,7 +81,7 @@ export async function createUser(queue: WritableQueue, request: schema.messages.
 			errors
 		};
 	}
-	let user_id = libcrypto.randomBytes(8);
+	let user_id = Uint8Array.from(libcrypto.randomBytes(8));
 	await atlas.stores.users.insert(queue, {
 		user_id,
 		username,
