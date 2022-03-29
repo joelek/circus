@@ -11,6 +11,7 @@ import * as atlas from "../database/atlas";
 import { ArtistBase } from "./schema/objects";
 import { binid, hexid } from "../utils";
 import { getPath } from "../database/indexer";
+import { createDecreasingOrder } from "@joelek/atlas";
 
 export function getStreamWeight(timestamp_ms: number): number {
 	let ms = Date.now() - timestamp_ms;
@@ -781,7 +782,7 @@ export async function searchForUsers(queue: ReadableQueue, query: string, offset
 
 export async function searchForYears(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Year[]> {
 	if (query === "") {
-		return await Promise.all((await atlas.stores.years.filter(queue))
+		return await Promise.all((await atlas.stores.years.filter(queue, {}, { year: createDecreasingOrder() }))
 			.slice(offset, offset + length)
 			.map((record) => lookupYear(queue, hexid(record.year_id), user_id)));
 	} else {

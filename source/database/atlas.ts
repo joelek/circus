@@ -6,7 +6,9 @@ const directories = context.createStore({
 	directory_id: context.createBinaryField(),
 	name: context.createStringField(),
 	parent_directory_id: context.createNullableBinaryField()
-}, ["directory_id"]);
+}, ["directory_id"], {
+
+});
 
 export type Directory = atlas.RecordOf<typeof directories>;
 
@@ -16,7 +18,9 @@ const files = context.createStore({
 	parent_directory_id: context.createNullableBinaryField(),
 	index_timestamp: context.createNullableIntegerField(),
 	size: context.createIntegerField()
-}, ["file_id"]);
+}, ["file_id"], {
+
+});
 
 export type File = atlas.RecordOf<typeof files>;
 
@@ -24,7 +28,9 @@ const audio_files = context.createStore({
 	file_id: context.createBinaryField(),
 	mime: context.createStringField(), // "audio/mp4" | "audio/mp3"
 	duration_ms: context.createIntegerField()
-}, ["file_id"]);
+}, ["file_id"], {
+
+});
 
 export type AudioFile = atlas.RecordOf<typeof audio_files>;
 
@@ -33,14 +39,18 @@ const image_files = context.createStore({
 	mime: context.createStringField(), // "image/jpeg"
 	width: context.createIntegerField(),
 	height: context.createIntegerField()
-}, ["file_id"]);
+}, ["file_id"], {
+
+});
 
 export type ImageFile = atlas.RecordOf<typeof image_files>;
 
 const metadata_files = context.createStore({
 	file_id: context.createBinaryField(),
 	mime: context.createStringField() // "application/json"
-}, ["file_id"]);
+}, ["file_id"], {
+
+});
 
 export type MetadataFile = atlas.RecordOf<typeof metadata_files>;
 
@@ -49,7 +59,9 @@ const subtitle_files = context.createStore({
 	mime: context.createStringField(), // "text/vtt"
 	duration_ms: context.createIntegerField(),
 	language: context.createNullableStringField()
-}, ["file_id"]);
+}, ["file_id"], {
+
+});
 
 export type SubtitleFile = atlas.RecordOf<typeof subtitle_files>;
 
@@ -59,21 +71,27 @@ const video_files = context.createStore({
 	duration_ms: context.createIntegerField(),
 	width: context.createIntegerField(),
 	height: context.createIntegerField()
-}, ["file_id"]);
+}, ["file_id"], {
+
+});
 
 export type VideoFile = atlas.RecordOf<typeof video_files>;
 
 const video_subtitles = context.createStore({
 	video_file_id: context.createBinaryField(),
 	subtitle_file_id: context.createBinaryField()
-}, ["video_file_id", "subtitle_file_id"]);
+}, ["video_file_id", "subtitle_file_id"], {
+
+});
 
 export type VideoSubtitle = atlas.RecordOf<typeof video_subtitles>;
 
 const artists = context.createStore({
 	artist_id: context.createBinaryField(),
 	name: context.createStringField()
-}, ["artist_id"]);
+}, ["artist_id"], {
+	name: context.createIncreasingOrder()
+});
 
 export type Artist = atlas.RecordOf<typeof artists>;
 
@@ -81,14 +99,18 @@ const albums = context.createStore({
 	album_id: context.createBinaryField(),
 	title: context.createStringField(),
 	year: context.createNullableIntegerField() // TODO: Promote to entity.
-}, ["album_id"]);
+}, ["album_id"], {
+	title: context.createIncreasingOrder()
+});
 
 export type Album = atlas.RecordOf<typeof albums>;
 
 const album_files = context.createStore({
 	album_id: context.createBinaryField(),
 	file_id: context.createBinaryField()
-}, ["album_id", "file_id"]);
+}, ["album_id", "file_id"], {
+
+});
 
 export type AlbumFile = atlas.RecordOf<typeof album_files>;
 
@@ -96,7 +118,9 @@ const discs = context.createStore({
 	disc_id: context.createBinaryField(),
 	album_id: context.createBinaryField(),
 	number: context.createIntegerField()
-}, ["disc_id"]);
+}, ["disc_id"], {
+
+});
 
 export type Disc = atlas.RecordOf<typeof discs>;
 
@@ -106,14 +130,18 @@ const tracks = context.createStore({
 	title: context.createStringField(),
 	number: context.createIntegerField(),
 	copyright: context.createNullableStringField()
-}, ["track_id"]);
+}, ["track_id"], {
+	title: context.createIncreasingOrder()
+});
 
 export type Track = atlas.RecordOf<typeof tracks>;
 
 const track_files = context.createStore({
 	track_id: context.createBinaryField(),
 	file_id: context.createBinaryField()
-}, ["track_id", "file_id"]);
+}, ["track_id", "file_id"], {
+
+});
 
 export type TrackFile = atlas.RecordOf<typeof track_files>;
 
@@ -121,7 +149,9 @@ const album_artists = context.createStore({
 	album_id: context.createBinaryField(),
 	artist_id: context.createBinaryField(),
 	order: context.createIntegerField()
-}, ["album_id", "artist_id"]);
+}, ["album_id", "artist_id"], {
+
+});
 
 export type AlbumArtist = atlas.RecordOf<typeof album_artists>;
 
@@ -129,7 +159,9 @@ const track_artists = context.createStore({
 	track_id: context.createBinaryField(),
 	artist_id: context.createBinaryField(),
 	order: context.createIntegerField()
-}, ["track_id", "artist_id"]);
+}, ["track_id", "artist_id"], {
+
+});
 
 export type TrackArtist = atlas.RecordOf<typeof track_artists>;
 
@@ -138,14 +170,18 @@ const shows = context.createStore({
 	name: context.createStringField(),
 	summary: context.createNullableStringField(),
 	imdb: context.createNullableStringField()
-}, ["show_id"]);
+}, ["show_id"], {
+	name: context.createIncreasingOrder()
+});
 
 export type Show = atlas.RecordOf<typeof shows>;
 
 const show_files = context.createStore({
 	show_id: context.createBinaryField(),
 	file_id: context.createBinaryField()
-}, ["show_id", "file_id"]);
+}, ["show_id", "file_id"], {
+
+});
 
 export type ShowFile = atlas.RecordOf<typeof show_files>;
 
@@ -153,7 +189,9 @@ const seasons = context.createStore({
 	season_id: context.createBinaryField(),
 	show_id: context.createBinaryField(),
 	number: context.createIntegerField()
-}, ["season_id"]);
+}, ["season_id"], {
+
+});
 
 export type Season = atlas.RecordOf<typeof seasons>;
 
@@ -166,14 +204,18 @@ const episodes = context.createStore({
 	summary: context.createNullableStringField(),
 	copyright: context.createNullableStringField(),
 	imdb: context.createNullableStringField()
-}, ["episode_id"]);
+}, ["episode_id"], {
+	title: context.createIncreasingOrder()
+});
 
 export type Episode = atlas.RecordOf<typeof episodes>;
 
 const episode_files = context.createStore({
 	episode_id: context.createBinaryField(),
 	file_id: context.createBinaryField()
-}, ["episode_id", "file_id"]);
+}, ["episode_id", "file_id"], {
+
+});
 
 export type EpisodeFile = atlas.RecordOf<typeof episode_files>;
 
@@ -184,21 +226,27 @@ const movies = context.createStore({
 	summary: context.createNullableStringField(),
 	copyright: context.createNullableStringField(),
 	imdb: context.createNullableStringField()
-}, ["movie_id"]);
+}, ["movie_id"], {
+	title: context.createIncreasingOrder()
+});
 
 export type Movie = atlas.RecordOf<typeof movies>;
 
 const movie_files = context.createStore({
 	movie_id: context.createBinaryField(),
 	file_id: context.createBinaryField()
-}, ["movie_id", "file_id"]);
+}, ["movie_id", "file_id"], {
+
+});
 
 export type MovieFile = atlas.RecordOf<typeof movie_files>;
 
 const actors = context.createStore({
 	actor_id: context.createBinaryField(),
 	name: context.createStringField()
-}, ["actor_id"]);
+}, ["actor_id"], {
+	name: context.createIncreasingOrder()
+});
 
 export type Actor = atlas.RecordOf<typeof actors>;
 
@@ -206,7 +254,9 @@ const movie_actors = context.createStore({
 	movie_id: context.createBinaryField(),
 	actor_id: context.createBinaryField(),
 	order: context.createIntegerField()
-}, ["movie_id", "actor_id"]);
+}, ["movie_id", "actor_id"], {
+
+});
 
 export type MovieActor = atlas.RecordOf<typeof movie_actors>;
 
@@ -214,14 +264,18 @@ const show_actors = context.createStore({
 	show_id: context.createBinaryField(),
 	actor_id: context.createBinaryField(),
 	order: context.createIntegerField()
-}, ["show_id", "actor_id"]);
+}, ["show_id", "actor_id"], {
+
+});
 
 export type ShowActor = atlas.RecordOf<typeof show_actors>;
 
 const genres = context.createStore({
 	genre_id: context.createBinaryField(),
 	name: context.createStringField()
-}, ["genre_id"]);
+}, ["genre_id"], {
+	name: context.createIncreasingOrder()
+});
 
 export type Genre = atlas.RecordOf<typeof genres>;
 
@@ -229,7 +283,9 @@ const movie_genres = context.createStore({
 	movie_id: context.createBinaryField(),
 	genre_id: context.createBinaryField(),
 	order: context.createIntegerField()
-}, ["movie_id", "genre_id"]);
+}, ["movie_id", "genre_id"], {
+
+});
 
 export type MovieGenre = atlas.RecordOf<typeof movie_genres>;
 
@@ -237,14 +293,18 @@ const show_genres = context.createStore({
 	show_id: context.createBinaryField(),
 	genre_id: context.createBinaryField(),
 	order: context.createIntegerField()
-}, ["show_id", "genre_id"]);
+}, ["show_id", "genre_id"], {
+
+});
 
 export type ShowGenre = atlas.RecordOf<typeof show_genres>;
 
 const subtitles = context.createStore({
 	subtitle_id: context.createBinaryField(),
 	file_id: context.createBinaryField()
-}, ["subtitle_id"]);
+}, ["subtitle_id"], {
+
+});
 
 export type Subtitle = atlas.RecordOf<typeof subtitles>;
 
@@ -254,7 +314,9 @@ const cues = context.createStore({
 	start_ms: context.createIntegerField(),
 	duration_ms: context.createIntegerField(),
 	lines: context.createStringField()
-}, ["cue_id"]);
+}, ["cue_id"], {
+
+});
 
 export type Cue = atlas.RecordOf<typeof cues>;
 
@@ -263,14 +325,18 @@ const users = context.createStore({
 	name: context.createStringField(),
 	username: context.createStringField(),
 	password: context.createStringField()
-}, ["user_id"]);
+}, ["user_id"], {
+	name: context.createIncreasingOrder()
+});
 
 export type User = atlas.RecordOf<typeof users>;
 
 const keys = context.createStore({
 	key_id: context.createBinaryField(),
 	user_id: context.createNullableBinaryField()
-}, ["key_id"]);
+}, ["key_id"], {
+
+});
 
 export type Key = atlas.RecordOf<typeof keys>;
 
@@ -279,7 +345,9 @@ const tokens = context.createStore({
 	user_id: context.createBinaryField(),
 	hash: context.createBinaryField(),
 	expires_ms: context.createIntegerField()
-}, ["token_id"]);
+}, ["token_id"], {
+
+});
 
 export type Token = atlas.RecordOf<typeof tokens>;
 
@@ -288,7 +356,9 @@ const streams = context.createStore({
 	user_id: context.createBinaryField(),
 	file_id: context.createBinaryField(),
 	timestamp_ms: context.createIntegerField()
-}, ["stream_id"]);
+}, ["stream_id"], {
+
+});
 
 export type Stream = atlas.RecordOf<typeof streams>;
 
@@ -297,7 +367,9 @@ const playlists = context.createStore({
 	title: context.createStringField(),
 	description: context.createStringField(),
 	user_id: context.createBinaryField()
-}, ["playlist_id"]);
+}, ["playlist_id"], {
+	title: context.createIncreasingOrder()
+});
 
 export type Playlist = atlas.RecordOf<typeof playlists>;
 
@@ -307,14 +379,18 @@ const playlist_items = context.createStore({
 	track_id: context.createBinaryField(),
 	number: context.createIntegerField(),
 	added_ms: context.createIntegerField()
-}, ["playlist_item_id"]);
+}, ["playlist_item_id"], {
+
+});
 
 export type PlaylistItem = atlas.RecordOf<typeof playlist_items>;
 
 const years = context.createStore({
 	year_id: context.createBinaryField(),
 	year: context.createIntegerField()
-}, ["year_id"]);
+}, ["year_id"], {
+	year: context.createIncreasingOrder()
+});
 
 export type Year = atlas.RecordOf<typeof years>;
 
