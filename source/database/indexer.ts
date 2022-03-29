@@ -788,8 +788,8 @@ async function removeBrokenEntities(queue: WritableQueue): Promise<void> {
 };
 
 export async function runIndexer(): Promise<void> {
-	console.log(`Running indexer...`);
 	await transactionManager.enqueueWritableTransaction(async (queue) => {
+		console.log(`Running indexer...`);
 		for (let directory of await links.directory_directories.filter(queue)) {
 			await checkDirectory(queue, directory);
 		}
@@ -802,6 +802,7 @@ export async function runIndexer(): Promise<void> {
 		await associateMetadata(queue);
 		await associateImages(queue);
 		await associateSubtitles(queue);
+		console.log(`Cleaning up...`);
 		await removeBrokenEntities(queue);
 		for (let token of await stores.tokens.filter(queue)) {
 			if (token.expires_ms <= Date.now()) {
@@ -817,8 +818,8 @@ export async function runIndexer(): Promise<void> {
 		for (let key of await links.user_keys.filter(queue)) {
 			console.log(`Registration key available: ${hexid(key.key_id)}`);
 		}
+		console.log(`Indexing finished.`);
 	});
-	console.log(`Indexing finished.`);
 	if (global.gc) {
 		global.gc();
 		let mbs = process.memoryUsage().heapUsed / 1024 / 1024;
