@@ -1,7 +1,6 @@
 import * as libcrypto from "crypto";
 import * as auth from "../server/auth";
 import * as passwords from "../server/passwords";
-import * as database from "../database/indexer";
 import * as jsondb from "../jsondb";
 import * as is from "../is";
 import * as schema from "./schema/";
@@ -11,6 +10,7 @@ import { ReadableQueue, WritableQueue } from "@joelek/atlas";
 import * as atlas from "../database/atlas";
 import { ArtistBase } from "./schema/objects";
 import { binid, hexid } from "../utils";
+import { getPath } from "../database/indexer";
 
 export function getStreamWeight(timestamp_ms: number): number {
 	let ms = Date.now() - timestamp_ms;
@@ -18,7 +18,7 @@ export function getStreamWeight(timestamp_ms: number): number {
 	return Math.pow(0.5, weeks);
 };
 
-export async function lookupFile(queue: ReadableQueue, file_id: string, user_id: string): Promise<File & { mime: string }> {
+export async function lookupFile(queue: ReadableQueue, file_id: string, user_id: string): Promise<File & { mime: string, path: string }> {
 	let file = await atlas.stores.files.lookup(queue, { file_id: binid(file_id) });
 	let mime = "application/octet-stream";
 	try {
@@ -36,12 +36,15 @@ export async function lookupFile(queue: ReadableQueue, file_id: string, user_id:
 	try {
 		mime = (await atlas.stores.video_files.lookup(queue, file)).mime;
 	} catch (error) {}
+	let paths = await getPath(queue, file);
+	let path = paths.join("/");
 	return {
 		...file,
 		file_id: hexid(file.file_id),
 		parent_directory_id: file.parent_directory_id != null ? hexid(file.parent_directory_id) : undefined,
 		index_timestamp: file.index_timestamp ?? undefined,
-		mime
+		mime,
+		path
 	};
 };
 
@@ -483,7 +486,7 @@ export async function lookupTrackBase(queue: ReadableQueue, track_id: string, us
 	return {
 		track_id: hexid(record.track_id),
 		title: config.use_demo_mode ? "Track title" : record.title,
-		disc: is.present(disc) ? disc : await lookupDiscBase(queue, hexid(record.track_id), user_id),
+		disc: is.present(disc) ? disc : await lookupDiscBase(queue, hexid(record.disc_id), user_id),
 		number: record.number
 	};
 };
@@ -608,10 +611,9 @@ export async function getNewMovies(queue: ReadableQueue, user_id: string, offset
 
 export async function searchForAlbums(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
 	if (query === "") {
-		return await Promise.all(Array.from(database.albums)
-			.sort(jsondb.LexicalSort.increasing((record) => record.title))
+		return await Promise.all((await atlas.stores.albums.filter(queue))
 			.slice(offset, offset + length)
-			.map((record) => lookupAlbum(queue, record.album_id, user_id)));
+			.map((record) => lookupAlbum(queue, hexid(record.album_id), user_id)));
 	} else {
 		return [];
 /* 		return await Promise.all(database.album_search.search(query)
@@ -624,18 +626,9 @@ export async function searchForAlbums(queue: ReadableQueue, query: string, offse
 
 export async function searchForArtists(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Artist[]> {
 	if (query === "") {
-		return await Promise.all(Array.from(database.artists)
-			.map((artist) => ({
-				artist,
-				albums: database.getAlbumsFromArtist.lookup(artist.artist_id).collect()
-			}))
-			.sort(jsondb.CombinedSort.of(
-				jsondb.CustomSort.increasing((entry) => entry.albums.length === 0),
-				jsondb.LexicalSort.increasing((entry) => entry.artist.name)
-			))
-			.map((entry) => entry.artist)
+		return await Promise.all((await atlas.stores.artists.filter(queue))
 			.slice(offset, offset + length)
-			.map((record) => lookupArtist(queue, record.artist_id, user_id)));
+			.map((record) => lookupArtist(queue, hexid(record.artist_id), user_id)));
 	} else {
 		return [];
 /* 		return await Promise.all(database.artist_search.search(query)
@@ -647,26 +640,24 @@ export async function searchForArtists(queue: ReadableQueue, query: string, offs
 };
 
 export async function searchForCues(queue: ReadableQueue, query: string, offset: number, limit: number, user_id: string): Promise<(schema.objects.Cue & { media: schema.objects.Episode | schema.objects.Movie })[]> {
-	return is.absent(database.cue_search) ? [] : await Promise.all(database.cue_search.search(query)
+	return []; /* await Promise.all(database.cue_search.search(query)
 		.slice(offset, offset + limit)
 		.map((record) => lookupCue(queue, record.lookup().cue_id, user_id))
 		.include(is.present)
-		.collect());
+		.collect()); */
 };
 
 export async function searchForDiscs(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Disc[]> {
-	return await Promise.all(Array.from(database.discs)
-		.sort(jsondb.LexicalSort.increasing((record) => record.disc_id))
+	return await Promise.all((await atlas.stores.discs.filter(queue))
 		.slice(offset, offset + length)
-		.map((record) => lookupDisc(queue, record.disc_id, user_id)));
+		.map((record) => lookupDisc(queue, hexid(record.disc_id), user_id)));
 };
 
 export async function searchForEpisodes(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Episode[]> {
 	if (query === "") {
-		return await Promise.all(Array.from(database.episodes)
-			.sort(jsondb.LexicalSort.increasing((record) => record.title))
+		return await Promise.all((await atlas.stores.episodes.filter(queue))
 			.slice(offset, offset + length)
-			.map((record) => lookupEpisode(queue, record.episode_id, user_id)));
+			.map((record) => lookupEpisode(queue, hexid(record.episode_id), user_id)));
 	} else {
 		return [];
 /* 		return await Promise.all(database.episode_search.search(query)
@@ -679,9 +670,9 @@ export async function searchForEpisodes(queue: ReadableQueue, query: string, off
 
 export async function searchForGenres(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Genre[]> {
 	if (query === "") {
-		return await Promise.all(Array.from(database.genres)
-			.sort(jsondb.LexicalSort.increasing((record) => record.name))
-			.map((record) => lookupGenre(queue, record.genre_id, user_id)));
+		return await Promise.all((await atlas.stores.genres.filter(queue))
+			.slice(offset, offset + length)
+			.map((record) => lookupGenre(queue, hexid(record.genre_id), user_id)));
 	} else {
 		return [];
 /* 		return await Promise.all(database.genre_search.search(query)
@@ -694,10 +685,9 @@ export async function searchForGenres(queue: ReadableQueue, query: string, offse
 
 export async function searchForMovies(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Movie[]> {
 	if (query === "") {
-		return await Promise.all(Array.from(database.movies)
-			.sort(jsondb.LexicalSort.increasing((record) => record.title))
+		return await Promise.all((await atlas.stores.movies.filter(queue))
 			.slice(offset, offset + length)
-			.map((record) => lookupMovie(queue, record.movie_id, user_id)));
+			.map((record) => lookupMovie(queue, hexid(record.movie_id), user_id)));
 	} else {
 		return [];
 /* 		return await Promise.all(database.movie_search.search(query)
@@ -710,10 +700,9 @@ export async function searchForMovies(queue: ReadableQueue, query: string, offse
 
 export async function searchForActors(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Actor[]> {
 	if (query === "") {
-		return await Promise.all(Array.from(database.actors)
-			.sort(jsondb.LexicalSort.increasing((record) => record.name))
+		return await Promise.all((await atlas.stores.actors.filter(queue))
 			.slice(offset, offset + length)
-			.map((record) => lookupActor(queue, record.actor_id, user_id)));
+			.map((record) => lookupActor(queue, hexid(record.actor_id), user_id)));
 	} else {
 		return [];
 /* 		return await Promise.all(database.actor_search.search(query)
@@ -726,10 +715,9 @@ export async function searchForActors(queue: ReadableQueue, query: string, offse
 
 export async function searchForPlaylists(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Playlist[]> {
 	if (query === "") {
-		return await Promise.all(Array.from(database.playlists)
-			.sort(jsondb.LexicalSort.increasing((record) => record.title))
+		return await Promise.all((await atlas.stores.playlists.filter(queue))
 			.slice(offset, offset + length)
-			.map((record) => lookupPlaylist(queue, record.playlist_id, user_id)));
+			.map((record) => lookupPlaylist(queue, hexid(record.playlist_id), user_id)));
 	} else {
 		return [];
 /* 		return await Promise.all(database.playlist_search.search(query)
@@ -741,18 +729,16 @@ export async function searchForPlaylists(queue: ReadableQueue, query: string, of
 };
 
 export async function searchForSeasons(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Season[]> {
-	return await Promise.all(Array.from(database.seasons)
-		.sort(jsondb.LexicalSort.increasing((record) => record.season_id))
+	return await Promise.all((await atlas.stores.seasons.filter(queue))
 		.slice(offset, offset + length)
-		.map((record) => lookupSeason(queue, record.season_id, user_id)));
+		.map((record) => lookupSeason(queue, hexid(record.season_id), user_id)));
 };
 
 export async function searchForShows(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Show[]> {
 	if (query === "") {
-		return await Promise.all(Array.from(database.shows)
-			.sort(jsondb.LexicalSort.increasing((record) => record.name))
+		return await Promise.all((await atlas.stores.shows.filter(queue))
 			.slice(offset, offset + length)
-			.map((record) => lookupShow(queue, record.show_id, user_id)));
+			.map((record) => lookupShow(queue, hexid(record.show_id), user_id)));
 	} else {
 		return [];
 /* 		return await Promise.all(database.shows_search.search(query)
@@ -765,10 +751,9 @@ export async function searchForShows(queue: ReadableQueue, query: string, offset
 
 export async function searchForTracks(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Track[]> {
 	if (query === "") {
-		return await Promise.all(Array.from(database.tracks)
-			.sort(jsondb.LexicalSort.increasing((record) => record.title))
+		return await Promise.all((await atlas.stores.tracks.filter(queue))
 			.slice(offset, offset + length)
-			.map((record) => lookupTrack(queue, record.track_id, user_id)));
+			.map((record) => lookupTrack(queue, hexid(record.track_id), user_id)));
 	} else {
 		return [];
 /* 		return await Promise.all(database.track_search.search(query)
@@ -781,10 +766,9 @@ export async function searchForTracks(queue: ReadableQueue, query: string, offse
 
 export async function searchForUsers(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.User[]> {
 	if (query === "") {
-		return await Promise.all(Array.from(database.users)
-			.sort(jsondb.LexicalSort.increasing((record) => record.name))
+		return await Promise.all((await atlas.stores.users.filter(queue))
 			.slice(offset, offset + length)
-			.map((record) => lookupUser(queue, record.user_id, user_id)));
+			.map((record) => lookupUser(queue, hexid(record.user_id), user_id)));
 	} else {
 		return [];
 /* 		return await Promise.all(database.user_search.search(query)
@@ -797,10 +781,9 @@ export async function searchForUsers(queue: ReadableQueue, query: string, offset
 
 export async function searchForYears(queue: ReadableQueue, query: string, offset: number, length: number, user_id: string): Promise<schema.objects.Year[]> {
 	if (query === "") {
-		return await Promise.all(Array.from(database.years)
-			.sort(jsondb.NumericSort.decreasing((record) => record.year))
+		return await Promise.all((await atlas.stores.years.filter(queue))
 			.slice(offset, offset + length)
-			.map((record) => lookupYear(queue, record.year_id, user_id)));
+			.map((record) => lookupYear(queue, hexid(record.year_id), user_id)));
 	} else {
 		return [];
 /* 		return await Promise.all(database.year_search.search(query)

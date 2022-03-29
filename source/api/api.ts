@@ -485,22 +485,25 @@ export const server = apiv2.makeServer({
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
 		let file = await handler.lookupFile(queue, options.file_id, user_id);
-		let path = database.getLegacyPath(file).join("/");
-		let range = autoguard.api.parseRangeHeader(request.headers().range, libfs.statSync(path).size);
-		let stream = libfs.createReadStream(path, {
+		let range = autoguard.api.parseRangeHeader(request.headers().range, libfs.statSync(file.path).size);
+		let stream = libfs.createReadStream(file.path, {
 			start: range.offset,
 			end: range.offset + range.length
 		});
-		stream.addListener("close", () => atlas.transactionManager.enqueueWritableTransaction(async (queue) => {
-			if (range.offset + stream.bytesRead === range.size) {
-				handler.createStream(queue, {
-					stream_id: libcrypto.randomBytes(8).toString("hex"),
-					user_id: user_id,
-					file_id: options.file_id,
-					timestamp_ms: Date.now()
-				});
-			}
-		}));
+		if (file.mime.startsWith("audio/") || file.mime.startsWith("video/")) {
+			stream.addListener("close", () => {
+				if (range.offset + stream.bytesRead === range.size) {
+					atlas.transactionManager.enqueueWritableTransaction(async (queue) => {
+						handler.createStream(queue, {
+							stream_id: libcrypto.randomBytes(8).toString("hex"),
+							user_id: user_id,
+							file_id: options.file_id,
+							timestamp_ms: Date.now()
+						});
+					});
+				}
+			});
+		}
 		return {
 			status: range.status,
 			headers: {

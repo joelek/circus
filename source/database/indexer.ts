@@ -183,19 +183,6 @@ export const track_search = loadIndex("search_tracks", tracks, tracks, (entry) =
 export const user_search = loadIndex("search_users", users, users, (entry) => [entry.name, entry.username], jdb2.Index.QUERY_TOKENIZER);
 export const year_search = loadIndex("search_years", years, years, (entry) => [entry.year], jdb2.Index.QUERY_TOKENIZER);
 
-export function getLegacyPath(entry: LegacyDirectory | LegacyFile): Array<string> {
-	let path = new Array<string>();
-	while (true) {
-		path.unshift(entry.name);
-		let parent_directory_id = entry.parent_directory_id;
-		if (is.absent(parent_directory_id)) {
-			break;
-		}
-		entry = directories.lookup(parent_directory_id);
-	}
-	return [...config.media_path, ...path];
-};
-
 export async function getPath(queue: ReadableQueue, entry: Directory | File): Promise<Array<string>> {
 	let path = new Array<string>();
 	while (true) {

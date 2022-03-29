@@ -12,7 +12,9 @@ import * as chromecasts from "../chromecast/chromecasts";
 import * as airplay from "../airplay/";
 import * as is from "../is";
 import { default as config } from "../config";
-import { resolve } from "path";
+import { transactionManager } from "../database/atlas";
+import { binid } from "../utils";
+import * as atlas from "../database/atlas";
 
 const contextServer = new context.server.ContextServer();
 const playlistsServer = new playlists.server.PlaylistsServer();
@@ -66,8 +68,7 @@ async function requestHandler(request: libhttp.IncomingMessage, response: libhtt
 	if (/^[/]media[/]/.test(path)) {
 		if ((parts = /^[/]media[/]stills[/]([0-9a-f]{16})[/]/.exec(path)) != null) {
 			let file_id = parts[1];
-			let file = indexer.files.lookup(file_id);
-			let filename = [".", "private", "stills", file.file_id];
+			let filename = [".", "private", "stills", file_id];
 			if (libfs.existsSync(filename.join("/"))) {
 				let stream = libfs.createReadStream(filename.join("/"));
 				stream.on("open", () => {
@@ -87,8 +88,7 @@ async function requestHandler(request: libhttp.IncomingMessage, response: libhtt
 		}
 		if ((parts = /^[/]media[/]gifs[/]([0-9a-f]{16})[/]/.exec(path)) != null) {
 			let cue_id = parts[1];
-			let cue = indexer.cues.lookup(cue_id);
-			let filename = [".", "private", "gifs", cue.cue_id];
+			let filename = [".", "private", "gifs", cue_id];
 			if (libfs.existsSync(filename.join("/"))) {
 				let stream = libfs.createReadStream(filename.join("/"));
 				stream.on("open", () => {
@@ -100,19 +100,28 @@ async function requestHandler(request: libhttp.IncomingMessage, response: libhtt
 					stream.pipe(response);
 				});
 			} else {
-				subsearch.generateMeme(filename, cue, () => {
-					if (!libfs.existsSync(filename.join("/"))) {
-						response.writeHead(500);
-						return response.end();
-					}
-					let stream = libfs.createReadStream(filename.join("/"));
-					stream.on("open", () => {
-						response.writeHead(200, {
-							"Access-Control-Allow-Origin": "*",
-							"Cache-Control": "public, max-age=86400",
-							"Content-Type": "image/gif"
+				transactionManager.enqueueReadableTransaction(async (queue) => {
+					let cue = await atlas.stores.cues.lookup(queue, { cue_id: binid(cue_id) });
+					let subtitle = await atlas.stores.subtitles.lookup(queue, cue);
+					let file_subtitle = await atlas.stores.files.lookup(queue, subtitle);
+					let video_subtitles = await atlas.links.subtitle_file_video_subtitles.filter(queue, subtitle);
+					let file_video = await atlas.stores.files.lookup(queue, { file_id: video_subtitles[0].video_file_id });
+					let video_path = await indexer.getPath(queue, file_video);
+					let subtitle_path = await indexer.getPath(queue, file_subtitle);
+					subsearch.generateMeme(filename, video_path, subtitle_path, cue, () => {
+						if (!libfs.existsSync(filename.join("/"))) {
+							response.writeHead(500);
+							return response.end();
+						}
+						let stream = libfs.createReadStream(filename.join("/"));
+						stream.on("open", () => {
+							response.writeHead(200, {
+								"Access-Control-Allow-Origin": "*",
+								"Cache-Control": "public, max-age=86400",
+								"Content-Type": "image/gif"
+							});
+							stream.pipe(response);
 						});
-						stream.pipe(response);
 					});
 				});
 			}
