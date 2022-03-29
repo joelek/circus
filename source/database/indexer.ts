@@ -8,7 +8,7 @@ import * as probes from "./probes";
 import { Directory as LegacyDirectory, File as LegacyFile } from "./schema"
 import { default as config } from "../config";
 import * as jdb2 from "../jdb2";
-import { transactionManager, stores, links, Directory, File } from "./atlas";
+import { transactionManager, stores, links, Directory, File, queries } from "./atlas";
 import { ReadableQueue, WritableQueue } from "@joelek/atlas";
 import { binid, hexid } from "../utils";
 
@@ -762,6 +762,27 @@ async function removeBrokenEntities(queue: WritableQueue): Promise<void> {
 		let seasons = await links.show_seasons.filter(queue, show);
 		if (seasons.length === 0) {
 			await stores.shows.remove(queue, show);
+		}
+	}
+	for (let actor of await stores.actors.filter(queue)) {
+		let movie_actors = await links.actor_movie_actors.filter(queue, actor);
+		let show_actors = await links.actor_show_actors.filter(queue, actor);
+		if (movie_actors.length === 0 && show_actors.length === 0) {
+			await stores.actors.remove(queue, actor);
+		}
+	}
+	for (let genre of await stores.genres.filter(queue)) {
+		let movie_genres = await links.genre_movie_genres.filter(queue, genre);
+		let show_genres = await links.genre_show_genres.filter(queue, genre);
+		if (movie_genres.length === 0 && show_genres.length === 0) {
+			await stores.genres.remove(queue, genre);
+		}
+	}
+	for (let year of await stores.years.filter(queue)) {
+		let albums = await queries.getAlbumsFromYear.filter(queue, year);
+		let movies = await queries.getMoviesFromYear.filter(queue, year);
+		if (albums.length === 0 && movies.length === 0) {
+			await stores.years.remove(queue, year);
 		}
 	}
 };
