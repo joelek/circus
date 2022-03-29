@@ -530,7 +530,7 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 					subtitle_id: subtitle_id,
 					file_id: file.file_id
 				});
-				for (let cue of subtitle_resource.cues) {
+/* 				for (let cue of subtitle_resource.cues) {
 					let cue_id = makeBinaryId("cue", subtitle_id, `${cue.start_ms}`);
 					await stores.cues.insert(queue, {
 						cue_id: cue_id,
@@ -539,7 +539,7 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 						duration_ms: cue.duration_ms,
 						lines: cue.lines.join("\n")
 					});
-				}
+				} */
 			}
 		} else if (file.name.endsWith(".json")) {
 			probe = probes.json.probe(fd);
