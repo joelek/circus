@@ -216,7 +216,3 @@ if (libfs.existsSync(config.certificate_path.join("/")) && libfs.existsSync(conf
 	airplay.observe(websocket_host, media_server_host);
 	chromecasts.observe(websocket_host, media_server_host);
 }
-
-for (let key of indexer.getKeysFromUser.lookup(undefined)) {
-	console.log(`Registration key available: ${key.key_id}`);
-}

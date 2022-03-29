@@ -10,6 +10,7 @@ import { default as config } from "../config";
 import * as jdb2 from "../jdb2";
 import { transactionManager, stores, links, Directory, File } from "./atlas";
 import { ReadableQueue, WritableQueue } from "@joelek/atlas";
+import { hexid } from "../api/handler";
 
 function wordify(string: string | number): Array<string> {
 	return String(string)
@@ -773,6 +774,9 @@ export async function runIndexer(): Promise<void> {
 			if (token.expires_ms <= Date.now()) {
 				await stores.tokens.remove(queue, token);
 			}
+		}
+		for (let key of await links.user_keys.filter(queue)) {
+			console.log(`Registration key available: ${hexid(key.key_id)}`);
 		}
 	});
 	console.log(`Indexing finished.`);
