@@ -131,7 +131,7 @@ export async function lookupAlbum(queue: ReadableQueue, album_id: string, api_us
 		...album_base,
 		artists: await Promise.all((await atlas.links.album_album_artists.filter(queue, album))
 			.map((record) => lookupArtistBase(queue, hexid(record.artist_id), api_user_id))),
-		year: album.year ?? undefined,
+		year: album.year_id != null ? (await lookupYearBase(queue, hexid(album.year_id), api_user_id)).year : undefined,
 		discs: await Promise.all((await atlas.links.album_discs.filter(queue, album))
 			.map((record) => lookupDisc(queue, hexid(record.disc_id), api_user_id, album_base)))
 	};
@@ -249,7 +249,7 @@ export async function lookupEpisode(queue: ReadableQueue, episode_id: string, ap
 		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
 	return {
 		...episode_base,
-		year: episode.year ?? undefined,
+		year: episode.year_id != null ? (await lookupYearBase(queue, hexid(episode.year_id), api_user_id)).year : undefined,
 		summary: config.use_demo_mode ? "Episode summary." : episode.summary ?? undefined,
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: {
@@ -327,7 +327,7 @@ export async function lookupMovie(queue: ReadableQueue, movie_id: string, api_us
 		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
 	return {
 		...movie_base,
-		year: movie.year ?? undefined,
+		year: movie.year_id != null ? (await lookupYearBase(queue, hexid(movie.year_id), api_user_id)).year : undefined,
 		summary: config.use_demo_mode ? "Movie summary." : movie.summary ?? undefined,
 		genres: await Promise.all((await atlas.links.movie_movie_genres.filter(queue, movie))
 			.map((record) => lookupGenreBase(queue, hexid(record.genre_id), api_user_id))),
@@ -1040,19 +1040,19 @@ export async function getUserShows(queue: ReadableQueue, subject_user_id: string
 };
 
 export async function getMoviesFromYear(queue: ReadableQueue, year_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
-	let year = await lookupYearBase(queue, year_id, user_id);
+	let year = await atlas.stores.years.lookup(queue, { year_id: binid(year_id) });
 	let movies = [] as Array<schema.objects.Movie>;
-	for (let entry of await atlas.queries.getMoviesFromYear.filter(queue, { year: year.year })) {
-		movies.push(await lookupMovie(queue, hexid(entry.movie_id), user_id));
+	for (let movie of await atlas.links.year_movies.filter(queue, year)) {
+		movies.push(await lookupMovie(queue, hexid(movie.movie_id), user_id));
 	}
 	return movies.slice(offset, offset + length);
 };
 
 export async function getAlbumsFromYear(queue: ReadableQueue, year_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Album[]> {
-	let year = await lookupYearBase(queue, year_id, user_id);
+	let year = await atlas.stores.years.lookup(queue, { year_id: binid(year_id) });
 	let albums = [] as Array<schema.objects.Album>;
-	for (let entry of await atlas.queries.getAlbumsFromYear.filter(queue, { year: year.year })) {
-		albums.push(await lookupAlbum(queue, hexid(entry.album_id), user_id));
+	for (let album of await atlas.links.year_albums.filter(queue, year)) {
+		albums.push(await lookupAlbum(queue, hexid(album.album_id), user_id));
 	}
 	return albums.slice(offset, offset + length);
 };

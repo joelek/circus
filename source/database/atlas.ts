@@ -98,7 +98,7 @@ export type Artist = atlas.RecordOf<typeof artists>;
 const albums = context.createStore({
 	album_id: context.createBinaryField(),
 	title: context.createStringField(),
-	year: context.createNullableIntegerField() // TODO: Promote to entity.
+	year_id: context.createNullableBinaryField()
 }, ["album_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -200,7 +200,7 @@ const episodes = context.createStore({
 	season_id: context.createBinaryField(),
 	title: context.createStringField(),
 	number: context.createIntegerField(),
-	year: context.createNullableIntegerField(), // TODO: Promote to entity.
+	year_id: context.createNullableBinaryField(),
 	summary: context.createNullableStringField(),
 	copyright: context.createNullableStringField(),
 	imdb: context.createNullableStringField()
@@ -222,7 +222,7 @@ export type EpisodeFile = atlas.RecordOf<typeof episode_files>;
 const movies = context.createStore({
 	movie_id: context.createBinaryField(),
 	title: context.createStringField(),
-	year: context.createNullableIntegerField(), // TODO: Promote to entity.
+	year_id: context.createNullableBinaryField(),
 	summary: context.createNullableStringField(),
 	copyright: context.createNullableStringField(),
 	imdb: context.createNullableStringField()
@@ -652,22 +652,28 @@ const track_playlist_items = context.createLink(tracks, playlist_items, {
 
 });
 
+const year_movies = context.createLink(years, movies, {
+	year_id: "year_id"
+}, {
+	title: context.createIncreasingOrder()
+});
+
+const year_albums = context.createLink(years, albums, {
+	year_id: "year_id"
+}, {
+	title: context.createIncreasingOrder()
+});
+
+const year_episodes = context.createLink(years, episodes, {
+	year_id: "year_id"
+}, {
+	title: context.createIncreasingOrder()
+});
+
 const getUsersFromUsername = context.createQuery(users, {
 	username: context.createEqualityOperator()
 }, {
 
-});
-
-const getMoviesFromYear = context.createQuery(movies, {
-	year: context.createEqualityOperator()
-}, {
-	title: context.createIncreasingOrder()
-});
-
-const getAlbumsFromYear = context.createQuery(albums, {
-	year: context.createEqualityOperator()
-}, {
-	title: context.createIncreasingOrder()
 });
 
 export const { transactionManager } = context.createTransactionManager("./private/db/", {
@@ -752,11 +758,12 @@ export const { transactionManager } = context.createTransactionManager("./privat
 	file_streams,
 	user_playlists,
 	playlist_playlist_items,
-	track_playlist_items
+	track_playlist_items,
+	year_movies,
+	year_episodes,
+	year_albums
 }, {
-	getUsersFromUsername,
-	getMoviesFromYear,
-	getAlbumsFromYear
+	getUsersFromUsername
 });
 
 export const stores = transactionManager.createTransactionalStores();

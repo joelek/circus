@@ -5,7 +5,6 @@ import * as schema from "./schema";
 import * as indices from "../jsondb/";
 import * as is from "../is";
 import * as probes from "./probes";
-import { Directory as LegacyDirectory, File as LegacyFile } from "./schema"
 import { default as config } from "../config";
 import * as jdb2 from "../jdb2";
 import { transactionManager, stores, links, Directory, File, queries } from "./atlas";
@@ -282,6 +281,14 @@ async function visitDirectory(queue: WritableQueue, path: Array<string>, parent_
 async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, ...file_ids: Array<Uint8Array>): Promise<void> {
 	let metadata = probe.metadata;
 	if (probes.schema.EpisodeMetadata.is(metadata)) {
+		let year_id: Uint8Array | undefined;
+		if (is.present(metadata.year)) {
+			year_id = makeBinaryId("year", metadata.year);
+			await stores.years.insert(queue, {
+				year_id: year_id,
+				year: metadata.year
+			});
+		}
 		let show_id = makeBinaryId("show", metadata.show.title);
 		await stores.shows.insert(queue, {
 			show_id: show_id,
@@ -301,7 +308,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			season_id: season_id,
 			title: metadata.title,
 			number: metadata.episode,
-			year: metadata.year ?? null,
+			year_id: year_id ?? null,
 			summary: metadata.summary ?? null,
 			copyright: metadata.copyright ?? null,
 			imdb: metadata.imdb ?? null
@@ -337,22 +344,23 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			});
 		}
 	} else if (probes.schema.MovieMetadata.is(metadata)) {
-		let movie_id = makeBinaryId("movie", metadata.title, metadata.year);
-		await stores.movies.insert(queue, {
-			movie_id: movie_id,
-			title: metadata.title,
-			year: metadata.year ?? null,
-			summary: metadata.summary ?? null,
-			copyright: metadata.copyright ?? null,
-			imdb: metadata.imdb ?? null
-		});
+		let year_id: Uint8Array | undefined;
 		if (is.present(metadata.year)) {
-			let year_id = makeBinaryId("year", metadata.year);
+			year_id = makeBinaryId("year", metadata.year);
 			await stores.years.insert(queue, {
 				year_id: year_id,
 				year: metadata.year
 			});
 		}
+		let movie_id = makeBinaryId("movie", metadata.title, metadata.year);
+		await stores.movies.insert(queue, {
+			movie_id: movie_id,
+			title: metadata.title,
+			year_id: year_id ?? null,
+			summary: metadata.summary ?? null,
+			copyright: metadata.copyright ?? null,
+			imdb: metadata.imdb ?? null
+		});
 		for (let file_id of file_ids) {
 			await stores.movie_files.insert(queue, {
 				movie_id: movie_id,
@@ -384,19 +392,20 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			});
 		}
 	} else if (probes.schema.TrackMetadata.is(metadata)) {
-		let album_id = makeBinaryId("album", metadata.album.title, metadata.album.year);
-		await stores.albums.insert(queue, {
-			album_id: album_id,
-			title: metadata.album.title,
-			year: metadata.album.year ?? null
-		});
+		let year_id: Uint8Array | undefined;
 		if (is.present(metadata.album.year)) {
-			let year_id = makeBinaryId("year", metadata.album.year);
+			year_id = makeBinaryId("year", metadata.album.year);
 			await stores.years.insert(queue, {
 				year_id: year_id,
 				year: metadata.album.year
 			});
 		}
+		let album_id = makeBinaryId("album", metadata.album.title, metadata.album.year);
+		await stores.albums.insert(queue, {
+			album_id: album_id,
+			title: metadata.album.title,
+			year_id: year_id ?? null
+		});
 		for (let [index, artist] of metadata.album.artists.entries()) {
 			let artist_id = makeBinaryId("artist", artist);
 			await stores.artists.insert(queue, {
@@ -442,19 +451,20 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			});
 		}
 	} else if (probes.schema.AlbumMetadata.is(metadata)) {
-		let album_id = makeBinaryId("album", metadata.title, metadata.year);
-		await stores.albums.insert(queue, {
-			album_id: album_id,
-			title: metadata.title,
-			year: metadata.year ?? null
-		});
+		let year_id: Uint8Array | undefined;
 		if (is.present(metadata.year)) {
-			let year_id = makeBinaryId("year", metadata.year);
+			year_id = makeBinaryId("year", metadata.year);
 			await stores.years.insert(queue, {
 				year_id: year_id,
 				year: metadata.year
 			});
 		}
+		let album_id = makeBinaryId("album", metadata.title, metadata.year);
+		await stores.albums.insert(queue, {
+			album_id: album_id,
+			title: metadata.title,
+			year_id: year_id ?? null
+		});
 		for (let [index, artist] of metadata.artists.entries()) {
 			let artist_id = makeBinaryId("artist", artist);
 			await stores.artists.insert(queue, {
@@ -779,9 +789,10 @@ async function removeBrokenEntities(queue: WritableQueue): Promise<void> {
 		}
 	}
 	for (let year of await stores.years.filter(queue)) {
-		let albums = await queries.getAlbumsFromYear.filter(queue, year);
-		let movies = await queries.getMoviesFromYear.filter(queue, year);
-		if (albums.length === 0 && movies.length === 0) {
+		let albums = await links.year_albums.filter(queue, year);
+		let movies = await links.year_movies.filter(queue, year);
+		let episodes = await links.year_episodes.filter(queue, year);
+		if (albums.length === 0 && movies.length === 0 && episodes.length === 0) {
 			await stores.years.remove(queue, year);
 		}
 	}
