@@ -5,6 +5,8 @@ import * as is from "../is";
 import * as observers from "../observers/";
 import * as schema from "./schema/";
 import * as typesockets from "../typesockets/";
+import { ReadableQueue } from "@joelek/atlas";
+import * as atlas from "../database/atlas";
 
 function getQuery(url: liburl.UrlWithParsedQuery, key: string): Array<string> {
 	let values = url.query[key] ?? [];
@@ -39,10 +41,10 @@ export class ContextServer {
 	private tokens = new Map<string, string>();
 	private sessions = new Map<string, Session>();
 
-	private getExistingSession(connection_id: string, callback: (session: Session) => void): void {
+	private async getExistingSession(queue: ReadableQueue, connection_id: string, callback: (session: Session) => void): Promise<void> {
 		let token = this.tokens.get(connection_id);
 		if (is.present(token)) {
-			let user_id = auth.getUserId(token);
+			let user_id = await auth.getUserId(queue, token);
 			let session = this.sessions.get(user_id);
 			if (is.present(session)) {
 				callback(session);
@@ -107,11 +109,11 @@ export class ContextServer {
 		return session;
 	}
 
-	private revokeAuthentication(connection_id: string): void {
+	private async revokeAuthentication(queue: ReadableQueue, connection_id: string): Promise<void> {
 		let token = this.tokens.get(connection_id);
 		this.tokens.delete(connection_id);
 		if (is.present(token)) {
-			let user_id = auth.getUserId(token);
+			let user_id = await auth.getUserId(queue, token);
 			let session = this.sessions.get(user_id);
 			if (is.present(session)) {
 				let devices = session.devices;
@@ -135,7 +137,7 @@ export class ContextServer {
 	constructor() {
 		this.chromecasts = new observers.ObservableClass<Array<schema.objects.Device>>([]);
 		this.tss = new typesockets.TypeSocketServer(schema.messages.Autoguard.Guards);
-		this.tss.addEventListener("sys", "connect", (message) => {
+		this.tss.addEventListener("sys", "connect", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 			console.log("connect: " + message.connection_url);
 			let device = makeDevice(message.connection_id, message.connection_url);
 			this.tss.send("SetLocalDevice", message.connection_id, {
@@ -144,22 +146,22 @@ export class ContextServer {
 			if (device.protocol === "cast" || device.protocol === "airplay") {
 				this.chromecasts.updateState([...this.chromecasts.getState(), device]);
 			}
-		});
-		this.tss.addEventListener("sys", "disconnect", (message) => {
+		}));
+		this.tss.addEventListener("sys", "disconnect", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 			console.log("disconnect: " + message.connection_url);
 			let device = makeDevice(message.connection_id, message.connection_url);
-			this.revokeAuthentication(message.connection_id);
+			await this.revokeAuthentication(queue, message.connection_id);
 			if (device.protocol === "cast" || device.protocol === "airplay") {
 				this.chromecasts.updateState(this.chromecasts.getState().filter((chromecast) => {
 					return chromecast.id !== device.id;
 				}));
 			}
-		});
-		this.tss.addEventListener("app", "SetToken", (message) => {
-			this.revokeAuthentication(message.connection_id);
+		}));
+		this.tss.addEventListener("app", "SetToken", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+			await this.revokeAuthentication(queue, message.connection_id);
 			let token = message.data.token;
 			if (is.present(token)) {
-				let user_id = auth.getUserId(token);
+				let user_id = await auth.getUserId(queue, token);
 				this.tokens.set(message.connection_id, token);
 				let session = this.getSession(user_id);
 				let device = makeDevice(message.connection_id, message.connection_url);
@@ -183,9 +185,9 @@ export class ContextServer {
 					token: token
 				});
 			}
-		});
-		this.tss.addEventListener("app", "SetContext", (message) => {
-			this.getExistingSession(message.connection_id, (session) => {
+		}));
+		this.tss.addEventListener("app", "SetContext", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+			await this.getExistingSession(queue, message.connection_id, (session) => {
 				if (is.absent(session.device)) {
 					session.device = makeDevice(message.connection_id, message.connection_url);
 					this.tss.send("SetDevice", session.devices.getState().map((device) => {
@@ -205,9 +207,9 @@ export class ContextServer {
 					return device.id;
 				}), message.data);
 			});
-		});
-		this.tss.addEventListener("app", "SetDevice", (message) => {
-			this.getExistingSession(message.connection_id, (session) => {
+		}));
+		this.tss.addEventListener("app", "SetDevice", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+			await this.getExistingSession(queue, message.connection_id, (session) => {
 				this.updateProgress(session);
 				this.tss.send("SetProgress", session.devices.getState().map((device) => {
 					return device.id;
@@ -224,9 +226,9 @@ export class ContextServer {
 					});
 				}
 			});
-		});
-		this.tss.addEventListener("app", "SetIndex", (message) => {
-			this.getExistingSession(message.connection_id, (session) => {
+		}));
+		this.tss.addEventListener("app", "SetIndex", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+			await this.getExistingSession(queue, message.connection_id, (session) => {
 				if (is.absent(session.device)) {
 					session.device = makeDevice(message.connection_id, message.connection_url);
 					this.tss.send("SetDevice", session.devices.getState().map((device) => {
@@ -247,9 +249,9 @@ export class ContextServer {
 					return device.id;
 				}), message.data);
 			});
-		});
-		this.tss.addEventListener("app", "SetPlayback", (message) => {
-			this.getExistingSession(message.connection_id, (session) => {
+		}));
+		this.tss.addEventListener("app", "SetPlayback", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+			await this.getExistingSession(queue, message.connection_id, (session) => {
 				if (is.absent(session.device)) {
 					session.device = makeDevice(message.connection_id, message.connection_url);
 					this.tss.send("SetDevice", session.devices.getState().map((device) => {
@@ -264,9 +266,9 @@ export class ContextServer {
 					return device.id;
 				}), message.data);
 			});
-		});
-		this.tss.addEventListener("app", "SetProgress", (message) => {
-			this.getExistingSession(message.connection_id, (session) => {
+		}));
+		this.tss.addEventListener("app", "SetProgress", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+			await this.getExistingSession(queue, message.connection_id, (session) => {
 				if (is.absent(session.device)) {
 					session.device = makeDevice(message.connection_id, message.connection_url);
 					this.tss.send("SetDevice", session.devices.getState().map((device) => {
@@ -281,7 +283,7 @@ export class ContextServer {
 					return device.id;
 				}), message.data);
 			});
-		});
+		}));
 	}
 
 	getRequestHandler(): libhttp.RequestListener {
