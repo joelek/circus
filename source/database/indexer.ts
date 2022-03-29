@@ -721,6 +721,25 @@ async function removeBrokenEntities(queue: WritableQueue): Promise<void> {
 			await stores.tracks.remove(queue, track);
 		}
 	}
+	for (let disc of await stores.discs.filter(queue)) {
+		let tracks = await links.disc_tracks.filter(queue, disc);
+		if (tracks.length === 0) {
+			await stores.discs.remove(queue, disc);
+		}
+	}
+	for (let album of await stores.albums.filter(queue)) {
+		let discs = await links.album_discs.filter(queue, album);
+		if (discs.length === 0) {
+			await stores.albums.remove(queue, album);
+		}
+	}
+	for (let artist of await stores.artists.filter(queue)) {
+		let album_artists = await links.artist_album_artists.filter(queue, artist);
+		let track_artists = await links.artist_track_artists.filter(queue, artist);
+		if (album_artists.length === 0 && track_artists.length === 0) {
+			await stores.artists.remove(queue, artist);
+		}
+	}
 	for (let movie of await stores.movies.filter(queue)) {
 		let movie_files = await links.movie_movie_files.filter(queue, movie);
 		if (movie_files.length === 0) {
@@ -731,6 +750,18 @@ async function removeBrokenEntities(queue: WritableQueue): Promise<void> {
 		let episode_files = await links.episode_episode_files.filter(queue, episode);
 		if (episode_files.length === 0) {
 			await stores.episodes.remove(queue, episode);
+		}
+	}
+	for (let season of await stores.seasons.filter(queue)) {
+		let episodes = await links.season_episodes.filter(queue, season);
+		if (episodes.length === 0) {
+			await stores.seasons.remove(queue, season);
+		}
+	}
+	for (let show of await stores.shows.filter(queue)) {
+		let seasons = await links.show_seasons.filter(queue, show);
+		if (seasons.length === 0) {
+			await stores.shows.remove(queue, show);
 		}
 	}
 };
