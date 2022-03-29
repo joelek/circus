@@ -7,7 +7,7 @@ import * as is from "../is";
 import * as schema from "./schema/";
 import { default as config } from "../config";
 import { SearchResult } from "../jdb2";
-import { Actor, Album, Artist, Cue, Episode, File, Genre, Movie, Playlist, Show, Stream, Track, User, Year } from "../database/schema";
+import { Actor, Album, Artist, Cue, Episode, File, Genre, ImageFile, Movie, Playlist, Show, Stream, Track, User, VideoFile, Year } from "../database/schema";
 import { ReadableQueue, WritableQueue } from "@joelek/atlas";
 import * as atlas from "../database/atlas";
 import { string } from "../jdb2/asserts";
@@ -275,193 +275,208 @@ export async function lookupGenre(queue: ReadableQueue, genre_id: string, user_i
 	};
 };
 
-export async function lookupMovieBase(queue: ReadableQueue, movie_id: string, user_id: string): Promise<schema.objects.MovieBase> {
-	let movie = database.movies.lookup(movie_id);
+export async function lookupMovieBase(queue: ReadableQueue, movie_id: string, api_user_id: string): Promise<schema.objects.MovieBase> {
+	let movie = await atlas.stores.movies.lookup(queue, { movie_id: binid(movie_id) });
+	let movie_files = await atlas.links.movie_movie_files.filter(queue, movie);
+	let artwork = [] as Array<ImageFile>;
+	for (let movie_file of movie_files) {
+		try {
+			let image_file = await atlas.stores.image_files.lookup(queue, movie_file);
+			artwork.push({
+				...image_file,
+				file_id: hexid(image_file.file_id)
+			});
+		} catch (error) {}
+	}
 	return {
-		movie_id: movie.movie_id,
+		movie_id: hexid(movie.movie_id),
 		title: config.use_demo_mode ? "Movie title" : movie.title,
-		artwork: database.getFilesFromMovie.lookup(movie_id)
-			.map((record) => {
-				try {
-					return database.image_files.lookup(record.file_id);
-				} catch (error) {}
-			})
-			.include(is.present)
-			.collect()
+		artwork: artwork
 	};
 };
 
-export async function lookupMovie(queue: ReadableQueue, movie_id: string, user_id: string): Promise<schema.objects.Movie> {
-	let movie = await lookupMovieBase(queue, movie_id, user_id);
-	let record = database.movies.lookup(movie_id);
-	let files = database.getFilesFromMovie.lookup(movie_id)
-		.map((record) => {
-			try {
-				return database.video_files.lookup(record.file_id);
-			} catch (error) {}
-		})
-		.include(is.present)
-		.sort(jsondb.NumericSort.decreasing((record) => record.height))
-		.collect();
-	let media = files.shift();
-	if (is.absent(media)) {
+export async function lookupMovie(queue: ReadableQueue, movie_id: string, api_user_id: string): Promise<schema.objects.Movie> {
+	let movie_base = await lookupMovieBase(queue, movie_id, api_user_id);
+	let movie = await atlas.stores.movies.lookup(queue, { movie_id: binid(movie_id) });
+	let video_files = [] as Array<atlas.VideoFile>;
+	let movie_files = await atlas.links.movie_movie_files.filter(queue, movie)
+	for (let movie_file of movie_files) {
+		try {
+			video_files.push(await atlas.stores.video_files.lookup(queue, movie_file));
+		} catch (error) {}
+	}
+	video_files.sort(jsondb.NumericSort.increasing((record) => record.height));
+	let video_file = video_files.pop();
+	if (is.absent(video_file)) {
 		throw `Expected a valid video file!`;
 	}
-	let subtitles = database.getSubtitleFilesFromVideoFile.lookup(media.file_id)
-		.map((record) => database.subtitle_files.lookup(record.subtitle_file_id))
-		.collect();
-	let streams = database.getStreamsFromFile.lookup(media.file_id)
-		.filter((stream) => stream.user_id === user_id)
-		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)))
-		.collect();
+	let subtitle_files = [] as Array<atlas.SubtitleFile>
+	let video_file_video_subtitles = (await atlas.links.video_file_video_subtitles.filter(queue, video_file));
+	for (let video_file_video_subtitle of video_file_video_subtitles) {
+		subtitle_files.push(await atlas.stores.subtitle_files.lookup(queue, { file_id: video_file_video_subtitle.subtitle_file_id }));
+	}
+	// TODO: Use query.
+	let streams = (await atlas.links.file_streams.filter(queue, video_file))
+		.filter((stream) => hexid(stream.user_id) === api_user_id)
+		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
 	return {
-		...movie,
-		year: record.year,
-		summary: config.use_demo_mode ? "Movie summary." : record.summary,
+		...movie_base,
+		year: movie.year ?? undefined,
+		summary: config.use_demo_mode ? "Movie summary." : movie.summary ?? undefined,
 		genres: await Promise.all(database.getGenresFromMovie.lookup(movie_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupGenreBase(queue, record.genre_id, user_id))
+			.map((record) => lookupGenreBase(queue, record.genre_id, api_user_id))
 			.collect()),
 		actors: await Promise.all(database.getActorsFromMovie.lookup(movie_id)
 			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupActor(queue, record.actor_id, user_id))
+			.map((record) => lookupActor(queue, record.actor_id, api_user_id))
 			.collect()),
 		last_stream_date: streams.pop()?.timestamp_ms,
-		media: media,
-		subtitles: subtitles,
-		copyright: record.copyright,
-		imdb: record.imdb
+		media: {
+			...video_file,
+			file_id: hexid(video_file.file_id)
+		},
+		subtitles: subtitle_files.map((subtitle_file) => ({
+			...subtitle_file,
+			file_id: hexid(subtitle_file.file_id),
+			language: subtitle_file.language ?? undefined
+		})),
+		copyright: movie.copyright ?? undefined,
+		imdb: movie.imdb ?? undefined
 	};
 };
 
-export async function lookupActorBase(queue: ReadableQueue, actor_id: string, user_id: string): Promise<schema.objects.ActorBase> {
-	let actor = database.actors.lookup(actor_id);
+export async function lookupActorBase(queue: ReadableQueue, actor_id: string, api_user_id: string): Promise<schema.objects.ActorBase> {
+	let actor = await atlas.stores.actors.lookup(queue, { actor_id: binid(actor_id) });
 	return {
-		actor_id: actor.actor_id,
+		actor_id: hexid(actor.actor_id),
 		name: config.use_demo_mode ? "Actor name" : actor.name
 	};
 };
 
-export async function lookupActor(queue: ReadableQueue, actor_id: string, user_id: string): Promise<schema.objects.Actor> {
-	let actor = await lookupActorBase(queue, actor_id, user_id);
+export async function lookupActor(queue: ReadableQueue, actor_id: string, api_user_id: string): Promise<schema.objects.Actor> {
+	let actor = await lookupActorBase(queue, actor_id, api_user_id);
 	return {
 		...actor
 	};
 };
 
-export async function lookupPlaylistBase(queue: ReadableQueue, playlist_id: string, user_id: string, user?: schema.objects.UserBase): Promise<schema.objects.PlaylistBase> {
-	let playlist = database.playlists.lookup(playlist_id);
+export async function lookupPlaylistBase(queue: ReadableQueue, playlist_id: string, api_user_id: string, user?: schema.objects.UserBase): Promise<schema.objects.PlaylistBase> {
+	let playlist = await atlas.stores.playlists.lookup(queue, { playlist_id: binid(playlist_id) });
 	return {
-		playlist_id: playlist.playlist_id,
+		playlist_id: hexid(playlist.playlist_id),
 		title: playlist.title,
 		description: playlist.description,
-		user: is.present(user) ? user : await lookupUserBase(queue, playlist.user_id, user_id)
+		user: is.present(user) ? user : await lookupUserBase(queue, hexid(playlist.user_id), api_user_id)
 	};
 };
 
-export async function lookupPlaylist(queue: ReadableQueue, playlist_id: string, user_id: string, user?: schema.objects.UserBase): Promise<schema.objects.Playlist> {
-	let playlist = await lookupPlaylistBase(queue, playlist_id, user_id, user);
+export async function lookupPlaylist(queue: ReadableQueue, playlist_id: string, api_user_id: string, user?: schema.objects.UserBase): Promise<schema.objects.Playlist> {
+	let playlist = await lookupPlaylistBase(queue, playlist_id, api_user_id, user);
 	return {
 		...playlist,
-		items: await Promise.all(database.getPlaylistsItemsFromPlaylist.lookup(playlist_id)
-			.sort(jsondb.NumericSort.increasing((record) => record.number))
-			.map((record) => lookupPlaylistItem(queue, record.playlist_item_id, user_id, playlist))
-			.collect())
+		items: await Promise.all((await atlas.links.playlist_playlist_items.filter(queue, { playlist_id: binid(playlist.playlist_id) }))
+			.map((record) => lookupPlaylistItem(queue, hexid(record.playlist_item_id), api_user_id, playlist)))
 	};
 };
 
-export async function lookupPlaylistItemBase(queue: ReadableQueue, playlist_item_id: string, user_id: string, playlist?: schema.objects.PlaylistBase): Promise<schema.objects.PlaylistItemBase> {
-	let playlist_item = database.playlist_items.lookup(playlist_item_id);
+export async function lookupPlaylistItemBase(queue: ReadableQueue, playlist_item_id: string, api_user_id: string, playlist?: schema.objects.PlaylistBase): Promise<schema.objects.PlaylistItemBase> {
+	let playlist_item = await atlas.stores.playlist_items.lookup(queue, { playlist_item_id: binid(playlist_item_id) });
 	return {
-		playlist_item_id: playlist_item.playlist_item_id,
+		playlist_item_id: hexid(playlist_item.playlist_item_id),
 		number: playlist_item.number,
-		playlist: is.present(playlist) ? playlist : await lookupPlaylistBase(queue, playlist_item.playlist_id, user_id),
-		track: await lookupTrack(queue, playlist_item.track_id, user_id)
+		playlist: is.present(playlist) ? playlist : await lookupPlaylistBase(queue, hexid(playlist_item.playlist_id), api_user_id),
+		track: await lookupTrack(queue, hexid(playlist_item.track_id), api_user_id)
 	};
 };
 
-export async function lookupPlaylistItem(queue: ReadableQueue, playlist_item_id: string, user_id: string, playlist?: schema.objects.PlaylistBase): Promise<schema.objects.PlaylistItem> {
-	let playlist_item = await lookupPlaylistItemBase(queue, playlist_item_id, user_id, playlist);
+export async function lookupPlaylistItem(queue: ReadableQueue, playlist_item_id: string, api_user_id: string, playlist?: schema.objects.PlaylistBase): Promise<schema.objects.PlaylistItem> {
+	let playlist_item = await lookupPlaylistItemBase(queue, playlist_item_id, api_user_id, playlist);
 	return {
 		...playlist_item
 	};
 };
 
-export async function lookupSeasonBase(queue: ReadableQueue, season_id: string, user_id: string, show?: schema.objects.ShowBase): Promise<schema.objects.SeasonBase> {
-	let season = database.seasons.lookup(season_id);
+export async function lookupSeasonBase(queue: ReadableQueue, season_id: string, api_user_id: string, show?: schema.objects.ShowBase): Promise<schema.objects.SeasonBase> {
+	let season = await atlas.stores.seasons.lookup(queue, { season_id: binid(season_id) });
 	return {
-		season_id: season.season_id,
+		season_id: hexid(season.season_id),
 		number: season.number,
-		show: is.present(show) ? show : await lookupShowBase(queue, season.show_id, user_id)
+		show: is.present(show) ? show : await lookupShowBase(queue, hexid(season.show_id), api_user_id)
 	};
 };
 
-export async function lookupSeason(queue: ReadableQueue, season_id: string, user_id: string, show?: schema.objects.ShowBase): Promise<schema.objects.Season> {
-	let season = await lookupSeasonBase(queue, season_id, user_id, show);
+export async function lookupSeason(queue: ReadableQueue, season_id: string, api_user_id: string, show?: schema.objects.ShowBase): Promise<schema.objects.Season> {
+	let season_base = await lookupSeasonBase(queue, season_id, api_user_id, show);
+	let season = await atlas.stores.seasons.lookup(queue, { season_id: binid(season_id) });
 	return {
-		...season,
-		episodes: await Promise.all(database.getEpisodesFromSeason.lookup(season_id)
-			.sort(jsondb.NumericSort.increasing((record) => record.number))
-			.map((record) => lookupEpisode(queue, record.episode_id, user_id, season))
-			.collect())
+		...season_base,
+		episodes: await Promise.all((await atlas.links.season_episodes.filter(queue, season))
+			.map((record) => lookupEpisode(queue, hexid(record.episode_id), api_user_id, season_base)))
 	}
 };
 
-export async function lookupShowBase(queue: ReadableQueue, show_id: string, user_id: string): Promise<schema.objects.ShowBase> {
-	let show = database.shows.lookup(show_id);
+export async function lookupShowBase(queue: ReadableQueue, show_id: string, api_user_id: string): Promise<schema.objects.ShowBase> {
+	let show = await atlas.stores.shows.lookup(queue, { show_id: binid(show_id) });
+	let show_files = await atlas.links.show_show_files.filter(queue, show);
+	let artwork: atlas.ImageFile | undefined;
+	for (let show_file of show_files) {
+		try {
+			artwork = await atlas.stores.image_files.lookup(queue, show_file);
+			break;
+		} catch (error) {}
+	}
 	return {
-		show_id: show.show_id,
+		show_id: hexid(show.show_id),
 		title: config.use_demo_mode ? "Show title" : show.name,
-		artwork: database.getFilesFromShow.lookup(show_id)
-			.map((record) => {
-				try {
-					return database.image_files.lookup(record.file_id);
-				} catch (error) {}
-			})
-			.include(is.present)
-			.slice(0, 1)
-			.collect()
+		artwork: artwork != null ? [
+			{
+				...artwork,
+				file_id: hexid(artwork.file_id)
+			}
+		] : []
 	};
 };
 
-export async function lookupShow(queue: ReadableQueue, show_id: string, user_id: string): Promise<schema.objects.Show> {
-	let show = await lookupShowBase(queue, show_id, user_id);
-	let record = database.shows.lookup(show_id);
+export async function lookupShow(queue: ReadableQueue, show_id: string, api_user_id: string): Promise<schema.objects.Show> {
+	let show_base = await lookupShowBase(queue, show_id, api_user_id);
+	let show = await atlas.stores.shows.lookup(queue, { show_id: binid(show_id) });
 	return {
-		...show,
-		summary: config.use_demo_mode ? "Show summary." : record.summary,
-		genres: await Promise.all(database.getGenresFromShow.lookup(show_id)
-			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupGenreBase(queue, record.genre_id, user_id))
-			.collect()),
-		actors: await Promise.all(database.getActorsFromShow.lookup(show_id)
-			.sort(jsondb.NumericSort.increasing((record) => record.order))
-			.map((record) => lookupActorBase(queue, record.actor_id, user_id))
-			.collect()),
-		seasons: await Promise.all(database.getSeasonsFromShow.lookup(show_id)
-			.sort(jsondb.NumericSort.increasing((record) => record.number))
-			.map((record) => lookupSeason(queue, record.season_id, user_id, show))
-			.collect()),
-		imdb: record.imdb
+		...show_base,
+		summary: config.use_demo_mode ? "Show summary." : show.summary ?? undefined,
+		genres: await Promise.all((await atlas.links.show_show_genres.filter(queue, show))
+			.map((show_genre) => lookupGenreBase(queue, hexid(show_genre.genre_id), api_user_id))),
+		actors: await Promise.all((await atlas.links.show_show_actors.filter(queue, show))
+			.map((show_actor) => lookupActorBase(queue, hexid(show_actor.actor_id), api_user_id))),
+		seasons: await Promise.all((await atlas.links.show_seasons.filter(queue, show))
+			.map((season) => lookupSeason(queue, hexid(season.season_id), api_user_id, show_base))),
+		imdb: show.imdb ?? undefined
 	};
 };
 
 export async function lookupSubtitleBase(queue: ReadableQueue, subtitle_id: string, user_id: string): Promise<schema.objects.SubtitleBase> {
-	let subtitle = database.subtitles.lookup(subtitle_id);
+	let subtitle = await atlas.stores.subtitles.lookup(queue, { subtitle_id: binid(subtitle_id) });
+	let subtitle_file = await atlas.stores.subtitle_files.lookup(queue, subtitle);
 	return {
-		subtitle_id: subtitle.subtitle_id,
-		subtitle: database.subtitle_files.lookup(subtitle.file_id)
+		subtitle_id: hexid(subtitle.subtitle_id),
+		subtitle: {
+			...subtitle_file,
+			file_id: hexid(subtitle_file.file_id),
+			language: subtitle_file.language ?? undefined
+		}
 	};
 };
 
 export async function lookupSubtitle(queue: ReadableQueue, subtitle_id: string, user_id: string): Promise<schema.objects.Subtitle> {
 	let subtitle = await lookupSubtitleBase(queue, subtitle_id, user_id);
+	let subtitle_cues = await atlas.links.subtitle_cues.filter(queue, { subtitle_id: binid(subtitle.subtitle_id) });
+	let cues = [] as Array<schema.objects.Cue>;
+	for (let subtitle_cue of subtitle_cues) {
+		cues.push(await lookupCue(queue, hexid(subtitle_cue.cue_id), user_id));
+	}
 	return {
 		...subtitle,
-		cues: await Promise.all(database.getCuesFromSubtitle.lookup(subtitle_id)
-			.sort(jsondb.NumericSort.increasing((record) => record.start_ms))
-			.map((record) => lookupCue(queue, record.cue_id, user_id))
-			.collect())
+		cues: cues
 	};
 };
 
