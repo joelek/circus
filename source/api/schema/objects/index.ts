@@ -68,7 +68,7 @@ export const Album: autoguard.serialization.MessageGuard<Album> = autoguard.guar
 		"artists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ArtistBase)),
 		"discs": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Disc))
 	}, {
-		"year": autoguard.guards.Number
+		"year": autoguard.guards.Reference.of(() => YearBase)
 	})
 );
 
@@ -78,7 +78,7 @@ export type Album = autoguard.guards.Intersection<[
 		"artists": autoguard.guards.Array<autoguard.guards.Reference<ArtistBase>>,
 		"discs": autoguard.guards.Array<autoguard.guards.Reference<Disc>>
 	}, {
-		"year": autoguard.guards.Number
+		"year": autoguard.guards.Reference<YearBase>
 	}>
 ]>;
 
@@ -258,7 +258,7 @@ export const Movie: autoguard.serialization.MessageGuard<Movie> = autoguard.guar
 		"media": autoguard.guards.Reference.of(() => VideoFile),
 		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile))
 	}, {
-		"year": autoguard.guards.Number,
+		"year": autoguard.guards.Reference.of(() => YearBase),
 		"summary": autoguard.guards.String,
 		"last_stream_date": autoguard.guards.Number,
 		"copyright": autoguard.guards.String,
@@ -274,7 +274,7 @@ export type Movie = autoguard.guards.Intersection<[
 		"media": autoguard.guards.Reference<VideoFile>,
 		"subtitles": autoguard.guards.Array<autoguard.guards.Reference<SubtitleFile>>
 	}, {
-		"year": autoguard.guards.Number,
+		"year": autoguard.guards.Reference<YearBase>,
 		"summary": autoguard.guards.String,
 		"last_stream_date": autoguard.guards.Number,
 		"copyright": autoguard.guards.String,
@@ -364,7 +364,7 @@ export const Episode: autoguard.serialization.MessageGuard<Episode> = autoguard.
 		"media": autoguard.guards.Reference.of(() => VideoFile),
 		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile))
 	}, {
-		"year": autoguard.guards.Number,
+		"year": autoguard.guards.Reference.of(() => YearBase),
 		"summary": autoguard.guards.String,
 		"last_stream_date": autoguard.guards.Number,
 		"copyright": autoguard.guards.String,
@@ -378,7 +378,7 @@ export type Episode = autoguard.guards.Intersection<[
 		"media": autoguard.guards.Reference<VideoFile>,
 		"subtitles": autoguard.guards.Array<autoguard.guards.Reference<SubtitleFile>>
 	}, {
-		"year": autoguard.guards.Number,
+		"year": autoguard.guards.Reference<YearBase>,
 		"summary": autoguard.guards.String,
 		"last_stream_date": autoguard.guards.Number,
 		"copyright": autoguard.guards.String,

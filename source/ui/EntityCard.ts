@@ -244,7 +244,7 @@ export class EntityCardFactory {
 		let subtitles = album.artists.map((artist) => this.entityTitleFactory.forArtist(artist));
 		let tags = [
 			"Album",
-			is.present(album.year) ? `${album.year}` : undefined,
+			is.present(album.year) ? `${album.year.year}` : undefined,
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		let copyrights = new Array<string>();
@@ -333,7 +333,7 @@ export class EntityCardFactory {
 		];
 		let tags = [
 			"Episode",
-			is.present(episode.year) ? `${episode.year}` : undefined,
+			is.present(episode.year) ? `${episode.year.year}` : undefined,
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		if (isHighDefinition(episode.media.width, episode.media.height)) {
@@ -370,7 +370,7 @@ export class EntityCardFactory {
 		let subtitles = movie.genres.map((genre) => this.entityTitleFactory.forGenre(genre));
 		let tags = [
 			"Movie",
-			is.present(movie.year) ? `${movie.year}` : undefined,
+			is.present(movie.year) ? `${movie.year.year}` : undefined,
 			metadata.formatDuration(duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		if (isHighDefinition(movie.media.width, movie.media.height)) {

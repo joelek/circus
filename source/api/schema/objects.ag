@@ -23,7 +23,7 @@ guard AlbumBase: {
 guard Album: AlbumBase & {
 	"artists": ArtistBase[],
 	"discs": Disc[],
-	"year"?: number
+	"year"?: YearBase
 };
 
 guard DiscBase: {
@@ -92,7 +92,7 @@ guard MovieBase: {
 };
 
 guard Movie: MovieBase & {
-	"year"?: number,
+	"year"?: YearBase,
 	"summary"?: string,
 	"genres": Genre[],
 	"actors": Actor[],
@@ -135,7 +135,7 @@ guard EpisodeBase: {
 };
 
 guard Episode: EpisodeBase & {
-	"year"?: number,
+	"year"?: YearBase,
 	"summary"?: string,
 	"last_stream_date"?: number,
 	"media": ../../database/schema/VideoFile,

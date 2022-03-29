@@ -131,7 +131,7 @@ export async function lookupAlbum(queue: ReadableQueue, album_id: string, api_us
 		...album_base,
 		artists: await Promise.all((await atlas.links.album_album_artists.filter(queue, album))
 			.map((record) => lookupArtistBase(queue, hexid(record.artist_id), api_user_id))),
-		year: album.year_id != null ? (await lookupYearBase(queue, hexid(album.year_id), api_user_id)).year : undefined,
+		year: album.year_id != null ? await lookupYearBase(queue, hexid(album.year_id), api_user_id) : undefined,
 		discs: await Promise.all((await atlas.links.album_discs.filter(queue, album))
 			.map((record) => lookupDisc(queue, hexid(record.disc_id), api_user_id, album_base)))
 	};
@@ -249,7 +249,7 @@ export async function lookupEpisode(queue: ReadableQueue, episode_id: string, ap
 		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
 	return {
 		...episode_base,
-		year: episode.year_id != null ? (await lookupYearBase(queue, hexid(episode.year_id), api_user_id)).year : undefined,
+		year: episode.year_id != null ? await lookupYearBase(queue, hexid(episode.year_id), api_user_id) : undefined,
 		summary: config.use_demo_mode ? "Episode summary." : episode.summary ?? undefined,
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: {
@@ -327,7 +327,7 @@ export async function lookupMovie(queue: ReadableQueue, movie_id: string, api_us
 		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
 	return {
 		...movie_base,
-		year: movie.year_id != null ? (await lookupYearBase(queue, hexid(movie.year_id), api_user_id)).year : undefined,
+		year: movie.year_id != null ? await lookupYearBase(queue, hexid(movie.year_id), api_user_id) : undefined,
 		summary: config.use_demo_mode ? "Movie summary." : movie.summary ?? undefined,
 		genres: await Promise.all((await atlas.links.movie_movie_genres.filter(queue, movie))
 			.map((record) => lookupGenreBase(queue, hexid(record.genre_id), api_user_id))),
