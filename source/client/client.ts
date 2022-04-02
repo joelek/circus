@@ -2726,7 +2726,6 @@ let updateviewforuri = (uri: string): void => {
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render());
 	} else if ((parts = /^video[/]shows[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
-
 		let show_id = decodeURIComponent(parts[1]);
 		apiclient["GET:/shows/<show_id>/"]({
 			options: {
@@ -2765,28 +2764,43 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^video[/]shows[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
-		apiclient["GET:/shows/<query>"]({
-			options: {
-				query,
-				token: token ?? "",
-				offset: 0,
-				limit: 1000
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let shows = new ArrayObservable<Show>([]);
+		async function load(): Promise<void> {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				let response = await apiclient["GET:/shows/<query>"]({
+					options: {
+						query: query,
+						offset: offset,
+						token: token ?? ""
+					}
+				});
+				let payload = await response.payload();
+				for (let track of payload.shows) {
+					shows.append(track);
+				}
+				offset += payload.shows.length;
+				if (payload.shows.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}).then(async (response) => {
-			let payload = await response.payload();
-			let shows = payload.shows;
-			mount.appendChild(xml.element("div")
-				.add(xml.element("div.content")
-					.add(renderTextHeader(xml.text("Shows")))
+		};
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(renderTextHeader(xml.text("Shows")))
+			)
+			.add(xml.element("div.content")
+				.add(Grid.make()
+					.repeat(shows, (show) => EntityCard.forShow(show))
 				)
-				.add(xml.element("div.content")
-					.add(Grid.make()
-						.add(...shows.map((show) => EntityCard.forShow(show)))
-					)
-				)
-				.render()
-			);
-		});
+			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+			.render()
+		);
 	} else if ((parts = /^video[/]episodes[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let episode_id = decodeURIComponent(parts[1]);
 		apiclient["GET:/episodes/<episode_id>/"]({
