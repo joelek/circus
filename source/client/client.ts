@@ -2660,27 +2660,43 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^audio[/]playlists[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
-		apiclient["GET:/playlists/<query>"]({
-			options: {
-				query,
-				token: token ?? "",
-				offset: 0,
-				limit: 1000
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let playlists = new ArrayObservable<Playlist>([]);
+		async function load(): Promise<void> {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				let response = await apiclient["GET:/playlists/<query>"]({
+					options: {
+						query: query,
+						offset: offset,
+						token: token ?? ""
+					}
+				});
+				let payload = await response.payload();
+				for (let playlist of payload.playlists) {
+					playlists.append(playlist);
+				}
+				offset += payload.playlists.length;
+				if (payload.playlists.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}).then(async (response) => {
-			let payload = await response.payload();
-			let playlists = payload.playlists;
-			mount.appendChild(xml.element("div")
-				.add(xml.element("div.content")
-					.add(renderTextHeader(xml.text("Playlists")))
+		};
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(renderTextHeader(xml.text("Playlists")))
+			)
+			.add(xml.element("div.content")
+				.add(Grid.make()
+					.repeat(playlists, (playlist) => EntityCard.forPlaylist(playlist))
 				)
-				.add(xml.element("div.content")
-					.add(Grid.make()
-						.add(...playlists.map((playlist) => EntityCard.forPlaylist(playlist)))
-					)
-				)
-			.render());
-		});
+			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+			.render()
+		);
 	} else if ((parts = /^audio[/]/.exec(uri)) !== null) {
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
