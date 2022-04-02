@@ -4,7 +4,7 @@ import { ArrayObservable, computed, ObservableClass } from "../observers";
 import * as client from "../player/client";
 import * as is from "../is";
 import {  ContextAlbum, ContextArtist, Device } from "../player/schema/objects";
-import { Actor, Album, Artist, Cue, Disc, Entity, Episode, Genre, Movie, Playlist, Season, Show, Track, User } from "../api/schema/objects";
+import { Actor, Album, Artist, Cue, Disc, Entity, Episode, Genre, Movie, Playlist, Season, Show, Track, User, Year } from "../api/schema/objects";
 import * as xml from "../xnode";
 import { formatDuration as format_duration, formatSize } from "../ui/metadata";
 import * as apischema from "../api/schema";
@@ -3281,24 +3281,40 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^years[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
-		apiclient["GET:/years/<query>"]({
-			options: {
-				query,
-				token: token ?? "",
-				offset: 0,
-				limit: 1000
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let years = new ArrayObservable<Year>([]);
+		async function load(): Promise<void> {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				let response = await apiclient["GET:/years/<query>"]({
+					options: {
+						query,
+						token: token ?? "",
+						offset
+					}
+				});
+				let payload = await response.payload();
+				for (let year of payload.years) {
+					years.append(year);
+				}
+				offset += payload.years.length;
+				if (payload.years.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}).then(async (response) => {
-			let payload = await response.payload();
-			let years = payload.years;
-			mount.appendChild(xml.element("div")
-				.add(xml.element("div.content")
-					.add(Grid.make({ mini: true })
-						.add(...years.map((year) => makeIconLink(Icon.makeCalendar(), `${year.year}`, `years/${year.year_id}/`)))
-					)
+		};
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(Grid.make({ mini: true })
+					.repeat(years, (year) => makeIconLink(Icon.makeCalendar(), `${year.year}`, `years/${year.year_id}/`))
 				)
-			.render());
-		});
+			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+			.render()
+		);
 	} else {
 		let shows = new ArrayObservable<apischema.objects.Show>([]);
 		let albums = new ArrayObservable<apischema.objects.Album>([]);
