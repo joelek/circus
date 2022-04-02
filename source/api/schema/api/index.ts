@@ -111,6 +111,7 @@ export namespace Autoguard {
 					"actor_id": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -129,6 +130,7 @@ export namespace Autoguard {
 					"actor_id": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -334,6 +336,7 @@ export namespace Autoguard {
 					"genre_id": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -352,6 +355,7 @@ export namespace Autoguard {
 					"genre_id": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -645,6 +649,7 @@ export namespace Autoguard {
 					"user_id": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -715,6 +720,7 @@ export namespace Autoguard {
 					"year_id": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -733,6 +739,7 @@ export namespace Autoguard {
 					"year_id": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),

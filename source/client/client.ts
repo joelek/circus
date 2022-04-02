@@ -2327,6 +2327,7 @@ let updateviewforuri = (uri: string): void => {
 			let reachedEnd = new ObservableClass(false);
 			let isLoading = new ObservableClass(false);
 			let playlists = new ArrayObservable<Playlist>([]);
+			let anchor = new ObservableClass(undefined as Playlist | undefined);
 			async function load(): Promise<void> {
 				if (!reachedEnd.getState() && !isLoading.getState()) {
 					isLoading.updateState(true);
@@ -2334,12 +2335,14 @@ let updateviewforuri = (uri: string): void => {
 						options: {
 							user_id,
 							token: token ?? "",
+							anchor: anchor.getState()?.playlist_id,
 							offset
 						}
 					});
 					let payload = await response.payload();
 					for (let playlist of payload.playlists) {
 						playlists.append(playlist);
+						anchor.updateState(playlist);
 					}
 					offset += payload.playlists.length;
 					if (payload.playlists.length === 0) {
@@ -2420,8 +2423,7 @@ let updateviewforuri = (uri: string): void => {
 				options: {
 					actor_id,
 					token: token ?? "",
-					offset: 0,
-					limit: 1000
+					anchor: undefined
 				}
 			}).then(async (response) => {
 				let payload = await response.payload();
@@ -2430,6 +2432,7 @@ let updateviewforuri = (uri: string): void => {
 				let reachedEnd = new ObservableClass(false);
 				let isLoading = new ObservableClass(false);
 				let movies = new ArrayObservable<Movie>([]);
+				let anchor = new ObservableClass(undefined as Movie | undefined);
 				async function load(): Promise<void> {
 					if (!reachedEnd.getState() && !isLoading.getState()) {
 						isLoading.updateState(true);
@@ -2437,12 +2440,14 @@ let updateviewforuri = (uri: string): void => {
 							options: {
 								actor_id,
 								token: token ?? "",
+								anchor: anchor.getState()?.movie_id,
 								offset
 							}
 						});
 						let payload = await response.payload();
 						for (let movie of payload.movies) {
 							movies.append(movie);
+							anchor.updateState(movie);
 						}
 						offset += payload.movies.length;
 						if (payload.movies.length === 0) {
@@ -3052,7 +3057,8 @@ let updateviewforuri = (uri: string): void => {
 			apiclient["GET:/genres/<genre_id>/shows/"]({
 				options: {
 					genre_id,
-					token: token ?? ""
+					token: token ?? "",
+					anchor: undefined
 				}
 			}).then(async (response) => {
 				let payload = await response.payload();
@@ -3061,6 +3067,7 @@ let updateviewforuri = (uri: string): void => {
 				let reachedEnd = new ObservableClass(false);
 				let isLoading = new ObservableClass(false);
 				let movies = new ArrayObservable<Movie>([]);
+				let anchor = new ObservableClass(undefined as Movie | undefined);
 				async function load(): Promise<void> {
 					if (!reachedEnd.getState() && !isLoading.getState()) {
 						isLoading.updateState(true);
@@ -3068,12 +3075,14 @@ let updateviewforuri = (uri: string): void => {
 							options: {
 								genre_id,
 								token: token ?? "",
+								anchor: anchor.getState()?.movie_id,
 								offset
 							}
 						});
 						let payload = await response.payload();
 						for (let movie of payload.movies) {
 							movies.append(movie);
+							anchor.updateState(movie);
 						}
 						offset += payload.movies.length;
 						if (payload.movies.length === 0) {
@@ -3311,7 +3320,7 @@ let updateviewforuri = (uri: string): void => {
 					year_id,
 					token: token ?? "",
 					offset: 0,
-					limit: 1000
+					anchor: undefined
 				}
 			}).then(async (response) => {
 				let payload = await response.payload();
@@ -3320,6 +3329,7 @@ let updateviewforuri = (uri: string): void => {
 				let reachedEnd = new ObservableClass(false);
 				let isLoading = new ObservableClass(false);
 				let albums = new ArrayObservable<Album>([]);
+				let anchor = new ObservableClass(undefined as Album | undefined);
 				async function load(): Promise<void> {
 					if (!reachedEnd.getState() && !isLoading.getState()) {
 						isLoading.updateState(true);
@@ -3327,12 +3337,14 @@ let updateviewforuri = (uri: string): void => {
 							options: {
 								year_id,
 								token: token ?? "",
+								anchor: anchor.getState()?.album_id,
 								offset
 							}
 						});
 						let payload = await response.payload();
 						for (let album of payload.albums) {
 							albums.append(album);
+							anchor.updateState(album);
 						}
 						offset += payload.albums.length;
 						if (payload.albums.length === 0) {

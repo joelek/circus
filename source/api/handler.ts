@@ -558,6 +558,7 @@ export async function lookupYear(queue: ReadableQueue, year_id: string, user_id:
 	};
 };
 
+// TODO: Add timestamp_ms to movies table.
 export async function getNewAlbums(queue: ReadableQueue, user_id: string, offset: number, length: number): Promise<schema.objects.Album[]> {
 	let map = new Map<string, number>();
 	let albums = await atlas.stores.albums.filter(queue);
@@ -587,6 +588,7 @@ export async function getNewAlbums(queue: ReadableQueue, user_id: string, offset
 		.map((album_id) => lookupAlbum(queue, album_id, user_id)));
 };
 
+// TODO: Add timestamp_ms to movies table.
 export async function getNewMovies(queue: ReadableQueue, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
 	let map = new Map<string, number>();
 	let movies = await atlas.stores.movies.filter(queue);
@@ -843,6 +845,7 @@ export async function searchForEntities(queue: ReadableQueue, query: string, use
 	return entities; */
 };
 
+// TODO: Optimize.
 export async function getArtistAppearances(queue: ReadableQueue, artist_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
 	let artist = await atlas.stores.artists.lookup(queue, { artist_id: binid(artist_id) });
 	let map = new Map<string, number>();
@@ -871,6 +874,7 @@ export async function getArtistAppearances(queue: ReadableQueue, artist_id: stri
 		.map((album_id) => lookupAlbum(queue, album_id, user_id)));
 };
 
+// TODO: Create global affinity table.
 export async function getArtistTracks(queue: ReadableQueue, artist_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Track[]> {
 	let artist = await atlas.stores.artists.lookup(queue, { artist_id: binid(artist_id) });
 	let map = new Map<string, number>();
@@ -894,6 +898,7 @@ export async function getArtistTracks(queue: ReadableQueue, artist_id: string, o
 		.map((track_id) => lookupTrack(queue, track_id, user_id)));
 }
 
+// TODO: Optimize.
 export async function getPlaylistAppearances(queue: ReadableQueue, track_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Playlist[]> {
 	let track = await atlas.stores.tracks.lookup(queue, { track_id: binid(track_id) });
 	let map = new Map<string, number>();
@@ -910,6 +915,7 @@ export async function getPlaylistAppearances(queue: ReadableQueue, track_id: str
 		.map((playlist_id) => lookupPlaylist(queue, playlist_id, user_id)));
 };
 
+// TODO: Create global affinity table.
 export async function getMovieSuggestions(queue: ReadableQueue, movie_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Movie[]> {
 	let movie = await atlas.stores.movies.lookup(queue, { movie_id: binid(movie_id) });
 	let map = new Map<string, number>();
@@ -935,51 +941,47 @@ export async function getMovieSuggestions(queue: ReadableQueue, movie_id: string
 		.map((movie_id) => lookupMovie(queue, movie_id, user_id)));
 };
 
-export async function getMoviesFromGenre(queue: ReadableQueue, genre_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
-	let genre = await atlas.stores.genres.lookup(queue, { genre_id: binid(genre_id) });
+export async function getMoviesFromGenre(queue: ReadableQueue, genre_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Movie[]> {
 	let movies = [] as Array<schema.objects.Movie>;
-	for (let entry of await atlas.links.genre_movie_genres.filter(queue, genre)) {
+	for (let entry of await atlas.links.genre_movie_genres.filter(queue, { genre_id: binid(genre_id) }, anchor != null ? { genre_id: binid(genre_id), movie_id: binid(anchor) } : undefined, length)) {
 		movies.push(await lookupMovie(queue, hexid(entry.movie_id), user_id));
 	}
-	return movies.slice(offset, offset + length);
+	return movies;
 };
 
-export async function getMoviesFromActor(queue: ReadableQueue, actor_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
-	let actor = await atlas.stores.actors.lookup(queue, { actor_id: binid(actor_id) });
+export async function getMoviesFromActor(queue: ReadableQueue, actor_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Movie[]> {
 	let movies = [] as Array<schema.objects.Movie>;
-	for (let entry of await atlas.links.actor_movie_actors.filter(queue, actor)) {
+	for (let entry of await atlas.links.actor_movie_actors.filter(queue, { actor_id: binid(actor_id) }, anchor != null ? { actor_id: binid(actor_id), movie_id: binid(anchor) } : undefined, length)) {
 		movies.push(await lookupMovie(queue, hexid(entry.movie_id), user_id));
 	}
-	return movies.slice(offset, offset + length);
+	return movies;
 };
 
-export async function getShowsFromGenre(queue: ReadableQueue, genre_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Show[]> {
-	let genre = await atlas.stores.genres.lookup(queue, { genre_id: binid(genre_id) });
+export async function getShowsFromGenre(queue: ReadableQueue, genre_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Show[]> {
 	let shows = [] as Array<schema.objects.Show>;
-	for (let entry of await atlas.links.genre_show_genres.filter(queue, genre)) {
+	for (let entry of await atlas.links.genre_show_genres.filter(queue, { genre_id: binid(genre_id) }, anchor != null ? { genre_id: binid(genre_id), show_id: binid(anchor) } : undefined, length)) {
 		shows.push(await lookupShow(queue, hexid(entry.show_id), user_id));
 	}
-	return shows.slice(offset, offset + length);
+	return shows;
 };
 
-export async function getShowsFromActor(queue: ReadableQueue, actor_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Show[]> {
-	let actor = await atlas.stores.actors.lookup(queue, { actor_id: binid(actor_id) });
+export async function getShowsFromActor(queue: ReadableQueue, actor_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Show[]> {
 	let shows = [] as Array<schema.objects.Show>;
-	for (let entry of await atlas.links.actor_show_actors.filter(queue, actor)) {
+	for (let entry of await atlas.links.actor_show_actors.filter(queue, { actor_id: binid(actor_id) }, anchor != null ? { actor_id: binid(actor_id), show_id: binid(anchor) } : undefined, length)) {
 		shows.push(await lookupShow(queue, hexid(entry.show_id), user_id));
 	}
-	return shows.slice(offset, offset + length);
+	return shows;
 };
 
-export async function getUserPlaylists(queue: ReadableQueue, subject_user_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Playlist[]> {
-	let user = await atlas.stores.users.lookup(queue, { user_id: binid(subject_user_id) });
+export async function getUserPlaylists(queue: ReadableQueue, subject_user_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Playlist[]> {
 	let playlists = [] as Array<schema.objects.Playlist>;
-	for (let entry of await atlas.links.user_playlists.filter(queue, user)) {
+	for (let entry of await atlas.links.user_playlists.filter(queue, { user_id: binid(subject_user_id) }, anchor != null ? { playlist_id: binid(anchor) } : undefined, length)) {
 		playlists.push(await lookupPlaylist(queue, hexid(entry.playlist_id), user_id));
 	}
-	return playlists.slice(offset, offset + length);
+	return playlists;
 };
 
+// TODO: Create affinity table.
 export async function getUserAlbums(queue: ReadableQueue, subject_user_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
 	let user = await atlas.stores.users.lookup(queue, { user_id: binid(subject_user_id) });
 	let map = new Map<string, number>();
@@ -1003,6 +1005,7 @@ export async function getUserAlbums(queue: ReadableQueue, subject_user_id: strin
 		.map((album_id) => lookupAlbum(queue, album_id, user_id)));
 };
 
+// TODO: Create affinity table.
 export async function getUserShows(queue: ReadableQueue, subject_user_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Show[]> {
 	let user = await atlas.stores.users.lookup(queue, { user_id: binid(subject_user_id) });
 	let map = new Map<string, number>();
@@ -1026,20 +1029,18 @@ export async function getUserShows(queue: ReadableQueue, subject_user_id: string
 		.map((show_id) => lookupShow(queue, show_id, user_id)));
 };
 
-export async function getMoviesFromYear(queue: ReadableQueue, year_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
-	let year = await atlas.stores.years.lookup(queue, { year_id: binid(year_id) });
+export async function getMoviesFromYear(queue: ReadableQueue, year_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Movie[]> {
 	let movies = [] as Array<schema.objects.Movie>;
-	for (let movie of await atlas.links.year_movies.filter(queue, year)) {
+	for (let movie of await atlas.links.year_movies.filter(queue, { year_id: binid(year_id) }, anchor != null ? { movie_id: binid(anchor) } : undefined, length)) {
 		movies.push(await lookupMovie(queue, hexid(movie.movie_id), user_id));
 	}
-	return movies.slice(offset, offset + length);
+	return movies;
 };
 
-export async function getAlbumsFromYear(queue: ReadableQueue, year_id: string, user_id: string, offset: number, length: number): Promise<schema.objects.Album[]> {
-	let year = await atlas.stores.years.lookup(queue, { year_id: binid(year_id) });
+export async function getAlbumsFromYear(queue: ReadableQueue, year_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Album[]> {
 	let albums = [] as Array<schema.objects.Album>;
-	for (let album of await atlas.links.year_albums.filter(queue, year)) {
+	for (let album of await atlas.links.year_albums.filter(queue, { year_id: binid(year_id) }, anchor != null ? { album_id: binid(anchor) } : undefined, length)) {
 		albums.push(await lookupAlbum(queue, hexid(album.album_id), user_id));
 	}
-	return albums.slice(offset, offset + length);
+	return albums;
 };

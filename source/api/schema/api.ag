@@ -21,12 +21,12 @@ route GET:/actors/<actor_id:string>/ ? <{ token: string }>
 		actor: ./objects/Actor
 	};
 
-route GET:/actors/<actor_id:string>/movies/ ? <{ token: string, offset?: number, limit?: number }>
+route GET:/actors/<actor_id:string>/movies/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		movies: ./objects/Movie[]
 	};
 
-route GET:/actors/<actor_id:string>/shows/ ? <{ token: string, offset?: number, limit?: number }>
+route GET:/actors/<actor_id:string>/shows/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		shows: ./objects/Show[]
 	};
@@ -92,12 +92,12 @@ route GET:/genres/<genre_id:string>/ ? <{ token: string }>
 		genre: ./objects/Genre
 	};
 
-route GET:/genres/<genre_id:string>/movies/ ? <{ token: string, offset?: number, limit?: number }>
+route GET:/genres/<genre_id:string>/movies/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		movies: ./objects/Movie[]
 	};
 
-route GET:/genres/<genre_id:string>/shows/ ? <{ token: string, offset?: number, limit?: number }>
+route GET:/genres/<genre_id:string>/shows/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		shows: ./objects/Show[]
 	};
@@ -186,7 +186,7 @@ route GET:/users/<user_id:string>/albums/ ? <{ token: string, offset?: number, l
 		albums: ./objects/Album[]
 	};
 
-route GET:/users/<user_id:string>/playlists/ ? <{ token: string, offset?: number, limit?: number }>
+route GET:/users/<user_id:string>/playlists/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		playlists: ./objects/Playlist[]
 	};
@@ -206,12 +206,12 @@ route GET:/years/<year_id:string>/ ? <{ token: string }>
 		year: ./objects/Year
 	};
 
-route GET:/years/<year_id:string>/albums/ ? <{ token: string, offset?: number, limit?: number }>
+route GET:/years/<year_id:string>/albums/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		albums: ./objects/Album[]
 	};
 
-route GET:/years/<year_id:string>/movies/ ? <{ token: string, offset?: number, limit?: number }>
+route GET:/years/<year_id:string>/movies/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		movies: ./objects/Movie[]
 	};

@@ -81,7 +81,7 @@ export const server = apiv2.makeServer({
 	"GET:/actors/<actor_id>/movies/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let movies = await handler.getMoviesFromActor(queue, options.actor_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let movies = await handler.getMoviesFromActor(queue, options.actor_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				movies
@@ -91,7 +91,7 @@ export const server = apiv2.makeServer({
 	"GET:/actors/<actor_id>/shows/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let shows = await handler.getShowsFromActor(queue, options.actor_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let shows = await handler.getShowsFromActor(queue, options.actor_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				shows
@@ -227,7 +227,7 @@ export const server = apiv2.makeServer({
 	"GET:/genres/<genre_id>/movies/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let movies = await handler.getMoviesFromGenre(queue, options.genre_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let movies = await handler.getMoviesFromGenre(queue, options.genre_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				movies
@@ -237,7 +237,7 @@ export const server = apiv2.makeServer({
 	"GET:/genres/<genre_id>/shows/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let shows = await handler.getShowsFromGenre(queue, options.genre_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let shows = await handler.getShowsFromGenre(queue, options.genre_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				shows
@@ -424,7 +424,7 @@ export const server = apiv2.makeServer({
 	"GET:/users/<user_id>/playlists/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let playlists = await handler.getUserPlaylists(queue, options.user_id || user_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let playlists = await handler.getUserPlaylists(queue, options.user_id || user_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				playlists
@@ -464,7 +464,7 @@ export const server = apiv2.makeServer({
 	"GET:/years/<year_id>/albums/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let albums = await handler.getAlbumsFromYear(queue, options.year_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let albums = await handler.getAlbumsFromYear(queue, options.year_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				albums
@@ -474,7 +474,7 @@ export const server = apiv2.makeServer({
 	"GET:/years/<year_id>/movies/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let movies = await handler.getMoviesFromYear(queue, options.year_id, user_id, options.offset ?? 0, options.limit ?? 24);
+		let movies = await handler.getMoviesFromYear(queue, options.year_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				movies
@@ -518,6 +518,7 @@ export const server = apiv2.makeServer({
 		};
 	}),
 	"GET:/statistics/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		// TODO: Create statistics table.
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
 		let files = await atlas.stores.files.filter(queue);
