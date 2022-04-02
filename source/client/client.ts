@@ -4,7 +4,7 @@ import { ArrayObservable, computed, ObservableClass } from "../observers";
 import * as client from "../player/client";
 import * as is from "../is";
 import {  ContextAlbum, ContextArtist, Device } from "../player/schema/objects";
-import { Actor, Album, Artist, Cue, Disc, Entity, Episode, Movie, Playlist, Season, Show, Track, User } from "../api/schema/objects";
+import { Actor, Album, Artist, Cue, Disc, Entity, Episode, Genre, Movie, Playlist, Season, Show, Track, User } from "../api/schema/objects";
 import * as xml from "../xnode";
 import { formatDuration as format_duration, formatSize } from "../ui/metadata";
 import * as apischema from "../api/schema";
@@ -3040,25 +3040,40 @@ let updateviewforuri = (uri: string): void => {
 		});
 	} else if ((parts = /^video[/]genres[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
-		apiclient["GET:/genres/<query>"]({
-			options: {
-				query,
-				token: token ?? "",
-				offset: 0,
-				limit: 1000
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let genres = new ArrayObservable<Genre>([]);
+		async function load(): Promise<void> {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				let response = await apiclient["GET:/genres/<query>"]({
+					options: {
+						query,
+						token: token ?? "",
+						offset
+					}
+				});
+				let payload = await response.payload();
+				for (let genre of payload.genres) {
+					genres.append(genre);
+				}
+				offset += payload.genres.length;
+				if (payload.genres.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
 			}
-		}).then(async (response) => {
-			let payload = await response.payload();
-			let genres = payload.genres;
-			mount.appendChild(xml.element("div")
-				.add(xml.element("div.content")
-					.add(Grid.make({ mini: true })
-						.add(...genres.map((genre) => makeIconLink(Icon.makePieChart(), genre.title, `video/genres/${genre.genre_id}/`)))
-					)
+		};
+		mount.appendChild(xml.element("div")
+			.add(xml.element("div.content")
+				.add(Grid.make({ mini: true })
+					.repeat(genres, (genre) => makeIconLink(Icon.makePieChart(), genre.title, `video/genres/${genre.genre_id}/`))
 				)
-				.render()
-			);
-		});
+			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+			.render()
+		);
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
