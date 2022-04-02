@@ -11,7 +11,7 @@ route GET:/<query:string> ? <{ token: string, offset?: number, limit?: number, c
 		entities: ./objects/Entity[]
 	};
 
-route GET:/actors/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+route GET:/actors/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		actors: ./objects/Actor[]
 	};
@@ -31,7 +31,7 @@ route GET:/actors/<actor_id:string>/shows/ ? <{ token: string, offset?: number, 
 		shows: ./objects/Show[]
 	};
 
-route GET:/albums/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+route GET:/albums/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		albums: ./objects/Album[]
 	};
@@ -46,7 +46,7 @@ route GET:/albums/<album_id:string>/ ? <{ token: string }>
 		album: ./objects/Album
 	};
 
-route GET:/artists/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+route GET:/artists/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		artists: ./objects/Artist[]
 	};
@@ -58,7 +58,7 @@ route GET:/artists/<artist_id:string>/ ? <{ token: string }>
 		appearances: ./objects/Album[]
 	};
 
-route GET:/discs/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+route GET:/discs/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		discs: ./objects/Disc[]
 	};
@@ -70,7 +70,7 @@ route GET:/discs/<disc_id:string>/ ? <{ token: string }>
 		next?: ./objects/Disc
 	};
 
-route GET:/episodes/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+route GET:/episodes/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		episodes: ./objects/Episode[]
 	};
@@ -82,7 +82,7 @@ route GET:/episodes/<episode_id:string>/ ? <{ token: string }>
 		next?: ./objects/Episode
 	};
 
-route GET:/genres/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+route GET:/genres/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		genres: ./objects/Genre[]
 	};
@@ -102,7 +102,7 @@ route GET:/genres/<genre_id:string>/shows/ ? <{ token: string, offset?: number, 
 		shows: ./objects/Show[]
 	};
 
-route GET:/movies/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+route GET:/movies/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		movies: ./objects/Movie[]
 	};
@@ -122,7 +122,7 @@ route GET:/movies/<movie_id:string>/suggestions/ ? <{ token: string, offset?: nu
 		movies: ./objects/Movie[]
 	};
 
-route GET:/playlists/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+route GET:/playlists/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		playlists: ./objects/Playlist[]
 	};
@@ -132,7 +132,7 @@ route GET:/playlists/<playlist_id:string>/ ? <{ token: string }>
 		playlist: ./objects/Playlist
 	};
 
-route GET:/seasons/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+route GET:/seasons/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		seasons: ./objects/Season[]
 	};
@@ -144,7 +144,7 @@ route GET:/seasons/<season_id:string>/ ? <{ token: string }>
 		next?: ./objects/Season
 	};
 
-route GET:/shows/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+route GET:/shows/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		shows: ./objects/Show[]
 	};
@@ -154,7 +154,7 @@ route GET:/shows/<show_id:string>/ ? <{ token: string }>
 		show: ./objects/Show
 	};
 
-route GET:/tracks/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+route GET:/tracks/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		tracks: ./objects/Track[]
 	};
@@ -171,7 +171,7 @@ route GET:/tracks/<track_id:string>/playlists/ ? <{ token: string, offset?: numb
 		playlists: ./objects/Playlist[]
 	};
 
-route GET:/users/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+route GET:/users/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		users: ./objects/User[]
 	};
@@ -196,7 +196,7 @@ route GET:/users/<user_id:string>/shows/ ? <{ token: string, offset?: number, li
 		shows: ./objects/Show[]
 	};
 
-route GET:/years/<query:string> ? <{ token: string, offset?: number, limit?: number }>
+route GET:/years/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		years: ./objects/Year[]
 	};

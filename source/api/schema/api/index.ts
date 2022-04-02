@@ -77,6 +77,7 @@ export namespace Autoguard {
 					"query": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -146,6 +147,7 @@ export namespace Autoguard {
 					"query": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -196,6 +198,7 @@ export namespace Autoguard {
 					"query": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -229,6 +232,7 @@ export namespace Autoguard {
 					"query": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -262,6 +266,7 @@ export namespace Autoguard {
 					"query": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -295,6 +300,7 @@ export namespace Autoguard {
 					"query": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -364,6 +370,7 @@ export namespace Autoguard {
 					"query": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -432,6 +439,7 @@ export namespace Autoguard {
 					"query": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -465,6 +473,7 @@ export namespace Autoguard {
 					"query": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -498,6 +507,7 @@ export namespace Autoguard {
 					"query": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -531,6 +541,7 @@ export namespace Autoguard {
 					"query": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -582,6 +593,7 @@ export namespace Autoguard {
 					"query": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -669,6 +681,7 @@ export namespace Autoguard {
 					"query": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),

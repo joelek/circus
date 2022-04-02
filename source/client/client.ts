@@ -2137,12 +2137,14 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let tracks = new ArrayObservable<Track>([]);
+		let anchor = new ObservableClass(undefined as Track | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
 				let response = await apiclient["GET:/tracks/<query>"]({
 					options: {
 						query: query,
+						anchor: anchor.getState()?.track_id,
 						offset: offset,
 						token: token ?? ""
 					}
@@ -2150,6 +2152,7 @@ let updateviewforuri = (uri: string): void => {
 				let payload = await response.payload();
 				for (let track of payload.tracks) {
 					tracks.append(track);
+					anchor.updateState(track);
 				}
 				offset += payload.tracks.length;
 				if (payload.tracks.length === 0) {
@@ -2205,6 +2208,7 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let seasons = new ArrayObservable<Season>([]);
+		let anchor = new ObservableClass(undefined as Season | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
@@ -2212,12 +2216,14 @@ let updateviewforuri = (uri: string): void => {
 					options: {
 						query,
 						token: token ?? "",
+						anchor: anchor.getState()?.season_id,
 						offset
 					}
 				});
 				let payload = await response.payload();
 				for (let season of payload.seasons) {
 					seasons.append(season);
+					anchor.updateState(season);
 				}
 				offset += payload.seasons.length;
 				if (payload.seasons.length === 0) {
@@ -2271,6 +2277,7 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let discs = new ArrayObservable<Disc>([]);
+		let anchor = new ObservableClass(undefined as Disc | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
@@ -2278,12 +2285,14 @@ let updateviewforuri = (uri: string): void => {
 					options: {
 						query,
 						token: token ?? "",
+						anchor: anchor.getState()?.disc_id,
 						offset
 					}
 				});
 				let payload = await response.payload();
 				for (let disc of payload.discs) {
 					discs.append(disc);
+					anchor.updateState(disc);
 				}
 				offset += payload.discs.length;
 				if (payload.discs.length === 0) {
@@ -2343,6 +2352,7 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let users = new ArrayObservable<User>([]);
+		let anchor = new ObservableClass(undefined as User | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
@@ -2350,12 +2360,14 @@ let updateviewforuri = (uri: string): void => {
 					options: {
 						query,
 						token: token ?? "",
+						anchor: anchor.getState()?.user_id,
 						offset
 					}
 				});
 				let payload = await response.payload();
 				for (let user of payload.users) {
 					users.append(user);
+					anchor.updateState(user);
 				}
 				offset += payload.users.length;
 				if (payload.users.length === 0) {
@@ -2433,6 +2445,7 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let actors = new ArrayObservable<Actor>([]);
+		let anchor = new ObservableClass(undefined as Actor | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
@@ -2440,12 +2453,14 @@ let updateviewforuri = (uri: string): void => {
 					options: {
 						query,
 						token: token ?? "",
+						anchor: anchor.getState()?.actor_id,
 						offset
 					}
 				});
 				let payload = await response.payload();
 				for (let actor of payload.actors) {
 					actors.append(actor);
+					anchor.updateState(actor);
 				}
 				offset += payload.actors.length;
 				if (payload.actors.length === 0) {
@@ -2495,6 +2510,7 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let albums = new ArrayObservable<Album>([]);
+		let anchor = new ObservableClass(undefined as Album | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
@@ -2502,12 +2518,14 @@ let updateviewforuri = (uri: string): void => {
 					options: {
 						query,
 						token: token ?? "",
+						anchor: anchor.getState()?.album_id,
 						offset
 					}
 				});
 				let payload = await response.payload();
 				for (let album of payload.albums) {
 					albums.append(album);
+					anchor.updateState(album);
 				}
 				offset += payload.albums.length;
 				if (payload.albums.length === 0) {
@@ -2582,6 +2600,7 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let artists = new ArrayObservable<Artist>([]);
+		let anchor = new ObservableClass(undefined as Artist | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
@@ -2589,12 +2608,14 @@ let updateviewforuri = (uri: string): void => {
 					options: {
 						query,
 						token: token ?? "",
+						anchor: anchor.getState()?.artist_id,
 						offset
 					}
 				});
 				let payload = await response.payload();
 				for (let artist of payload.artists) {
 					artists.append(artist);
+					anchor.updateState(artist);
 				}
 				offset += payload.artists.length;
 				if (payload.artists.length === 0) {
@@ -2664,12 +2685,14 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let playlists = new ArrayObservable<Playlist>([]);
+		let anchor = new ObservableClass(undefined as Playlist | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
 				let response = await apiclient["GET:/playlists/<query>"]({
 					options: {
 						query: query,
+						anchor: anchor.getState()?.playlist_id,
 						offset: offset,
 						token: token ?? ""
 					}
@@ -2677,6 +2700,7 @@ let updateviewforuri = (uri: string): void => {
 				let payload = await response.payload();
 				for (let playlist of payload.playlists) {
 					playlists.append(playlist);
+					anchor.updateState(playlist);
 				}
 				offset += payload.playlists.length;
 				if (payload.playlists.length === 0) {
@@ -2784,12 +2808,14 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let shows = new ArrayObservable<Show>([]);
+		let anchor = new ObservableClass(undefined as Show | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
 				let response = await apiclient["GET:/shows/<query>"]({
 					options: {
 						query: query,
+						anchor: anchor.getState()?.show_id,
 						offset: offset,
 						token: token ?? ""
 					}
@@ -2797,6 +2823,7 @@ let updateviewforuri = (uri: string): void => {
 				let payload = await response.payload();
 				for (let track of payload.shows) {
 					shows.append(track);
+					anchor.updateState(track);
 				}
 				offset += payload.shows.length;
 				if (payload.shows.length === 0) {
@@ -2845,6 +2872,7 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let episodes = new ArrayObservable<Episode>([]);
+		let anchor = new ObservableClass(undefined as Episode | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
@@ -2852,12 +2880,14 @@ let updateviewforuri = (uri: string): void => {
 					options: {
 						query,
 						token: token ?? "",
+						anchor: anchor.getState()?.episode_id,
 						offset
 					}
 				});
 				let payload = await response.payload();
 				for (let episode of payload.episodes) {
 					episodes.append(episode);
+					anchor.updateState(episode);
 				}
 				offset += payload.episodes.length;
 				if (payload.episodes.length === 0) {
@@ -2940,6 +2970,7 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let movies = new ArrayObservable<Movie>([]);
+		let anchor = new ObservableClass(undefined as Movie | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
@@ -2947,12 +2978,14 @@ let updateviewforuri = (uri: string): void => {
 					options: {
 						query,
 						token: token ?? "",
+						anchor: anchor.getState()?.movie_id,
 						offset
 					}
 				});
 				let payload = await response.payload();
 				for (let movie of payload.movies) {
 					movies.append(movie);
+					anchor.updateState(movie);
 				}
 				offset += payload.movies.length;
 				if (payload.movies.length === 0) {
@@ -3044,6 +3077,7 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let genres = new ArrayObservable<Genre>([]);
+		let anchor = new ObservableClass(undefined as Genre | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
@@ -3051,12 +3085,14 @@ let updateviewforuri = (uri: string): void => {
 					options: {
 						query,
 						token: token ?? "",
+						anchor: anchor.getState()?.genre_id,
 						offset
 					}
 				});
 				let payload = await response.payload();
 				for (let genre of payload.genres) {
 					genres.append(genre);
+					anchor.updateState(genre);
 				}
 				offset += payload.genres.length;
 				if (payload.genres.length === 0) {
@@ -3285,6 +3321,7 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let years = new ArrayObservable<Year>([]);
+		let anchor = new ObservableClass(undefined as Year | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
@@ -3292,12 +3329,14 @@ let updateviewforuri = (uri: string): void => {
 					options: {
 						query,
 						token: token ?? "",
+						anchor: anchor.getState()?.year_id,
 						offset
 					}
 				});
 				let payload = await response.payload();
 				for (let year of payload.years) {
 					years.append(year);
+					anchor.updateState(year);
 				}
 				offset += payload.years.length;
 				if (payload.years.length === 0) {
@@ -3499,3 +3538,11 @@ function setupRouting(): void {
 	});
 }
 setupRouting();
+/*
+
+
+		let anchor = new ObservableClass(undefined as Track | undefined);
+						anchor: anchor.getState()?.track_id,
+					anchor.updateState(track);
+
+*/
