@@ -2764,18 +2764,21 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let albums = new ArrayObservable<apischema.objects.Album>([]);
+		let anchor = new ObservableClass(undefined as Album | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
 				let response = await apiclient.getNewAlbums({
 					options: {
 						token: token ?? "",
+						anchor: anchor.getState()?.album_id,
 						offset
 					}
 				});
 				let payload = await response.payload();
 				for (let album of payload.albums) {
 					albums.append(album);
+					anchor.updateState(album);
 				}
 				offset += payload.albums.length;
 				if (payload.albums.length === 0) {
@@ -3157,18 +3160,21 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let movies = new ArrayObservable<apischema.objects.Movie>([]);
+		let anchor = new ObservableClass(undefined as Movie | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
 				let response = await apiclient.getNewMovies({
 					options: {
 						token: token ?? "",
+						anchor: anchor.getState()?.movie_id,
 						offset
 					}
 				});
 				let payload = await response.payload();
 				for (let movie of payload.movies) {
 					movies.append(movie);
+					anchor.updateState(movie);
 				}
 				offset += payload.movies.length;
 				if (payload.movies.length === 0) {

@@ -260,6 +260,7 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 		components.push("");
 		let parameters = new Array<[string, string]>();
 		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeParameterPairs("anchor", [request.options?.["anchor"]], true));
 		parameters.push(...autoguard.api.encodeParameterPairs("offset", [request.options?.["offset"]], false));
 		parameters.push(...autoguard.api.encodeParameterPairs("limit", [request.options?.["limit"]], false));
 		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...[], ...parameters.map((parameter) => parameter[0])]));
@@ -657,6 +658,7 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 		components.push("");
 		let parameters = new Array<[string, string]>();
 		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeParameterPairs("anchor", [request.options?.["anchor"]], true));
 		parameters.push(...autoguard.api.encodeParameterPairs("offset", [request.options?.["offset"]], false));
 		parameters.push(...autoguard.api.encodeParameterPairs("limit", [request.options?.["limit"]], false));
 		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...[], ...parameters.map((parameter) => parameter[0])]));

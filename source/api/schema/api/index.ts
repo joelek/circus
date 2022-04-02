@@ -167,6 +167,7 @@ export namespace Autoguard {
 				autoguard.guards.Object.of({
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
@@ -392,6 +393,7 @@ export namespace Autoguard {
 				autoguard.guards.Object.of({
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),

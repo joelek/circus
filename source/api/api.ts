@@ -111,7 +111,7 @@ export const server = apiv2.makeServer({
 	getNewAlbums: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let albums = await handler.getNewAlbums(queue, user_id, options.offset ?? 0, options.limit ?? 24);
+		let albums = await handler.getNewAlbums(queue, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				albums
@@ -257,7 +257,7 @@ export const server = apiv2.makeServer({
 	getNewMovies: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let movies = await handler.getNewMovies(queue, user_id, options.offset ?? 0, options.limit ?? 24);
+		let movies = await handler.getNewMovies(queue, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
 		return {
 			payload: {
 				movies

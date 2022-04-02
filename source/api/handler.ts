@@ -558,20 +558,20 @@ export async function lookupYear(queue: ReadableQueue, year_id: string, user_id:
 	};
 };
 
-export async function getNewAlbums(queue: ReadableQueue, user_id: string, offset: number, length: number): Promise<schema.objects.Album[]> {
+export async function getNewAlbums(queue: ReadableQueue, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Album[]> {
 	let albums = [] as Array<schema.objects.Album>;
-	for (let entry of await atlas.queries.getRecentlyUpdatedAlbums.filter(queue, {})) {
+	for (let entry of await atlas.queries.getRecentlyUpdatedAlbums.filter(queue, {}, anchor != null ? { album_id: binid(anchor) } : undefined, length)) {
 		albums.push(await lookupAlbum(queue, hexid(entry.album_id), user_id));
 	}
-	return albums.slice(offset, offset + length);
+	return albums;
 };
 
-export async function getNewMovies(queue: ReadableQueue, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
+export async function getNewMovies(queue: ReadableQueue, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Movie[]> {
 	let movies = [] as Array<schema.objects.Movie>;
-	for (let entry of await atlas.queries.getRecentlyUpdatedMovies.filter(queue, {})) {
+	for (let entry of await atlas.queries.getRecentlyUpdatedMovies.filter(queue, {}, anchor != null ? { movie_id: binid(anchor) } : undefined, length)) {
 		movies.push(await lookupMovie(queue, hexid(entry.movie_id), user_id));
 	}
-	return movies.slice(offset, offset + length);
+	return movies;
 };
 
 export async function searchForAlbums(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
