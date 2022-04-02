@@ -2323,28 +2323,46 @@ let updateviewforuri = (uri: string): void => {
 		}).then(async (response) => {
 			let payload = await response.payload();
 			let user = payload.user;
-			apiclient["GET:/users/<user_id>/playlists/"]({
-				options: {
-					user_id,
-					token: token ?? "",
-					offset: 0,
-					limit: 1000
+			let offset = 0;
+			let reachedEnd = new ObservableClass(false);
+			let isLoading = new ObservableClass(false);
+			let playlists = new ArrayObservable<Playlist>([]);
+			async function load(): Promise<void> {
+				if (!reachedEnd.getState() && !isLoading.getState()) {
+					isLoading.updateState(true);
+					let response = await apiclient["GET:/users/<user_id>/playlists/"]({
+						options: {
+							user_id,
+							token: token ?? "",
+							offset
+						}
+					});
+					let payload = await response.payload();
+					for (let playlist of payload.playlists) {
+						playlists.append(playlist);
+					}
+					offset += payload.playlists.length;
+					if (payload.playlists.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
 				}
-			}).then(async (response) => {
-				let payload = await response.payload();
-				let playlists = payload.playlists;
-				mount.appendChild(xml.element("div.content")
+			};
+			mount.appendChild(xml.element("div")
+				.add(xml.element("div.content")
 					.add(renderTextHeader(xml.text(user.name)))
-					.add(xml.element("div")
-						.set("style", "display: grid; gap: 24px;")
-						.set("data-hide", `${playlists.length === 0}`)
-						.add(renderTextHeader(xml.text("Playlists")))
-						.add(Grid.make()
-							.add(...playlists.map((playlist) => EntityCard.forPlaylist(playlist)))
-						)
+				)
+				.add(xml.element("div.content")
+					.set("style", "display: grid; gap: 24px")
+					.bind("data-hide", playlists.compute((playlists) => playlists.length === 0))
+					.add(renderTextHeader(xml.text("Playlists")))
+					.add(Grid.make()
+						.repeat(playlists, (playlist) => EntityCard.forPlaylist(playlist))
 					)
-					.render());
-			});
+				)
+				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+				.render()
+			);
 		});
 	} else if ((parts = /^users[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
