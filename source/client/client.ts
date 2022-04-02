@@ -3316,36 +3316,51 @@ let updateviewforuri = (uri: string): void => {
 			}).then(async (response) => {
 				let payload = await response.payload();
 				let movies = payload.movies;
-				apiclient["GET:/years/<year_id>/albums/"]({
-					options: {
-						year_id,
-						token: token ?? "",
-						offset: 0,
-						limit: 1000
+				let offset = 0;
+				let reachedEnd = new ObservableClass(false);
+				let isLoading = new ObservableClass(false);
+				let albums = new ArrayObservable<Album>([]);
+				async function load(): Promise<void> {
+					if (!reachedEnd.getState() && !isLoading.getState()) {
+						isLoading.updateState(true);
+						let response = await apiclient["GET:/years/<year_id>/albums/"]({
+							options: {
+								year_id,
+								token: token ?? "",
+								offset
+							}
+						});
+						let payload = await response.payload();
+						for (let album of payload.albums) {
+							albums.append(album);
+						}
+						offset += payload.albums.length;
+						if (payload.albums.length === 0) {
+							reachedEnd.updateState(true);
+						}
+						isLoading.updateState(false);
 					}
-				}).then(async (response) => {
-					let payload = await response.payload();
-					let albums = payload.albums;
-					mount.appendChild(xml.element("div")
-						.add(xml.element("div.content")
-							.add(renderTextHeader(xml.text(`${year.year}`)))
-							.add(xml.element("div")
-								.set("style", "display: grid; gap: 24px;")
-								.set("data-hide", `${movies.length === 0}`)
-								.add(renderTextHeader(xml.text("Movies")))
-								.add(carouselFactory.make(new ArrayObservable(movies.map((movie) => EntityCard.forMovie(movie)))))
-							)
-							.add(xml.element("div")
-								.set("style", "display: grid; gap: 24px;")
-								.set("data-hide", `${albums.length === 0}`)
-								.add(renderTextHeader(xml.text("Albums")))
-								.add(Grid.make()
-									.add(...albums.map((album) => EntityCard.forAlbum(album)))
-								)
+				};
+				mount.appendChild(xml.element("div")
+					.add(xml.element("div.content")
+						.add(renderTextHeader(xml.text(`${year.year}`)))
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.set("data-hide", `${movies.length === 0}`)
+							.add(renderTextHeader(xml.text("Movies")))
+							.add(carouselFactory.make(new ArrayObservable(movies.map((movie) => EntityCard.forMovie(movie)))))
+						)
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.bind("data-hide", albums.compute((albums) => albums.length === 0))
+							.add(renderTextHeader(xml.text("Albums")))
+							.add(Grid.make()
+								.repeat(albums, (album) => EntityCard.forAlbum(album))
 							)
 						)
-					.render());
-				});
+					)
+				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+				.render());
 			});
 		});
 	} else if ((parts = /^years[/]([^/?]*)/.exec(uri)) !== null) {
