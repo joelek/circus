@@ -243,10 +243,10 @@ export async function lookupEpisode(queue: ReadableQueue, episode_id: string, ap
 	for (let video_file_video_subtitle of video_file_video_subtitles) {
 		subtitle_files.push(await atlas.stores.subtitle_files.lookup(queue, { file_id: video_file_video_subtitle.subtitle_file_id }));
 	}
-	// TODO: Use query.
-	let streams = (await atlas.links.file_streams.filter(queue, video_file))
-		.filter((stream) => hexid(stream.user_id) === api_user_id)
-		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
+	let streams = await atlas.queries.getStreamsFromUserIdAndFileId.filter(queue, {
+		user_id: binid(api_user_id),
+		file_id: video_file.file_id
+	}, undefined, 1);
 	return {
 		...episode_base,
 		year: episode.year_id != null ? await lookupYearBase(queue, hexid(episode.year_id), api_user_id) : undefined,
@@ -321,10 +321,10 @@ export async function lookupMovie(queue: ReadableQueue, movie_id: string, api_us
 	for (let video_file_video_subtitle of video_file_video_subtitles) {
 		subtitle_files.push(await atlas.stores.subtitle_files.lookup(queue, { file_id: video_file_video_subtitle.subtitle_file_id }));
 	}
-	// TODO: Use query.
-	let streams = (await atlas.links.file_streams.filter(queue, video_file))
-		.filter((stream) => hexid(stream.user_id) === api_user_id)
-		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
+	let streams = await atlas.queries.getStreamsFromUserIdAndFileId.filter(queue, {
+		user_id: binid(api_user_id),
+		file_id: video_file.file_id
+	}, undefined, 1);
 	return {
 		...movie_base,
 		year: movie.year_id != null ? await lookupYearBase(queue, hexid(movie.year_id), api_user_id) : undefined,
@@ -511,10 +511,10 @@ export async function lookupTrack(queue: ReadableQueue, track_id: string, user_i
 	for (let track_artist of track_artists) {
 		artists.push(await lookupArtistBase(queue, hexid(track_artist.artist_id), user_id));
 	}
-	// TODO: Use query.
-	let streams = (await atlas.links.file_streams.filter(queue, media))
-		.filter((stream) => hexid(stream.user_id) === user_id)
-		.sort((jsondb.NumericSort.increasing((stream) => stream.timestamp_ms)));
+	let streams = await atlas.queries.getStreamsFromUserIdAndFileId.filter(queue, {
+		user_id: binid(user_id),
+		file_id: media.file_id
+	}, undefined, 1);
 	return {
 		...track,
 		artists: artists,

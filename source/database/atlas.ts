@@ -670,6 +670,13 @@ const year_episodes = context.createLink(years, episodes, {
 	title: context.createIncreasingOrder()
 });
 
+const getStreamsFromUserIdAndFileId = context.createQuery(streams, {
+	file_id: context.createEqualityOperator(),
+	user_id: context.createEqualityOperator()
+}, {
+	timestamp_ms: context.createDecreasingOrder()
+});
+
 const getUsersFromUsername = context.createQuery(users, {
 	username: context.createEqualityOperator()
 }, {
@@ -763,7 +770,8 @@ export const { transactionManager } = context.createTransactionManager("./privat
 	year_episodes,
 	year_albums
 }, {
-	getUsersFromUsername
+	getUsersFromUsername,
+	getStreamsFromUserIdAndFileId
 });
 
 export const stores = transactionManager.createTransactionalStores();
