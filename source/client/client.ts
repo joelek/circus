@@ -2426,35 +2426,50 @@ let updateviewforuri = (uri: string): void => {
 			}).then(async (response) => {
 				let payload = await response.payload();
 				let shows = payload.shows;
-				apiclient["GET:/actors/<actor_id>/movies/"]({
-					options: {
-						actor_id,
-						token: token ?? "",
-						offset: 0,
-						limit: 1000
+				let offset = 0;
+				let reachedEnd = new ObservableClass(false);
+				let isLoading = new ObservableClass(false);
+				let movies = new ArrayObservable<Movie>([]);
+				async function load(): Promise<void> {
+					if (!reachedEnd.getState() && !isLoading.getState()) {
+						isLoading.updateState(true);
+						let response = await apiclient["GET:/actors/<actor_id>/movies/"]({
+							options: {
+								actor_id,
+								token: token ?? "",
+								offset
+							}
+						});
+						let payload = await response.payload();
+						for (let movie of payload.movies) {
+							movies.append(movie);
+						}
+						offset += payload.movies.length;
+						if (payload.movies.length === 0) {
+							reachedEnd.updateState(true);
+						}
+						isLoading.updateState(false);
 					}
-				}).then(async (response) => {
-					let payload = await response.payload();
-					let movies = payload.movies;
-					mount.appendChild(xml.element("div.content")
-						.set("style", "display: grid; gap: 48px;")
-						.add(renderTextHeader(xml.text(actor.name)))
-						.add(xml.element("div")
-							.set("style", "display: grid; gap: 24px;")
-							.set("data-hide", `${shows.length === 0}`)
-							.add(renderTextHeader(xml.text("Shows")))
-							.add(carouselFactory.make(new ArrayObservable(shows.map((show) => EntityCard.forShow(show)))))
+				};
+				mount.appendChild(xml.element("div.content")
+					.set("style", "display: grid; gap: 48px;")
+					.add(renderTextHeader(xml.text(actor.name)))
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 24px;")
+						.set("data-hide", `${shows.length === 0}`)
+						.add(renderTextHeader(xml.text("Shows")))
+						.add(carouselFactory.make(new ArrayObservable(shows.map((show) => EntityCard.forShow(show)))))
+					)
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 24px;")
+						.bind("data-hide", movies.compute((movies) => movies.length === 0))
+						.add(renderTextHeader(xml.text("Movies")))
+						.add(Grid.make()
+							.repeat(movies, (movie) => EntityCard.forMovie(movie))
 						)
-						.add(xml.element("div")
-							.set("style", "display: grid; gap: 24px;")
-							.set("data-hide", `${movies.length === 0}`)
-							.add(renderTextHeader(xml.text("Movies")))
-							.add(Grid.make()
-								.add(...movies.map((movie) => EntityCard.forMovie(movie)))
-							)
-						)
-						.render());
-				});
+					)
+					.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+					.render());
 			});
 		});
 	} else if ((parts = /^actors[/]([^/?]*)/.exec(uri)) !== null) {
