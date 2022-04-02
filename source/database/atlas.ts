@@ -98,7 +98,8 @@ export type Artist = atlas.RecordOf<typeof artists>;
 const albums = context.createStore({
 	album_id: context.createBinaryField(),
 	title: context.createStringField(),
-	year_id: context.createNullableBinaryField()
+	year_id: context.createNullableBinaryField(),
+	timestamp_ms: context.createNullableIntegerField()
 }, ["album_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -117,7 +118,8 @@ export type AlbumFile = atlas.RecordOf<typeof album_files>;
 const discs = context.createStore({
 	disc_id: context.createBinaryField(),
 	album_id: context.createBinaryField(),
-	number: context.createIntegerField()
+	number: context.createIntegerField(),
+	timestamp_ms: context.createNullableIntegerField()
 }, ["disc_id"], {
 
 });
@@ -129,7 +131,8 @@ const tracks = context.createStore({
 	disc_id: context.createBinaryField(),
 	title: context.createStringField(),
 	number: context.createIntegerField(),
-	copyright: context.createNullableStringField()
+	copyright: context.createNullableStringField(),
+	timestamp_ms: context.createNullableIntegerField()
 }, ["track_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -169,7 +172,8 @@ const shows = context.createStore({
 	show_id: context.createBinaryField(),
 	name: context.createStringField(),
 	summary: context.createNullableStringField(),
-	imdb: context.createNullableStringField()
+	imdb: context.createNullableStringField(),
+	timestamp_ms: context.createNullableIntegerField()
 }, ["show_id"], {
 	name: context.createIncreasingOrder()
 });
@@ -188,7 +192,8 @@ export type ShowFile = atlas.RecordOf<typeof show_files>;
 const seasons = context.createStore({
 	season_id: context.createBinaryField(),
 	show_id: context.createBinaryField(),
-	number: context.createIntegerField()
+	number: context.createIntegerField(),
+	timestamp_ms: context.createNullableIntegerField()
 }, ["season_id"], {
 
 });
@@ -203,7 +208,8 @@ const episodes = context.createStore({
 	year_id: context.createNullableBinaryField(),
 	summary: context.createNullableStringField(),
 	copyright: context.createNullableStringField(),
-	imdb: context.createNullableStringField()
+	imdb: context.createNullableStringField(),
+	timestamp_ms: context.createNullableIntegerField()
 }, ["episode_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -225,7 +231,8 @@ const movies = context.createStore({
 	year_id: context.createNullableBinaryField(),
 	summary: context.createNullableStringField(),
 	copyright: context.createNullableStringField(),
-	imdb: context.createNullableStringField()
+	imdb: context.createNullableStringField(),
+	timestamp_ms: context.createNullableIntegerField()
 }, ["movie_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -683,6 +690,49 @@ const getUsersFromUsername = context.createQuery(users, {
 
 });
 
+const getRecentlyUpdatedAlbums = context.createQuery(albums, {
+
+}, {
+	timestamp_ms: context.createDecreasingOrder()
+});
+
+const getRecentlyUpdatedDiscs = context.createQuery(discs, {
+
+}, {
+	timestamp_ms: context.createDecreasingOrder()
+});
+
+const getRecentlyUpdatedTracks = context.createQuery(tracks, {
+
+}, {
+	timestamp_ms: context.createDecreasingOrder()
+});
+
+
+const getRecentlyUpdatedMovies = context.createQuery(movies, {
+
+}, {
+	timestamp_ms: context.createDecreasingOrder()
+});
+
+const getRecentlyUpdatedShows = context.createQuery(shows, {
+
+}, {
+	timestamp_ms: context.createDecreasingOrder()
+});
+
+const getRecentlyUpdatedSeasons = context.createQuery(seasons, {
+
+}, {
+	timestamp_ms: context.createDecreasingOrder()
+});
+
+const getRecentlyUpdatedEpisodes = context.createQuery(episodes, {
+
+}, {
+	timestamp_ms: context.createDecreasingOrder()
+});
+
 export const { transactionManager } = context.createTransactionManager("./private/db/", {
 	directories,
 	files,
@@ -771,7 +821,14 @@ export const { transactionManager } = context.createTransactionManager("./privat
 	year_albums
 }, {
 	getUsersFromUsername,
-	getStreamsFromUserIdAndFileId
+	getStreamsFromUserIdAndFileId,
+	getRecentlyUpdatedAlbums,
+	getRecentlyUpdatedDiscs,
+	getRecentlyUpdatedTracks,
+	getRecentlyUpdatedMovies,
+	getRecentlyUpdatedShows,
+	getRecentlyUpdatedSeasons,
+	getRecentlyUpdatedEpisodes
 });
 
 export const stores = transactionManager.createTransactionalStores();

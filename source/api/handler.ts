@@ -558,58 +558,20 @@ export async function lookupYear(queue: ReadableQueue, year_id: string, user_id:
 	};
 };
 
-// TODO: Add timestamp_ms to movies table.
 export async function getNewAlbums(queue: ReadableQueue, user_id: string, offset: number, length: number): Promise<schema.objects.Album[]> {
-	let map = new Map<string, number>();
-	let albums = await atlas.stores.albums.filter(queue);
-	for (let album of albums) {
-		let key = hexid(album.album_id);
-		let discs = await atlas.links.album_discs.filter(queue, album);
-		for (let disc of discs) {
-			let tracks = await atlas.links.disc_tracks.filter(queue, disc);
-			for (let track of tracks) {
-				let track_files = await atlas.links.track_track_files.filter(queue, track);
-				for (let track_file of track_files) {
-					let file = await atlas.stores.files.lookup(queue, track_file);
-					if (file.index_timestamp == null) {
-						continue;
-					}
-					let value = map.get(key) ?? 0;
-					value = Math.max(value, file.index_timestamp);
-					map.set(key, value);
-				}
-			}
-		}
+	let albums = [] as Array<schema.objects.Album>;
+	for (let entry of await atlas.queries.getRecentlyUpdatedAlbums.filter(queue, {})) {
+		albums.push(await lookupAlbum(queue, hexid(entry.album_id), user_id));
 	}
-	return await Promise.all(Array.from(map.entries())
-		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
-		.slice(offset, offset + length)
-		.map((entry) => entry[0])
-		.map((album_id) => lookupAlbum(queue, album_id, user_id)));
+	return albums.slice(offset, offset + length);
 };
 
-// TODO: Add timestamp_ms to movies table.
 export async function getNewMovies(queue: ReadableQueue, user_id: string, offset: number, length: number): Promise<schema.objects.Movie[]> {
-	let map = new Map<string, number>();
-	let movies = await atlas.stores.movies.filter(queue);
-	for (let movie of movies) {
-		let key = hexid(movie.movie_id);
-		let movie_files = await atlas.links.movie_movie_files.filter(queue, movie);
-		for (let movie_file of movie_files) {
-			let file = await atlas.stores.files.lookup(queue, movie_file);
-			if (file.index_timestamp == null) {
-				continue;
-			}
-			let value = map.get(key) ?? 0;
-			value = Math.max(value, file.index_timestamp);
-			map.set(key, value);
-		}
+	let movies = [] as Array<schema.objects.Movie>;
+	for (let entry of await atlas.queries.getRecentlyUpdatedMovies.filter(queue, {})) {
+		movies.push(await lookupMovie(queue, hexid(entry.movie_id), user_id));
 	}
-	return await Promise.all(Array.from(map.entries())
-		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
-		.slice(offset, offset + length)
-		.map((entry) => entry[0])
-		.map((movie_id) => lookupMovie(queue, movie_id, user_id)));
+	return movies.slice(offset, offset + length);
 };
 
 export async function searchForAlbums(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {

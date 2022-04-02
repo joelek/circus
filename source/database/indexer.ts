@@ -182,13 +182,15 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			show_id: show_id,
 			name: metadata.show.title,
 			summary: metadata.show.summary ?? null,
-			imdb: metadata.show.imdb ?? null
+			imdb: metadata.show.imdb ?? null,
+			timestamp_ms: null
 		});
 		let season_id = makeBinaryId("season", show_id, `${metadata.season}`);
 		await stores.seasons.insert(queue, {
 			season_id: season_id,
 			show_id: show_id,
-			number: metadata.season
+			number: metadata.season,
+			timestamp_ms: null
 		});
 		let episode_id = makeBinaryId("episode", season_id, `${metadata.episode}`);
 		await stores.episodes.insert(queue, {
@@ -199,7 +201,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			year_id: year_id ?? null,
 			summary: metadata.summary ?? null,
 			copyright: metadata.copyright ?? null,
-			imdb: metadata.imdb ?? null
+			imdb: metadata.imdb ?? null,
+			timestamp_ms: null
 		});
 		for (let file_id of file_ids) {
 			await stores.episode_files.insert(queue, {
@@ -247,7 +250,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			year_id: year_id ?? null,
 			summary: metadata.summary ?? null,
 			copyright: metadata.copyright ?? null,
-			imdb: metadata.imdb ?? null
+			imdb: metadata.imdb ?? null,
+			timestamp_ms: null
 		});
 		for (let file_id of file_ids) {
 			await stores.movie_files.insert(queue, {
@@ -292,7 +296,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		await stores.albums.insert(queue, {
 			album_id: album_id,
 			title: metadata.album.title,
-			year_id: year_id ?? null
+			year_id: year_id ?? null,
+			timestamp_ms: null
 		});
 		for (let [index, artist] of metadata.album.artists.entries()) {
 			let artist_id = makeBinaryId("artist", artist);
@@ -310,7 +315,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		await stores.discs.insert(queue, {
 			disc_id: disc_id,
 			album_id: album_id,
-			number: metadata.disc
+			number: metadata.disc,
+			timestamp_ms: null
 		});
 		let track_id = makeBinaryId("track", disc_id, `${metadata.track}`);
 		await stores.tracks.insert(queue, {
@@ -318,7 +324,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			disc_id: disc_id,
 			title: metadata.title,
 			number: metadata.track,
-			copyright: metadata.copyright ?? null
+			copyright: metadata.copyright ?? null,
+			timestamp_ms: null
 		});
 		for (let file_id of file_ids) {
 			await stores.track_files.insert(queue, {
@@ -351,7 +358,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		await stores.albums.insert(queue, {
 			album_id: album_id,
 			title: metadata.title,
-			year_id: year_id ?? null
+			year_id: year_id ?? null,
+			timestamp_ms: null
 		});
 		for (let [index, artist] of metadata.artists.entries()) {
 			let artist_id = makeBinaryId("artist", artist);
@@ -369,7 +377,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		await stores.discs.insert(queue, {
 			disc_id: disc_id,
 			album_id: album_id,
-			number: metadata.disc
+			number: metadata.disc,
+			timestamp_ms: null
 		});
 		if (metadata.tracks.length === file_ids.length) {
 			for (let [index, file_id] of file_ids.entries()) {
@@ -380,7 +389,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 					disc_id: disc_id,
 					title: track.title,
 					number: index + 1,
-					copyright: track.copyright ?? metadata.copyright ?? null
+					copyright: track.copyright ?? metadata.copyright ?? null,
+					timestamp_ms: null
 				});
 				await stores.track_files.insert(queue, {
 					track_id: track_id,
@@ -686,6 +696,119 @@ async function removeBrokenEntities(queue: WritableQueue): Promise<void> {
 	}
 };
 
+export async function computeAlbumTimestamps(queue: WritableQueue): Promise<void> {
+	let albums = await stores.albums.filter(queue);
+	for (let album of albums) {
+		let album_timestamp_ms = album.timestamp_ms;
+		let discs = await links.album_discs.filter(queue, album);
+		for (let disc of discs) {
+			let disc_timestamp_ms = disc.timestamp_ms;
+			let tracks = await links.disc_tracks.filter(queue, disc);
+			for (let track of tracks) {
+				let track_timestamp_ms = track.timestamp_ms;
+				let track_files = await links.track_track_files.filter(queue, track);
+				for (let track_file of track_files) {
+					let file = await stores.files.lookup(queue, track_file);
+					if (file.index_timestamp == null) {
+						continue;
+					}
+					track_timestamp_ms = track_timestamp_ms != null ? Math.max(track_timestamp_ms, file.index_timestamp) : file.index_timestamp;
+					disc_timestamp_ms = disc_timestamp_ms != null ? Math.max(disc_timestamp_ms, file.index_timestamp) : file.index_timestamp;
+					album_timestamp_ms = album_timestamp_ms != null ? Math.max(album_timestamp_ms, file.index_timestamp) : file.index_timestamp;
+				}
+				if (track.timestamp_ms !== track_timestamp_ms) {
+					await stores.tracks.insert(queue, {
+						...track,
+						timestamp_ms: track_timestamp_ms
+					});
+				}
+			}
+			if (disc.timestamp_ms !== disc_timestamp_ms) {
+				await stores.discs.insert(queue, {
+					...disc,
+					timestamp_ms: disc_timestamp_ms
+				});
+			}
+		}
+		if (album.timestamp_ms !== album_timestamp_ms) {
+			await stores.albums.insert(queue, {
+				...album,
+				timestamp_ms: album_timestamp_ms
+			});
+		}
+	}
+};
+
+export async function computeMovieTimestamps(queue: WritableQueue): Promise<void> {
+	let movies = await stores.movies.filter(queue);
+	for (let movie of movies) {
+		let movie_timestamp_ms = movie.timestamp_ms;
+		let movie_files = await links.movie_movie_files.filter(queue, movie);
+		for (let movie_file of movie_files) {
+			let file = await stores.files.lookup(queue, movie_file);
+			if (file.index_timestamp == null) {
+				continue;
+			}
+			movie_timestamp_ms = movie_timestamp_ms != null ? Math.max(movie_timestamp_ms, file.index_timestamp) : file.index_timestamp;
+		}
+		if (movie.timestamp_ms !== movie_timestamp_ms) {
+			await stores.movies.insert(queue, {
+				...movie,
+				timestamp_ms: movie_timestamp_ms
+			});
+		}
+	}
+};
+
+export async function computeShowTimestamps(queue: WritableQueue): Promise<void> {
+	let shows = await stores.shows.filter(queue);
+	for (let show of shows) {
+		let show_timestamp_ms = show.timestamp_ms;
+		let seasons = await links.show_seasons.filter(queue, show);
+		for (let season of seasons) {
+			let season_timestamp_ms = season.timestamp_ms;
+			let episodes = await links.season_episodes.filter(queue, season);
+			for (let episode of episodes) {
+				let episode_timestamp_ms = episode.timestamp_ms;
+				let episode_files = await links.episode_episode_files.filter(queue, episode);
+				for (let episode_file of episode_files) {
+					let file = await stores.files.lookup(queue, episode_file);
+					if (file.index_timestamp == null) {
+						continue;
+					}
+					episode_timestamp_ms = episode_timestamp_ms != null ? Math.max(episode_timestamp_ms, file.index_timestamp) : file.index_timestamp;
+					season_timestamp_ms = season_timestamp_ms != null ? Math.max(season_timestamp_ms, file.index_timestamp) : file.index_timestamp;
+					show_timestamp_ms = show_timestamp_ms != null ? Math.max(show_timestamp_ms, file.index_timestamp) : file.index_timestamp;
+				}
+				if (episode.timestamp_ms !== episode_timestamp_ms) {
+					await stores.episodes.insert(queue, {
+						...episode,
+						timestamp_ms: episode_timestamp_ms
+					});
+				}
+			}
+			if (season.timestamp_ms !== season_timestamp_ms) {
+				await stores.seasons.insert(queue, {
+					...season,
+					timestamp_ms: season_timestamp_ms
+				});
+			}
+		}
+		if (show.timestamp_ms !== show_timestamp_ms) {
+			await stores.shows.insert(queue, {
+				...show,
+				timestamp_ms: show_timestamp_ms
+			});
+		}
+	}
+};
+
+async function computeCachedValues(queue: WritableQueue): Promise<void> {
+	await computeAlbumTimestamps(queue);
+	await computeMovieTimestamps(queue);
+	await computeShowTimestamps(queue);
+};
+
 export async function migrateLegacyData(queue: WritableQueue): Promise<void> {
 	if (libfs.existsSync(TABLES_ROOT.join("/"))) {
 		console.log(`Migrating legacy user data...`);
@@ -800,6 +923,8 @@ export async function runIndexer(): Promise<void> {
 		await associateSubtitles(queue);
 		console.log(`Cleaning up...`);
 		await removeBrokenEntities(queue);
+		console.log(`Computing cached values...`);
+		await computeCachedValues(queue);
 		await migrateLegacyData(queue);
 		for (let token of await stores.tokens.filter(queue)) {
 			if (token.expires_ms <= Date.now()) {
