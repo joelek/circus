@@ -934,20 +934,20 @@ export async function getUserPlaylists(queue: ReadableQueue, subject_user_id: st
 	return playlists;
 };
 
-export async function getUserAlbums(queue: ReadableQueue, subject_user_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
+export async function getUserAlbums(queue: ReadableQueue, subject_user_id: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
 	let albums = [] as Array<schema.objects.Album>;
-	for (let album_affinity of await atlas.links.user_album_affinities.filter(queue, { user_id: binid(subject_user_id) })) {
+	for (let album_affinity of await atlas.links.user_album_affinities.filter(queue, { user_id: binid(subject_user_id) }, anchor != null ? { album_id: binid(anchor), user_id: binid(subject_user_id) } : undefined, length)) {
 		albums.push(await lookupAlbum(queue, hexid(album_affinity.album_id), user_id));
 	}
-	return albums.slice(offset, offset + length); // TODO: Use anchor.
+	return albums;
 };
 
-export async function getUserShows(queue: ReadableQueue, subject_user_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Show[]> {
+export async function getUserShows(queue: ReadableQueue, subject_user_id: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Show[]> {
 	let shows = [] as Array<schema.objects.Show>;
-	for (let show_affinity of await atlas.links.user_show_affinities.filter(queue, { user_id: binid(subject_user_id) })) {
+	for (let show_affinity of await atlas.links.user_show_affinities.filter(queue, { user_id: binid(subject_user_id) }, anchor != null ? { show_id: binid(anchor), user_id: binid(subject_user_id) } : undefined, length)) {
 		shows.push(await lookupShow(queue, hexid(show_affinity.show_id), user_id));
 	}
-	return shows.slice(offset, offset + length); // TODO: Use anchor.
+	return shows;
 };
 
 export async function getMoviesFromYear(queue: ReadableQueue, year_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Movie[]> {

@@ -181,7 +181,7 @@ route GET:/users/<user_id:string>/ ? <{ token: string }>
 		user: ./objects/User
 	};
 
-route GET:/users/<user_id:string>/albums/ ? <{ token: string, offset?: number, limit?: number }>
+route GET:/users/<user_id:string>/albums/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		albums: ./objects/Album[]
 	};
@@ -191,7 +191,7 @@ route GET:/users/<user_id:string>/playlists/ ? <{ token: string, anchor?: plain,
 		playlists: ./objects/Playlist[]
 	};
 
-route GET:/users/<user_id:string>/shows/ ? <{ token: string, offset?: number, limit?: number }>
+route GET:/users/<user_id:string>/shows/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		shows: ./objects/Show[]
 	};

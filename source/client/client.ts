@@ -3433,6 +3433,7 @@ let updateviewforuri = (uri: string): void => {
 			let reachedEnd = new ObservableClass(false);
 			let isLoading = new ObservableClass(false);
 			let albums = new ArrayObservable<apischema.objects.Album>([]);
+			let anchor = new ObservableClass(undefined as Album | undefined);
 			async function load(): Promise<void> {
 				if (!reachedEnd.getState() && !isLoading.getState()) {
 					isLoading.updateState(true);
@@ -3440,12 +3441,14 @@ let updateviewforuri = (uri: string): void => {
 						options: {
 							user_id: "",
 							token: token ?? "",
+							anchor: anchor.getState()?.album_id,
 							offset
 						}
 					});
 					let payload = await response.payload();
 					for (let album of payload.albums) {
 						albums.append(album);
+						anchor.updateState(album);
 					}
 					offset += payload.albums.length;
 					if (payload.albums.length === 0) {
