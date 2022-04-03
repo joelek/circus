@@ -1,4 +1,5 @@
 import * as atlas from "@joelek/atlas";
+import { WritableQueue } from "@joelek/atlas";
 
 const context = atlas.createContext();
 
@@ -401,6 +402,72 @@ const years = context.createStore({
 
 export type Year = atlas.RecordOf<typeof years>;
 
+const album_affinities = context.createStore({
+	album_id: context.createBinaryField(),
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["user_id", "album_id"], {
+
+});
+
+export type AlbumAffinity = atlas.RecordOf<typeof album_affinities>;
+
+const movie_affinities = context.createStore({
+	movie_id: context.createBinaryField(),
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["user_id", "movie_id"], {
+
+});
+
+export type MovieAffinity = atlas.RecordOf<typeof movie_affinities>;
+
+const show_affinities = context.createStore({
+	show_id: context.createBinaryField(),
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["user_id", "show_id"], {
+
+});
+
+export type ShowAffinity = atlas.RecordOf<typeof show_affinities>;
+
+const album_album_affinities = context.createLink(albums, album_affinities, {
+	album_id: "album_id"
+}, {
+
+});
+
+const user_album_affinities = context.createLink(users, album_affinities, {
+	user_id: "user_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
+
+const movie_movie_affinities = context.createLink(movies, movie_affinities, {
+	movie_id: "movie_id"
+}, {
+
+});
+
+const user_movie_affinities = context.createLink(users, movie_affinities, {
+	user_id: "user_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
+
+const show_show_affinities = context.createLink(shows, show_affinities, {
+	show_id: "show_id"
+}, {
+
+});
+
+const user_show_affinities = context.createLink(users, show_affinities, {
+	user_id: "user_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
+
 const directory_directories = context.createLink(directories, directories, {
 	directory_id: "parent_directory_id"
 }, {
@@ -771,7 +838,10 @@ export const { transactionManager } = context.createTransactionManager("./privat
 	streams,
 	playlists,
 	playlist_items,
-	years
+	years,
+	album_affinities,
+	movie_affinities,
+	show_affinities
 }, {
 	directory_directories,
 	directory_files,
@@ -818,7 +888,13 @@ export const { transactionManager } = context.createTransactionManager("./privat
 	track_playlist_items,
 	year_movies,
 	year_episodes,
-	year_albums
+	year_albums,
+	user_album_affinities,
+	album_album_affinities,
+	user_movie_affinities,
+	movie_movie_affinities,
+	user_show_affinities,
+	show_show_affinities
 }, {
 	getUsersFromUsername,
 	getStreamsFromUserIdAndFileId,
@@ -834,3 +910,80 @@ export const { transactionManager } = context.createTransactionManager("./privat
 export const stores = transactionManager.createTransactionalStores();
 export const links = transactionManager.createTransactionalLinks();
 export const queries = transactionManager.createTransactionalQueries();
+
+function computeAffinity(timestamp_ms: number): number {
+	let ms = timestamp_ms - new Date("2022-01-01T00:00:00Z").valueOf();
+	let weeks = ms / (1000 * 60 * 60 * 24 * 7);
+	return Math.pow(2.0, weeks);
+};
+
+async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<void> {
+	let affinity = computeAffinity(stream.timestamp_ms);
+	let track_files = await links.file_track_files.filter(queue, stream);
+	for (let track_file of track_files) {
+		let track = await stores.tracks.lookup(queue, track_file);
+		let disc = await stores.discs.lookup(queue, track);
+		let album = await stores.albums.lookup(queue, disc);
+		let album_affinity: AlbumAffinity = {
+			...album,
+			...stream,
+			affinity
+		};
+		try {
+			album_affinity.affinity += (await stores.album_affinities.lookup(queue, album_affinity)).affinity;
+		} catch (error) {}
+		await stores.album_affinities.insert(queue, album_affinity);
+	}
+};
+
+async function createMovieStream(queue: WritableQueue, stream: Stream): Promise<void> {
+	let affinity = computeAffinity(stream.timestamp_ms);
+	let movie_files = await links.file_movie_files.filter(queue, stream);
+	for (let movie_file of movie_files) {
+		let movie = await stores.movies.lookup(queue, movie_file);
+		let movie_affinity: MovieAffinity = {
+			...movie,
+			...stream,
+			affinity
+		};
+		try {
+			movie_affinity.affinity += (await stores.movie_affinities.lookup(queue, movie_affinity)).affinity;
+		} catch (error) {}
+		await stores.movie_affinities.insert(queue, movie_affinity);
+	}
+};
+
+async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promise<void> {
+	let affinity = computeAffinity(stream.timestamp_ms);
+	let episode_files = await links.file_episode_files.filter(queue, stream);
+	for (let episode_file of episode_files) {
+		let episode = await stores.episodes.lookup(queue, episode_file);
+		let season = await stores.seasons.lookup(queue, episode);
+		let show = await stores.shows.lookup(queue, season);
+		let show_affinity: ShowAffinity = {
+			...show,
+			...stream,
+			affinity
+		};
+		try {
+			show_affinity.affinity += (await stores.show_affinities.lookup(queue, show_affinity)).affinity;
+		} catch (error) {}
+		await stores.show_affinities.insert(queue, show_affinity);
+	}
+};
+
+export async function createStream(queue: WritableQueue, stream: Stream): Promise<void> {
+	await stores.streams.insert(queue, stream);
+	try {
+		await createTrackStream(queue, stream);
+		return;
+	} catch (error) {}
+	try {
+		await createMovieStream(queue, stream);
+		return;
+	} catch (error) {}
+	try {
+		await createEpisodeStream(queue, stream);
+		return;
+	} catch (error) {}
+};

@@ -4,9 +4,9 @@ import * as libfs from "fs";
 import * as libauth from "../server/auth";
 import * as auth from "../server/auth";
 import * as handler from "./handler";
-import * as database from "../database/indexer";
 import * as apiv2 from "./schema/api/server";
 import * as atlas from "../database/atlas";
+import { binid } from "../utils";
 
 function getVersion(): {
 	major: number,
@@ -494,10 +494,10 @@ export const server = apiv2.makeServer({
 			stream.addListener("close", () => {
 				if (range.offset + stream.bytesRead === range.size) {
 					atlas.transactionManager.enqueueWritableTransaction(async (queue) => {
-						handler.createStream(queue, {
-							stream_id: libcrypto.randomBytes(8).toString("hex"),
-							user_id: user_id,
-							file_id: options.file_id,
+						await atlas.createStream(queue, {
+							stream_id: Uint8Array.from(libcrypto.randomBytes(8)),
+							user_id: binid(user_id),
+							file_id: binid(options.file_id),
 							timestamp_ms: Date.now()
 						});
 					});

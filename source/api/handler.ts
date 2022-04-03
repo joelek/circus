@@ -5,7 +5,7 @@ import * as jsondb from "../jsondb";
 import * as is from "../is";
 import * as schema from "./schema/";
 import { default as config } from "../config";
-import { File,  ImageFile, Stream } from "../database/schema";
+import { File, ImageFile } from "../database/schema";
 import { ReadableQueue, WritableQueue } from "@joelek/atlas";
 import * as atlas from "../database/atlas";
 import { ArtistBase } from "./schema/objects";
@@ -47,15 +47,6 @@ export async function lookupFile(queue: ReadableQueue, file_id: string, user_id:
 		mime,
 		path
 	};
-};
-
-export async function createStream(queue: WritableQueue, stream: Stream): Promise<void> {
-	await atlas.stores.streams.insert(queue, {
-		...stream,
-		stream_id: binid(stream.stream_id),
-		user_id: binid(stream.user_id),
-		file_id: binid(stream.file_id)
-	});
 };
 
 export async function createUser(queue: WritableQueue, request: schema.messages.RegisterRequest): Promise<schema.messages.RegisterResponse | schema.messages.ErrorMessage> {
@@ -943,52 +934,20 @@ export async function getUserPlaylists(queue: ReadableQueue, subject_user_id: st
 	return playlists;
 };
 
-// TODO: Create affinity table.
 export async function getUserAlbums(queue: ReadableQueue, subject_user_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
-	let user = await atlas.stores.users.lookup(queue, { user_id: binid(subject_user_id) });
-	let map = new Map<string, number>();
-	let streams = await atlas.links.user_streams.filter(queue, user);
-	for (let stream of streams) {
-		let track_files = await atlas.links.file_track_files.filter(queue, stream);
-		for (let track_file of track_files) {
-			let track = await atlas.stores.tracks.lookup(queue, track_file);
-			let disc = await atlas.stores.discs.lookup(queue, track);
-			let album = await atlas.stores.albums.lookup(queue, disc);
-			let key = hexid(album.album_id);
-			let value = map.get(key) ?? 0;
-			value += getStreamWeight(stream.timestamp_ms);
-			map.set(key, value);
-		}
+	let albums = [] as Array<schema.objects.Album>;
+	for (let album_affinity of await atlas.links.user_album_affinities.filter(queue, { user_id: binid(subject_user_id) })) {
+		albums.push(await lookupAlbum(queue, hexid(album_affinity.album_id), user_id));
 	}
-	return await Promise.all(Array.from(map.entries())
-		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
-		.slice(offset, offset + length)
-		.map((entry) => entry[0])
-		.map((album_id) => lookupAlbum(queue, album_id, user_id)));
+	return albums.slice(offset, offset + length); // TODO: Use anchor.
 };
 
-// TODO: Create affinity table.
 export async function getUserShows(queue: ReadableQueue, subject_user_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Show[]> {
-	let user = await atlas.stores.users.lookup(queue, { user_id: binid(subject_user_id) });
-	let map = new Map<string, number>();
-	let streams = await atlas.links.user_streams.filter(queue, user);
-	for (let stream of streams) {
-		let episode_files = await atlas.links.file_episode_files.filter(queue, stream);
-		for (let episode_file of episode_files) {
-			let episode = await atlas.stores.episodes.lookup(queue, episode_file);
-			let season = await atlas.stores.seasons.lookup(queue, episode);
-			let show = await atlas.stores.shows.lookup(queue, season);
-			let key = hexid(show.show_id);
-			let value = map.get(key) ?? 0;
-			value += getStreamWeight(stream.timestamp_ms);
-			map.set(key, value);
-		}
+	let shows = [] as Array<schema.objects.Show>;
+	for (let show_affinity of await atlas.links.user_show_affinities.filter(queue, { user_id: binid(subject_user_id) })) {
+		shows.push(await lookupShow(queue, hexid(show_affinity.show_id), user_id));
 	}
-	return await Promise.all(Array.from(map.entries())
-		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
-		.slice(offset, offset + length)
-		.map((entry) => entry[0])
-		.map((show_id) => lookupShow(queue, show_id, user_id)));
+	return shows.slice(offset, offset + length); // TODO: Use anchor.
 };
 
 export async function getMoviesFromYear(queue: ReadableQueue, year_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Movie[]> {

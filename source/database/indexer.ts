@@ -7,7 +7,7 @@ import * as is from "../is";
 import * as probes from "./probes";
 import { default as config } from "../config";
 import * as jdb2 from "../jdb2";
-import { transactionManager, stores, links, Directory, File } from "./atlas";
+import { transactionManager, stores, links, Directory, File, createStream } from "./atlas";
 import { ReadableQueue, WritableQueue } from "@joelek/atlas";
 import { binid, hexid } from "../utils";
 
@@ -866,7 +866,7 @@ export async function migrateLegacyData(queue: WritableQueue): Promise<void> {
 					mime = (await stores.video_files.lookup(queue, file)).mime;
 				} catch (error) {}
 				if (mime.startsWith("audio/") || mime.startsWith("video/")) {
-					await stores.streams.insert(queue, {
+					await createStream(queue, {
 						...stream,
 						stream_id: binid(stream.stream_id),
 						user_id: binid(stream.user_id),
