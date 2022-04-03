@@ -1011,10 +1011,13 @@ export const stores = transactionManager.createTransactionalStores();
 export const links = transactionManager.createTransactionalLinks();
 export const queries = transactionManager.createTransactionalQueries();
 
+// Double precision can store positive values between 2^-1022 (inclusive) and 2^1024 (exclusive).
+// The time bias and the time unit is carefully selected so that the computations will work well into the future.
 function computeAffinity(timestamp_ms: number): number {
-	let ms = timestamp_ms - new Date("2022-01-01T00:00:00Z").valueOf();
-	let weeks = ms / (1000 * 60 * 60 * 24 * 7);
-	return Math.pow(2.0, weeks);
+	let bias_ms = new Date("2060-01-01T00:00:00Z").valueOf();
+	let delta_ms = timestamp_ms - bias_ms;
+	let units = delta_ms / (1000 * 60 * 60 * 24 * 7 * 2);
+	return Math.pow(2.0, units);
 };
 
 async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<void> {
