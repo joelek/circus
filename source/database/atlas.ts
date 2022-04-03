@@ -402,6 +402,26 @@ const years = context.createStore({
 
 export type Year = atlas.RecordOf<typeof years>;
 
+const track_affinities = context.createStore({
+	track_id: context.createBinaryField(),
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["user_id", "track_id"], {
+
+});
+
+export type TrackAffinity = atlas.RecordOf<typeof track_affinities>;
+
+const disc_affinities = context.createStore({
+	disc_id: context.createBinaryField(),
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["user_id", "disc_id"], {
+
+});
+
+export type DiscAffinity = atlas.RecordOf<typeof disc_affinities>;
+
 const album_affinities = context.createStore({
 	album_id: context.createBinaryField(),
 	user_id: context.createBinaryField(),
@@ -422,6 +442,26 @@ const movie_affinities = context.createStore({
 
 export type MovieAffinity = atlas.RecordOf<typeof movie_affinities>;
 
+const episode_affinities = context.createStore({
+	episode_id: context.createBinaryField(),
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["user_id", "episode_id"], {
+
+});
+
+export type EpisodeAffinity = atlas.RecordOf<typeof episode_affinities>;
+
+const season_affinities = context.createStore({
+	season_id: context.createBinaryField(),
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["user_id", "season_id"], {
+
+});
+
+export type SeasonAffinity = atlas.RecordOf<typeof season_affinities>;
+
 const show_affinities = context.createStore({
 	show_id: context.createBinaryField(),
 	user_id: context.createBinaryField(),
@@ -431,6 +471,30 @@ const show_affinities = context.createStore({
 });
 
 export type ShowAffinity = atlas.RecordOf<typeof show_affinities>;
+
+const track_track_affinities = context.createLink(tracks, track_affinities, {
+	track_id: "track_id"
+}, {
+
+});
+
+const user_track_affinities = context.createLink(users, track_affinities, {
+	user_id: "user_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
+
+const disc_disc_affinities = context.createLink(discs, disc_affinities, {
+	disc_id: "disc_id"
+}, {
+
+});
+
+const user_disc_affinities = context.createLink(users, disc_affinities, {
+	user_id: "user_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
 
 const album_album_affinities = context.createLink(albums, album_affinities, {
 	album_id: "album_id"
@@ -451,6 +515,30 @@ const movie_movie_affinities = context.createLink(movies, movie_affinities, {
 });
 
 const user_movie_affinities = context.createLink(users, movie_affinities, {
+	user_id: "user_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
+
+const episode_episode_affinities = context.createLink(episodes, episode_affinities, {
+	episode_id: "episode_id"
+}, {
+
+});
+
+const user_episode_affinities = context.createLink(users, episode_affinities, {
+	user_id: "user_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
+
+const season_season_affinities = context.createLink(seasons, season_affinities, {
+	season_id: "season_id"
+}, {
+
+});
+
+const user_season_affinities = context.createLink(users, season_affinities, {
 	user_id: "user_id"
 }, {
 	affinity: context.createDecreasingOrder()
@@ -839,8 +927,12 @@ export const { transactionManager } = context.createTransactionManager("./privat
 	playlists,
 	playlist_items,
 	years,
+	track_affinities,
+	disc_affinities,
 	album_affinities,
 	movie_affinities,
+	episode_affinities,
+	season_affinities,
 	show_affinities
 }, {
 	directory_directories,
@@ -889,10 +981,18 @@ export const { transactionManager } = context.createTransactionManager("./privat
 	year_movies,
 	year_episodes,
 	year_albums,
+	user_track_affinities,
+	track_track_affinities,
+	user_disc_affinities,
+	disc_disc_affinities,
 	user_album_affinities,
 	album_album_affinities,
 	user_movie_affinities,
 	movie_movie_affinities,
+	user_episode_affinities,
+	episode_episode_affinities,
+	user_season_affinities,
+	season_season_affinities,
 	user_show_affinities,
 	show_show_affinities
 }, {
@@ -925,7 +1025,25 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 	}
 	for (let track_file of track_files) {
 		let track = await stores.tracks.lookup(queue, track_file);
+		let track_affinity: TrackAffinity = {
+			...track,
+			...stream,
+			affinity
+		};
+		try {
+			track_affinity.affinity += (await stores.track_affinities.lookup(queue, track_affinity)).affinity;
+		} catch (error) {}
+		await stores.track_affinities.insert(queue, track_affinity);
 		let disc = await stores.discs.lookup(queue, track);
+		let disc_affinity: DiscAffinity = {
+			...disc,
+			...stream,
+			affinity
+		};
+		try {
+			disc_affinity.affinity += (await stores.disc_affinities.lookup(queue, disc_affinity)).affinity;
+		} catch (error) {}
+		await stores.disc_affinities.insert(queue, disc_affinity);
 		let album = await stores.albums.lookup(queue, disc);
 		let album_affinity: AlbumAffinity = {
 			...album,
@@ -967,7 +1085,25 @@ async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promis
 	}
 	for (let episode_file of episode_files) {
 		let episode = await stores.episodes.lookup(queue, episode_file);
+		let episode_affinity: EpisodeAffinity = {
+			...episode,
+			...stream,
+			affinity
+		};
+		try {
+			episode_affinity.affinity += (await stores.episode_affinities.lookup(queue, episode_affinity)).affinity;
+		} catch (error) {}
+		await stores.episode_affinities.insert(queue, episode_affinity);
 		let season = await stores.seasons.lookup(queue, episode);
+		let season_affinity: SeasonAffinity = {
+			...season,
+			...stream,
+			affinity
+		};
+		try {
+			season_affinity.affinity += (await stores.season_affinities.lookup(queue, season_affinity)).affinity;
+		} catch (error) {}
+		await stores.season_affinities.insert(queue, season_affinity);
 		let show = await stores.shows.lookup(queue, season);
 		let show_affinity: ShowAffinity = {
 			...show,
