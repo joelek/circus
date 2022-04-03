@@ -920,6 +920,9 @@ function computeAffinity(timestamp_ms: number): number {
 async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<void> {
 	let affinity = computeAffinity(stream.timestamp_ms);
 	let track_files = await links.file_track_files.filter(queue, stream);
+	if (track_files.length === 0) {
+		throw ``;
+	}
 	for (let track_file of track_files) {
 		let track = await stores.tracks.lookup(queue, track_file);
 		let disc = await stores.discs.lookup(queue, track);
@@ -939,6 +942,9 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 async function createMovieStream(queue: WritableQueue, stream: Stream): Promise<void> {
 	let affinity = computeAffinity(stream.timestamp_ms);
 	let movie_files = await links.file_movie_files.filter(queue, stream);
+	if (movie_files.length === 0) {
+		throw ``;
+	}
 	for (let movie_file of movie_files) {
 		let movie = await stores.movies.lookup(queue, movie_file);
 		let movie_affinity: MovieAffinity = {
@@ -956,6 +962,9 @@ async function createMovieStream(queue: WritableQueue, stream: Stream): Promise<
 async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promise<void> {
 	let affinity = computeAffinity(stream.timestamp_ms);
 	let episode_files = await links.file_episode_files.filter(queue, stream);
+	if (episode_files.length === 0) {
+		throw ``;
+	}
 	for (let episode_file of episode_files) {
 		let episode = await stores.episodes.lookup(queue, episode_file);
 		let season = await stores.seasons.lookup(queue, episode);
