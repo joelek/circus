@@ -868,12 +868,12 @@ export async function getPlaylistAppearances(queue: ReadableQueue, track_id: str
 		.map((playlist_id) => lookupPlaylist(queue, playlist_id, user_id)));
 };
 
-export async function getMovieSuggestions(queue: ReadableQueue, movie_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Movie[]> {
+export async function getMovieSuggestions(queue: ReadableQueue, movie_id: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Movie[]> {
 	let movies = [] as Array<schema.objects.Movie>;
-	for (let entry of await atlas.links.movie_movie_suggestions.filter(queue, { movie_id: binid(movie_id) })) {
+	for (let entry of await atlas.links.movie_movie_suggestions.filter(queue, { movie_id: binid(movie_id) }, anchor != null ? { movie_id: binid(movie_id), suggested_movie_id: binid(anchor) } : undefined, length)) {
 		movies.push(await lookupMovie(queue, hexid(entry.suggested_movie_id), user_id));
 	}
-	return movies.slice(offset, offset + length); // TODO: Use anchor.
+	return movies;
 };
 
 export async function getMoviesFromGenre(queue: ReadableQueue, genre_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Movie[]> {

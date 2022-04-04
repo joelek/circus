@@ -2961,6 +2961,7 @@ let updateviewforuri = (uri: string): void => {
 			let reachedEnd = new ObservableClass(false);
 			let isLoading = new ObservableClass(false);
 			let movies = new ArrayObservable<Movie>([]);
+			let anchor = new ObservableClass(undefined as Movie | undefined);
 			async function load(): Promise<void> {
 				if (!reachedEnd.getState() && !isLoading.getState()) {
 					isLoading.updateState(true);
@@ -2968,12 +2969,14 @@ let updateviewforuri = (uri: string): void => {
 						options: {
 							movie_id,
 							token: token ?? "",
+							anchor: anchor.getState()?.movie_id,
 							offset
 						}
 					});
 					let payload = await response.payload();
 					for (let movie of payload.movies) {
 						movies.append(movie);
+						anchor.updateState(movie);
 					}
 					offset += payload.movies.length;
 					if (payload.movies.length === 0) {

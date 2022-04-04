@@ -117,7 +117,7 @@ route GET:/movies/<movie_id:string>/ ? <{ token: string }>
 		movie: ./objects/Movie
 	};
 
-route GET:/movies/<movie_id:string>/suggestions/ ? <{ token: string, offset?: number, limit?: number }>
+route GET:/movies/<movie_id:string>/suggestions/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		movies: ./objects/Movie[]
 	};

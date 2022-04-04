@@ -973,6 +973,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				let options: Record<string, autoguard.api.JSON> = {};
 				options["movie_id"] = matchers[1].getValue();
 				options["token"] = autoguard.api.decodeParameterValue(raw.parameters, "token", true);
+				options["anchor"] = autoguard.api.decodeParameterValue(raw.parameters, "anchor", true);
 				options["offset"] = autoguard.api.decodeParameterValue(raw.parameters, "offset", false);
 				options["limit"] = autoguard.api.decodeParameterValue(raw.parameters, "limit", false);
 				options = { ...options, ...autoguard.api.decodeUndeclaredParameters(raw.parameters, Object.keys(options)) };

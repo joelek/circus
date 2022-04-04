@@ -277,7 +277,7 @@ export const server = apiv2.makeServer({
 	"GET:/movies/<movie_id>/suggestions/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let movies = await handler.getMovieSuggestions(queue, options.movie_id, options.offset ?? 0, options.limit ?? 24, user_id);
+		let movies = await handler.getMovieSuggestions(queue, options.movie_id, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
 		return {
 			payload: {
 				movies
