@@ -3,7 +3,9 @@ guard ActorBase: {
 	"name": string
 };
 
-guard Actor: ActorBase & {};
+guard Actor: ActorBase & {
+	"affinity": number
+};
 
 guard ArtistBase: {
 	"artist_id": string,
@@ -11,7 +13,8 @@ guard ArtistBase: {
 };
 
 guard Artist: ArtistBase & {
-	"albums": Album[]
+	"albums": Album[],
+	"affinity": number
 };
 
 guard AlbumBase: {
@@ -69,7 +72,8 @@ guard PlaylistBase: {
 };
 
 guard Playlist: PlaylistBase & {
-	"items": PlaylistItem[]
+	"items": PlaylistItem[],
+	"affinity": number
 };
 
 guard PlaylistItemBase: {
@@ -86,7 +90,9 @@ guard GenreBase: {
 	"title": string
 };
 
-guard Genre: GenreBase & {};
+guard Genre: GenreBase & {
+	"affinity": number
+};
 
 guard MovieBase: {
 	"movie_id": string,
@@ -97,8 +103,8 @@ guard MovieBase: {
 guard Movie: MovieBase & {
 	"year"?: YearBase,
 	"summary"?: string,
-	"genres": Genre[],
-	"actors": Actor[],
+	"genres": GenreBase[],
+	"actors": ActorBase[],
 	"last_stream_date"?: number,
 	"media": ../../database/schema/VideoFile,
 	"subtitles": ../../database/schema/SubtitleFile[],
@@ -115,8 +121,8 @@ guard ShowBase: {
 
 guard Show: ShowBase & {
 	"summary"?: string,
-	"genres": Genre[],
-	"actors": Actor[],
+	"genres": GenreBase[],
+	"actors": ActorBase[],
 	"seasons": Season[],
 	"imdb"?: string,
 	"affinity": number
@@ -177,7 +183,9 @@ guard YearBase: {
 	"year": number
 };
 
-guard Year: YearBase & {};
+guard Year: YearBase & {
+	"affinity": number
+};
 
 guard EntityBase: ActorBase | AlbumBase | ArtistBase | CueBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase;
 

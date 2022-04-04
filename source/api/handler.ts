@@ -143,7 +143,8 @@ export async function lookupArtist(queue: ReadableQueue, artist_id: string, api_
 	return {
 		...artist_base,
 		albums: await Promise.all((await atlas.links.artist_album_artists.filter(queue, artist))
-			.map((album_artist) => lookupAlbum(queue, hexid(album_artist.album_id), api_user_id)))
+			.map((album_artist) => lookupAlbum(queue, hexid(album_artist.album_id), api_user_id))),
+		affinity: atlas.adjustAffinity(artist.affinity)
 	};
 };
 
@@ -269,9 +270,11 @@ export async function lookupGenreBase(queue: ReadableQueue, genre_id: string, ap
 };
 
 export async function lookupGenre(queue: ReadableQueue, genre_id: string, api_user_id: string): Promise<schema.objects.Genre> {
-	let genre = await lookupGenreBase(queue, genre_id, api_user_id);
+	let genre_base = await lookupGenreBase(queue, genre_id, api_user_id);
+	let genre = await atlas.stores.genres.lookup(queue, { genre_id: binid(genre_id) });
 	return {
-		...genre
+		...genre_base,
+		affinity: atlas.adjustAffinity(genre.affinity)
 	};
 };
 
@@ -352,9 +355,11 @@ export async function lookupActorBase(queue: ReadableQueue, actor_id: string, ap
 };
 
 export async function lookupActor(queue: ReadableQueue, actor_id: string, api_user_id: string): Promise<schema.objects.Actor> {
-	let actor = await lookupActorBase(queue, actor_id, api_user_id);
+	let actor_base = await lookupActorBase(queue, actor_id, api_user_id);
+	let actor = await atlas.stores.actors.lookup(queue, { actor_id: binid(actor_id) });
 	return {
-		...actor
+		...actor_base,
+		affinity: atlas.adjustAffinity(actor.affinity)
 	};
 };
 
@@ -369,11 +374,13 @@ export async function lookupPlaylistBase(queue: ReadableQueue, playlist_id: stri
 };
 
 export async function lookupPlaylist(queue: ReadableQueue, playlist_id: string, api_user_id: string, user?: schema.objects.UserBase): Promise<schema.objects.Playlist> {
-	let playlist = await lookupPlaylistBase(queue, playlist_id, api_user_id, user);
+	let playlist_base = await lookupPlaylistBase(queue, playlist_id, api_user_id, user);
+	let playlist = await atlas.stores.playlists.lookup(queue, { playlist_id: binid(playlist_id) });
 	return {
-		...playlist,
-		items: await Promise.all((await atlas.links.playlist_playlist_items.filter(queue, { playlist_id: binid(playlist.playlist_id) }))
-			.map((record) => lookupPlaylistItem(queue, hexid(record.playlist_item_id), api_user_id, playlist)))
+		...playlist_base,
+		items: await Promise.all((await atlas.links.playlist_playlist_items.filter(queue, { playlist_id: binid(playlist_base.playlist_id) }))
+			.map((record) => lookupPlaylistItem(queue, hexid(record.playlist_item_id), api_user_id, playlist_base))),
+		affinity: atlas.adjustAffinity(playlist.affinity)
 	};
 };
 
@@ -551,8 +558,10 @@ export async function lookupYearBase(queue: ReadableQueue, year_id: string, user
 
 export async function lookupYear(queue: ReadableQueue, year_id: string, user_id: string): Promise<schema.objects.Year> {
 	let year = await lookupYearBase(queue, year_id, user_id);
+	let record = await atlas.stores.years.lookup(queue, { year_id: binid(year_id) });
 	return {
-		...year
+		...year,
+		affinity: atlas.adjustAffinity(record.affinity)
 	};
 };
 

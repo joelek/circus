@@ -89,7 +89,8 @@ export type VideoSubtitle = atlas.RecordOf<typeof video_subtitles>;
 
 const artists = context.createStore({
 	artist_id: context.createBinaryField(),
-	name: context.createStringField()
+	name: context.createStringField(),
+	affinity: context.createNumberField()
 }, ["artist_id"], {
 	name: context.createIncreasingOrder()
 });
@@ -258,7 +259,8 @@ export type MovieFile = atlas.RecordOf<typeof movie_files>;
 
 const actors = context.createStore({
 	actor_id: context.createBinaryField(),
-	name: context.createStringField()
+	name: context.createStringField(),
+	affinity: context.createNumberField()
 }, ["actor_id"], {
 	name: context.createIncreasingOrder()
 });
@@ -287,7 +289,8 @@ export type ShowActor = atlas.RecordOf<typeof show_actors>;
 
 const genres = context.createStore({
 	genre_id: context.createBinaryField(),
-	name: context.createStringField()
+	name: context.createStringField(),
+	affinity: context.createNumberField()
 }, ["genre_id"], {
 	name: context.createIncreasingOrder()
 });
@@ -381,7 +384,8 @@ const playlists = context.createStore({
 	playlist_id: context.createBinaryField(),
 	title: context.createStringField(),
 	description: context.createStringField(),
-	user_id: context.createBinaryField()
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
 }, ["playlist_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -402,12 +406,63 @@ export type PlaylistItem = atlas.RecordOf<typeof playlist_items>;
 
 const years = context.createStore({
 	year_id: context.createBinaryField(),
-	year: context.createIntegerField()
+	year: context.createIntegerField(),
+	affinity: context.createNumberField()
 }, ["year_id"], {
 	year: context.createIncreasingOrder()
 });
 
 export type Year = atlas.RecordOf<typeof years>;
+
+const artist_affinities = context.createStore({
+	artist_id: context.createBinaryField(),
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["user_id", "artist_id"], {
+
+});
+
+export type ArtistAffinity = atlas.RecordOf<typeof artist_affinities>;
+
+const actor_affinities = context.createStore({
+	actor_id: context.createBinaryField(),
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["user_id", "actor_id"], {
+
+});
+
+export type ActorAffinity = atlas.RecordOf<typeof actor_affinities>;
+
+const genre_affinities = context.createStore({
+	genre_id: context.createBinaryField(),
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["user_id", "genre_id"], {
+
+});
+
+export type GenreAffinity = atlas.RecordOf<typeof genre_affinities>;
+
+const playlist_affinities = context.createStore({
+	playlist_id: context.createBinaryField(),
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["user_id", "playlist_id"], {
+
+});
+
+export type PlaylistAffinity = atlas.RecordOf<typeof playlist_affinities>;
+
+const year_affinities = context.createStore({
+	year_id: context.createBinaryField(),
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["user_id", "year_id"], {
+
+});
+
+export type YearAffinity = atlas.RecordOf<typeof year_affinities>;
 
 const track_affinities = context.createStore({
 	track_id: context.createBinaryField(),
@@ -580,6 +635,66 @@ const show_show_affinities = context.createLink(shows, show_affinities, {
 });
 
 const user_show_affinities = context.createLink(users, show_affinities, {
+	user_id: "user_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
+
+const artist_artist_affinities = context.createLink(artists, artist_affinities, {
+	artist_id: "artist_id"
+}, {
+
+});
+
+const user_artist_affinities = context.createLink(users, artist_affinities, {
+	user_id: "user_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
+
+const genre_genre_affinities = context.createLink(genres, genre_affinities, {
+	genre_id: "genre_id"
+}, {
+
+});
+
+const user_genre_affinities = context.createLink(users, genre_affinities, {
+	user_id: "user_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
+
+const actor_actor_affinities = context.createLink(actors, actor_affinities, {
+	actor_id: "actor_id"
+}, {
+
+});
+
+const user_actor_affinities = context.createLink(users, actor_affinities, {
+	user_id: "user_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
+
+const playlist_playlist_affinities = context.createLink(playlists, playlist_affinities, {
+	playlist_id: "playlist_id"
+}, {
+
+});
+
+const user_playlist_affinities = context.createLink(users, playlist_affinities, {
+	user_id: "user_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
+
+const year_year_affinities = context.createLink(years, year_affinities, {
+	year_id: "year_id"
+}, {
+
+});
+
+const user_year_affinities = context.createLink(users, year_affinities, {
 	user_id: "user_id"
 }, {
 	affinity: context.createDecreasingOrder()
@@ -963,6 +1078,11 @@ export const { transactionManager } = context.createTransactionManager("./privat
 	episode_affinities,
 	season_affinities,
 	show_affinities,
+	artist_affinities,
+	actor_affinities,
+	genre_affinities,
+	playlist_affinities,
+	year_affinities,
 	movie_suggestions
 }, {
 	directory_directories,
@@ -1025,6 +1145,16 @@ export const { transactionManager } = context.createTransactionManager("./privat
 	season_season_affinities,
 	user_show_affinities,
 	show_show_affinities,
+	user_artist_affinities,
+	artist_artist_affinities,
+	user_actor_affinities,
+	actor_actor_affinities,
+	user_genre_affinities,
+	genre_genre_affinities,
+	user_playlist_affinities,
+	playlist_playlist_affinities,
+	user_year_affinities,
+	year_year_affinities,
 	movie_movie_suggestions,
 	movie_movie_suggestions_two
 }, {
@@ -1113,6 +1243,73 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 			album_affinity.affinity += (await stores.album_affinities.lookup(queue, album_affinity)).affinity;
 		} catch (error) {}
 		await stores.album_affinities.insert(queue, album_affinity);
+		if (album.year_id != null) {
+			let year = await stores.years.lookup(queue, { year_id: album.year_id });
+			await stores.years.insert(queue, {
+				...year,
+				affinity
+			});
+			let year_affinity: YearAffinity = {
+				...year,
+				...stream,
+				affinity
+			};
+			try {
+				year_affinity.affinity += (await stores.year_affinities.lookup(queue, year_affinity)).affinity;
+			} catch (error) {}
+			await stores.year_affinities.insert(queue, year_affinity);
+		}
+		let track_artists = await links.track_track_artists.filter(queue, track);
+		for (let track_artist of track_artists) {
+			let artist = await stores.artists.lookup(queue, track_artist);
+			await stores.artists.insert(queue, {
+				...artist,
+				affinity
+			});
+			let artist_affinity: ArtistAffinity = {
+				...artist,
+				...stream,
+				affinity
+			};
+			try {
+				artist_affinity.affinity += (await stores.artist_affinities.lookup(queue, artist_affinity)).affinity;
+			} catch (error) {}
+			await stores.artist_affinities.insert(queue, artist_affinity);
+		}
+		let album_artists = await links.album_album_artists.filter(queue, album);
+		for (let album_artist of album_artists) {
+			let artist = await stores.artists.lookup(queue, album_artist);
+			await stores.artists.insert(queue, {
+				...artist,
+				affinity
+			});
+			let artist_affinity: ArtistAffinity = {
+				...artist,
+				...stream,
+				affinity
+			};
+			try {
+				artist_affinity.affinity += (await stores.artist_affinities.lookup(queue, artist_affinity)).affinity;
+			} catch (error) {}
+			await stores.artist_affinities.insert(queue, artist_affinity);
+		}
+		let playlist_items = await links.track_playlist_items.filter(queue, track);
+		for (let playlist_item of playlist_items) {
+			let playlist = await stores.playlists.lookup(queue, playlist_item);
+			await stores.playlists.insert(queue, {
+				...playlist,
+				affinity
+			});
+			let playlist_affinity: PlaylistAffinity = {
+				...playlist,
+				...stream,
+				affinity
+			};
+			try {
+				playlist_affinity.affinity += (await stores.playlist_affinities.lookup(queue, playlist_affinity)).affinity;
+			} catch (error) {}
+			await stores.playlist_affinities.insert(queue, playlist_affinity);
+		}
 	}
 };
 
@@ -1137,6 +1334,56 @@ async function createMovieStream(queue: WritableQueue, stream: Stream): Promise<
 			movie_affinity.affinity += (await stores.movie_affinities.lookup(queue, movie_affinity)).affinity;
 		} catch (error) {}
 		await stores.movie_affinities.insert(queue, movie_affinity);
+		if (movie.year_id != null) {
+			let year = await stores.years.lookup(queue, { year_id: movie.year_id });
+			await stores.years.insert(queue, {
+				...year,
+				affinity
+			});
+			let year_affinity: YearAffinity = {
+				...year,
+				...stream,
+				affinity
+			};
+			try {
+				year_affinity.affinity += (await stores.year_affinities.lookup(queue, year_affinity)).affinity;
+			} catch (error) {}
+			await stores.year_affinities.insert(queue, year_affinity);
+		}
+		let movie_actors = await links.movie_movie_actors.filter(queue, movie);
+		for (let movie_actor of movie_actors) {
+			let actor = await stores.actors.lookup(queue, movie_actor);
+			await stores.actors.insert(queue, {
+				...actor,
+				affinity
+			});
+			let actor_affinity: ActorAffinity = {
+				...actor,
+				...stream,
+				affinity
+			};
+			try {
+				actor_affinity.affinity += (await stores.actor_affinities.lookup(queue, actor_affinity)).affinity;
+			} catch (error) {}
+			await stores.actor_affinities.insert(queue, actor_affinity);
+		}
+		let movie_genres = await links.movie_movie_genres.filter(queue, movie);
+		for (let movie_genre of movie_genres) {
+			let genre = await stores.genres.lookup(queue, movie_genre);
+			await stores.genres.insert(queue, {
+				...genre,
+				affinity
+			});
+			let genre_affinity: GenreAffinity = {
+				...genre,
+				...stream,
+				affinity
+			};
+			try {
+				genre_affinity.affinity += (await stores.genre_affinities.lookup(queue, genre_affinity)).affinity;
+			} catch (error) {}
+			await stores.genre_affinities.insert(queue, genre_affinity);
+		}
 	}
 };
 
@@ -1189,9 +1436,60 @@ async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promis
 			show_affinity.affinity += (await stores.show_affinities.lookup(queue, show_affinity)).affinity;
 		} catch (error) {}
 		await stores.show_affinities.insert(queue, show_affinity);
+		if (episode.year_id != null) {
+			let year = await stores.years.lookup(queue, { year_id: episode.year_id });
+			await stores.years.insert(queue, {
+				...year,
+				affinity
+			});
+			let year_affinity: YearAffinity = {
+				...year,
+				...stream,
+				affinity
+			};
+			try {
+				year_affinity.affinity += (await stores.year_affinities.lookup(queue, year_affinity)).affinity;
+			} catch (error) {}
+			await stores.year_affinities.insert(queue, year_affinity);
+		}
+		let show_actors = await links.show_show_actors.filter(queue, show);
+		for (let show_actor of show_actors) {
+			let actor = await stores.actors.lookup(queue, show_actor);
+			await stores.actors.insert(queue, {
+				...actor,
+				affinity
+			});
+			let actor_affinity: ActorAffinity = {
+				...actor,
+				...stream,
+				affinity
+			};
+			try {
+				actor_affinity.affinity += (await stores.actor_affinities.lookup(queue, actor_affinity)).affinity;
+			} catch (error) {}
+			await stores.actor_affinities.insert(queue, actor_affinity);
+		}
+		let show_genres = await links.show_show_genres.filter(queue, show);
+		for (let show_genre of show_genres) {
+			let genre = await stores.genres.lookup(queue, show_genre);
+			await stores.genres.insert(queue, {
+				...genre,
+				affinity
+			});
+			let genre_affinity: GenreAffinity = {
+				...genre,
+				...stream,
+				affinity
+			};
+			try {
+				genre_affinity.affinity += (await stores.genre_affinities.lookup(queue, genre_affinity)).affinity;
+			} catch (error) {}
+			await stores.genre_affinities.insert(queue, genre_affinity);
+		}
 	}
 };
 
+// TODO: Fix affinity sum.
 export async function createStream(queue: WritableQueue, stream: Stream): Promise<void> {
 	await stores.streams.insert(queue, stream);
 	try {

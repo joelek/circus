@@ -172,7 +172,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		let year_id: Uint8Array | undefined;
 		if (is.present(metadata.year)) {
 			year_id = makeBinaryId("year", metadata.year);
-			await stores.years.insert(queue, {
+			await stores.years.update(queue, {
 				year_id: year_id,
 				year: metadata.year
 			});
@@ -212,7 +212,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		}
 		for (let [index, actor] of metadata.show.actors.entries()) {
 			let actor_id = makeBinaryId("actor", actor);
-			await stores.actors.insert(queue, {
+			await stores.actors.update(queue, {
 				actor_id: actor_id,
 				name: actor
 			});
@@ -224,7 +224,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		}
 		for (let [index, genre] of metadata.show.genres.entries()) {
 			let genre_id = makeBinaryId("genre", genre);
-			await stores.genres.insert(queue, {
+			await stores.genres.update(queue, {
 				genre_id: genre_id,
 				name: genre
 			});
@@ -238,7 +238,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		let year_id: Uint8Array | undefined;
 		if (is.present(metadata.year)) {
 			year_id = makeBinaryId("year", metadata.year);
-			await stores.years.insert(queue, {
+			await stores.years.update(queue, {
 				year_id: year_id,
 				year: metadata.year
 			});
@@ -261,7 +261,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		}
 		for (let [index, actor] of metadata.actors.entries()) {
 			let actor_id = makeBinaryId("actor", actor);
-			await stores.actors.insert(queue, {
+			await stores.actors.update(queue, {
 				actor_id: actor_id,
 				name: actor
 			});
@@ -273,7 +273,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		}
 		for (let [index, genre] of metadata.genres.entries()) {
 			let genre_id = makeBinaryId("genre", genre);
-			await stores.genres.insert(queue, {
+			await stores.genres.update(queue, {
 				genre_id: genre_id,
 				name: genre
 			});
@@ -287,7 +287,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		let year_id: Uint8Array | undefined;
 		if (is.present(metadata.album.year)) {
 			year_id = makeBinaryId("year", metadata.album.year);
-			await stores.years.insert(queue, {
+			await stores.years.update(queue, {
 				year_id: year_id,
 				year: metadata.album.year
 			});
@@ -301,7 +301,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		});
 		for (let [index, artist] of metadata.album.artists.entries()) {
 			let artist_id = makeBinaryId("artist", artist);
-			await stores.artists.insert(queue, {
+			await stores.artists.update(queue, {
 				artist_id: artist_id,
 				name: artist
 			});
@@ -335,7 +335,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		}
 		for (let [index, artist] of metadata.artists.entries()) {
 			let artist_id = makeBinaryId("artist", artist);
-			await stores.artists.insert(queue, {
+			await stores.artists.update(queue, {
 				artist_id: artist_id,
 				name: artist
 			});
@@ -349,7 +349,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		let year_id: Uint8Array | undefined;
 		if (is.present(metadata.year)) {
 			year_id = makeBinaryId("year", metadata.year);
-			await stores.years.insert(queue, {
+			await stores.years.update(queue, {
 				year_id: year_id,
 				year: metadata.year
 			});
@@ -363,7 +363,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		});
 		for (let [index, artist] of metadata.artists.entries()) {
 			let artist_id = makeBinaryId("artist", artist);
-			await stores.artists.insert(queue, {
+			await stores.artists.update(queue, {
 				artist_id: artist_id,
 				name: artist
 			});
@@ -398,7 +398,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 				});
 				for (let [index, artist] of track.artists.entries()) {
 					let artist_id = makeBinaryId("artist", artist);
-					await stores.artists.insert(queue, {
+					await stores.artists.update(queue, {
 						artist_id: artist_id,
 						name: artist
 					});
@@ -913,7 +913,8 @@ export async function migrateLegacyData(queue: WritableQueue): Promise<void> {
 				await stores.playlists.insert(queue, {
 					...playlist,
 					playlist_id: binid(playlist.playlist_id),
-					user_id: binid(playlist.user_id)
+					user_id: binid(playlist.user_id),
+					affinity: 0
 				});
 			} catch (error) {}
 		}

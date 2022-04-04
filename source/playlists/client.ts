@@ -36,7 +36,8 @@ export class PlaylistsClient {
 			}
 			let playlist = {
 				...message.playlist,
-				items: new Array<api.PlaylistItem>()
+				items: new Array<api.PlaylistItem>(),
+				affinity: 0
 			};
 			this.playlists.append(new observers.ObservableClass(playlist));
 		});

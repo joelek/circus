@@ -138,7 +138,7 @@ export class EntityRowFactory {
 		throw `Expected code to be unreachable!`;
 	}
 
-	forActor(actor: api.Actor): xnode.XElement {
+	forActor(actor: api.ActorBase): xnode.XElement {
 		let link = this.entityLinkFactory.forActor(actor);
 		let image = this.ImageBox.forSquare();
 		let titles = [
@@ -204,7 +204,7 @@ export class EntityRowFactory {
 		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
-	forGenre(genre: api.Genre): xnode.XElement {
+	forGenre(genre: api.GenreBase): xnode.XElement {
 		let link = this.entityLinkFactory.forGenre(genre);
 		let image = this.ImageBox.forSquare();
 		let titles = [

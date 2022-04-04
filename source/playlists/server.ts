@@ -113,7 +113,8 @@ export class PlaylistsServer {
 					playlist_id: binid(playlist_id),
 					title: title,
 					description: description,
-					user_id: binid(user_id)
+					user_id: binid(user_id),
+					affinity: 0
 				};
 				await atlas.stores.playlists.insert(queue, playlist);
 				let session = this.getOrCreateSession(user_id);
