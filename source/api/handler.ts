@@ -827,21 +827,14 @@ export async function getArtistAppearances(queue: ReadableQueue, artist_id: stri
 		.map((album_id) => lookupAlbum(queue, album_id, user_id)));
 };
 
-// TODO: Create global affinity table.
 export async function getArtistTracks(queue: ReadableQueue, artist_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Track[]> {
 	let artist = await atlas.stores.artists.lookup(queue, { artist_id: binid(artist_id) });
 	let map = new Map<string, number>();
 	let track_artists = await atlas.links.artist_track_artists.filter(queue, artist);
 	for (let track_artist of track_artists) {
-		let track_files = await atlas.links.track_track_files.filter(queue, track_artist);
-		for (let track_file of track_files) {
-			let streams = await atlas.links.file_streams.filter(queue, track_file);
-			for (let stream of streams) {
-				let key = hexid(track_file.track_id);
-				let value = map.get(key) ?? 0;
-				value += getStreamWeight(stream.timestamp_ms);
-				map.set(key, value);
-			}
+		let track = await atlas.stores.tracks.lookup(queue, track_artist);
+		if (track.affinity > 0) {
+			map.set(hexid(track_artist.track_id), track.affinity);
 		}
 	}
 	return await Promise.all(Array.from(map.entries())
