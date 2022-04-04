@@ -178,7 +178,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			});
 		}
 		let show_id = makeBinaryId("show", metadata.show.title);
-		await stores.shows.insert(queue, {
+		await stores.shows.update(queue, {
 			show_id: show_id,
 			name: metadata.show.title,
 			summary: metadata.show.summary ?? null,
@@ -186,14 +186,14 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			timestamp_ms: null
 		});
 		let season_id = makeBinaryId("season", show_id, `${metadata.season}`);
-		await stores.seasons.insert(queue, {
+		await stores.seasons.update(queue, {
 			season_id: season_id,
 			show_id: show_id,
 			number: metadata.season,
 			timestamp_ms: null
 		});
 		let episode_id = makeBinaryId("episode", season_id, `${metadata.episode}`);
-		await stores.episodes.insert(queue, {
+		await stores.episodes.update(queue, {
 			episode_id: episode_id,
 			season_id: season_id,
 			title: metadata.title,
@@ -244,7 +244,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			});
 		}
 		let movie_id = makeBinaryId("movie", metadata.title, metadata.year);
-		await stores.movies.insert(queue, {
+		await stores.movies.update(queue, {
 			movie_id: movie_id,
 			title: metadata.title,
 			year_id: year_id ?? null,
@@ -293,7 +293,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			});
 		}
 		let album_id = makeBinaryId("album", metadata.album.title, metadata.album.year);
-		await stores.albums.insert(queue, {
+		await stores.albums.update(queue, {
 			album_id: album_id,
 			title: metadata.album.title,
 			year_id: year_id ?? null,
@@ -312,14 +312,14 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			});
 		}
 		let disc_id = makeBinaryId("disc", album_id, `${metadata.disc}`);
-		await stores.discs.insert(queue, {
+		await stores.discs.update(queue, {
 			disc_id: disc_id,
 			album_id: album_id,
 			number: metadata.disc,
 			timestamp_ms: null
 		});
 		let track_id = makeBinaryId("track", disc_id, `${metadata.track}`);
-		await stores.tracks.insert(queue, {
+		await stores.tracks.update(queue, {
 			track_id: track_id,
 			disc_id: disc_id,
 			title: metadata.title,
@@ -355,7 +355,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			});
 		}
 		let album_id = makeBinaryId("album", metadata.title, metadata.year);
-		await stores.albums.insert(queue, {
+		await stores.albums.update(queue, {
 			album_id: album_id,
 			title: metadata.title,
 			year_id: year_id ?? null,
@@ -374,7 +374,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			});
 		}
 		let disc_id = makeBinaryId("disc", album_id, `${metadata.disc}`);
-		await stores.discs.insert(queue, {
+		await stores.discs.update(queue, {
 			disc_id: disc_id,
 			album_id: album_id,
 			number: metadata.disc,
@@ -384,7 +384,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			for (let [index, file_id] of file_ids.entries()) {
 				let track = metadata.tracks[index];
 				let track_id = makeBinaryId("track", disc_id, `${index}`);
-				await stores.tracks.insert(queue, {
+				await stores.tracks.update(queue, {
 					track_id: track_id,
 					disc_id: disc_id,
 					title: track.title,

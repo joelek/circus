@@ -100,7 +100,8 @@ const albums = context.createStore({
 	album_id: context.createBinaryField(),
 	title: context.createStringField(),
 	year_id: context.createNullableBinaryField(),
-	timestamp_ms: context.createNullableIntegerField()
+	timestamp_ms: context.createNullableIntegerField(),
+	affinity: context.createNumberField()
 }, ["album_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -120,7 +121,8 @@ const discs = context.createStore({
 	disc_id: context.createBinaryField(),
 	album_id: context.createBinaryField(),
 	number: context.createIntegerField(),
-	timestamp_ms: context.createNullableIntegerField()
+	timestamp_ms: context.createNullableIntegerField(),
+	affinity: context.createNumberField()
 }, ["disc_id"], {
 
 });
@@ -133,7 +135,8 @@ const tracks = context.createStore({
 	title: context.createStringField(),
 	number: context.createIntegerField(),
 	copyright: context.createNullableStringField(),
-	timestamp_ms: context.createNullableIntegerField()
+	timestamp_ms: context.createNullableIntegerField(),
+	affinity: context.createNumberField()
 }, ["track_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -174,7 +177,8 @@ const shows = context.createStore({
 	name: context.createStringField(),
 	summary: context.createNullableStringField(),
 	imdb: context.createNullableStringField(),
-	timestamp_ms: context.createNullableIntegerField()
+	timestamp_ms: context.createNullableIntegerField(),
+	affinity: context.createNumberField()
 }, ["show_id"], {
 	name: context.createIncreasingOrder()
 });
@@ -194,7 +198,8 @@ const seasons = context.createStore({
 	season_id: context.createBinaryField(),
 	show_id: context.createBinaryField(),
 	number: context.createIntegerField(),
-	timestamp_ms: context.createNullableIntegerField()
+	timestamp_ms: context.createNullableIntegerField(),
+	affinity: context.createNumberField()
 }, ["season_id"], {
 
 });
@@ -210,7 +215,8 @@ const episodes = context.createStore({
 	summary: context.createNullableStringField(),
 	copyright: context.createNullableStringField(),
 	imdb: context.createNullableStringField(),
-	timestamp_ms: context.createNullableIntegerField()
+	timestamp_ms: context.createNullableIntegerField(),
+	affinity: context.createNumberField()
 }, ["episode_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -233,7 +239,8 @@ const movies = context.createStore({
 	summary: context.createNullableStringField(),
 	copyright: context.createNullableStringField(),
 	imdb: context.createNullableStringField(),
-	timestamp_ms: context.createNullableIntegerField()
+	timestamp_ms: context.createNullableIntegerField(),
+	affinity: context.createNumberField()
 }, ["movie_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -1054,6 +1061,10 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 	}
 	for (let track_file of track_files) {
 		let track = await stores.tracks.lookup(queue, track_file);
+		await stores.tracks.insert(queue, {
+			...track,
+			affinity
+		});
 		let track_affinity: TrackAffinity = {
 			...track,
 			...stream,
@@ -1064,6 +1075,10 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 		} catch (error) {}
 		await stores.track_affinities.insert(queue, track_affinity);
 		let disc = await stores.discs.lookup(queue, track);
+		await stores.discs.insert(queue, {
+			...disc,
+			affinity
+		});
 		let disc_affinity: DiscAffinity = {
 			...disc,
 			...stream,
@@ -1074,6 +1089,10 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 		} catch (error) {}
 		await stores.disc_affinities.insert(queue, disc_affinity);
 		let album = await stores.albums.lookup(queue, disc);
+		await stores.albums.insert(queue, {
+			...album,
+			affinity
+		});
 		let album_affinity: AlbumAffinity = {
 			...album,
 			...stream,
@@ -1094,6 +1113,10 @@ async function createMovieStream(queue: WritableQueue, stream: Stream): Promise<
 	}
 	for (let movie_file of movie_files) {
 		let movie = await stores.movies.lookup(queue, movie_file);
+		await stores.movies.insert(queue, {
+			...movie,
+			affinity
+		});
 		let movie_affinity: MovieAffinity = {
 			...movie,
 			...stream,
@@ -1114,6 +1137,10 @@ async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promis
 	}
 	for (let episode_file of episode_files) {
 		let episode = await stores.episodes.lookup(queue, episode_file);
+		await stores.episodes.insert(queue, {
+			...episode,
+			affinity
+		});
 		let episode_affinity: EpisodeAffinity = {
 			...episode,
 			...stream,
@@ -1124,6 +1151,10 @@ async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promis
 		} catch (error) {}
 		await stores.episode_affinities.insert(queue, episode_affinity);
 		let season = await stores.seasons.lookup(queue, episode);
+		await stores.seasons.insert(queue, {
+			...season,
+			affinity
+		});
 		let season_affinity: SeasonAffinity = {
 			...season,
 			...stream,
@@ -1134,6 +1165,10 @@ async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promis
 		} catch (error) {}
 		await stores.season_affinities.insert(queue, season_affinity);
 		let show = await stores.shows.lookup(queue, season);
+		await stores.shows.insert(queue, {
+			...show,
+			affinity
+		});
 		let show_affinity: ShowAffinity = {
 			...show,
 			...stream,
