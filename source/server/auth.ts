@@ -36,7 +36,7 @@ export async function createToken(queue: WritableQueue, username: string, passwo
 export async function getUserId(queue: ReadableQueue, chunk: string): Promise<string> {
 	let parts = /^([0-9a-f]{16})([0-9a-f]{16})$/.exec(chunk);
 	if (!parts) {
-		throw new Error();
+		throw 400;
 	}
 	let selector = parts[1];
 	let validator = parts[2];
