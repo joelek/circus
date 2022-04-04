@@ -803,10 +803,41 @@ export async function computeShowTimestamps(queue: WritableQueue): Promise<void>
 	}
 };
 
-async function computeCachedValues(queue: WritableQueue): Promise<void> {
+export async function computeMovieSuggestions(queue: WritableQueue): Promise<void> {
+	let movie_suggestions = await stores.movie_suggestions.filter(queue);
+	for (let movie_suggestion of movie_suggestions) {
+		await stores.movie_suggestions.remove(queue, movie_suggestion);
+	}
+	let movies = await stores.movies.filter(queue);
+	for (let movie of movies) {
+		let movie_genres = await links.movie_movie_genres.filter(queue, movie);
+		for (let suggested_movie of movies) {
+			if (suggested_movie.movie_id === movie.movie_id) {
+				continue;
+			}
+			let suggested_movie_genres = await links.movie_movie_genres.filter(queue, suggested_movie);
+			let affinity = 0 - movie_genres.length;
+			for (let movie_genre of movie_genres) {
+				if (suggested_movie_genres.find((suggested_movie_genre) => hexid(suggested_movie_genre.genre_id) === hexid(movie_genre.genre_id)) != null) {
+					affinity += 2;
+				}
+			}
+			if (affinity >= 0) {
+				await stores.movie_suggestions.insert(queue, {
+					movie_id: movie.movie_id,
+					suggested_movie_id: suggested_movie.movie_id,
+					affinity: affinity
+				});
+			}
+		}
+	}
+};
+
+export async function computeDerivedValues(queue: WritableQueue): Promise<void> {
 	await computeAlbumTimestamps(queue);
 	await computeMovieTimestamps(queue);
 	await computeShowTimestamps(queue);
+	await computeMovieSuggestions(queue);
 };
 
 export async function migrateLegacyData(queue: WritableQueue): Promise<void> {
@@ -923,8 +954,8 @@ export async function runIndexer(): Promise<void> {
 		await associateSubtitles(queue);
 		console.log(`Cleaning up...`);
 		await removeBrokenEntities(queue);
-		console.log(`Computing cached values...`);
-		await computeCachedValues(queue);
+		console.log(`Computing derived values...`);
+		await computeDerivedValues(queue);
 		await migrateLegacyData(queue);
 		for (let token of await stores.tokens.filter(queue)) {
 			if (token.expires_ms <= Date.now()) {

@@ -472,6 +472,28 @@ const show_affinities = context.createStore({
 
 export type ShowAffinity = atlas.RecordOf<typeof show_affinities>;
 
+const movie_suggestions = context.createStore({
+	movie_id: context.createBinaryField(),
+	suggested_movie_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["movie_id", "suggested_movie_id"], {
+
+});
+
+export type MovieSuggestion = atlas.RecordOf<typeof movie_suggestions>;
+
+const movie_movie_suggestions = context.createLink(movies, movie_suggestions, {
+	movie_id: "movie_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
+
+const movie_movie_suggestions_two = context.createLink(movies, movie_suggestions, {
+	movie_id: "suggested_movie_id"
+}, {
+
+});
+
 const track_track_affinities = context.createLink(tracks, track_affinities, {
 	track_id: "track_id"
 }, {
@@ -933,7 +955,8 @@ export const { transactionManager } = context.createTransactionManager("./privat
 	movie_affinities,
 	episode_affinities,
 	season_affinities,
-	show_affinities
+	show_affinities,
+	movie_suggestions
 }, {
 	directory_directories,
 	directory_files,
@@ -994,7 +1017,9 @@ export const { transactionManager } = context.createTransactionManager("./privat
 	user_season_affinities,
 	season_season_affinities,
 	user_show_affinities,
-	show_show_affinities
+	show_show_affinities,
+	movie_movie_suggestions,
+	movie_movie_suggestions_two
 }, {
 	getUsersFromUsername,
 	getStreamsFromUserIdAndFileId,

@@ -868,30 +868,12 @@ export async function getPlaylistAppearances(queue: ReadableQueue, track_id: str
 		.map((playlist_id) => lookupPlaylist(queue, playlist_id, user_id)));
 };
 
-// TODO: Create global affinity table.
 export async function getMovieSuggestions(queue: ReadableQueue, movie_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Movie[]> {
-	let movie = await atlas.stores.movies.lookup(queue, { movie_id: binid(movie_id) });
-	let map = new Map<string, number>();
-	let movie_genres = await atlas.links.movie_movie_genres.filter(queue, movie);
-	for (let movie_genre of movie_genres) {
-		let movie_genres = await atlas.links.genre_movie_genres.filter(queue, movie_genre);
-		for (let movie_genre of movie_genres) {
-			let key = hexid(movie_genre.movie_id);
-			let value = map.get(key) ?? 0;
-			value += 2;
-			map.set(key, value);
-		}
+	let movies = [] as Array<schema.objects.Movie>;
+	for (let entry of await atlas.links.movie_movie_suggestions.filter(queue, { movie_id: binid(movie_id) })) {
+		movies.push(await lookupMovie(queue, hexid(entry.suggested_movie_id), user_id));
 	}
-	for (let entry of map) {
-		let movie_genres = await atlas.links.movie_movie_genres.filter(queue, { movie_id: binid(entry[0]) });
-		map.set(entry[0], entry[1] - movie_genres.length);
-	}
-	map.delete(movie_id);
-	return await Promise.all(Array.from(map.entries())
-		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
-		.slice(offset, offset + length)
-		.map((entry) => entry[0])
-		.map((movie_id) => lookupMovie(queue, movie_id, user_id)));
+	return movies.slice(offset, offset + length); // TODO: Use anchor.
 };
 
 export async function getMoviesFromGenre(queue: ReadableQueue, genre_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Movie[]> {
