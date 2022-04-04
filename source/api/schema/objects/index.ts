@@ -66,7 +66,8 @@ export const Album: autoguard.serialization.MessageGuard<Album> = autoguard.guar
 	autoguard.guards.Reference.of(() => AlbumBase),
 	autoguard.guards.Object.of({
 		"artists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ArtistBase)),
-		"discs": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Disc))
+		"discs": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Disc)),
+		"affinity": autoguard.guards.Number
 	}, {
 		"year": autoguard.guards.Reference.of(() => YearBase)
 	})
@@ -76,7 +77,8 @@ export type Album = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<AlbumBase>,
 	autoguard.guards.Object<{
 		"artists": autoguard.guards.Array<autoguard.guards.Reference<ArtistBase>>,
-		"discs": autoguard.guards.Array<autoguard.guards.Reference<Disc>>
+		"discs": autoguard.guards.Array<autoguard.guards.Reference<Disc>>,
+		"affinity": autoguard.guards.Number
 	}, {
 		"year": autoguard.guards.Reference<YearBase>
 	}>
@@ -97,14 +99,16 @@ export type DiscBase = autoguard.guards.Object<{
 export const Disc: autoguard.serialization.MessageGuard<Disc> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => DiscBase),
 	autoguard.guards.Object.of({
-		"tracks": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Track))
+		"tracks": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Track)),
+		"affinity": autoguard.guards.Number
 	}, {})
 );
 
 export type Disc = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<DiscBase>,
 	autoguard.guards.Object<{
-		"tracks": autoguard.guards.Array<autoguard.guards.Reference<Track>>
+		"tracks": autoguard.guards.Array<autoguard.guards.Reference<Track>>,
+		"affinity": autoguard.guards.Number
 	}, {}>
 ]>;
 
@@ -126,7 +130,8 @@ export const Track: autoguard.serialization.MessageGuard<Track> = autoguard.guar
 	autoguard.guards.Reference.of(() => TrackBase),
 	autoguard.guards.Object.of({
 		"artists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ArtistBase)),
-		"media": autoguard.guards.Reference.of(() => AudioFile)
+		"media": autoguard.guards.Reference.of(() => AudioFile),
+		"affinity": autoguard.guards.Number
 	}, {
 		"last_stream_date": autoguard.guards.Number,
 		"copyright": autoguard.guards.String
@@ -137,7 +142,8 @@ export type Track = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<TrackBase>,
 	autoguard.guards.Object<{
 		"artists": autoguard.guards.Array<autoguard.guards.Reference<ArtistBase>>,
-		"media": autoguard.guards.Reference<AudioFile>
+		"media": autoguard.guards.Reference<AudioFile>,
+		"affinity": autoguard.guards.Number
 	}, {
 		"last_stream_date": autoguard.guards.Number,
 		"copyright": autoguard.guards.String
@@ -256,7 +262,8 @@ export const Movie: autoguard.serialization.MessageGuard<Movie> = autoguard.guar
 		"genres": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Genre)),
 		"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor)),
 		"media": autoguard.guards.Reference.of(() => VideoFile),
-		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile))
+		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile)),
+		"affinity": autoguard.guards.Number
 	}, {
 		"year": autoguard.guards.Reference.of(() => YearBase),
 		"summary": autoguard.guards.String,
@@ -272,7 +279,8 @@ export type Movie = autoguard.guards.Intersection<[
 		"genres": autoguard.guards.Array<autoguard.guards.Reference<Genre>>,
 		"actors": autoguard.guards.Array<autoguard.guards.Reference<Actor>>,
 		"media": autoguard.guards.Reference<VideoFile>,
-		"subtitles": autoguard.guards.Array<autoguard.guards.Reference<SubtitleFile>>
+		"subtitles": autoguard.guards.Array<autoguard.guards.Reference<SubtitleFile>>,
+		"affinity": autoguard.guards.Number
 	}, {
 		"year": autoguard.guards.Reference<YearBase>,
 		"summary": autoguard.guards.String,
@@ -299,7 +307,8 @@ export const Show: autoguard.serialization.MessageGuard<Show> = autoguard.guards
 	autoguard.guards.Object.of({
 		"genres": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Genre)),
 		"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor)),
-		"seasons": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Season))
+		"seasons": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Season)),
+		"affinity": autoguard.guards.Number
 	}, {
 		"summary": autoguard.guards.String,
 		"imdb": autoguard.guards.String
@@ -311,7 +320,8 @@ export type Show = autoguard.guards.Intersection<[
 	autoguard.guards.Object<{
 		"genres": autoguard.guards.Array<autoguard.guards.Reference<Genre>>,
 		"actors": autoguard.guards.Array<autoguard.guards.Reference<Actor>>,
-		"seasons": autoguard.guards.Array<autoguard.guards.Reference<Season>>
+		"seasons": autoguard.guards.Array<autoguard.guards.Reference<Season>>,
+		"affinity": autoguard.guards.Number
 	}, {
 		"summary": autoguard.guards.String,
 		"imdb": autoguard.guards.String
@@ -333,14 +343,16 @@ export type SeasonBase = autoguard.guards.Object<{
 export const Season: autoguard.serialization.MessageGuard<Season> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => SeasonBase),
 	autoguard.guards.Object.of({
-		"episodes": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Episode))
+		"episodes": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Episode)),
+		"affinity": autoguard.guards.Number
 	}, {})
 );
 
 export type Season = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<SeasonBase>,
 	autoguard.guards.Object<{
-		"episodes": autoguard.guards.Array<autoguard.guards.Reference<Episode>>
+		"episodes": autoguard.guards.Array<autoguard.guards.Reference<Episode>>,
+		"affinity": autoguard.guards.Number
 	}, {}>
 ]>;
 
@@ -362,7 +374,8 @@ export const Episode: autoguard.serialization.MessageGuard<Episode> = autoguard.
 	autoguard.guards.Reference.of(() => EpisodeBase),
 	autoguard.guards.Object.of({
 		"media": autoguard.guards.Reference.of(() => VideoFile),
-		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile))
+		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile)),
+		"affinity": autoguard.guards.Number
 	}, {
 		"year": autoguard.guards.Reference.of(() => YearBase),
 		"summary": autoguard.guards.String,
@@ -376,7 +389,8 @@ export type Episode = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<EpisodeBase>,
 	autoguard.guards.Object<{
 		"media": autoguard.guards.Reference<VideoFile>,
-		"subtitles": autoguard.guards.Array<autoguard.guards.Reference<SubtitleFile>>
+		"subtitles": autoguard.guards.Array<autoguard.guards.Reference<SubtitleFile>>,
+		"affinity": autoguard.guards.Number
 	}, {
 		"year": autoguard.guards.Reference<YearBase>,
 		"summary": autoguard.guards.String,

@@ -124,7 +124,8 @@ export async function lookupAlbum(queue: ReadableQueue, album_id: string, api_us
 			.map((record) => lookupArtistBase(queue, hexid(record.artist_id), api_user_id))),
 		year: album.year_id != null ? await lookupYearBase(queue, hexid(album.year_id), api_user_id) : undefined,
 		discs: await Promise.all((await atlas.links.album_discs.filter(queue, album))
-			.map((record) => lookupDisc(queue, hexid(record.disc_id), api_user_id, album_base)))
+			.map((record) => lookupDisc(queue, hexid(record.disc_id), api_user_id, album_base))),
+		affinity: atlas.adjustAffinity(album.affinity)
 	};
 };
 
@@ -200,7 +201,8 @@ export async function lookupDisc(queue: ReadableQueue, disc_id: string, api_user
 	return {
 		...disc_base,
 		tracks: await Promise.all((await atlas.links.disc_tracks.filter(queue, disc))
-			.map((record) => lookupTrack(queue, hexid(record.track_id), api_user_id, disc_base)))
+			.map((record) => lookupTrack(queue, hexid(record.track_id), api_user_id, disc_base))),
+		affinity: atlas.adjustAffinity(disc.affinity)
 	};
 };
 
@@ -253,7 +255,8 @@ export async function lookupEpisode(queue: ReadableQueue, episode_id: string, ap
 			language: subtitle_file.language ?? undefined
 		})),
 		copyright: episode.copyright ?? undefined,
-		imdb: episode.imdb ?? undefined
+		imdb: episode.imdb ?? undefined,
+		affinity: atlas.adjustAffinity(episode.affinity)
 	};
 };
 
@@ -335,7 +338,8 @@ export async function lookupMovie(queue: ReadableQueue, movie_id: string, api_us
 			language: subtitle_file.language ?? undefined
 		})),
 		copyright: movie.copyright ?? undefined,
-		imdb: movie.imdb ?? undefined
+		imdb: movie.imdb ?? undefined,
+		affinity: atlas.adjustAffinity(movie.affinity)
 	};
 };
 
@@ -405,7 +409,8 @@ export async function lookupSeason(queue: ReadableQueue, season_id: string, api_
 	return {
 		...season_base,
 		episodes: await Promise.all((await atlas.links.season_episodes.filter(queue, season))
-			.map((record) => lookupEpisode(queue, hexid(record.episode_id), api_user_id, season_base)))
+			.map((record) => lookupEpisode(queue, hexid(record.episode_id), api_user_id, season_base))),
+		affinity: atlas.adjustAffinity(season.affinity)
 	}
 };
 
@@ -443,7 +448,8 @@ export async function lookupShow(queue: ReadableQueue, show_id: string, api_user
 			.map((show_actor) => lookupActorBase(queue, hexid(show_actor.actor_id), api_user_id))),
 		seasons: await Promise.all((await atlas.links.show_seasons.filter(queue, show))
 			.map((season) => lookupSeason(queue, hexid(season.season_id), api_user_id, show_base))),
-		imdb: show.imdb ?? undefined
+		imdb: show.imdb ?? undefined,
+		affinity: atlas.adjustAffinity(show.affinity)
 	};
 };
 
@@ -514,7 +520,8 @@ export async function lookupTrack(queue: ReadableQueue, track_id: string, user_i
 			...media,
 			file_id: hexid(media.file_id)
 		},
-		copyright: record.copyright ?? undefined
+		copyright: record.copyright ?? undefined,
+		affinity: atlas.adjustAffinity(record.affinity)
 	};
 };
 

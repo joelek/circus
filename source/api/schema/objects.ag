@@ -23,7 +23,8 @@ guard AlbumBase: {
 guard Album: AlbumBase & {
 	"artists": ArtistBase[],
 	"discs": Disc[],
-	"year"?: YearBase
+	"year"?: YearBase,
+	"affinity": number
 };
 
 guard DiscBase: {
@@ -33,7 +34,8 @@ guard DiscBase: {
 };
 
 guard Disc: DiscBase & {
-	"tracks": Track[]
+	"tracks": Track[],
+	"affinity": number
 };
 
 guard TrackBase: {
@@ -47,7 +49,8 @@ guard Track: TrackBase & {
 	"artists": ArtistBase[],
 	"last_stream_date"?: number,
 	"media": ../../database/schema/AudioFile,
-	"copyright"?: string
+	"copyright"?: string,
+	"affinity": number
 };
 
 guard UserBase: {
@@ -100,7 +103,8 @@ guard Movie: MovieBase & {
 	"media": ../../database/schema/VideoFile,
 	"subtitles": ../../database/schema/SubtitleFile[],
 	"copyright"?: string,
-	"imdb"?: string
+	"imdb"?: string,
+	"affinity": number
 };
 
 guard ShowBase: {
@@ -114,7 +118,8 @@ guard Show: ShowBase & {
 	"genres": Genre[],
 	"actors": Actor[],
 	"seasons": Season[],
-	"imdb"?: string
+	"imdb"?: string,
+	"affinity": number
 };
 
 guard SeasonBase: {
@@ -124,7 +129,8 @@ guard SeasonBase: {
 };
 
 guard Season: SeasonBase & {
-	"episodes": Episode[]
+	"episodes": Episode[],
+	"affinity": number
 };
 
 guard EpisodeBase: {
@@ -141,7 +147,8 @@ guard Episode: EpisodeBase & {
 	"media": ../../database/schema/VideoFile,
 	"subtitles": ../../database/schema/SubtitleFile[],
 	"copyright"?: string,
-	"imdb"?: string
+	"imdb"?: string,
+	"affinity": number
 };
 
 guard SubtitleBase: {
