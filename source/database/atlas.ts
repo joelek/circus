@@ -1204,7 +1204,7 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 		let track = await stores.tracks.lookup(queue, track_file);
 		await stores.tracks.insert(queue, {
 			...track,
-			affinity
+			affinity: track.affinity + affinity
 		});
 		let track_affinity: TrackAffinity = {
 			...track,
@@ -1218,7 +1218,7 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 		let disc = await stores.discs.lookup(queue, track);
 		await stores.discs.insert(queue, {
 			...disc,
-			affinity
+			affinity: disc.affinity + affinity
 		});
 		let disc_affinity: DiscAffinity = {
 			...disc,
@@ -1232,7 +1232,7 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 		let album = await stores.albums.lookup(queue, disc);
 		await stores.albums.insert(queue, {
 			...album,
-			affinity
+			affinity: album.affinity + affinity
 		});
 		let album_affinity: AlbumAffinity = {
 			...album,
@@ -1247,7 +1247,7 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 			let year = await stores.years.lookup(queue, { year_id: album.year_id });
 			await stores.years.insert(queue, {
 				...year,
-				affinity
+				affinity: year.affinity + affinity
 			});
 			let year_affinity: YearAffinity = {
 				...year,
@@ -1264,7 +1264,7 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 			let artist = await stores.artists.lookup(queue, track_artist);
 			await stores.artists.insert(queue, {
 				...artist,
-				affinity
+				affinity: artist.affinity + affinity
 			});
 			let artist_affinity: ArtistAffinity = {
 				...artist,
@@ -1281,7 +1281,7 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 			let artist = await stores.artists.lookup(queue, album_artist);
 			await stores.artists.insert(queue, {
 				...artist,
-				affinity
+				affinity: artist.affinity + affinity
 			});
 			let artist_affinity: ArtistAffinity = {
 				...artist,
@@ -1298,7 +1298,7 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 			let playlist = await stores.playlists.lookup(queue, playlist_item);
 			await stores.playlists.insert(queue, {
 				...playlist,
-				affinity
+				affinity: playlist.affinity + affinity
 			});
 			let playlist_affinity: PlaylistAffinity = {
 				...playlist,
@@ -1323,7 +1323,7 @@ async function createMovieStream(queue: WritableQueue, stream: Stream): Promise<
 		let movie = await stores.movies.lookup(queue, movie_file);
 		await stores.movies.insert(queue, {
 			...movie,
-			affinity
+			affinity: movie.affinity + affinity
 		});
 		let movie_affinity: MovieAffinity = {
 			...movie,
@@ -1338,7 +1338,7 @@ async function createMovieStream(queue: WritableQueue, stream: Stream): Promise<
 			let year = await stores.years.lookup(queue, { year_id: movie.year_id });
 			await stores.years.insert(queue, {
 				...year,
-				affinity
+				affinity: year.affinity + affinity
 			});
 			let year_affinity: YearAffinity = {
 				...year,
@@ -1355,7 +1355,7 @@ async function createMovieStream(queue: WritableQueue, stream: Stream): Promise<
 			let actor = await stores.actors.lookup(queue, movie_actor);
 			await stores.actors.insert(queue, {
 				...actor,
-				affinity
+				affinity: actor.affinity + affinity
 			});
 			let actor_affinity: ActorAffinity = {
 				...actor,
@@ -1372,7 +1372,7 @@ async function createMovieStream(queue: WritableQueue, stream: Stream): Promise<
 			let genre = await stores.genres.lookup(queue, movie_genre);
 			await stores.genres.insert(queue, {
 				...genre,
-				affinity
+				affinity: genre.affinity + affinity
 			});
 			let genre_affinity: GenreAffinity = {
 				...genre,
@@ -1397,7 +1397,7 @@ async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promis
 		let episode = await stores.episodes.lookup(queue, episode_file);
 		await stores.episodes.insert(queue, {
 			...episode,
-			affinity
+			affinity: episode.affinity + affinity
 		});
 		let episode_affinity: EpisodeAffinity = {
 			...episode,
@@ -1411,7 +1411,7 @@ async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promis
 		let season = await stores.seasons.lookup(queue, episode);
 		await stores.seasons.insert(queue, {
 			...season,
-			affinity
+			affinity: season.affinity + affinity
 		});
 		let season_affinity: SeasonAffinity = {
 			...season,
@@ -1425,7 +1425,7 @@ async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promis
 		let show = await stores.shows.lookup(queue, season);
 		await stores.shows.insert(queue, {
 			...show,
-			affinity
+			affinity: show.affinity + affinity
 		});
 		let show_affinity: ShowAffinity = {
 			...show,
@@ -1440,7 +1440,7 @@ async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promis
 			let year = await stores.years.lookup(queue, { year_id: episode.year_id });
 			await stores.years.insert(queue, {
 				...year,
-				affinity
+				affinity: year.affinity + affinity
 			});
 			let year_affinity: YearAffinity = {
 				...year,
@@ -1457,7 +1457,7 @@ async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promis
 			let actor = await stores.actors.lookup(queue, show_actor);
 			await stores.actors.insert(queue, {
 				...actor,
-				affinity
+				affinity: actor.affinity + affinity
 			});
 			let actor_affinity: ActorAffinity = {
 				...actor,
@@ -1474,7 +1474,7 @@ async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promis
 			let genre = await stores.genres.lookup(queue, show_genre);
 			await stores.genres.insert(queue, {
 				...genre,
-				affinity
+				affinity: genre.affinity + affinity
 			});
 			let genre_affinity: GenreAffinity = {
 				...genre,
@@ -1489,7 +1489,6 @@ async function createEpisodeStream(queue: WritableQueue, stream: Stream): Promis
 	}
 };
 
-// TODO: Fix affinity sum.
 export async function createStream(queue: WritableQueue, stream: Stream): Promise<void> {
 	await stores.streams.insert(queue, stream);
 	try {
