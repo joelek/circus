@@ -89,16 +89,11 @@ export async function getPath(queue: ReadableQueue, entry: Directory | File): Pr
 	return [...config.media_path, ...path];
 };
 
-function getDirectoryPath(queue: ReadableQueue, directory: Directory): Promise<Array<string>> {
-	return getPath(queue, directory);
-};
-
 function getFilePath(queue: ReadableQueue, file: File): Promise<Array<string>> {
 	return getPath(queue, file);
 };
 
-async function checkFile(queue: WritableQueue, root: File): Promise<void> {
-	let paths = await getFilePath(queue, root);
+async function checkFile(queue: WritableQueue, root: File, paths: Array<string>): Promise<void> {
 	let path = paths.join("/");
 	if (libfs.existsSync(path)) {
 		let stats = libfs.statSync(path);
@@ -111,18 +106,17 @@ async function checkFile(queue: WritableQueue, root: File): Promise<void> {
 	await stores.files.remove(queue, root);
 };
 
-async function checkDirectory(queue: WritableQueue, root: Directory): Promise<void> {
-	let paths = await getDirectoryPath(queue, root);
+async function checkDirectory(queue: WritableQueue, root: Directory, paths: Array<string>): Promise<void> {
 	let path = paths.join("/");
 	if (libfs.existsSync(path)) {
 		let stats = libfs.statSync(path);
 		if (stats.isDirectory()) {
 			let directory_id = root.directory_id;
 			for (let directory of await links.directory_directories.filter(queue, { directory_id })) {
-				checkDirectory(queue, directory);
+				checkDirectory(queue, directory, [...paths, directory.name]);
 			}
 			for (let file of await links.directory_files.filter(queue, { directory_id })) {
-				checkFile(queue, file);
+				checkFile(queue, file, [...paths, file.name]);
 			}
 			return;
 		}
@@ -942,10 +936,10 @@ export async function runIndexer(): Promise<void> {
 	await transactionManager.enqueueWritableTransaction(async (queue) => {
 		console.log(`Running indexer...`);
 		for (let directory of await links.directory_directories.filter(queue)) {
-			await checkDirectory(queue, directory);
+			await checkDirectory(queue, directory, []);
 		}
 		for (let file of await links.directory_files.filter(queue)) {
-			await checkFile(queue, file);
+			await checkFile(queue, file, []);
 		}
 		await visitDirectory(queue, config.media_path, null);
 		await indexFiles(queue);
