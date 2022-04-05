@@ -103,6 +103,7 @@ async function checkFile(queue: WritableQueue, root: File, paths: Array<string>)
 			}
 		}
 	}
+	console.log(`Removing ${path} from index.`);
 	await stores.files.remove(queue, root);
 };
 
@@ -113,14 +114,15 @@ async function checkDirectory(queue: WritableQueue, root: Directory, paths: Arra
 		if (stats.isDirectory()) {
 			let directory_id = root.directory_id;
 			for (let directory of await links.directory_directories.filter(queue, { directory_id })) {
-				checkDirectory(queue, directory, [...paths, directory.name]);
+				await checkDirectory(queue, directory, [...paths, directory.name]);
 			}
 			for (let file of await links.directory_files.filter(queue, { directory_id })) {
-				checkFile(queue, file, [...paths, file.name]);
+				await checkFile(queue, file, [...paths, file.name]);
 			}
 			return;
 		}
 	}
+	console.log(`Removing ${path} from index.`);
 	await stores.directories.remove(queue, root);
 };
 
@@ -937,10 +939,10 @@ export async function runIndexer(): Promise<void> {
 	await transactionManager.enqueueWritableTransaction(async (queue) => {
 		console.log(`Updating file lists...`);
 		for (let directory of await links.directory_directories.filter(queue)) {
-			await checkDirectory(queue, directory, []);
+			await checkDirectory(queue, directory, [...config.media_path, directory.name]);
 		}
 		for (let file of await links.directory_files.filter(queue)) {
-			await checkFile(queue, file, []);
+			await checkFile(queue, file, [...config.media_path, file.name]);
 		}
 		await visitDirectory(queue, config.media_path, null);
 	});
