@@ -718,7 +718,6 @@ export async function computeAlbumTimestamps(queue: WritableQueue): Promise<void
 	console.log(`Computing album timestamps...`);
 	let albums = await stores.albums.filter(queue);
 	for (let album of albums) {
-		console.log(`${album.title}`);
 		let album_timestamp_ms = album.timestamp_ms;
 		let discs = await links.album_discs.filter(queue, album);
 		for (let disc of discs) {
@@ -763,7 +762,6 @@ export async function computeMovieTimestamps(queue: WritableQueue): Promise<void
 	console.log(`Computing movie timestamps...`);
 	let movies = await stores.movies.filter(queue);
 	for (let movie of movies) {
-		console.log(`${movie.title}`);
 		let movie_timestamp_ms = movie.timestamp_ms;
 		let movie_files = await links.movie_movie_files.filter(queue, movie);
 		for (let movie_file of movie_files) {
@@ -786,7 +784,6 @@ export async function computeShowTimestamps(queue: WritableQueue): Promise<void>
 	console.log(`Computing show timestamps...`);
 	let shows = await stores.shows.filter(queue);
 	for (let show of shows) {
-		console.log(`${show.name}`);
 		let show_timestamp_ms = show.timestamp_ms;
 		let seasons = await links.show_seasons.filter(queue, show);
 		for (let season of seasons) {
@@ -829,13 +826,8 @@ export async function computeShowTimestamps(queue: WritableQueue): Promise<void>
 
 export async function computeMovieSuggestions(queue: WritableQueue): Promise<void> {
 	console.log(`Computing movie suggestions...`);
-	let movie_suggestions = await stores.movie_suggestions.filter(queue);
-	for (let movie_suggestion of movie_suggestions) {
-		await stores.movie_suggestions.remove(queue, movie_suggestion);
-	}
 	let movies = await stores.movies.filter(queue);
 	for (let movie of movies) {
-		console.log(`${movie.title}`);
 		let movie_genres = await links.movie_movie_genres.filter(queue, movie);
 		for (let suggested_movie of movies) {
 			if (suggested_movie.movie_id === movie.movie_id) {
