@@ -164,7 +164,45 @@ async function visitDirectory(queue: WritableQueue, path: Array<string>, parent_
 
 async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, ...file_ids: Array<Uint8Array>): Promise<void> {
 	let metadata = probe.metadata;
-	if (probes.schema.EpisodeMetadata.is(metadata)) {
+	if (probes.schema.ShowMetadata.is(metadata)) {
+		let show_id = makeBinaryId("show", metadata.title);
+		await stores.shows.update(queue, {
+			show_id: show_id,
+			name: metadata.title,
+			summary: metadata.summary ?? null,
+			imdb: metadata.imdb ?? null
+		});
+		for (let file_id of file_ids) {
+			await stores.show_files.insert(queue, {
+				show_id: show_id,
+				file_id: file_id
+			});
+		}
+		for (let [index, actor] of metadata.actors.entries()) {
+			let actor_id = makeBinaryId("actor", actor);
+			await stores.actors.update(queue, {
+				actor_id: actor_id,
+				name: actor
+			});
+			await stores.show_actors.insert(queue, {
+				actor_id: actor_id,
+				show_id: show_id,
+				order: index
+			});
+		}
+		for (let [index, genre] of metadata.genres.entries()) {
+			let genre_id = makeBinaryId("genre", genre);
+			await stores.genres.update(queue, {
+				genre_id: genre_id,
+				name: genre
+			});
+			await stores.show_genres.insert(queue, {
+				genre_id: genre_id,
+				show_id: show_id,
+				order: index
+			});
+		}
+	} else if (probes.schema.EpisodeMetadata.is(metadata)) {
 		let year_id: Uint8Array | undefined;
 		if (is.present(metadata.year)) {
 			year_id = makeBinaryId("year", metadata.year);
@@ -490,7 +528,6 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 				});
 			}
 		}
-		// TODO: Only index actual media files and not the metadata files themselves.
 		await indexMetadata(queue, probe, file_id);
 	} catch (error) {
 		console.log(`Indexing failed for "${path}"!`);
@@ -517,22 +554,11 @@ async function indexFiles(queue: WritableQueue): Promise<void> {
 
 async function getSiblingFiles(queue: ReadableQueue, subject: File): Promise<Array<File>> {
 	let parent_directory = await links.directory_files.lookup(queue, subject);
-	let candidates_in_directory = [] as Array<File>;
-	for (let file of await links.directory_files.filter(queue, parent_directory)) {
-		try {
-			await stores.audio_files.lookup(queue, file);
-			candidates_in_directory.push(file);
-			continue;
-		} catch (error) {}
-		try {
-			await stores.video_files.lookup(queue, file);
-			candidates_in_directory.push(file);
-			continue;
-		} catch (error) {}
-	}
-	candidates_in_directory.sort(indices.LexicalSort.increasing((file) => file.name));
+	let candidates_in_directory = (await links.directory_files.filter(queue, parent_directory))
+		.sort(indices.LexicalSort.increasing((file) => file.name));
 	let basename = subject.name.split(".")[0];
 	let candidates_sharing_basename = candidates_in_directory
+		.filter((file) => hexid(file.file_id) !== hexid(subject.file_id))
 		.filter((file) => file.name.split(".")[0] === basename);
 	if (candidates_sharing_basename.length > 0) {
 		return candidates_sharing_basename;
@@ -564,46 +590,49 @@ async function associateImages(queue: WritableQueue): Promise<void> {
 		let file = await stores.files.lookup(queue, image_file);
 		let siblings = await getSiblingFiles(queue, file);
 		for (let sibling of siblings) {
-			let track_files = (await links.file_track_files.filter(queue, sibling))
-				.filter((track_file) => track_file.file_id !== image_file.file_id);
+			let track_files = await links.file_track_files.filter(queue, sibling);
 			if (track_files.length > 0) {
 				for (let track_file of track_files) {
-					try {
-						let track = await stores.tracks.lookup(queue, track_file);
-						let disc = await stores.discs.lookup(queue, track);
-						let album = await stores.albums.lookup(queue, disc);
-						await stores.album_files.insert(queue, {
-							album_id: album.album_id,
-							file_id: image_file.file_id
-						});
-					} catch (error) {}
-				}
-				continue;
-			}
-			let movie_files = (await links.file_movie_files.filter(queue, sibling))
-				.filter((movie_file) => movie_file.file_id !== image_file.file_id);
-			if (movie_files.length > 0) {
-				for (let movie_file of movie_files) {
-					await stores.movie_files.insert(queue, {
-						movie_id: movie_file.movie_id,
+					let track = await stores.tracks.lookup(queue, track_file);
+					let disc = await stores.discs.lookup(queue, track);
+					let album = await stores.albums.lookup(queue, disc);
+					await stores.album_files.insert(queue, {
+						album_id: album.album_id,
 						file_id: image_file.file_id
 					});
 				}
 				continue;
 			}
-			let episode_files = (await links.file_episode_files.filter(queue, sibling))
-				.filter((episode_file) => episode_file.file_id !== image_file.file_id);
+			let movie_files = await links.file_movie_files.filter(queue, sibling);
+			if (movie_files.length > 0) {
+				for (let movie_file of movie_files) {
+					let movie = await stores.movies.lookup(queue, movie_file);
+					await stores.movie_files.insert(queue, {
+						movie_id: movie.movie_id,
+						file_id: image_file.file_id
+					});
+				}
+				continue;
+			}
+			let episode_files = await links.file_episode_files.filter(queue, sibling);
 			if (episode_files.length > 0) {
 				for (let episode_file of episode_files) {
-					try {
-						let episode = await stores.episodes.lookup(queue, episode_file);
-						let season = await stores.seasons.lookup(queue, episode);
-						let show = await stores.shows.lookup(queue, season);
-						await stores.show_files.insert(queue, {
-							show_id: show.show_id,
-							file_id: image_file.file_id
-						});
-					} catch (error) {}
+					let episode = await stores.episodes.lookup(queue, episode_file);
+					await stores.episode_files.insert(queue, {
+						episode_id: episode.episode_id,
+						file_id: image_file.file_id
+					});
+				}
+				continue;
+			}
+			let show_files = await links.file_show_files.filter(queue, sibling);
+			if (show_files.length > 0) {
+				for (let show_file of show_files) {
+					let show = await stores.shows.lookup(queue, show_file);
+					await stores.show_files.insert(queue, {
+						show_id: show.show_id,
+						file_id: image_file.file_id
+					});
 				}
 				continue;
 			}
@@ -617,14 +646,16 @@ async function associateSubtitles(queue: WritableQueue): Promise<void> {
 	console.log(`Database contains ${subtitle_files.length} subtitle files.`);
 	for (let subtitle_file of subtitle_files) {
 		let file = await stores.files.lookup(queue, subtitle_file);
-		let basename = file.name.split(".")[0];
-		let siblings = (await getSiblingFiles(queue, file))
-			.filter((file) => file.name.split(".")[0] === basename);
+		let siblings = await getSiblingFiles(queue, file);
 		for (let sibling of siblings) {
-			await stores.video_subtitles.insert(queue, {
-				video_file_id: sibling.file_id,
-				subtitle_file_id: file.file_id
-			});
+			try {
+				let video_file = await stores.video_files.lookup(queue, sibling);
+				await stores.video_subtitles.insert(queue, {
+					video_file_id: video_file.file_id,
+					subtitle_file_id: file.file_id
+				});
+				continue;
+			} catch (error) {}
 		}
 	}
 };

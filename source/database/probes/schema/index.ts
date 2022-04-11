@@ -2,6 +2,26 @@
 
 import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 
+export const ShowMetadata: autoguard.serialization.MessageGuard<ShowMetadata> = autoguard.guards.Object.of({
+	"type": autoguard.guards.StringLiteral.of("show"),
+	"title": autoguard.guards.String,
+	"genres": autoguard.guards.Array.of(autoguard.guards.String),
+	"actors": autoguard.guards.Array.of(autoguard.guards.String)
+}, {
+	"summary": autoguard.guards.String,
+	"imdb": autoguard.guards.String
+});
+
+export type ShowMetadata = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"show">,
+	"title": autoguard.guards.String,
+	"genres": autoguard.guards.Array<autoguard.guards.String>,
+	"actors": autoguard.guards.Array<autoguard.guards.String>
+}, {
+	"summary": autoguard.guards.String,
+	"imdb": autoguard.guards.String
+}>;
+
 export const EpisodeMetadata: autoguard.serialization.MessageGuard<EpisodeMetadata> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("episode"),
 	"title": autoguard.guards.String,
@@ -131,6 +151,7 @@ export type AlbumMetadata = autoguard.guards.Object<{
 }>;
 
 export const Metadata: autoguard.serialization.MessageGuard<Metadata> = autoguard.guards.Union.of(
+	autoguard.guards.Reference.of(() => ShowMetadata),
 	autoguard.guards.Reference.of(() => EpisodeMetadata),
 	autoguard.guards.Reference.of(() => MovieMetadata),
 	autoguard.guards.Reference.of(() => TrackMetadata),
@@ -138,6 +159,7 @@ export const Metadata: autoguard.serialization.MessageGuard<Metadata> = autoguar
 );
 
 export type Metadata = autoguard.guards.Union<[
+	autoguard.guards.Reference<ShowMetadata>,
 	autoguard.guards.Reference<EpisodeMetadata>,
 	autoguard.guards.Reference<MovieMetadata>,
 	autoguard.guards.Reference<TrackMetadata>,
@@ -242,6 +264,7 @@ export type Probe = autoguard.guards.Object<{
 
 export namespace Autoguard {
 	export const Guards = {
+		"ShowMetadata": autoguard.guards.Reference.of(() => ShowMetadata),
 		"EpisodeMetadata": autoguard.guards.Reference.of(() => EpisodeMetadata),
 		"MovieMetadata": autoguard.guards.Reference.of(() => MovieMetadata),
 		"TrackMetadata": autoguard.guards.Reference.of(() => TrackMetadata),

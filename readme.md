@@ -41,6 +41,21 @@ External image and metadata files may be used to supply additional information t
 
 ```
 {
+	"type": "show",
+	"title": "Show title",
+	"summary"?: "Show summary.",
+	"genres": [
+		"Genre name"
+	],
+	"actors": [
+		"Actor name"
+	],
+	"imdb"?: "tt0000000"
+}
+```
+
+```
+{
 	"type": "episode",
 	"title": "Episode title",
 	"season": 1,
