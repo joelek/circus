@@ -897,18 +897,24 @@ export async function computeShowTimestamps(queue: WritableQueue): Promise<void>
 
 export async function computeMovieSuggestions(queue: WritableQueue): Promise<void> {
 	console.log(`Computing movie suggestions...`);
-	let movies = await stores.movies.filter(queue);
-	for (let movie of movies) {
+	let movies = await Promise.all((await stores.movies.filter(queue)).map(async (movie) => {
 		let movie_genres = await links.movie_movie_genres.filter(queue, movie);
+		return {
+			...movie,
+			movie_genres
+		};
+	}));
+	for (let movie of movies) {
 		for (let suggested_movie of movies) {
 			if (suggested_movie.movie_id === movie.movie_id) {
 				continue;
 			}
-			let suggested_movie_genres = await links.movie_movie_genres.filter(queue, suggested_movie);
-			let affinity = 0 - movie_genres.length;
-			for (let movie_genre of movie_genres) {
-				if (suggested_movie_genres.find((suggested_movie_genre) => hexid(suggested_movie_genre.genre_id) === hexid(movie_genre.genre_id)) != null) {
-					affinity += 2;
+			let affinity = 0;
+			for (let movie_genre of movie.movie_genres) {
+				if (suggested_movie.movie_genres.find((suggested_movie_genre) => hexid(suggested_movie_genre.genre_id) === hexid(movie_genre.genre_id)) != null) {
+					affinity += 1;
+				} else {
+					affinity -= 1;
 				}
 			}
 			if (affinity >= 0) {
