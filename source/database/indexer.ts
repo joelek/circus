@@ -917,7 +917,14 @@ export async function computeMovieSuggestions(queue: WritableQueue): Promise<voi
 					affinity -= 1;
 				}
 			}
-			if (affinity >= 0) {
+			for (let suggested_movie_genre of suggested_movie.movie_genres) {
+				if (movie.movie_genres.find((movie_genre) => hexid(movie_genre.genre_id) === hexid(suggested_movie_genre.genre_id)) != null) {
+					affinity += 1;
+				} else {
+					affinity -= 1;
+				}
+			}
+			if (affinity > 0) {
 				await stores.movie_suggestions.insert(queue, {
 					movie_id: movie.movie_id,
 					suggested_movie_id: suggested_movie.movie_id,
