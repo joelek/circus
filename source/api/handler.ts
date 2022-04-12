@@ -221,7 +221,7 @@ export async function lookupEpisode(queue: ReadableQueue, episode_id: string, ap
 	let episode_base = await lookupEpisodeBase(queue, episode_id, api_user_id, season);
 	let episode = await atlas.stores.episodes.lookup(queue, { episode_id: binid(episode_id) });
 	let video_files = [] as Array<atlas.VideoFile>;
-	let episode_files = await atlas.links.episode_episode_files.filter(queue, episode)
+	let episode_files = await atlas.links.episode_episode_files.filter(queue, episode);
 	for (let episode_file of episode_files) {
 		try {
 			video_files.push(await atlas.stores.video_files.lookup(queue, episode_file));

@@ -162,6 +162,79 @@ async function visitDirectory(queue: WritableQueue, path: Array<string>, parent_
 	}
 };
 
+async function associateShowFiles(queue: WritableQueue, show_id: Uint8Array, ...file_ids: Array<Uint8Array>): Promise<void> {
+	for (let file_id of file_ids) {
+		try {
+			let image_file = await stores.image_files.lookup(queue, { file_id });
+			await stores.show_files.insert(queue, {
+				show_id: show_id,
+				...image_file
+			});
+			continue;
+		} catch (error) {}
+	}
+};
+
+async function associateEpisodeFiles(queue: WritableQueue, episode_id: Uint8Array, ...file_ids: Array<Uint8Array>): Promise<void> {
+	for (let file_id of file_ids) {
+		try {
+			let video_file = await stores.video_files.lookup(queue, { file_id });
+			await stores.episode_files.insert(queue, {
+				episode_id: episode_id,
+				...video_file
+			});
+			continue;
+		} catch (error) {}
+	}
+};
+
+async function associateMovieFiles(queue: WritableQueue, movie_id: Uint8Array, ...file_ids: Array<Uint8Array>): Promise<void> {
+	for (let file_id of file_ids) {
+		try {
+			let video_file = await stores.video_files.lookup(queue, { file_id });
+			await stores.movie_files.insert(queue, {
+				movie_id: movie_id,
+				...video_file
+			});
+			continue;
+		} catch (error) {}
+		try {
+			let image_file = await stores.image_files.lookup(queue, { file_id });
+			await stores.movie_files.insert(queue, {
+				movie_id: movie_id,
+				...image_file
+			});
+			continue;
+		} catch (error) {}
+	}
+};
+
+async function associateTrackFiles(queue: WritableQueue, track_id: Uint8Array, ...file_ids: Array<Uint8Array>): Promise<void> {
+	for (let file_id of file_ids) {
+		try {
+			let audio_file = await stores.audio_files.lookup(queue, { file_id });
+			await stores.track_files.insert(queue, {
+				track_id: track_id,
+				...audio_file
+			});
+			continue;
+		} catch (error) {}
+	}
+};
+
+async function associateAlbumFiles(queue: WritableQueue, album_id: Uint8Array, ...file_ids: Array<Uint8Array>): Promise<void> {
+	for (let file_id of file_ids) {
+		try {
+			let image_file = await stores.image_files.lookup(queue, { file_id });
+			await stores.album_files.insert(queue, {
+				album_id: album_id,
+				...image_file
+			});
+			continue;
+		} catch (error) {}
+	}
+};
+
 async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, ...file_ids: Array<Uint8Array>): Promise<void> {
 	let metadata = probe.metadata;
 	if (probes.schema.ShowMetadata.is(metadata)) {
@@ -172,12 +245,6 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			summary: metadata.summary ?? null,
 			imdb: metadata.imdb ?? null
 		});
-		for (let file_id of file_ids) {
-			await stores.show_files.insert(queue, {
-				show_id: show_id,
-				file_id: file_id
-			});
-		}
 		for (let [index, actor] of metadata.actors.entries()) {
 			let actor_id = makeBinaryId("actor", actor);
 			await stores.actors.update(queue, {
@@ -202,6 +269,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 				order: index
 			});
 		}
+		await associateShowFiles(queue, show_id, ...file_ids);
 	} else if (probes.schema.EpisodeMetadata.is(metadata)) {
 		let year_id: Uint8Array | undefined;
 		if (is.present(metadata.year)) {
@@ -235,12 +303,6 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			copyright: metadata.copyright ?? null,
 			imdb: metadata.imdb ?? null
 		});
-		for (let file_id of file_ids) {
-			await stores.episode_files.insert(queue, {
-				episode_id: episode_id,
-				file_id: file_id
-			});
-		}
 		for (let [index, actor] of metadata.show.actors.entries()) {
 			let actor_id = makeBinaryId("actor", actor);
 			await stores.actors.update(queue, {
@@ -265,6 +327,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 				order: index
 			});
 		}
+		await associateEpisodeFiles(queue, episode_id, ...file_ids);
 	} else if (probes.schema.MovieMetadata.is(metadata)) {
 		let year_id: Uint8Array | undefined;
 		if (is.present(metadata.year)) {
@@ -283,12 +346,6 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			copyright: metadata.copyright ?? null,
 			imdb: metadata.imdb ?? null
 		});
-		for (let file_id of file_ids) {
-			await stores.movie_files.insert(queue, {
-				movie_id: movie_id,
-				file_id: file_id
-			});
-		}
 		for (let [index, actor] of metadata.actors.entries()) {
 			let actor_id = makeBinaryId("actor", actor);
 			await stores.actors.update(queue, {
@@ -313,6 +370,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 				order: index
 			});
 		}
+		await associateMovieFiles(queue, movie_id, ...file_ids);
 	} else if (probes.schema.TrackMetadata.is(metadata)) {
 		let year_id: Uint8Array | undefined;
 		if (is.present(metadata.album.year)) {
@@ -354,12 +412,6 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			number: metadata.track,
 			copyright: metadata.copyright ?? null
 		});
-		for (let file_id of file_ids) {
-			await stores.track_files.insert(queue, {
-				track_id: track_id,
-				file_id: file_id
-			});
-		}
 		for (let [index, artist] of metadata.artists.entries()) {
 			let artist_id = makeBinaryId("artist", artist);
 			await stores.artists.update(queue, {
@@ -372,6 +424,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 				order: index
 			});
 		}
+		await associateTrackFiles(queue, track_id, ...file_ids);
 	} else if (probes.schema.AlbumMetadata.is(metadata)) {
 		let year_id: Uint8Array | undefined;
 		if (is.present(metadata.year)) {
@@ -405,35 +458,29 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			album_id: album_id,
 			number: metadata.disc
 		});
-		if (metadata.tracks.length === file_ids.length) {
-			for (let [index, file_id] of file_ids.entries()) {
-				let track = metadata.tracks[index];
-				let track_id = makeBinaryId("track", disc_id, `${index}`);
-				await stores.tracks.update(queue, {
-					track_id: track_id,
-					disc_id: disc_id,
-					title: track.title,
-					number: index + 1,
-					copyright: track.copyright ?? metadata.copyright ?? null
+		for (let [index, track] of metadata.tracks.entries()) {
+			let track_id = makeBinaryId("track", disc_id, `${index}`);
+			await stores.tracks.update(queue, {
+				track_id: track_id,
+				disc_id: disc_id,
+				title: track.title,
+				number: index + 1,
+				copyright: track.copyright ?? metadata.copyright ?? null
+			});
+			for (let [index, artist] of track.artists.entries()) {
+				let artist_id = makeBinaryId("artist", artist);
+				await stores.artists.update(queue, {
+					artist_id: artist_id,
+					name: artist
 				});
-				await stores.track_files.insert(queue, {
+				await stores.track_artists.insert(queue, {
 					track_id: track_id,
-					file_id: file_id
+					artist_id: artist_id,
+					order: index
 				});
-				for (let [index, artist] of track.artists.entries()) {
-					let artist_id = makeBinaryId("artist", artist);
-					await stores.artists.update(queue, {
-						artist_id: artist_id,
-						name: artist
-					});
-					await stores.track_artists.insert(queue, {
-						track_id: track_id,
-						artist_id: artist_id,
-						order: index
-					});
-				}
 			}
 		}
+		await associateAlbumFiles(queue, album_id, ...file_ids);
 	}
 };
 
@@ -472,6 +519,7 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 						lines: cue.lines.join("\n")
 					});
 				} */
+				await indexMetadata(queue, probe);
 			}
 		} else if (file.name.endsWith(".json")) {
 			probe = probes.json.probe(fd);
@@ -482,6 +530,7 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 					file_id: file_id,
 					mime: "application/json"
 				});
+				await indexMetadata(queue, probe);
 			}
 		} else if (file.name.endsWith(".mp3")) {
 			probe = probes.mp3.probe(fd);
@@ -493,6 +542,7 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 					mime: "audio/mp3",
 					duration_ms: audio_resource.duration_ms
 				});
+				await indexMetadata(queue, probe, file_id);
 			}
 		} else if (file.name.endsWith(".mp4")) {
 			probe = probes.mp4.probe(fd);
@@ -508,12 +558,14 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 					width: video_resource.width,
 					height: video_resource.height
 				});
+				await indexMetadata(queue, probe, file_id);
 			} else if (is.present(audio_resource)) {
 				await stores.audio_files.insert(queue, {
 					file_id: file_id,
 					mime: "audio/mp4",
 					duration_ms: audio_resource.duration_ms
 				});
+				await indexMetadata(queue, probe, file_id);
 			}
 		} else if (file.name.endsWith(".jpg") || file.name.endsWith(".jpeg")) {
 			probe = probes.jpeg.probe(fd);
@@ -526,9 +578,9 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 					width: image_resource.width,
 					height: image_resource.height
 				});
+				await indexMetadata(queue, probe);
 			}
 		}
-		await indexMetadata(queue, probe, file_id);
 	} catch (error) {
 		console.log(`Indexing failed for "${path}"!`);
 		console.log(error);
@@ -596,10 +648,7 @@ async function associateImages(queue: WritableQueue): Promise<void> {
 					let track = await stores.tracks.lookup(queue, track_file);
 					let disc = await stores.discs.lookup(queue, track);
 					let album = await stores.albums.lookup(queue, disc);
-					await stores.album_files.insert(queue, {
-						album_id: album.album_id,
-						file_id: image_file.file_id
-					});
+					await associateAlbumFiles(queue, album.album_id, image_file.file_id);
 				}
 				continue;
 			}
@@ -607,10 +656,7 @@ async function associateImages(queue: WritableQueue): Promise<void> {
 			if (movie_files.length > 0) {
 				for (let movie_file of movie_files) {
 					let movie = await stores.movies.lookup(queue, movie_file);
-					await stores.movie_files.insert(queue, {
-						movie_id: movie.movie_id,
-						file_id: image_file.file_id
-					});
+					await associateMovieFiles(queue, movie.movie_id, image_file.file_id);
 				}
 				continue;
 			}
@@ -618,10 +664,7 @@ async function associateImages(queue: WritableQueue): Promise<void> {
 			if (episode_files.length > 0) {
 				for (let episode_file of episode_files) {
 					let episode = await stores.episodes.lookup(queue, episode_file);
-					await stores.episode_files.insert(queue, {
-						episode_id: episode.episode_id,
-						file_id: image_file.file_id
-					});
+					await associateEpisodeFiles(queue, episode.episode_id, image_file.file_id);
 				}
 				continue;
 			}
@@ -629,10 +672,7 @@ async function associateImages(queue: WritableQueue): Promise<void> {
 			if (show_files.length > 0) {
 				for (let show_file of show_files) {
 					let show = await stores.shows.lookup(queue, show_file);
-					await stores.show_files.insert(queue, {
-						show_id: show.show_id,
-						file_id: image_file.file_id
-					});
+					await associateShowFiles(queue, show.show_id, image_file.file_id);
 				}
 				continue;
 			}
@@ -652,7 +692,7 @@ async function associateSubtitles(queue: WritableQueue): Promise<void> {
 				let video_file = await stores.video_files.lookup(queue, sibling);
 				await stores.video_subtitles.insert(queue, {
 					video_file_id: video_file.file_id,
-					subtitle_file_id: file.file_id
+					subtitle_file_id: subtitle_file.file_id
 				});
 				continue;
 			} catch (error) {}
