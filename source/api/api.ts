@@ -207,7 +207,7 @@ export const server = apiv2.makeServer({
 	"GET:/genres/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let genres = await handler.searchForGenres(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let genres = await handler.searchForGenres(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 100, user_id);
 		return {
 			payload: {
 				genres
@@ -444,7 +444,7 @@ export const server = apiv2.makeServer({
 	"GET:/years/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let years = await handler.searchForYears(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let years = await handler.searchForYears(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 100, user_id);
 		return {
 			payload: {
 				years
