@@ -831,7 +831,7 @@ export async function getArtistAppearances(queue: ReadableQueue, artist_id: stri
 		let album = await atlas.stores.albums.lookup(queue, { album_id: binid(entry[0]) });
 		let album_artists = await atlas.links.album_album_artists.filter(queue, album);
 		for (let album_artist of album_artists) {
-			if (hexid(album_artist.album_id) === entry[0]) {
+			if (hexid(album_artist.artist_id) === artist_id) {
 				map.delete(entry[0]);
 			}
 		}
