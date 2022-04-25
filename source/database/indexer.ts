@@ -1115,5 +1115,3 @@ process.on("SIGINT", () => {
 	console.log("SIGINT");
 	process.exit(0);
 });
-
-// slow because of tree.length() check
