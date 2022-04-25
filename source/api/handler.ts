@@ -586,12 +586,8 @@ export async function searchForAlbums(queue: ReadableQueue, query: string, ancho
 		return await Promise.all((await atlas.stores.albums.filter(queue, undefined, undefined, anchor != null ? { album_id: binid(anchor) } : undefined, length))
 			.map((record) => lookupAlbum(queue, hexid(record.album_id), user_id)));
 	} else {
-		return [];
-/* 		return await Promise.all(database.album_search.search(query)
-			.slice(offset, offset + length)
-			.map((record) => record.lookup().album_id)
-			.map((id) => lookupAlbum(queue, id, user_id))
-			.collect()); */
+		return await Promise.all((await atlas.stores.albums.search(queue, query, anchor != null ? { album_id: binid(anchor) } : undefined, length))
+			.map((record) => lookupAlbum(queue, hexid(record.album_id), user_id)));
 	}
 };
 
@@ -600,21 +596,13 @@ export async function searchForArtists(queue: ReadableQueue, query: string, anch
 		return await Promise.all((await atlas.stores.artists.filter(queue, undefined, undefined, anchor != null ? { artist_id: binid(anchor) } : undefined, length))
 			.map((record) => lookupArtist(queue, hexid(record.artist_id), user_id)));
 	} else {
-		return [];
-/* 		return await Promise.all(database.artist_search.search(query)
-			.slice(offset, offset + length)
-			.map((record) => record.lookup().artist_id)
-			.map((id) => lookupArtist(queue, id, user_id))
-			.collect()); */
+		return await Promise.all((await atlas.stores.artists.search(queue, query, anchor != null ? { artist_id: binid(anchor) } : undefined, length))
+			.map((record) => lookupArtist(queue, hexid(record.artist_id), user_id)));
 	}
 };
 
 export async function searchForCues(queue: ReadableQueue, query: string, offset: number, limit: number, user_id: string): Promise<(schema.objects.Cue & { media: schema.objects.Episode | schema.objects.Movie })[]> {
-	return []; /* await Promise.all(database.cue_search.search(query)
-		.slice(offset, offset + limit)
-		.map((record) => lookupCue(queue, record.lookup().cue_id, user_id))
-		.include(is.present)
-		.collect()); */
+	return [];
 };
 
 export async function searchForDiscs(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Disc[]> {
@@ -627,12 +615,8 @@ export async function searchForEpisodes(queue: ReadableQueue, query: string, anc
 		return await Promise.all((await atlas.stores.episodes.filter(queue, undefined, undefined, anchor != null ? { episode_id: binid(anchor) } : undefined, length))
 			.map((record) => lookupEpisode(queue, hexid(record.episode_id), user_id)));
 	} else {
-		return [];
-/* 		return await Promise.all(database.episode_search.search(query)
-			.slice(offset, offset + length)
-			.map((record) => record.lookup().episode_id)
-			.map((id) => lookupEpisode(queue, id, user_id))
-			.collect()); */
+		return await Promise.all((await atlas.stores.episodes.search(queue, query, anchor != null ? { episode_id: binid(anchor) } : undefined, length))
+			.map((record) => lookupEpisode(queue, hexid(record.episode_id), user_id)));
 	}
 };
 
@@ -641,12 +625,8 @@ export async function searchForGenres(queue: ReadableQueue, query: string, ancho
 		return await Promise.all((await atlas.stores.genres.filter(queue, undefined, undefined, anchor != null ? { genre_id: binid(anchor) } : undefined, length))
 			.map((record) => lookupGenre(queue, hexid(record.genre_id), user_id)));
 	} else {
-		return [];
-/* 		return await Promise.all(database.genre_search.search(query)
-			.slice(offset, offset + length)
-			.map((record) => record.lookup().genre_id)
-			.map((id) => lookupGenre(queue, id, user_id))
-			.collect()); */
+		return await Promise.all((await atlas.stores.genres.search(queue, query, anchor != null ? { genre_id: binid(anchor) } : undefined, length))
+			.map((record) => lookupGenre(queue, hexid(record.genre_id), user_id)));
 	}
 };
 
@@ -655,12 +635,8 @@ export async function searchForMovies(queue: ReadableQueue, query: string, ancho
 		return await Promise.all((await atlas.stores.movies.filter(queue, undefined, undefined, anchor != null ? { movie_id: binid(anchor) } : undefined, length))
 			.map((record) => lookupMovie(queue, hexid(record.movie_id), user_id)));
 	} else {
-		return [];
-/* 		return await Promise.all(database.movie_search.search(query)
-			.slice(offset, offset + length)
-			.map((record) => record.lookup().movie_id)
-			.map((id) => lookupMovie(queue, id, user_id))
-			.collect()); */
+		return await Promise.all((await atlas.stores.movies.search(queue, query, anchor != null ? { movie_id: binid(anchor) } : undefined, length))
+			.map((record) => lookupMovie(queue, hexid(record.movie_id), user_id)));
 	}
 };
 
@@ -669,12 +645,8 @@ export async function searchForActors(queue: ReadableQueue, query: string, ancho
 		return await Promise.all((await atlas.stores.actors.filter(queue, undefined, undefined, anchor != null ? { actor_id: binid(anchor) } : undefined, length))
 			.map((record) => lookupActor(queue, hexid(record.actor_id), user_id)));
 	} else {
-		return [];
-/* 		return await Promise.all(database.actor_search.search(query)
-			.slice(offset, offset + length)
-			.map((record) => record.lookup().actor_id)
-			.map((id) => lookupActor(queue, id, user_id))
-			.collect()); */
+		return await Promise.all((await atlas.stores.actors.search(queue, query, anchor != null ? { actor_id: binid(anchor) } : undefined, length))
+			.map((record) => lookupActor(queue, hexid(record.actor_id), user_id)));
 	}
 };
 
@@ -683,12 +655,8 @@ export async function searchForPlaylists(queue: ReadableQueue, query: string, an
 		return await Promise.all((await atlas.stores.playlists.filter(queue, undefined, undefined, anchor != null ? { playlist_id: binid(anchor) } : undefined, length))
 			.map((record) => lookupPlaylist(queue, hexid(record.playlist_id), user_id)));
 	} else {
-		return [];
-/* 		return await Promise.all(database.playlist_search.search(query)
-			.slice(offset, offset + length)
-			.map((record) => record.lookup().playlist_id)
-			.map((id) => lookupPlaylist(queue, id, user_id))
-			.collect()); */
+		return await Promise.all((await atlas.stores.playlists.search(queue, query, anchor != null ? { playlist_id: binid(anchor) } : undefined, length))
+			.map((record) => lookupPlaylist(queue, hexid(record.playlist_id), user_id)));
 	}
 };
 
@@ -702,12 +670,8 @@ export async function searchForShows(queue: ReadableQueue, query: string, anchor
 		return await Promise.all((await atlas.stores.shows.filter(queue, undefined, undefined, anchor != null ? { show_id: binid(anchor) } : undefined, length))
 			.map((record) => lookupShow(queue, hexid(record.show_id), user_id)));
 	} else {
-		return [];
-/* 		return await Promise.all(database.shows_search.search(query)
-			.slice(offset, offset + length)
-			.map((record) => record.lookup().show_id)
-			.map((id) => lookupShow(queue, id, user_id))
-			.collect()); */
+		return await Promise.all((await atlas.stores.shows.search(queue, query, anchor != null ? { show_id: binid(anchor) } : undefined, length))
+			.map((record) => lookupShow(queue, hexid(record.show_id), user_id)));
 	}
 };
 
@@ -716,12 +680,8 @@ export async function searchForTracks(queue: ReadableQueue, query: string, ancho
 		return await Promise.all((await atlas.stores.tracks.filter(queue, undefined, undefined, anchor != null ? { track_id: binid(anchor) } : undefined, length))
 			.map((record) => lookupTrack(queue, hexid(record.track_id), user_id)));
 	} else {
-		return [];
-/* 		return await Promise.all(database.track_search.search(query)
-			.slice(offset, offset + length)
-			.map((record) => record.lookup().track_id)
-			.map((id) => lookupTrack(queue, id, user_id))
-			.collect()); */
+		return await Promise.all((await atlas.stores.tracks.search(queue, query, anchor != null ? { track_id: binid(anchor) } : undefined, length))
+			.map((record) => lookupTrack(queue, hexid(record.track_id), user_id)));
 	}
 };
 
@@ -730,12 +690,8 @@ export async function searchForUsers(queue: ReadableQueue, query: string, anchor
 		return await Promise.all((await atlas.stores.users.filter(queue, undefined, undefined, anchor != null ? { user_id: binid(anchor) } : undefined, length))
 			.map((record) => lookupUser(queue, hexid(record.user_id), user_id)));
 	} else {
-		return [];
-/* 		return await Promise.all(database.user_search.search(query)
-			.slice(offset, offset + length)
-			.map((record) => record.lookup().user_id)
-			.map((id) => lookupUser(queue, id, user_id))
-			.collect()); */
+		return await Promise.all((await atlas.stores.users.search(queue, query, anchor != null ? { user_id: binid(anchor) } : undefined, length))
+			.map((record) => lookupUser(queue, hexid(record.user_id), user_id)));
 	}
 };
 
@@ -744,12 +700,8 @@ export async function searchForYears(queue: ReadableQueue, query: string, anchor
 		return await Promise.all((await atlas.stores.years.filter(queue, undefined, { year: createDecreasingOrder() }, anchor != null ? { year_id: binid(anchor) } : undefined, length))
 			.map((record) => lookupYear(queue, hexid(record.year_id), user_id)));
 	} else {
-		return [];
-/* 		return await Promise.all(database.year_search.search(query)
-			.slice(offset, offset + length)
-			.map((record) => record.lookup().year_id)
-			.map((id) => lookupYear(queue, id, user_id))
-			.collect()); */
+		return await Promise.all((await atlas.stores.years.search(queue, query, anchor != null ? { year_id: binid(anchor) } : undefined, length))
+			.map((record) => lookupYear(queue, hexid(record.year_id), user_id)));
 	}
 };
 
