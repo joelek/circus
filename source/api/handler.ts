@@ -142,8 +142,9 @@ export async function lookupArtist(queue: ReadableQueue, artist_id: string, api_
 	let artist = await atlas.stores.artists.lookup(queue, { artist_id: binid(artist_id) });
 	return {
 		...artist_base,
-		albums: await Promise.all((await atlas.links.artist_album_artists.filter(queue, artist))
-			.map((album_artist) => lookupAlbum(queue, hexid(album_artist.album_id), api_user_id))),
+		albums: (await Promise.all((await atlas.links.artist_album_artists.filter(queue, artist))
+			.map((album_artist) => lookupAlbum(queue, hexid(album_artist.album_id), api_user_id))))
+			.sort(jsondb.NumericSort.decreasing((album) => album.year?.year)),
 		affinity: atlas.adjustAffinity(artist.affinity)
 	};
 };

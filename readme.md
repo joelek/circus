@@ -220,4 +220,3 @@ Ports, paths and other settings can be configured through altering the config fi
 * Add filter to entity pages.
 * Change line heights to prevent the truncation of capital letters with umlauts.
 * Index keyframes and create movie and episode subpage with list.
-* Fix discography order by year.
