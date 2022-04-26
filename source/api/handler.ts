@@ -706,7 +706,10 @@ export async function searchForYears(queue: ReadableQueue, query: string, anchor
 };
 
 export async function searchForEntities(queue: ReadableQueue, query: string, user_id: string, offset: number, limit: number, options?: Partial<{ cues: boolean }>): Promise<schema.objects.Entity[]> {
-	return [];
+	let tracks = await atlas.stores.tracks.search(queue, query);
+	return await Promise.all(tracks.slice(offset, offset + limit)
+		.map((record) => lookupTrack(queue, hexid(record.track_id), user_id)));
+
 /* 	let results = [
 		...database.actor_search.search(query).map((result) => ({ ...result, type: "ACTOR", type_rank: 1 })),
 		...database.album_search.search(query).map((result) => ({ ...result, type: "ALBUM", type_rank: 9 })),
