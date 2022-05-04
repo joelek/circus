@@ -1032,7 +1032,7 @@ const getRecentlyUpdatedEpisodes = context.createQuery(episodes, {
 	timestamp_ms: context.createDecreasingOrder()
 });
 
-export const { transactionManager } = context.createTransactionManager("./private/db/", {
+export const transactionManager = context.createTransactionManager("./private/db/", {
 	directories,
 	files,
 	audio_files,
@@ -1169,9 +1169,9 @@ export const { transactionManager } = context.createTransactionManager("./privat
 	getRecentlyUpdatedEpisodes
 });
 
-export const stores = transactionManager.createTransactionalStores();
-export const links = transactionManager.createTransactionalLinks();
-export const queries = transactionManager.createTransactionalQueries();
+export const stores = transactionManager.stores;
+export const links = transactionManager.links;
+export const queries = transactionManager.queries;
 
 // Double precision can store positive values between 2^-1022 (inclusive) and 2^1024 (exclusive).
 export function computeAffinity(timestamp_ms: number): number {
