@@ -12,6 +12,7 @@ import { ArtistBase } from "./schema/objects";
 import { binid, hexid } from "../utils";
 import { getPath } from "../database/indexer";
 import { createDecreasingOrder } from "@joelek/atlas";
+import { ActorResult, AlbumResult, ArtistResult, DiscResult, EpisodeResult, GenreResult, MovieResult, PlaylistResult, SeasonResult, ShowResult, TrackResult, UserResult, YearResult } from "./schema/api";
 
 export function getStreamWeight(timestamp_ms: number): number {
 	let ms = Date.now() - timestamp_ms;
@@ -582,134 +583,170 @@ export async function getNewMovies(queue: ReadableQueue, user_id: string, anchor
 	return movies;
 };
 
-export async function searchForAlbums(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
-	if (query === "") {
-		return await Promise.all((await atlas.stores.albums.filter(queue, undefined, undefined, anchor != null ? { album_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupAlbum(queue, hexid(record.album_id), user_id)));
-	} else {
-		return await Promise.all((await atlas.stores.albums.search(queue, query, anchor != null ? { album_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupAlbum(queue, hexid(record.album_id), user_id)));
-	}
+export async function searchForAlbums(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<AlbumResult[]> {
+	return await Promise.all((await atlas.stores.albums.search(queue, query, anchor != null ? { album_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let album = await lookupAlbum(queue, hexid(record.album_id), user_id)
+			return {
+				album,
+				rank
+			};
+		}));
 };
 
-export async function searchForArtists(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Artist[]> {
-	if (query === "") {
-		return await Promise.all((await atlas.stores.artists.filter(queue, undefined, undefined, anchor != null ? { artist_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupArtist(queue, hexid(record.artist_id), user_id)));
-	} else {
-		return await Promise.all((await atlas.stores.artists.search(queue, query, anchor != null ? { artist_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupArtist(queue, hexid(record.artist_id), user_id)));
-	}
+export async function searchForArtists(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<ArtistResult[]> {
+	return await Promise.all((await atlas.stores.artists.search(queue, query, anchor != null ? { artist_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let artist = await lookupArtist(queue, hexid(record.artist_id), user_id)
+			return {
+				artist,
+				rank
+			};
+		}));
 };
 
 export async function searchForCues(queue: ReadableQueue, query: string, offset: number, limit: number, user_id: string): Promise<(schema.objects.Cue & { media: schema.objects.Episode | schema.objects.Movie })[]> {
 	return [];
 };
 
-export async function searchForDiscs(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Disc[]> {
-	return await Promise.all((await atlas.stores.discs.filter(queue, undefined, undefined, anchor != null ? { disc_id: binid(anchor) } : undefined, length))
-		.map((record) => lookupDisc(queue, hexid(record.disc_id), user_id)));
+export async function searchForDiscs(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<DiscResult[]> {
+	return await Promise.all((await atlas.stores.discs.search(queue, query, anchor != null ? { disc_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let disc = await lookupDisc(queue, hexid(record.disc_id), user_id)
+			return {
+				disc,
+				rank
+			};
+		}));
 };
 
-export async function searchForEpisodes(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Episode[]> {
-	if (query === "") {
-		return await Promise.all((await atlas.stores.episodes.filter(queue, undefined, undefined, anchor != null ? { episode_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupEpisode(queue, hexid(record.episode_id), user_id)));
-	} else {
-		return await Promise.all((await atlas.stores.episodes.search(queue, query, anchor != null ? { episode_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupEpisode(queue, hexid(record.episode_id), user_id)));
-	}
+export async function searchForEpisodes(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<EpisodeResult[]> {
+	return await Promise.all((await atlas.stores.episodes.search(queue, query, anchor != null ? { episode_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let episode = await lookupEpisode(queue, hexid(record.episode_id), user_id)
+			return {
+				episode,
+				rank
+			};
+		}));
 };
 
-export async function searchForGenres(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Genre[]> {
-	if (query === "") {
-		return await Promise.all((await atlas.stores.genres.filter(queue, undefined, undefined, anchor != null ? { genre_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupGenre(queue, hexid(record.genre_id), user_id)));
-	} else {
-		return await Promise.all((await atlas.stores.genres.search(queue, query, anchor != null ? { genre_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupGenre(queue, hexid(record.genre_id), user_id)));
-	}
+export async function searchForGenres(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<GenreResult[]> {
+	return await Promise.all((await atlas.stores.genres.search(queue, query, anchor != null ? { genre_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let genre = await lookupGenre(queue, hexid(record.genre_id), user_id)
+			return {
+				genre,
+				rank
+			};
+		}));
 };
 
-export async function searchForMovies(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Movie[]> {
-	if (query === "") {
-		return await Promise.all((await atlas.stores.movies.filter(queue, undefined, undefined, anchor != null ? { movie_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupMovie(queue, hexid(record.movie_id), user_id)));
-	} else {
-		return await Promise.all((await atlas.stores.movies.search(queue, query, anchor != null ? { movie_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupMovie(queue, hexid(record.movie_id), user_id)));
-	}
+export async function searchForMovies(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<MovieResult[]> {
+	return await Promise.all((await atlas.stores.movies.search(queue, query, anchor != null ? { movie_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let movie = await lookupMovie(queue, hexid(record.movie_id), user_id)
+			return {
+				movie,
+				rank
+			};
+		}));
 };
 
-export async function searchForActors(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Actor[]> {
-	if (query === "") {
-		return await Promise.all((await atlas.stores.actors.filter(queue, undefined, undefined, anchor != null ? { actor_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupActor(queue, hexid(record.actor_id), user_id)));
-	} else {
-		return await Promise.all((await atlas.stores.actors.search(queue, query, anchor != null ? { actor_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupActor(queue, hexid(record.actor_id), user_id)));
-	}
+export async function searchForActors(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<ActorResult[]> {
+	return await Promise.all((await atlas.stores.actors.search(queue, query, anchor != null ? { actor_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let actor = await lookupActor(queue, hexid(record.actor_id), user_id)
+			return {
+				actor,
+				rank
+			};
+		}));
 };
 
-export async function searchForPlaylists(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Playlist[]> {
-	if (query === "") {
-		return await Promise.all((await atlas.stores.playlists.filter(queue, undefined, undefined, anchor != null ? { playlist_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupPlaylist(queue, hexid(record.playlist_id), user_id)));
-	} else {
-		return await Promise.all((await atlas.stores.playlists.search(queue, query, anchor != null ? { playlist_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupPlaylist(queue, hexid(record.playlist_id), user_id)));
-	}
+export async function searchForPlaylists(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<PlaylistResult[]> {
+	return await Promise.all((await atlas.stores.playlists.search(queue, query, anchor != null ? { playlist_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let playlist = await lookupPlaylist(queue, hexid(record.playlist_id), user_id)
+			return {
+				playlist,
+				rank
+			};
+		}));
 };
 
-export async function searchForSeasons(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Season[]> {
-	return await Promise.all((await atlas.stores.seasons.filter(queue, undefined, undefined, anchor != null ? { season_id: binid(anchor) } : undefined, length))
-		.map((record) => lookupSeason(queue, hexid(record.season_id), user_id)));
+export async function searchForSeasons(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<SeasonResult[]> {
+	return await Promise.all((await atlas.stores.seasons.search(queue, query, anchor != null ? { season_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let season = await lookupSeason(queue, hexid(record.season_id), user_id)
+			return {
+				season,
+				rank
+			};
+		}));
 };
 
-export async function searchForShows(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Show[]> {
-	if (query === "") {
-		return await Promise.all((await atlas.stores.shows.filter(queue, undefined, undefined, anchor != null ? { show_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupShow(queue, hexid(record.show_id), user_id)));
-	} else {
-		return await Promise.all((await atlas.stores.shows.search(queue, query, anchor != null ? { show_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupShow(queue, hexid(record.show_id), user_id)));
-	}
+export async function searchForShows(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<ShowResult[]> {
+	return await Promise.all((await atlas.stores.shows.search(queue, query, anchor != null ? { show_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let show = await lookupShow(queue, hexid(record.show_id), user_id)
+			return {
+				show,
+				rank
+			};
+		}));
 };
 
-export async function searchForTracks(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Track[]> {
-	if (query === "") {
-		return await Promise.all((await atlas.stores.tracks.filter(queue, undefined, undefined, anchor != null ? { track_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupTrack(queue, hexid(record.track_id), user_id)));
-	} else {
-		return await Promise.all((await atlas.stores.tracks.search(queue, query, anchor != null ? { track_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupTrack(queue, hexid(record.track_id), user_id)));
-	}
+export async function searchForTracks(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<TrackResult[]> {
+	return await Promise.all((await atlas.stores.tracks.search(queue, query, anchor != null ? { track_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let track = await lookupTrack(queue, hexid(record.track_id), user_id)
+			return {
+				track,
+				rank
+			};
+		}));
 };
 
-export async function searchForUsers(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.User[]> {
-	if (query === "") {
-		return await Promise.all((await atlas.stores.users.filter(queue, undefined, undefined, anchor != null ? { user_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupUser(queue, hexid(record.user_id), user_id)));
-	} else {
-		return await Promise.all((await atlas.stores.users.search(queue, query, anchor != null ? { user_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupUser(queue, hexid(record.user_id), user_id)));
-	}
+export async function searchForUsers(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<UserResult[]> {
+	return await Promise.all((await atlas.stores.users.search(queue, query, anchor != null ? { user_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let user = await lookupUser(queue, hexid(record.user_id), user_id)
+			return {
+				user,
+				rank
+			};
+		}));
 };
 
-export async function searchForYears(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Year[]> {
-	if (query === "") {
-		return await Promise.all((await atlas.stores.years.filter(queue, undefined, { year: createDecreasingOrder() }, anchor != null ? { year_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupYear(queue, hexid(record.year_id), user_id)));
-	} else {
-		return await Promise.all((await atlas.stores.years.search(queue, query, anchor != null ? { year_id: binid(anchor) } : undefined, length))
-			.map((record) => lookupYear(queue, hexid(record.year_id), user_id)));
-	}
+export async function searchForYears(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<YearResult[]> {
+	return await Promise.all((await atlas.stores.years.search(queue, query, anchor != null ? { year_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let year = await lookupYear(queue, hexid(record.year_id), user_id)
+			return {
+				year,
+				rank
+			};
+		}));
 };
 
 export async function searchForEntities(queue: ReadableQueue, query: string, user_id: string, offset: number, limit: number, options?: Partial<{ cues: boolean }>): Promise<schema.objects.Entity[]> {
 	let tracks = await atlas.stores.tracks.search(queue, query);
 	return await Promise.all(tracks.slice(offset, offset + limit)
-		.map((record) => lookupTrack(queue, hexid(record.track_id), user_id)));
+		.map((record) => lookupTrack(queue, hexid(record.record.track_id), user_id)));
 
 /* 	let results = [
 		...database.actor_search.search(query).map((result) => ({ ...result, type: "ACTOR", type_rank: 1 })),

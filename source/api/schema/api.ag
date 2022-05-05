@@ -11,9 +11,14 @@ route GET:/<query:string> ? <{ token: string, offset?: number, limit?: number, c
 		entities: ./objects/Entity[]
 	};
 
+guard ActorResult: {
+	actor: ./objects/Actor,
+	rank: number
+};
+
 route GET:/actors/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
-		actors: ./objects/Actor[]
+		results: ActorResult[]
 	};
 
 route GET:/actors/<actor_id:string>/ ? <{ token: string }>
@@ -31,9 +36,14 @@ route GET:/actors/<actor_id:string>/shows/ ? <{ token: string, anchor?: plain, o
 		shows: ./objects/Show[]
 	};
 
+guard AlbumResult: {
+	album: ./objects/Album,
+	rank: number
+};
+
 route GET:/albums/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
-		albums: ./objects/Album[]
+		results: AlbumResult[]
 	};
 
 route getNewAlbums(): GET:/albums/new/ ? <{ token: plain, anchor?: plain, offset?: number, limit?: number }>
@@ -46,9 +56,14 @@ route GET:/albums/<album_id:string>/ ? <{ token: string }>
 		album: ./objects/Album
 	};
 
+guard ArtistResult: {
+	artist: ./objects/Artist,
+	rank: number
+};
+
 route GET:/artists/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
-		artists: ./objects/Artist[]
+		results: ArtistResult[]
 	};
 
 route GET:/artists/<artist_id:string>/ ? <{ token: string }>
@@ -58,9 +73,14 @@ route GET:/artists/<artist_id:string>/ ? <{ token: string }>
 		appearances: ./objects/Album[]
 	};
 
+guard DiscResult: {
+	disc: ./objects/Disc,
+	rank: number
+};
+
 route GET:/discs/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
-		discs: ./objects/Disc[]
+		results: DiscResult[]
 	};
 
 route GET:/discs/<disc_id:string>/ ? <{ token: string }>
@@ -70,9 +90,14 @@ route GET:/discs/<disc_id:string>/ ? <{ token: string }>
 		next?: ./objects/Disc
 	};
 
+guard EpisodeResult: {
+	episode: ./objects/Episode,
+	rank: number
+};
+
 route GET:/episodes/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
-		episodes: ./objects/Episode[]
+		results: EpisodeResult[]
 	};
 
 route GET:/episodes/<episode_id:string>/ ? <{ token: string }>
@@ -82,9 +107,14 @@ route GET:/episodes/<episode_id:string>/ ? <{ token: string }>
 		next?: ./objects/Episode
 	};
 
+guard GenreResult: {
+	genre: ./objects/Genre,
+	rank: number
+};
+
 route GET:/genres/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
-		genres: ./objects/Genre[]
+		results: GenreResult[]
 	};
 
 route GET:/genres/<genre_id:string>/ ? <{ token: string }>
@@ -102,9 +132,14 @@ route GET:/genres/<genre_id:string>/shows/ ? <{ token: string, anchor?: plain, o
 		shows: ./objects/Show[]
 	};
 
+guard MovieResult: {
+	movie: ./objects/Movie,
+	rank: number
+};
+
 route GET:/movies/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
-		movies: ./objects/Movie[]
+		results: MovieResult[]
 	};
 
 route getNewMovies(): GET:/movies/new/ ? <{ token: plain, anchor?: plain, offset?: number, limit?: number }>
@@ -122,9 +157,14 @@ route GET:/movies/<movie_id:string>/suggestions/ ? <{ token: string, anchor?: pl
 		movies: ./objects/Movie[]
 	};
 
+guard PlaylistResult: {
+	playlist: ./objects/Playlist,
+	rank: number
+};
+
 route GET:/playlists/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
-		playlists: ./objects/Playlist[]
+		results: PlaylistResult[]
 	};
 
 route GET:/playlists/<playlist_id:string>/ ? <{ token: string }>
@@ -132,9 +172,14 @@ route GET:/playlists/<playlist_id:string>/ ? <{ token: string }>
 		playlist: ./objects/Playlist
 	};
 
+guard SeasonResult: {
+	season: ./objects/Season,
+	rank: number
+};
+
 route GET:/seasons/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
-		seasons: ./objects/Season[]
+		results: SeasonResult[]
 	};
 
 route GET:/seasons/<season_id:string>/ ? <{ token: string }>
@@ -144,9 +189,14 @@ route GET:/seasons/<season_id:string>/ ? <{ token: string }>
 		next?: ./objects/Season
 	};
 
+guard ShowResult: {
+	show: ./objects/Show,
+	rank: number
+};
+
 route GET:/shows/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
-		shows: ./objects/Show[]
+		results: ShowResult[]
 	};
 
 route GET:/shows/<show_id:string>/ ? <{ token: string }>
@@ -154,9 +204,14 @@ route GET:/shows/<show_id:string>/ ? <{ token: string }>
 		show: ./objects/Show
 	};
 
+guard TrackResult: {
+	track: ./objects/Track,
+	rank: number
+};
+
 route GET:/tracks/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
-		tracks: ./objects/Track[]
+		results: TrackResult[]
 	};
 
 route GET:/tracks/<track_id:string>/ ? <{ token: string }>
@@ -171,9 +226,14 @@ route GET:/tracks/<track_id:string>/playlists/ ? <{ token: string, offset?: numb
 		playlists: ./objects/Playlist[]
 	};
 
+guard UserResult: {
+	user: ./objects/User,
+	rank: number
+};
+
 route GET:/users/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
-		users: ./objects/User[]
+		results: UserResult[]
 	};
 
 route GET:/users/<user_id:string>/ ? <{ token: string }>
@@ -196,9 +256,14 @@ route GET:/users/<user_id:string>/shows/ ? <{ token: string, anchor?: plain, off
 		shows: ./objects/Show[]
 	};
 
+guard YearResult: {
+	year: ./objects/Year,
+	rank: number
+};
+
 route GET:/years/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
-		years: ./objects/Year[]
+		results: YearResult[]
 	};
 
 route GET:/years/<year_id:string>/ ? <{ token: string }>

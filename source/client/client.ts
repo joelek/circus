@@ -2150,12 +2150,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let track of payload.tracks) {
+				for (let { track } of payload.results) {
 					tracks.append(track);
 					anchor.updateState(track);
 				}
-				offset += payload.tracks.length;
-				if (payload.tracks.length === 0) {
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -2221,12 +2221,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let season of payload.seasons) {
+				for (let { season } of payload.results) {
 					seasons.append(season);
 					anchor.updateState(season);
 				}
-				offset += payload.seasons.length;
-				if (payload.seasons.length === 0) {
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -2290,12 +2290,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let disc of payload.discs) {
+				for (let { disc } of payload.results) {
 					discs.append(disc);
 					anchor.updateState(disc);
 				}
-				offset += payload.discs.length;
-				if (payload.discs.length === 0) {
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -2386,12 +2386,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let user of payload.users) {
+				for (let { user } of payload.results) {
 					users.append(user);
 					anchor.updateState(user);
 				}
-				offset += payload.users.length;
-				if (payload.users.length === 0) {
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -2496,12 +2496,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let actor of payload.actors) {
+				for (let { actor } of payload.results) {
 					actors.append(actor);
 					anchor.updateState(actor);
 				}
-				offset += payload.actors.length;
-				if (payload.actors.length === 0) {
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -2561,12 +2561,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let album of payload.albums) {
+				for (let { album } of payload.results) {
 					albums.append(album);
 					anchor.updateState(album);
 				}
-				offset += payload.albums.length;
-				if (payload.albums.length === 0) {
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -2651,12 +2651,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let artist of payload.artists) {
+				for (let { artist } of payload.results) {
 					artists.append(artist);
 					anchor.updateState(artist);
 				}
-				offset += payload.artists.length;
-				if (payload.artists.length === 0) {
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -2736,12 +2736,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let playlist of payload.playlists) {
+				for (let { playlist } of payload.results) {
 					playlists.append(playlist);
 					anchor.updateState(playlist);
 				}
-				offset += payload.playlists.length;
-				if (payload.playlists.length === 0) {
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -2862,12 +2862,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let track of payload.shows) {
-					shows.append(track);
-					anchor.updateState(track);
+				for (let { show } of payload.results) {
+					shows.append(show);
+					anchor.updateState(show);
 				}
-				offset += payload.shows.length;
-				if (payload.shows.length === 0) {
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -2926,12 +2926,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let episode of payload.episodes) {
+				for (let { episode } of payload.results) {
 					episodes.append(episode);
 					anchor.updateState(episode);
 				}
-				offset += payload.episodes.length;
-				if (payload.episodes.length === 0) {
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -3027,12 +3027,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let movie of payload.movies) {
+				for (let { movie } of payload.results) {
 					movies.append(movie);
 					anchor.updateState(movie);
 				}
-				offset += payload.movies.length;
-				if (payload.movies.length === 0) {
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -3138,12 +3138,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let genre of payload.genres) {
+				for (let { genre } of payload.results) {
 					genres.append(genre);
 					anchor.updateState(genre);
 				}
-				offset += payload.genres.length;
-				if (payload.genres.length === 0) {
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -3403,12 +3403,12 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let year of payload.years) {
+				for (let { year } of payload.results) {
 					years.append(year);
 					anchor.updateState(year);
 				}
-				offset += payload.years.length;
-				if (payload.years.length === 0) {
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);

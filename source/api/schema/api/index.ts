@@ -19,8 +19,152 @@ import { Track } from ".././objects";
 import { User } from ".././objects";
 import { Year } from ".././objects";
 
+export const ActorResult: autoguard.serialization.MessageGuard<ActorResult> = autoguard.guards.Object.of({
+	"actor": autoguard.guards.Reference.of(() => Actor),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type ActorResult = autoguard.guards.Object<{
+	"actor": autoguard.guards.Reference<Actor>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
+export const AlbumResult: autoguard.serialization.MessageGuard<AlbumResult> = autoguard.guards.Object.of({
+	"album": autoguard.guards.Reference.of(() => Album),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type AlbumResult = autoguard.guards.Object<{
+	"album": autoguard.guards.Reference<Album>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
+export const ArtistResult: autoguard.serialization.MessageGuard<ArtistResult> = autoguard.guards.Object.of({
+	"artist": autoguard.guards.Reference.of(() => Artist),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type ArtistResult = autoguard.guards.Object<{
+	"artist": autoguard.guards.Reference<Artist>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
+export const DiscResult: autoguard.serialization.MessageGuard<DiscResult> = autoguard.guards.Object.of({
+	"disc": autoguard.guards.Reference.of(() => Disc),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type DiscResult = autoguard.guards.Object<{
+	"disc": autoguard.guards.Reference<Disc>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
+export const EpisodeResult: autoguard.serialization.MessageGuard<EpisodeResult> = autoguard.guards.Object.of({
+	"episode": autoguard.guards.Reference.of(() => Episode),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type EpisodeResult = autoguard.guards.Object<{
+	"episode": autoguard.guards.Reference<Episode>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
+export const GenreResult: autoguard.serialization.MessageGuard<GenreResult> = autoguard.guards.Object.of({
+	"genre": autoguard.guards.Reference.of(() => Genre),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type GenreResult = autoguard.guards.Object<{
+	"genre": autoguard.guards.Reference<Genre>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
+export const MovieResult: autoguard.serialization.MessageGuard<MovieResult> = autoguard.guards.Object.of({
+	"movie": autoguard.guards.Reference.of(() => Movie),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type MovieResult = autoguard.guards.Object<{
+	"movie": autoguard.guards.Reference<Movie>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
+export const PlaylistResult: autoguard.serialization.MessageGuard<PlaylistResult> = autoguard.guards.Object.of({
+	"playlist": autoguard.guards.Reference.of(() => Playlist),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type PlaylistResult = autoguard.guards.Object<{
+	"playlist": autoguard.guards.Reference<Playlist>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
+export const SeasonResult: autoguard.serialization.MessageGuard<SeasonResult> = autoguard.guards.Object.of({
+	"season": autoguard.guards.Reference.of(() => Season),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type SeasonResult = autoguard.guards.Object<{
+	"season": autoguard.guards.Reference<Season>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
+export const ShowResult: autoguard.serialization.MessageGuard<ShowResult> = autoguard.guards.Object.of({
+	"show": autoguard.guards.Reference.of(() => Show),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type ShowResult = autoguard.guards.Object<{
+	"show": autoguard.guards.Reference<Show>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
+export const TrackResult: autoguard.serialization.MessageGuard<TrackResult> = autoguard.guards.Object.of({
+	"track": autoguard.guards.Reference.of(() => Track),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type TrackResult = autoguard.guards.Object<{
+	"track": autoguard.guards.Reference<Track>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
+export const UserResult: autoguard.serialization.MessageGuard<UserResult> = autoguard.guards.Object.of({
+	"user": autoguard.guards.Reference.of(() => User),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type UserResult = autoguard.guards.Object<{
+	"user": autoguard.guards.Reference<User>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
+export const YearResult: autoguard.serialization.MessageGuard<YearResult> = autoguard.guards.Object.of({
+	"year": autoguard.guards.Reference.of(() => Year),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type YearResult = autoguard.guards.Object<{
+	"year": autoguard.guards.Reference<Year>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
 export namespace Autoguard {
-	export const Guards = {};
+	export const Guards = {
+		"ActorResult": autoguard.guards.Reference.of(() => ActorResult),
+		"AlbumResult": autoguard.guards.Reference.of(() => AlbumResult),
+		"ArtistResult": autoguard.guards.Reference.of(() => ArtistResult),
+		"DiscResult": autoguard.guards.Reference.of(() => DiscResult),
+		"EpisodeResult": autoguard.guards.Reference.of(() => EpisodeResult),
+		"GenreResult": autoguard.guards.Reference.of(() => GenreResult),
+		"MovieResult": autoguard.guards.Reference.of(() => MovieResult),
+		"PlaylistResult": autoguard.guards.Reference.of(() => PlaylistResult),
+		"SeasonResult": autoguard.guards.Reference.of(() => SeasonResult),
+		"ShowResult": autoguard.guards.Reference.of(() => ShowResult),
+		"TrackResult": autoguard.guards.Reference.of(() => TrackResult),
+		"UserResult": autoguard.guards.Reference.of(() => UserResult),
+		"YearResult": autoguard.guards.Reference.of(() => YearResult)
+	};
 
 	export type Guards = { [A in keyof typeof Guards]: ReturnType<typeof Guards[A]["as"]>; };
 
@@ -827,7 +971,7 @@ export namespace Autoguard {
 		}),
 		"GET:/actors/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor))
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ActorResult))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -871,7 +1015,7 @@ export namespace Autoguard {
 		}),
 		"GET:/albums/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"albums": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Album))
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => AlbumResult))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -904,7 +1048,7 @@ export namespace Autoguard {
 		}),
 		"GET:/artists/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"artists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Artist))
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ArtistResult))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -928,7 +1072,7 @@ export namespace Autoguard {
 		}),
 		"GET:/discs/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"discs": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Disc))
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => DiscResult))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -953,7 +1097,7 @@ export namespace Autoguard {
 		}),
 		"GET:/episodes/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"episodes": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Episode))
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => EpisodeResult))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -978,7 +1122,7 @@ export namespace Autoguard {
 		}),
 		"GET:/genres/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"genres": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Genre))
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => GenreResult))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -1022,7 +1166,7 @@ export namespace Autoguard {
 		}),
 		"GET:/movies/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"movies": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Movie))
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => MovieResult))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -1066,7 +1210,7 @@ export namespace Autoguard {
 		}),
 		"GET:/playlists/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"playlists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Playlist))
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => PlaylistResult))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -1088,7 +1232,7 @@ export namespace Autoguard {
 		}),
 		"GET:/seasons/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"seasons": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Season))
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SeasonResult))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -1113,7 +1257,7 @@ export namespace Autoguard {
 		}),
 		"GET:/shows/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"shows": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Show))
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ShowResult))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -1135,7 +1279,7 @@ export namespace Autoguard {
 		}),
 		"GET:/tracks/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"tracks": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Track))
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => TrackResult))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -1171,7 +1315,7 @@ export namespace Autoguard {
 		}),
 		"GET:/users/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"users": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => User))
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => UserResult))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -1226,7 +1370,7 @@ export namespace Autoguard {
 		}),
 		"GET:/years/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"years": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Year))
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => YearResult))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
