@@ -587,9 +587,9 @@ export async function searchForAlbums(queue: ReadableQueue, query: string, ancho
 	return await Promise.all((await atlas.stores.albums.search(queue, query, anchor != null ? { album_id: binid(anchor) } : undefined, length))
 		.map(async (result) => {
 			let { record, rank } = { ...result };
-			let album = await lookupAlbum(queue, hexid(record.album_id), user_id)
+			let entity = await lookupAlbum(queue, hexid(record.album_id), user_id)
 			return {
-				album,
+				entity,
 				rank
 			};
 		}));
@@ -599,9 +599,9 @@ export async function searchForArtists(queue: ReadableQueue, query: string, anch
 	return await Promise.all((await atlas.stores.artists.search(queue, query, anchor != null ? { artist_id: binid(anchor) } : undefined, length))
 		.map(async (result) => {
 			let { record, rank } = { ...result };
-			let artist = await lookupArtist(queue, hexid(record.artist_id), user_id)
+			let entity = await lookupArtist(queue, hexid(record.artist_id), user_id)
 			return {
-				artist,
+				entity,
 				rank
 			};
 		}));
@@ -615,9 +615,9 @@ export async function searchForDiscs(queue: ReadableQueue, query: string, anchor
 	return await Promise.all((await atlas.stores.discs.search(queue, query, anchor != null ? { disc_id: binid(anchor) } : undefined, length))
 		.map(async (result) => {
 			let { record, rank } = { ...result };
-			let disc = await lookupDisc(queue, hexid(record.disc_id), user_id)
+			let entity = await lookupDisc(queue, hexid(record.disc_id), user_id)
 			return {
-				disc,
+				entity,
 				rank
 			};
 		}));
@@ -627,9 +627,9 @@ export async function searchForEpisodes(queue: ReadableQueue, query: string, anc
 	return await Promise.all((await atlas.stores.episodes.search(queue, query, anchor != null ? { episode_id: binid(anchor) } : undefined, length))
 		.map(async (result) => {
 			let { record, rank } = { ...result };
-			let episode = await lookupEpisode(queue, hexid(record.episode_id), user_id)
+			let entity = await lookupEpisode(queue, hexid(record.episode_id), user_id)
 			return {
-				episode,
+				entity,
 				rank
 			};
 		}));
@@ -639,9 +639,9 @@ export async function searchForGenres(queue: ReadableQueue, query: string, ancho
 	return await Promise.all((await atlas.stores.genres.search(queue, query, anchor != null ? { genre_id: binid(anchor) } : undefined, length))
 		.map(async (result) => {
 			let { record, rank } = { ...result };
-			let genre = await lookupGenre(queue, hexid(record.genre_id), user_id)
+			let entity = await lookupGenre(queue, hexid(record.genre_id), user_id)
 			return {
-				genre,
+				entity,
 				rank
 			};
 		}));
@@ -651,9 +651,9 @@ export async function searchForMovies(queue: ReadableQueue, query: string, ancho
 	return await Promise.all((await atlas.stores.movies.search(queue, query, anchor != null ? { movie_id: binid(anchor) } : undefined, length))
 		.map(async (result) => {
 			let { record, rank } = { ...result };
-			let movie = await lookupMovie(queue, hexid(record.movie_id), user_id)
+			let entity = await lookupMovie(queue, hexid(record.movie_id), user_id)
 			return {
-				movie,
+				entity,
 				rank
 			};
 		}));
@@ -663,9 +663,9 @@ export async function searchForActors(queue: ReadableQueue, query: string, ancho
 	return await Promise.all((await atlas.stores.actors.search(queue, query, anchor != null ? { actor_id: binid(anchor) } : undefined, length))
 		.map(async (result) => {
 			let { record, rank } = { ...result };
-			let actor = await lookupActor(queue, hexid(record.actor_id), user_id)
+			let entity = await lookupActor(queue, hexid(record.actor_id), user_id)
 			return {
-				actor,
+				entity,
 				rank
 			};
 		}));
@@ -675,9 +675,9 @@ export async function searchForPlaylists(queue: ReadableQueue, query: string, an
 	return await Promise.all((await atlas.stores.playlists.search(queue, query, anchor != null ? { playlist_id: binid(anchor) } : undefined, length))
 		.map(async (result) => {
 			let { record, rank } = { ...result };
-			let playlist = await lookupPlaylist(queue, hexid(record.playlist_id), user_id)
+			let entity = await lookupPlaylist(queue, hexid(record.playlist_id), user_id)
 			return {
-				playlist,
+				entity,
 				rank
 			};
 		}));
@@ -687,9 +687,9 @@ export async function searchForSeasons(queue: ReadableQueue, query: string, anch
 	return await Promise.all((await atlas.stores.seasons.search(queue, query, anchor != null ? { season_id: binid(anchor) } : undefined, length))
 		.map(async (result) => {
 			let { record, rank } = { ...result };
-			let season = await lookupSeason(queue, hexid(record.season_id), user_id)
+			let entity = await lookupSeason(queue, hexid(record.season_id), user_id)
 			return {
-				season,
+				entity,
 				rank
 			};
 		}));
@@ -699,9 +699,9 @@ export async function searchForShows(queue: ReadableQueue, query: string, anchor
 	return await Promise.all((await atlas.stores.shows.search(queue, query, anchor != null ? { show_id: binid(anchor) } : undefined, length))
 		.map(async (result) => {
 			let { record, rank } = { ...result };
-			let show = await lookupShow(queue, hexid(record.show_id), user_id)
+			let entity = await lookupShow(queue, hexid(record.show_id), user_id)
 			return {
-				show,
+				entity,
 				rank
 			};
 		}));
@@ -711,9 +711,9 @@ export async function searchForTracks(queue: ReadableQueue, query: string, ancho
 	return await Promise.all((await atlas.stores.tracks.search(queue, query, anchor != null ? { track_id: binid(anchor) } : undefined, length))
 		.map(async (result) => {
 			let { record, rank } = { ...result };
-			let track = await lookupTrack(queue, hexid(record.track_id), user_id)
+			let entity = await lookupTrack(queue, hexid(record.track_id), user_id)
 			return {
-				track,
+				entity,
 				rank
 			};
 		}));
@@ -723,9 +723,9 @@ export async function searchForUsers(queue: ReadableQueue, query: string, anchor
 	return await Promise.all((await atlas.stores.users.search(queue, query, anchor != null ? { user_id: binid(anchor) } : undefined, length))
 		.map(async (result) => {
 			let { record, rank } = { ...result };
-			let user = await lookupUser(queue, hexid(record.user_id), user_id)
+			let entity = await lookupUser(queue, hexid(record.user_id), user_id)
 			return {
-				user,
+				entity,
 				rank
 			};
 		}));
@@ -735,9 +735,9 @@ export async function searchForYears(queue: ReadableQueue, query: string, anchor
 	return await Promise.all((await atlas.stores.years.search(queue, query, anchor != null ? { year_id: binid(anchor) } : undefined, length))
 		.map(async (result) => {
 			let { record, rank } = { ...result };
-			let year = await lookupYear(queue, hexid(record.year_id), user_id)
+			let entity = await lookupYear(queue, hexid(record.year_id), user_id)
 			return {
-				year,
+				entity,
 				rank
 			};
 		}));

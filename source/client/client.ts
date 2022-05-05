@@ -2150,9 +2150,9 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let { track } of payload.results) {
-					tracks.append(track);
-					anchor.updateState(track);
+				for (let { entity } of payload.results) {
+					tracks.append(entity);
+					anchor.updateState(entity);
 				}
 				offset += payload.results.length;
 				if (payload.results.length === 0) {
@@ -2221,9 +2221,9 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let { season } of payload.results) {
-					seasons.append(season);
-					anchor.updateState(season);
+				for (let { entity } of payload.results) {
+					seasons.append(entity);
+					anchor.updateState(entity);
 				}
 				offset += payload.results.length;
 				if (payload.results.length === 0) {
@@ -2290,9 +2290,9 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let { disc } of payload.results) {
-					discs.append(disc);
-					anchor.updateState(disc);
+				for (let { entity } of payload.results) {
+					discs.append(entity);
+					anchor.updateState(entity);
 				}
 				offset += payload.results.length;
 				if (payload.results.length === 0) {
@@ -2386,9 +2386,9 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let { user } of payload.results) {
-					users.append(user);
-					anchor.updateState(user);
+				for (let { entity } of payload.results) {
+					users.append(entity);
+					anchor.updateState(entity);
 				}
 				offset += payload.results.length;
 				if (payload.results.length === 0) {
@@ -2496,9 +2496,9 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let { actor } of payload.results) {
-					actors.append(actor);
-					anchor.updateState(actor);
+				for (let { entity } of payload.results) {
+					actors.append(entity);
+					anchor.updateState(entity);
 				}
 				offset += payload.results.length;
 				if (payload.results.length === 0) {
@@ -2561,9 +2561,9 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let { album } of payload.results) {
-					albums.append(album);
-					anchor.updateState(album);
+				for (let { entity } of payload.results) {
+					albums.append(entity);
+					anchor.updateState(entity);
 				}
 				offset += payload.results.length;
 				if (payload.results.length === 0) {
@@ -2651,9 +2651,9 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let { artist } of payload.results) {
-					artists.append(artist);
-					anchor.updateState(artist);
+				for (let { entity } of payload.results) {
+					artists.append(entity);
+					anchor.updateState(entity);
 				}
 				offset += payload.results.length;
 				if (payload.results.length === 0) {
@@ -2736,9 +2736,9 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let { playlist } of payload.results) {
-					playlists.append(playlist);
-					anchor.updateState(playlist);
+				for (let { entity } of payload.results) {
+					playlists.append(entity);
+					anchor.updateState(entity);
 				}
 				offset += payload.results.length;
 				if (payload.results.length === 0) {
@@ -2862,9 +2862,9 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let { show } of payload.results) {
-					shows.append(show);
-					anchor.updateState(show);
+				for (let { entity } of payload.results) {
+					shows.append(entity);
+					anchor.updateState(entity);
 				}
 				offset += payload.results.length;
 				if (payload.results.length === 0) {
@@ -2926,9 +2926,9 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let { episode } of payload.results) {
-					episodes.append(episode);
-					anchor.updateState(episode);
+				for (let { entity } of payload.results) {
+					episodes.append(entity);
+					anchor.updateState(entity);
 				}
 				offset += payload.results.length;
 				if (payload.results.length === 0) {
@@ -3027,9 +3027,9 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let { movie } of payload.results) {
-					movies.append(movie);
-					anchor.updateState(movie);
+				for (let { entity } of payload.results) {
+					movies.append(entity);
+					anchor.updateState(entity);
 				}
 				offset += payload.results.length;
 				if (payload.results.length === 0) {
@@ -3138,9 +3138,9 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let { genre } of payload.results) {
-					genres.append(genre);
-					anchor.updateState(genre);
+				for (let { entity } of payload.results) {
+					genres.append(entity);
+					anchor.updateState(entity);
 				}
 				offset += payload.results.length;
 				if (payload.results.length === 0) {
@@ -3403,9 +3403,9 @@ let updateviewforuri = (uri: string): void => {
 					}
 				});
 				let payload = await response.payload();
-				for (let { year } of payload.results) {
-					years.append(year);
-					anchor.updateState(year);
+				for (let { entity } of payload.results) {
+					years.append(entity);
+					anchor.updateState(entity);
 				}
 				offset += payload.results.length;
 				if (payload.results.length === 0) {
@@ -3615,11 +3615,3 @@ function setupRouting(): void {
 	});
 }
 setupRouting();
-/*
-
-
-		let anchor = new ObservableClass(undefined as Track | undefined);
-						anchor: anchor.getState()?.track_id,
-					anchor.updateState(track);
-
-*/
