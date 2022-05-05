@@ -3665,34 +3665,178 @@ class SearchResultsMerger {
 
 	constructor(token: string, query: string) {
 		let limit = 12;
+		let actors = new SearchResultProvider<Actor>(async (anchor) => {
+			let response = await apiclient["GET:/actors/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.actor_id,
+					limit
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let albums = new SearchResultProvider<Album>(async (anchor) => {
+			let response = await apiclient["GET:/albums/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.album_id,
+					limit
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let artists = new SearchResultProvider<Artist>(async (anchor) => {
+			let response = await apiclient["GET:/artists/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.artist_id,
+					limit
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let discs = new SearchResultProvider<Disc>(async (anchor) => {
+			let response = await apiclient["GET:/discs/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.disc_id,
+					limit
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let episodes = new SearchResultProvider<Episode>(async (anchor) => {
+			let response = await apiclient["GET:/episodes/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.episode_id,
+					limit
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let genres = new SearchResultProvider<Genre>(async (anchor) => {
+			let response = await apiclient["GET:/genres/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.genre_id,
+					limit
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let movies = new SearchResultProvider<Movie>(async (anchor) => {
+			let response = await apiclient["GET:/movies/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.movie_id,
+					limit
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let seasons = new SearchResultProvider<Season>(async (anchor) => {
+			let response = await apiclient["GET:/seasons/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.season_id,
+					limit
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let playlists = new SearchResultProvider<Playlist>(async (anchor) => {
+			let response = await apiclient["GET:/playlists/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.playlist_id,
+					limit
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let shows = new SearchResultProvider<Show>(async (anchor) => {
+			let response = await apiclient["GET:/shows/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.show_id,
+					limit
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let tracks = new SearchResultProvider<Track>(async (anchor) => {
+			let response = await apiclient["GET:/tracks/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.track_id,
+					limit
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let users = new SearchResultProvider<User>(async (anchor) => {
+			let response = await apiclient["GET:/users/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.user_id,
+					limit
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let years = new SearchResultProvider<Year>(async (anchor) => {
+			let response = await apiclient["GET:/years/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.year_id,
+					limit
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
 		this.providers = [
-			new SearchResultProvider<Actor>(async (anchor) => {
-				let response = await apiclient["GET:/actors/<query>"]({
-					options: {
-						token,
-						query,
-						anchor: anchor?.actor_id,
-						limit
-					}
-				});
-				let payload = await response.payload();
-				return payload.results;
-			}) as SearchResultProvider<Entity>,
-			new SearchResultProvider<Movie>(async (anchor) => {
-				let response = await apiclient["GET:/movies/<query>"]({
-					options: {
-						token,
-						query,
-						anchor: anchor?.movie_id,
-						limit
-					}
-				});
-				let payload = await response.payload();
-				return payload.results;
-			}) as SearchResultProvider<Entity>
-		]
+			years,
+			artists,
+			albums,
+			movies,
+			shows,
+			tracks,
+			playlists,
+			genres,
+			actors,
+			users,
+			episodes,
+			seasons,
+			discs
+		] as Array<SearchResultProvider<Entity>>;
 	}
-
 	async fetch(limit: number): Promise<Array<{ entity: Entity, rank: number }>> {
 		let entities = [] as Array<{ entity: Entity, rank: number }>;
 		while (entities.length < limit) {
