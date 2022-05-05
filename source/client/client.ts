@@ -3222,23 +3222,16 @@ let updateviewforuri = (uri: string): void => {
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let entities = new ArrayObservable<Entity>([]);
+		let merger: SearchResultsMerger | undefined;
 		async function load(): Promise<void> {
-			if (!reachedEnd.getState() && !isLoading.getState()) {
+			if (!reachedEnd.getState() && !isLoading.getState() && merger != null) {
 				isLoading.updateState(true);
-				let response = await apiclient["GET:/<query>"]({
-					options: {
-						query: query.getState(),
-						token: token ?? "",
-						offset,
-						cues: cues.getState()
-					}
-				});
-				let payload = await response.payload();
-				for (let entity of payload.entities) {
+				let results = await merger.fetch(12);
+				for (let { entity } of results) {
 					entities.append(entity);
 				}
-				offset += payload.entities.length;
-				if (payload.entities.length === 0) {
+				offset += results.length;
+				if (results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
@@ -3249,6 +3242,7 @@ let updateviewforuri = (uri: string): void => {
 			window.history.replaceState({ ...window.history.state, uri }, "", uri);
 			offset = 0;
 			reachedEnd.updateState(false);
+			merger = new SearchResultsMerger(token ?? "", query.getState());
 			entities.update([]);
 			load();
 		}
@@ -3615,3 +3609,110 @@ function setupRouting(): void {
 	});
 }
 setupRouting();
+
+class SearchResultProvider<A> {
+	private fetcher: (anchor?: A) => Promise<Array<{ entity: A, rank: number }>>;
+	private anchor?: A;
+	private results: Array<{ entity: A, rank: number }>;
+	private exhausted: boolean;
+	private index: number;
+
+	constructor(fetcher: (anchor?: A) => Promise<Array<{ entity: A, rank: number }>>, anchor?: A) {
+		this.fetcher = fetcher;
+		this.anchor = anchor;
+		this.results = [];
+		this.exhausted = false;
+		this.index = 0;
+	}
+
+	async peek(): Promise<{ entity: A, rank: number } | undefined> {
+		if (this.exhausted) {
+			return;
+		}
+		if (this.index >= this.results.length) {
+			let results = await this.fetcher(this.anchor);
+			if (results.length === 0) {
+				this.exhausted = true;
+				return;
+			}
+			this.results.push(...results);
+		}
+		let result = this.results[this.index];
+		return result;
+	}
+
+	async read(): Promise<{ entity: A, rank: number } | undefined> {
+		if (this.exhausted) {
+			return;
+		}
+		if (this.index >= this.results.length) {
+			let results = await this.fetcher(this.anchor);
+			if (results.length === 0) {
+				this.exhausted = true;
+				return;
+			}
+			this.results.push(...results);
+		}
+		let result = this.results[this.index];
+		this.anchor = result.entity;
+		this.index += 1;
+		return result;
+	}
+};
+
+class SearchResultsMerger {
+	private providers: Array<SearchResultProvider<Entity>>;
+
+	constructor(token: string, query: string) {
+		let limit = 12;
+		this.providers = [
+			new SearchResultProvider<Actor>(async (anchor) => {
+				let response = await apiclient["GET:/actors/<query>"]({
+					options: {
+						token,
+						query,
+						anchor: anchor?.actor_id,
+						limit
+					}
+				});
+				let payload = await response.payload();
+				return payload.results;
+			}) as SearchResultProvider<Entity>,
+			new SearchResultProvider<Movie>(async (anchor) => {
+				let response = await apiclient["GET:/movies/<query>"]({
+					options: {
+						token,
+						query,
+						anchor: anchor?.movie_id,
+						limit
+					}
+				});
+				let payload = await response.payload();
+				return payload.results;
+			}) as SearchResultProvider<Entity>
+		]
+	}
+
+	async fetch(limit: number): Promise<Array<{ entity: Entity, rank: number }>> {
+		let entities = [] as Array<{ entity: Entity, rank: number }>;
+		while (entities.length < limit) {
+			let candidates = [] as Array<{ result: { entity: Entity, rank: number }, provider: SearchResultProvider<Entity> }>;
+			for (let provider of this.providers) {
+				let result = await provider.peek();
+				if (result == null) {
+					continue;
+				}
+				candidates.push({ result, provider });
+			}
+			this.providers = candidates.map((candidate) => candidate.provider);
+			if (candidates.length === 0) {
+				break;
+			}
+			candidates.sort((one, two) => two.result.rank - one.result.rank);
+			let candidate = candidates[0];
+			await candidate.provider.read();
+			entities.push(candidate.result);
+		}
+		return entities;
+	}
+};
