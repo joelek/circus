@@ -50,8 +50,8 @@ export const server = apiv2.makeServer({
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
 		let entities = options.cues
-			? await handler.searchForCues(queue, options.query, options.offset ?? 0, options.limit ?? 24, user_id)
-			: await handler.searchForEntities(queue, options.query, user_id, options.offset ?? 0, options.limit ?? 24);
+			? await handler.searchForCues(queue, options.query, options.offset ?? 0, options.limit ?? 12, user_id)
+			: await handler.searchForEntities(queue, options.query, user_id, options.offset ?? 0, options.limit ?? 12);
 		return {
 			payload: {
 				entities
@@ -61,7 +61,7 @@ export const server = apiv2.makeServer({
 	"GET:/actors/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let results = await handler.searchForActors(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let results = await handler.searchForActors(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				results
@@ -81,7 +81,7 @@ export const server = apiv2.makeServer({
 	"GET:/actors/<actor_id>/movies/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let movies = await handler.getMoviesFromActor(queue, options.actor_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
+		let movies = await handler.getMoviesFromActor(queue, options.actor_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 12);
 		return {
 			payload: {
 				movies
@@ -91,7 +91,7 @@ export const server = apiv2.makeServer({
 	"GET:/actors/<actor_id>/shows/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let shows = await handler.getShowsFromActor(queue, options.actor_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
+		let shows = await handler.getShowsFromActor(queue, options.actor_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 12);
 		return {
 			payload: {
 				shows
@@ -101,7 +101,7 @@ export const server = apiv2.makeServer({
 	"GET:/albums/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let results = await handler.searchForAlbums(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let results = await handler.searchForAlbums(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				results
@@ -111,7 +111,7 @@ export const server = apiv2.makeServer({
 	getNewAlbums: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let albums = await handler.getNewAlbums(queue, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
+		let albums = await handler.getNewAlbums(queue, user_id, options.anchor, options.offset ?? 0, options.limit ?? 12);
 		return {
 			payload: {
 				albums
@@ -131,7 +131,7 @@ export const server = apiv2.makeServer({
 	"GET:/artists/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let results = await handler.searchForArtists(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let results = await handler.searchForArtists(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				results
@@ -155,7 +155,7 @@ export const server = apiv2.makeServer({
 	"GET:/discs/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let results = await handler.searchForDiscs(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let results = await handler.searchForDiscs(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				results
@@ -181,7 +181,7 @@ export const server = apiv2.makeServer({
 	"GET:/episodes/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let results = await handler.searchForEpisodes(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let results = await handler.searchForEpisodes(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				results
@@ -207,7 +207,7 @@ export const server = apiv2.makeServer({
 	"GET:/genres/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let results = await handler.searchForGenres(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 100, user_id);
+		let results = await handler.searchForGenres(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				results
@@ -227,7 +227,7 @@ export const server = apiv2.makeServer({
 	"GET:/genres/<genre_id>/movies/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let movies = await handler.getMoviesFromGenre(queue, options.genre_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
+		let movies = await handler.getMoviesFromGenre(queue, options.genre_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 12);
 		return {
 			payload: {
 				movies
@@ -237,7 +237,7 @@ export const server = apiv2.makeServer({
 	"GET:/genres/<genre_id>/shows/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let shows = await handler.getShowsFromGenre(queue, options.genre_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
+		let shows = await handler.getShowsFromGenre(queue, options.genre_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 12);
 		return {
 			payload: {
 				shows
@@ -247,7 +247,7 @@ export const server = apiv2.makeServer({
 	"GET:/movies/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let results = await handler.searchForMovies(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let results = await handler.searchForMovies(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				results
@@ -257,7 +257,7 @@ export const server = apiv2.makeServer({
 	getNewMovies: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let movies = await handler.getNewMovies(queue, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
+		let movies = await handler.getNewMovies(queue, user_id, options.anchor, options.offset ?? 0, options.limit ?? 12);
 		return {
 			payload: {
 				movies
@@ -277,7 +277,7 @@ export const server = apiv2.makeServer({
 	"GET:/movies/<movie_id>/suggestions/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let movies = await handler.getMovieSuggestions(queue, options.movie_id, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let movies = await handler.getMovieSuggestions(queue, options.movie_id, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				movies
@@ -287,7 +287,7 @@ export const server = apiv2.makeServer({
 	"GET:/playlists/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let results = await handler.searchForPlaylists(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let results = await handler.searchForPlaylists(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				results
@@ -307,7 +307,7 @@ export const server = apiv2.makeServer({
 	"GET:/seasons/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let results = await handler.searchForSeasons(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let results = await handler.searchForSeasons(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				results
@@ -333,7 +333,7 @@ export const server = apiv2.makeServer({
 	"GET:/shows/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let results = await handler.searchForShows(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let results = await handler.searchForShows(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				results
@@ -353,7 +353,7 @@ export const server = apiv2.makeServer({
 	"GET:/tracks/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let results = await handler.searchForTracks(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let results = await handler.searchForTracks(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				results
@@ -379,7 +379,7 @@ export const server = apiv2.makeServer({
 	"GET:/tracks/<track_id>/playlists/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let playlists = await handler.getPlaylistAppearances(queue, options.track_id, options.offset ?? 0, options.limit ?? 24, user_id);
+		let playlists = await handler.getPlaylistAppearances(queue, options.track_id, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				playlists
@@ -389,7 +389,7 @@ export const server = apiv2.makeServer({
 	"GET:/users/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let results = await handler.searchForUsers(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let results = await handler.searchForUsers(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				results
@@ -414,7 +414,7 @@ export const server = apiv2.makeServer({
 	"GET:/users/<user_id>/albums/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let albums = await handler.getUserAlbums(queue, options.user_id || user_id, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let albums = await handler.getUserAlbums(queue, options.user_id || user_id, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				albums
@@ -424,7 +424,7 @@ export const server = apiv2.makeServer({
 	"GET:/users/<user_id>/playlists/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let playlists = await handler.getUserPlaylists(queue, options.user_id || user_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
+		let playlists = await handler.getUserPlaylists(queue, options.user_id || user_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 12);
 		return {
 			payload: {
 				playlists
@@ -434,7 +434,7 @@ export const server = apiv2.makeServer({
 	"GET:/users/<user_id>/shows/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let shows = await handler.getUserShows(queue, options.user_id || user_id, options.anchor, options.offset ?? 0, options.limit ?? 24, user_id);
+		let shows = await handler.getUserShows(queue, options.user_id || user_id, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				shows
@@ -444,7 +444,7 @@ export const server = apiv2.makeServer({
 	"GET:/years/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let results = await handler.searchForYears(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 100, user_id);
+		let results = await handler.searchForYears(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				results
@@ -464,7 +464,7 @@ export const server = apiv2.makeServer({
 	"GET:/years/<year_id>/albums/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let albums = await handler.getAlbumsFromYear(queue, options.year_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
+		let albums = await handler.getAlbumsFromYear(queue, options.year_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 12);
 		return {
 			payload: {
 				albums
@@ -474,7 +474,7 @@ export const server = apiv2.makeServer({
 	"GET:/years/<year_id>/movies/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let movies = await handler.getMoviesFromYear(queue, options.year_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 24);
+		let movies = await handler.getMoviesFromYear(queue, options.year_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 12);
 		return {
 			payload: {
 				movies
