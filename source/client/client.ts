@@ -3134,7 +3134,8 @@ let updateviewforuri = (uri: string): void => {
 						query,
 						token: token ?? "",
 						anchor: anchor.getState()?.genre_id,
-						offset
+						offset,
+						limit: 100
 					}
 				});
 				let payload = await response.payload();
@@ -3393,7 +3394,8 @@ let updateviewforuri = (uri: string): void => {
 						query,
 						token: token ?? "",
 						anchor: anchor.getState()?.year_id,
-						offset
+						offset,
+						limit: 100
 					}
 				});
 				let payload = await response.payload();
@@ -3421,7 +3423,8 @@ let updateviewforuri = (uri: string): void => {
 		apiclient["GET:/users/<user_id>/shows/"]({
 			options: {
 				user_id: "",
-				token: token ?? ""
+				token: token ?? "",
+				limit: 3
 			}
 		}).then(async (response) => {
 			let payload = await response.payload();
