@@ -409,7 +409,7 @@ const years = context.createStore({
 	year: context.createIntegerField(),
 	affinity: context.createNumberField()
 }, ["year_id"], {
-	year: context.createIncreasingOrder()
+	year: context.createDecreasingOrder()
 });
 
 export type Year = atlas.RecordOf<typeof years>;
