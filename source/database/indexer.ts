@@ -98,9 +98,25 @@ async function checkFile(queue: WritableQueue, root: File, paths: Array<string>)
 	if (libfs.existsSync(path)) {
 		let stats = libfs.statSync(path);
 		if (stats.isFile()) {
-			if (stats.mtime.valueOf() === root.index_timestamp) {
-				return;
+			if (root.index_timestamp != null) {
+				let modifiedTimestampFile = Math.floor(stats.mtime.valueOf() / 1000);
+				let modifiedTimestampDatabase = Math.floor(root.index_timestamp / 1000);
+				if (modifiedTimestampFile !== modifiedTimestampDatabase) {
+					console.log(`The timestamp of ${path} has changed, re-indexing.`);
+					await stores.files.update(queue, {
+						...root,
+						index_timestamp: null
+					});
+				}
 			}
+			if (root.size !== stats.size) {
+				console.log(`The size of ${path} has changed, re-indexing.`);
+				await stores.files.update(queue, {
+					...root,
+					index_timestamp: null
+				});
+			}
+			return;
 		}
 	}
 	console.log(`Removing ${path} from index.`);
