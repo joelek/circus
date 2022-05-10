@@ -1199,6 +1199,12 @@ export async function migrateLegacyData(queue: WritableQueue): Promise<void> {
 	}
 };
 
+export const stats = {
+	librarySize: 0,
+	audioContent: 0,
+	videoContent: 0
+};
+
 export async function runIndexer(): Promise<void> {
 	console.log(`Running indexer...`);
 	await transactionManager.enqueueWritableTransaction(async (queue) => {
@@ -1262,6 +1268,20 @@ export async function runIndexer(): Promise<void> {
 		}
 		for (let key of await links.user_keys.filter(queue)) {
 			console.log(`Registration key available: ${hexid(key.key_id)}`);
+		}
+	});
+	await transactionManager.enqueueReadableTransaction(async (queue) => {
+		stats.librarySize = 0;
+		for (let file of await stores.files.filter(queue)) {
+			stats.librarySize += file.size;
+		}
+		stats.audioContent = 0;
+		for (let audio_file of await stores.audio_files.filter(queue)) {
+			stats.audioContent += audio_file.duration_ms;
+		}
+		stats.videoContent = 0;
+		for (let video_file of await stores.video_files.filter(queue)) {
+			stats.videoContent += video_file.duration_ms;
 		}
 	});
 	console.log(`Indexing finished.`);

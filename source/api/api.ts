@@ -7,6 +7,7 @@ import * as handler from "./handler";
 import * as apiv2 from "./schema/api/server";
 import * as atlas from "../database/atlas";
 import { binid } from "../utils";
+import { stats } from "../database/indexer";
 
 function getVersion(): {
 	major: number,
@@ -674,15 +675,8 @@ export const server = apiv2.makeServer({
 		};
 	}),
 	"GET:/statistics/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
-		// TODO: Create statistics table.
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let files = await atlas.stores.files.filter(queue);
-		let audio_files = await atlas.stores.audio_files.filter(queue);
-		let image_files = await atlas.stores.image_files.filter(queue);
-		let metadata_files = await atlas.stores.metadata_files.filter(queue);
-		let subtitle_files = await atlas.stores.subtitle_files.filter(queue);
-		let video_files =  await atlas.stores.video_files.filter(queue);
 		let version = getVersion();
 		return {
 			payload: {
@@ -701,42 +695,42 @@ export const server = apiv2.makeServer({
 					},
 					{
 						title: "Library Size",
-						value: files.reduce((sum, item) => sum + (item?.size ?? 0), 0),
+						value: stats.librarySize,
 						unit: "BYTES"
 					},
 					{
 						title: "Audio Content",
-						value: audio_files.reduce((sum, item) => sum + item.duration_ms, 0),
+						value: stats.audioContent,
 						unit: "MILLISECONDS"
 					},
 					{
 						title: "Video Content",
-						value: video_files.reduce((sum, item) => sum + item.duration_ms, 0),
+						value: stats.videoContent,
 						unit: "MILLISECONDS"
 					},
 					{
 						title: "Files",
-						value: files.length
+						value: await atlas.stores.files.length(queue)
 					},
 					{
 						title: "Audio Files",
-						value: audio_files.length
+						value: await atlas.stores.audio_files.length(queue)
 					},
 					{
 						title: "Image Files",
-						value: image_files.length
+						value: await atlas.stores.image_files.length(queue)
 					},
 					{
 						title: "Metadata Files",
-						value: metadata_files.length
+						value: await atlas.stores.metadata_files.length(queue)
 					},
 					{
 						title: "Subtitle Files",
-						value: subtitle_files.length
+						value: await atlas.stores.subtitle_files.length(queue)
 					},
 					{
 						title: "Video Files",
-						value: video_files.length
+						value: await atlas.stores.video_files.length(queue)
 					}
 				]
 			}
