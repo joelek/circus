@@ -709,6 +709,16 @@ export const server = apiv2.makeServer({
 						unit: "MILLISECONDS"
 					},
 					{
+						title: "Audio Streamed",
+						value: stats.audioStreamed,
+						unit: "MILLISECONDS"
+					},
+					{
+						title: "Video Streamed",
+						value: stats.videoStreamed,
+						unit: "MILLISECONDS"
+					},
+					{
 						title: "Files",
 						value: await atlas.stores.files.length(queue)
 					},
@@ -731,6 +741,62 @@ export const server = apiv2.makeServer({
 					{
 						title: "Video Files",
 						value: await atlas.stores.video_files.length(queue)
+					},
+					{
+						title: "Artists",
+						value: await atlas.stores.artists.length(queue)
+					},
+					{
+						title: "Albums",
+						value: await atlas.stores.albums.length(queue)
+					},
+					{
+						title: "Discs",
+						value: await atlas.stores.discs.length(queue)
+					},
+					{
+						title: "Tracks",
+						value: await atlas.stores.tracks.length(queue)
+					},
+					{
+						title: "Shows",
+						value: await atlas.stores.shows.length(queue)
+					},
+					{
+						title: "Seasons",
+						value: await atlas.stores.seasons.length(queue)
+					},
+					{
+						title: "Episodes",
+						value: await atlas.stores.episodes.length(queue)
+					},
+					{
+						title: "Movies",
+						value: await atlas.stores.movies.length(queue)
+					},
+					{
+						title: "Genres",
+						value: await atlas.stores.genres.length(queue)
+					},
+					{
+						title: "Actors",
+						value: await atlas.stores.actors.length(queue)
+					},
+					{
+						title: "Users",
+						value: await atlas.stores.users.length(queue)
+					},
+					{
+						title: "Playlists",
+						value: await atlas.stores.playlists.length(queue)
+					},
+					{
+						title: "Playlists Items",
+						value: await atlas.stores.playlist_items.length(queue)
+					},
+					{
+						title: "Streams",
+						value: await atlas.stores.streams.length(queue)
 					}
 				]
 			}

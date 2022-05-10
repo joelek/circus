@@ -1202,7 +1202,9 @@ export async function migrateLegacyData(queue: WritableQueue): Promise<void> {
 export const stats = {
 	librarySize: 0,
 	audioContent: 0,
-	videoContent: 0
+	videoContent: 0,
+	audioStreamed: 0,
+	videoStreamed: 0
 };
 
 export async function runIndexer(): Promise<void> {
@@ -1282,6 +1284,20 @@ export async function runIndexer(): Promise<void> {
 		stats.videoContent = 0;
 		for (let video_file of await stores.video_files.filter(queue)) {
 			stats.videoContent += video_file.duration_ms;
+		}
+		stats.audioStreamed = 0;
+		stats.videoStreamed = 0;
+		for (let stream of await stores.streams.filter(queue)) {
+			try {
+				let audio_file = await stores.audio_files.lookup(queue, stream);
+				stats.audioStreamed += audio_file.duration_ms;
+				continue;
+			} catch (error) {}
+			try {
+				let video_file = await stores.video_files.lookup(queue, stream);
+				stats.videoStreamed += video_file.duration_ms;
+				continue;
+			} catch (error) {}
 		}
 	});
 	console.log(`Indexing finished.`);
