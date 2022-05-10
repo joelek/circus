@@ -172,8 +172,9 @@ export async function lookupArtistAlbums(queue: ReadableQueue, artist_id: string
 
 export async function lookupArtistContext(queue: ReadableQueue, artist_id: string, api_user_id: string): Promise<schema.objects.ArtistContext> {
 	let artist = await lookupArtist(queue, artist_id, api_user_id);
-	let albums = await Promise.all((await atlas.links.artist_album_artists.filter(queue, { artist_id: binid(artist_id )}))
-		.map((record) => lookupAlbumContext(queue, hexid(record.album_id), api_user_id)));
+	let albums = (await Promise.all((await atlas.links.artist_album_artists.filter(queue, { artist_id: binid(artist_id )}))
+		.map((record) => lookupAlbumContext(queue, hexid(record.album_id), api_user_id))))
+		.sort(jsondb.NumericSort.decreasing((album) => album.year?.year));
 	return {
 		...artist,
 		albums
