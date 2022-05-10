@@ -3513,8 +3513,7 @@ let updateviewforuri = (uri: string): void => {
 		apiclient["GET:/users/<user_id>/shows/"]({
 			options: {
 				user_id: "",
-				token: token ?? "",
-				limit: 3
+				token: token ?? ""
 			}
 		}).then(async (response) => {
 			let payload = await response.payload();
@@ -3757,14 +3756,12 @@ class SearchResultsMerger {
 	private providers: Array<SearchResultProvider<Entity>>;
 
 	constructor(token: string, query: string) {
-		let limit = 12;
 		let actors = new SearchResultProvider<Actor>(async (anchor) => {
 			let response = await apiclient["GET:/actors/<query>"]({
 				options: {
 					token,
 					query,
-					anchor: anchor?.actor_id,
-					limit
+					anchor: anchor?.actor_id
 				}
 			});
 			let payload = await response.payload();
@@ -3775,8 +3772,7 @@ class SearchResultsMerger {
 				options: {
 					token,
 					query,
-					anchor: anchor?.album_id,
-					limit
+					anchor: anchor?.album_id
 				}
 			});
 			let payload = await response.payload();
@@ -3787,8 +3783,7 @@ class SearchResultsMerger {
 				options: {
 					token,
 					query,
-					anchor: anchor?.artist_id,
-					limit
+					anchor: anchor?.artist_id
 				}
 			});
 			let payload = await response.payload();
@@ -3799,8 +3794,7 @@ class SearchResultsMerger {
 				options: {
 					token,
 					query,
-					anchor: anchor?.disc_id,
-					limit
+					anchor: anchor?.disc_id
 				}
 			});
 			let payload = await response.payload();
@@ -3811,8 +3805,7 @@ class SearchResultsMerger {
 				options: {
 					token,
 					query,
-					anchor: anchor?.episode_id,
-					limit
+					anchor: anchor?.episode_id
 				}
 			});
 			let payload = await response.payload();
@@ -3823,8 +3816,7 @@ class SearchResultsMerger {
 				options: {
 					token,
 					query,
-					anchor: anchor?.genre_id,
-					limit
+					anchor: anchor?.genre_id
 				}
 			});
 			let payload = await response.payload();
@@ -3835,8 +3827,7 @@ class SearchResultsMerger {
 				options: {
 					token,
 					query,
-					anchor: anchor?.movie_id,
-					limit
+					anchor: anchor?.movie_id
 				}
 			});
 			let payload = await response.payload();
@@ -3847,8 +3838,7 @@ class SearchResultsMerger {
 				options: {
 					token,
 					query,
-					anchor: anchor?.season_id,
-					limit
+					anchor: anchor?.season_id
 				}
 			});
 			let payload = await response.payload();
@@ -3859,8 +3849,7 @@ class SearchResultsMerger {
 				options: {
 					token,
 					query,
-					anchor: anchor?.playlist_id,
-					limit
+					anchor: anchor?.playlist_id
 				}
 			});
 			let payload = await response.payload();
@@ -3871,8 +3860,7 @@ class SearchResultsMerger {
 				options: {
 					token,
 					query,
-					anchor: anchor?.show_id,
-					limit
+					anchor: anchor?.show_id
 				}
 			});
 			let payload = await response.payload();
@@ -3883,8 +3871,7 @@ class SearchResultsMerger {
 				options: {
 					token,
 					query,
-					anchor: anchor?.track_id,
-					limit
+					anchor: anchor?.track_id
 				}
 			});
 			let payload = await response.payload();
@@ -3895,8 +3882,7 @@ class SearchResultsMerger {
 				options: {
 					token,
 					query,
-					anchor: anchor?.user_id,
-					limit
+					anchor: anchor?.user_id
 				}
 			});
 			let payload = await response.payload();
@@ -3907,8 +3893,7 @@ class SearchResultsMerger {
 				options: {
 					token,
 					query,
-					anchor: anchor?.year_id,
-					limit
+					anchor: anchor?.year_id
 				}
 			});
 			let payload = await response.payload();
