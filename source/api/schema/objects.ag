@@ -13,8 +13,12 @@ guard ArtistBase: {
 };
 
 guard Artist: ArtistBase & {
-	"albums": Album[],
-	"affinity": number
+	"affinity": number,
+	"duration_ms": number
+};
+
+guard ArtistContext: Artist & {
+	"albums": AlbumContext[]
 };
 
 guard AlbumBase: {
@@ -25,9 +29,14 @@ guard AlbumBase: {
 
 guard Album: AlbumBase & {
 	"artists": ArtistBase[],
-	"discs": Disc[],
 	"year"?: YearBase,
-	"affinity": number
+	"copyright"?: string,
+	"affinity": number,
+	"duration_ms": number
+};
+
+guard AlbumContext: Album & {
+	"discs": DiscContext[]
 };
 
 guard DiscBase: {
@@ -37,8 +46,12 @@ guard DiscBase: {
 };
 
 guard Disc: DiscBase & {
-	"tracks": Track[],
-	"affinity": number
+	"affinity": number,
+	"duration_ms": number
+};
+
+guard DiscContext: Disc & {
+	"tracks": TrackContext[]
 };
 
 guard TrackBase: {
@@ -53,7 +66,12 @@ guard Track: TrackBase & {
 	"last_stream_date"?: number,
 	"media": ../../database/schema/AudioFile,
 	"copyright"?: string,
-	"affinity": number
+	"affinity": number,
+	"duration_ms": number
+};
+
+guard TrackContext: Track & {
+
 };
 
 guard UserBase: {
@@ -72,18 +90,27 @@ guard PlaylistBase: {
 };
 
 guard Playlist: PlaylistBase & {
-	"items": PlaylistItem[],
-	"affinity": number
+	"affinity": number,
+	"duration_ms": number
+};
+
+guard PlaylistContext: Playlist & {
+	"items": PlaylistItemContext[]
 };
 
 guard PlaylistItemBase: {
 	"playlist_item_id": string,
 	"number": number,
 	"playlist": PlaylistBase,
-	"track": Track
+	"track": Track,
+	"duration_ms": number
 };
 
 guard PlaylistItem: PlaylistItemBase & {};
+
+guard PlaylistItemContext: PlaylistItem & {
+
+};
 
 guard GenreBase: {
 	"genre_id": string,
@@ -110,7 +137,12 @@ guard Movie: MovieBase & {
 	"subtitles": ../../database/schema/SubtitleFile[],
 	"copyright"?: string,
 	"imdb"?: string,
-	"affinity": number
+	"affinity": number,
+	"duration_ms": number
+};
+
+guard MovieContext: Movie & {
+
 };
 
 guard ShowBase: {
@@ -123,9 +155,13 @@ guard Show: ShowBase & {
 	"summary"?: string,
 	"genres": GenreBase[],
 	"actors": ActorBase[],
-	"seasons": Season[],
 	"imdb"?: string,
-	"affinity": number
+	"affinity": number,
+	"duration_ms": number
+};
+
+guard ShowContext: Show & {
+	"seasons": SeasonContext[]
 };
 
 guard SeasonBase: {
@@ -135,8 +171,12 @@ guard SeasonBase: {
 };
 
 guard Season: SeasonBase & {
-	"episodes": Episode[],
-	"affinity": number
+	"affinity": number,
+	"duration_ms": number
+};
+
+guard SeasonContext: Season & {
+	"episodes": EpisodeContext[]
 };
 
 guard EpisodeBase: {
@@ -154,7 +194,12 @@ guard Episode: EpisodeBase & {
 	"subtitles": ../../database/schema/SubtitleFile[],
 	"copyright"?: string,
 	"imdb"?: string,
-	"affinity": number
+	"affinity": number,
+	"duration_ms": number
+};
+
+guard EpisodeContext: Episode & {
+
 };
 
 guard SubtitleBase: {

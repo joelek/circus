@@ -114,7 +114,8 @@ export class PlaylistsServer {
 					title: title,
 					description: description,
 					user_id: binid(user_id),
-					affinity: 0
+					affinity: 0,
+					duration_ms: 0
 				};
 				await atlas.stores.playlists.insert(queue, playlist);
 				let session = this.getOrCreateSession(user_id);
@@ -207,9 +208,12 @@ export class PlaylistsServer {
 					playlist_id: binid(playlist_id),
 					track_id: binid(track_id),
 					number: (playlist_items.pop()?.number ?? 0) + 1,
-					added_ms: Date.now()
+					added_ms: Date.now(),
+					duration_ms: track.duration_ms
 				};
 				await atlas.stores.playlist_items.insert(queue, playlist_item);
+				playlist.duration_ms += playlist_item.duration_ms;
+				await atlas.stores.playlists.insert(queue, playlist);
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("CreatePlaylistItem", Array.from(session.connections), {
 					playlist_item: await api.handler.lookupPlaylistItemBase(queue, hexid(playlist_item.playlist_item_id), user_id)
@@ -241,6 +245,8 @@ export class PlaylistsServer {
 						await atlas.stores.playlist_items.update(queue, playlist_item);
 					}
 				}
+				playlist.duration_ms -= playlist_item.duration_ms;
+				await atlas.stores.playlists.insert(queue, playlist);
 				let session = this.getOrCreateSession(user_id);
 				this.tss.send("DeletePlaylistItem", Array.from(session.connections), {
 					playlist_item: await api.handler.lookupPlaylistItemBase(queue, hexid(playlist_item.playlist_item_id), user_id)

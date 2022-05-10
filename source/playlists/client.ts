@@ -9,7 +9,7 @@ export class PlaylistsClient {
 	private tsc: typesockets.TypeSocketClient<messages.Autoguard.Guards>;
 	private token = new observers.ObservableClass(undefined as string | undefined);
 	private online = new observers.ObservableClass(false);
-	readonly playlists = new observers.ArrayObservable(new Array<observers.ObservableClass<api.Playlist>>());
+	readonly playlists = new observers.ArrayObservable(new Array<observers.ObservableClass<api.PlaylistContext>>());
 
 	constructor(url: string, factory: typesockets.WebSocketFactory = (url) => new WebSocket(url)) {
 		this.tsc = new typesockets.TypeSocketClient(url, factory, messages.Autoguard.Guards);
@@ -37,7 +37,8 @@ export class PlaylistsClient {
 			let playlist = {
 				...message.playlist,
 				items: new Array<api.PlaylistItem>(),
-				affinity: 0
+				affinity: 0,
+				duration_ms: 0
 			};
 			this.playlists.append(new observers.ObservableClass(playlist));
 		});

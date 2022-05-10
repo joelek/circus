@@ -1,20 +1,20 @@
-guard ContextAlbum: ../../api/schema/objects/Album;
+guard ContextAlbum: ../../api/schema/objects/AlbumContext;
 
-guard ContextArtist: ../../api/schema/objects/Artist;
+guard ContextArtist: ../../api/schema/objects/ArtistContext;
 
-guard ContextDisc: ../../api/schema/objects/Disc;
+guard ContextDisc: ../../api/schema/objects/DiscContext;
 
-guard ContextTrack: ../../api/schema/objects/Track;
+guard ContextTrack: ../../api/schema/objects/TrackContext;
 
-guard ContextPlaylist: ../../api/schema/objects/Playlist;
+guard ContextPlaylist: ../../api/schema/objects/PlaylistContext;
 
-guard ContextMovie: ../../api/schema/objects/Movie;
+guard ContextMovie: ../../api/schema/objects/MovieContext;
 
-guard ContextShow: ../../api/schema/objects/Show;
+guard ContextShow: ../../api/schema/objects/ShowContext;
 
-guard ContextSeason: ../../api/schema/objects/Season;
+guard ContextSeason: ../../api/schema/objects/SeasonContext;
 
-guard ContextEpisode: ../../api/schema/objects/Episode;
+guard ContextEpisode: ../../api/schema/objects/EpisodeContext;
 
 guard Context: ContextAlbum | ContextArtist | ContextDisc | ContextTrack | ContextPlaylist | ContextMovie | ContextShow | ContextSeason | ContextEpisode;
 

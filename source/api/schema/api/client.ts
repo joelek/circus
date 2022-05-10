@@ -311,6 +311,66 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			return new autoguard.api.ServerResponse(response, false);
 		}
 	},
+	"getAlbumDiscs": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getAlbumDiscs"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("albums");
+		components.push(...autoguard.api.encodeComponents([request.options?.["album_id"]], true));
+		components.push("discs");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["album_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getAlbumDiscs"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
+	"getAlbumContext": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getAlbumContext"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("albums");
+		components.push(...autoguard.api.encodeComponents([request.options?.["album_id"]], true));
+		components.push("context");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["album_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getAlbumContext"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
 	"GET:/artists/<query>": async (request) => {
 		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["GET:/artists/<query>"], clientOptions?.debugMode);
 		guard.as(request, "request");
@@ -367,6 +427,66 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["GET:/artists/<artist_id>/"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
+	"getArtistAlbums": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getArtistAlbums"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("artists");
+		components.push(...autoguard.api.encodeComponents([request.options?.["artist_id"]], true));
+		components.push("albums");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["artist_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getArtistAlbums"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
+	"getArtistContext": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getArtistContext"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("artists");
+		components.push(...autoguard.api.encodeComponents([request.options?.["artist_id"]], true));
+		components.push("context");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["artist_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getArtistContext"], clientOptions?.debugMode);
 			let response = guard.as({ status, headers, payload }, "response");
 			return new autoguard.api.ServerResponse(response, false);
 		}
@@ -431,6 +551,66 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			return new autoguard.api.ServerResponse(response, false);
 		}
 	},
+	"getDiscTracks": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getDiscTracks"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("discs");
+		components.push(...autoguard.api.encodeComponents([request.options?.["disc_id"]], true));
+		components.push("tracks");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["disc_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getDiscTracks"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
+	"getDiscContext": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getDiscContext"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("discs");
+		components.push(...autoguard.api.encodeComponents([request.options?.["disc_id"]], true));
+		components.push("context");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["disc_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getDiscContext"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
 	"GET:/episodes/<query>": async (request) => {
 		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["GET:/episodes/<query>"], clientOptions?.debugMode);
 		guard.as(request, "request");
@@ -487,6 +667,36 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["GET:/episodes/<episode_id>/"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
+	"getEpisodeContext": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getEpisodeContext"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("episodes");
+		components.push(...autoguard.api.encodeComponents([request.options?.["episode_id"]], true));
+		components.push("context");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["episode_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getEpisodeContext"], clientOptions?.debugMode);
 			let response = guard.as({ status, headers, payload }, "response");
 			return new autoguard.api.ServerResponse(response, false);
 		}
@@ -742,6 +952,36 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			return new autoguard.api.ServerResponse(response, false);
 		}
 	},
+	"getMovieContext": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getMovieContext"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("movies");
+		components.push(...autoguard.api.encodeComponents([request.options?.["movie_id"]], true));
+		components.push("context");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["movie_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getMovieContext"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
 	"GET:/playlists/<query>": async (request) => {
 		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["GET:/playlists/<query>"], clientOptions?.debugMode);
 		guard.as(request, "request");
@@ -798,6 +1038,66 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["GET:/playlists/<playlist_id>/"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
+	"getPlaylistItems": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getPlaylistItems"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("playlists");
+		components.push(...autoguard.api.encodeComponents([request.options?.["playlist_id"]], true));
+		components.push("items");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["playlist_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getPlaylistItems"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
+	"getPlaylistContext": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getPlaylistContext"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("playlists");
+		components.push(...autoguard.api.encodeComponents([request.options?.["playlist_id"]], true));
+		components.push("context");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["playlist_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getPlaylistContext"], clientOptions?.debugMode);
 			let response = guard.as({ status, headers, payload }, "response");
 			return new autoguard.api.ServerResponse(response, false);
 		}
@@ -862,6 +1162,66 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			return new autoguard.api.ServerResponse(response, false);
 		}
 	},
+	"getSeasonEpisodes": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getSeasonEpisodes"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("seasons");
+		components.push(...autoguard.api.encodeComponents([request.options?.["season_id"]], true));
+		components.push("episodes");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["season_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getSeasonEpisodes"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
+	"getSeasonContext": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getSeasonContext"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("seasons");
+		components.push(...autoguard.api.encodeComponents([request.options?.["season_id"]], true));
+		components.push("context");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["season_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getSeasonContext"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
 	"GET:/shows/<query>": async (request) => {
 		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["GET:/shows/<query>"], clientOptions?.debugMode);
 		guard.as(request, "request");
@@ -918,6 +1278,66 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["GET:/shows/<show_id>/"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
+	"getShowSeasons": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getShowSeasons"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("shows");
+		components.push(...autoguard.api.encodeComponents([request.options?.["show_id"]], true));
+		components.push("seasons");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["show_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getShowSeasons"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
+	"getShowContext": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getShowContext"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("shows");
+		components.push(...autoguard.api.encodeComponents([request.options?.["show_id"]], true));
+		components.push("context");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["show_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getShowContext"], clientOptions?.debugMode);
 			let response = guard.as({ status, headers, payload }, "response");
 			return new autoguard.api.ServerResponse(response, false);
 		}
@@ -1010,6 +1430,36 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["GET:/tracks/<track_id>/playlists/"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
+	"getTrackContext": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getTrackContext"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("tracks");
+		components.push(...autoguard.api.encodeComponents([request.options?.["track_id"]], true));
+		components.push("context");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["track_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getTrackContext"], clientOptions?.debugMode);
 			let response = guard.as({ status, headers, payload }, "response");
 			return new autoguard.api.ServerResponse(response, false);
 		}

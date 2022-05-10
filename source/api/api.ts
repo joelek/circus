@@ -128,6 +128,27 @@ export const server = apiv2.makeServer({
 			}
 		};
 	}),
+	getAlbumDiscs: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let api_user_id = await auth.getUserId(queue, options.token);
+		let album = await handler.lookupAlbum(queue, options.album_id, api_user_id);
+		let discs = await handler.lookupAlbumDiscs(queue, options.album_id, api_user_id, album);
+		return {
+			payload: {
+				discs
+			}
+		};
+	}),
+	getAlbumContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let context = await handler.lookupAlbumContext(queue, options.album_id, user_id);
+		return {
+			payload: {
+				context
+			}
+		};
+	}),
 	"GET:/artists/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
@@ -152,6 +173,27 @@ export const server = apiv2.makeServer({
 			}
 		};
 	}),
+	getArtistAlbums: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let api_user_id = await auth.getUserId(queue, options.token);
+		let artist = await handler.lookupArtist(queue, options.artist_id, api_user_id);
+		let albums = await handler.lookupArtistAlbums(queue, options.artist_id, api_user_id, artist);
+		return {
+			payload: {
+				albums
+			}
+		};
+	}),
+	getArtistContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let context = await handler.lookupArtistContext(queue, options.artist_id, user_id);
+		return {
+			payload: {
+				context
+			}
+		};
+	}),
 	"GET:/discs/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
@@ -166,7 +208,7 @@ export const server = apiv2.makeServer({
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
 		let disc = await handler.lookupDisc(queue, options.disc_id, user_id);
-		let discs = (await handler.lookupAlbum(queue, disc.album.album_id, user_id)).discs;
+		let discs = await handler.lookupAlbumDiscs(queue, disc.album.album_id, user_id, disc.album);
 		let index = discs.findIndex((other) => other.disc_id === disc.disc_id);
 		let last = discs[index - 1];
 		let next = discs[index + 1];
@@ -175,6 +217,27 @@ export const server = apiv2.makeServer({
 				disc,
 				last,
 				next
+			}
+		};
+	}),
+	getDiscTracks: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let api_user_id = await auth.getUserId(queue, options.token);
+		let disc = await handler.lookupDisc(queue, options.disc_id, api_user_id);
+		let tracks = await handler.lookupDiscTracks(queue, options.disc_id, api_user_id, disc);
+		return {
+			payload: {
+				tracks
+			}
+		};
+	}),
+	getDiscContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let context = await handler.lookupDiscContext(queue, options.disc_id, user_id);
+		return {
+			payload: {
+				context
 			}
 		};
 	}),
@@ -192,7 +255,7 @@ export const server = apiv2.makeServer({
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
 		let episode = await handler.lookupEpisode(queue, options.episode_id, user_id);
-		let episodes = (await handler.lookupSeason(queue, episode.season.season_id, user_id)).episodes;
+		let episodes = await handler.lookupSeasonEpisodes(queue, episode.season.season_id, user_id, episode.season);
 		let index = episodes.findIndex((other) => other.episode_id === episode.episode_id);
 		let last = episodes[index - 1];
 		let next = episodes[index + 1];
@@ -201,6 +264,16 @@ export const server = apiv2.makeServer({
 				episode,
 				last,
 				next
+			}
+		};
+	}),
+	getEpisodeContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let context = await handler.lookupEpisodeContext(queue, options.episode_id, user_id);
+		return {
+			payload: {
+				context
 			}
 		};
 	}),
@@ -284,6 +357,16 @@ export const server = apiv2.makeServer({
 			}
 		};
 	}),
+	getMovieContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let context = await handler.lookupMovieContext(queue, options.movie_id, user_id);
+		return {
+			payload: {
+				context
+			}
+		};
+	}),
 	"GET:/playlists/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
@@ -304,6 +387,27 @@ export const server = apiv2.makeServer({
 			}
 		};
 	}),
+	getPlaylistItems: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let api_user_id = await auth.getUserId(queue, options.token);
+		let playlist = await handler.lookupPlaylist(queue, options.playlist_id, api_user_id);
+		let items = await handler.lookupPlaylistItems(queue, options.playlist_id, api_user_id, playlist);
+		return {
+			payload: {
+				items
+			}
+		};
+	}),
+	getPlaylistContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let context = await handler.lookupPlaylistContext(queue, options.playlist_id, user_id);
+		return {
+			payload: {
+				context
+			}
+		};
+	}),
 	"GET:/seasons/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
@@ -318,7 +422,7 @@ export const server = apiv2.makeServer({
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
 		let season = await handler.lookupSeason(queue, options.season_id, user_id);
-		let seasons = (await handler.lookupShow(queue, season.show.show_id, user_id)).seasons;
+		let seasons = await handler.lookupShowSeasons(queue, season.show.show_id, user_id, season.show);
 		let index = seasons.findIndex((other) => other.season_id === season.season_id);
 		let last = seasons[index - 1];
 		let next = seasons[index + 1];
@@ -327,6 +431,27 @@ export const server = apiv2.makeServer({
 				season,
 				last,
 				next
+			}
+		};
+	}),
+	getSeasonEpisodes: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let season = await handler.lookupSeasonBase(queue, options.season_id, user_id);
+		let episodes = await handler.lookupSeasonEpisodes(queue, options.season_id, user_id, season);
+		return {
+			payload: {
+				episodes
+			}
+		};
+	}),
+	getSeasonContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let context = await handler.lookupSeasonContext(queue, options.season_id, user_id);
+		return {
+			payload: {
+				context
 			}
 		};
 	}),
@@ -350,6 +475,27 @@ export const server = apiv2.makeServer({
 			}
 		};
 	}),
+	getShowSeasons: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let show = await handler.lookupShowBase(queue, options.show_id, user_id);
+		let seasons = await handler.lookupShowSeasons(queue, options.show_id, user_id, show);
+		return {
+			payload: {
+				seasons
+			}
+		};
+	}),
+	getShowContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let context = await handler.lookupShowContext(queue, options.show_id, user_id);
+		return {
+			payload: {
+				context
+			}
+		};
+	}),
 	"GET:/tracks/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
@@ -364,7 +510,7 @@ export const server = apiv2.makeServer({
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
 		let track = await handler.lookupTrack(queue, options.track_id, user_id);
-		let tracks = (await handler.lookupDisc(queue, track.disc.disc_id, user_id)).tracks;
+		let tracks = await handler.lookupDiscTracks(queue, track.disc.disc_id, user_id, track.disc);
 		let index = tracks.findIndex((other) => other.track_id === track.track_id);
 		let last = tracks[index - 1];
 		let next = tracks[index + 1];
@@ -383,6 +529,16 @@ export const server = apiv2.makeServer({
 		return {
 			payload: {
 				playlists
+			}
+		};
+	}),
+	getTrackContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let context = await handler.lookupTrackContext(queue, options.track_id, user_id);
+		return {
+			payload: {
+				context
 			}
 		};
 	}),

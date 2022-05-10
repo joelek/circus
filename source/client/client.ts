@@ -4,7 +4,7 @@ import { ArrayObservable, computed, ObservableClass } from "../observers";
 import * as client from "../player/client";
 import * as is from "../is";
 import {  ContextAlbum, ContextArtist, Device } from "../player/schema/objects";
-import { Actor, Album, Artist, Cue, Disc, Entity, Episode, Genre, Movie, Playlist, Season, Show, Track, User, Year } from "../api/schema/objects";
+import { Actor, Album, Artist, Cue, Disc, Entity, Episode, Genre, Movie, Playlist, PlaylistItem, Season, Show, Track, User, Year } from "../api/schema/objects";
 import * as xml from "../xnode";
 import { formatDuration as format_duration, formatSize } from "../ui/metadata";
 import * as apischema from "../api/schema";
@@ -302,7 +302,7 @@ document.head.appendChild(IconFactory.makeStyle().render())
 const carouselFactory = new CarouselFactory(Icon);
 document.head.appendChild(CarouselFactory.makeStyle().render())
 
-const PlaybackButton = new PlaybackButtonFactory(player, Icon);
+const PlaybackButton = new PlaybackButtonFactory(apiclient, player, Icon);
 document.head.appendChild(PlaybackButtonFactory.makeStyle().render())
 
 const ImageBox = new ImageBoxFactory(verifiedToken);
@@ -2185,22 +2185,33 @@ let updateviewforuri = (uri: string): void => {
 			let season = payload.season;
 			let last = payload.last;
 			let next = payload.next;
+			let episodes = new ArrayObservable<Episode>([]);
+			apiclient.getSeasonEpisodes({
+				options: {
+					season_id,
+					token: token ?? ""
+				}
+			}).then(async (response) => {
+				let payload = await response.payload();
+				episodes.update(payload.episodes);
+			});
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forSeason(season, { compactDescription: false }))
 				)
 				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
-					.add(...season.episodes.map((episode, episodeIndex) => {
+					.repeat(episodes, (episode, episodeIndex) => {
 						return EntityCard.forEpisode(episode, {
 							playbackButton: PlaybackButton.forSeason(season, episodeIndex)
 						});
-					}))
+					})
 				)
 				.add(xml.element("div.content")
 					.add(entityNavLinkFactory.forSeason(last, next))
 				)
-				.render());
+				.render()
+			);
 		});
 	} else if ((parts = /^video[/]seasons[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
@@ -2256,15 +2267,25 @@ let updateviewforuri = (uri: string): void => {
 			let disc = payload.disc;
 			let last = payload.last;
 			let next = payload.next;
+			let tracks = new ArrayObservable<Track>([]);
+			apiclient.getDiscTracks({
+				options: {
+					disc_id,
+					token: token ?? ""
+				}
+			}).then(async (response) => {
+				let payload = await response.payload();
+				tracks.update(payload.tracks);
+			});
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forDisc(disc, { compactDescription: false }))
 				)
 				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 16px;")
-					.add(...disc.tracks.map((track, trackIndex) => {
+					.repeat(tracks, (track, trackIndex) => {
 						return EntityRow.forTrack(track, PlaybackButton.forDisc(disc, trackIndex));
-					}))
+					})
 				)
 				.add(xml.element("div.content")
 					.add(entityNavLinkFactory.forDisc(last, next))
@@ -2529,18 +2550,41 @@ let updateviewforuri = (uri: string): void => {
 		}).then(async (response) => {
 			let payload = await response.payload();
 			let album = payload.album;
+			let discs = new ArrayObservable<Disc>([]);
+			apiclient.getAlbumDiscs({
+				options: {
+					album_id,
+					token: token ?? ""
+				}
+			}).then(async (response) => {
+				let payload = await response.payload();
+				discs.update(payload.discs);
+			});
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forAlbum(album, { compactDescription: false }))
 				)
-				.add(...album.discs.map((disc, discIndex) => xml.element("div.content")
-					.set("style", "display: grid; gap: 16px;")
-					.add(renderTextHeader(xml.text(`Disc ${disc.number}`)))
-					.add(...disc.tracks.map((track, trackIndex) => {
-						return EntityRow.forTrack(track, PlaybackButton.forAlbum(album, discIndex, trackIndex));
-					})))
-				)
-				.render());
+				.repeat(discs, (disc, discIndex) => {
+					let tracks = new ArrayObservable<Track>([]);
+					apiclient.getDiscTracks({
+						options: {
+							disc_id: disc.disc_id,
+							token: token ?? ""
+						}
+					}).then(async (response) => {
+						let payload = await response.payload();
+						tracks.update(payload.tracks);
+					});
+					let element = xml.element("div.content")
+						.set("style", "display: grid; gap: 16px;")
+						.add(renderTextHeader(xml.text(`Disc ${disc.number}`)))
+						.repeat(tracks, (track, trackIndex) => {
+							return EntityRow.forTrack(track, PlaybackButton.forAlbum(album, discIndex, trackIndex));
+						});
+					return element;
+				})
+				.render()
+			);
 		});
 	} else if ((parts = /^audio[/]albums[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
@@ -2596,6 +2640,16 @@ let updateviewforuri = (uri: string): void => {
 			let artist = payload.artist;
 			let tracks = payload.tracks;
 			let appearances = payload.appearances;
+			let albums = new ArrayObservable<Album>([]);
+			apiclient.getArtistAlbums({
+				options: {
+					artist_id,
+					token: token ?? ""
+				}
+			}).then(async (response) => {
+				let payload = await response.payload();
+				albums.update(payload.albums);
+			});
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forArtist(artist, { compactDescription: false }))
@@ -2610,15 +2664,16 @@ let updateviewforuri = (uri: string): void => {
 						}))
 					)
 				)
-				.add(artist.albums.length === 0 ? undefined : xml.element("div.content")
+				.add(xml.element("div.content")
+					.bind("data-hide", albums.compute((albums) => albums.length === 0))
 					.set("style", "display: grid; gap: 24px;")
 					.add(renderTextHeader(xml.text("Discography")))
 					.add(Grid.make()
-						.add(...artist.albums.map((album, albumIndex) => {
+						.repeat(albums, (album, albumIndex) => {
 							return EntityCard.forAlbum(album, {
 								playbackButton: PlaybackButton.forArtist(artist, albumIndex)
 							});
-						}))
+						})
 					)
 				)
 				.add(appearances.length === 0 ? undefined : xml.element("div.content")
@@ -2688,13 +2743,24 @@ let updateviewforuri = (uri: string): void => {
 					playlist_id
 				}
 			})).permissions === "write";
+			let items = new ArrayObservable<PlaylistItem>([]);
+			apiclient.getPlaylistItems({
+				options: {
+					playlist_id,
+					token: token ?? ""
+				}
+			}).then(async (response) => {
+				let payload = await response.payload();
+				items.update(payload.items);
+			});
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forPlaylist(playlist, { compactDescription: false }))
 				)
-				.add(playlist.items.length === 0 ? undefined : xml.element("div.content")
+				.add(xml.element("div.content")
+					.bind("data-hide", items.compute((items) => items.length === 0))
 					.set("style", "display: grid; gap: 16px;")
-					.add(...playlist.items.map((item, itemIndex) => xml.element("div")
+					.repeat(items, (item, itemIndex) => xml.element("div")
 						.set("style", "align-items: center; display: grid; grid-template-columns: 1fr min-content; gap: 16px;")
 						.add(EntityRow.forTrack(item.track, PlaybackButton.forPlaylist(playlist, itemIndex)))
 						.add(makeButton()
@@ -2713,7 +2779,7 @@ let updateviewforuri = (uri: string): void => {
 							})
 							.add(Icon.makeMinus())
 						)
-					))
+					)
 				)
 				.render());
 		});
@@ -2816,7 +2882,33 @@ let updateviewforuri = (uri: string): void => {
 		}).then(async (response) => {
 			let payload = await response.payload();
 			let show = payload.show;
-			let indices = utils.getNextEpisode(show);
+			let seasons = new ArrayObservable<Season>([]);
+			apiclient.getShowSeasons({
+				options: {
+					show_id,
+					token: token ?? ""
+				}
+			}).then(async (response) => {
+				let payload = await response.payload();
+				seasons.update(payload.seasons);
+			});
+			let nextEpisodeElements = new ArrayObservable<xml.XElement>([]);
+			apiclient.getShowContext({
+				options: {
+					show_id,
+					token: token ?? ""
+				}
+			}).then(async (response) => {
+				let payload = await response.payload();
+				let context = payload.context;
+				let next = utils.getNextEpisode(context);
+				if (next != null) {
+					let element = EntityCard.forEpisode(context.seasons[next.seasonIndex].episodes[next.episodeIndex], {
+						playbackButton: PlaybackButton.forShow(show, next.seasonIndex, next.episodeIndex)
+					});
+					nextEpisodeElements.update([element]);
+				}
+			});
 			mount.appendChild(xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forShow(show, { compactDescription: false }))
@@ -2826,18 +2918,16 @@ let updateviewforuri = (uri: string): void => {
 					.set("style", "display: grid; gap: 16px;")
 					.add(...show.actors.slice(0, 3).map((actor) => EntityRow.forActor(actor)))
 				)
-				.add(is.absent(indices) ? undefined : xml.element("div.content")
+				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
 					.add(renderTextHeader(xml.text("Next episode")))
-					.add(EntityCard.forEpisode(show.seasons[indices.seasonIndex].episodes[indices.episodeIndex], {
-						playbackButton: PlaybackButton.forShow(show, indices.seasonIndex, indices.episodeIndex)
-					}))
+					.repeat(nextEpisodeElements, (element) => element)
 				)
 				.add(xml.element("div.content")
 					.add(Grid.make()
-						.add(...show.seasons.map((season, seasonIndex) => EntityCard.forSeason(season, {
+						.repeat(seasons, (season, seasonIndex) => EntityCard.forSeason(season, {
 							playbackButton: PlaybackButton.forShow(show, seasonIndex)
-						})))
+						}))
 					)
 				)
 				.render()

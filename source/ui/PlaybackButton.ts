@@ -6,6 +6,8 @@ import * as is from "../is";
 import * as context from "../player";
 import * as utils from "../utils";
 import { IconFactory } from "./Icon";
+import { Client } from "../api/schema/api/client";
+import { ContextAlbum, ContextArtist, ContextDisc, ContextEpisode, ContextMovie, ContextPlaylist, ContextSeason, ContextShow, ContextTrack } from "../player/schema/objects";
 
 const CSS = `
 	.playback-button {
@@ -36,6 +38,7 @@ type Controller = Partial<{
 }>;
 
 export class PlaybackButtonFactory {
+	private rpc: Client;
 	private player: context.client.ContextClient;
 	private iconFactory: IconFactory;
 
@@ -66,7 +69,107 @@ export class PlaybackButtonFactory {
 			});
 	}
 
-	constructor(player: context.client.ContextClient, iconFactory: IconFactory) {
+	private async getAlbumContext(album: api.Album): Promise<api.AlbumContext> {
+		let response = await this.rpc.getAlbumContext({
+			options: {
+				album_id: album.album_id,
+				token: this.player.token.getState() ?? ""
+			}
+		});
+		let payload = await response.payload();
+		return payload.context;
+	}
+
+	private async getArtistContext(artist: api.Artist): Promise<api.ArtistContext> {
+		let response = await this.rpc.getArtistContext({
+			options: {
+				artist_id: artist.artist_id,
+				token: this.player.token.getState() ?? ""
+			}
+		});
+		let payload = await response.payload();
+		return payload.context;
+	}
+
+	private async getDiscContext(disc: api.Disc): Promise<api.DiscContext> {
+		let response = await this.rpc.getDiscContext({
+			options: {
+				disc_id: disc.disc_id,
+				token: this.player.token.getState() ?? ""
+			}
+		});
+		let payload = await response.payload();
+		return payload.context;
+	}
+
+	private async getEpisodeContext(episode: api.Episode): Promise<api.EpisodeContext> {
+		let response = await this.rpc.getEpisodeContext({
+			options: {
+				episode_id: episode.episode_id,
+				token: this.player.token.getState() ?? ""
+			}
+		});
+		let payload = await response.payload();
+		return payload.context;
+	}
+
+	private async getMovieContext(movie: api.Movie): Promise<api.MovieContext> {
+		let response = await this.rpc.getMovieContext({
+			options: {
+				movie_id: movie.movie_id,
+				token: this.player.token.getState() ?? ""
+			}
+		});
+		let payload = await response.payload();
+		return payload.context;
+	}
+
+	private async getPlaylistContext(playlist: api.Playlist): Promise<api.PlaylistContext> {
+		let response = await this.rpc.getPlaylistContext({
+			options: {
+				playlist_id: playlist.playlist_id,
+				token: this.player.token.getState() ?? ""
+			}
+		});
+		let payload = await response.payload();
+		return payload.context;
+	}
+
+	private async getSeasonContext(season: api.Season): Promise<api.SeasonContext> {
+		let response = await this.rpc.getSeasonContext({
+			options: {
+				season_id: season.season_id,
+				token: this.player.token.getState() ?? ""
+			}
+		});
+		let payload = await response.payload();
+		return payload.context;
+	}
+
+	private async getShowContext(show: api.Show): Promise<api.ShowContext> {
+		let response = await this.rpc.getShowContext({
+			options: {
+				show_id: show.show_id,
+				token: this.player.token.getState() ?? ""
+			}
+		});
+		let payload = await response.payload();
+		return payload.context;
+	}
+
+	private async getTrackContext(track: api.Track): Promise<api.TrackContext> {
+		let response = await this.rpc.getTrackContext({
+			options: {
+				track_id: track.track_id,
+				token: this.player.token.getState() ?? ""
+			}
+		});
+		let payload = await response.payload();
+		return payload.context;
+	}
+
+	constructor(rpc: Client, player: context.client.ContextClient, iconFactory: IconFactory) {
+		this.rpc = rpc;
 		this.player = player;
 		this.iconFactory = iconFactory;
 	}
@@ -106,64 +209,57 @@ export class PlaybackButtonFactory {
 	}
 
 	forAlbum(album: api.Album, discIndex?: number, trackIndex?: number): xnode.XElement {
-		let isContext = observables.computed((contextPath) => {
-			if (!is.present(contextPath)) {
+		let isContext = observables.computed((context, currentEntry) => {
+			if (!ContextAlbum.is(context) || !ContextTrack.is(currentEntry)) {
 				return false;
 			}
-			if (is.present(discIndex)) {
-				let disc = album.discs[discIndex];
-				if (contextPath[contextPath.length - 2] !== disc.disc_id) {
+			if (context.album_id !== album.album_id) {
+				return false;
+			}
+			if (discIndex != null) {
+				if (context.discs[discIndex].disc_id !== currentEntry.disc.disc_id) {
 					return false;
 				}
-				if (is.present(trackIndex)) {
-					let track = disc.tracks[trackIndex];
-					if (contextPath[contextPath.length - 1] !== track.track_id) {
+				if (trackIndex != null) {
+					if (context.discs[discIndex].tracks[trackIndex].track_id !== currentEntry.track_id) {
 						return false;
 					}
 				}
-			} else {
-				if (contextPath[contextPath.length - 3] !== album.album_id) {
-					return false;
-				}
 			}
 			return true;
-		}, this.player.contextPath);
+		}, this.player.context, this.player.currentEntry);
 		return this.make(isContext, {
-			play: () => this.player.playAlbum(album, discIndex, trackIndex)
+			play: async () => this.player.playAlbum(await this.getAlbumContext(album), discIndex, trackIndex)
 		});
 	}
 
 	forArtist(artist: api.Artist, albumIndex?: number, discIndex?: number, trackIndex?: number): xnode.XElement {
-		let isContext = observables.computed((contextPath) => {
-			if (!is.present(contextPath)) {
+		let isContext = observables.computed((context, currentEntry) => {
+			if (!ContextArtist.is(context) || !ContextTrack.is(currentEntry)) {
 				return false;
 			}
-			if (is.present(albumIndex)) {
-				let album = artist.albums[albumIndex];
-				if (contextPath[contextPath.length - 3] !== album.album_id) {
+			if (context.artist_id !== artist.artist_id) {
+				return false;
+			}
+			if (albumIndex != null) {
+				if (context.albums[albumIndex].album_id !== currentEntry.disc.album.album_id) {
 					return false;
 				}
-				if (is.present(discIndex)) {
-					let disc = album.discs[discIndex];
-					if (contextPath[contextPath.length - 2] !== disc.disc_id) {
+				if (discIndex != null) {
+					if (context.albums[albumIndex].discs[discIndex].disc_id !== currentEntry.disc.disc_id) {
 						return false;
 					}
-					if (is.present(trackIndex)) {
-						let track = disc.tracks[trackIndex];
-						if (contextPath[contextPath.length - 1] !== track.track_id) {
+					if (trackIndex != null) {
+						if (context.albums[albumIndex].discs[discIndex].tracks[trackIndex].track_id !== currentEntry.track_id) {
 							return false;
 						}
 					}
 				}
-			} else {
-				if (contextPath[contextPath.length - 4] !== artist.artist_id) {
-					return false;
-				}
 			}
 			return true;
-		}, this.player.contextPath);
+		}, this.player.context, this.player.currentEntry);
 		return this.make(isContext, {
-			play: () => this.player.playArtist(artist, albumIndex, discIndex, trackIndex)
+			play: async () => this.player.playArtist(await this.getArtistContext(artist), albumIndex, discIndex, trackIndex)
 		});
 	}
 
@@ -172,15 +268,9 @@ export class PlaybackButtonFactory {
 		if (false) {
 		} else if (api.Episode.is(cue.media)) {
 			let episode = cue.media;
-			let isContext = observables.computed((contextPath) => {
-				if (!is.present(contextPath)) {
-					return false;
-				}
-				if (contextPath[contextPath.length - 1] !== episode.episode_id) {
-					return false;
-				}
-				return true;
-			}, this.player.contextPath);
+			let isContext = observables.computed((context) => {
+				return ContextEpisode.is(context) && context.episode_id === episode.episode_id;
+			}, this.player.context);
 			return this.make(isContext, {
 				play: () => {
 					this.player.playEpisode(episode);
@@ -194,15 +284,9 @@ export class PlaybackButtonFactory {
 			});
 		} else if (api.Movie.is(cue.media)) {
 			let movie = cue.media;
-			let isContext = observables.computed((contextPath) => {
-				if (!is.present(contextPath)) {
-					return false;
-				}
-				if (contextPath[contextPath.length - 1] !== movie.movie_id) {
-					return false;
-				}
-				return true;
-			}, this.player.contextPath);
+			let isContext = observables.computed((context) => {
+				return ContextMovie.is(context) && context.movie_id === movie.movie_id;
+			}, this.player.context);
 			return this.make(isContext, {
 				play: () => {
 					this.player.playMovie(movie);
@@ -219,146 +303,140 @@ export class PlaybackButtonFactory {
 	}
 
 	forDisc(disc: api.Disc, trackIndex?: number): xnode.XElement {
-		let isContext = observables.computed((contextPath) => {
-			if (!is.present(contextPath)) {
+		let isContext = observables.computed((context, currentEntry) => {
+			if (!ContextDisc.is(context) || !ContextTrack.is(currentEntry)) {
 				return false;
 			}
-			if (is.present(trackIndex)) {
-				let track = disc.tracks[trackIndex];
-				if (contextPath[contextPath.length - 1] !== track.track_id) {
-					return false;
-				}
-			} else {
-				if (contextPath[contextPath.length - 2] !== disc.disc_id) {
+			if (context.disc_id !== disc.disc_id) {
+				return false;
+			}
+			if (trackIndex != null) {
+				if (context.tracks[trackIndex].track_id !== currentEntry.track_id) {
 					return false;
 				}
 			}
 			return true;
-		}, this.player.contextPath);
+		}, this.player.context, this.player.currentEntry);
 		return this.make(isContext, {
-			play: () => this.player.playDisc(disc, trackIndex)
+			play: async () => this.player.playDisc(await this.getDiscContext(disc), trackIndex)
 		});
 	}
 
 	forEpisode(episode: api.Episode): xnode.XElement {
-		let isContext = observables.computed((contextPath) => {
-			if (!is.present(contextPath)) {
+		let isContext = observables.computed((context, currentEntry) => {
+			if (!ContextEpisode.is(context) || !ContextEpisode.is(currentEntry)) {
 				return false;
 			}
-			if (contextPath[contextPath.length - 1] !== episode.episode_id) {
+			if (context.episode_id !== episode.episode_id) {
 				return false;
 			}
 			return true;
-		}, this.player.contextPath);
+		}, this.player.context, this.player.currentEntry);
 		return this.make(isContext, {
-			play: () => this.player.playEpisode(episode)
+			play: async () => this.player.playEpisode(await this.getEpisodeContext(episode))
 		});
 	}
 
 	forMovie(movie: api.Movie): xnode.XElement {
-		let isContext = observables.computed((contextPath) => {
-			if (!is.present(contextPath)) {
+		let isContext = observables.computed((context, currentEntry) => {
+			if (!ContextMovie.is(context) || !ContextMovie.is(currentEntry)) {
 				return false;
 			}
-			if (contextPath[contextPath.length - 1] !== movie.movie_id) {
+			if (context.movie_id !== movie.movie_id) {
 				return false;
 			}
 			return true;
-		}, this.player.contextPath);
+		}, this.player.context, this.player.currentEntry);
 		return this.make(isContext, {
-			play: () => this.player.playMovie(movie)
+			play: async () => this.player.playMovie(await this.getMovieContext(movie))
 		});
 	}
 
-	forPlaylist(playlist: api.Playlist, trackIndex?: number): xnode.XElement {
-		let isContext = observables.computed((contextPath) => {
-			if (!is.present(contextPath)) {
+	forPlaylist(playlist: api.Playlist, itemIndex?: number): xnode.XElement {
+		let isContext = observables.computed((context, currentEntry) => {
+			if (!ContextPlaylist.is(context) || !ContextTrack.is(currentEntry)) {
 				return false;
 			}
-			if (is.present(trackIndex)) {
-				let track = playlist.items[trackIndex].track;
-				if (contextPath[contextPath.length - 1] !== track.track_id) {
-					return false;
-				}
-			} else {
-				if (contextPath[contextPath.length - 2] !== playlist.playlist_id) {
+			if (context.playlist_id !== playlist.playlist_id) {
+				return false;
+			}
+			if (itemIndex != null) {
+				if (context.items[itemIndex].track.track_id !== currentEntry.track_id) {
 					return false;
 				}
 			}
 			return true;
-		}, this.player.contextPath);
+		}, this.player.context, this.player.currentEntry);
 		return this.make(isContext, {
-			play: () => this.player.playPlaylist(playlist, trackIndex)
+			play: async () => this.player.playPlaylist(await this.getPlaylistContext(playlist), itemIndex)
 		});
 	}
 
 	forSeason(season: api.Season, episodeIndex?: number): xnode.XElement {
-		let isContext = observables.computed((contextPath) => {
-			if (!is.present(contextPath)) {
+		let isContext = observables.computed((context, currentEntry) => {
+			if (!ContextSeason.is(context) || !ContextEpisode.is(currentEntry)) {
 				return false;
 			}
-			if (is.present(episodeIndex)) {
-				let episode = season.episodes[episodeIndex];
-				if (contextPath[contextPath.length - 1] !== episode.episode_id) {
-					return false;
-				}
-			} else {
-				if (contextPath[contextPath.length - 2] !== season.season_id) {
+			if (context.season_id !== season.season_id) {
+				return false;
+			}
+			if (episodeIndex != null) {
+				if (context.episodes[episodeIndex].episode_id !== currentEntry.episode_id) {
 					return false;
 				}
 			}
 			return true;
-		}, this.player.contextPath);
+		}, this.player.context, this.player.currentEntry);
 		return this.make(isContext, {
-			play: () => this.player.playSeason(season, episodeIndex)
+			play: async () => this.player.playSeason(await this.getSeasonContext(season), episodeIndex)
 		});
 	}
 
 	forShow(show: api.Show, seasonIndex?: number, episodeIndex?: number): xnode.XElement {
-		if (is.absent(seasonIndex)) {
-			let indices = utils.getNextEpisode(show);
-			seasonIndex = indices?.seasonIndex;
-			episodeIndex = indices?.episodeIndex;
-		}
-		let isContext = observables.computed((contextPath) => {
-			if (!is.present(contextPath)) {
+		let isContext = observables.computed((context, currentEntry) => {
+			if (!ContextShow.is(context) || !ContextEpisode.is(currentEntry)) {
 				return false;
 			}
-			if (is.present(seasonIndex)) {
-				let season = show.seasons[seasonIndex];
-				if (contextPath[contextPath.length - 2] !== season.season_id) {
+			if (context.show_id !== show.show_id) {
+				return false;
+			}
+			if (seasonIndex != null) {
+				if (context.seasons[seasonIndex].season_id !== currentEntry.season.season_id) {
 					return false;
 				}
-				if (is.present(episodeIndex)) {
-					let episode = season.episodes[episodeIndex];
-					if (contextPath[contextPath.length - 1] !== episode.episode_id) {
+				if (episodeIndex != null) {
+					if (context.seasons[seasonIndex].episodes[episodeIndex].episode_id !== currentEntry.episode_id) {
 						return false;
 					}
 				}
-			} else {
-				if (contextPath[contextPath.length - 3] !== show.show_id) {
-					return false;
-				}
 			}
 			return true;
-		}, this.player.contextPath);
+		}, this.player.context, this.player.currentEntry);
 		return this.make(isContext, {
-			play: () => this.player.playShow(show, seasonIndex, episodeIndex)
+			play: async () => {
+				let context = await this.getShowContext(show);
+				if (is.absent(seasonIndex)) {
+					let indices = utils.getNextEpisode(context);
+					seasonIndex = indices?.seasonIndex;
+					episodeIndex = indices?.episodeIndex;
+				}
+				this.player.playShow(context, seasonIndex, episodeIndex);
+			}
 		});
 	}
 
 	forTrack(track: api.Track): xnode.XElement {
-		let isContext = observables.computed((contextPath) => {
-			if (!is.present(contextPath)) {
+		let isContext = observables.computed((context, currentEntry) => {
+			if (!ContextTrack.is(context) || !ContextTrack.is(currentEntry)) {
 				return false;
 			}
-			if (contextPath[contextPath.length - 1] !== track.track_id) {
+			if (context.track_id !== track.track_id) {
 				return false;
 			}
 			return true;
-		}, this.player.contextPath);
+		}, this.player.context, this.player.currentEntry);
 		return this.make(isContext, {
-			play: () => this.player.playTrack(track)
+			play: async () => this.player.playTrack(await this.getTrackContext(track))
 		});
 	}
 

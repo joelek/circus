@@ -220,3 +220,36 @@ Ports, paths and other settings can be configured through altering the config fi
 * Add filter to entity pages.
 * Change line heights to prevent the truncation of capital letters with umlauts.
 * Index keyframes and create movie and episode subpage with list.
+
+
+desktop 12x master:
+movies 15ms
+shows 980ms
+episodes 9ms
+albums 80ms
+artists 64ms (4 are empty)
+tracks 9ms
+
+desktop 12x wip:
+movies 9ms
+shows 500ms
+episodes 5ms
+albums 54ms
+artists 41ms (4 are empty)
+tracks 6ms
+
+server 12x master:
+movies 120ms
+shows 8400ms
+episodes 75ms
+albums 650ms
+artists 510ms (4 are empty)
+tracks 64ms
+
+server 12x wip:
+movies 80ms
+shows 4300ms
+episodes 40ms
+albums 450ms
+artists 360ms (4 are empty)
+tracks 50ms

@@ -90,7 +90,8 @@ export type VideoSubtitle = atlas.RecordOf<typeof video_subtitles>;
 const artists = context.createStore({
 	artist_id: context.createBinaryField(),
 	name: context.createStringField({ searchable: true }),
-	affinity: context.createNumberField()
+	affinity: context.createNumberField(),
+	duration_ms: context.createIntegerField()
 }, ["artist_id"], {
 	name: context.createIncreasingOrder()
 });
@@ -101,8 +102,10 @@ const albums = context.createStore({
 	album_id: context.createBinaryField(),
 	title: context.createStringField({ searchable: true }),
 	year_id: context.createNullableBinaryField(),
+	copyright: context.createNullableStringField(),
 	timestamp_ms: context.createNullableIntegerField(),
-	affinity: context.createNumberField()
+	affinity: context.createNumberField(),
+	duration_ms: context.createIntegerField()
 }, ["album_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -123,7 +126,8 @@ const discs = context.createStore({
 	album_id: context.createBinaryField(),
 	number: context.createIntegerField(),
 	timestamp_ms: context.createNullableIntegerField(),
-	affinity: context.createNumberField()
+	affinity: context.createNumberField(),
+	duration_ms: context.createIntegerField()
 }, ["disc_id"], {
 
 });
@@ -137,7 +141,8 @@ const tracks = context.createStore({
 	number: context.createIntegerField(),
 	copyright: context.createNullableStringField(),
 	timestamp_ms: context.createNullableIntegerField(),
-	affinity: context.createNumberField()
+	affinity: context.createNumberField(),
+	duration_ms: context.createIntegerField()
 }, ["track_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -179,7 +184,8 @@ const shows = context.createStore({
 	summary: context.createNullableStringField(),
 	imdb: context.createNullableStringField(),
 	timestamp_ms: context.createNullableIntegerField(),
-	affinity: context.createNumberField()
+	affinity: context.createNumberField(),
+	duration_ms: context.createIntegerField()
 }, ["show_id"], {
 	name: context.createIncreasingOrder()
 });
@@ -200,7 +206,8 @@ const seasons = context.createStore({
 	show_id: context.createBinaryField(),
 	number: context.createIntegerField(),
 	timestamp_ms: context.createNullableIntegerField(),
-	affinity: context.createNumberField()
+	affinity: context.createNumberField(),
+	duration_ms: context.createIntegerField()
 }, ["season_id"], {
 
 });
@@ -217,7 +224,8 @@ const episodes = context.createStore({
 	copyright: context.createNullableStringField(),
 	imdb: context.createNullableStringField(),
 	timestamp_ms: context.createNullableIntegerField(),
-	affinity: context.createNumberField()
+	affinity: context.createNumberField(),
+	duration_ms: context.createIntegerField()
 }, ["episode_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -241,7 +249,8 @@ const movies = context.createStore({
 	copyright: context.createNullableStringField(),
 	imdb: context.createNullableStringField(),
 	timestamp_ms: context.createNullableIntegerField(),
-	affinity: context.createNumberField()
+	affinity: context.createNumberField(),
+	duration_ms: context.createIntegerField()
 }, ["movie_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -385,7 +394,8 @@ const playlists = context.createStore({
 	title: context.createStringField({ searchable: true }),
 	description: context.createStringField(),
 	user_id: context.createBinaryField(),
-	affinity: context.createNumberField()
+	affinity: context.createNumberField(),
+	duration_ms: context.createIntegerField()
 }, ["playlist_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -397,7 +407,8 @@ const playlist_items = context.createStore({
 	playlist_id: context.createBinaryField(),
 	track_id: context.createBinaryField(),
 	number: context.createIntegerField(),
-	added_ms: context.createIntegerField()
+	added_ms: context.createIntegerField(),
+	duration_ms: context.createIntegerField()
 }, ["playlist_item_id"], {
 
 });

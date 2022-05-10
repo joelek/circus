@@ -30,7 +30,7 @@ export interface Listener<A extends keyof HTMLElementEventMap> {
 }
 
 export interface Renderer<A> {
-	(state: A): XElement;
+	(state: A, index: number): XElement;
 }
 
 export class XElement implements XNode<globalThis.Element> {
@@ -155,9 +155,9 @@ export class XElement implements XNode<globalThis.Element> {
 		}
 		if (this.array) {
 			this.array.addObserver({
-				onappend: (state) => {
+				onappend: (state, index) => {
 					if (this.renderer) {
-						let child = this.renderer(state);
+						let child = this.renderer(state, index);
 						element.appendChild(child.render());
 					}
 				},

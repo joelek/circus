@@ -56,6 +56,16 @@ route GET:/albums/<album_id:string>/ ? <{ token: string }>
 		album: ./objects/Album
 	};
 
+route getAlbumDiscs(): GET:/albums/<album_id:string>/discs/ ? <{ token: string }>
+	=> {
+		discs: ./objects/Disc[]
+	};
+
+route getAlbumContext(): GET:/albums/<album_id:string>/context/ ? <{ token: string }>
+	=> {
+		context: ./objects/AlbumContext
+	};
+
 guard ArtistResult: {
 	entity: ./objects/Artist,
 	rank: number
@@ -71,6 +81,16 @@ route GET:/artists/<artist_id:string>/ ? <{ token: string }>
 		artist: ./objects/Artist,
 		tracks: ./objects/Track[],
 		appearances: ./objects/Album[]
+	};
+
+route getArtistAlbums(): GET:/artists/<artist_id:string>/albums/ ? <{ token: string }>
+	=> {
+		albums: ./objects/Album[]
+	};
+
+route getArtistContext(): GET:/artists/<artist_id:string>/context/ ? <{ token: string }>
+	=> {
+		context: ./objects/ArtistContext
 	};
 
 guard DiscResult: {
@@ -90,6 +110,16 @@ route GET:/discs/<disc_id:string>/ ? <{ token: string }>
 		next?: ./objects/Disc
 	};
 
+route getDiscTracks(): GET:/discs/<disc_id:string>/tracks/ ? <{ token: string }>
+	=> {
+		tracks: ./objects/Track[]
+	};
+
+route getDiscContext(): GET:/discs/<disc_id:string>/context/ ? <{ token: string }>
+	=> {
+		context: ./objects/DiscContext
+	};
+
 guard EpisodeResult: {
 	entity: ./objects/Episode,
 	rank: number
@@ -105,6 +135,11 @@ route GET:/episodes/<episode_id:string>/ ? <{ token: string }>
 		episode: ./objects/Episode,
 		last?: ./objects/Episode,
 		next?: ./objects/Episode
+	};
+
+route getEpisodeContext(): GET:/episodes/<episode_id:string>/context/ ? <{ token: string }>
+	=> {
+		context: ./objects/EpisodeContext
 	};
 
 guard GenreResult: {
@@ -157,6 +192,11 @@ route GET:/movies/<movie_id:string>/suggestions/ ? <{ token: string, anchor?: pl
 		movies: ./objects/Movie[]
 	};
 
+route getMovieContext(): GET:/movies/<movie_id:string>/context/ ? <{ token: string }>
+	=> {
+		context: ./objects/MovieContext
+	};
+
 guard PlaylistResult: {
 	entity: ./objects/Playlist,
 	rank: number
@@ -170,6 +210,16 @@ route GET:/playlists/<query:string> ? <{ token: string, anchor?: plain, offset?:
 route GET:/playlists/<playlist_id:string>/ ? <{ token: string }>
 	=> {
 		playlist: ./objects/Playlist
+	};
+
+route getPlaylistItems(): GET:/playlists/<playlist_id:string>/items/ ? <{ token: string }>
+	=> {
+		items: ./objects/PlaylistItem[]
+	};
+
+route getPlaylistContext(): GET:/playlists/<playlist_id:string>/context/ ? <{ token: string }>
+	=> {
+		context: ./objects/PlaylistContext
 	};
 
 guard SeasonResult: {
@@ -189,6 +239,16 @@ route GET:/seasons/<season_id:string>/ ? <{ token: string }>
 		next?: ./objects/Season
 	};
 
+route getSeasonEpisodes(): GET:/seasons/<season_id:string>/episodes/ ? <{ token: string }>
+	=> {
+		episodes: ./objects/Episode[]
+	};
+
+route getSeasonContext(): GET:/seasons/<season_id:string>/context/ ? <{ token: string }>
+	=> {
+		context: ./objects/SeasonContext
+	};
+
 guard ShowResult: {
 	entity: ./objects/Show,
 	rank: number
@@ -202,6 +262,16 @@ route GET:/shows/<query:string> ? <{ token: string, anchor?: plain, offset?: num
 route GET:/shows/<show_id:string>/ ? <{ token: string }>
 	=> {
 		show: ./objects/Show
+	};
+
+route getShowSeasons(): GET:/shows/<show_id:string>/seasons/ ? <{ token: string }>
+	=> {
+		seasons: ./objects/Season[]
+	};
+
+route getShowContext(): GET:/shows/<show_id:string>/context/ ? <{ token: string }>
+	=> {
+		context: ./objects/ShowContext
 	};
 
 guard TrackResult: {
@@ -224,6 +294,11 @@ route GET:/tracks/<track_id:string>/ ? <{ token: string }>
 route GET:/tracks/<track_id:string>/playlists/ ? <{ token: string, offset?: number, limit?: number }>
 	=> {
 		playlists: ./objects/Playlist[]
+	};
+
+route getTrackContext(): GET:/tracks/<track_id:string>/context/ ? <{ token: string }>
+	=> {
+		context: ./objects/TrackContext
 	};
 
 guard UserResult: {

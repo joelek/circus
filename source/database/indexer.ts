@@ -7,7 +7,7 @@ import * as is from "../is";
 import * as probes from "./probes";
 import { default as config } from "../config";
 import * as jdb2 from "../jdb2";
-import { transactionManager, stores, links, Directory, File, createStream } from "./atlas";
+import { transactionManager, stores, links, Directory, File, createStream, VideoFile, AudioFile } from "./atlas";
 import { ReadableQueue, WritableQueue } from "@joelek/atlas";
 import { binid, hexid } from "../utils";
 
@@ -454,6 +454,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		await stores.albums.update(queue, {
 			album_id: album_id,
 			title: metadata.title,
+			copyright: metadata.copyright,
 			year_id: year_id ?? null
 		});
 		for (let [index, artist] of metadata.artists.entries()) {
@@ -481,7 +482,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 				disc_id: disc_id,
 				title: track.title,
 				number: index + 1,
-				copyright: track.copyright ?? metadata.copyright ?? null
+				copyright: track.copyright ?? null
 			});
 			for (let [index, artist] of track.artists.entries()) {
 				let artist_id = makeBinaryId("artist", artist);
@@ -911,6 +912,156 @@ export async function computeShowTimestamps(queue: WritableQueue): Promise<void>
 	}
 };
 
+export async function computeDurations(queue: WritableQueue): Promise<void> {
+	console.log(`Computing durations...`);
+	let shows = await stores.shows.filter(queue);
+	for (let show of shows) {
+		let show_duration_ms = 0;
+		let seasons = await links.show_seasons.filter(queue, show);
+		for (let season of seasons) {
+			let season_duration_ms = 0;
+			let episodes = await links.season_episodes.filter(queue, season);
+			for (let episode of episodes) {
+				let episode_duration_ms = 0;
+				let video_files = [] as Array<VideoFile>;
+				let episode_files = await links.episode_episode_files.filter(queue, episode);
+				for (let episode_file of episode_files) {
+					try {
+						let video_file = await stores.video_files.lookup(queue, episode_file);
+						video_files.push(video_file);
+					} catch (error) {}
+				}
+				video_files.sort(indices.NumericSort.increasing((record) => record.height));
+				let video_file = video_files.pop();
+				if (video_file == null) {
+					continue;
+				}
+				episode_duration_ms += video_file.duration_ms;
+				season_duration_ms += video_file.duration_ms;
+				show_duration_ms += video_file.duration_ms;
+				await stores.episodes.insert(queue, {
+					...episode,
+					duration_ms: episode_duration_ms
+				});
+			}
+			await stores.seasons.insert(queue, {
+				...season,
+				duration_ms: season_duration_ms
+			});
+		}
+		await stores.shows.insert(queue, {
+			...show,
+			duration_ms: show_duration_ms
+		});
+	}
+	let albums = await stores.albums.filter(queue);
+	for (let album of albums) {
+		let album_duration_ms = 0;
+		let discs = await links.album_discs.filter(queue, album);
+		for (let disc of discs) {
+			let disc_duration_ms = 0;
+			let tracks = await links.disc_tracks.filter(queue, disc);
+			for (let track of tracks) {
+				let track_duration_ms = 0;
+				let audio_files = [] as Array<AudioFile>;
+				let track_files = await links.track_track_files.filter(queue, track);
+				for (let track_file of track_files) {
+					try {
+						let audio_File = await stores.audio_files.lookup(queue, track_file);
+						audio_files.push(audio_File);
+					} catch (error) {}
+				}
+				audio_files.sort(indices.NumericSort.increasing((record) => record.duration_ms));
+				let audio_file = audio_files.pop();
+				if (audio_file == null) {
+					continue;
+				}
+				track_duration_ms += audio_file.duration_ms;
+				disc_duration_ms += audio_file.duration_ms;
+				album_duration_ms += audio_file.duration_ms;
+				await stores.tracks.insert(queue, {
+					...track,
+					duration_ms: track_duration_ms
+				});
+			}
+			await stores.discs.insert(queue, {
+				...disc,
+				duration_ms: disc_duration_ms
+			});
+		}
+		await stores.albums.insert(queue, {
+			...album,
+			duration_ms: album_duration_ms
+		});
+	}
+	let artists = await stores.artists.filter(queue);
+	for (let artist of artists) {
+		let artist_duration_ms = 0;
+		let album_artists = await links.artist_album_artists.filter(queue, artist);
+		for (let album_artist of album_artists) {
+			let album = await stores.albums.lookup(queue, album_artist);
+			artist_duration_ms += album.duration_ms;
+		}
+		await stores.artists.insert(queue, {
+			...artist,
+			duration_ms: artist_duration_ms
+		});
+	}
+	let movies = await stores.movies.filter(queue);
+	for (let movie of movies) {
+		let movie_duration_ms = 0;
+		let video_files = [] as Array<VideoFile>;
+		let episode_files = await links.movie_movie_files.filter(queue, movie);
+		for (let episode_file of episode_files) {
+			try {
+				let video_file = await stores.video_files.lookup(queue, episode_file);
+				video_files.push(video_file);
+			} catch (error) {}
+		}
+		video_files.sort(indices.NumericSort.increasing((record) => record.height));
+		let video_file = video_files.pop();
+		if (video_file == null) {
+			continue;
+		}
+		movie_duration_ms += video_file.duration_ms;
+		await stores.movies.insert(queue, {
+			...movie,
+			duration_ms: movie_duration_ms
+		});
+	}
+	let playlists = await stores.playlists.filter(queue);
+	for (let playlist of playlists) {
+		let playlist_duration_ms = 0;
+		let playlist_items = await links.playlist_playlist_items.filter(queue, playlist);
+		for (let playlist_item of playlist_items) {
+			let playlist_item_duration_ms = 0;
+			let audio_files = [] as Array<AudioFile>;
+			let track_files = await links.track_track_files.filter(queue, playlist_item);
+			for (let track_file of track_files) {
+				try {
+					let audio_File = await stores.audio_files.lookup(queue, track_file);
+					audio_files.push(audio_File);
+				} catch (error) {}
+			}
+			audio_files.sort(indices.NumericSort.increasing((record) => record.duration_ms));
+			let audio_file = audio_files.pop();
+			if (audio_file == null) {
+				continue;
+			}
+			playlist_item_duration_ms += audio_file.duration_ms;
+			playlist_duration_ms += audio_file.duration_ms;
+			await stores.playlist_items.insert(queue, {
+				...playlist_item,
+				duration_ms: playlist_item_duration_ms
+			});
+		}
+		await stores.playlists.insert(queue, {
+			...playlist,
+			duration_ms: playlist_duration_ms
+		});
+	}
+};
+
 export async function computeMovieSuggestions(queue: WritableQueue): Promise<void> {
 	console.log(`Computing movie suggestions...`);
 	let movies = await Promise.all((await stores.movies.filter(queue)).map(async (movie) => {
@@ -1021,11 +1172,10 @@ export async function migrateLegacyData(queue: WritableQueue): Promise<void> {
 		let playlists = loadTable("playlists", schema.Playlist, (record) => record.playlist_id);
 		for (let playlist of playlists) {
 			try {
-				await stores.playlists.insert(queue, {
+				await stores.playlists.update(queue, {
 					...playlist,
 					playlist_id: binid(playlist.playlist_id),
-					user_id: binid(playlist.user_id),
-					affinity: 0
+					user_id: binid(playlist.user_id)
 				});
 			} catch (error) {}
 		}
@@ -1033,7 +1183,7 @@ export async function migrateLegacyData(queue: WritableQueue): Promise<void> {
 		let playlist_items = loadTable("playlist_items", schema.PlaylistItem, (record) => record.playlist_item_id);
 		for (let playlist_item of playlist_items) {
 			try {
-				await stores.playlist_items.insert(queue, {
+				await stores.playlist_items.update(queue, {
 					...playlist_item,
 					playlist_item_id: binid(playlist_item.playlist_item_id),
 					playlist_id: binid(playlist_item.playlist_id),
@@ -1087,6 +1237,9 @@ export async function runIndexer(): Promise<void> {
 	});
 	await transactionManager.enqueueWritableTransaction(async (queue) => {
 		await computeShowTimestamps(queue);
+	});
+	await transactionManager.enqueueWritableTransaction(async (queue) => {
+		await computeDurations(queue);
 	});
 	await transactionManager.enqueueWritableTransaction(async (queue) => {
 		await computeMovieSuggestions(queue);

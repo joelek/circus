@@ -3,19 +3,29 @@
 import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 import { Actor } from ".././objects";
 import { Album } from ".././objects";
+import { AlbumContext } from ".././objects";
 import { Artist } from ".././objects";
+import { ArtistContext } from ".././objects";
 import { Disc } from ".././objects";
+import { DiscContext } from ".././objects";
 import { Entity } from ".././objects";
 import { Episode } from ".././objects";
+import { EpisodeContext } from ".././objects";
 import { ErrorMessage } from ".././messages";
 import { Genre } from ".././objects";
 import { Movie } from ".././objects";
+import { MovieContext } from ".././objects";
 import { Playlist } from ".././objects";
+import { PlaylistContext } from ".././objects";
+import { PlaylistItem } from ".././objects";
 import { RegisterRequest } from ".././messages";
 import { RegisterResponse } from ".././messages";
 import { Season } from ".././objects";
+import { SeasonContext } from ".././objects";
 import { Show } from ".././objects";
+import { ShowContext } from ".././objects";
 import { Track } from ".././objects";
+import { TrackContext } from ".././objects";
 import { User } from ".././objects";
 import { Year } from ".././objects";
 
@@ -339,6 +349,36 @@ export namespace Autoguard {
 			),
 			"payload": autoguard.api.Binary
 		}),
+		"getAlbumDiscs": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"album_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getAlbumContext": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"album_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
 		"GET:/artists/<query>": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
@@ -359,6 +399,36 @@ export namespace Autoguard {
 			"payload": autoguard.api.Binary
 		}),
 		"GET:/artists/<artist_id>/": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"artist_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getArtistAlbums": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"artist_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getArtistContext": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
 					"artist_id": autoguard.guards.String,
@@ -407,6 +477,36 @@ export namespace Autoguard {
 			),
 			"payload": autoguard.api.Binary
 		}),
+		"getDiscTracks": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"disc_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getDiscContext": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"disc_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
 		"GET:/episodes/<query>": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
@@ -427,6 +527,21 @@ export namespace Autoguard {
 			"payload": autoguard.api.Binary
 		}),
 		"GET:/episodes/<episode_id>/": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"episode_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getEpisodeContext": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
 					"episode_id": autoguard.guards.String,
@@ -584,6 +699,21 @@ export namespace Autoguard {
 			),
 			"payload": autoguard.api.Binary
 		}),
+		"getMovieContext": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"movie_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
 		"GET:/playlists/<query>": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
@@ -604,6 +734,36 @@ export namespace Autoguard {
 			"payload": autoguard.api.Binary
 		}),
 		"GET:/playlists/<playlist_id>/": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"playlist_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getPlaylistItems": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"playlist_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getPlaylistContext": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
 					"playlist_id": autoguard.guards.String,
@@ -652,6 +812,36 @@ export namespace Autoguard {
 			),
 			"payload": autoguard.api.Binary
 		}),
+		"getSeasonEpisodes": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"season_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getSeasonContext": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"season_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
 		"GET:/shows/<query>": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
@@ -672,6 +862,36 @@ export namespace Autoguard {
 			"payload": autoguard.api.Binary
 		}),
 		"GET:/shows/<show_id>/": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"show_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getShowSeasons": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"show_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getShowContext": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
 					"show_id": autoguard.guards.String,
@@ -729,6 +949,21 @@ export namespace Autoguard {
 					"offset": autoguard.guards.Number,
 					"limit": autoguard.guards.Number
 				}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getTrackContext": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"track_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
 				autoguard.api.Options
 			)
 		}, {
@@ -1046,6 +1281,28 @@ export namespace Autoguard {
 				autoguard.api.Headers
 			)
 		}),
+		"getAlbumDiscs": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"discs": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Disc))
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getAlbumContext": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"context": autoguard.guards.Reference.of(() => AlbumContext)
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
 		"GET:/artists/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ArtistResult))
@@ -1062,6 +1319,28 @@ export namespace Autoguard {
 				"artist": autoguard.guards.Reference.of(() => Artist),
 				"tracks": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Track)),
 				"appearances": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Album))
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getArtistAlbums": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"albums": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Album))
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getArtistContext": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"context": autoguard.guards.Reference.of(() => ArtistContext)
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -1095,6 +1374,28 @@ export namespace Autoguard {
 				autoguard.api.Headers
 			)
 		}),
+		"getDiscTracks": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"tracks": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Track))
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getDiscContext": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"context": autoguard.guards.Reference.of(() => DiscContext)
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
 		"GET:/episodes/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => EpisodeResult))
@@ -1113,6 +1414,17 @@ export namespace Autoguard {
 				"last": autoguard.guards.Reference.of(() => Episode),
 				"next": autoguard.guards.Reference.of(() => Episode)
 			})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getEpisodeContext": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"context": autoguard.guards.Reference.of(() => EpisodeContext)
+			}, {})
 		}, {
 			"status": autoguard.guards.Number,
 			"headers": autoguard.guards.Intersection.of(
@@ -1208,6 +1520,17 @@ export namespace Autoguard {
 				autoguard.api.Headers
 			)
 		}),
+		"getMovieContext": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"context": autoguard.guards.Reference.of(() => MovieContext)
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
 		"GET:/playlists/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => PlaylistResult))
@@ -1222,6 +1545,28 @@ export namespace Autoguard {
 		"GET:/playlists/<playlist_id>/": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
 				"playlist": autoguard.guards.Reference.of(() => Playlist)
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getPlaylistItems": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"items": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => PlaylistItem))
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getPlaylistContext": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"context": autoguard.guards.Reference.of(() => PlaylistContext)
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -1255,6 +1600,28 @@ export namespace Autoguard {
 				autoguard.api.Headers
 			)
 		}),
+		"getSeasonEpisodes": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"episodes": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Episode))
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getSeasonContext": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"context": autoguard.guards.Reference.of(() => SeasonContext)
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
 		"GET:/shows/<query>": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ShowResult))
@@ -1269,6 +1636,28 @@ export namespace Autoguard {
 		"GET:/shows/<show_id>/": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
 				"show": autoguard.guards.Reference.of(() => Show)
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getShowSeasons": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"seasons": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Season))
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getShowContext": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"context": autoguard.guards.Reference.of(() => ShowContext)
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -1305,6 +1694,17 @@ export namespace Autoguard {
 		"GET:/tracks/<track_id>/playlists/": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
 				"playlists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Playlist))
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getTrackContext": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"context": autoguard.guards.Reference.of(() => TrackContext)
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,

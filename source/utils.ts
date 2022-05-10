@@ -1,5 +1,5 @@
 import * as is from "./is";
-import { Show } from "./api/schema/objects";
+import { ShowContext } from "./api/schema/objects";
 
 export function hexid(buffer: Uint8Array): string {
 	return Buffer.from(buffer).toString("hex");
@@ -29,7 +29,7 @@ function formatTimestamp(ms: number): string {
 	return join(fh, ":", fm, ":", fs, ".", fms);
 }
 
-function getNextEpisode(show: Show): undefined | { seasonIndex: number, episodeIndex: number } {
+function getNextEpisode(show: ShowContext): undefined | { seasonIndex: number, episodeIndex: number } {
 	let indices: undefined | {
 		seasonIndex: number,
 		episodeIndex: number;
