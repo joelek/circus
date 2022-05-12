@@ -86,10 +86,12 @@ let nextVideo = document.createElement("video");
 
 let unlocked = false;
 let silence = "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA==";
-player.playback.addObserver((playback) => {
+player.playback.addObserver(async (playback) => {
 	if (!unlocked && playback) {
 		currentVideo.src = silence;
-		currentVideo.play();
+		try {
+			await currentVideo.play();
+		} catch (error) {}
 		unlocked = true;
 	}
 });
