@@ -99,46 +99,46 @@ export class EntityRowFactory {
 
 	forEntity(entity: api.Entity, options: Options = {}): xnode.XElement {
 		if (api.Actor.is(entity)) {
-			return this.forActor(entity);
+			return this.forActor(entity, options);
 		}
 		if (api.Album.is(entity)) {
-			return this.forAlbum(entity);
+			return this.forAlbum(entity, options);
 		}
 		if (api.Artist.is(entity)) {
-			return this.forArtist(entity);
+			return this.forArtist(entity, options);
 		}
 		if (api.Cue.is(entity)) {
-			return this.forCue(entity);
+			return this.forCue(entity, options);
 		}
 		if (api.Disc.is(entity)) {
-			return this.forDisc(entity);
+			return this.forDisc(entity, options);
 		}
 		if (api.Episode.is(entity)) {
-			return this.forEpisode(entity);
+			return this.forEpisode(entity, options);
 		}
 		if (api.Genre.is(entity)) {
-			return this.forGenre(entity);
+			return this.forGenre(entity, options);
 		}
 		if (api.Playlist.is(entity)) {
-			return this.forPlaylist(entity);
+			return this.forPlaylist(entity, options);
 		}
 		if (api.Movie.is(entity)) {
-			return this.forMovie(entity);
+			return this.forMovie(entity, options);
 		}
 		if (api.Season.is(entity)) {
-			return this.forSeason(entity);
+			return this.forSeason(entity, options);
 		}
 		if (api.Show.is(entity)) {
-			return this.forShow(entity);
+			return this.forShow(entity, options);
 		}
 		if (api.Track.is(entity)) {
-			return this.forTrack(entity);
+			return this.forTrack(entity, options);
 		}
 		if (api.User.is(entity)) {
-			return this.forUser(entity);
+			return this.forUser(entity, options);
 		}
 		if (api.Year.is(entity)) {
-			return this.forYear(entity);
+			return this.forYear(entity, options);
 		}
 		throw `Expected code to be unreachable!`;
 	}
