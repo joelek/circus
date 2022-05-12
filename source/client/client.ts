@@ -1935,7 +1935,8 @@ computed((context, currentEntry) => {
 	if (context != null && currentEntry != null) {
 		mediaPlayerItems.update([
 			EntityRow.forEntity(currentEntry, {
-				playbackButton: undefined
+				playbackButton: undefined,
+				link: EntityLink.forEntity(context)
 			})
 		]);
 	} else {
