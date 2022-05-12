@@ -83,8 +83,20 @@ window.addEventListener("keydown", (event) => {
 let lastVideo = document.createElement("video");
 let currentVideo = document.createElement("video");
 let nextVideo = document.createElement("video");
+
+let unlocked = false;
+let silence = "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA==";
+player.playback.addObserver((playback) => {
+	if (!unlocked && playback) {
+		currentVideo.src = silence;
+		currentVideo.play();
+		unlocked = true;
+	}
+});
 currentVideo.addEventListener("ended", () => {
-	player.next();
+	if (currentVideo.src !== silence) {
+		player.next();
+	}
 });
 let isLoading = new ObservableClass(true);
 currentVideo.addEventListener("loadeddata", () => {
