@@ -1005,6 +1005,7 @@ style.innerText = `
 		cursor: pointer;
 		display: grid;
 		gap: 8px;
+		height: 60px;
 	}
 
 	.media-player__title {
@@ -1139,7 +1140,7 @@ style.innerText = `
 	.app__content {
 		background-color: rgb(31, 31, 31);
 		overflow: hidden;
-		padding: 64px 0px 112px 0px;
+		padding: 64px 0px 132px 0px;
 		position: relative;
 		z-index: 0;
 	}
@@ -1928,11 +1929,26 @@ progress
 		.add(progresstrack)
 	);
 
+let mediaPlayerItems = new ArrayObservable<xml.XElement>([]);
+
+computed((context, currentEntry) => {
+	if (context != null && currentEntry != null) {
+		mediaPlayerItems.update([
+			EntityRow.forEntity(currentEntry, {
+				playbackButton: undefined
+			})
+		]);
+	} else {
+		mediaPlayerItems.update([]);
+	}
+}, player.context, player.currentEntry);
+
 let mp = xml.element("div.content")
 	.set("style", "padding: 16px;")
 	.add(xml.element("div.media-player")
 		.add(xml.element("div.media-player__top")
 			.add(xml.element("div.media-player__metadata")
+				.repeat(mediaPlayerItems, (mediaPlayerItem) => mediaPlayerItem)/*
 				.add(xml.element("div.media-player__title")
 					.add(xml.text(mediaPlayerTitle))
 				)
@@ -1964,9 +1980,9 @@ let mp = xml.element("div.content")
 							throw `Expected code to be unreachable!`;
 						}
 					}
-				})
+				}) */
 			)
-			.add(xml.element("div.media-player__controls")
+			.add(xml.element("div.media-player__controls")/*
 				.add(makeButton()
 					.bind("data-hide", player.devices.compute((devices) => {
 						return devices.length < 2;
@@ -1975,7 +1991,7 @@ let mp = xml.element("div.content")
 					.on("click", () => {
 						showDevices.updateState(!showDevices.getState());
 					})
-				)
+				) */
 				.add(makeButton()
 					.bind("data-enabled", player.canPlayLast.addObserver(a => a))
 					.add(Icon.makeSkip({ direction: "left" }))
