@@ -1495,6 +1495,31 @@ let appheader = xml.element("div.app__header")
 								)
 								.add(xml.element("div")
 									.set("style", "display: grid; gap: 16px;")
+									.repeat(devicelist, (device) => xml.element("div.device-selector__device")
+										.add(makeButton()
+											.set("data-active", "" + device.active)
+											.add(Icon.makeBroadcast())
+										)
+										.add(xml.element("div.device-selector__device-info")
+											.add(xml.element("div.device-selector__device-name")
+												.add(xml.text(device.name))
+											)
+											.add(xml.element("div.device-selector__device-type")
+												.add(xml.text(device.local ? "Local device" : "Remote device"))
+											)
+										)
+										.on("click", () => {
+											player.transfer({
+												id: device.id,
+												protocol: device.protocol,
+												name: device.name,
+												type: device.type
+											});
+										})
+									)
+								)
+								.add(xml.element("div")
+									.set("style", "display: grid; gap: 16px;")
 									.set("data-hide", `${payload.statistics.length === 0}`)
 									.add(...payload.statistics.map((setting) => {
 										let title = setting.title;
