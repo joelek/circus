@@ -2296,7 +2296,9 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 16px;")
 					.repeat(tracks, (track, trackIndex) => {
-						return EntityRow.forTrack(track, PlaybackButton.forDisc(disc, trackIndex));
+						return EntityRow.forTrack(track, {
+							playbackButton: PlaybackButton.forDisc(disc, trackIndex)
+						});
 					})
 				)
 				.add(xml.element("div.content")
@@ -2591,7 +2593,9 @@ let updateviewforuri = (uri: string): void => {
 						.set("style", "display: grid; gap: 16px;")
 						.add(renderTextHeader(xml.text(`Disc ${disc.number}`)))
 						.repeat(tracks, (track, trackIndex) => {
-							return EntityRow.forTrack(track, PlaybackButton.forAlbum(album, discIndex, trackIndex));
+							return EntityRow.forTrack(track, {
+								playbackButton: PlaybackButton.forAlbum(album, discIndex, trackIndex)
+							});
 						});
 					return element;
 				})
@@ -2774,7 +2778,9 @@ let updateviewforuri = (uri: string): void => {
 					.set("style", "display: grid; gap: 16px;")
 					.repeat(items, (item, itemIndex) => xml.element("div")
 						.set("style", "align-items: center; display: grid; grid-template-columns: 1fr min-content; gap: 16px;")
-						.add(EntityRow.forTrack(item.track, PlaybackButton.forPlaylist(playlist, itemIndex)))
+						.add(EntityRow.forTrack(item.track, {
+							playbackButton: PlaybackButton.forPlaylist(playlist, itemIndex)
+						}))
 						.add(makeButton()
 							.set("data-hide", `${!hasWritePermission}`)
 							.on("click", async () => {
