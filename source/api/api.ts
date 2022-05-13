@@ -651,6 +651,7 @@ export const server = apiv2.makeServer({
 			stream.addListener("close", () => {
 				if (range.offset + stream.bytesRead === range.size) {
 					atlas.transactionManager.enqueueWritableTransaction(async (queue) => {
+						await auth.refreshToken(queue, options.token);
 						await atlas.createStream(queue, {
 							stream_id: Uint8Array.from(libcrypto.randomBytes(8)),
 							user_id: binid(user_id),
