@@ -1005,7 +1005,7 @@ style.innerText = `
 		cursor: pointer;
 		display: grid;
 		gap: 8px;
-		height: 60px;
+		height: 40px;
 	}
 
 	.media-player__title {
@@ -1140,7 +1140,7 @@ style.innerText = `
 	.app__content {
 		background-color: rgb(31, 31, 31);
 		overflow: hidden;
-		padding: 64px 0px 132px 0px;
+		padding: 64px 0px 112px 0px;
 		position: relative;
 		z-index: 0;
 	}

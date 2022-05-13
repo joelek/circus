@@ -12,7 +12,7 @@ const CSS = `
 		align-items: center;
 		display: grid;
 		gap: 16px;
-		grid-template-columns: 60px 1fr;
+		grid-template-columns: 40px 1fr;
 	}
 
 	.entity-row__artwork {
