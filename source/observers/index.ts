@@ -88,7 +88,7 @@ export class ArrayObservable<A> {
 	}
 
 	getState(): Array<A> {
-		return this.state;
+		return [...this.state];
 	}
 
 	append(state: A): void {
