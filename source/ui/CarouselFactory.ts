@@ -148,9 +148,6 @@ export class CarouselFactory {
 						.bind("data-enabled", canScrollLast.addObserver((canScrollLast) => `${canScrollLast}`))
 						.add(this.iconFactory.makeChevron({ direction: "left" }))
 					)
-					.add(xnode.element("div.carousel__control-title")
-						.add(xnode.text("Last item"))
-					)
 				)
 				.add(xnode.element("div.carousel__control")
 					.on("click", async () => {
@@ -165,9 +162,6 @@ export class CarouselFactory {
 					.add(xnode.element("div.icon-button")
 						.bind("data-enabled", canScrollNext.addObserver((canScrollNext) => `${canScrollNext}`))
 						.add(this.iconFactory.makeChevron())
-					)
-					.add(xnode.element("div.carousel__control-title")
-						.add(xnode.text("Next item"))
 					)
 				)
 			);
