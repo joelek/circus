@@ -568,6 +568,16 @@ export const server = apiv2.makeServer({
 			}
 		};
 	}),
+	getUserArtists: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let artists = await handler.getUserArtists(queue, options.user_id || user_id, options.anchor, options.limit ?? 12, user_id);
+		return {
+			payload: {
+				artists
+			}
+		};
+	}),
 	"GET:/users/<user_id>/albums/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);

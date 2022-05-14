@@ -1557,6 +1557,38 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			return new autoguard.api.ServerResponse(response, false);
 		}
 	},
+	"getUserArtists": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getUserArtists"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("users");
+		components.push(...autoguard.api.encodeComponents([request.options?.["user_id"]], true));
+		components.push("artists");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeParameterPairs("anchor", [request.options?.["anchor"]], true));
+		parameters.push(...autoguard.api.encodeParameterPairs("limit", [request.options?.["limit"]], false));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["user_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getUserArtists"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
 	"GET:/users/<user_id>/playlists/": async (request) => {
 		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["GET:/users/<user_id>/playlists/"], clientOptions?.debugMode);
 		guard.as(request, "request");

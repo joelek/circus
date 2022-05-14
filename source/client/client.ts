@@ -3580,70 +3580,96 @@ let updateviewforuri = (uri: string): void => {
 		}).then(async (response) => {
 			let payload = await response.payload();
 			let shows = new ArrayObservable<apischema.objects.Show>(payload.shows);
-			let offset = 0;
-			let reachedEnd = new ObservableClass(false);
-			let isLoading = new ObservableClass(false);
-			let albums = new ArrayObservable<apischema.objects.Album>([]);
-			let anchor = new ObservableClass(undefined as Album | undefined);
-			async function load(): Promise<void> {
-				if (!reachedEnd.getState() && !isLoading.getState()) {
-					isLoading.updateState(true);
-					let response = await apiclient["GET:/users/<user_id>/albums/"]({
-						options: {
-							user_id: "",
-							token: token ?? "",
-							anchor: anchor.getState()?.album_id,
-							offset
-						}
-					});
-					let payload = await response.payload();
-					for (let album of payload.albums) {
-						albums.append(album);
-						anchor.updateState(album);
-					}
-					offset += payload.albums.length;
-					if (payload.albums.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
+			apiclient.getUserArtists({
+				options: {
+					user_id: "",
+					token: token ?? ""
 				}
-			};
-			mount.appendChild(xml.element("div")
-				.add(xml.element("div.content")
-					.add(Grid.make({ mini: true })
-						.add(makeIconLink(Icon.makeMonitor(), "Watch", "video/"))
-						.add(makeIconLink(Icon.makeSpeaker(), "Listen", "audio/"))
-						.add(makeIconLink(Icon.makeMagnifyingGlass(), "Search", "search/"))
-						.add(makeIconLink(Icon.makeCalendar(), "Revisit", "years/"))
-					)
-					.add(xml.element("div")
-						.set("style", "display: grid; gap: 24px")
-						.bind("data-hide", shows.compute((shows) => shows.length === 0))
-						.add(renderTextHeader(xml.text("Suggested shows")))
-						.add(carouselFactory.make((() => {
-							let widgets = new ArrayObservable<xml.XElement>([]);
-							shows.addObserver({
-								onappend(show) {
-									widgets.append(EntityCard.forShow(show));
-								},
-								onsplice(show, index) {
-									widgets.splice(index);
-								}
-							});
-							return widgets;
-						})()))
-					)
-					.add(xml.element("div")
-						.set("style", "display: grid; gap: 24px")
-						.bind("data-hide", albums.compute((albums) => albums.length === 0))
-						.add(renderTextHeader(xml.text("Suggested albums")))
-						.add(Grid.make()
-							.repeat(albums, (album) => EntityCard.forAlbum(album))
+			}).then(async (response) => {
+				let payload = await response.payload();
+				let artists = new ArrayObservable<apischema.objects.Artist>(payload.artists);
+				let offset = 0;
+				let reachedEnd = new ObservableClass(false);
+				let isLoading = new ObservableClass(false);
+				let albums = new ArrayObservable<apischema.objects.Album>([]);
+				let anchor = new ObservableClass(undefined as Album | undefined);
+				async function load(): Promise<void> {
+					if (!reachedEnd.getState() && !isLoading.getState()) {
+						isLoading.updateState(true);
+						let response = await apiclient["GET:/users/<user_id>/albums/"]({
+							options: {
+								user_id: "",
+								token: token ?? "",
+								anchor: anchor.getState()?.album_id,
+								offset
+							}
+						});
+						let payload = await response.payload();
+						for (let album of payload.albums) {
+							albums.append(album);
+							anchor.updateState(album);
+						}
+						offset += payload.albums.length;
+						if (payload.albums.length === 0) {
+							reachedEnd.updateState(true);
+						}
+						isLoading.updateState(false);
+					}
+				};
+				mount.appendChild(xml.element("div")
+					.add(xml.element("div.content")
+						.add(Grid.make({ mini: true })
+							.add(makeIconLink(Icon.makeMonitor(), "Watch", "video/"))
+							.add(makeIconLink(Icon.makeSpeaker(), "Listen", "audio/"))
+							.add(makeIconLink(Icon.makeMagnifyingGlass(), "Search", "search/"))
+							.add(makeIconLink(Icon.makeCalendar(), "Revisit", "years/"))
+						)
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px")
+							.bind("data-hide", shows.compute((shows) => shows.length === 0))
+							.add(renderTextHeader(xml.text("Suggested shows")))
+							.add(carouselFactory.make((() => {
+								let widgets = new ArrayObservable<xml.XElement>([]);
+								shows.addObserver({
+									onappend(show) {
+										widgets.append(EntityCard.forShow(show));
+									},
+									onsplice(show, index) {
+										widgets.splice(index);
+									}
+								});
+								return widgets;
+							})()))
+						)
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px")
+							.bind("data-hide", shows.compute((artists) => artists.length === 0))
+							.add(renderTextHeader(xml.text("Suggested artists")))
+							.add(carouselFactory.make((() => {
+								let widgets = new ArrayObservable<xml.XElement>([]);
+								artists.addObserver({
+									onappend(artist) {
+										widgets.append(EntityCard.forArtist(artist));
+									},
+									onsplice(show, index) {
+										widgets.splice(index);
+									}
+								});
+								return widgets;
+							})()))
+						)
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px")
+							.bind("data-hide", albums.compute((albums) => albums.length === 0))
+							.add(renderTextHeader(xml.text("Suggested albums")))
+							.add(Grid.make()
+								.repeat(albums, (album) => EntityCard.forAlbum(album))
+							)
 						)
 					)
-				)
-				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render());
+					.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+				.render());
+			});
 		});
 	}
 };

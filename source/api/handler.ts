@@ -1029,6 +1029,14 @@ export async function getUserPlaylists(queue: ReadableQueue, subject_user_id: st
 	return playlists;
 };
 
+export async function getUserArtists(queue: ReadableQueue, subject_user_id: string, anchor: string | undefined, length: number, user_id: string): Promise<schema.objects.Artist[]> {
+	let artists = [] as Array<schema.objects.Artist>;
+	for (let artist_affinity of await atlas.links.user_artist_affinities.filter(queue, { user_id: binid(subject_user_id) }, anchor != null ? { artist_id: binid(anchor), user_id: binid(subject_user_id) } : undefined, length)) {
+		artists.push(await lookupArtist(queue, hexid(artist_affinity.artist_id), user_id));
+	}
+	return artists;
+};
+
 export async function getUserAlbums(queue: ReadableQueue, subject_user_id: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
 	let albums = [] as Array<schema.objects.Album>;
 	for (let album_affinity of await atlas.links.user_album_affinities.filter(queue, { user_id: binid(subject_user_id) }, anchor != null ? { album_id: binid(anchor), user_id: binid(subject_user_id) } : undefined, length)) {

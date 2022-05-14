@@ -321,6 +321,11 @@ route GET:/users/<user_id:string>/albums/ ? <{ token: string, anchor?: plain, of
 		albums: ./objects/Album[]
 	};
 
+route getUserArtists(): GET:/users/<user_id:string>/artists/ ? <{ token: string, anchor?: plain, limit?: number }>
+	=> {
+		artists: ./objects/Artist[]
+	};
+
 route GET:/users/<user_id:string>/playlists/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		playlists: ./objects/Playlist[]
