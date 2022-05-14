@@ -64,27 +64,61 @@ export class CarouselFactory {
 		children.compute((children) => {
 			childLength.updateState(children.length);
 		});
-		let activeIndex = new observers.ObservableClass(0);
-		let canScrollLast = observers.computed((activeIndex) => {
-			return activeIndex > 0;
-		}, activeIndex);
-		let canScrollNext = observers.computed((activeIndex, childLength) => {
-			return activeIndex < childLength - 1;
-		}, activeIndex, childLength);
+		let childVisibilities = new observers.ArrayObservable<boolean>([]);
+		children.addObserver({
+			onappend(state) {
+				childVisibilities.append(false);
+			},
+			onsplice(state, index) {
+				childVisibilities.splice(index);
+			}
+		});
+		let childrenBefore = new observers.ObservableClass(0);
+		let childrenAfter = new observers.ObservableClass(0);
+		let childrenVisible = observers.computed((before, after, length) => {
+			return length - before - after;
+		}, childrenBefore, childrenAfter, childLength);
+		childVisibilities.compute((childVisibilities) => {
+			let before = 0;
+			let after = 0;
+			for (let i = 0; i < childVisibilities.length; i += 1) {
+				if (childVisibilities[i] === true) {
+					break;
+				}
+				before += 1;
+			}
+			for (let i = childVisibilities.length - 1; i >= 0; i -= 1) {
+				if (childVisibilities[i] === true) {
+					break;
+				}
+				after += 1;
+			}
+			childrenBefore.updateState(before);
+			childrenAfter.updateState(after);
+		});
+		let canScrollLast = observers.computed((childrenBefore) => {
+			return childrenBefore > 0;
+		}, childrenBefore);
+		let canScrollNext = observers.computed((childrenAfter) => {
+			return childrenAfter > 0;
+		}, childrenAfter);
 		let contentElement = xnode.element("div.carousel__content");
 		contentElement.ref().then(async (contentElement) => {
 			let observer = new IntersectionObserver(async (entries) => {
+				let vis = childVisibilities.getState();
 				for (let entry of entries) {
 					for (let [index, child] of children.getState().entries()) {
 						let ref = await child.ref();
-						if (entry.target === ref && entry.isIntersecting) {
-							activeIndex.updateState(index);
-							return;
+						if (entry.target === ref) {
+							vis[index] = entry.isIntersecting;
+							break;
 						}
 					}
 				}
+				childVisibilities.update(vis);
 			}, {
-				root: contentElement
+				root: contentElement,
+				threshold: 1
 			});
 			children.addObserver({
 				async onappend(state) {
@@ -104,7 +138,8 @@ export class CarouselFactory {
 					.on("click", async () => {
 						if (canScrollLast.getState()) {
 							let content = await contentElement.ref() as HTMLElement;
-							let child = children.getState()[activeIndex.getState() - 1];
+							let index = Math.max(0, childrenBefore.getState() - childrenVisible.getState());
+							let child = children.getState()[index];
 							let ref = await child.ref() as HTMLElement;
 							content.scrollTo({ left: ref.offsetLeft - content.offsetLeft, behavior: "smooth" });
 						}
@@ -121,7 +156,8 @@ export class CarouselFactory {
 					.on("click", async () => {
 						if (canScrollNext.getState()) {
 							let content = await contentElement.ref() as HTMLElement;
-							let child = children.getState()[activeIndex.getState() + 1];
+							let index = Math.min(childLength.getState() - 1, childrenBefore.getState() + childrenVisible.getState());
+							let child = children.getState()[index];
 							let ref = await child.ref() as HTMLElement;
 							content.scrollTo({ left: ref.offsetLeft - content.offsetLeft, behavior: "smooth" });
 						}
