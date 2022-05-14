@@ -14,7 +14,7 @@ const CSS = `
 		display: grid;
 		gap: 24px;
 		grid-auto-flow: column;
-		grid-auto-columns: 100%;
+		grid-auto-columns: min-content;
 		overflow: scroll hidden;
 		scroll-behavior: smooth;
 		scroll-snap-type: x mandatory;
