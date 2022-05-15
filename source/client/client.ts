@@ -2128,7 +2128,7 @@ function observe(element: xml.XElement, handler: () => Promise<void>): xml.XElem
 	return element;
 }
 
-let updateviewforuri = (uri: string): void => {
+let updateviewforuri = async (uri: string): Promise<Element> => {
 	let parts: RegExpExecArray | null;
 	if (false) {
 	} else if ((parts = /^audio[/]tracks[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
@@ -2158,7 +2158,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		}
-		apiclient["GET:/tracks/<track_id>/"]({
+		return apiclient["GET:/tracks/<track_id>/"]({
 			options: {
 				track_id: parts[1],
 				token: token ?? ""
@@ -2168,7 +2168,7 @@ let updateviewforuri = (uri: string): void => {
 			let track = payload.track;
 			let last = payload.last;
 			let next = payload.next;
-			mount.appendChild(xml.element("div")
+			return xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forTrack(track, { compactDescription: false }))
 				)
@@ -2184,8 +2184,7 @@ let updateviewforuri = (uri: string): void => {
 					)
 				)
 				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-				.render()
-			);
+				.render();
 		});
 	} else if ((parts = /^audio[/]tracks[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
@@ -2217,7 +2216,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Tracks")))
 			)
@@ -2227,11 +2226,10 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render()
-		);
+			.render();
 	} else if ((parts = /^video[/]seasons[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let season_id = decodeURIComponent(parts[1]);
-		apiclient["GET:/seasons/<season_id>/"]({
+		return apiclient["GET:/seasons/<season_id>/"]({
 			options: {
 				season_id,
 				token: token ?? ""
@@ -2251,7 +2249,7 @@ let updateviewforuri = (uri: string): void => {
 				let payload = await response.payload();
 				episodes.update(payload.episodes);
 			});
-			mount.appendChild(xml.element("div")
+			return xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forSeason(season, { compactDescription: false }))
 				)
@@ -2266,8 +2264,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(entityNavLinkFactory.forSeason(last, next))
 				)
-				.render()
-			);
+				.render();
 		});
 	} else if ((parts = /^video[/]seasons[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
@@ -2299,7 +2296,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Seasons")))
 			)
@@ -2309,11 +2306,10 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render()
-		);
+			.render();
 	} else if ((parts = /^audio[/]discs[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let disc_id = decodeURIComponent(parts[1]);
-		apiclient["GET:/discs/<disc_id>/"]({
+		return apiclient["GET:/discs/<disc_id>/"]({
 			options: {
 				disc_id,
 				token: token ?? ""
@@ -2333,7 +2329,7 @@ let updateviewforuri = (uri: string): void => {
 				let payload = await response.payload();
 				tracks.update(payload.tracks);
 			});
-			mount.appendChild(xml.element("div")
+			return xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forDisc(disc, { compactDescription: false }))
 				)
@@ -2348,7 +2344,7 @@ let updateviewforuri = (uri: string): void => {
 				.add(xml.element("div.content")
 					.add(entityNavLinkFactory.forDisc(last, next))
 				)
-				.render());
+				.render();
 		});
 	} else if ((parts = /^audio[/]discs[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
@@ -2380,7 +2376,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Discs")))
 			)
@@ -2390,11 +2386,10 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render()
-		);
+			.render();
 	} else if ((parts = /^users[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let user_id = decodeURIComponent(parts[1]);
-		apiclient["GET:/users/<user_id>/"]({
+		return apiclient["GET:/users/<user_id>/"]({
 			options: {
 				user_id,
 				token: token ?? ""
@@ -2430,7 +2425,7 @@ let updateviewforuri = (uri: string): void => {
 					isLoading.updateState(false);
 				}
 			};
-			mount.appendChild(xml.element("div")
+			return xml.element("div")
 				.add(xml.element("div.content")
 					.add(renderTextHeader(xml.text(user.name)))
 				)
@@ -2443,8 +2438,7 @@ let updateviewforuri = (uri: string): void => {
 					)
 				)
 				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-				.render()
-			);
+				.render();
 		});
 	} else if ((parts = /^users[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
@@ -2476,7 +2470,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Users")))
 			)
@@ -2486,11 +2480,10 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render()
-		);
+			.render();
 	} else if ((parts = /^actors[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let actor_id = decodeURIComponent(parts[1]);
-		apiclient["GET:/actors/<actor_id>/"]({
+		return apiclient["GET:/actors/<actor_id>/"]({
 			options: {
 				actor_id,
 				token: token ?? ""
@@ -2498,7 +2491,7 @@ let updateviewforuri = (uri: string): void => {
 		}).then(async (response) => {
 			let payload = await response.payload();
 			let actor = payload.actor;
-			apiclient["GET:/actors/<actor_id>/shows/"]({
+			return apiclient["GET:/actors/<actor_id>/shows/"]({
 				options: {
 					actor_id,
 					token: token ?? "",
@@ -2535,7 +2528,7 @@ let updateviewforuri = (uri: string): void => {
 						isLoading.updateState(false);
 					}
 				};
-				mount.appendChild(xml.element("div.content")
+				return xml.element("div.content")
 					.set("style", "display: grid; gap: 48px;")
 					.add(renderTextHeader(xml.text(actor.name)))
 					.add(xml.element("div")
@@ -2553,7 +2546,7 @@ let updateviewforuri = (uri: string): void => {
 						)
 					)
 					.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-					.render());
+					.render();
 			});
 		});
 	} else if ((parts = /^actors[/]([^/?]*)/.exec(uri)) !== null) {
@@ -2586,7 +2579,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Actors")))
 			)
@@ -2596,11 +2589,10 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render()
-		);
+			.render();
 	} else if ((parts = /^audio[/]albums[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let album_id = decodeURIComponent(parts[1]);
-		apiclient["GET:/albums/<album_id>/"]({
+		return apiclient["GET:/albums/<album_id>/"]({
 			options: {
 				album_id: album_id,
 				token: token ?? ""
@@ -2618,7 +2610,7 @@ let updateviewforuri = (uri: string): void => {
 				let payload = await response.payload();
 				discs.update(payload.discs);
 			});
-			mount.appendChild(xml.element("div")
+			return xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forAlbum(album, { compactDescription: false }))
 				)
@@ -2643,8 +2635,7 @@ let updateviewforuri = (uri: string): void => {
 						});
 					return element;
 				})
-				.render()
-			);
+				.render();
 		});
 	} else if ((parts = /^audio[/]albums[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
@@ -2676,7 +2667,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Albums")))
 			)
@@ -2686,11 +2677,10 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render()
-		);
+			.render();
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let artist_id = decodeURIComponent(parts[1]);
-		apiclient["GET:/artists/<artist_id>/"]({
+		return apiclient["GET:/artists/<artist_id>/"]({
 			options: {
 				artist_id,
 				token: token ?? ""
@@ -2710,7 +2700,7 @@ let updateviewforuri = (uri: string): void => {
 				let payload = await response.payload();
 				albums.update(payload.albums);
 			});
-			mount.appendChild(xml.element("div")
+			return xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forArtist(artist, { compactDescription: false }))
 				)
@@ -2745,7 +2735,7 @@ let updateviewforuri = (uri: string): void => {
 						}))
 					)
 				)
-				.render());
+				.render();
 		});
 	} else if ((parts = /^audio[/]artists[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
@@ -2777,7 +2767,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		}
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Artists")))
 			)
@@ -2787,10 +2777,10 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render());
+			.render();
 	} else if ((parts = /^audio[/]playlists[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let playlist_id = decodeURIComponent(parts[1]);
-		apiclient["GET:/playlists/<playlist_id>/"]({
+		return apiclient["GET:/playlists/<playlist_id>/"]({
 			options: {
 				playlist_id,
 				token: token ?? ""
@@ -2813,7 +2803,7 @@ let updateviewforuri = (uri: string): void => {
 				let payload = await response.payload();
 				items.update(payload.items);
 			});
-			mount.appendChild(xml.element("div")
+			return xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forPlaylist(playlist, { compactDescription: false }))
 				)
@@ -2843,7 +2833,7 @@ let updateviewforuri = (uri: string): void => {
 						)
 					)
 				)
-				.render());
+				.render();
 		});
 	} else if ((parts = /^audio[/]playlists[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
@@ -2875,7 +2865,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Playlists")))
 			)
@@ -2885,8 +2875,7 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render()
-		);
+			.render();
 	} else if ((parts = /^audio[/]/.exec(uri)) !== null) {
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
@@ -2915,7 +2904,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(Grid.make({ mini: true })
 					.add(makeIconLink(Icon.makeDisc(), "Albums", "audio/albums/"))
@@ -2933,10 +2922,10 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render());
+			.render();
 	} else if ((parts = /^video[/]shows[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let show_id = decodeURIComponent(parts[1]);
-		apiclient["GET:/shows/<show_id>/"]({
+		return apiclient["GET:/shows/<show_id>/"]({
 			options: {
 				show_id,
 				token: token ?? ""
@@ -2971,7 +2960,7 @@ let updateviewforuri = (uri: string): void => {
 					nextEpisodeElements.update([element]);
 				}
 			});
-			mount.appendChild(xml.element("div")
+			return xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forShow(show, { compactDescription: false }))
 				)
@@ -2992,8 +2981,7 @@ let updateviewforuri = (uri: string): void => {
 						}))
 					)
 				)
-				.render()
-			);
+				.render();
 		});
 	} else if ((parts = /^video[/]shows[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
@@ -3025,7 +3013,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Shows")))
 			)
@@ -3035,11 +3023,10 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render()
-		);
+			.render();
 	} else if ((parts = /^video[/]episodes[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let episode_id = decodeURIComponent(parts[1]);
-		apiclient["GET:/episodes/<episode_id>/"]({
+		return apiclient["GET:/episodes/<episode_id>/"]({
 			options: {
 				episode_id,
 				token: token ?? ""
@@ -3049,15 +3036,14 @@ let updateviewforuri = (uri: string): void => {
 			let episode = payload.episode;
 			let last = payload.last;
 			let next = payload.next;
-			mount.appendChild(xml.element("div")
+			return xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forEpisode(episode, { compactDescription: false }))
 				)
 				.add(xml.element("div.content")
 					.add(entityNavLinkFactory.forEpisode(last, next))
 				)
-				.render()
-			);
+				.render();
 		});
 	} else if ((parts = /^video[/]episodes[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
@@ -3089,7 +3075,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Episodes")))
 			)
@@ -3099,11 +3085,10 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render()
-		);
+			.render();
 	} else if ((parts = /^video[/]movies[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let movie_id = decodeURIComponent(parts[1]);
-		apiclient["GET:/movies/<movie_id>/"]({
+		return apiclient["GET:/movies/<movie_id>/"]({
 			options: {
 				movie_id,
 				token: token ?? ""
@@ -3139,7 +3124,7 @@ let updateviewforuri = (uri: string): void => {
 			};
 			let payload = await response.payload();
 			let movie = payload.movie;
-			mount.appendChild(xml.element("div")
+			return xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forMovie(movie, { compactDescription: false }))
 				)
@@ -3157,8 +3142,7 @@ let updateviewforuri = (uri: string): void => {
 					)
 				)
 				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-				.render()
-			);
+				.render();
 		});
 	} else if ((parts = /^video[/]movies[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
@@ -3190,7 +3174,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Movies")))
 			)
@@ -3200,11 +3184,10 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render()
-		);
+			.render();
 	} else if ((parts = /^video[/]genres[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let genre_id = decodeURIComponent(parts[1]);
-		apiclient["GET:/genres/<genre_id>/"]({
+		return apiclient["GET:/genres/<genre_id>/"]({
 			options: {
 				genre_id,
 				token: token ?? ""
@@ -3212,7 +3195,7 @@ let updateviewforuri = (uri: string): void => {
 		}).then(async (response) => {
 			let payload = await response.payload();
 			let genre = payload.genre;
-			apiclient["GET:/genres/<genre_id>/shows/"]({
+			return apiclient["GET:/genres/<genre_id>/shows/"]({
 				options: {
 					genre_id,
 					token: token ?? "",
@@ -3249,7 +3232,7 @@ let updateviewforuri = (uri: string): void => {
 						isLoading.updateState(false);
 					}
 				};
-				mount.appendChild(xml.element("div")
+				return xml.element("div")
 					.add(xml.element("div.content")
 						.add(renderTextHeader(xml.text(genre.title)))
 					)
@@ -3267,8 +3250,7 @@ let updateviewforuri = (uri: string): void => {
 						)
 					)
 					.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-					.render()
-				);
+					.render();
 			});
 		});
 	} else if ((parts = /^video[/]genres[/]([^/?]*)/.exec(uri)) !== null) {
@@ -3302,15 +3284,14 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(Grid.make({ mini: true })
 					.repeat(genres, (genre) => makeIconLink(Icon.makePieChart(), genre.title, `video/genres/${genre.genre_id}/`))
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render()
-		);
+			.render();
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
@@ -3339,7 +3320,7 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(Grid.make({ mini: true })
 					.add(makeIconLink(Icon.makeStar(), "Movies", "video/movies/"))
@@ -3357,7 +3338,7 @@ let updateviewforuri = (uri: string): void => {
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render());
+			.render();
 	} else if ((parts = /^search[/]([^/?]*)/.exec(uri)) !== null) {
 		function getBoolean(uri: string, key: string): boolean | undefined {
 			let url = new URL(uri, window.location.origin);
@@ -3388,16 +3369,21 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		computed((query, cues) => {
-			if (!isLoading.getState()) {
-				let uri = `search/${encodeURIComponent(query)}?cues=${cues}`;
-				window.history.replaceState({ ...window.history.state, uri }, "", uri);
-				reachedEnd.updateState(false);
-				merger = new SearchResultsMerger(token ?? "", query);
-				entities.update([]);
-				load();
-			}
-		}, query, cues);
+		window.requestAnimationFrame(() => {
+			computed((query, cues) => {
+				if (!isLoading.getState()) {
+					replaceUrl(`search/${encodeURIComponent(query)}?cues=${cues}`);
+					entities.update([]);
+					reachedEnd.updateState(false);
+					if (query === "") {
+						merger = undefined;
+					} else {
+						merger = new SearchResultsMerger(token ?? "", query);
+						load();
+					}
+				}
+			}, query, cues);
+		});
 		let headEntities = new ArrayObservable<Entity>([]);
 		let tailEntities = new ArrayObservable<Entity>([]);
 		entities.addObserver({
@@ -3416,7 +3402,7 @@ let updateviewforuri = (uri: string): void => {
 				}
 			}
 		});
-		mount.appendChild(xml.element("div.content")
+		return xml.element("div.content")
 			.add(xml.element("div")
 				.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr auto;")
 				.add(xml.element("div")
@@ -3458,10 +3444,10 @@ let updateviewforuri = (uri: string): void => {
 				.repeat(tailEntities, (entity) => EntityRow.forEntity(entity))
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render());
+			.render();
 	} else if ((parts = /^years[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let year_id = decodeURIComponent(parts[1]);
-		apiclient["GET:/years/<year_id>/"]({
+		return apiclient["GET:/years/<year_id>/"]({
 			options: {
 				year_id,
 				token: token ?? ""
@@ -3469,7 +3455,7 @@ let updateviewforuri = (uri: string): void => {
 		}).then(async (response) => {
 			let payload = await response.payload();
 			let year = payload.year;
-			apiclient["GET:/years/<year_id>/movies/"]({
+			return apiclient["GET:/years/<year_id>/movies/"]({
 				options: {
 					year_id,
 					token: token ?? "",
@@ -3507,7 +3493,7 @@ let updateviewforuri = (uri: string): void => {
 						isLoading.updateState(false);
 					}
 				};
-				mount.appendChild(xml.element("div")
+				return xml.element("div")
 					.add(xml.element("div.content")
 						.add(renderTextHeader(xml.text(`${year.year}`)))
 						.add(xml.element("div")
@@ -3526,7 +3512,7 @@ let updateviewforuri = (uri: string): void => {
 						)
 					)
 				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-				.render());
+				.render();
 			});
 		});
 	} else if ((parts = /^years[/]([^/?]*)/.exec(uri)) !== null) {
@@ -3560,17 +3546,16 @@ let updateviewforuri = (uri: string): void => {
 				isLoading.updateState(false);
 			}
 		};
-		mount.appendChild(xml.element("div")
+		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(Grid.make({ mini: true })
 					.repeat(years, (year) => makeIconLink(Icon.makeCalendar(), `${year.year}`, `years/${year.year_id}/`))
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-			.render()
-		);
+			.render();
 	} else {
-		apiclient["GET:/users/<user_id>/shows/"]({
+		return apiclient["GET:/users/<user_id>/shows/"]({
 			options: {
 				user_id: "",
 				token: token ?? ""
@@ -3578,7 +3563,7 @@ let updateviewforuri = (uri: string): void => {
 		}).then(async (response) => {
 			let payload = await response.payload();
 			let shows = new ArrayObservable<apischema.objects.Show>(payload.shows);
-			apiclient.getUserArtists({
+			return apiclient.getUserArtists({
 				options: {
 					user_id: "",
 					token: token ?? ""
@@ -3614,7 +3599,7 @@ let updateviewforuri = (uri: string): void => {
 						isLoading.updateState(false);
 					}
 				};
-				mount.appendChild(xml.element("div")
+				return xml.element("div")
 					.add(xml.element("div.content")
 						.add(Grid.make({ mini: true })
 							.add(makeIconLink(Icon.makeMonitor(), "Watch", "video/"))
@@ -3666,7 +3651,7 @@ let updateviewforuri = (uri: string): void => {
 						)
 					)
 					.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-				.render());
+				.render();
 			});
 		});
 	}
@@ -3701,7 +3686,17 @@ type CacheEntry = {
 };
 let mount_cache = new Array<CacheEntry>();
 let mounted_uri: string | undefined;
-function navigate(uri: string, use_cache: boolean = false): void {
+function replaceUrl(uri: string): void {
+	if (mounted_uri != null) {
+		let entry = mount_cache.find((entry) => entry.uri === mounted_uri);
+		if (entry != null) {
+			entry.uri = uri;
+			window.history.replaceState({ ...window.history.state, uri }, "", uri);
+			mounted_uri = uri;
+		}
+	}
+}
+async function navigate(uri: string, use_cache: boolean = false): Promise<void> {
 	hideModalMenu();
 	if (is.absent(verifiedToken.getState())) {
 		while (is.present(mount.lastChild)) {
@@ -3762,7 +3757,14 @@ function navigate(uri: string, use_cache: boolean = false): void {
 		mount.scrollLeft = entry.x;
 		mount.scrollTop = entry.y;
 	} else {
-		updateviewforuri(uri);
+		let element = await updateviewforuri(uri);
+		mount_cache.unshift({
+			uri: uri,
+			element: element,
+			x: 0,
+			y: 0
+		});
+		mount.appendChild(element);
 	}
 	if (is.absent(window.history.state)) {
 		window.history.replaceState({ uri, index: historyIndex.getState() }, "", uri);
