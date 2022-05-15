@@ -3371,7 +3371,6 @@ let updateviewforuri = (uri: string): void => {
 		}
 		let query = new ObservableClass(decodeURIComponent(parts[1]));
 		let cues = new ObservableClass(getBoolean(uri, "cues") ?? false);
-		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let entities = new ArrayObservable<Entity>([]);
@@ -3383,22 +3382,22 @@ let updateviewforuri = (uri: string): void => {
 				for (let { entity } of results) {
 					entities.append(entity);
 				}
-				offset += results.length;
 				if (results.length === 0) {
 					reachedEnd.updateState(true);
 				}
 				isLoading.updateState(false);
 			}
 		};
-		function doSearch() {
-			let uri = `search/${encodeURIComponent(query.getState())}?cues=${cues.getState()}`;
-			window.history.replaceState({ ...window.history.state, uri }, "", uri);
-			offset = 0;
-			reachedEnd.updateState(false);
-			merger = new SearchResultsMerger(token ?? "", query.getState());
-			entities.update([]);
-			load();
-		}
+		computed((query, cues) => {
+			if (!isLoading.getState()) {
+				let uri = `search/${encodeURIComponent(query)}?cues=${cues}`;
+				window.history.replaceState({ ...window.history.state, uri }, "", uri);
+				reachedEnd.updateState(false);
+				merger = new SearchResultsMerger(token ?? "", query);
+				entities.update([]);
+				load();
+			}
+		}, query, cues);
 		let headEntities = new ArrayObservable<Entity>([]);
 		let tailEntities = new ArrayObservable<Entity>([]);
 		entities.addObserver({
@@ -3426,14 +3425,14 @@ let updateviewforuri = (uri: string): void => {
 						.set("type", "text")
 						.set("spellcheck", "false")
 						.set("placeholder", "Search...")
-						.bind2("value", query)
+						.set("value", query.getState())
 						.on("keyup", (event) => {
 							if (event.code === "Enter") {
 								(event.target as HTMLInputElement).blur();
 							}
 						})
-						.on("blur", () => {
-							doSearch();
+						.on("change", (event) => {
+							query.updateState((event.target as HTMLInputElement).value);
 						})
 					)
 					.add(Icon.makeMagnifyingGlass()
@@ -3445,7 +3444,6 @@ let updateviewforuri = (uri: string): void => {
 					.add(Icon.makeQuotationMark())
 					.on("click", () => {
 						cues.updateState(!cues.getState());
-						doSearch();
 					})
 				)
 			)

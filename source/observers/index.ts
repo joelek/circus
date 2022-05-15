@@ -42,6 +42,7 @@ export type ObservableClassTuple<A extends TupleOf<any>> = {
 	[B in keyof A]: ObservableClass<A[B]>;
 };
 
+// The computer is called once for every observable.
 export function computed<A extends TupleOf<any>, B>(computer: (...values: TupleOf<A>) => B, ...observables: TupleOf<ObservableClassTuple<A>>): ObservableClass<B> {
 	let observable = new ObservableClass(computer(...observables.map((observable) => observable.getState()) as [...A]));
 	let updater = () => {
