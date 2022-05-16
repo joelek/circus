@@ -3134,38 +3134,31 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				.render();
 		});
 	} else if ((parts = /^video[/]movies[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = decodeURIComponent(parts[1]);
-		let offset = 0;
-		let reachedEnd = new ObservableClass(false);
-		let isLoading = new ObservableClass(false);
+		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
 		let movies = new ArrayObservable<Movie>([]);
-		let anchor = new ObservableClass(undefined as Movie | undefined);
+		let provider: MovieSearchResultProvider | undefined;
 		async function load(): Promise<void> {
-			if (!reachedEnd.getState() && !isLoading.getState()) {
-				isLoading.updateState(true);
-				let response = await apiclient["GET:/movies/<query>"]({
-					options: {
-						query,
-						token: token ?? "",
-						anchor: anchor.getState()?.movie_id,
-						offset
-					}
-				});
-				let payload = await response.payload();
-				for (let { entity } of payload.results) {
+			if (provider != null) {
+				let results = await provider.fetch();
+				for (let { entity } of results) {
 					movies.append(entity);
-					anchor.updateState(entity);
 				}
-				offset += payload.results.length;
-				if (payload.results.length === 0) {
-					reachedEnd.updateState(true);
-				}
-				isLoading.updateState(false);
 			}
 		};
+		window.requestAnimationFrame(() => {
+			query.addObserver((query) => {
+				replaceUrl(`video/movies/${encodeURIComponent(query)}`);
+				movies.update([]);
+				provider = new MovieSearchResultProvider(token ?? "", query);
+				load();
+			});
+		});
 		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Movies")))
+			)
+			.add(xml.element("div.content")
+				.add(makeSearchField(query))
 			)
 			.add(xml.element("div.content")
 				.add(Grid.make()
@@ -3905,6 +3898,22 @@ class EpisodeSearchResultProvider extends SearchResultProvider<Episode> {
 					token,
 					query,
 					anchor: anchor?.episode_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+	}
+};
+
+class MovieSearchResultProvider extends SearchResultProvider<Movie> {
+	constructor(token: string, query: string) {
+		super(async (anchor) => {
+			let response = await apiclient["GET:/movies/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.movie_id
 				}
 			});
 			let payload = await response.payload();
