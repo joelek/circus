@@ -2444,38 +2444,31 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				.render();
 		});
 	} else if ((parts = /^users[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = decodeURIComponent(parts[1]);
-		let offset = 0;
-		let reachedEnd = new ObservableClass(false);
-		let isLoading = new ObservableClass(false);
+		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
 		let users = new ArrayObservable<User>([]);
-		let anchor = new ObservableClass(undefined as User | undefined);
+		let provider: UserSearchResultProvider | undefined;
 		async function load(): Promise<void> {
-			if (!reachedEnd.getState() && !isLoading.getState()) {
-				isLoading.updateState(true);
-				let response = await apiclient["GET:/users/<query>"]({
-					options: {
-						query,
-						token: token ?? "",
-						anchor: anchor.getState()?.user_id,
-						offset
-					}
-				});
-				let payload = await response.payload();
-				for (let { entity } of payload.results) {
+			if (provider != null) {
+				let results = await provider.fetch();
+				for (let { entity } of results) {
 					users.append(entity);
-					anchor.updateState(entity);
 				}
-				offset += payload.results.length;
-				if (payload.results.length === 0) {
-					reachedEnd.updateState(true);
-				}
-				isLoading.updateState(false);
 			}
 		};
+		window.requestAnimationFrame(() => {
+			query.addObserver((query) => {
+				replaceUrl(`users/${encodeURIComponent(query)}`);
+				users.update([]);
+				provider = new UserSearchResultProvider(token ?? "", query);
+				load();
+			});
+		});
 		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Users")))
+			)
+			.add(xml.element("div.content")
+				.add(makeSearchField(query))
 			)
 			.add(xml.element("div.content")
 				.add(Grid.make()
@@ -3941,6 +3934,22 @@ class DiscSearchResultProvider extends SearchResultProvider<Disc> {
 					token,
 					query,
 					anchor: anchor?.disc_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+	}
+};
+
+class UserSearchResultProvider extends SearchResultProvider<User> {
+	constructor(token: string, query: string) {
+		super(async (anchor) => {
+			let response = await apiclient["GET:/users/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.user_id
 				}
 			});
 			let payload = await response.payload();
