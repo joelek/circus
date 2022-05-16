@@ -2357,38 +2357,31 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				.render();
 		});
 	} else if ((parts = /^audio[/]discs[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = decodeURIComponent(parts[1]);
-		let offset = 0;
-		let reachedEnd = new ObservableClass(false);
-		let isLoading = new ObservableClass(false);
+		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
 		let discs = new ArrayObservable<Disc>([]);
-		let anchor = new ObservableClass(undefined as Disc | undefined);
+		let provider: DiscSearchResultProvider | undefined;
 		async function load(): Promise<void> {
-			if (!reachedEnd.getState() && !isLoading.getState()) {
-				isLoading.updateState(true);
-				let response = await apiclient["GET:/discs/<query>"]({
-					options: {
-						query,
-						token: token ?? "",
-						anchor: anchor.getState()?.disc_id,
-						offset
-					}
-				});
-				let payload = await response.payload();
-				for (let { entity } of payload.results) {
+			if (provider != null) {
+				let results = await provider.fetch();
+				for (let { entity } of results) {
 					discs.append(entity);
-					anchor.updateState(entity);
 				}
-				offset += payload.results.length;
-				if (payload.results.length === 0) {
-					reachedEnd.updateState(true);
-				}
-				isLoading.updateState(false);
 			}
 		};
+		window.requestAnimationFrame(() => {
+			query.addObserver((query) => {
+				replaceUrl(`audio/discs/${encodeURIComponent(query)}`);
+				discs.update([]);
+				provider = new DiscSearchResultProvider(token ?? "", query);
+				load();
+			});
+		});
 		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Discs")))
+			)
+			.add(xml.element("div.content")
+				.add(makeSearchField(query))
 			)
 			.add(xml.element("div.content")
 				.add(Grid.make()
@@ -3932,6 +3925,22 @@ class SeasonSearchResultProvider extends SearchResultProvider<Season> {
 					token,
 					query,
 					anchor: anchor?.season_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+	}
+};
+
+class DiscSearchResultProvider extends SearchResultProvider<Disc> {
+	constructor(token: string, query: string) {
+		super(async (anchor) => {
+			let response = await apiclient["GET:/discs/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.disc_id
 				}
 			});
 			let payload = await response.payload();
