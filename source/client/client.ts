@@ -2546,38 +2546,31 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			});
 		});
 	} else if ((parts = /^actors[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = decodeURIComponent(parts[1]);
-		let offset = 0;
-		let reachedEnd = new ObservableClass(false);
-		let isLoading = new ObservableClass(false);
+		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
 		let actors = new ArrayObservable<Actor>([]);
-		let anchor = new ObservableClass(undefined as Actor | undefined);
+		let provider: ActorSearchResultProvider | undefined;
 		async function load(): Promise<void> {
-			if (!reachedEnd.getState() && !isLoading.getState()) {
-				isLoading.updateState(true);
-				let response = await apiclient["GET:/actors/<query>"]({
-					options: {
-						query,
-						token: token ?? "",
-						anchor: anchor.getState()?.actor_id,
-						offset
-					}
-				});
-				let payload = await response.payload();
-				for (let { entity } of payload.results) {
+			if (provider != null) {
+				let results = await provider.fetch();
+				for (let { entity } of results) {
 					actors.append(entity);
-					anchor.updateState(entity);
 				}
-				offset += payload.results.length;
-				if (payload.results.length === 0) {
-					reachedEnd.updateState(true);
-				}
-				isLoading.updateState(false);
 			}
 		};
+		window.requestAnimationFrame(() => {
+			query.addObserver((query) => {
+				replaceUrl(`actors/${encodeURIComponent(query)}`);
+				actors.update([]);
+				provider = new ActorSearchResultProvider(token ?? "", query);
+				load();
+			});
+		});
 		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Actors")))
+			)
+			.add(xml.element("div.content")
+				.add(makeSearchField(query))
 			)
 			.add(xml.element("div.content")
 				.add(Grid.make()
@@ -3950,6 +3943,22 @@ class UserSearchResultProvider extends SearchResultProvider<User> {
 					token,
 					query,
 					anchor: anchor?.user_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+	}
+};
+
+class ActorSearchResultProvider extends SearchResultProvider<Actor> {
+	constructor(token: string, query: string) {
+		super(async (anchor) => {
+			let response = await apiclient["GET:/actors/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.actor_id
 				}
 			});
 			let payload = await response.payload();
