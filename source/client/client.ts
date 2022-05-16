@@ -2674,12 +2674,12 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			}
 		};
 		window.requestAnimationFrame(() => {
-			computed((query) => {
+			query.addObserver((query) => {
 				replaceUrl(`audio/albums/${encodeURIComponent(query)}`);
 				albums.update([]);
 				provider = new AlbumSearchResultProvider(token ?? "", query);
 				load();
-			}, query);
+			});
 		});
 		return xml.element("div")
 			.add(xml.element("div.content")
