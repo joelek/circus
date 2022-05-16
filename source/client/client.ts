@@ -2284,38 +2284,31 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				.render();
 		});
 	} else if ((parts = /^video[/]seasons[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = decodeURIComponent(parts[1]);
-		let offset = 0;
-		let reachedEnd = new ObservableClass(false);
-		let isLoading = new ObservableClass(false);
+		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
 		let seasons = new ArrayObservable<Season>([]);
-		let anchor = new ObservableClass(undefined as Season | undefined);
+		let provider: SeasonSearchResultProvider | undefined;
 		async function load(): Promise<void> {
-			if (!reachedEnd.getState() && !isLoading.getState()) {
-				isLoading.updateState(true);
-				let response = await apiclient["GET:/seasons/<query>"]({
-					options: {
-						query,
-						token: token ?? "",
-						anchor: anchor.getState()?.season_id,
-						offset
-					}
-				});
-				let payload = await response.payload();
-				for (let { entity } of payload.results) {
+			if (provider != null) {
+				let results = await provider.fetch();
+				for (let { entity } of results) {
 					seasons.append(entity);
-					anchor.updateState(entity);
 				}
-				offset += payload.results.length;
-				if (payload.results.length === 0) {
-					reachedEnd.updateState(true);
-				}
-				isLoading.updateState(false);
 			}
 		};
+		window.requestAnimationFrame(() => {
+			query.addObserver((query) => {
+				replaceUrl(`video/seasons/${encodeURIComponent(query)}`);
+				seasons.update([]);
+				provider = new SeasonSearchResultProvider(token ?? "", query);
+				load();
+			});
+		});
 		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Seasons")))
+			)
+			.add(xml.element("div.content")
+				.add(makeSearchField(query))
 			)
 			.add(xml.element("div.content")
 				.add(Grid.make()
@@ -3923,6 +3916,22 @@ class TrackSearchResultProvider extends SearchResultProvider<Track> {
 					token,
 					query,
 					anchor: anchor?.track_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+	}
+};
+
+class SeasonSearchResultProvider extends SearchResultProvider<Season> {
+	constructor(token: string, query: string) {
+		super(async (anchor) => {
+			let response = await apiclient["GET:/seasons/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.season_id
 				}
 			});
 			let payload = await response.payload();
