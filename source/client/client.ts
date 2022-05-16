@@ -1304,6 +1304,30 @@ function makeButton(options?: Partial<{ style: "flat" | "normal" }>): xml.XEleme
 	return xml.element(`div.icon-button${style === "normal" ? "" : ".icon-button--flat"}`);
 }
 
+function makeSearchField(query: ObservableClass<string>) {
+	return (
+		xml.element("div")
+			.set("style", "position: relative;")
+			.add(xml.element("input")
+				.set("type", "text")
+				.set("spellcheck", "false")
+				.set("placeholder", "Search...")
+				.set("value", query.getState())
+				.on("keyup", (event) => {
+					if (event.code === "Enter") {
+						(event.target as HTMLInputElement).blur();
+					}
+				})
+				.on("change", (event) => {
+					query.updateState((event.target as HTMLInputElement).value);
+				})
+			)
+			.add(Icon.makeMagnifyingGlass()
+				.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
+			)
+	);
+};
+
 const showPage = new ObservableClass(false);
 const showDevices = new ObservableClass(false);
 player.devices.addObserver({
@@ -2638,38 +2662,31 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				.render();
 		});
 	} else if ((parts = /^audio[/]albums[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = decodeURIComponent(parts[1]);
-		let offset = 0;
-		let reachedEnd = new ObservableClass(false);
-		let isLoading = new ObservableClass(false);
+		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
 		let albums = new ArrayObservable<Album>([]);
-		let anchor = new ObservableClass(undefined as Album | undefined);
+		let provider: AlbumSearchResultProvider | undefined;
 		async function load(): Promise<void> {
-			if (!reachedEnd.getState() && !isLoading.getState()) {
-				isLoading.updateState(true);
-				let response = await apiclient["GET:/albums/<query>"]({
-					options: {
-						query,
-						token: token ?? "",
-						anchor: anchor.getState()?.album_id,
-						offset
-					}
-				});
-				let payload = await response.payload();
-				for (let { entity } of payload.results) {
+			if (provider != null) {
+				let results = await provider.fetch();
+				for (let { entity } of results) {
 					albums.append(entity);
-					anchor.updateState(entity);
 				}
-				offset += payload.results.length;
-				if (payload.results.length === 0) {
-					reachedEnd.updateState(true);
-				}
-				isLoading.updateState(false);
 			}
 		};
+		window.requestAnimationFrame(() => {
+			computed((query) => {
+				replaceUrl(`audio/albums/${encodeURIComponent(query)}`);
+				albums.update([]);
+				provider = new AlbumSearchResultProvider(token ?? "", query);
+				load();
+			}, query);
+		});
 		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Albums")))
+			)
+			.add(xml.element("div.content")
+				.add(makeSearchField(query))
 			)
 			.add(xml.element("div.content")
 				.add(Grid.make()
@@ -3405,26 +3422,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		return xml.element("div.content")
 			.add(xml.element("div")
 				.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr auto;")
-				.add(xml.element("div")
-					.set("style", "position: relative;")
-					.add(xml.element("input")
-						.set("type", "text")
-						.set("spellcheck", "false")
-						.set("placeholder", "Search...")
-						.set("value", query.getState())
-						.on("keyup", (event) => {
-							if (event.code === "Enter") {
-								(event.target as HTMLInputElement).blur();
-							}
-						})
-						.on("change", (event) => {
-							query.updateState((event.target as HTMLInputElement).value);
-						})
-					)
-					.add(Icon.makeMagnifyingGlass()
-						.set("style", "fill: rgb(255, 255, 255); position: absolute; left: 0px; top: 50%; transform: translate(100%, -50%);")
-					)
-				)
+				.add(makeSearchField(query))
 				.add(makeButton()
 					.bind("data-active", cues.addObserver(a => a))
 					.add(Icon.makeQuotationMark())
@@ -3795,6 +3793,7 @@ class SearchResultProvider<A> {
 	private anchor?: A;
 	private results: Array<{ entity: A, rank: number }>;
 	private exhausted: boolean;
+	private pending: boolean;
 	private index: number;
 
 	constructor(fetcher: (anchor?: A) => Promise<Array<{ entity: A, rank: number }>>, anchor?: A) {
@@ -3802,15 +3801,35 @@ class SearchResultProvider<A> {
 		this.anchor = anchor;
 		this.results = [];
 		this.exhausted = false;
+		this.pending = false;
 		this.index = 0;
 	}
 
+	async fetch(): Promise<Array<{ entity: A, rank: number }>> {
+		if (this.exhausted || this.pending) {
+			return [];
+		}
+		this.pending = true;
+		let results = await this.fetcher(this.anchor);
+		this.pending = false;
+		if (results.length === 0) {
+			this.exhausted = true;
+			return [];
+		}
+		this.results.push(...results);
+		this.anchor = results[results.length - 1].entity;
+		this.index = this.results.length;
+		return results;
+	}
+
 	async peek(): Promise<{ entity: A, rank: number } | undefined> {
-		if (this.exhausted) {
+		if (this.exhausted || this.pending) {
 			return;
 		}
 		if (this.index >= this.results.length) {
+			this.pending = true;
 			let results = await this.fetcher(this.anchor);
+			this.pending = false;
 			if (results.length === 0) {
 				this.exhausted = true;
 				return;
@@ -3822,11 +3841,13 @@ class SearchResultProvider<A> {
 	}
 
 	async read(): Promise<{ entity: A, rank: number } | undefined> {
-		if (this.exhausted) {
+		if (this.exhausted || this.pending) {
 			return;
 		}
 		if (this.index >= this.results.length) {
+			this.pending = true;
 			let results = await this.fetcher(this.anchor);
+			this.pending = false;
 			if (results.length === 0) {
 				this.exhausted = true;
 				return;
@@ -3837,6 +3858,22 @@ class SearchResultProvider<A> {
 		this.anchor = result.entity;
 		this.index += 1;
 		return result;
+	}
+};
+
+class AlbumSearchResultProvider extends SearchResultProvider<Album> {
+	constructor(token: string, query: string) {
+		super(async (anchor) => {
+			let response = await apiclient["GET:/albums/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.album_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
 	}
 };
 
@@ -4003,6 +4040,7 @@ class SearchResultsMerger {
 			discs
 		] as Array<SearchResultProvider<Entity>>;
 	}
+
 	async fetch(limit: number): Promise<Array<{ entity: Entity, rank: number }>> {
 		let entities = [] as Array<{ entity: Entity, rank: number }>;
 		while (entities.length < limit) {
