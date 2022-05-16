@@ -2987,38 +2987,31 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				.render();
 		});
 	} else if ((parts = /^video[/]shows[/]([^/?]*)/.exec(uri)) !== null) {
-		let query = decodeURIComponent(parts[1]);
-		let offset = 0;
-		let reachedEnd = new ObservableClass(false);
-		let isLoading = new ObservableClass(false);
+		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
 		let shows = new ArrayObservable<Show>([]);
-		let anchor = new ObservableClass(undefined as Show | undefined);
+		let provider: ShowSearchResultProvider | undefined;
 		async function load(): Promise<void> {
-			if (!reachedEnd.getState() && !isLoading.getState()) {
-				isLoading.updateState(true);
-				let response = await apiclient["GET:/shows/<query>"]({
-					options: {
-						query: query,
-						anchor: anchor.getState()?.show_id,
-						offset: offset,
-						token: token ?? ""
-					}
-				});
-				let payload = await response.payload();
-				for (let { entity } of payload.results) {
+			if (provider != null) {
+				let results = await provider.fetch();
+				for (let { entity } of results) {
 					shows.append(entity);
-					anchor.updateState(entity);
 				}
-				offset += payload.results.length;
-				if (payload.results.length === 0) {
-					reachedEnd.updateState(true);
-				}
-				isLoading.updateState(false);
 			}
 		};
+		window.requestAnimationFrame(() => {
+			query.addObserver((query) => {
+				replaceUrl(`video/shows/${encodeURIComponent(query)}`);
+				shows.update([]);
+				provider = new ShowSearchResultProvider(token ?? "", query);
+				load();
+			});
+		});
 		return xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Shows")))
+			)
+			.add(xml.element("div.content")
+				.add(makeSearchField(query))
 			)
 			.add(xml.element("div.content")
 				.add(Grid.make()
@@ -3887,6 +3880,22 @@ class PlaylistSearchResultProvider extends SearchResultProvider<Playlist> {
 					token,
 					query,
 					anchor: anchor?.playlist_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+	}
+};
+
+class ShowSearchResultProvider extends SearchResultProvider<Show> {
+	constructor(token: string, query: string) {
+		super(async (anchor) => {
+			let response = await apiclient["GET:/shows/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.show_id
 				}
 			});
 			let payload = await response.payload();
