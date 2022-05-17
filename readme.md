@@ -137,6 +137,14 @@ External image and metadata files may be used to supply additional information t
 }
 ```
 
+```
+{
+	"type": "artist",
+	"name": "Artist name",
+	"tidal"?: 12345
+}
+```
+
 The media probing system associates metadata on a folder basis meaning that external image and metadata files associate with every media file contained in the same directory.
 
 ## Playback protocol

@@ -565,6 +565,18 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 					})
 			);
 		}
+	} else if (apischema.objects.Artist.is(contextMenuEntity)) {
+		let tidal = contextMenuEntity.tidal;
+		if (is.present(tidal)) {
+			contextMenuItems.append(
+				xml.element("button")
+					.add(xml.text("TIDAL"))
+					.on("click", async () => {
+						window.open(`https://listen.tidal.com/artist/${tidal}/`);
+						showContextMenu.updateState(false);
+					})
+			);
+		}
 	}
 	showContextMenu.updateState(contextMenuItems.getState().length > 0);
 });

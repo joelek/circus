@@ -150,12 +150,27 @@ export type AlbumMetadata = autoguard.guards.Object<{
 	"copyright": autoguard.guards.String
 }>;
 
+export const ArtistMetadata: autoguard.serialization.MessageGuard<ArtistMetadata> = autoguard.guards.Object.of({
+	"type": autoguard.guards.StringLiteral.of("artist"),
+	"name": autoguard.guards.String
+}, {
+	"tidal": autoguard.guards.Number
+});
+
+export type ArtistMetadata = autoguard.guards.Object<{
+	"type": autoguard.guards.StringLiteral<"artist">,
+	"name": autoguard.guards.String
+}, {
+	"tidal": autoguard.guards.Number
+}>;
+
 export const Metadata: autoguard.serialization.MessageGuard<Metadata> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => ShowMetadata),
 	autoguard.guards.Reference.of(() => EpisodeMetadata),
 	autoguard.guards.Reference.of(() => MovieMetadata),
 	autoguard.guards.Reference.of(() => TrackMetadata),
-	autoguard.guards.Reference.of(() => AlbumMetadata)
+	autoguard.guards.Reference.of(() => AlbumMetadata),
+	autoguard.guards.Reference.of(() => ArtistMetadata)
 );
 
 export type Metadata = autoguard.guards.Union<[
@@ -163,7 +178,8 @@ export type Metadata = autoguard.guards.Union<[
 	autoguard.guards.Reference<EpisodeMetadata>,
 	autoguard.guards.Reference<MovieMetadata>,
 	autoguard.guards.Reference<TrackMetadata>,
-	autoguard.guards.Reference<AlbumMetadata>
+	autoguard.guards.Reference<AlbumMetadata>,
+	autoguard.guards.Reference<ArtistMetadata>
 ]>;
 
 export const AudioResource: autoguard.serialization.MessageGuard<AudioResource> = autoguard.guards.Object.of({
@@ -269,6 +285,7 @@ export namespace Autoguard {
 		"MovieMetadata": autoguard.guards.Reference.of(() => MovieMetadata),
 		"TrackMetadata": autoguard.guards.Reference.of(() => TrackMetadata),
 		"AlbumMetadata": autoguard.guards.Reference.of(() => AlbumMetadata),
+		"ArtistMetadata": autoguard.guards.Reference.of(() => ArtistMetadata),
 		"Metadata": autoguard.guards.Reference.of(() => Metadata),
 		"AudioResource": autoguard.guards.Reference.of(() => AudioResource),
 		"ImageResource": autoguard.guards.Reference.of(() => ImageResource),

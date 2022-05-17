@@ -64,7 +64,13 @@ guard AlbumMetadata: {
 	"copyright"?: string
 };
 
-guard Metadata: ShowMetadata | EpisodeMetadata | MovieMetadata | TrackMetadata | AlbumMetadata;
+guard ArtistMetadata: {
+	"type": "artist",
+	"name": string,
+	"tidal"?: number
+};
+
+guard Metadata: ShowMetadata | EpisodeMetadata | MovieMetadata | TrackMetadata | AlbumMetadata | ArtistMetadata;
 
 guard AudioResource: {
 	"type": "audio",

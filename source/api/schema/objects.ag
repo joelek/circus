@@ -9,12 +9,14 @@ guard Actor: ActorBase & {
 
 guard ArtistBase: {
 	"artist_id": string,
-	"title": string
+	"title": string,
+	"artwork": ../../database/schema/ImageFile[]
 };
 
 guard Artist: ArtistBase & {
 	"affinity": number,
-	"duration_ms": number
+	"duration_ms": number,
+	"tidal"?: number
 };
 
 guard ArtistContext: Artist & {

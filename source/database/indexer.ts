@@ -251,6 +251,19 @@ async function associateAlbumFiles(queue: WritableQueue, album_id: Uint8Array, .
 	}
 };
 
+async function associateArtistFiles(queue: WritableQueue, artist_id: Uint8Array, ...file_ids: Array<Uint8Array>): Promise<void> {
+	for (let file_id of file_ids) {
+		try {
+			let image_file = await stores.image_files.lookup(queue, { file_id });
+			await stores.artist_files.insert(queue, {
+				artist_id: artist_id,
+				...image_file
+			});
+			continue;
+		} catch (error) {}
+	}
+};
+
 async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, ...file_ids: Array<Uint8Array>): Promise<void> {
 	let metadata = probe.metadata;
 	if (probes.schema.ShowMetadata.is(metadata)) {
@@ -498,6 +511,15 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			}
 		}
 		await associateAlbumFiles(queue, album_id, ...file_ids);
+	} else if (probes.schema.ArtistMetadata.is(metadata)) {
+		let artist = metadata;
+		let artist_id = makeBinaryId("artist", artist.name);
+		await stores.artists.update(queue, {
+			artist_id: artist_id,
+			name: artist.name,
+			tidal: artist.tidal
+		});
+		await associateArtistFiles(queue, artist_id, ...file_ids);
 	}
 };
 
@@ -690,6 +712,14 @@ async function associateImages(queue: WritableQueue): Promise<void> {
 				for (let show_file of show_files) {
 					let show = await stores.shows.lookup(queue, show_file);
 					await associateShowFiles(queue, show.show_id, image_file.file_id);
+				}
+				continue;
+			}
+			let artist_files = await links.file_artist_files.filter(queue, sibling);
+			if (artist_files.length > 0) {
+				for (let artist_file of artist_files) {
+					let artist = await stores.artists.lookup(queue, artist_file);
+					await associateArtistFiles(queue, artist.artist_id, image_file.file_id);
 				}
 				continue;
 			}

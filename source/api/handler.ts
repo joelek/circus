@@ -147,9 +147,21 @@ export async function lookupAlbumContext(queue: ReadableQueue, album_id: string,
 
 export async function lookupArtistBase(queue: ReadableQueue, artist_id: string, api_user_id: string): Promise<schema.objects.ArtistBase> {
 	let artist = await atlas.stores.artists.lookup(queue, { artist_id: binid(artist_id) });
+	let artist_files = await atlas.links.artist_artist_files.filter(queue, artist);
+	let artwork = [] as Array<ImageFile>;
+	for (let artist_file of artist_files) {
+		try {
+			let image_file = await atlas.stores.image_files.lookup(queue, artist_file);
+			artwork.push({
+				...image_file,
+				file_id: hexid(image_file.file_id)
+			});
+		} catch (error) {}
+	}
 	return {
 		artist_id: hexid(artist.artist_id),
-		title: config.use_demo_mode ? "Artist name" : artist.name
+		title: config.use_demo_mode ? "Artist name" : artist.name,
+		artwork: artwork
 	};
 };
 
@@ -159,7 +171,8 @@ export async function lookupArtist(queue: ReadableQueue, artist_id: string, api_
 	return {
 		...artist_base,
 		affinity: atlas.adjustAffinity(artist.affinity),
-		duration_ms: artist.duration_ms
+		duration_ms: artist.duration_ms,
+		tidal: artist.tidal ?? undefined
 	};
 };
 

@@ -91,12 +91,22 @@ const artists = context.createStore({
 	artist_id: context.createBinaryField(),
 	name: context.createStringField({ searchable: true }),
 	affinity: context.createNumberField(),
-	duration_ms: context.createIntegerField()
+	duration_ms: context.createIntegerField(),
+	tidal: context.createNullableIntegerField()
 }, ["artist_id"], {
 	name: context.createIncreasingOrder()
 });
 
 export type Artist = atlas.RecordOf<typeof artists>;
+
+const artist_files = context.createStore({
+	artist_id: context.createBinaryField(),
+	file_id: context.createBinaryField()
+}, ["artist_id", "file_id"], {
+
+});
+
+export type ArtistFile = atlas.RecordOf<typeof artist_files>;
 
 const albums = context.createStore({
 	album_id: context.createBinaryField(),
@@ -765,6 +775,19 @@ const subtitle_file_video_subtitles = context.createLink(subtitle_files, video_s
 
 });
 
+
+const file_artist_files = context.createLink(files, artist_files, {
+	file_id: "file_id"
+}, {
+
+});
+
+const artist_artist_files = context.createLink(artists, artist_files, {
+	artist_id: "artist_id"
+}, {
+
+});
+
 const file_album_files = context.createLink(files, album_files, {
 	file_id: "file_id"
 }, {
@@ -1053,6 +1076,7 @@ export const transactionManager = context.createTransactionManager("./private/db
 	video_files,
 	video_subtitles,
 	artists,
+	artist_files,
 	albums,
 	album_files,
 	discs,
@@ -1105,6 +1129,8 @@ export const transactionManager = context.createTransactionManager("./private/db
 	file_video_files,
 	video_file_video_subtitles,
 	subtitle_file_video_subtitles,
+	artist_artist_files,
+	file_artist_files,
 	file_album_files,
 	album_album_files,
 	album_discs,

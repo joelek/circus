@@ -32,12 +32,14 @@ export type Actor = autoguard.guards.Intersection<[
 
 export const ArtistBase: autoguard.serialization.MessageGuard<ArtistBase> = autoguard.guards.Object.of({
 	"artist_id": autoguard.guards.String,
-	"title": autoguard.guards.String
+	"title": autoguard.guards.String,
+	"artwork": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ImageFile))
 }, {});
 
 export type ArtistBase = autoguard.guards.Object<{
 	"artist_id": autoguard.guards.String,
-	"title": autoguard.guards.String
+	"title": autoguard.guards.String,
+	"artwork": autoguard.guards.Array<autoguard.guards.Reference<ImageFile>>
 }, {}>;
 
 export const Artist: autoguard.serialization.MessageGuard<Artist> = autoguard.guards.Intersection.of(
@@ -45,7 +47,9 @@ export const Artist: autoguard.serialization.MessageGuard<Artist> = autoguard.gu
 	autoguard.guards.Object.of({
 		"affinity": autoguard.guards.Number,
 		"duration_ms": autoguard.guards.Number
-	}, {})
+	}, {
+		"tidal": autoguard.guards.Number
+	})
 );
 
 export type Artist = autoguard.guards.Intersection<[
@@ -53,7 +57,9 @@ export type Artist = autoguard.guards.Intersection<[
 	autoguard.guards.Object<{
 		"affinity": autoguard.guards.Number,
 		"duration_ms": autoguard.guards.Number
-	}, {}>
+	}, {
+		"tidal": autoguard.guards.Number
+	}>
 ]>;
 
 export const ArtistContext: autoguard.serialization.MessageGuard<ArtistContext> = autoguard.guards.Intersection.of(
