@@ -2925,6 +2925,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		}).then(async (response) => {
 			let payload = await response.payload();
 			let show = payload.show;
+			let actors = payload.actors;
 			let seasons = new ArrayObservable<Season>([]);
 			apiclient.getShowSeasons({
 				options: {
@@ -2957,9 +2958,9 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					.add(EntityCard.forShow(show, { compactDescription: false }))
 				)
 				.add(xml.element("div.content")
-					.set("data-hide", `${show.actors.length === 0}`)
+					.set("data-hide", `${actors.length === 0}`)
 					.set("style", "display: grid; gap: 16px;")
-					.add(...show.actors.slice(0, 3).map((actor) => EntityRow.forActor(actor)))
+					.add(...actors.slice(0, 3).map((actor) => EntityRow.forActor(actor)))
 				)
 				.add(xml.element("div.content")
 					.set("style", "display: grid; gap: 24px;")
@@ -3102,14 +3103,15 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			};
 			let payload = await response.payload();
 			let movie = payload.movie;
+			let actors = payload.actors;
 			return xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forMovie(movie, { compactDescription: false }))
 				)
 				.add(xml.element("div.content")
-					.set("data-hide", `${movie.actors.length === 0}`)
+					.set("data-hide", `${actors.length === 0}`)
 					.set("style", "display: grid; gap: 16px;")
-					.add(...movie.actors.slice(0, 3).map((actor) => EntityRow.forActor(actor)))
+					.add(...actors.slice(0, 3).map((actor) => EntityRow.forActor(actor)))
 				)
 				.add(xml.element("div.content")
 					.bind("data-hide", movies.compute((movies) => movies.length === 0))

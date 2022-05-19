@@ -342,9 +342,11 @@ export const server = apiv2.makeServer({
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
 		let movie = await handler.lookupMovie(queue, options.movie_id, user_id);
+		let actors = await handler.lookupMovieActors(queue, options.movie_id, user_id, undefined, 5);
 		return {
 			payload: {
-				movie
+				movie,
+				actors
 			}
 		};
 	}),
@@ -365,6 +367,16 @@ export const server = apiv2.makeServer({
 		return {
 			payload: {
 				context
+			}
+		};
+	}),
+	getMovieActors: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let actors = await handler.lookupMovieActors(queue, options.movie_id, user_id, options.anchor, options.limit ?? 12);
+		return {
+			payload: {
+				actors
 			}
 		};
 	}),
@@ -470,9 +482,11 @@ export const server = apiv2.makeServer({
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
 		let show = await handler.lookupShow(queue, options.show_id, user_id);
+		let actors = await handler.lookupShowActors(queue, options.show_id, user_id, undefined, 5);
 		return {
 			payload: {
-				show
+				show,
+				actors
 			}
 		};
 	}),
@@ -494,6 +508,16 @@ export const server = apiv2.makeServer({
 		return {
 			payload: {
 				context
+			}
+		};
+	}),
+	getShowActors: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let actors = await handler.lookupShowActors(queue, options.show_id, user_id, options.anchor, options.limit ?? 12);
+		return {
+			payload: {
+				actors
 			}
 		};
 	}),

@@ -184,7 +184,8 @@ route getNewMovies(): GET:/movies/new/ ? <{ token: plain, anchor?: plain, offset
 
 route GET:/movies/<movie_id:string>/ ? <{ token: string }>
 	=> {
-		movie: ./objects/Movie
+		movie: ./objects/Movie,
+		actors: ./objects/Actor[]
 	};
 
 route GET:/movies/<movie_id:string>/suggestions/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
@@ -195,6 +196,11 @@ route GET:/movies/<movie_id:string>/suggestions/ ? <{ token: string, anchor?: pl
 route getMovieContext(): GET:/movies/<movie_id:string>/context/ ? <{ token: string }>
 	=> {
 		context: ./objects/MovieContext
+	};
+
+route getMovieActors(): GET:/movies/<movie_id:plain>/actors/ ? <{ token: plain, anchor?: plain, limit?: number }>
+	=> {
+		actors: ./objects/Actor[]
 	};
 
 guard PlaylistResult: {
@@ -261,7 +267,8 @@ route GET:/shows/<query:string> ? <{ token: string, anchor?: plain, offset?: num
 
 route GET:/shows/<show_id:string>/ ? <{ token: string }>
 	=> {
-		show: ./objects/Show
+		show: ./objects/Show,
+		actors: ./objects/Actor[]
 	};
 
 route getShowSeasons(): GET:/shows/<show_id:string>/seasons/ ? <{ token: string }>
@@ -272,6 +279,11 @@ route getShowSeasons(): GET:/shows/<show_id:string>/seasons/ ? <{ token: string 
 route getShowContext(): GET:/shows/<show_id:string>/context/ ? <{ token: string }>
 	=> {
 		context: ./objects/ShowContext
+	};
+
+route getShowActors(): GET:/shows/<show_id:plain>/actors/ ? <{ token: plain, anchor?: plain, limit?: number }>
+	=> {
+		actors: ./objects/Actor[]
 	};
 
 guard TrackResult: {

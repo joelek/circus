@@ -362,7 +362,6 @@ export const Movie: autoguard.serialization.MessageGuard<Movie> = autoguard.guar
 	autoguard.guards.Reference.of(() => MovieBase),
 	autoguard.guards.Object.of({
 		"genres": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => GenreBase)),
-		"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ActorBase)),
 		"media": autoguard.guards.Reference.of(() => VideoFile),
 		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile)),
 		"affinity": autoguard.guards.Number,
@@ -380,7 +379,6 @@ export type Movie = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<MovieBase>,
 	autoguard.guards.Object<{
 		"genres": autoguard.guards.Array<autoguard.guards.Reference<GenreBase>>,
-		"actors": autoguard.guards.Array<autoguard.guards.Reference<ActorBase>>,
 		"media": autoguard.guards.Reference<VideoFile>,
 		"subtitles": autoguard.guards.Array<autoguard.guards.Reference<SubtitleFile>>,
 		"affinity": autoguard.guards.Number,
@@ -420,7 +418,6 @@ export const Show: autoguard.serialization.MessageGuard<Show> = autoguard.guards
 	autoguard.guards.Reference.of(() => ShowBase),
 	autoguard.guards.Object.of({
 		"genres": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => GenreBase)),
-		"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ActorBase)),
 		"affinity": autoguard.guards.Number,
 		"duration_ms": autoguard.guards.Number
 	}, {
@@ -433,7 +430,6 @@ export type Show = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<ShowBase>,
 	autoguard.guards.Object<{
 		"genres": autoguard.guards.Array<autoguard.guards.Reference<GenreBase>>,
-		"actors": autoguard.guards.Array<autoguard.guards.Reference<ActorBase>>,
 		"affinity": autoguard.guards.Number,
 		"duration_ms": autoguard.guards.Number
 	}, {

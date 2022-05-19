@@ -714,6 +714,24 @@ export namespace Autoguard {
 			),
 			"payload": autoguard.api.Binary
 		}),
+		"getMovieActors": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"movie_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {
+					"anchor": autoguard.guards.String,
+					"limit": autoguard.guards.Number
+				}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
 		"GET:/playlists/<query>": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
@@ -897,6 +915,24 @@ export namespace Autoguard {
 					"show_id": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getShowActors": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"show_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {
+					"anchor": autoguard.guards.String,
+					"limit": autoguard.guards.Number
+				}),
 				autoguard.api.Options
 			)
 		}, {
@@ -1518,7 +1554,8 @@ export namespace Autoguard {
 		}),
 		"GET:/movies/<movie_id>/": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"movie": autoguard.guards.Reference.of(() => Movie)
+				"movie": autoguard.guards.Reference.of(() => Movie),
+				"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -1541,6 +1578,17 @@ export namespace Autoguard {
 		"getMovieContext": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
 				"context": autoguard.guards.Reference.of(() => MovieContext)
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getMovieActors": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -1653,7 +1701,8 @@ export namespace Autoguard {
 		}),
 		"GET:/shows/<show_id>/": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"show": autoguard.guards.Reference.of(() => Show)
+				"show": autoguard.guards.Reference.of(() => Show),
+				"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
@@ -1676,6 +1725,17 @@ export namespace Autoguard {
 		"getShowContext": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
 				"context": autoguard.guards.Reference.of(() => ShowContext)
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getShowActors": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,

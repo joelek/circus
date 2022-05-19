@@ -134,7 +134,6 @@ guard Movie: MovieBase & {
 	"year"?: YearBase,
 	"summary"?: string,
 	"genres": GenreBase[],
-	"actors": ActorBase[],
 	"last_stream_date"?: number,
 	"media": ../../database/schema/VideoFile,
 	"subtitles": ../../database/schema/SubtitleFile[],
@@ -157,7 +156,6 @@ guard ShowBase: {
 guard Show: ShowBase & {
 	"summary"?: string,
 	"genres": GenreBase[],
-	"actors": ActorBase[],
 	"imdb"?: string,
 	"affinity": number,
 	"duration_ms": number

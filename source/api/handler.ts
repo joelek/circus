@@ -395,8 +395,6 @@ export async function lookupMovie(queue: ReadableQueue, movie_id: string, api_us
 		summary: config.use_demo_mode ? "Movie summary." : movie.summary ?? undefined,
 		genres: await Promise.all((await atlas.links.movie_movie_genres.filter(queue, movie))
 			.map((record) => lookupGenreBase(queue, hexid(record.genre_id), api_user_id))),
-		actors: await Promise.all((await atlas.links.movie_movie_actors.filter(queue, movie))
-			.map((record) => lookupActorBase(queue, hexid(record.actor_id), api_user_id))),
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: {
 			...video_file,
@@ -416,6 +414,12 @@ export async function lookupMovie(queue: ReadableQueue, movie_id: string, api_us
 
 export async function lookupMovieContext(queue: ReadableQueue, movie_id: string, api_user_id: string): Promise<schema.objects.MovieContext> {
 	return lookupMovie(queue, movie_id, api_user_id);
+};
+
+export async function lookupMovieActors(queue: ReadableQueue, movie_id: string, api_user_id: string, anchor: string | undefined, limit: number | undefined): Promise<Array<schema.objects.Actor>> {
+	let actors = await Promise.all((await atlas.links.movie_movie_actors.filter(queue, { movie_id: binid(movie_id) }, anchor != null ? { movie_id: binid(movie_id), actor_id: binid(anchor) } : undefined, limit))
+		.map((record) => lookupActor(queue, hexid(record.actor_id), api_user_id)));
+	return actors;
 };
 
 export async function lookupActorBase(queue: ReadableQueue, actor_id: string, api_user_id: string): Promise<schema.objects.ActorBase> {
@@ -558,8 +562,6 @@ export async function lookupShow(queue: ReadableQueue, show_id: string, api_user
 		summary: config.use_demo_mode ? "Show summary." : show.summary ?? undefined,
 		genres: await Promise.all((await atlas.links.show_show_genres.filter(queue, show))
 			.map((show_genre) => lookupGenreBase(queue, hexid(show_genre.genre_id), api_user_id))),
-		actors: await Promise.all((await atlas.links.show_show_actors.filter(queue, show))
-			.map((show_actor) => lookupActorBase(queue, hexid(show_actor.actor_id), api_user_id))),
 		imdb: show.imdb ?? undefined,
 		affinity: atlas.adjustAffinity(show.affinity),
 		duration_ms: show.duration_ms
@@ -580,6 +582,12 @@ export async function lookupShowContext(queue: ReadableQueue, show_id: string, a
 		...show,
 		seasons
 	};
+};
+
+export async function lookupShowActors(queue: ReadableQueue, show_id: string, api_user_id: string, anchor: string | undefined, limit: number | undefined): Promise<Array<schema.objects.Actor>> {
+	let actors = await Promise.all((await atlas.links.show_show_actors.filter(queue, { show_id: binid(show_id) }, anchor != null ? { show_id: binid(show_id), actor_id: binid(anchor) } : undefined, limit))
+		.map((record) => lookupActor(queue, hexid(record.actor_id), api_user_id)));
+	return actors;
 };
 
 export async function lookupSubtitleBase(queue: ReadableQueue, subtitle_id: string, user_id: string): Promise<schema.objects.SubtitleBase> {
