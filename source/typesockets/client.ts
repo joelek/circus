@@ -127,7 +127,7 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	}
 
 	removeEventListener<B extends keyof TypeSocketClientMessageMap<A>, C extends keyof TypeSocketClientMessageMap<A>[B]>(namespace: B, type: C, listener: stdlib.routing.MessageObserver<TypeSocketClientMessageMap<A>[B][C]>): void {
-		this.router.addObserver(namespace, type, listener);
+		this.router.removeObserver(namespace, type, listener);
 	}
 
 	request<B extends keyof A, C extends keyof A>(type: B, response_type: C, data: A[B]): Promise<A[C]> {
@@ -135,7 +135,6 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 			let id = this.makeId();
 			let payload = this.serializer.serialize(type, data, id);
 			this.requests.set(id, (type, data) => {
-
 				if (type !== response_type) {
 					reject(`Received response with type "${type}" when expecting "${response_type}"!`);
 				} else {

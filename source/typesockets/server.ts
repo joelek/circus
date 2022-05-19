@@ -108,7 +108,7 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 	}
 
 	removeEventListener<B extends keyof TypeSocketServerMessageMap<A>, C extends keyof TypeSocketServerMessageMap<A>[B]>(namespace: B, type: C, listener: stdlib.routing.MessageObserver<TypeSocketServerMessageMap<A>[B][C]>): void {
-		this.router.addObserver(namespace, type, listener);
+		this.router.removeObserver(namespace, type, listener);
 	}
 
 	respond<B extends keyof A>(message: { connection_id: string, id?: string }, type: B, data: A[B]): void {
