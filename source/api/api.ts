@@ -164,7 +164,7 @@ export const server = apiv2.makeServer({
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
 		let artist = await handler.lookupArtist(queue, options.artist_id, user_id);
-		let tracks = await handler.getArtistTracks(queue, options.artist_id, 0, 3, user_id);
+		let tracks = await handler.getArtistTracks(queue, options.artist_id, 0, 5, user_id);
 		let appearances = await handler.getArtistAppearances(queue, options.artist_id, 0, 24, user_id);
 		return {
 			payload: {
