@@ -44,7 +44,8 @@ guard TrackMetadata: {
 	"album": {
 		"title": string,
 		"year"?: number,
-		"artists": string[]
+		"artists": string[],
+		"tidal"?: number
 	},
 	"artists": string[],
 	"copyright"?: string
@@ -61,7 +62,8 @@ guard AlbumMetadata: {
 		"artists": string[],
 		"copyright"?: string
 	}[],
-	"copyright"?: string
+	"copyright"?: string,
+	"tidal"?: number
 };
 
 guard ArtistMetadata: {

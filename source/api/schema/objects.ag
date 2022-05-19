@@ -34,7 +34,8 @@ guard Album: AlbumBase & {
 	"year"?: YearBase,
 	"copyright"?: string,
 	"affinity": number,
-	"duration_ms": number
+	"duration_ms": number,
+	"tidal"?: number
 };
 
 guard AlbumContext: Album & {

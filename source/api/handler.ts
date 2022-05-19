@@ -125,7 +125,8 @@ export async function lookupAlbum(queue: ReadableQueue, album_id: string, api_us
 			.map((record) => lookupArtistBase(queue, hexid(record.artist_id), api_user_id))),
 		year: album.year_id != null ? await lookupYearBase(queue, hexid(album.year_id), api_user_id) : undefined,
 		affinity: atlas.adjustAffinity(album.affinity),
-		duration_ms: album.duration_ms
+		duration_ms: album.duration_ms,
+		tidal: album.tidal ?? undefined
 	};
 };
 

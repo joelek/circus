@@ -106,7 +106,8 @@ External image and metadata files may be used to supply additional information t
 		"year"?: 2000,
 		"artists": [
 			"Artist name"
-		]
+		],
+		"tidal"?: 12345
 	},
 	"artists": [
 		"Artist name"
@@ -133,7 +134,8 @@ External image and metadata files may be used to supply additional information t
 			"copyright"?: "Copyright information"
 		}
 	],
-	"copyright"?: "Copyright information"
+	"copyright"?: "Copyright information",
+	"tidal"?: 12345
 }
 ```
 

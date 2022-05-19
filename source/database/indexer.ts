@@ -413,7 +413,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		await stores.albums.update(queue, {
 			album_id: album_id,
 			title: metadata.album.title,
-			year_id: year_id ?? null
+			year_id: year_id ?? null,
+			tidal: metadata.album.tidal
 		});
 		for (let [index, artist] of metadata.album.artists.entries()) {
 			let artist_id = makeBinaryId("artist", artist);
@@ -468,7 +469,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			album_id: album_id,
 			title: metadata.title,
 			copyright: metadata.copyright,
-			year_id: year_id ?? null
+			year_id: year_id ?? null,
+			tidal: metadata.tidal
 		});
 		for (let [index, artist] of metadata.artists.entries()) {
 			let artist_id = makeBinaryId("artist", artist);

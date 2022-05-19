@@ -96,7 +96,8 @@ export const Album: autoguard.serialization.MessageGuard<Album> = autoguard.guar
 		"duration_ms": autoguard.guards.Number
 	}, {
 		"year": autoguard.guards.Reference.of(() => YearBase),
-		"copyright": autoguard.guards.String
+		"copyright": autoguard.guards.String,
+		"tidal": autoguard.guards.Number
 	})
 );
 
@@ -108,7 +109,8 @@ export type Album = autoguard.guards.Intersection<[
 		"duration_ms": autoguard.guards.Number
 	}, {
 		"year": autoguard.guards.Reference<YearBase>,
-		"copyright": autoguard.guards.String
+		"copyright": autoguard.guards.String,
+		"tidal": autoguard.guards.Number
 	}>
 ]>;
 

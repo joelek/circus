@@ -115,7 +115,8 @@ const albums = context.createStore({
 	copyright: context.createNullableStringField(),
 	timestamp_ms: context.createNullableIntegerField(),
 	affinity: context.createNumberField(),
-	duration_ms: context.createIntegerField()
+	duration_ms: context.createIntegerField(),
+	tidal: context.createNullableIntegerField()
 }, ["album_id"], {
 	title: context.createIncreasingOrder()
 });
