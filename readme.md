@@ -214,7 +214,6 @@ Ports, paths and other settings can be configured through altering the config fi
 * Make color scheme and project name configurable.
 * Structure code using subprojects.
 * Clear player state when the user logs out.
-* Store create and update timestamps for entities.
 * Add account tiers to keys and users.
 * Create full screen player with additional controls and graphics.
 * Set document title based on page.
@@ -227,6 +226,5 @@ Ports, paths and other settings can be configured through altering the config fi
 * Add shuffle and repeat features to player.
 * Index content at regular one hour intervals when inactive.
 * Verify external track metadata functionality.
-* Add filter to entity pages.
 * Change line heights to prevent the truncation of capital letters with umlauts.
 * Index keyframes and create movie and episode subpage with list.
