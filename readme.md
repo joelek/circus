@@ -223,7 +223,6 @@ Ports, paths and other settings can be configured through altering the config fi
 * Index generated images.
 * Move authentication to typesockets.
 * Add synchronization to playback protocol.
-* Add shuffle and repeat features to player.
 * Index content at regular one hour intervals when inactive.
 * Verify external track metadata functionality.
 * Change line heights to prevent the truncation of capital letters with umlauts.

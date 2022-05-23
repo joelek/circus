@@ -98,7 +98,9 @@ export type Device = autoguard.guards.Object<{
 }, {}>;
 
 export const Session: autoguard.serialization.MessageGuard<Session> = autoguard.guards.Object.of({
-	"playback": autoguard.guards.Boolean
+	"playback": autoguard.guards.Boolean,
+	"repeat": autoguard.guards.Boolean,
+	"shuffle": autoguard.guards.Boolean
 }, {
 	"context": autoguard.guards.Reference.of(() => Context),
 	"device": autoguard.guards.Reference.of(() => Device),
@@ -107,7 +109,9 @@ export const Session: autoguard.serialization.MessageGuard<Session> = autoguard.
 });
 
 export type Session = autoguard.guards.Object<{
-	"playback": autoguard.guards.Boolean
+	"playback": autoguard.guards.Boolean,
+	"repeat": autoguard.guards.Boolean,
+	"shuffle": autoguard.guards.Boolean
 }, {
 	"context": autoguard.guards.Reference<Context>,
 	"device": autoguard.guards.Reference<Device>,

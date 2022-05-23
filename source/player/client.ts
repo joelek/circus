@@ -15,14 +15,16 @@ export class ContextClient {
 	readonly isDeviceRemote = new observers.ObservableClass(false);
 	readonly context = new observers.ObservableClass(undefined as schema.objects.Context | undefined);
 	readonly contextPath = new observers.ObservableClass(undefined as string[] | undefined);
+	readonly shuffle = new observers.ObservableClass(false);
+	readonly repeat = new observers.ObservableClass(false);
 	readonly flattenedContext = new observers.ObservableClass(undefined as schema.objects.ContextItem[] | undefined);
-	readonly lastIndex = new observers.ObservableClass(undefined as number | undefined);
+	readonly lastEntryIndex = new observers.ObservableClass(undefined as number | undefined);
 	readonly lastEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
 	readonly lastLocalEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
-	readonly currentIndex = new observers.ObservableClass(undefined as number | undefined);
+	readonly currentEntryIndex = new observers.ObservableClass(undefined as number | undefined);
 	readonly currentEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
 	readonly currentLocalEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
-	readonly nextIndex = new observers.ObservableClass(undefined as number | undefined);
+	readonly nextEntryIndex = new observers.ObservableClass(undefined as number | undefined);
 	readonly nextEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
 	readonly nextLocalEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
 	readonly playback = new observers.ObservableClass(false);
@@ -36,7 +38,7 @@ export class ContextClient {
 
 	private sendPlay(context: schema.objects.Context, index: number): void {
 		this.context.updateState(context);
-		this.currentIndex.updateState(index);
+		this.currentEntryIndex.updateState(index);
 		this.playback.updateState(true);
 		this.isCurrentEntryVideo.updateState(false);
 		this.tsc.send("SetContext", {
@@ -118,11 +120,11 @@ export class ContextClient {
 		{
 			let computer = () => {
 				let context = this.context.getState();
-				let currentIndex = this.currentIndex.getState();
-				if (is.present(context) && is.present(currentIndex)) {
+				let currentEntryIndex = this.currentEntryIndex.getState();
+				if (is.present(context) && is.present(currentEntryIndex)) {
 					if (schema.objects.ContextAlbum.is(context)) {
 						let discIndex = 0;
-						let trackIndex = currentIndex;
+						let trackIndex = currentEntryIndex;
 						let album = context;
 						let discs = album.discs;
 						for (let d = 0; d < discs.length; d++) {
@@ -142,7 +144,7 @@ export class ContextClient {
 					} else if (schema.objects.ContextArtist.is(context)) {
 						let albumIndex = 0;
 						let discIndex = 0;
-						let trackIndex = currentIndex;
+						let trackIndex = currentEntryIndex;
 						let artist = context;
 						let albums = artist.albums;
 						outer: for (let a = 0; a < albums.length; a++) {
@@ -174,14 +176,14 @@ export class ContextClient {
 							context.movie_id
 						].filter(is.present));
 					} else if (schema.objects.ContextPlaylist.is(context)) {
-						let itemIndex = currentIndex;
+						let itemIndex = currentEntryIndex;
 						return this.contextPath.updateState([
 							context.playlist_id,
 							context.items[itemIndex]?.track.track_id
 						].filter(is.present));
 					} else if (schema.objects.ContextShow.is(context)) {
 						let seasonIndex = 0;
-						let episodeIndex = currentIndex;
+						let episodeIndex = currentEntryIndex;
 						let show = context;
 						let seasons = show.seasons;
 						for (let d = 0; d < seasons.length; d++) {
@@ -199,7 +201,7 @@ export class ContextClient {
 							context.seasons[seasonIndex]?.episodes[episodeIndex]?.episode_id
 						].filter(is.present));
 					} else if (schema.objects.ContextSeason.is(context)) {
-						let episodeIndex = currentIndex;
+						let episodeIndex = currentEntryIndex;
 						return this.contextPath.updateState([
 							context.season_id,
 							context.episodes[episodeIndex]?.episode_id
@@ -215,7 +217,7 @@ export class ContextClient {
 				this.contextPath.updateState(undefined);
 			};
 			this.context.addObserver(computer);
-			this.currentIndex.addObserver(computer);
+			this.currentEntryIndex.addObserver(computer);
 		}
 		this.lastEntry.addObserver((lastEntry) => {
 			this.canPlayLast.updateState(is.present(lastEntry));
@@ -314,70 +316,93 @@ export class ContextClient {
 		{
 			let computer = () => {
 				let flattenedContext = this.flattenedContext.getState();
-				let currentIndex = this.currentIndex.getState();
-				if (is.present(flattenedContext) && is.present(currentIndex)) {
-					let index = currentIndex - 1;
-					if (index >= 0 && index < flattenedContext.length) {
-						return this.lastIndex.updateState(index);
+				let currentEntryIndex = this.currentEntryIndex.getState();
+				let shuffle = this.shuffle.getState();
+				let repeat = this.repeat.getState();
+				let lastEntryIndex: number | undefined;
+				if (is.present(flattenedContext) && is.present(currentEntryIndex)) {
+					if (shuffle) {
+					} else {
+						let index = currentEntryIndex - 1;
+						if (repeat) {
+							index = (index + flattenedContext.length) % flattenedContext.length;
+						}
+						lastEntryIndex = index;
 					}
 				}
-				return this.lastIndex.updateState(undefined);
+				return this.lastEntryIndex.updateState(lastEntryIndex);
 			};
 			this.flattenedContext.addObserver(computer);
-			this.currentIndex.addObserver(computer);
+			this.currentEntryIndex.addObserver(computer);
+			this.shuffle.addObserver(computer);
+			this.repeat.addObserver(computer);
 		}
 		{
 			let computer = () => {
 				let flattenedContext = this.flattenedContext.getState();
-				let currentIndex = this.currentIndex.getState();
-				if (is.present(flattenedContext) && is.present(currentIndex)) {
-					let index = currentIndex + 1;
-					if (index >= 0 && index < flattenedContext.length) {
-						return this.nextIndex.updateState(index);
+				let currentEntryIndex = this.currentEntryIndex.getState();
+				let shuffle = this.shuffle.getState();
+				let repeat = this.repeat.getState();
+				let nextEntryIndex: number | undefined;
+				if (is.present(flattenedContext) && is.present(currentEntryIndex)) {
+					if (shuffle) {
+						nextEntryIndex = Math.floor(Math.random() * flattenedContext.length);
+					} else {
+						let index = currentEntryIndex + 1;
+						if (repeat) {
+							index = index % flattenedContext.length;
+						}
+						nextEntryIndex = index;
 					}
 				}
-				return this.nextIndex.updateState(undefined);
+				return this.nextEntryIndex.updateState(nextEntryIndex);
 			};
 			this.flattenedContext.addObserver(computer);
-			this.currentIndex.addObserver(computer);
+			this.currentEntryIndex.addObserver(computer);
+			this.shuffle.addObserver(computer);
+			this.repeat.addObserver(computer);
 		}
 		{
 			let computer = () => {
 				let flattenedContext = this.flattenedContext.getState();
-				let lastIndex = this.lastIndex.getState();
-				if (is.present(flattenedContext) && is.present(lastIndex)) {
-					return this.lastEntry.updateState(flattenedContext[lastIndex]);
+				let lastEntryIndex = this.lastEntryIndex.getState();
+				if (is.present(flattenedContext) && is.present(lastEntryIndex)) {
+					if (lastEntryIndex >= 0 && lastEntryIndex < flattenedContext.length) {
+						return this.lastEntry.updateState(flattenedContext[lastEntryIndex]);
+					}
 				}
 				return this.lastEntry.updateState(undefined);
 			};
 			this.flattenedContext.addObserver(computer);
-			this.lastIndex.addObserver(computer);
+			this.lastEntryIndex.addObserver(computer);
 		}
 		{
 			let computer = () => {
 				let flattenedContext = this.flattenedContext.getState();
-				let contextIndex = this.currentIndex.getState();
-				if (is.present(flattenedContext) && is.present(contextIndex)) {
-					if (contextIndex >= 0 && contextIndex + 0 < flattenedContext.length) {
-						return this.currentEntry.updateState(flattenedContext[contextIndex + 0]);
+				let currentEntryIndex = this.currentEntryIndex.getState();
+				if (is.present(flattenedContext) && is.present(currentEntryIndex)) {
+					if (currentEntryIndex >= 0 && currentEntryIndex < flattenedContext.length) {
+						return this.currentEntry.updateState(flattenedContext[currentEntryIndex]);
 					}
 				}
 				return this.currentEntry.updateState(undefined);
 			};
 			this.flattenedContext.addObserver(computer);
-			this.currentIndex.addObserver(computer);
+			this.currentEntryIndex.addObserver(computer);
 		}
 		{
 			let computer = () => {
 				let flattenedContext = this.flattenedContext.getState();
-				let nextIndex = this.nextIndex.getState();
-				if (is.present(flattenedContext) && is.present(nextIndex)) {
-					return this.nextEntry.updateState(flattenedContext[nextIndex]);
+				let nextEntryIndex = this.nextEntryIndex.getState();
+				if (is.present(flattenedContext) && is.present(nextEntryIndex)) {
+					if (nextEntryIndex >= 0 && nextEntryIndex < flattenedContext.length) {
+						return this.nextEntry.updateState(flattenedContext[nextEntryIndex]);
+					}
 				}
 				return this.nextEntry.updateState(undefined);
 			};
 			this.flattenedContext.addObserver(computer);
-			this.nextIndex.addObserver(computer);
+			this.nextEntryIndex.addObserver(computer);
 		}
 		this.tsc.addEventListener("app", "SetLocalDevice", (message) => {
 			this.localDevice.updateState(message.device);
@@ -392,7 +417,7 @@ export class ContextClient {
 			this.device.updateState(message.device);
 		});
 		this.tsc.addEventListener("app", "SetIndex", (message) => {
-			this.currentIndex.updateState(message.index);
+			this.currentEntryIndex.updateState(message.index);
 		});
 		this.tsc.addEventListener("app", "SetPlayback", (message) => {
 			this.playback.updateState(message.playback);
@@ -400,13 +425,19 @@ export class ContextClient {
 		this.tsc.addEventListener("app", "SetProgress", (message) => {
 			this.progress.updateState(message.progress);
 		});
+		this.tsc.addEventListener("app", "SetRepeat", (message) => {
+			this.repeat.updateState(message.repeat);
+		});
+		this.tsc.addEventListener("app", "SetShuffle", (message) => {
+			this.shuffle.updateState(message.shuffle);
+		});
 		this.tsc.addEventListener("app", "SetToken", (message) => {
 			this.token.updateState(message.token);
 		});
 		this.isOnline.addObserver((isOnline) => {
 			if (!isOnline) {
 				this.context.updateState(undefined);
-				this.currentIndex.updateState(undefined);
+				this.currentEntryIndex.updateState(undefined);
 				this.playback.updateState(false);
 				this.progress.updateState(undefined);
 			}
@@ -429,11 +460,12 @@ export class ContextClient {
 	}
 
 	last(): void {
-		let lastIndex = this.lastIndex.getState();
-		if (is.present(lastIndex)) {
-			this.currentIndex.updateState(lastIndex);
+		let lastEntryIndex = this.lastEntryIndex.getState();
+		if (is.present(lastEntryIndex)) {
+			this.currentEntryIndex.updateState(undefined);
+			this.currentEntryIndex.updateState(lastEntryIndex);
 			this.tsc.send("SetIndex", {
-				index: lastIndex
+				index: lastEntryIndex
 			});
 		} else {
 			this.pause();
@@ -441,11 +473,12 @@ export class ContextClient {
 	}
 
 	next(): void {
-		let nextIndex = this.nextIndex.getState();
-		if (is.present(nextIndex)) {
-			this.currentIndex.updateState(nextIndex);
+		let nextEntryIndex = this.nextEntryIndex.getState();
+		if (is.present(nextEntryIndex)) {
+			this.currentEntryIndex.updateState(undefined);
+			this.currentEntryIndex.updateState(nextEntryIndex);
 			this.tsc.send("SetIndex", {
-				index: nextIndex
+				index: nextEntryIndex
 			});
 		} else {
 			this.pause();
@@ -595,12 +628,28 @@ export class ContextClient {
 		});
 	}
 
-	toggle(): void {
+	togglePlayback(): void {
 		if (this.playback.getState()) {
 			this.pause();
 		} else {
 			this.resume();
 		}
+	}
+
+	toggleRepeat(): void {
+		let repeat = !this.repeat.getState();
+		this.repeat.updateState(repeat);
+		this.tsc.send("SetRepeat", {
+			repeat: repeat
+		});
+	}
+
+	toggleShuffle(): void {
+		let shuffle = !this.shuffle.getState();
+		this.shuffle.updateState(shuffle);
+		this.tsc.send("SetShuffle", {
+			shuffle: shuffle
+		});
 	}
 
 	transfer(device?: schema.objects.Device): void {

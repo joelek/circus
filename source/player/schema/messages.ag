@@ -26,6 +26,14 @@ guard SetProgress: {
 	"progress"?: number
 };
 
+guard SetRepeat: {
+	"repeat": boolean
+};
+
+guard SetShuffle: {
+	"shuffle": boolean
+};
+
 guard SetToken: {
 	"token"?: string
 };

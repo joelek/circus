@@ -72,7 +72,7 @@ window.addEventListener("keydown", (event) => {
 		}
 		event.preventDefault();
 		event.stopPropagation();
-		player.toggle();
+		player.togglePlayback();
 	} else if (event.code === "Escape") {
 		event.preventDefault();
 		event.stopPropagation();
@@ -1051,6 +1051,7 @@ style.innerText = `
 	}
 
 	.media-player__controls {
+		align-items: center;
 		display: grid;
 		gap: 8px;
 		grid-auto-columns: minmax(auto, min-content);
@@ -1058,7 +1059,10 @@ style.innerText = `
 	}
 
 	.media-player__bottom {
-
+		align-items: center;
+		display: grid;
+		gap: 16px;
+		grid-template-columns: min-content auto min-content;
 	}
 
 	.media-player__progress {
@@ -1096,7 +1100,7 @@ style.innerText = `
 		cursor: pointer;
 		fill: rgb(31, 31, 31);
 		padding: 8px;
-		transition: background-color 0.125s, transform 0.125s;
+		transition: background-color 0.125s, fill 0.125s, transform 0.125s;
 	}
 
 	.icon-button[data-enabled="false"] {
@@ -1117,6 +1121,14 @@ style.innerText = `
 	.icon-button[data-active="true"] {
 		background-color: ${ACCENT_COLOR};
 		fill: rgb(255, 255, 255);
+	}
+
+	.icon-button--flat[data-active="false"] {
+		fill: rgb(31, 31, 31);
+	}
+
+	.icon-button--flat[data-active="true"] {
+		fill: ${ACCENT_COLOR};
 	}
 
 	@media (hover: hover) and (pointer: fine) {
@@ -1164,7 +1176,7 @@ style.innerText = `
 	.app__content {
 		background-color: rgb(31, 31, 31);
 		overflow: hidden;
-		padding: 64px 0px 112px 0px;
+		padding: 64px 0px 120px 0px;
 		position: relative;
 		z-index: 0;
 	}
@@ -1915,7 +1927,7 @@ let mpw = xml.element("div.app__navigation")
 		.bind("data-hide", player.isOnline.addObserver((isOnline) => isOnline))
 		.add(xml.element("div.offline-indicator")
 			.add(xml.element("div.offline-indicator__content")
-				.add(xml.text("The application is currently offline."))
+				.add(xml.text("The server is currently offline."))
 			)
 		)
 	)
@@ -2061,7 +2073,7 @@ let mp = xml.element("div.content")
 						}))
 					)
 					.on("click", () => {
-						player.toggle();
+						player.togglePlayback();
 					})
 				)
 				.add(makeButton()
@@ -2074,7 +2086,27 @@ let mp = xml.element("div.content")
 			)
 		)
 		.add(xml.element("div.media-player__bottom")
+			.add(makeButton({ style: "flat" })
+				.bind("data-active", player.shuffle.addObserver(a => a))
+				.add(Icon.makeShuffle()
+						.set("width", "16px")
+						.set("height", "16px")
+				)
+				.on("click", () => {
+					player.toggleShuffle();
+				})
+			)
 			.add(progress)
+			.add(makeButton({ style: "flat" })
+				.bind("data-active", player.repeat.addObserver(a => a))
+				.add(Icon.makeRepeat()
+						.set("width", "16px")
+						.set("height", "16px")
+				)
+				.on("click", () => {
+					player.toggleRepeat();
+				})
+			)
 		)
 	)
 	.render();

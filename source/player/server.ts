@@ -59,6 +59,8 @@ export class ContextServer {
 		}
 		const session: Session = {
 			playback: false,
+			repeat: false,
+			shuffle: false,
 			devices: new observers.ObservableClass(new Array<schema.objects.Device>())
 		};
 		let allDevices = new observers.ObservableClass<Array<schema.objects.Device>>([]);
@@ -181,6 +183,12 @@ export class ContextServer {
 				this.tss.send("SetProgress", message.connection_id, {
 					progress: session.progress
 				});
+				this.tss.send("SetRepeat", message.connection_id, {
+					repeat: session.repeat
+				});
+				this.tss.send("SetShuffle", message.connection_id, {
+					shuffle: session.shuffle
+				});
 				this.tss.send("SetToken", message.connection_id, {
 					token: token
 				});
@@ -280,6 +288,38 @@ export class ContextServer {
 				session.progress = message.data.progress;
 				session.progressTimestamp = Date.now();
 				this.tss.send("SetProgress", session.devices.getState().map((device) => {
+					return device.id;
+				}), message.data);
+			});
+		}));
+		this.tss.addEventListener("app", "SetRepeat", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+			await this.getExistingSession(queue, message.connection_id, (session) => {
+				if (is.absent(session.device)) {
+					session.device = makeDevice(message.connection_id, message.connection_url);
+					this.tss.send("SetDevice", session.devices.getState().map((device) => {
+						return device.id;
+					}), {
+						device: session.device
+					});
+				}
+				session.repeat = message.data.repeat;
+				this.tss.send("SetRepeat", session.devices.getState().map((device) => {
+					return device.id;
+				}), message.data);
+			});
+		}));
+		this.tss.addEventListener("app", "SetShuffle", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+			await this.getExistingSession(queue, message.connection_id, (session) => {
+				if (is.absent(session.device)) {
+					session.device = makeDevice(message.connection_id, message.connection_url);
+					this.tss.send("SetDevice", session.devices.getState().map((device) => {
+						return device.id;
+					}), {
+						device: session.device
+					});
+				}
+				session.shuffle = message.data.shuffle;
+				this.tss.send("SetShuffle", session.devices.getState().map((device) => {
 					return device.id;
 				}), message.data);
 			});
