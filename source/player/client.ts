@@ -36,7 +36,71 @@ export class ContextClient {
 	readonly isCurrentEntryVideo = new observers.ObservableClass(false);
 	readonly isOnline = new observers.ObservableClass(false);
 
-	private sendPlay(context: schema.objects.Context, index: number): void {
+	private flattenContext(context: schema.objects.Context): Array<schema.objects.ContextItem> {
+		if (schema.objects.ContextAlbum.is(context)) {
+			let files = [] as schema.objects.ContextItem[];
+			let album = context;
+			for (let disc of album.discs) {
+				files.push(...disc.tracks);
+			}
+			return files;
+		} else if (schema.objects.ContextArtist.is(context)) {
+			let files = [] as schema.objects.ContextItem[];
+			let artist = context;
+			for (let album of artist.albums) {
+				for (let disc of album.discs) {
+					files.push(...disc.tracks);
+				}
+			}
+			return files;
+		} else if (schema.objects.ContextEpisode.is(context)) {
+			let files = [] as schema.objects.ContextItem[];
+			let episode = context;
+			files.push(episode);
+			return files;
+		} else if (schema.objects.ContextMovie.is(context)) {
+			let files = [] as schema.objects.ContextItem[];
+			let movie = context;
+			files.push(movie);
+			return files;
+		} else if (schema.objects.ContextPlaylist.is(context)) {
+			let files = [] as schema.objects.ContextItem[];
+			let playlist = context;
+			for (let item of playlist.items) {
+				files.push(item.track);
+			}
+			return files;
+		} else if (schema.objects.ContextSeason.is(context)) {
+			let files = [] as schema.objects.ContextItem[];
+			let season = context;
+			files.push(...season.episodes);
+			return files;
+		} else if (schema.objects.ContextShow.is(context)) {
+			let files = [] as schema.objects.ContextItem[];
+			let show = context;
+			for (let season of show.seasons) {
+				files.push(...season.episodes);
+			}
+			return files;
+		} else if (schema.objects.ContextTrack.is(context)) {
+			let files = [] as schema.objects.ContextItem[];
+			let track = context;
+			files.push(track);
+			return files;
+		} else {
+			throw `Expected code to be unreachable!`;
+		}
+	}
+
+	private sendPlay(context: schema.objects.Context, index?: number): void {
+		if (is.absent(index)) {
+			if (this.shuffle.getState()) {
+				let flattenedContext = this.flattenContext(context);
+				index = Math.floor(Math.random() * flattenedContext.length);
+			} else {
+				index = 0;
+			}
+		}
 		this.context.updateState(context);
 		this.currentEntryIndex.updateState(index);
 		this.playback.updateState(true);
@@ -62,59 +126,7 @@ export class ContextClient {
 		});
 		this.context.addObserver((context) => {
 			if (is.present(context)) {
-				if (schema.objects.ContextAlbum.is(context)) {
-					let files = [] as schema.objects.ContextItem[];
-					let album = context;
-					for (let disc of album.discs) {
-						files.push(...disc.tracks);
-					}
-					this.flattenedContext.updateState(files);
-				} else if (schema.objects.ContextArtist.is(context)) {
-					let files = [] as schema.objects.ContextItem[];
-					let artist = context;
-					for (let album of artist.albums) {
-						for (let disc of album.discs) {
-							files.push(...disc.tracks);
-						}
-					}
-					this.flattenedContext.updateState(files);
-				} else if (schema.objects.ContextEpisode.is(context)) {
-					let files = [] as schema.objects.ContextItem[];
-					let episode = context;
-					files.push(episode);
-					this.flattenedContext.updateState(files);
-				} else if (schema.objects.ContextMovie.is(context)) {
-					let files = [] as schema.objects.ContextItem[];
-					let movie = context;
-					files.push(movie);
-					this.flattenedContext.updateState(files);
-				} else if (schema.objects.ContextPlaylist.is(context)) {
-					let files = [] as schema.objects.ContextItem[];
-					let playlist = context;
-					for (let item of playlist.items) {
-						files.push(item.track);
-					}
-					this.flattenedContext.updateState(files);
-				} else if (schema.objects.ContextSeason.is(context)) {
-					let files = [] as schema.objects.ContextItem[];
-					let season = context;
-					files.push(...season.episodes);
-					this.flattenedContext.updateState(files);
-				} else if (schema.objects.ContextShow.is(context)) {
-					let files = [] as schema.objects.ContextItem[];
-					let show = context;
-					for (let season of show.seasons) {
-						files.push(...season.episodes);
-					}
-					this.flattenedContext.updateState(files);
-				} else if (schema.objects.ContextTrack.is(context)) {
-					let files = [] as schema.objects.ContextItem[];
-					let track = context;
-					files.push(track);
-					this.flattenedContext.updateState(files);
-				} else {
-					throw `Expected code to be unreachable!`;
-				}
+				this.flattenedContext.updateState(this.flattenContext(context));
 			}
 		});
 		{
@@ -497,8 +509,9 @@ export class ContextClient {
 	}
 
 	playAlbum(album: schema.objects.ContextAlbum, discIndex?: number, trackIndex?: number): void {
-		let index = 0;
+		let index: number | undefined;
 		if (is.present(discIndex)) {
+			index = index ?? 0;
 			let discs = album.discs;
 			if (discIndex < 0 || discIndex >= discs.length) {
 				throw `Expected ${discIndex} to be a number between 0 and ${discs.length}!`;
@@ -516,8 +529,9 @@ export class ContextClient {
 	}
 
 	playArtist(artist: schema.objects.ContextArtist, albumIndex?: number, discIndex?: number, trackIndex?: number): void {
-		let index = 0;
+		let index: number | undefined;
 		if (is.present(albumIndex)) {
+			index = index ?? 0;
 			let albums = artist.albums;
 			if (albumIndex < 0 || albumIndex >= albums.length) {
 				throw `Expected ${albumIndex} to be a number between 0 and ${albums.length}!`;
@@ -542,8 +556,9 @@ export class ContextClient {
 	}
 
 	playDisc(disc: schema.objects.ContextDisc, trackIndex?: number): void {
-		let index = 0;
+		let index: number | undefined;
 		if (is.present(trackIndex)) {
+			index = index ?? 0;
 			let tracks = disc.tracks;
 			if (trackIndex < 0 || trackIndex >= tracks.length) {
 				throw `Expected ${trackIndex} to be a number between 0 and ${tracks.length}!`;
@@ -554,16 +569,17 @@ export class ContextClient {
 	}
 
 	playEpisode(episode: schema.objects.ContextEpisode): void {
-		this.sendPlay(episode, 0);
+		this.sendPlay(episode);
 	}
 
 	playMovie(movie: schema.objects.ContextMovie): void {
-		this.sendPlay(movie, 0);
+		this.sendPlay(movie);
 	}
 
 	playPlaylist(playlist: schema.objects.ContextPlaylist, itemIndex?: number): void {
-		let index = 0;
+		let index: number | undefined;
 		if (is.present(itemIndex)) {
+			index = index ?? 0;
 			let items = playlist.items;
 			if (itemIndex < 0 || itemIndex >= items.length) {
 				throw `Expected ${itemIndex} to be a number between 0 and ${items.length}!`;
@@ -574,8 +590,9 @@ export class ContextClient {
 	}
 
 	playSeason(season: schema.objects.ContextSeason, episodeIndex?: number): void {
-		let index = 0;
+		let index: number | undefined;
 		if (is.present(episodeIndex)) {
+			index = index ?? 0;
 			let episodes = season.episodes;
 			if (episodeIndex < 0 || episodeIndex >= episodes.length) {
 				throw `Expected ${episodeIndex} to be a number between 0 and ${episodes.length}!`;
@@ -586,8 +603,9 @@ export class ContextClient {
 	}
 
 	playShow(show: schema.objects.ContextShow, seasonIndex?: number, episodeIndex?: number): void {
-		let index = 0;
+		let index: number | undefined;
 		if (is.present(seasonIndex)) {
+			index = index ?? 0;
 			let seasons = show.seasons;
 			if (seasonIndex < 0 || seasonIndex >= seasons.length) {
 				throw `Expected ${seasonIndex} to be a number between 0 and ${seasons.length}!`;
@@ -605,7 +623,7 @@ export class ContextClient {
 	}
 
 	playTrack(track: schema.objects.ContextTrack): void {
-		this.sendPlay(track, 0);
+		this.sendPlay(track);
 	}
 
 	reconnect(): void {
