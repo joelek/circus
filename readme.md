@@ -183,32 +183,6 @@ Circus generates additional registration keys as soon as all registration keys h
 
 Ports, paths and other settings can be configured through altering the config file located in the "./private/config/" directory. The config file is written to disk as Circus is launched.
 
-## Screenshots
-
-![](./public/images/artist.png)
-
-> The page of an artist.
-
-![](./public/images/genre.png)
-
-> The page of a genre.
-
-![](./public/images/movie.png)
-
-> The page of a movie.
-
-![](./public/images/search.png)
-
-> The search page.
-
-![](./public/images/show.png)
-
-> The page of a show.
-
-![](./public/images/year.png)
-
-> The page of a year.
-
 ## Roadmap
 
 * Make color scheme and project name configurable.
