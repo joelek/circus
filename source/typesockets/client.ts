@@ -136,7 +136,7 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 			let payload = this.serializer.serialize(type, data, id);
 			this.requests.set(id, (type, data) => {
 				if (type !== response_type) {
-					reject(`Received response with type "${type}" when expecting "${response_type}"!`);
+					reject(`Received response with type "${String(type)}" when expecting "${String(response_type)}"!`);
 				} else {
 					resolve(data);
 				}

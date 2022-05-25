@@ -17,7 +17,7 @@ export class Serializer<A extends stdlib.routing.MessageMap<A>> {
 		let data = envelope.data;
 		let guard = this.guards[type] as autoguard.serialization.MessageGuard<A[B]> | undefined;
 		if (is.absent(guard)) {
-			throw `Unknown message type "${type}"!`;
+			throw `Unknown message type "${String(type)}"!`;
 		}
 		cb(type, guard.as(data), id);
 	}

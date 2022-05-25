@@ -66,7 +66,7 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 			try {
 				this.serializer.deserialize(payload, (type, data, id) => {
 					if (this.debug) {
-						console.log(`${connection_id} -> ${type}`);
+						console.log(`${connection_id} -> ${String(type)}`);
 					}
 					this.router.route("sys", "message", {
 						connection_id,
@@ -114,7 +114,7 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 	respond<B extends keyof A>(message: { connection_id: string, id?: string }, type: B, data: A[B]): void {
 		let payload = this.serializer.serialize(type, data, message.id);
 		if (this.debug) {
-			console.log(`${message.connection_id} <- ${type}`);
+			console.log(`${message.connection_id} <- ${String(type)}`);
 		}
 		try {
 			this.socket.send(message.connection_id, payload);
@@ -129,7 +129,7 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 		let payload = this.serializer.serialize(type, data);
 		for (let connection_id of Array.isArray(connection_ids) ? connection_ids : [connection_ids]) {
 			if (this.debug) {
-				console.log(`${connection_id} <- ${type}`);
+				console.log(`${connection_id} <- ${String(type)}`);
 			}
 			try {
 				this.socket.send(connection_id, payload);
