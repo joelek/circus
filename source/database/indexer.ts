@@ -238,8 +238,17 @@ async function associateTrackFiles(queue: WritableQueue, track_id: Uint8Array, .
 	}
 };
 
-async function associateAlbumFiles(queue: WritableQueue, album_id: Uint8Array, ...file_ids: Array<Uint8Array>): Promise<void> {
+async function associateAlbumFiles(queue: WritableQueue, album_id: Uint8Array, track_ids: Array<Uint8Array>, ...file_ids: Array<Uint8Array>): Promise<void> {
+	let index = 0;
 	for (let file_id of file_ids) {
+		try {
+			let audio_file = await stores.audio_files.lookup(queue, { file_id });
+			await stores.track_files.insert(queue, {
+				track_id: track_ids[index++],
+				...audio_file
+			});
+			continue;
+		} catch (error) {}
 		try {
 			let image_file = await stores.image_files.lookup(queue, { file_id });
 			await stores.album_files.insert(queue, {
@@ -490,6 +499,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			album_id: album_id,
 			number: metadata.disc
 		});
+		let track_ids = [] as Array<Uint8Array>;
 		for (let [index, track] of metadata.tracks.entries()) {
 			let track_id = makeBinaryId("track", disc_id, `${index}`);
 			await stores.tracks.update(queue, {
@@ -511,8 +521,9 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 					order: index
 				});
 			}
+			track_ids.push(track_id);
 		}
-		await associateAlbumFiles(queue, album_id, ...file_ids);
+		await associateAlbumFiles(queue, album_id, track_ids, ...file_ids);
 	} else if (probes.schema.ArtistMetadata.is(metadata)) {
 		let artist = metadata;
 		let artist_id = makeBinaryId("artist", artist.name);
@@ -689,7 +700,7 @@ async function associateImages(queue: WritableQueue): Promise<void> {
 					let track = await stores.tracks.lookup(queue, track_file);
 					let disc = await stores.discs.lookup(queue, track);
 					let album = await stores.albums.lookup(queue, disc);
-					await associateAlbumFiles(queue, album.album_id, image_file.file_id);
+					await associateAlbumFiles(queue, album.album_id, [], image_file.file_id);
 				}
 				continue;
 			}
