@@ -3612,7 +3612,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 						)
 						.add(xml.element("div")
 							.set("style", "display: grid; gap: 24px")
-							.bind("data-hide", shows.compute((artists) => artists.length === 0))
+							.bind("data-hide", artists.compute((artists) => artists.length === 0))
 							.add(renderTextHeader(xml.text("Suggested artists")))
 							.add(carouselFactory.make((() => {
 								let widgets = new ArrayObservable<xml.XElement>([]);
