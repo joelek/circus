@@ -105,7 +105,6 @@ export const Session: autoguard.serialization.MessageGuard<Session> = autoguard.
 	"context": autoguard.guards.Reference.of(() => Context),
 	"device": autoguard.guards.Reference.of(() => Device),
 	"index": autoguard.guards.Number,
-	"order": autoguard.guards.Array.of(autoguard.guards.Number),
 	"progress": autoguard.guards.Number
 });
 
@@ -117,7 +116,6 @@ export type Session = autoguard.guards.Object<{
 	"context": autoguard.guards.Reference<Context>,
 	"device": autoguard.guards.Reference<Device>,
 	"index": autoguard.guards.Number,
-	"order": autoguard.guards.Array<autoguard.guards.Number>,
 	"progress": autoguard.guards.Number
 }>;
 

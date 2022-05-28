@@ -44,14 +44,6 @@ export type SetLocalDevice = autoguard.guards.Object<{
 	"device": autoguard.guards.Reference<Device>
 }, {}>;
 
-export const SetOrder: autoguard.serialization.MessageGuard<SetOrder> = autoguard.guards.Object.of({}, {
-	"order": autoguard.guards.Array.of(autoguard.guards.Number)
-});
-
-export type SetOrder = autoguard.guards.Object<{}, {
-	"order": autoguard.guards.Array<autoguard.guards.Number>
-}>;
-
 export const SetPlayback: autoguard.serialization.MessageGuard<SetPlayback> = autoguard.guards.Object.of({
 	"playback": autoguard.guards.Boolean
 }, {});
@@ -99,7 +91,6 @@ export namespace Autoguard {
 		"SetDevices": autoguard.guards.Reference.of(() => SetDevices),
 		"SetIndex": autoguard.guards.Reference.of(() => SetIndex),
 		"SetLocalDevice": autoguard.guards.Reference.of(() => SetLocalDevice),
-		"SetOrder": autoguard.guards.Reference.of(() => SetOrder),
 		"SetPlayback": autoguard.guards.Reference.of(() => SetPlayback),
 		"SetProgress": autoguard.guards.Reference.of(() => SetProgress),
 		"SetRepeat": autoguard.guards.Reference.of(() => SetRepeat),

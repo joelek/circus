@@ -18,10 +18,6 @@ guard SetLocalDevice: {
 	"device": ./objects/Device
 };
 
-guard SetOrder: {
-	"order"?: number[]
-};
-
 guard SetPlayback: {
 	"playback": boolean
 };

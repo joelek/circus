@@ -31,7 +31,6 @@ guard Session: {
 	"context"?: Context,
 	"device"?: Device,
 	"index"?: number,
-	"order"?: number[],
 	"playback": boolean,
 	"progress"?: number,
 	"repeat": boolean,
