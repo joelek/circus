@@ -177,6 +177,9 @@ export class ContextServer {
 				this.tss.send("SetIndex", message.connection_id, {
 					index: session.index
 				});
+				this.tss.send("SetOrder", message.connection_id, {
+					order: session.order
+				});
 				this.tss.send("SetPlayback", message.connection_id, {
 					playback: session.playback
 				});
@@ -209,6 +212,12 @@ export class ContextServer {
 					return device.id;
 				}), {
 					index: session.index
+				});
+				session.order = undefined;
+				this.tss.send("SetOrder", session.devices.getState().map((device) => {
+					return device.id;
+				}), {
+					order: session.order
 				});
 				session.context = message.data.context;
 				this.tss.send("SetContext", session.devices.getState().map((device) => {
@@ -254,6 +263,22 @@ export class ContextServer {
 				});
 				session.index = message.data.index;
 				this.tss.send("SetIndex", session.devices.getState().map((device) => {
+					return device.id;
+				}), message.data);
+			});
+		}));
+		this.tss.addEventListener("app", "SetOrder", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+			await this.getExistingSession(queue, message.connection_id, (session) => {
+				if (is.absent(session.device)) {
+					session.device = makeDevice(message.connection_id, message.connection_url);
+					this.tss.send("SetDevice", session.devices.getState().map((device) => {
+						return device.id;
+					}), {
+						device: session.device
+					});
+				}
+				session.order = message.data.order;
+				this.tss.send("SetOrder", session.devices.getState().map((device) => {
 					return device.id;
 				}), message.data);
 			});
