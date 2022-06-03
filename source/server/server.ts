@@ -19,18 +19,6 @@ import * as atlas from "../database/atlas";
 const contextServer = new context.server.ContextServer();
 const playlistsServer = new playlists.server.PlaylistsServer();
 
-let indexTimer: NodeJS.Timeout | undefined;
-
-function setupIndexTimer(): void {
-	if (is.present(indexTimer)) {
-		clearTimeout(indexTimer);
-	}
-	indexTimer = setTimeout(() => {
-		indexTimer = undefined;
-		indexer.runIndexer();
-	}, 60 * 60 * 1000);
-}
-
 async function requestHandler(request: libhttp.IncomingMessage, response: libhttp.ServerResponse): Promise<void> {
 	let host = request.headers["host"] || "";
 	let method = request.method || "";
@@ -45,7 +33,6 @@ async function requestHandler(request: libhttp.IncomingMessage, response: libhtt
 	response.on("finish", () => {
 		let duration_ms = Date.now() - startMs;
 		process.stderr.write(`${response.statusCode} ${method}:${path} (${duration_ms} ms)\n`);
-		setupIndexTimer();
 	});
 	if (false && /^[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+(:[0-9]+)?$/.test(host)) {
 		response.writeHead(400);
