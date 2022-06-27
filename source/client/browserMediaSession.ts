@@ -1,42 +1,23 @@
-// @ts-nocheck
+let storedMetadata: MediaMetadata | undefined;
+let storedHandlers: { [key: string]: MediaSessionActionHandler | null } | undefined;
 
-export interface MediaImage {
-	src?: string,
-	sizes?: string,
-	type?: string
-}
-
-export interface MediaMetadata {
-	title?: string,
-	artist?: string,
-	album?: string,
-	artwork?: Array<MediaImage>
-}
-
-export function setMetadata(metadata: MediaMetadata) {
+export function setMetadata(metadata: MediaMetadataInit) {
 	if (navigator.mediaSession) {
-		navigator.mediaSession.metadata = new globalThis.MediaMetadata(metadata);
+		storedMetadata = new MediaMetadata(metadata);
 	}
 }
 
-export interface MediaHandler {
-	(): void
-}
-
-export interface MediaHandlers {
-	play?: (() => void) | null,
-	pause?: (() => void) | null,
-	seekbackward?: ((details: { seekOffset?: number }) => void) | null,
-	seekforward?: ((details: { seekOffset?: number }) => void) | null,
-	seekto?: ((details: { fastSeek?: boolean, seekTime: number }) => void) | null,
-	previoustrack?: (() => void) | null,
-	nexttrack?: (() => void) | null
-}
-
-export function setHandlers(handlers: MediaHandlers) {
+export function setHandlers(handlers: { [key: string]: MediaSessionActionHandler | null }) {
 	if (navigator.mediaSession) {
-		for (let type in handlers) {
-			navigator.mediaSession.setActionHandler(type, handlers[type]);
+		storedHandlers = handlers;
+	}
+}
+
+export function update() {
+	if (navigator.mediaSession) {
+		navigator.mediaSession.metadata = storedMetadata ?? null;
+		for (let key in storedHandlers) {
+			navigator.mediaSession.setActionHandler(key as MediaSessionAction, storedHandlers[key as MediaSessionAction]);
 		}
 	}
 }

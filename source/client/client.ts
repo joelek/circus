@@ -101,6 +101,11 @@ currentVideo.addEventListener("ended", () => {
 	}
 });
 let isLoading = new ObservableClass(true);
+isLoading.addObserver((isLoading) => {
+	if (!isLoading) {
+		session.update();
+	}
+});
 currentVideo.addEventListener("loadeddata", () => {
 	if (currentVideo.src !== silence) {
 		isLoading.updateState(false);
