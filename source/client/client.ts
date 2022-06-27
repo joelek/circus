@@ -258,10 +258,10 @@ player.currentEntry.addObserver((currentEntry) => {
 		let nextLocalEntry = player.nextLocalEntry.getState();
 		let token = player.token.getState();
 		if (is.absent(nextLocalEntry) || is.absent(token)) {
-			lastVideo.src = ``;
+			nextVideo.src = ``;
 			return;
 		} else {
-			lastVideo.src = `/api/files/${nextLocalEntry.media.file_id}/?token=${token}`;
+			nextVideo.src = `/api/files/${nextLocalEntry.media.file_id}/?token=${token}`;
 		}
 	};
 	player.nextLocalEntry.addObserver(computer);
