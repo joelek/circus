@@ -84,15 +84,15 @@ let lastVideo = document.createElement("video");
 let currentVideo = document.createElement("video");
 let nextVideo = document.createElement("video");
 
-let unlocked = false;
+let unlocked = new ObservableClass(false);
 let silence = "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA==";
 player.playback.addObserver(async (playback) => {
-	if (!unlocked && playback) {
+	if (!unlocked.getState() && playback) {
 		currentVideo.src = silence;
 		try {
 			await currentVideo.play();
 		} catch (error) {}
-		unlocked = true;
+		unlocked.updateState(true);
 	}
 });
 currentVideo.addEventListener("ended", () => {
@@ -102,10 +102,14 @@ currentVideo.addEventListener("ended", () => {
 });
 let isLoading = new ObservableClass(true);
 currentVideo.addEventListener("loadeddata", () => {
-	isLoading.updateState(false);
+	if (currentVideo.src !== silence) {
+		isLoading.updateState(false);
+	}
 });
 currentVideo.addEventListener("playing", () => {
-	player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
+	if (currentVideo.src !== silence) {
+		player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
+	}
 });
 {
 	let computer = async () => {
@@ -140,9 +144,9 @@ currentVideo.addEventListener("playing", () => {
 			play: canPlayCurrent ? player.resume.bind(player) : null,
 			pause: canPlayCurrent ? player.pause.bind(player) : null,
 			previoustrack: canPlayLast ? player.last.bind(player) : null,
-			seekto: (details) => {
-				player.seek(details.seekTime);
-			},
+			seekto: canPlayCurrent ? (details) => {
+				player.seek(details.seekTime ?? undefined);
+			} : null,
 			nexttrack: canPlayNext ? player.next.bind(player) : null
 		});
 	};
