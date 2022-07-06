@@ -1585,6 +1585,7 @@ let appheader = xml.element("div.app__header")
 												name: device.name,
 												type: device.type
 											});
+											modalPageElements.update([]);
 										})
 									)
 								)
