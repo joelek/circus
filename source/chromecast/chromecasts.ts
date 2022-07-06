@@ -11,6 +11,7 @@ import * as autoguard from "@joelek/ts-autoguard";
 import * as sockets from "@joelek/ts-sockets";
 import * as stdlib from "@joelek/ts-stdlib";
 import { Episode, Movie, Track } from "../api/schema/objects";
+import * as utils from "../utils";
 
 const DEBUG = false;
 
@@ -416,7 +417,8 @@ class ChromecastPlayer {
 		this.connectionHandler = new ConnectionHandler(messageHandler);
 		this.mediaHandler = new MediaHandler(messageHandler);
 		this.receiverHandler = new ReceiverHandler(messageHandler);
-		let url = `${websocket_host}/sockets/context/?protocol=cast&name=${encodeURIComponent(device_name)}&type=${encodeURIComponent(device_type)}`;
+		let did = utils.generateHexId(16);
+		let url = `${websocket_host}/sockets/context/?protocol=cast&name=${encodeURIComponent(device_name)}&type=${encodeURIComponent(device_type)}&did=${did}`;
 		this.context = new libcontext.ContextClient(url, (url) => new sockets.WebSocketClient(url));
 		this.timer = undefined;
 		socket.on("close", () => {

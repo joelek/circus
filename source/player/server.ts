@@ -19,10 +19,12 @@ function getQuery(url: liburl.UrlWithParsedQuery, key: string): Array<string> {
 
 function makeDevice(connection_id: string, connection_url: string): schema.objects.Device {
 	let url = liburl.parse(connection_url, true);
+	let did = getQuery(url, "did").pop() ?? "";
 	let protocol = getQuery(url, "protocol").pop() ?? "";
 	let name = getQuery(url, "name").pop() ?? "";
 	let type = getQuery(url, "type").pop() ?? "";
 	return {
+		did: did,
 		id: connection_id,
 		protocol: protocol,
 		name: name,
@@ -88,18 +90,27 @@ export class ContextServer {
 			this.updateProgress(session);
 		});
 		session.devices.addObserver((devices) => {
-			let deviceWasLost = is.absent(devices.find((device) => {
+			let deviceWasLost = is.present(session.device) && is.absent(devices.find((device) => {
 				return device.id === session.device?.id;
 			}));
 			if (deviceWasLost) {
+				let deviceCandidates = devices.filter((device) => {
+					return device.did === session.device?.did;
+				});
+				let device = deviceCandidates.pop();
 				this.updateProgress(session);
-				session.playback = false;
+				this.tss.send("SetProgress", devices.map((device) => {
+					return device.id;
+				}), {
+					progress: session.progress
+				});
+				session.playback = session.playback && is.present(device);
 				this.tss.send("SetPlayback", devices.map((device) => {
 					return device.id;
 				}), {
 					playback: session.playback
 				});
-				session.device = undefined;
+				session.device = device;
 				this.tss.send("SetDevice", devices.map((device) => {
 					return device.id;
 				}), {

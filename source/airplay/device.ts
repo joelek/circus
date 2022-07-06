@@ -8,6 +8,7 @@ import * as schema from "./schema/";
 import * as api from "./api";
 import * as http from "./http";
 import * as plist from "./plist";
+import * as utils from "../utils";
 
 const PORT = 7000;
 
@@ -59,7 +60,8 @@ export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
 			inbound.addObserver("close", () => {
 				this.route("close", {});
 			});
-			let url = `${websocket_host}/sockets/context/?protocol=airplay&name=${encodeURIComponent(device_name)}&type=${encodeURIComponent(device_type)}`;
+			let did = utils.generateHexId(16);
+			let url = `${websocket_host}/sockets/context/?protocol=airplay&name=${encodeURIComponent(device_name)}&type=${encodeURIComponent(device_type)}&did=${did}`;
 			let context = new player.ContextClient(url, (url) => new sockets.WebSocketClient(url));
 			observers.computed(async (currentLocalEntry, token) => {
 				if (is.present(currentLocalEntry) && is.present(token)) {

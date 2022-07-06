@@ -84,6 +84,7 @@ export type ContextItem = autoguard.guards.Union<[
 ]>;
 
 export const Device: autoguard.serialization.MessageGuard<Device> = autoguard.guards.Object.of({
+	"did": autoguard.guards.String,
 	"id": autoguard.guards.String,
 	"protocol": autoguard.guards.String,
 	"name": autoguard.guards.String,
@@ -91,6 +92,7 @@ export const Device: autoguard.serialization.MessageGuard<Device> = autoguard.gu
 }, {});
 
 export type Device = autoguard.guards.Object<{
+	"did": autoguard.guards.String,
 	"id": autoguard.guards.String,
 	"protocol": autoguard.guards.String,
 	"name": autoguard.guards.String,

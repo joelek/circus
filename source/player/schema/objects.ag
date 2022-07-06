@@ -21,6 +21,7 @@ guard Context: ContextAlbum | ContextArtist | ContextDisc | ContextTrack | Conte
 guard ContextItem: ContextTrack | ContextMovie | ContextEpisode;
 
 guard Device: {
+	"did": string,
 	"id": string,
 	"protocol": string,
 	"name": string,

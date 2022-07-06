@@ -44,7 +44,8 @@ function makeUrl(tail: string): string {
 	return `${protocol}//${host}${path}`;
 }
 
-let player = new client.ContextClient(makeUrl(`context/?type=browser&name=Client`));
+let did = utils.generateHexId(16);
+let player = new client.ContextClient(makeUrl(`context/?type=browser&name=Client&did=${did}`));
 let playlists = new PlaylistsClient(makeUrl(`playlists/`));
 
 window.addEventListener("focus", () => {
@@ -1580,6 +1581,7 @@ let appheader = xml.element("div.app__header")
 										)
 										.on("click", () => {
 											player.transfer({
+												did: device.did,
 												id: device.id,
 												protocol: device.protocol,
 												name: device.name,
@@ -1760,6 +1762,7 @@ let modals = xml.element("div.modal-container")
 						)
 						.on("click", () => {
 							player.transfer({
+								did: device.did,
 								id: device.id,
 								protocol: device.protocol,
 								name: device.name,

@@ -69,8 +69,18 @@ function getNextEpisode(show: ShowContext): undefined | { seasonIndex: number, e
 	return indices;
 }
 
+function generateHexId(length: number): string {
+	let alphabet = "0123456789abcdef";
+	let result = "";
+	for (let i = 0; i < length; i++) {
+		result += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+	}
+	return result;
+};
+
 export {
 	join,
 	formatTimestamp,
-	getNextEpisode
+	getNextEpisode,
+	generateHexId
 };
