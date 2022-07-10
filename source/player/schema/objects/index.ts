@@ -101,6 +101,7 @@ export type Device = autoguard.guards.Object<{
 
 export const Session: autoguard.serialization.MessageGuard<Session> = autoguard.guards.Object.of({
 	"playback": autoguard.guards.Boolean,
+	"playing": autoguard.guards.Boolean,
 	"repeat": autoguard.guards.Boolean,
 	"shuffle": autoguard.guards.Boolean
 }, {
@@ -113,6 +114,7 @@ export const Session: autoguard.serialization.MessageGuard<Session> = autoguard.
 
 export type Session = autoguard.guards.Object<{
 	"playback": autoguard.guards.Boolean,
+	"playing": autoguard.guards.Boolean,
 	"repeat": autoguard.guards.Boolean,
 	"shuffle": autoguard.guards.Boolean
 }, {

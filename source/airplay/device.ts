@@ -46,11 +46,22 @@ export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
 				let string = request.body.toString();
 				let document = plist.parseFromString(string);
 				if (schema.messages.PlayingEvent.is(document)) {
-					context.resume();
+					context.setPlaying(true);
+					if (!context.playback.getState()) {
+						context.resume();
+					}
 				} else if (schema.messages.PausedEvent.is(document)) {
-					context.pause();
-				} else if (schema.messages.StoppedEvent.is(document) && document.reason === "ended") {
-					context.next();
+					context.setPlaying(false);
+					if (context.playback.getState()) {
+						context.pause();
+					}
+				} else if (schema.messages.LoadingEvent.is(document)) {
+					context.setPlaying(false);
+				} else if (schema.messages.StoppedEvent.is(document)) {
+					context.setPlaying(false);
+					if (document.reason === "ended") {
+						context.next();
+					}
 				}
 				return {
 					status: 200,

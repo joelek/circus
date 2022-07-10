@@ -60,6 +60,14 @@ export type SetPlayback = autoguard.guards.Object<{
 	"playback": autoguard.guards.Boolean
 }, {}>;
 
+export const SetPlaying: autoguard.serialization.MessageGuard<SetPlaying> = autoguard.guards.Object.of({
+	"playing": autoguard.guards.Boolean
+}, {});
+
+export type SetPlaying = autoguard.guards.Object<{
+	"playing": autoguard.guards.Boolean
+}, {}>;
+
 export const SetProgress: autoguard.serialization.MessageGuard<SetProgress> = autoguard.guards.Object.of({}, {
 	"progress": autoguard.guards.Number
 });
@@ -101,6 +109,7 @@ export namespace Autoguard {
 		"SetLocalDevice": autoguard.guards.Reference.of(() => SetLocalDevice),
 		"SetOrder": autoguard.guards.Reference.of(() => SetOrder),
 		"SetPlayback": autoguard.guards.Reference.of(() => SetPlayback),
+		"SetPlaying": autoguard.guards.Reference.of(() => SetPlaying),
 		"SetProgress": autoguard.guards.Reference.of(() => SetProgress),
 		"SetRepeat": autoguard.guards.Reference.of(() => SetRepeat),
 		"SetShuffle": autoguard.guards.Reference.of(() => SetShuffle),

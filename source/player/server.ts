@@ -61,6 +61,7 @@ export class ContextServer {
 		}
 		const session: Session = {
 			playback: false,
+			playing: false,
 			repeat: false,
 			shuffle: false,
 			devices: new observers.ObservableClass(new Array<schema.objects.Device>())
@@ -110,6 +111,12 @@ export class ContextServer {
 				}), {
 					playback: session.playback
 				});
+				session.playing = false;
+				this.tss.send("SetPlaying", devices.map((device) => {
+					return device.id;
+				}), {
+					playing: session.playing
+				});
 				session.device = device;
 				this.tss.send("SetDevice", devices.map((device) => {
 					return device.id;
@@ -139,7 +146,7 @@ export class ContextServer {
 
 	private updateProgress(session: Session): void {
 		let now = Date.now();
-		if (session.playback) {
+		if (session.playing) {
 			if (is.present(session.progress) && is.present(session.progressTimestamp)) {
 				session.progress += (now - session.progressTimestamp) / 1000;
 			}
@@ -194,6 +201,9 @@ export class ContextServer {
 				this.tss.send("SetPlayback", message.connection_id, {
 					playback: session.playback
 				});
+				this.tss.send("SetPlaying", message.connection_id, {
+					playing: session.playing
+				});
 				this.tss.send("SetProgress", message.connection_id, {
 					progress: session.progress
 				});
@@ -218,6 +228,12 @@ export class ContextServer {
 						device: session.device
 					});
 				}
+				session.playing = false;
+				this.tss.send("SetPlaying", session.devices.getState().map((device) => {
+					return device.id;
+				}), {
+					playing: session.playing
+				});
 				session.index = undefined;
 				this.tss.send("SetIndex", session.devices.getState().map((device) => {
 					return device.id;
@@ -239,6 +255,12 @@ export class ContextServer {
 		this.tss.addEventListener("app", "SetDevice", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 			await this.getExistingSession(queue, message.connection_id, (session) => {
 				this.updateProgress(session);
+				session.playing = false;
+				this.tss.send("SetPlaying", session.devices.getState().map((device) => {
+					return device.id;
+				}), {
+					playing: session.playing
+				});
 				this.tss.send("SetProgress", session.devices.getState().map((device) => {
 					return device.id;
 				}), {
@@ -265,6 +287,12 @@ export class ContextServer {
 						device: session.device
 					});
 				}
+				session.playing = false;
+				this.tss.send("SetPlaying", session.devices.getState().map((device) => {
+					return device.id;
+				}), {
+					playing: session.playing
+				});
 				session.progress = is.present(message.data.index) ? 0 : undefined;
 				session.progressTimestamp = Date.now();
 				this.tss.send("SetProgress", session.devices.getState().map((device) => {
@@ -304,9 +332,25 @@ export class ContextServer {
 						device: session.device
 					});
 				}
-				this.updateProgress(session);
 				session.playback = message.data.playback;
 				this.tss.send("SetPlayback", session.devices.getState().map((device) => {
+					return device.id;
+				}), message.data);
+			});
+		}));
+		this.tss.addEventListener("app", "SetPlaying", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+			await this.getExistingSession(queue, message.connection_id, (session) => {
+				if (is.absent(session.device)) {
+					session.device = makeDevice(message.connection_id, message.connection_url);
+					this.tss.send("SetDevice", session.devices.getState().map((device) => {
+						return device.id;
+					}), {
+						device: session.device
+					});
+				}
+				this.updateProgress(session);
+				session.playing = message.data.playing;
+				this.tss.send("SetPlaying", session.devices.getState().map((device) => {
 					return device.id;
 				}), message.data);
 			});

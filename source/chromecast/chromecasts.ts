@@ -459,8 +459,23 @@ class ChromecastPlayer {
 				if (is.present(mediaSessionId)) {
 					if (status.mediaSessionId === mediaSessionId) {
 						if (this.context.isDeviceLocal.getState()) {
-							if (status.playerState === "IDLE" && status.idleReason === "FINISHED") {
-								this.context.next();
+							if (status.playerState === "IDLE") {
+								this.context.setPlaying(false);
+								if (status.idleReason === "FINISHED") {
+									this.context.next();
+								}
+							} else if (status.playerState === "PLAYING") {
+								this.context.setPlaying(true);/*
+								if (!this.context.playback.getState()) {
+									this.context.resume();
+								} */
+							} else if (status.playerState === "PAUSED") {
+								this.context.setPlaying(false);/*
+								if (this.context.playback.getState()) {
+									this.context.pause();
+								} */
+							} else if (status.playerState === "BUFFERING") {
+								this.context.setPlaying(false);
 							}
 						}
 					} else {

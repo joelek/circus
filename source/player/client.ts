@@ -29,6 +29,7 @@ export class ContextClient {
 	readonly nextEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
 	readonly nextLocalEntry = new observers.ObservableClass(undefined as schema.objects.ContextItem | undefined);
 	readonly playback = new observers.ObservableClass(false);
+	readonly playing = new observers.ObservableClass(false);
 	readonly progress = new observers.ObservableClass(undefined as number | undefined);
 	readonly localPlayback = new observers.ObservableClass(false);
 	readonly canPlayLast = new observers.ObservableClass(false);
@@ -120,6 +121,7 @@ export class ContextClient {
 		this.currentEntryIndex.updateState(index);
 		this.order.updateState(order);
 		this.playback.updateState(true);
+		this.playing.updateState(false);
 		this.isCurrentEntryVideo.updateState(false);
 		this.tsc.send("SetContext", {
 			context
@@ -135,6 +137,9 @@ export class ContextClient {
 		});
 		this.tsc.send("SetPlayback", {
 			playback: true
+		});
+		this.tsc.send("SetPlaying", {
+			playing: false
 		});
 	}
 
@@ -266,11 +271,11 @@ export class ContextClient {
 			this.estimatedProgress.updateState(progress);
 			this.estimatedProgressTimestamp.updateState(Date.now());
 		}, true);
-		this.playback.addObserver((playback) => {
+		this.playing.addObserver((playing) => {
 			let estimatedProgress = this.estimatedProgress.getState();
 			let estimatedProgressTimestamp = this.estimatedProgressTimestamp.getState();
 			let now = Date.now();
-			if (!playback) {
+			if (!playing) {
 				if (is.present(estimatedProgress) && is.present(estimatedProgressTimestamp)) {
 					this.estimatedProgress.updateState(estimatedProgress + (now - estimatedProgressTimestamp) / 1000);
 				}
@@ -464,6 +469,9 @@ export class ContextClient {
 		});
 		this.tsc.addEventListener("app", "SetPlayback", (message) => {
 			this.playback.updateState(message.playback);
+		});
+		this.tsc.addEventListener("app", "SetPlaying", (message) => {
+			this.playing.updateState(message.playing);
 		});
 		this.tsc.addEventListener("app", "SetProgress", (message) => {
 			this.progress.updateState(message.progress);
@@ -675,6 +683,13 @@ export class ContextClient {
 		this.progress.updateState(progress);
 		this.tsc.send("SetProgress", {
 			progress: progress
+		});
+	}
+
+	setPlaying(playing: boolean): void {
+		this.playing.updateState(playing);
+		this.tsc.send("SetPlaying", {
+			playing: playing
 		});
 	}
 

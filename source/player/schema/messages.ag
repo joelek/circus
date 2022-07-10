@@ -26,6 +26,10 @@ guard SetPlayback: {
 	"playback": boolean
 };
 
+guard SetPlaying: {
+	"playing": boolean
+};
+
 guard SetProgress: {
 	"progress"?: number
 };
