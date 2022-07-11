@@ -1086,6 +1086,11 @@ style.innerText = `
 	}
 
 	.media-player__progress {
+		display: grid;
+		gap: 4px;
+	}
+
+	.media-player__progress-bar {
 		cursor: pointer;
 		padding: 8px 0px;
 	}
@@ -1108,6 +1113,14 @@ style.innerText = `
 		z-index: 0;
 	}
 
+	.media-player__progress-metadata {
+		color: rgb(159, 159, 159);
+		font-size: 12px;
+		overflow: hidden;
+		text-align: center;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 
 
 
@@ -1196,7 +1209,7 @@ style.innerText = `
 	.app__content {
 		background-color: rgb(31, 31, 31);
 		overflow: hidden;
-		padding: 64px 0px 120px 0px;
+		padding: 64px 0px 128px 0px;
 		position: relative;
 		z-index: 0;
 	}
@@ -1959,8 +1972,33 @@ let mpw = xml.element("div.app__navigation")
 
 
 let progress = xml.element("div.media-player__progress");
+let progressbar = xml.element("div.media-player__progress-bar");
 let progresscontainer = xml.element("div.media-player__progress-container");
 let progresstrack = xml.element("div.media-player__progress-track");
+let progressmetadata = xml.element("div.media-player__progress-metadata");
+
+progress.add(
+	progressbar.add(
+		progresscontainer.add(
+			progresstrack
+		)
+	),
+	progressmetadata
+);
+
+function formatTimestamp(ms: number): string {
+	let s = Math.floor(ms / 1000);
+	ms -= (s * 1000);
+	let m = Math.floor(s / 60);
+	s -= (m * 60);
+	let h = Math.floor(m / 60);
+	m -= (h * 60);
+	if (h > 0) {
+		return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+	} else {
+		return `${m}:${s.toString().padStart(2, "0")}`;
+	}
+};
 
 window.requestAnimationFrame(async function computer() {
 	let currentEntry = player.currentEntry.getState();
@@ -1968,15 +2006,18 @@ window.requestAnimationFrame(async function computer() {
 	let estimatedProgress = player.estimatedProgress.getState();
 	let estimatedProgressTimestamp = player.estimatedProgressTimestamp.getState();
 	let scale = 0;
+	let metadata = "- / -";
 	if (is.present(currentEntry) && is.present(estimatedProgress) && is.present(estimatedProgressTimestamp)) {
 		let progress = estimatedProgress;
 		if (playing) {
 			progress += (Date.now() - estimatedProgressTimestamp) / 1000;
 		}
 		scale = progress / (currentEntry.media.duration_ms / 1000);
+		metadata = `${formatTimestamp(progress * 1000)} / ${formatTimestamp(currentEntry.duration_ms)}`;
 	}
 	let ref = await progresstrack.ref() as HTMLDivElement;
 	ref.style.setProperty("transform", `scale(${scale}, 1.0)`);
+	progressmetadata.ref().then((ref) => ref.textContent = metadata);
 	window.requestAnimationFrame(computer);
 });
 
@@ -2003,14 +2044,11 @@ document.body.addEventListener("pointerup", async (event) => {
 document.body.addEventListener("pointerleave", async (event) => {
 	progressactive = false;
 });
-progress
+progressbar
 	.on("pointerdown", async (event) => {
 		progressactive = true;
 		await progressupdate(event.pageX);
-	})
-	.add(progresscontainer
-		.add(progresstrack)
-	);
+	});
 
 let mediaPlayerItems = new ArrayObservable<xml.XElement>([]);
 
