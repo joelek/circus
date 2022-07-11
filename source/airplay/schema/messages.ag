@@ -1,19 +1,48 @@
 guard LoadingEvent: {
+	"category": "video" | string,
+	"params": {
+		"uuid": string
+	},
 	"sessionID": number,
 	"state": "loading"
 };
 
+guard TimeRange: {
+	"duration": number,
+	"start": number
+};
+
 guard PlayingEvent: {
+	"category": "video" | string,
+	"params": {
+		duration: number,
+		loadedTimeRanges: TimeRange[],
+		playbackBufferEmpty: boolean,
+		playbackBufferFull: boolean,
+		playbackLikelyToKeepUp: boolean,
+		playbackLikelyToKeepUpTime: number,
+		position: number,
+		rate: number,
+		readyToPlay: boolean,
+		seekableTimeRanges: TimeRange[],
+		stallCount: number,
+		uuid: string
+	},
 	"sessionID": number,
 	"state": "playing"
 };
 
 guard PausedEvent: {
+	"category": "video" | string,
 	"sessionID": number,
 	"state": "paused"
 };
 
 guard StoppedEvent: {
+	"category": "video" | string,
+	"params": {
+		"uuid": string
+	},
 	"sessionID": number,
 	"state": "stopped",
 	"reason": string

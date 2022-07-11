@@ -3,42 +3,124 @@
 import * as autoguard from "@joelek/ts-autoguard/dist/lib-shared";
 
 export const LoadingEvent: autoguard.serialization.MessageGuard<LoadingEvent> = autoguard.guards.Object.of({
+	"category": autoguard.guards.Union.of(
+		autoguard.guards.StringLiteral.of("video"),
+		autoguard.guards.String
+	),
+	"params": autoguard.guards.Object.of({
+		"uuid": autoguard.guards.String
+	}, {}),
 	"sessionID": autoguard.guards.Number,
 	"state": autoguard.guards.StringLiteral.of("loading")
 }, {});
 
 export type LoadingEvent = autoguard.guards.Object<{
+	"category": autoguard.guards.Union<[
+		autoguard.guards.StringLiteral<"video">,
+		autoguard.guards.String
+	]>,
+	"params": autoguard.guards.Object<{
+		"uuid": autoguard.guards.String
+	}, {}>,
 	"sessionID": autoguard.guards.Number,
 	"state": autoguard.guards.StringLiteral<"loading">
 }, {}>;
 
+export const TimeRange: autoguard.serialization.MessageGuard<TimeRange> = autoguard.guards.Object.of({
+	"duration": autoguard.guards.Number,
+	"start": autoguard.guards.Number
+}, {});
+
+export type TimeRange = autoguard.guards.Object<{
+	"duration": autoguard.guards.Number,
+	"start": autoguard.guards.Number
+}, {}>;
+
 export const PlayingEvent: autoguard.serialization.MessageGuard<PlayingEvent> = autoguard.guards.Object.of({
+	"category": autoguard.guards.Union.of(
+		autoguard.guards.StringLiteral.of("video"),
+		autoguard.guards.String
+	),
+	"params": autoguard.guards.Object.of({
+		"duration": autoguard.guards.Number,
+		"loadedTimeRanges": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => TimeRange)),
+		"playbackBufferEmpty": autoguard.guards.Boolean,
+		"playbackBufferFull": autoguard.guards.Boolean,
+		"playbackLikelyToKeepUp": autoguard.guards.Boolean,
+		"playbackLikelyToKeepUpTime": autoguard.guards.Number,
+		"position": autoguard.guards.Number,
+		"rate": autoguard.guards.Number,
+		"readyToPlay": autoguard.guards.Boolean,
+		"seekableTimeRanges": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => TimeRange)),
+		"stallCount": autoguard.guards.Number,
+		"uuid": autoguard.guards.String
+	}, {}),
 	"sessionID": autoguard.guards.Number,
 	"state": autoguard.guards.StringLiteral.of("playing")
 }, {});
 
 export type PlayingEvent = autoguard.guards.Object<{
+	"category": autoguard.guards.Union<[
+		autoguard.guards.StringLiteral<"video">,
+		autoguard.guards.String
+	]>,
+	"params": autoguard.guards.Object<{
+		"duration": autoguard.guards.Number,
+		"loadedTimeRanges": autoguard.guards.Array<autoguard.guards.Reference<TimeRange>>,
+		"playbackBufferEmpty": autoguard.guards.Boolean,
+		"playbackBufferFull": autoguard.guards.Boolean,
+		"playbackLikelyToKeepUp": autoguard.guards.Boolean,
+		"playbackLikelyToKeepUpTime": autoguard.guards.Number,
+		"position": autoguard.guards.Number,
+		"rate": autoguard.guards.Number,
+		"readyToPlay": autoguard.guards.Boolean,
+		"seekableTimeRanges": autoguard.guards.Array<autoguard.guards.Reference<TimeRange>>,
+		"stallCount": autoguard.guards.Number,
+		"uuid": autoguard.guards.String
+	}, {}>,
 	"sessionID": autoguard.guards.Number,
 	"state": autoguard.guards.StringLiteral<"playing">
 }, {}>;
 
 export const PausedEvent: autoguard.serialization.MessageGuard<PausedEvent> = autoguard.guards.Object.of({
+	"category": autoguard.guards.Union.of(
+		autoguard.guards.StringLiteral.of("video"),
+		autoguard.guards.String
+	),
 	"sessionID": autoguard.guards.Number,
 	"state": autoguard.guards.StringLiteral.of("paused")
 }, {});
 
 export type PausedEvent = autoguard.guards.Object<{
+	"category": autoguard.guards.Union<[
+		autoguard.guards.StringLiteral<"video">,
+		autoguard.guards.String
+	]>,
 	"sessionID": autoguard.guards.Number,
 	"state": autoguard.guards.StringLiteral<"paused">
 }, {}>;
 
 export const StoppedEvent: autoguard.serialization.MessageGuard<StoppedEvent> = autoguard.guards.Object.of({
+	"category": autoguard.guards.Union.of(
+		autoguard.guards.StringLiteral.of("video"),
+		autoguard.guards.String
+	),
+	"params": autoguard.guards.Object.of({
+		"uuid": autoguard.guards.String
+	}, {}),
 	"sessionID": autoguard.guards.Number,
 	"state": autoguard.guards.StringLiteral.of("stopped"),
 	"reason": autoguard.guards.String
 }, {});
 
 export type StoppedEvent = autoguard.guards.Object<{
+	"category": autoguard.guards.Union<[
+		autoguard.guards.StringLiteral<"video">,
+		autoguard.guards.String
+	]>,
+	"params": autoguard.guards.Object<{
+		"uuid": autoguard.guards.String
+	}, {}>,
 	"sessionID": autoguard.guards.Number,
 	"state": autoguard.guards.StringLiteral<"stopped">,
 	"reason": autoguard.guards.String
@@ -47,6 +129,7 @@ export type StoppedEvent = autoguard.guards.Object<{
 export namespace Autoguard {
 	export const Guards = {
 		"LoadingEvent": autoguard.guards.Reference.of(() => LoadingEvent),
+		"TimeRange": autoguard.guards.Reference.of(() => TimeRange),
 		"PlayingEvent": autoguard.guards.Reference.of(() => PlayingEvent),
 		"PausedEvent": autoguard.guards.Reference.of(() => PausedEvent),
 		"StoppedEvent": autoguard.guards.Reference.of(() => StoppedEvent)
