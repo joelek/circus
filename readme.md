@@ -194,7 +194,6 @@ Ports, paths and other settings can be configured through altering the config fi
 * Create full screen player with additional controls and graphics.
 * Set document title based on page.
 * Create and use layout components with standard spacing.
-* Put languages in database.
 * Add support for language preferences for audio and subtitles.
 * Improve stream detection algorithm.
 * Index generated images.

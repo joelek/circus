@@ -1,4 +1,3 @@
-import * as languages from "../languages";
 import * as session from "./browserMediaSession";
 import { ArrayObservable, computed, ObservableClass } from "../observers";
 import * as client from "../player/client";
@@ -251,17 +250,14 @@ player.currentEntry.addObserver((currentEntry) => {
 		}
 		if (Movie.is(currentLocalEntry) || Episode.is(currentLocalEntry)) {
 			let subtitles = currentLocalEntry.subtitles;
-			let defaultSubtitle = subtitles.find((subtitle) => subtitle.language === "swe") ?? subtitles.find((subtitle) => subtitle.language === "eng") ?? subtitles.find((subtitle) => true);
+			let defaultSubtitle = subtitles.find((subtitle) => subtitle.language?.iso_639_2 === "swe") ?? subtitles.find((subtitle) => subtitle.language?.iso_639_2 === "eng") ?? subtitles.find((subtitle) => true);
 			for (let subtitle of subtitles) {
 				let element = document.createElement("track");
 				element.src = `/api/files/${subtitle.file_id}/?token=${token}`;
 				if (is.present(subtitle.language)) {
-					let language = languages.db[subtitle.language];
-					if (is.present(language)) {
-						element.label = language.title;
-						element.srclang = language.iso639_1;
-						element.kind = "subtitles";
-					}
+					element.label = subtitle.language.name;
+					element.srclang = subtitle.language.iso_639_1;
+					element.kind = "subtitles";
 				}
 				if (subtitle === defaultSubtitle) {
 					element.setAttribute("default", "");

@@ -14,6 +14,29 @@ import { createDecreasingOrder } from "@joelek/atlas";
 import { ActorResult, AlbumResult, ArtistResult, DiscResult, EpisodeResult, GenreResult, MovieResult, PlaylistResult, SeasonResult, ShowResult, TrackResult, UserResult, YearResult } from "./schema/api";
 import { string } from "../jdb2/asserts";
 
+export async function getLanguageFromSubtitleFile(queue: ReadableQueue, subtitle_file: atlas.SubtitleFile, api_user_id: string): Promise<schema.objects.Language | undefined> {
+	if (subtitle_file.language_id != null) {
+		let language = await atlas.stores.languages.lookup(queue, { language_id: subtitle_file.language_id });
+		return {
+			language_id: hexid(language.language_id),
+			name: language.name,
+			iso_639_1: language.iso_639_1,
+			iso_639_2: language.iso_639_2
+		};
+	}
+	if (subtitle_file.language != null) {
+		let languages = await atlas.queries.getLanguagesFromIso6392.filter(queue, { iso_639_2: subtitle_file.language });
+		for (let language of languages) {
+			return {
+				language_id: hexid(language.language_id),
+				name: language.name,
+				iso_639_1: language.iso_639_1,
+				iso_639_2: language.iso_639_2
+			};
+		}
+	}
+};
+
 export function getStreamWeight(timestamp_ms: number): number {
 	let ms = Date.now() - timestamp_ms;
 	let weeks = ms / (1000 * 60 * 60 * 24 * 7);
@@ -313,11 +336,12 @@ export async function lookupEpisode(queue: ReadableQueue, episode_id: string, ap
 			...video_file,
 			file_id: hexid(video_file.file_id)
 		},
-		subtitles: subtitle_files.map((subtitle_file) => ({
-			...subtitle_file,
+		subtitles: await Promise.all(subtitle_files.map(async (subtitle_file) => ({
 			file_id: hexid(subtitle_file.file_id),
-			language: subtitle_file.language ?? undefined
-		})),
+			mime: subtitle_file.mime,
+			duration_ms: subtitle_file.duration_ms,
+			language: await getLanguageFromSubtitleFile(queue, subtitle_file, api_user_id)
+		}))),
 		copyright: episode.copyright ?? undefined,
 		imdb: episode.imdb ?? undefined,
 		affinity: atlas.adjustAffinity(episode.affinity),
@@ -401,11 +425,12 @@ export async function lookupMovie(queue: ReadableQueue, movie_id: string, api_us
 			...video_file,
 			file_id: hexid(video_file.file_id)
 		},
-		subtitles: subtitle_files.map((subtitle_file) => ({
-			...subtitle_file,
+		subtitles: await Promise.all(subtitle_files.map(async (subtitle_file) => ({
 			file_id: hexid(subtitle_file.file_id),
-			language: subtitle_file.language ?? undefined
-		})),
+			mime: subtitle_file.mime,
+			duration_ms: subtitle_file.duration_ms,
+			language: await getLanguageFromSubtitleFile(queue, subtitle_file, api_user_id)
+		}))),
 		copyright: movie.copyright ?? undefined,
 		imdb: movie.imdb ?? undefined,
 		affinity: atlas.adjustAffinity(movie.affinity),

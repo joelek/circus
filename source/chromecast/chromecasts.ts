@@ -4,25 +4,23 @@ import * as cast_message from "./cast_message";
 import * as mdns from "../mdns";
 import * as schema from "./schema";
 import * as is from "../is";
-import * as languages from "../languages";
 import * as observers from "../observers/";
 import * as libcontext from "../player/client";
 import * as autoguard from "@joelek/ts-autoguard";
 import * as sockets from "@joelek/ts-sockets";
 import * as stdlib from "@joelek/ts-stdlib";
-import { Episode, Movie, Track } from "../api/schema/objects";
+import { Episode, Language, Movie, Track } from "../api/schema/objects";
 import * as utils from "../utils";
 
 const DEBUG = false;
 
-function getLanguage(language: string | undefined): { language: string, name: string } {
-	let entry =  languages.db[language ?? "eng"] ?? languages.db["eng"];
-	return {
-		language: [
-			entry.iso639_1,
-			entry.iso3166_1
-		].join("-"),
-		name: entry.title
+function getLanguage(language: Language | undefined): { language: string, name: string } {
+	return language == null ? {
+		language: "en",
+		name: "English"
+	} : {
+		language: language.iso_639_1,
+		name: language.name
 	};
 }
 
@@ -523,19 +521,19 @@ class ChromecastPlayer {
 					let activeTrackIds: number[] | undefined;
 					if (is.present(media.tracks)) {
 						let swe = media.tracks.find((track) => {
-							return (track as any).language === "sv-SE";
+							return (track as any).language === "sv";
 						});
 						if (is.present(swe)) {
 							activeTrackIds = [ swe.trackId ];
 						} else {
 							let eng = media.tracks.find((track) => {
-								return (track as any).language === "en-US";
+								return (track as any).language === "en";
 							});
 							if (is.present(eng)) {
 								activeTrackIds = [ eng.trackId ];
 							} else {
 								let jpn = media.tracks.find((track) => {
-									return (track as any).language === "ja-JP";
+									return (track as any).language === "ja";
 								});
 								if (is.present(jpn)) {
 									activeTrackIds = [ jpn.trackId ];

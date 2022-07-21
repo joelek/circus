@@ -3,6 +3,29 @@ import { WritableQueue } from "@joelek/atlas";
 
 const context = atlas.createContext();
 
+const languages = context.createStore({
+	language_id: context.createBinaryField(),
+	name: context.createStringField(),
+	iso_639_1: context.createStringField(),
+	iso_639_2: context.createStringField()
+}, ["language_id"], {
+
+});
+
+export type Language = atlas.RecordOf<typeof languages>;
+
+const getLanguagesFromIso6391 = context.createQuery(languages, {
+	iso_639_1: context.createEqualityOperator()
+}, {
+
+});
+
+const getLanguagesFromIso6392 = context.createQuery(languages, {
+	iso_639_2: context.createEqualityOperator()
+}, {
+
+});
+
 const directories = context.createStore({
 	directory_id: context.createBinaryField(),
 	name: context.createStringField(),
@@ -59,7 +82,8 @@ const subtitle_files = context.createStore({
 	file_id: context.createBinaryField(),
 	mime: context.createStringField(), // "text/vtt"
 	duration_ms: context.createIntegerField(),
-	language: context.createNullableStringField()
+	language: context.createNullableStringField(),
+	language_id: context.createNullableBinaryField()
 }, ["file_id"], {
 
 });
@@ -1068,6 +1092,7 @@ const getRecentlyUpdatedEpisodes = context.createQuery(episodes, {
 });
 
 export const transactionManager = context.createTransactionManager("./private/db/", {
+	languages,
 	directories,
 	files,
 	audio_files,
@@ -1196,6 +1221,8 @@ export const transactionManager = context.createTransactionManager("./private/db
 	movie_movie_suggestions,
 	movie_movie_suggestions_two
 }, {
+	getLanguagesFromIso6391,
+	getLanguagesFromIso6392,
 	getUsersFromUsername,
 	getStreamsFromUserIdAndFileId,
 	getRecentlyUpdatedAlbums,

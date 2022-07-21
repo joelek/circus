@@ -7,7 +7,7 @@ import * as is from "../is";
 import * as probes from "./probes";
 import { default as config } from "../config";
 import * as jdb2 from "../jdb2";
-import { transactionManager, stores, links, Directory, File, createStream, VideoFile, AudioFile } from "./atlas";
+import { transactionManager, stores, links, Directory, File, createStream, VideoFile, AudioFile, queries } from "./atlas";
 import { ReadableQueue, WritableQueue } from "@joelek/atlas";
 import { binid, hexid } from "../utils";
 
@@ -550,11 +550,19 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 			let subtitle_resources = probe.resources.filter((resource): resource is probes.schema.SubtitleResource => resource.type === "subtitle");
 			let subtitle_resource = subtitle_resources.shift();
 			if (is.present(subtitle_resource)) {
+				let language_id: Uint8Array | null = null;
+				if (is.present(subtitle_resource.language)) {
+					let languages = await queries.getLanguagesFromIso6392.filter(queue, {
+						iso_639_2: subtitle_resource.language
+					});
+					language_id = languages.pop()?.language_id || null;
+				}
 				await stores.subtitle_files.insert(queue, {
 					file_id: file_id,
 					mime: "text/vtt",
 					duration_ms: subtitle_resource.duration_ms,
-					language: subtitle_resource.language ?? null
+					language: subtitle_resource.language ?? null,
+					language_id: language_id
 				});
 				let subtitle_id = makeBinaryId("subtitle", file.file_id);
 				await stores.subtitles.insert(queue, {
@@ -1252,6 +1260,26 @@ export const stats = {
 
 export async function runIndexer(): Promise<void> {
 	console.log(`Running indexer...`);
+	await transactionManager.enqueueWritableTransaction(async (queue) => {
+		await stores.languages.insert(queue, {
+			language_id: makeBinaryId("language", "en"),
+			name: "English",
+			iso_639_1: "en",
+			iso_639_2: "eng"
+		});
+		await stores.languages.insert(queue, {
+			language_id: makeBinaryId("language", "sv"),
+			name: "Swedish",
+			iso_639_1: "sv",
+			iso_639_2: "swe"
+		});
+		await stores.languages.insert(queue, {
+			language_id: makeBinaryId("language", "ja"),
+			name: "Japanese",
+			iso_639_1: "ja",
+			iso_639_2: "jpn"
+		});
+	});
 	await transactionManager.enqueueWritableTransaction(async (queue) => {
 		console.log(`Updating file lists...`);
 		for (let directory of await links.directory_directories.filter(queue)) {

@@ -6,6 +6,32 @@ import { ImageFile } from "../../../database/schema";
 import { SubtitleFile } from "../../../database/schema";
 import { VideoFile } from "../../../database/schema";
 
+export const LanguageBase: autoguard.serialization.MessageGuard<LanguageBase> = autoguard.guards.Object.of({
+	"language_id": autoguard.guards.String,
+	"name": autoguard.guards.String
+}, {});
+
+export type LanguageBase = autoguard.guards.Object<{
+	"language_id": autoguard.guards.String,
+	"name": autoguard.guards.String
+}, {}>;
+
+export const Language: autoguard.serialization.MessageGuard<Language> = autoguard.guards.Intersection.of(
+	autoguard.guards.Reference.of(() => LanguageBase),
+	autoguard.guards.Object.of({
+		"iso_639_1": autoguard.guards.String,
+		"iso_639_2": autoguard.guards.String
+	}, {})
+);
+
+export type Language = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<LanguageBase>,
+	autoguard.guards.Object<{
+		"iso_639_1": autoguard.guards.String,
+		"iso_639_2": autoguard.guards.String
+	}, {}>
+]>;
+
 export const ActorBase: autoguard.serialization.MessageGuard<ActorBase> = autoguard.guards.Object.of({
 	"actor_id": autoguard.guards.String,
 	"name": autoguard.guards.String
@@ -363,7 +389,16 @@ export const Movie: autoguard.serialization.MessageGuard<Movie> = autoguard.guar
 	autoguard.guards.Object.of({
 		"genres": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => GenreBase)),
 		"media": autoguard.guards.Reference.of(() => VideoFile),
-		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile)),
+		"subtitles": autoguard.guards.Array.of(autoguard.guards.Object.of({
+			"file_id": autoguard.guards.String,
+			"mime": autoguard.guards.Union.of(
+				autoguard.guards.String,
+				autoguard.guards.StringLiteral.of("text/vtt")
+			),
+			"duration_ms": autoguard.guards.Number
+		}, {
+			"language": autoguard.guards.Reference.of(() => Language)
+		})),
 		"affinity": autoguard.guards.Number,
 		"duration_ms": autoguard.guards.Number
 	}, {
@@ -380,7 +415,16 @@ export type Movie = autoguard.guards.Intersection<[
 	autoguard.guards.Object<{
 		"genres": autoguard.guards.Array<autoguard.guards.Reference<GenreBase>>,
 		"media": autoguard.guards.Reference<VideoFile>,
-		"subtitles": autoguard.guards.Array<autoguard.guards.Reference<SubtitleFile>>,
+		"subtitles": autoguard.guards.Array<autoguard.guards.Object<{
+			"file_id": autoguard.guards.String,
+			"mime": autoguard.guards.Union<[
+				autoguard.guards.String,
+				autoguard.guards.StringLiteral<"text/vtt">
+			]>,
+			"duration_ms": autoguard.guards.Number
+		}, {
+			"language": autoguard.guards.Reference<Language>
+		}>>,
 		"affinity": autoguard.guards.Number,
 		"duration_ms": autoguard.guards.Number
 	}, {
@@ -512,7 +556,16 @@ export const Episode: autoguard.serialization.MessageGuard<Episode> = autoguard.
 	autoguard.guards.Reference.of(() => EpisodeBase),
 	autoguard.guards.Object.of({
 		"media": autoguard.guards.Reference.of(() => VideoFile),
-		"subtitles": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SubtitleFile)),
+		"subtitles": autoguard.guards.Array.of(autoguard.guards.Object.of({
+			"file_id": autoguard.guards.String,
+			"mime": autoguard.guards.Union.of(
+				autoguard.guards.String,
+				autoguard.guards.StringLiteral.of("text/vtt")
+			),
+			"duration_ms": autoguard.guards.Number
+		}, {
+			"language": autoguard.guards.Reference.of(() => Language)
+		})),
 		"affinity": autoguard.guards.Number,
 		"duration_ms": autoguard.guards.Number
 	}, {
@@ -528,7 +581,16 @@ export type Episode = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<EpisodeBase>,
 	autoguard.guards.Object<{
 		"media": autoguard.guards.Reference<VideoFile>,
-		"subtitles": autoguard.guards.Array<autoguard.guards.Reference<SubtitleFile>>,
+		"subtitles": autoguard.guards.Array<autoguard.guards.Object<{
+			"file_id": autoguard.guards.String,
+			"mime": autoguard.guards.Union<[
+				autoguard.guards.String,
+				autoguard.guards.StringLiteral<"text/vtt">
+			]>,
+			"duration_ms": autoguard.guards.Number
+		}, {
+			"language": autoguard.guards.Reference<Language>
+		}>>,
 		"affinity": autoguard.guards.Number,
 		"duration_ms": autoguard.guards.Number
 	}, {
@@ -704,6 +766,8 @@ export type Entity = autoguard.guards.Union<[
 
 export namespace Autoguard {
 	export const Guards = {
+		"LanguageBase": autoguard.guards.Reference.of(() => LanguageBase),
+		"Language": autoguard.guards.Reference.of(() => Language),
 		"ActorBase": autoguard.guards.Reference.of(() => ActorBase),
 		"Actor": autoguard.guards.Reference.of(() => Actor),
 		"ArtistBase": autoguard.guards.Reference.of(() => ArtistBase),

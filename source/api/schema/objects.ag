@@ -1,3 +1,13 @@
+guard LanguageBase: {
+	"language_id": string,
+	"name": string
+};
+
+guard Language: LanguageBase & {
+	"iso_639_1": string,
+	"iso_639_2": string
+};
+
 guard ActorBase: {
 	"actor_id": string,
 	"name": string
@@ -136,7 +146,12 @@ guard Movie: MovieBase & {
 	"genres": GenreBase[],
 	"last_stream_date"?: number,
 	"media": ../../database/schema/VideoFile,
-	"subtitles": ../../database/schema/SubtitleFile[],
+	"subtitles": {
+		"file_id": string,
+		"mime": string | "text/vtt",
+		"duration_ms": number,
+		"language"?: Language
+	}[],
 	"copyright"?: string,
 	"imdb"?: string,
 	"affinity": number,
@@ -192,7 +207,12 @@ guard Episode: EpisodeBase & {
 	"summary"?: string,
 	"last_stream_date"?: number,
 	"media": ../../database/schema/VideoFile,
-	"subtitles": ../../database/schema/SubtitleFile[],
+	"subtitles": {
+		"file_id": string,
+		"mime": string | "text/vtt",
+		"duration_ms": number,
+		"language"?: Language
+	}[],
 	"copyright"?: string,
 	"imdb"?: string,
 	"affinity": number,
