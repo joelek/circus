@@ -23,7 +23,8 @@ function makeCorrelationID(): string {
 }
 
 type DeviceEventMap = {
-	"close": {}
+	"connect": {};
+	"close": {};
 };
 
 export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
@@ -67,6 +68,9 @@ export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
 					status: 200,
 					reason: "OK"
 				};
+			});
+			inbound.addObserver("connect", () => {
+				this.route("connect", {});
 			});
 			inbound.addObserver("close", () => {
 				this.route("close", {});

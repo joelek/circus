@@ -51,7 +51,12 @@ export function observe(websocket_host: string, media_server_host: string): void
 				let device_type = getDeviceType(service_info ?? []);
 				let device = new Device(hostname, websocket_host, media_server_host, device_name, device_type);
 				devices.set(hostname, device);
+				device.addObserver("connect", function onconnect() {
+					console.log(`Connected to AirPlay device at ${service_device.hostname}.`);
+					device.removeObserver("connect", onconnect);
+				});
 				device.addObserver("close", function onclose() {
+					console.log(`Disconnected from AirPlay device at ${service_device.hostname}.`);
 					device.removeObserver("close", onclose);
 					devices.delete(hostname);
 				});

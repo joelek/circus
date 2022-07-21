@@ -123,7 +123,8 @@ export function serializeResponse(response: Partial<Response>): Buffer {
 };
 
 export type OutboundSocketEventMap = {
-	"close": {}
+	"connect": {};
+	"close": {};
 };
 
 export class OutboundSocket extends stdlib.routing.MessageRouter<OutboundSocketEventMap> {
@@ -133,6 +134,7 @@ export class OutboundSocket extends stdlib.routing.MessageRouter<OutboundSocketE
 		super();
 		let socket = libnet.createConnection(options);
 		socket.on("connect", () => {
+			this.route("connect", {});
 		});
 		socket.on("close", () => {
 			this.route("close", {});
@@ -161,7 +163,8 @@ export class OutboundSocket extends stdlib.routing.MessageRouter<OutboundSocketE
 };
 
 export type InboundSocketEventMap = {
-	"close": {}
+	"connect": {};
+	"close": {};
 };
 
 export class InboundSocket extends stdlib.routing.MessageRouter<InboundSocketEventMap> {
@@ -184,6 +187,7 @@ export class InboundSocket extends stdlib.routing.MessageRouter<InboundSocketEve
 				return socket.emit("error", `Expected a valid upgrade header!`);
 			}
 			socket.off("data", ondata);
+			this.route("connect", {});
 			socket.on("data", async (buffer) => {
 				try {
 					let request = parseRequest(buffer);
