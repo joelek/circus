@@ -189,15 +189,17 @@ Ports, paths and other settings can be configured through altering the config fi
 * Structure code using subprojects.
 * Clear player state when the user logs out.
 * Add account tiers to keys and users.
+* Implement user admin for admin accounts.
+* Allow admin accounts to re-index content through the user interface.
 * Create full screen player with additional controls and graphics.
 * Set document title based on page.
 * Create and use layout components with standard spacing.
 * Put languages in database.
+* Add support for language preferences for audio and subtitles.
 * Improve stream detection algorithm.
 * Index generated images.
 * Move authentication to typesockets.
-* Add synchronization to playback protocol.
-* Index content at regular one hour intervals when inactive.
+* Add synchronization (latency estimation) to playback protocol.
 * Verify external track metadata functionality.
 * Change line heights to prevent the truncation of capital letters with umlauts.
 * Index keyframes and create movie and episode subpage with list.
