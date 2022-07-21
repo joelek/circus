@@ -9,6 +9,7 @@ import * as api from "./api";
 import * as http from "./http";
 import * as plist from "./plist";
 import * as utils from "../utils";
+import { Episode, Movie } from "../api/schema/objects";
 
 const PORT = 7000;
 
@@ -82,6 +83,12 @@ export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
 				if (is.present(currentLocalEntry) && is.present(token)) {
 					let url = `${media_server_host}/api/files/${currentLocalEntry.media.file_id}/?token=${token}`;
 					await api.play(outbound, correlation_id, url, 0.0);
+					if (Episode.is(currentLocalEntry) || Movie.is(currentLocalEntry)) {
+						for (let subtitle of currentLocalEntry.subtitles) {
+							let url = `${media_server_host}/api/files/${subtitle.file_id}/?token=${token}`;
+							// TODO: Figure out how to show subtitles through AirPlay.
+						}
+					}
 				} else {
 					await api.stop(outbound, correlation_id);
 				}
