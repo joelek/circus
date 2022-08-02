@@ -192,7 +192,6 @@ Ports, paths and other settings can be configured through altering the config fi
 * Implement user admin for admin accounts.
 * Allow admin accounts to re-index content through the user interface.
 * Create full screen player with additional controls and graphics.
-* Set document title based on page.
 * Create and use layout components with standard spacing.
 * Add support for language preferences for audio and subtitles.
 * Improve stream detection algorithm.

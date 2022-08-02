@@ -2265,7 +2265,7 @@ function observe(element: xml.XElement, handler: () => Promise<void>): xml.XElem
 	return element;
 }
 
-let updateviewforuri = async (uri: string): Promise<Element> => {
+let updateviewforuri = async (uri: string): Promise<{ element: Element, title: string }> => {
 	let parts: RegExpExecArray | null;
 	if (false) {
 	} else if ((parts = /^audio[/]tracks[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
@@ -2305,7 +2305,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			let track = payload.track;
 			let last = payload.last;
 			let next = payload.next;
-			return xml.element("div")
+			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forTrack(track, { compactDescription: false }))
 				)
@@ -2322,6 +2322,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				)
 				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 				.render();
+			return {
+				element,
+				title: `${track.title}`
+			};
 		});
 	} else if ((parts = /^audio[/]tracks[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
@@ -2337,13 +2341,13 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		};
 		window.requestAnimationFrame(() => {
 			query.addObserver((query) => {
-				replaceUrl(`audio/tracks/${encodeURIComponent(query)}`);
+				replaceUrl(`audio/tracks/${encodeURIComponent(query)}`, `Tracks`);
 				tracks.update([]);
 				provider = new TrackSearchResultProvider(token ?? "", query);
 				load();
 			});
 		});
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Tracks")))
 			)
@@ -2357,6 +2361,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Tracks`
+		};
 	} else if ((parts = /^video[/]seasons[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let season_id = decodeURIComponent(parts[1]);
 		return apiclient["GET:/seasons/<season_id>/"]({
@@ -2379,7 +2387,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				let payload = await response.payload();
 				episodes.update(payload.episodes);
 			});
-			return xml.element("div")
+			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forSeason(season, { compactDescription: false }))
 				)
@@ -2395,6 +2403,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					.add(entityNavLinkFactory.forSeason(last, next))
 				)
 				.render();
+			return {
+				element,
+				title: `Season ${season.number}`
+			};
 		});
 	} else if ((parts = /^video[/]seasons[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
@@ -2410,13 +2422,13 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		};
 		window.requestAnimationFrame(() => {
 			query.addObserver((query) => {
-				replaceUrl(`video/seasons/${encodeURIComponent(query)}`);
+				replaceUrl(`video/seasons/${encodeURIComponent(query)}`, `Seasons`);
 				seasons.update([]);
 				provider = new SeasonSearchResultProvider(token ?? "", query);
 				load();
 			});
 		});
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Seasons")))
 			)
@@ -2430,6 +2442,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Seasons`
+		};
 	} else if ((parts = /^audio[/]discs[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let disc_id = decodeURIComponent(parts[1]);
 		return apiclient["GET:/discs/<disc_id>/"]({
@@ -2452,7 +2468,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				let payload = await response.payload();
 				tracks.update(payload.tracks);
 			});
-			return xml.element("div")
+			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forDisc(disc, { compactDescription: false }))
 				)
@@ -2468,6 +2484,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					.add(entityNavLinkFactory.forDisc(last, next))
 				)
 				.render();
+			return {
+				element,
+				title: `Disc ${disc.number}`
+			};
 		});
 	} else if ((parts = /^audio[/]discs[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
@@ -2483,13 +2503,13 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		};
 		window.requestAnimationFrame(() => {
 			query.addObserver((query) => {
-				replaceUrl(`audio/discs/${encodeURIComponent(query)}`);
+				replaceUrl(`audio/discs/${encodeURIComponent(query)}`, `Discs`);
 				discs.update([]);
 				provider = new DiscSearchResultProvider(token ?? "", query);
 				load();
 			});
 		});
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Discs")))
 			)
@@ -2503,6 +2523,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Discs`
+		};
 	} else if ((parts = /^users[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let user_id = decodeURIComponent(parts[1]);
 		return apiclient["GET:/users/<user_id>/"]({
@@ -2541,7 +2565,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					isLoading.updateState(false);
 				}
 			};
-			return xml.element("div")
+			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(renderTextHeader(xml.text(user.name)))
 				)
@@ -2555,6 +2579,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				)
 				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 				.render();
+			return {
+				element,
+				title: `${user.name}`
+			};
 		});
 	} else if ((parts = /^users[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
@@ -2570,13 +2598,13 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		};
 		window.requestAnimationFrame(() => {
 			query.addObserver((query) => {
-				replaceUrl(`users/${encodeURIComponent(query)}`);
+				replaceUrl(`users/${encodeURIComponent(query)}`, `Users`);
 				users.update([]);
 				provider = new UserSearchResultProvider(token ?? "", query);
 				load();
 			});
 		});
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Users")))
 			)
@@ -2590,6 +2618,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Users`
+		};
 	} else if ((parts = /^actors[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let actor_id = decodeURIComponent(parts[1]);
 		return apiclient["GET:/actors/<actor_id>/"]({
@@ -2637,7 +2669,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 						isLoading.updateState(false);
 					}
 				};
-				return xml.element("div.content")
+				let element = xml.element("div.content")
 					.set("style", "display: grid; gap: 48px;")
 					.add(renderTextHeader(xml.text(actor.name)))
 					.add(xml.element("div")
@@ -2656,6 +2688,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					)
 					.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 					.render();
+				return {
+					element,
+					title: `${actor.name}`
+				};
 			});
 		});
 	} else if ((parts = /^actors[/]([^/?]*)/.exec(uri)) !== null) {
@@ -2672,13 +2708,13 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		};
 		window.requestAnimationFrame(() => {
 			query.addObserver((query) => {
-				replaceUrl(`actors/${encodeURIComponent(query)}`);
+				replaceUrl(`actors/${encodeURIComponent(query)}`, `Actors`);
 				actors.update([]);
 				provider = new ActorSearchResultProvider(token ?? "", query);
 				load();
 			});
 		});
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Actors")))
 			)
@@ -2692,6 +2728,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Actors`
+		};
 	} else if ((parts = /^audio[/]albums[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let album_id = decodeURIComponent(parts[1]);
 		return apiclient["GET:/albums/<album_id>/"]({
@@ -2712,7 +2752,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				let payload = await response.payload();
 				discs.update(payload.discs);
 			});
-			return xml.element("div")
+			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forAlbum(album, { compactDescription: false }))
 				)
@@ -2738,6 +2778,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					return element;
 				})
 				.render();
+			return {
+				element,
+				title: `${album.title}`
+			};
 		});
 	} else if ((parts = /^audio[/]albums[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
@@ -2753,13 +2797,13 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		};
 		window.requestAnimationFrame(() => {
 			query.addObserver((query) => {
-				replaceUrl(`audio/albums/${encodeURIComponent(query)}`);
+				replaceUrl(`audio/albums/${encodeURIComponent(query)}`, `Albums`);
 				albums.update([]);
 				provider = new AlbumSearchResultProvider(token ?? "", query);
 				load();
 			});
 		});
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Albums")))
 			)
@@ -2773,6 +2817,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Albums`
+		};
 	} else if ((parts = /^audio[/]artists[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let artist_id = decodeURIComponent(parts[1]);
 		return apiclient["GET:/artists/<artist_id>/"]({
@@ -2795,7 +2843,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				let payload = await response.payload();
 				albums.update(payload.albums);
 			});
-			return xml.element("div")
+			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forArtist(artist, { compactDescription: false }))
 				)
@@ -2831,6 +2879,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					)
 				)
 				.render();
+			return {
+				element,
+				title: `${artist.title}`
+			};
 		});
 	} else if ((parts = /^audio[/]artists[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
@@ -2846,13 +2898,13 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		};
 		window.requestAnimationFrame(() => {
 			query.addObserver((query) => {
-				replaceUrl(`audio/artists/${encodeURIComponent(query)}`);
+				replaceUrl(`audio/artists/${encodeURIComponent(query)}`, `Artists`);
 				artists.update([]);
 				provider = new ArtistSearchResultProvider(token ?? "", query);
 				load();
 			});
 		});
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Artists")))
 			)
@@ -2866,6 +2918,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Artists`
+		};
 	} else if ((parts = /^audio[/]playlists[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let playlist_id = decodeURIComponent(parts[1]);
 		return apiclient["GET:/playlists/<playlist_id>/"]({
@@ -2891,7 +2947,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				let payload = await response.payload();
 				items.update(payload.items);
 			});
-			return xml.element("div")
+			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forPlaylist(playlist, { compactDescription: false }))
 				)
@@ -2922,6 +2978,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					)
 				)
 				.render();
+			return {
+				element,
+				title: `${playlist.title}`
+			};
 		});
 	} else if ((parts = /^audio[/]playlists[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
@@ -2937,13 +2997,13 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		};
 		window.requestAnimationFrame(() => {
 			query.addObserver((query) => {
-				replaceUrl(`audio/playlists/${encodeURIComponent(query)}`);
+				replaceUrl(`audio/playlists/${encodeURIComponent(query)}`, `Playlists`);
 				playlists.update([]);
 				provider = new PlaylistSearchResultProvider(token ?? "", query);
 				load();
 			});
 		});
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Playlists")))
 			)
@@ -2957,6 +3017,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Playlists`
+		};
 	} else if ((parts = /^audio[/]/.exec(uri)) !== null) {
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
@@ -2985,7 +3049,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				isLoading.updateState(false);
 			}
 		};
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(Grid.make({ mini: true })
 					.add(makeIconLink(Icon.makeDisc(), "Albums", "audio/albums/"))
@@ -3004,6 +3068,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Listen`
+		};
 	} else if ((parts = /^video[/]shows[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let show_id = decodeURIComponent(parts[1]);
 		return apiclient["GET:/shows/<show_id>/"]({
@@ -3042,7 +3110,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					nextEpisodeElements.update([element]);
 				}
 			});
-			return xml.element("div")
+			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forShow(show, { compactDescription: false }))
 				)
@@ -3064,6 +3132,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					)
 				)
 				.render();
+			return {
+				element,
+				title: `${show.title}`
+			};
 		});
 	} else if ((parts = /^video[/]shows[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
@@ -3079,13 +3151,13 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		};
 		window.requestAnimationFrame(() => {
 			query.addObserver((query) => {
-				replaceUrl(`video/shows/${encodeURIComponent(query)}`);
+				replaceUrl(`video/shows/${encodeURIComponent(query)}`, `Shows`);
 				shows.update([]);
 				provider = new ShowSearchResultProvider(token ?? "", query);
 				load();
 			});
 		});
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Shows")))
 			)
@@ -3099,6 +3171,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Shows`
+		};
 	} else if ((parts = /^video[/]episodes[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let episode_id = decodeURIComponent(parts[1]);
 		return apiclient["GET:/episodes/<episode_id>/"]({
@@ -3111,7 +3187,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			let episode = payload.episode;
 			let last = payload.last;
 			let next = payload.next;
-			return xml.element("div")
+			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forEpisode(episode, { compactDescription: false }))
 				)
@@ -3119,6 +3195,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					.add(entityNavLinkFactory.forEpisode(last, next))
 				)
 				.render();
+			return {
+				element,
+				title: `${episode.title}`
+			};
 		});
 	} else if ((parts = /^video[/]episodes[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
@@ -3134,13 +3214,13 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		};
 		window.requestAnimationFrame(() => {
 			query.addObserver((query) => {
-				replaceUrl(`video/episodes/${encodeURIComponent(query)}`);
+				replaceUrl(`video/episodes/${encodeURIComponent(query)}`, `Episodes`);
 				episodes.update([]);
 				provider = new EpisodeSearchResultProvider(token ?? "", query);
 				load();
 			});
 		});
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Episodes")))
 			)
@@ -3154,6 +3234,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Episodes`
+		};
 	} else if ((parts = /^video[/]movies[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let movie_id = decodeURIComponent(parts[1]);
 		return apiclient["GET:/movies/<movie_id>/"]({
@@ -3193,7 +3277,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			let payload = await response.payload();
 			let movie = payload.movie;
 			let actors = payload.actors;
-			return xml.element("div")
+			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forMovie(movie, { compactDescription: false }))
 				)
@@ -3212,6 +3296,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				)
 				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 				.render();
+			return {
+				element,
+				title: `${movie.title}`
+			};
 		});
 	} else if ((parts = /^video[/]movies[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = new ObservableClass<string>(decodeURIComponent(parts[1]));
@@ -3227,13 +3315,13 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		};
 		window.requestAnimationFrame(() => {
 			query.addObserver((query) => {
-				replaceUrl(`video/movies/${encodeURIComponent(query)}`);
+				replaceUrl(`video/movies/${encodeURIComponent(query)}`, `Movies`);
 				movies.update([]);
 				provider = new MovieSearchResultProvider(token ?? "", query);
 				load();
 			});
 		});
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Movies")))
 			)
@@ -3247,6 +3335,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Movies`
+		};
 	} else if ((parts = /^video[/]genres[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let genre_id = decodeURIComponent(parts[1]);
 		return apiclient["GET:/genres/<genre_id>/"]({
@@ -3294,7 +3386,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 						isLoading.updateState(false);
 					}
 				};
-				return xml.element("div")
+				let element = xml.element("div")
 					.add(xml.element("div.content")
 						.add(renderTextHeader(xml.text(genre.title)))
 					)
@@ -3313,6 +3405,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					)
 					.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 					.render();
+				return {
+					element,
+					title: `${genre.title}`
+				};
 			});
 		});
 	} else if ((parts = /^video[/]genres[/]([^/?]*)/.exec(uri)) !== null) {
@@ -3346,7 +3442,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				isLoading.updateState(false);
 			}
 		};
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(Grid.make({ mini: true })
 					.repeat(genres, (genre) => makeIconLink(Icon.makePieChart(), genre.title, `video/genres/${genre.genre_id}/`))
@@ -3354,6 +3450,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Genres`
+		};
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
@@ -3382,7 +3482,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				isLoading.updateState(false);
 			}
 		};
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(Grid.make({ mini: true })
 					.add(makeIconLink(Icon.makeStar(), "Movies", "video/movies/"))
@@ -3401,6 +3501,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Watch`
+		};
 	} else if ((parts = /^search[/]([^/?]*)/.exec(uri)) !== null) {
 		function getBoolean(uri: string, key: string): boolean | undefined {
 			let url = new URL(uri, window.location.origin);
@@ -3434,7 +3538,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 		window.requestAnimationFrame(() => {
 			computed((query, cues) => {
 				if (!isLoading.getState()) {
-					replaceUrl(`search/${encodeURIComponent(query)}?cues=${cues}`);
+					replaceUrl(`search/${encodeURIComponent(query)}?cues=${cues}`, `Search`);
 					entities.update([]);
 					reachedEnd.updateState(false);
 					if (query === "") {
@@ -3464,7 +3568,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				}
 			}
 		});
-		return xml.element("div.content")
+		let element = xml.element("div.content")
 			.add(xml.element("div")
 				.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr auto;")
 				.add(makeSearchField(query))
@@ -3488,6 +3592,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Search`
+		};
 	} else if ((parts = /^years[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let year_id = decodeURIComponent(parts[1]);
 		return apiclient["GET:/years/<year_id>/"]({
@@ -3536,7 +3644,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 						isLoading.updateState(false);
 					}
 				};
-				return xml.element("div")
+				let element = xml.element("div")
 					.add(xml.element("div.content")
 						.add(renderTextHeader(xml.text(`${year.year}`)))
 						.add(xml.element("div")
@@ -3556,6 +3664,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					)
 				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 				.render();
+				return {
+					element,
+					title: `${year.year}`
+				};
 			});
 		});
 	} else if ((parts = /^years[/]([^/?]*)/.exec(uri)) !== null) {
@@ -3589,7 +3701,7 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 				isLoading.updateState(false);
 			}
 		};
-		return xml.element("div")
+		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(Grid.make({ mini: true })
 					.repeat(years, (year) => makeIconLink(Icon.makeCalendar(), `${year.year}`, `years/${year.year_id}/`))
@@ -3597,6 +3709,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 			.render();
+		return {
+			element,
+			title: `Years`
+		};
 	} else {
 		return apiclient["GET:/users/<user_id>/shows/"]({
 			options: {
@@ -3642,13 +3758,13 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 						isLoading.updateState(false);
 					}
 				};
-				return xml.element("div")
+				let element = xml.element("div")
 					.add(xml.element("div.content")
 						.add(Grid.make({ mini: true })
 							.add(makeIconLink(Icon.makeMonitor(), "Watch", "video/"))
 							.add(makeIconLink(Icon.makeSpeaker(), "Listen", "audio/"))
 							.add(makeIconLink(Icon.makeMagnifyingGlass(), "Search", "search/"))
-							.add(makeIconLink(Icon.makeCalendar(), "Revisit", "years/"))
+							.add(makeIconLink(Icon.makeCalendar(), "Years", "years/"))
 						)
 						.add(xml.element("div")
 							.set("style", "display: grid; gap: 24px")
@@ -3695,6 +3811,10 @@ let updateviewforuri = async (uri: string): Promise<Element> => {
 					)
 					.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 				.render();
+				return {
+					element,
+					title: `Circus`
+				};
 			});
 		});
 	}
@@ -3724,17 +3844,20 @@ let get_route = (pathname: string = window.location.pathname, basehref: string =
 type CacheEntry = {
 	uri: string,
 	element: Element,
+	title: string,
 	x: number,
 	y: number,
 };
 let mount_cache = new Array<CacheEntry>();
 let mounted_uri: string | undefined;
-function replaceUrl(uri: string): void {
+function replaceUrl(uri: string, title: string): void {
 	if (mounted_uri != null) {
 		let entry = mount_cache.find((entry) => entry.uri === mounted_uri);
 		if (entry != null) {
 			entry.uri = uri;
+			entry.title = title;
 			window.history.replaceState({ ...window.history.state, uri }, "", uri);
+			document.title = title;
 			mounted_uri = uri;
 		}
 	}
@@ -3784,6 +3907,7 @@ async function navigate(uri: string, use_cache: boolean = false): Promise<void> 
 			entry = {
 				uri: mounted_uri,
 				element: mount.firstChild as Element,
+				title: document.title,
 				x: mount.scrollLeft,
 				y: mount.scrollTop
 			};
@@ -3796,19 +3920,20 @@ async function navigate(uri: string, use_cache: boolean = false): Promise<void> 
 	}
 	let entry = mount_cache.find((entry) => entry.uri === uri);
 	if (is.present(entry) && use_cache) {
-		mount.appendChild(entry.element);
-		mount.scrollLeft = entry.x;
-		mount.scrollTop = entry.y;
 	} else {
-		let element = await updateviewforuri(uri);
-		mount_cache.unshift({
+		let { element, title } = await updateviewforuri(uri);
+		entry = {
 			uri: uri,
 			element: element,
+			title: title,
 			x: 0,
 			y: 0
-		});
-		mount.appendChild(element);
+		};
+		mount_cache.unshift(entry);
 	}
+	mount.appendChild(entry.element);
+	mount.scrollLeft = entry.x;
+	mount.scrollTop = entry.y;
 	if (is.absent(window.history.state)) {
 		window.history.replaceState({ uri, index: historyIndex.getState() }, "", uri);
 	} else {
@@ -3820,7 +3945,8 @@ async function navigate(uri: string, use_cache: boolean = false): Promise<void> 
 			historyIndex.updateState(window.history.state.index);
 		}
 	}
-	mounted_uri = uri;
+	mounted_uri = entry.uri;
+	document.title = entry.title;
 }
 function setupRouting(): void {
 	window.addEventListener("popstate", (event) => {
