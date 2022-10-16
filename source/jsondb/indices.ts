@@ -52,7 +52,7 @@ export class CollectionIndex<A extends Record<string, any>> {
 		this.insert(next);
 	}
 
-	static fromIndex<A, B>(parent: RecordIndex<A>, child: RecordIndex<B>, getIndexedValue: (record: B) => string | undefined): CollectionIndex<B> {
+	static fromIndex<A extends Record<string, any>, B extends Record<string, any>>(parent: RecordIndex<A>, child: RecordIndex<B>, getIndexedValue: (record: B) => string | undefined): CollectionIndex<B> {
 		let index = new CollectionIndex<B>((key) => child.lookup(key), (record) => child.keyof(record), getIndexedValue);
 		child.on("insert", (event) => {
 			index.insert(event.next);
@@ -72,7 +72,7 @@ export class CollectionIndex<A extends Record<string, any>> {
 		return index;
 	}
 
-	static fromTable<A, B>(parent: jdb.Table<A>, child: jdb.Table<B>, getIndexedValue: (record: B) => string | undefined): CollectionIndex<B> {
+	static fromTable<A extends Record<string, any>, B extends Record<string, any>>(parent: jdb.Table<A>, child: jdb.Table<B>, getIndexedValue: (record: B) => string | undefined): CollectionIndex<B> {
 		let index = new CollectionIndex<B>((key) => child.lookup(key), (record) => child.keyof(record), getIndexedValue);
 		child.on("insert", (event) => {
 			index.insert(event.next);
@@ -191,7 +191,7 @@ export class RecordIndex<A extends Record<string, any>> {
 		this.insertOrUpdate(record, action);
 	}
 
-	static from<A>(records: Iterable<A>, getKey: (record: A) => string): RecordIndex<A> {
+	static from<A extends Record<string, any>>(records: Iterable<A>, getKey: (record: A) => string): RecordIndex<A> {
 		let index = new RecordIndex<A>(getKey);
 		for (let record of records) {
 			index.insert(record);
@@ -285,7 +285,7 @@ export class SearchIndex<A extends Record<string, any>> {
 		this.insert(next);
 	}
 
-	static fromIndex<A>(records: RecordIndex<A>, getIndexedValues: (record: A) => Array<string>, minTokenLength: number = 0): SearchIndex<A> {
+	static fromIndex<A extends Record<string, any>>(records: RecordIndex<A>, getIndexedValues: (record: A) => Array<string>, minTokenLength: number = 0): SearchIndex<A> {
 		let index = new SearchIndex<A>((key) => records.lookup(key), (record) => records.keyof(record), getIndexedValues, minTokenLength);
 		records.on("insert", (event) => {
 			index.insert(event.next);
@@ -299,7 +299,7 @@ export class SearchIndex<A extends Record<string, any>> {
 		return index;
 	}
 
-	static fromTable<A>(records: jdb.Table<A>, getIndexedValues: (record: A) => Array<string>, minTokenLength: number = 0): SearchIndex<A> {
+	static fromTable<A extends Record<string, any>>(records: jdb.Table<A>, getIndexedValues: (record: A) => Array<string>, minTokenLength: number = 0): SearchIndex<A> {
 		let index = new SearchIndex<A>((key) => records.lookup(key), (record) => records.keyof(record), getIndexedValues, minTokenLength);
 		for (let record of records) {
 			index.insert(record);
