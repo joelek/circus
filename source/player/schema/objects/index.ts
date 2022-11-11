@@ -10,6 +10,7 @@ import { PlaylistContext } from "../../../api/schema/objects";
 import { SeasonContext } from "../../../api/schema/objects";
 import { ShowContext } from "../../../api/schema/objects";
 import { TrackContext } from "../../../api/schema/objects";
+import { YearContext } from "../../../api/schema/objects";
 
 export const ContextAlbum: autoguard.serialization.MessageGuard<ContextAlbum> = autoguard.guards.Reference.of(() => AlbumContext);
 
@@ -47,6 +48,10 @@ export const ContextEpisode: autoguard.serialization.MessageGuard<ContextEpisode
 
 export type ContextEpisode = autoguard.guards.Reference<EpisodeContext>;
 
+export const ContextYear: autoguard.serialization.MessageGuard<ContextYear> = autoguard.guards.Reference.of(() => YearContext);
+
+export type ContextYear = autoguard.guards.Reference<YearContext>;
+
 export const Context: autoguard.serialization.MessageGuard<Context> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => ContextAlbum),
 	autoguard.guards.Reference.of(() => ContextArtist),
@@ -56,7 +61,8 @@ export const Context: autoguard.serialization.MessageGuard<Context> = autoguard.
 	autoguard.guards.Reference.of(() => ContextMovie),
 	autoguard.guards.Reference.of(() => ContextShow),
 	autoguard.guards.Reference.of(() => ContextSeason),
-	autoguard.guards.Reference.of(() => ContextEpisode)
+	autoguard.guards.Reference.of(() => ContextEpisode),
+	autoguard.guards.Reference.of(() => ContextYear)
 );
 
 export type Context = autoguard.guards.Union<[
@@ -68,7 +74,8 @@ export type Context = autoguard.guards.Union<[
 	autoguard.guards.Reference<ContextMovie>,
 	autoguard.guards.Reference<ContextShow>,
 	autoguard.guards.Reference<ContextSeason>,
-	autoguard.guards.Reference<ContextEpisode>
+	autoguard.guards.Reference<ContextEpisode>,
+	autoguard.guards.Reference<ContextYear>
 ]>;
 
 export const ContextItem: autoguard.serialization.MessageGuard<ContextItem> = autoguard.guards.Union.of(
@@ -136,6 +143,7 @@ export namespace Autoguard {
 		"ContextShow": autoguard.guards.Reference.of(() => ContextShow),
 		"ContextSeason": autoguard.guards.Reference.of(() => ContextSeason),
 		"ContextEpisode": autoguard.guards.Reference.of(() => ContextEpisode),
+		"ContextYear": autoguard.guards.Reference.of(() => ContextYear),
 		"Context": autoguard.guards.Reference.of(() => Context),
 		"ContextItem": autoguard.guards.Reference.of(() => ContextItem),
 		"Device": autoguard.guards.Reference.of(() => Device),

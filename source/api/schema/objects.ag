@@ -253,6 +253,10 @@ guard Year: YearBase & {
 	"affinity": number
 };
 
+guard YearContext: Year & {
+	"albums": AlbumContext[]
+};
+
 guard EntityBase: ActorBase | AlbumBase | ArtistBase | CueBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase;
 
 guard Entity: Actor | Album | Artist | Cue | Disc | Episode | Genre | Movie | Playlist | Season | Show | Track | User | Year;

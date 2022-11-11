@@ -28,6 +28,7 @@ import { Track } from ".././objects";
 import { TrackContext } from ".././objects";
 import { User } from ".././objects";
 import { Year } from ".././objects";
+import { YearContext } from ".././objects";
 
 export const ActorResult: autoguard.serialization.MessageGuard<ActorResult> = autoguard.guards.Object.of({
 	"entity": autoguard.guards.Reference.of(() => Actor),
@@ -1190,6 +1191,21 @@ export namespace Autoguard {
 			),
 			"payload": autoguard.api.Binary
 		}),
+		"getYearContext": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"year_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
 		"GET:/files/<file_id>/": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
@@ -1893,6 +1909,17 @@ export namespace Autoguard {
 		"GET:/years/<year_id>/movies/": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
 				"movies": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Movie))
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getYearContext": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"context": autoguard.guards.Reference.of(() => YearContext)
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,

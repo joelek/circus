@@ -7,7 +7,7 @@ import * as context from "../player";
 import * as utils from "../utils";
 import { IconFactory } from "./Icon";
 import { Client } from "../api/schema/api/client";
-import { ContextAlbum, ContextArtist, ContextDisc, ContextEpisode, ContextMovie, ContextPlaylist, ContextSeason, ContextShow, ContextTrack } from "../player/schema/objects";
+import { ContextAlbum, ContextArtist, ContextDisc, ContextEpisode, ContextMovie, ContextPlaylist, ContextSeason, ContextShow, ContextTrack, ContextYear } from "../player/schema/objects";
 
 const CSS = `
 	.playback-button {
@@ -161,6 +161,17 @@ export class PlaybackButtonFactory {
 		let response = await this.rpc.getTrackContext({
 			options: {
 				track_id: track.track_id,
+				token: this.player.token.getState() ?? ""
+			}
+		});
+		let payload = await response.payload();
+		return payload.context;
+	}
+
+	private async getYearContext(year: api.Year): Promise<api.YearContext> {
+		let response = await this.rpc.getYearContext({
+			options: {
+				year_id: year.year_id,
 				token: this.player.token.getState() ?? ""
 			}
 		});
@@ -437,6 +448,21 @@ export class PlaybackButtonFactory {
 		}, this.player.context, this.player.currentEntry);
 		return this.make(isContext, {
 			play: async () => this.player.playTrack(await this.getTrackContext(track))
+		});
+	}
+
+	forYear(year: api.Year): xnode.XElement {
+		let isContext = observables.computed((context, currentEntry) => {
+			if (!ContextYear.is(context) || !ContextTrack.is(currentEntry)) {
+				return false;
+			}
+			if (context.year_id !== year.year_id) {
+				return false;
+			}
+			return true;
+		}, this.player.context, this.player.currentEntry);
+		return this.make(isContext, {
+			play: async () => this.player.playYear(await this.getYearContext(year))
 		});
 	}
 

@@ -672,6 +672,16 @@ export const server = apiv2.makeServer({
 			}
 		};
 	}),
+	getYearContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let context = await handler.lookupYearContext(queue, options.year_id, user_id);
+		return {
+			payload: {
+				context
+			}
+		};
+	}),
 	"GET:/files/<file_id>/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);

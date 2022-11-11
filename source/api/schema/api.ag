@@ -373,6 +373,11 @@ route GET:/years/<year_id:string>/movies/ ? <{ token: string, anchor?: plain, of
 		movies: ./objects/Movie[]
 	};
 
+route getYearContext(): GET:/years/<year_id:string>/context/ ? <{ token: string }>
+	=> {
+		context: ./objects/YearContext
+	};
+
 route GET:/files/<file_id:string>/ ? <{ token: string }>
 	=> binary;
 

@@ -696,6 +696,20 @@ export type Year = autoguard.guards.Intersection<[
 	}, {}>
 ]>;
 
+export const YearContext: autoguard.serialization.MessageGuard<YearContext> = autoguard.guards.Intersection.of(
+	autoguard.guards.Reference.of(() => Year),
+	autoguard.guards.Object.of({
+		"albums": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => AlbumContext))
+	}, {})
+);
+
+export type YearContext = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<Year>,
+	autoguard.guards.Object<{
+		"albums": autoguard.guards.Array<autoguard.guards.Reference<AlbumContext>>
+	}, {}>
+]>;
+
 export const EntityBase: autoguard.serialization.MessageGuard<EntityBase> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => ActorBase),
 	autoguard.guards.Reference.of(() => AlbumBase),
@@ -810,6 +824,7 @@ export namespace Autoguard {
 		"Cue": autoguard.guards.Reference.of(() => Cue),
 		"YearBase": autoguard.guards.Reference.of(() => YearBase),
 		"Year": autoguard.guards.Reference.of(() => Year),
+		"YearContext": autoguard.guards.Reference.of(() => YearContext),
 		"EntityBase": autoguard.guards.Reference.of(() => EntityBase),
 		"Entity": autoguard.guards.Reference.of(() => Entity)
 	};

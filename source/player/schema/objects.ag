@@ -16,7 +16,9 @@ guard ContextSeason: ../../api/schema/objects/SeasonContext;
 
 guard ContextEpisode: ../../api/schema/objects/EpisodeContext;
 
-guard Context: ContextAlbum | ContextArtist | ContextDisc | ContextTrack | ContextPlaylist | ContextMovie | ContextShow | ContextSeason | ContextEpisode;
+guard ContextYear: ../../api/schema/objects/YearContext;
+
+guard Context: ContextAlbum | ContextArtist | ContextDisc | ContextTrack | ContextPlaylist | ContextMovie | ContextShow | ContextSeason | ContextEpisode | ContextYear;
 
 guard ContextItem: ContextTrack | ContextMovie | ContextEpisode;
 

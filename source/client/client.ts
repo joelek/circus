@@ -3646,7 +3646,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 				};
 				let element = xml.element("div")
 					.add(xml.element("div.content")
-						.add(renderTextHeader(xml.text(`${year.year}`)))
+						.add(EntityCard.forYear(year))
 						.add(xml.element("div")
 							.set("style", "display: grid; gap: 24px;")
 							.set("data-hide", `${movies.length === 0}`)

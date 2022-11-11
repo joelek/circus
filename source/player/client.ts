@@ -89,6 +89,15 @@ export class ContextClient {
 			let track = context;
 			files.push(track);
 			return files;
+		} else if (schema.objects.ContextYear.is(context)) {
+			let files = [] as schema.objects.ContextItem[];
+			let year = context;
+			for (let album of year.albums) {
+				for (let disc of album.discs) {
+					files.push(...disc.tracks);
+				}
+			}
+			return files;
 		} else {
 			throw `Expected code to be unreachable!`;
 		}
@@ -248,6 +257,10 @@ export class ContextClient {
 					} else if (schema.objects.ContextTrack.is(context)) {
 						return this.contextPath.updateState([
 							context.track_id
+						].filter(is.present));
+					} else if (schema.objects.ContextYear.is(context)) {
+						return this.contextPath.updateState([
+							context.year_id
 						].filter(is.present));
 					} else {
 						throw `Expected code to be unreachable!`;
@@ -664,6 +677,10 @@ export class ContextClient {
 
 	playTrack(track: schema.objects.ContextTrack): void {
 		this.sendPlay(track);
+	}
+
+	playYear(year: schema.objects.ContextYear): void {
+		this.sendPlay(year);
 	}
 
 	reconnect(): void {

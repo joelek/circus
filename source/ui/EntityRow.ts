@@ -301,13 +301,14 @@ export class EntityRowFactory {
 	}
 
 	forYear(year: api.Year, options: Options = {}): xnode.XElement {
+		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forYear(year);
 		let link = options.link ?? this.entityLinkFactory.forYear(year);
 		let image = this.ImageBox.forSquare();
 		let titles = [
 			this.entityTitleFactory.forYear(year)
 		];
 		let subtitles = [] as xnode.XElement[];
-		return this.make(link, image, undefined, titles, subtitles);
+		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
 	static makeStyle(): xnode.XElement {

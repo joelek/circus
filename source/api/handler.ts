@@ -726,6 +726,16 @@ export async function lookupYear(queue: ReadableQueue, year_id: string, user_id:
 	};
 };
 
+export async function lookupYearContext(queue: ReadableQueue, year_id: string, api_user_id: string): Promise<schema.objects.YearContext> {
+	let year = await lookupYear(queue, year_id, api_user_id);
+	let albums = await Promise.all((await atlas.links.year_albums.filter(queue, { year_id: binid(year_id)}))
+		.map((record) => lookupAlbumContext(queue, hexid(record.album_id), api_user_id)));
+	return {
+		...year,
+		albums
+	};
+};
+
 export async function getNewAlbums(queue: ReadableQueue, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Album[]> {
 	let albums = [] as Array<schema.objects.Album>;
 	for (let entry of await atlas.queries.getRecentlyUpdatedAlbums.filter(queue, {}, anchor != null ? { album_id: binid(anchor) } : undefined, length)) {
