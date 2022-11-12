@@ -24,11 +24,42 @@ const CSS = `
 		padding-bottom: ${9/16 * 100}%;
 	}
 
-	.image-box__image {
+	.image-box__content {
 		height: 100%;
 		object-fit: contain;
 		position: absolute;
 		width: 100%;
+	}
+
+	.image-box__image {
+		position: absolute;
+		width: 100%;
+	}
+
+	.image-box__image:nth-child(1) {
+		transform: none;
+	}
+
+	.image-box__image:nth-child(2) {
+		border-radius: 2px;
+		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
+		transform: translate(25%, 50%) translate(-50%, -50%) scale(33%);
+	}
+
+	.image-box__image:nth-child(3) {
+		border-radius: 2px;
+		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
+		transform: translate(75%, 50%) translate(-50%, -50%) scale(33%);
+	}
+
+	.image-box__image:nth-child(4) {
+		border-radius: 2px;
+		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
+		transform: translate(50%, 50%) translate(-50%, -50%) scale(50%);
+	}
+
+	.image-box__image:nth-child(n+5) {
+		display: none;
 	}
 
 	[data-opaque] {
@@ -49,10 +80,15 @@ export class ImageBoxFactory {
 		this.token = token;
 	}
 
-	for(url?: string, format: "poster" | "square" | "video" = "square"): xnode.XElement {
-		let isLoaded = new observables.ObservableClass(false);
-		return xnode.element(`div.image-box.image-box--${format}`)
-			.add(is.absent(url) ? undefined : xnode.element("img.image-box__image")
+	for(urls: Array<string | undefined>, format: "poster" | "square" | "video" = "square"): xnode.XElement {
+		let node = xnode.element(`div.image-box.image-box--${format}`);
+		let content = xnode.element(`div.image-box__content`);
+		for (let url of urls) {
+			if (is.absent(url)) {
+				continue;
+			}
+			let isLoaded = new observables.ObservableClass(false);
+			content.add(xnode.element("img.image-box__image")
 				.bind("data-opaque", isLoaded.addObserver((isLoaded) => isLoaded))
 				.bind("src", this.token.addObserver((token) => {
 					if (is.present(token) && is.present(url)) {
@@ -63,18 +99,21 @@ export class ImageBoxFactory {
 					isLoaded.updateState(true);
 				})
 			);
+		}
+		return node
+			.add(content);
 	}
 
-	forPoster(url?: string): xnode.XElement {
-		return this.for(url, "poster");
+	forPoster(...urls: Array<string | undefined>): xnode.XElement {
+		return this.for(urls, "poster");
 	}
 
-	forSquare(url?: string): xnode.XElement {
-		return this.for(url, "square");
+	forSquare(...urls: Array<string | undefined>): xnode.XElement {
+		return this.for(urls, "square");
 	}
 
-	forVideo(url?: string): xnode.XElement {
-		return this.for(url, "video");
+	forVideo(...urls: Array<string | undefined>): xnode.XElement {
+		return this.for(urls, "video");
 	}
 
 	static makeStyle(): xnode.XElement {
