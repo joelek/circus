@@ -436,7 +436,7 @@ export class EntityCardFactory {
 	forYear(year: api.Year, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forYear(year);
 		let link = this.entityLinkFactory.forYear(year);
-		let image = this.ImageBox.forSquare();
+		let image = this.ImageBox.forSquare(...year.artwork.map((image) => `/api/files/${image.file_id}/`));
 		let titles = [
 			this.entityTitleFactory.forYear(year)
 		];

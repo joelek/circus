@@ -720,9 +720,23 @@ export async function lookupYearBase(queue: ReadableQueue, year_id: string, user
 export async function lookupYear(queue: ReadableQueue, year_id: string, user_id: string): Promise<schema.objects.Year> {
 	let year = await lookupYearBase(queue, year_id, user_id);
 	let record = await atlas.stores.years.lookup(queue, { year_id: binid(year_id) });
+	let artwork = [] as Array<ImageFile>;
+	for (let album of await atlas.links.year_albums.filter(queue, { year_id: binid(year_id) }, undefined, 4)) {
+		let album_files = await atlas.links.album_album_files.filter(queue, album, undefined, 1);
+		for (let album_file of album_files) {
+			try {
+				let image_file = await atlas.stores.image_files.lookup(queue, album_file);
+				artwork.push({
+					...image_file,
+					file_id: hexid(image_file.file_id)
+				});
+			} catch (error) {}
+		}
+	}
 	return {
 		...year,
-		affinity: atlas.adjustAffinity(record.affinity)
+		affinity: atlas.adjustAffinity(record.affinity),
+		artwork: artwork
 	};
 };
 

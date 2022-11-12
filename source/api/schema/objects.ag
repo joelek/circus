@@ -250,7 +250,8 @@ guard YearBase: {
 };
 
 guard Year: YearBase & {
-	"affinity": number
+	"affinity": number,
+	"artwork": ../../database/schema/ImageFile[]
 };
 
 guard YearContext: Year & {

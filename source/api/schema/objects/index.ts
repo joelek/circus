@@ -685,14 +685,16 @@ export type YearBase = autoguard.guards.Object<{
 export const Year: autoguard.serialization.MessageGuard<Year> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => YearBase),
 	autoguard.guards.Object.of({
-		"affinity": autoguard.guards.Number
+		"affinity": autoguard.guards.Number,
+		"artwork": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ImageFile))
 	}, {})
 );
 
 export type Year = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<YearBase>,
 	autoguard.guards.Object<{
-		"affinity": autoguard.guards.Number
+		"affinity": autoguard.guards.Number,
+		"artwork": autoguard.guards.Array<autoguard.guards.Reference<ImageFile>>
 	}, {}>
 ]>;
 
