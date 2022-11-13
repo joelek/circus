@@ -24,6 +24,10 @@ const CSS = `
 		padding-bottom: ${9/16 * 100}%;
 	}
 
+	.image-box--multiple {
+
+	}
+
 	.image-box__content {
 		height: 100%;
 		object-fit: contain;
@@ -36,22 +40,26 @@ const CSS = `
 		width: 100%;
 	}
 
+	.image-box--multiple
 	.image-box__image:nth-child(1) {
 		transform: none;
 	}
 
+	.image-box--multiple
 	.image-box__image:nth-child(2) {
 		border-radius: 2px;
 		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
 		transform: translate(25%, 50%) translate(-50%, -50%) scale(33%);
 	}
 
+	.image-box--multiple
 	.image-box__image:nth-child(3) {
 		border-radius: 2px;
 		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
 		transform: translate(75%, 50%) translate(-50%, -50%) scale(33%);
 	}
 
+	.image-box--multiple
 	.image-box__image:nth-child(4) {
 		border-radius: 2px;
 		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
@@ -80,8 +88,8 @@ export class ImageBoxFactory {
 		this.token = token;
 	}
 
-	for(urls: Array<string | undefined>, format: "poster" | "square" | "video" = "square"): xnode.XElement {
-		let node = xnode.element(`div.image-box.image-box--${format}`);
+	for(urls: Array<string>, multiple?: boolean, format: "poster" | "square" | "video" = "square"): xnode.XElement {
+		let node = xnode.element(`div.image-box.image-box--${format}${multiple ? ".image-box--multiple" : ""}`);
 		let content = xnode.element(`div.image-box__content`);
 		for (let url of urls) {
 			if (is.absent(url)) {
@@ -104,16 +112,16 @@ export class ImageBoxFactory {
 			.add(content);
 	}
 
-	forPoster(...urls: Array<string | undefined>): xnode.XElement {
-		return this.for(urls, "poster");
+	forPoster(urls: Array<string>, multiple?: boolean): xnode.XElement {
+		return this.for(urls, multiple, "poster");
 	}
 
-	forSquare(...urls: Array<string | undefined>): xnode.XElement {
-		return this.for(urls, "square");
+	forSquare(urls: Array<string>, multiple?: boolean): xnode.XElement {
+		return this.for(urls, multiple, "square");
 	}
 
-	forVideo(...urls: Array<string | undefined>): xnode.XElement {
-		return this.for(urls, "video");
+	forVideo(urls: Array<string>, multiple?: boolean): xnode.XElement {
+		return this.for(urls, multiple, "video");
 	}
 
 	static makeStyle(): xnode.XElement {
