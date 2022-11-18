@@ -42,7 +42,10 @@ const CSS = `
 
 	.image-box--multiple
 	.image-box__image:nth-child(1) {
-		transform: none;
+		border-radius: 2px;
+		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
+		transform: translate(50%, 50%) translate(-50%, -50%) scale(50%);
+		z-index: 1;
 	}
 
 	.image-box--multiple
@@ -50,6 +53,7 @@ const CSS = `
 		border-radius: 2px;
 		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
 		transform: translate(25%, 50%) translate(-50%, -50%) scale(33%);
+		z-index: 0;
 	}
 
 	.image-box--multiple
@@ -57,16 +61,11 @@ const CSS = `
 		border-radius: 2px;
 		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
 		transform: translate(75%, 50%) translate(-50%, -50%) scale(33%);
+		z-index: 0;
 	}
 
 	.image-box--multiple
-	.image-box__image:nth-child(4) {
-		border-radius: 2px;
-		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
-		transform: translate(50%, 50%) translate(-50%, -50%) scale(50%);
-	}
-
-	.image-box__image:nth-child(n+5) {
+	.image-box__image:nth-child(n+4) {
 		display: none;
 	}
 
