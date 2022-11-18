@@ -4,6 +4,7 @@ import * as jsondb from "../jsondb/";
 import * as messages from "./schema/messages";
 import * as typesockets from "../typesockets/client";
 import * as api from "../api/schema/objects";
+import { ImageFile } from "../database/schema";
 
 export class PlaylistsClient {
 	private tsc: typesockets.TypeSocketClient<messages.Autoguard.Guards>;
@@ -38,7 +39,8 @@ export class PlaylistsClient {
 				...message.playlist,
 				items: new Array<api.PlaylistItem>(),
 				affinity: 0,
-				duration_ms: 0
+				duration_ms: 0,
+				artwork: [] as Array<ImageFile>
 			};
 			this.playlists.append(new observers.ObservableClass(playlist));
 		});

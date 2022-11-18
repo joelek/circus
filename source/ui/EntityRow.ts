@@ -238,7 +238,7 @@ export class EntityRowFactory {
 	forPlaylist(playlist: api.Playlist, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forPlaylist(playlist);
 		let link = options.link ?? this.entityLinkFactory.forPlaylist(playlist);
-		let image = this.ImageBox.forSquare([]);
+		let image = this.ImageBox.forSquare(playlist.artwork.map((image) => `/api/files/${image.file_id}/`), true);
 		let titles = [
 			this.entityTitleFactory.forPlaylist(playlist)
 		];

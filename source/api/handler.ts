@@ -478,10 +478,26 @@ export async function lookupPlaylistBase(queue: ReadableQueue, playlist_id: stri
 export async function lookupPlaylist(queue: ReadableQueue, playlist_id: string, api_user_id: string, user?: schema.objects.UserBase): Promise<schema.objects.Playlist> {
 	let playlist_base = await lookupPlaylistBase(queue, playlist_id, api_user_id, user);
 	let playlist = await atlas.stores.playlists.lookup(queue, { playlist_id: binid(playlist_id) });
+	let artwork = [] as Array<ImageFile>;
+	for (let playlist_item of await atlas.links.playlist_playlist_items.filter(queue, { playlist_id: binid(playlist_id) }, undefined, 4)) {
+		let track = await atlas.stores.tracks.lookup(queue, playlist_item);
+		let disc = await atlas.stores.discs.lookup(queue, track);
+		let album = await atlas.stores.albums.lookup(queue, disc);
+		for (let album_file of await atlas.links.album_album_files.filter(queue, album, undefined, 1)) {
+			try {
+				let image_file = await atlas.stores.image_files.lookup(queue, album_file);
+				artwork.push({
+					...image_file,
+					file_id: hexid(image_file.file_id)
+				});
+			} catch (error) {}
+		}
+	}
 	return {
 		...playlist_base,
 		affinity: atlas.adjustAffinity(playlist.affinity),
-		duration_ms: playlist.duration_ms
+		duration_ms: playlist.duration_ms,
+		artwork: artwork
 	};
 };
 

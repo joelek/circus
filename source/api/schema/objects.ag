@@ -104,7 +104,8 @@ guard PlaylistBase: {
 
 guard Playlist: PlaylistBase & {
 	"affinity": number,
-	"duration_ms": number
+	"duration_ms": number,
+	"artwork": ../../database/schema/ImageFile[]
 };
 
 guard PlaylistContext: Playlist & {

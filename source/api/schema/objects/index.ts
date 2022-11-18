@@ -286,7 +286,8 @@ export const Playlist: autoguard.serialization.MessageGuard<Playlist> = autoguar
 	autoguard.guards.Reference.of(() => PlaylistBase),
 	autoguard.guards.Object.of({
 		"affinity": autoguard.guards.Number,
-		"duration_ms": autoguard.guards.Number
+		"duration_ms": autoguard.guards.Number,
+		"artwork": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ImageFile))
 	}, {})
 );
 
@@ -294,7 +295,8 @@ export type Playlist = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<PlaylistBase>,
 	autoguard.guards.Object<{
 		"affinity": autoguard.guards.Number,
-		"duration_ms": autoguard.guards.Number
+		"duration_ms": autoguard.guards.Number,
+		"artwork": autoguard.guards.Array<autoguard.guards.Reference<ImageFile>>
 	}, {}>
 ]>;
 
