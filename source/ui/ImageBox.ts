@@ -44,24 +44,30 @@ const CSS = `
 	.image-box__image:nth-child(1) {
 		border-radius: 2px;
 		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
-		transform: translate(50%, 50%) translate(-50%, -50%) scale(50%);
-		z-index: 1;
+		transform: translate(-50%, -50%) scale(50%);
+		left: 50%;
+		top: 50%;
+		z-index: 3;
 	}
 
 	.image-box--multiple
 	.image-box__image:nth-child(2) {
 		border-radius: 2px;
 		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
-		transform: translate(25%, 50%) translate(-50%, -50%) scale(33%);
-		z-index: 0;
+		transform: translate(-50%, -50%) scale(33.3%);
+		left: 25%;
+		top: 50%;
+		z-index: 2;
 	}
 
 	.image-box--multiple
 	.image-box__image:nth-child(3) {
 		border-radius: 2px;
 		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
-		transform: translate(75%, 50%) translate(-50%, -50%) scale(33%);
-		z-index: 0;
+		transform: translate(-50%, -50%) scale(33.3%);
+		left: 75%;
+		top: 50%;
+		z-index: 1;
 	}
 
 	.image-box--multiple
