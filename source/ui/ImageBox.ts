@@ -24,6 +24,10 @@ const CSS = `
 		padding-bottom: ${9/16 * 100}%;
 	}
 
+	.image-box--landscape {
+		padding-bottom: ${2/3 * 100}%;
+	}
+
 	.image-box--multiple {
 
 	}
@@ -93,7 +97,7 @@ export class ImageBoxFactory {
 		this.token = token;
 	}
 
-	for(urls: Array<string>, multiple?: boolean, format: "poster" | "square" | "video" = "square"): xnode.XElement {
+	for(urls: Array<string>, multiple?: boolean, format: "poster" | "square" | "video" | "landscape" = "square"): xnode.XElement {
 		let node = xnode.element(`div.image-box.image-box--${format}${multiple ? ".image-box--multiple" : ""}`);
 		let content = xnode.element(`div.image-box__content`);
 		for (let url of urls) {
@@ -127,6 +131,10 @@ export class ImageBoxFactory {
 
 	forVideo(urls: Array<string>, multiple?: boolean): xnode.XElement {
 		return this.for(urls, multiple, "video");
+	}
+
+	forLandscape(urls: Array<string>, multiple?: boolean): xnode.XElement {
+		return this.for(urls, multiple, "landscape");
 	}
 
 	static makeStyle(): xnode.XElement {
