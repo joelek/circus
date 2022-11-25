@@ -238,7 +238,7 @@ export class EntityRowFactory {
 	forPlaylist(playlist: api.Playlist, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forPlaylist(playlist);
 		let link = options.link ?? this.entityLinkFactory.forPlaylist(playlist);
-		let image = this.ImageBox.forSquare(playlist.artwork.map((image) => `/api/files/${image.file_id}/`), true);
+		let image = this.ImageBox.forLandscape(playlist.artwork.map((image) => `/api/files/${image.file_id}/`), true);
 		let titles = [
 			this.entityTitleFactory.forPlaylist(playlist)
 		];
@@ -303,7 +303,7 @@ export class EntityRowFactory {
 	forYear(year: api.Year, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forYear(year);
 		let link = options.link ?? this.entityLinkFactory.forYear(year);
-		let image = this.ImageBox.forSquare(year.artwork.map((image) => `/api/files/${image.file_id}/`), true);
+		let image = this.ImageBox.forLandscape(year.artwork.map((image) => `/api/files/${image.file_id}/`), true);
 		let titles = [
 			this.entityTitleFactory.forYear(year)
 		];
