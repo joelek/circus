@@ -7,7 +7,7 @@
 		"@joelek/ts-sockets": "github:joelek/ts-sockets#semver:^2.2",
 		"@joelek/ts-stdlib": "github:joelek/ts-stdlib#semver:^1.1",
 		"@types/node": "^16.7",
-		"typescript": "^4.4"
+		"typescript": "^4.0"
 	},
 	"license": "MIT",
 	"main": "./dist/server.min.js",
