@@ -18,7 +18,7 @@
 	},
 	"scripts": {
 		"appgen": "node -e \"process.stdout.write(JSON.stringify((({ name, version }) => ({ name, version }))(require('./package.json')), null, '\t').split(/\\r?\\n/).join(require('os').EOL) + require('os').EOL)\" > ./source/app.json",
-		"build": "npm run appgen && npm run codegen && npm run compile && npm run package",
+		"build": "npm run appgen && npm run codegen && npm run compile && npm run package && npm run test",
 		"clean": "rm -rf ./build/ ./node_modules/",
 		"codegen": "npx autoguard",
 		"compile": "rm -rf ./build/* && npx tsc --build",
@@ -26,7 +26,8 @@
 		"package:server": "npx tsb --entry=./build/server/server.js --bundle=./dist/server.min.js",
 		"package": "rm -rf ./dist/* && npm run package:client && npm run package:server",
 		"preversion": "npm run build && git add ./",
-		"postversion": "git push && git push --tags"
+		"postversion": "git push && git push --tags",
+		"test": ""
 	},
 	"version": "0.0.151"
 }
