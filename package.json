@@ -25,7 +25,7 @@
 		"package:client": "npx tsb --entry=./build/client/client.js --bundle=./dist/client.min.js",
 		"package:server": "npx tsb --entry=./build/server/server.js --bundle=./dist/server.min.js",
 		"package": "rm -rf ./dist/* && npm run package:client && npm run package:server",
-		"preversion": "npm run build && git add ./",
+		"version": "npm run build && git add ./",
 		"postversion": "git push && git push --tags",
 		"test": ""
 	},
