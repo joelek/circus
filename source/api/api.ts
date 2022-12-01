@@ -8,6 +8,7 @@ import * as apiv2 from "./schema/api/server";
 import * as atlas from "../database/atlas";
 import { binid } from "../utils";
 import { stats } from "../database/indexer";
+import * as app from "../app.json";
 
 function getVersion(): {
 	major: number,
@@ -15,9 +16,7 @@ function getVersion(): {
 	patch: number
 } | undefined {
 	try {
-		let pack = libfs.readFileSync("./package.json", "utf8");
-		let json = JSON.parse(pack);
-		let parts = /^([0-9]+)[.]([0-9]+)[.]([0-9]+)$/.exec(String(json?.version));
+		let parts = /^([0-9]+)[.]([0-9]+)[.]([0-9]+)$/.exec(app.version);
 		if (parts != null) {
 			let major = Number.parseInt(parts[1], 10);
 			let minor = Number.parseInt(parts[2], 10);
