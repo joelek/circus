@@ -180,8 +180,11 @@ function parseXingHeader(reader: readers.Binary): number {
 export function probe(fd: number): schema.Probe {
 	let reader = new readers.Binary(fd);
 	let tags = parseID3v2Header(reader);
-	console.log(tags);
-	let duration_ms = parseXingHeader(reader);
+	let duration_ms = 3 * 60 * 1000;
+	// TODO: Improve xing parsing.
+	try {
+		duration_ms = parseXingHeader(reader);
+	} catch (error) {}
 	let result: schema.Probe = {
 		resources: [
 			{
@@ -199,6 +202,20 @@ export function probe(fd: number): schema.Probe {
 			album: {
 				title: tags.album,
 				year: tags.year,
+				artists: is.absent(tags.album_artist) ? [] : tags.album_artist.split(";").map((artist) => artist.trim())
+			},
+			artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
+			copyright: tags.copyright
+		};
+		result.metadata = metadata;
+	} else if (is.present(tags.title) && is.present(tags.artist)) {
+		let metadata: schema.TrackMetadata = {
+			type: "track",
+			title: tags.title,
+			disc: 0,
+			track: 0,
+			album: {
+				title: "Tracks",
 				artists: is.absent(tags.album_artist) ? [] : tags.album_artist.split(";").map((artist) => artist.trim())
 			},
 			artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
