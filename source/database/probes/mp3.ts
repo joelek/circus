@@ -212,11 +212,11 @@ export function probe(fd: number): schema.Probe {
 		let metadata: schema.TrackMetadata = {
 			type: "track",
 			title: tags.title,
-			disc: 0,
-			track: 0,
+			disc: 1,
+			track: 1,
 			album: {
-				title: "Various Tracks",
-				artists: ["Various Artists"]
+				title: tags.title,
+				artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
 			},
 			artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
 			copyright: tags.copyright
