@@ -215,8 +215,8 @@ export function probe(fd: number): schema.Probe {
 			disc: 0,
 			track: 0,
 			album: {
-				title: "Tracks",
-				artists: is.absent(tags.album_artist) ? [] : tags.album_artist.split(";").map((artist) => artist.trim())
+				title: "Various Tracks",
+				artists: ["Various Artists"]
 			},
 			artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
 			copyright: tags.copyright
