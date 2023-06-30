@@ -305,6 +305,7 @@ export function probe(fd: number): schema.Probe {
 		};
 		result.metadata = metadata;
 	} else if (is.present(tags.title) && is.present(tags.artist)) {
+		// TODO: Remove stray track indexing when media directories are presented in the UI.
 		let metadata: schema.TrackMetadata = {
 			type: "track",
 			title: tags.title,
