@@ -311,7 +311,7 @@ export function probe(fd: number): schema.Probe {
 			disc: 1,
 			track: 1,
 			album: {
-				title: tags.title,
+				title: `${tags.title} by ${tags.artist}`,
 				year: tags.year,
 				artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
 			},
