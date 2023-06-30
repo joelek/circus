@@ -134,7 +134,7 @@ function parseID3v22Tags(reader: readers.Binary): Tags {
 	return reader.newContext((read, skip) => {
 		let header = parseID3v22Header(reader);
 		if (header.flags.is_compressed) {
-			throw new Error(`Expected an uncompressed ID3v2.2 header!`);
+			throw new Error(`Expected an uncompressed ID3v2.2 tag!`);
 		}
 		let buffer_size = header.payload_size;
 		let buffer = read(Buffer.alloc(buffer_size));
@@ -366,13 +366,13 @@ function parseID3v23Tags(reader: readers.Binary): Tags {
 		while (cursor.offset < buffer.length) {
 			let frame = parseID3v23Frame(buffer, cursor);
 			if (frame.header.flags.is_compressed) {
-				throw new Error(`Expected an uncompressed ID3v2.3 frame header!`);
+				throw new Error(`Expected an uncompressed ID3v2.3 frame!`);
 			}
 			if (frame.header.flags.is_encrypted) {
-				throw new Error(`Expected an unencrypted ID3v2.3 frame header!`);
+				throw new Error(`Expected an unencrypted ID3v2.3 frame!`);
 			}
 			if (frame.header.flags.has_group_information) {
-				throw new Error(`Expected an ID3v2.3 frame header without group information!`);
+				throw new Error(`Expected an ID3v2.3 frame without group information!`);
 			}
 			if (header.flags.is_unsynchronized) {
 				frame.body = resynchronizeID3v2Data(frame.body);
@@ -611,16 +611,16 @@ function parseID3v24Tags(reader: readers.Binary): Tags {
 		while (cursor.offset < buffer.length) {
 			let frame = parseID3v24Frame(buffer, cursor);
 			if (frame.header.flags.has_data_length_indicator) {
-				throw new Error(`Expected an ID3v2.4 frame header without a data length indicator!`);
+				throw new Error(`Expected an ID3v2.4 frame without a data length indicator!`);
 			}
 			if (frame.header.flags.has_group_information) {
-				throw new Error(`Expected an ID3v2.4 frame header without group information!`);
+				throw new Error(`Expected an ID3v2.4 frame without group information!`);
 			}
 			if (frame.header.flags.is_compressed) {
-				throw new Error(`Expected an uncompressed ID3v2.4 frame header!`);
+				throw new Error(`Expected an uncompressed ID3v2.4 frame!`);
 			}
 			if (frame.header.flags.is_encrypted) {
-				throw new Error(`Expected an unencrypted ID3v2.4 frame header!`);
+				throw new Error(`Expected an unencrypted ID3v2.4 frame!`);
 			}
 			if (header.flags.is_unsynchronized || frame.header.flags.is_unsynchronized) {
 				frame.body = resynchronizeID3v2Data(frame.body);
