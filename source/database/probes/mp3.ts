@@ -96,8 +96,23 @@ enum Layer {
 	LAYER_1
 };
 
+enum Channels {
+	STEREO,
+	JOINT_STEREO,
+	DUAL_CHANNEL,
+	SINGLE_CHANNEL
+};
+
+enum Emphasis {
+	NONE,
+	EMPHASIS_50_OVER_15_MS,
+	RESERVED,
+	CCIT_J17
+};
+
+// The values differ between versions and layers.
 const KILOBITS_PER_SECOND = [
-	0,
+	-1,
 	32,
 	40,
 	48,
@@ -112,79 +127,160 @@ const KILOBITS_PER_SECOND = [
 	224,
 	256,
 	320,
-	0
+	-1
 ];
 
+// The values differ between versions and layers.
 const SAMPLES_PER_SECOND = [
 	44100,
 	48000,
 	32000,
-	0
+	-1
 ];
 
-function parseXingHeader(reader: readers.Binary): number {
+type MPEGAudioFrameHeader = {
+	version: Version;
+	layer: Layer;
+	skip_crc: boolean;
+	bitrate_index: number;
+	sample_rate_index: number;
+	padded: boolean;
+	application_private: boolean;
+	channels: Channels;
+	mode_extension: number;
+	copyrighted: boolean;
+	original: boolean;
+	emphasis: Emphasis;
+};
+
+function parseMPEGAudioFrameHeader(reader: readers.Binary): MPEGAudioFrameHeader {
 	return reader.newContext((read, skip) => {
 		let buffer = Buffer.alloc(4);
 		read(buffer);
 		let sync = ((buffer[0] & 0xFF) << 3) | ((buffer[1] & 0xE0) >> 5);
 		let version = ((buffer[1] & 0x18) >> 3) as Version;
 		let layer = ((buffer[1] & 0x06) >> 1) as Layer;
-		let skip_crc = ((buffer[1] & 0x01) >> 0);
-		let bitrate = ((buffer[2] & 0xF0) >> 4);
-		let sample_rate = ((buffer[2] & 0x0C) >> 2);
-		let padded = ((buffer[2] & 0x02) >> 1);
-		let application_private = ((buffer[2] & 0x01) >> 0);
-		let channels = ((buffer[3] & 0xC0) >> 6);
+		let skip_crc = ((buffer[1] & 0x01) >> 0) === 1;
+		let bitrate_index = ((buffer[2] & 0xF0) >> 4);
+		let sample_rate_index = ((buffer[2] & 0x0C) >> 2);
+		let padded = ((buffer[2] & 0x02) >> 1) === 1;
+		let application_private = ((buffer[2] & 0x01) >> 0) === 1;
+		let channels = ((buffer[3] & 0xC0) >> 6) as Channels;
 		let mode_extension = ((buffer[3] & 0x30) >> 4);
-		let copyrighted = ((buffer[3] & 0x08) >> 3);
-		let original = ((buffer[3] & 0x04) >> 2);
-		let emphasis = ((buffer[3] & 0x03) >> 0);
-		if (sync === 0x07FF && version === Version.V1 && layer === Layer.LAYER_3) {
-			let samples_per_frame = 1152;
-			let slots = Math.floor(samples_per_frame * KILOBITS_PER_SECOND[bitrate] * 1000 / 8 / SAMPLES_PER_SECOND[sample_rate]);
-			if (padded) {
-				slots += 1;
-			}
-			let bytes = slots * 1;
-			let body = Buffer.alloc(bytes - 4);
-			read(body);
-			let zeroes = body.slice(0, 0 + 32);
-			let xing = body.slice(32, 32 + 4);
-			if (xing.toString("binary") === "Xing" || xing.toString() === "Info") {
-				let flags = body.slice(36, 36 + 4);
-				let has_quality = ((flags[3] & 0x08) >> 3);
-				let has_toc = ((flags[3] & 0x04) >> 2);
-				let has_bytes = ((flags[3] & 0x02) >> 1);
-				let has_frames = ((flags[3] & 0x01) >> 0);
-				let offset = 40;
-				if (has_frames) {
-					let num_frames = body.readUInt32BE(offset); offset += 4;
-					let duration_ms = Math.ceil((num_frames * samples_per_frame / SAMPLES_PER_SECOND[sample_rate]) * 1000);
-					return duration_ms;
-				}
-				if (has_bytes) {
-					let num_bytes = body.readUInt32BE(offset); offset += 4;
-				}
-				if (has_toc) {
-					offset += 100;
-				}
-				if (has_quality) {
-					let quality = body.readUInt32BE(offset); offset += 4;
-				}
-			}
+		let copyrighted = ((buffer[3] & 0x08) >> 3) === 1;
+		let original = ((buffer[3] & 0x04) >> 2) === 1;
+		let emphasis = ((buffer[3] & 0x03) >> 0) as Emphasis;
+		if (sync !== 0x07FF) {
+			throw new Error(`Expected a MPEG Audio Frame Header!`);
 		}
-		throw `Expected a Xing header!`;
+		return {
+			version,
+			layer,
+			skip_crc,
+			bitrate_index,
+			sample_rate_index,
+			padded,
+			application_private,
+			channels,
+			mode_extension,
+			copyrighted,
+			original,
+			emphasis
+		};
 	});
-}
+};
+
+type MPEGAudioFrame = {
+	header: MPEGAudioFrameHeader;
+	body: Buffer;
+};
+
+function parseMPEGAudioFrame(reader: readers.Binary): MPEGAudioFrame {
+	return reader.newContext((read, skip) => {
+		let header = parseMPEGAudioFrameHeader(reader);
+		if (header.version !== Version.V1 || header.layer !== Layer.LAYER_3) {
+			throw new Error(`Expected a MPEG Version 1 Layer 3 header!`);
+		}
+		// The value differs between versions and layers.
+		let samples_per_frame = 1152;
+		let slots = Math.floor(samples_per_frame * KILOBITS_PER_SECOND[header.bitrate_index] * 1000 / 8 / SAMPLES_PER_SECOND[header.sample_rate_index]);
+		if (header.padded) {
+			slots += 1;
+		}
+		let bytes = slots * 1;
+		let body = Buffer.alloc(bytes - 4);
+		read(body);
+		return {
+			header,
+			body
+		};
+	});
+};
+
+type XingHeader = {
+	number_of_frames?: number;
+	number_of_bytes?: number;
+	toc?: number[];
+	quality?: number;
+};
+
+function parseXingHeader(frame: MPEGAudioFrame): XingHeader {
+	let offset = 0;
+	let zeroes = frame.body.slice(offset, offset + 32); offset += 32;
+	let id = frame.body.slice(offset, offset + 4); offset += 4;
+	let flags = frame.body.slice(offset, offset + 4); offset += 4;
+	if (id.toString() !== "Xing" && id.toString() !== "Info") {
+		throw new Error(`Expected a Xing or Info header!`);
+	}
+	let has_quality = ((flags[3] & 0x08) >> 3) === 1;
+	let has_toc = ((flags[3] & 0x04) >> 2) === 1;
+	let has_bytes = ((flags[3] & 0x02) >> 1) === 1;
+	let has_frames = ((flags[3] & 0x01) >> 0) === 1;
+	let number_of_frames: number | undefined;
+	let number_of_bytes: number | undefined;
+	let toc: number[] | undefined;
+	let quality: number | undefined;
+	if (has_frames) {
+		number_of_frames = frame.body.readUInt32BE(offset); offset += 4;
+	}
+	if (has_bytes) {
+		number_of_bytes = frame.body.readUInt32BE(offset); offset += 4;
+	}
+	if (has_toc) {
+		toc = [];
+		for (let i = 0; i < 100; i++) {
+			let entry = frame.body.readUint8(offset); offset += 1;
+			toc.push(entry);
+		}
+	}
+	if (has_quality) {
+		quality = frame.body.readUInt32BE(offset); offset += 4;
+	}
+	return {
+		number_of_frames,
+		number_of_bytes,
+		toc,
+		quality
+	};
+};
 
 export function probe(fd: number): schema.Probe {
 	let reader = new readers.Binary(fd);
 	let tags = parseID3v2Header(reader);
-	let duration_ms = 3 * 60 * 1000;
-	// TODO: Improve xing parsing.
+	console.log(tags);
+	let frame = parseMPEGAudioFrame(reader);
+	let duration_ms = 0
 	try {
-		duration_ms = parseXingHeader(reader);
-	} catch (error) {}
+		let xing = parseXingHeader(frame);
+		if (xing.number_of_frames == null) {
+			throw new Error(`Expected Xing header to contain number of frames!`);
+		}
+		// The value differs between versions and layers.
+		let samples_per_frame = 1152;
+		duration_ms = Math.ceil((xing.number_of_frames * samples_per_frame / SAMPLES_PER_SECOND[frame.header.sample_rate_index]) * 1000);
+	} catch (error) {
+		duration_ms = Math.ceil((libfs.fstatSync(fd).size * 8) / (KILOBITS_PER_SECOND[frame.header.bitrate_index] * 1000) * 1000);
+	}
 	let result: schema.Probe = {
 		resources: [
 			{
