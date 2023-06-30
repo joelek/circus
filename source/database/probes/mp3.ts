@@ -369,13 +369,16 @@ function parseID3v23Tags(reader: readers.Binary): Tags {
 				break;
 			}
 			if (frame.header.flags.is_compressed) {
-				throw new Error(`Expected an uncompressed ID3v2.3 frame!`);
+				console.warn(`Expected an uncompressed ID3v2.3 frame!`);
+				continue;
 			}
 			if (frame.header.flags.is_encrypted) {
-				throw new Error(`Expected an unencrypted ID3v2.3 frame!`);
+				console.warn(`Expected an unencrypted ID3v2.3 frame!`);
+				continue;
 			}
 			if (frame.header.flags.has_group_information) {
-				throw new Error(`Expected an ID3v2.3 frame without group information!`);
+				console.warn(`Expected an ID3v2.3 frame without group information!`);
+				continue;
 			}
 			if (header.flags.is_unsynchronized) {
 				frame.body = resynchronizeID3v2Data(frame.body);
@@ -614,16 +617,20 @@ function parseID3v24Tags(reader: readers.Binary): Tags {
 				break;
 			}
 			if (frame.header.flags.has_data_length_indicator) {
-				throw new Error(`Expected an ID3v2.4 frame without a data length indicator!`);
+				console.warn(`Expected an ID3v2.4 frame without a data length indicator!`);
+				continue;
 			}
 			if (frame.header.flags.has_group_information) {
-				throw new Error(`Expected an ID3v2.4 frame without group information!`);
+				console.warn(`Expected an ID3v2.4 frame without group information!`);
+				continue;
 			}
 			if (frame.header.flags.is_compressed) {
-				throw new Error(`Expected an uncompressed ID3v2.4 frame!`);
+				console.warn(`Expected an uncompressed ID3v2.4 frame!`);
+				continue;
 			}
 			if (frame.header.flags.is_encrypted) {
-				throw new Error(`Expected an unencrypted ID3v2.4 frame!`);
+				console.warn(`Expected an unencrypted ID3v2.4 frame!`);
+				continue;
 			}
 			if (header.flags.is_unsynchronized || frame.header.flags.is_unsynchronized) {
 				frame.body = resynchronizeID3v2Data(frame.body);
