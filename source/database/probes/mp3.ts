@@ -14,6 +14,80 @@ type Tags = {
 	copyright?: string
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function parseID3v11Tags(reader: readers.Binary): Tags {
+	return reader.newContext((read, skip, tell) => {
+		let tags = {} as Tags;
+		let { cursor, size } = tell();
+		skip(size - 128 - cursor);
+		let buffer = read(Buffer.alloc(128));
+		let offset = 0;
+		let id = buffer.slice(offset, offset + 3).toString(); offset += 3;
+		let title = buffer.slice(offset, offset + 30).toString("latin1"); offset += 30;
+		let artist = buffer.slice(offset, offset + 30).toString("latin1"); offset += 30;
+		let album = buffer.slice(offset, offset + 30).toString("latin1"); offset += 30;
+		let year = buffer.slice(offset, offset + 4).toString(); offset += 4;
+		let comment = buffer.slice(offset, offset + 28).toString("latin1"); offset += 28;
+		let track_number = buffer.slice(offset, offset + 2).toString(); offset += 2;
+		let genre = buffer.slice(offset, offset + 1).toString(); offset += 1;
+		if (id !== "TAG") {
+			throw new Error(`Expected an ID3v1.0 tag!`);
+		}
+		tags.title = title.trim() || undefined;
+		tags.artist = artist.trim() || undefined;
+		tags.album = album.trim() || undefined;
+		let year_parts = /^([0-9]+)$/.exec(year);
+		if (is.present(year_parts)) {
+			tags.year = parseInt(year_parts[1]);
+		}
+		let track_number_parts = /^([0-9]+)$/.exec(track_number);
+		if (is.present(track_number_parts)) {
+			tags.track_number = parseInt(track_number_parts[1]);
+		}
+		return tags;
+	});
+};
+
+function parseID3v1Tags(reader: readers.Binary): Tags {
+	try {
+		return parseID3v11Tags(reader);
+	} catch (error) {}
+	throw new Error(`Expected a valid ID3v1 tag!`);
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function decodeSyncSafeInteger(buffer: Buffer): number {
 	let a = buffer.readUInt8(0);
 	let b = buffer.readUInt8(1);
@@ -889,10 +963,14 @@ function parseXingHeader(frame: MPEGAudioFrame): XingHeader {
 
 export function probe(fd: number): schema.Probe {
 	let reader = new readers.Binary(fd);
-	let tags = parseID3v2Tags(reader);
-	console.log(tags);
+	let tags = {} as Tags;
+	let id3v2_tags_found = false;
+	try {
+		tags = parseID3v2Tags(reader);
+		id3v2_tags_found = true;
+	} catch (error) {}
 	let frame = parseMPEGAudioFrame(reader);
-	let duration_ms = 0
+	let duration_ms = 0;
 	try {
 		let xing = parseXingHeader(frame);
 		if (xing.number_of_frames == null) {
@@ -903,6 +981,9 @@ export function probe(fd: number): schema.Probe {
 		duration_ms = Math.ceil((xing.number_of_frames * samples_per_frame / SAMPLES_PER_SECOND[frame.header.sample_rate_index]) * 1000);
 	} catch (error) {
 		duration_ms = Math.ceil((libfs.fstatSync(fd).size * 8) / (KILOBITS_PER_SECOND[frame.header.bitrate_index] * 1000) * 1000);
+	}
+	if (!id3v2_tags_found) {
+		tags = parseID3v1Tags(reader);
 	}
 	let result: schema.Probe = {
 		resources: [
