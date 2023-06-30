@@ -501,7 +501,7 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		});
 		let track_ids = [] as Array<Uint8Array>;
 		for (let [index, track] of metadata.tracks.entries()) {
-			let track_id = makeBinaryId("track", disc_id, `${index}`);
+			let track_id = makeBinaryId("track", disc_id, `${index + 1}`);
 			await stores.tracks.update(queue, {
 				track_id: track_id,
 				disc_id: disc_id,
