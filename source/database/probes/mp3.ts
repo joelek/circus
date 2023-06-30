@@ -22,6 +22,19 @@ function decodeSyncSafeInteger(buffer: Buffer): number {
 	return ((a & 0x7F) << 21) | ((b & 0x7F) << 14) | ((c & 0x7F) << 7) | ((d & 0x7F) << 0);
 };
 
+function resynchronizeID3v2Data(buffer: Buffer): Buffer {
+	let bytes = [] as Array<number>;
+	for (let i = 0; i < buffer.length; i++) {
+		let a = buffer[i+0];
+		let b = buffer[i+1];
+		bytes.push(a);
+		if (a === 0xFF && b === 0x00) {
+			i += 1;
+		}
+	}
+	return Buffer.from(bytes);
+};
+
 function truncateID3v2String(string: string): string {
 	let index = string.indexOf("\0");
 	if (index < 0) {
@@ -120,9 +133,6 @@ function parseID3v22String(buffer: Buffer): string {
 function parseID3v22Tags(reader: readers.Binary): Tags {
 	return reader.newContext((read, skip) => {
 		let header = parseID3v22Header(reader);
-		if (header.flags.is_unsynchronized) {
-			throw new Error(`Expected a non-unsynchronized ID3v2.2 header!`);
-		}
 		if (header.flags.is_compressed) {
 			throw new Error(`Expected an uncompressed ID3v2.2 header!`);
 		}
@@ -132,6 +142,9 @@ function parseID3v22Tags(reader: readers.Binary): Tags {
 		let cursor = { offset: 0 };
 		while (cursor.offset < buffer.length) {
 			let frame = parseID3v22Frame(buffer, cursor);
+			if (header.flags.is_unsynchronized) {
+				frame.body = resynchronizeID3v2Data(frame.body);
+			}
 			if (frame.header.id === "\0\0\0") {
 				break;
 			}
@@ -341,9 +354,6 @@ function parseID3v23String(buffer: Buffer): string {
 function parseID3v23Tags(reader: readers.Binary): Tags {
 	return reader.newContext((read, skip) => {
 		let header = parseID3v23Header(reader);
-		if (header.flags.is_unsynchronized) {
-			throw new Error(`Expected a non-unsynchronized ID3v2.3 header!`);
-		}
 		let buffer_size = header.payload_size;
 		if (header.flags.has_extended_header) {
 			let extended_header_size = decodeSyncSafeInteger(read(Buffer.alloc(4)));
@@ -364,7 +374,9 @@ function parseID3v23Tags(reader: readers.Binary): Tags {
 			if (frame.header.flags.has_group_information) {
 				throw new Error(`Expected an ID3v2.3 frame header without group information!`);
 			}
-
+			if (header.flags.is_unsynchronized) {
+				frame.body = resynchronizeID3v2Data(frame.body);
+			}
 			if (frame.header.id === "\0\0\0\0") {
 				break;
 			}
@@ -587,9 +599,6 @@ function parseID3v24String(buffer: Buffer): string {
 function parseID3v24Tags(reader: readers.Binary): Tags {
 	return reader.newContext((read, skip) => {
 		let header = parseID3v24Header(reader);
-		if (header.flags.is_unsynchronized) {
-			throw new Error(`Expected a non-unsynchronized ID3v2.4 header!`);
-		}
 		let buffer_size = header.payload_size;
 		if (header.flags.has_extended_header) {
 			let extended_header_size = decodeSyncSafeInteger(read(Buffer.alloc(4)));
@@ -613,8 +622,8 @@ function parseID3v24Tags(reader: readers.Binary): Tags {
 			if (frame.header.flags.is_encrypted) {
 				throw new Error(`Expected an unencrypted ID3v2.4 frame header!`);
 			}
-			if (frame.header.flags.is_unsynchronized) {
-				throw new Error(`Expected a non-unsynchronized ID3v2.4 frame header!`);
+			if (header.flags.is_unsynchronized || frame.header.flags.is_unsynchronized) {
+				frame.body = resynchronizeID3v2Data(frame.body);
 			}
 			if (frame.header.id === "\0\0\0\0") {
 				break;
