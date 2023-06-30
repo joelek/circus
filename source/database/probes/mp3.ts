@@ -20,7 +20,15 @@ function decodeSyncSafeInteger(buffer: Buffer): number {
 	let c = buffer.readUInt8(2);
 	let d = buffer.readUInt8(3);
 	return ((a & 0x7F) << 21) | ((b & 0x7F) << 14) | ((c & 0x7F) << 7) | ((d & 0x7F) << 0);
-}
+};
+
+function truncateID3v2String(string: string): string {
+	let index = string.indexOf("\0");
+	if (index < 0) {
+		return string;
+	}
+	return string.slice(0, index);
+};
 
 type ID3v22Header = {
 	version: number;
@@ -94,17 +102,17 @@ enum ID3v22StringEncoding {
 function parseID3v22String(buffer: Buffer): string {
 	let type = buffer.readUint8(0) as ID3v22StringEncoding;
 	if (type === ID3v22StringEncoding.LATIN_1) {
-		let bytes = buffer.slice(1, -1); // TODO: Fix optional termination.
-		return bytes.toString("latin1");
+		let bytes = buffer.slice(1);
+		return truncateID3v2String(bytes.toString("latin1"));
 	}
 	if (type === ID3v22StringEncoding.UTF16_BE_OR_LE) {
-		let bytes = buffer.slice(1, -2); // TODO: Fix optional termination.
-		let bom = bytes.readUint16BE();
+		let bom = buffer.readUint16BE(1);
+		let bytes = buffer.slice(3);
 		let is_big_endian = (bom === 0xFEFF);
 		if (is_big_endian) {
 			buffer.swap16();
 		}
-		return bytes.toString("utf16le");
+		return truncateID3v2String(bytes.toString("utf16le"));
 	}
 	throw new Error(`Expected a valid ID3v2.2 string encoding!`);
 };
@@ -315,17 +323,17 @@ enum ID3v23StringEncoding {
 function parseID3v23String(buffer: Buffer): string {
 	let type = buffer.readUint8(0) as ID3v23StringEncoding;
 	if (type === ID3v23StringEncoding.LATIN_1) {
-		let bytes = buffer.slice(1, -1); // TODO: Fix optional termination.
-		return bytes.toString("latin1");
+		let bytes = buffer.slice(1);
+		return truncateID3v2String(bytes.toString("latin1"));
 	}
 	if (type === ID3v23StringEncoding.UTF16_BE_OR_LE) {
-		let bytes = buffer.slice(1, -2); // TODO: Fix optional termination.
-		let bom = bytes.readUint16BE();
+		let bom = buffer.readUint16BE(1);
+		let bytes = buffer.slice(3);
 		let is_big_endian = (bom === 0xFEFF);
 		if (is_big_endian) {
 			buffer.swap16();
 		}
-		return bytes.toString("utf16le");
+		return truncateID3v2String(bytes.toString("utf16le"));
 	}
 	throw new Error(`Expected a valid ID3v2.3 string encoding!`);
 };
@@ -552,26 +560,26 @@ enum ID3v24StringEncoding {
 function parseID3v24String(buffer: Buffer): string {
 	let type = buffer.readUint8(0) as ID3v24StringEncoding;
 	if (type === ID3v24StringEncoding.LATIN_1) {
-		let bytes = buffer.slice(1, -1); // TODO: Fix termination.
-		return bytes.toString("latin1");
+		let bytes = buffer.slice(1);
+		return truncateID3v2String(bytes.toString("latin1"));
 	}
 	if (type === ID3v24StringEncoding.UTF16_BE_OR_LE) {
-		let bytes = buffer.slice(1, -2); // TODO: Fix termination.
-		let bom = bytes.readUint16BE();
+		let bom = buffer.readUint16BE(1);
+		let bytes = buffer.slice(3);
 		let is_big_endian = (bom === 0xFEFF);
 		if (is_big_endian) {
 			buffer.swap16();
 		}
-		return bytes.toString("utf16le");
+		return truncateID3v2String(bytes.toString("utf16le"));
 	}
 	if (type === ID3v24StringEncoding.UTF16_BE) {
-		let bytes = buffer.slice(1, -2); // TODO: Fix termination.
+		let bytes = buffer.slice(1);
 		buffer.swap16();
-		return bytes.toString("utf16le");
+		return truncateID3v2String(bytes.toString("utf16le"));
 	}
 	if (type === ID3v24StringEncoding.UTF8) {
-		let bytes = buffer.slice(1, -1); // TODO: Fix termination.
-		return bytes.toString("utf-8");
+		let bytes = buffer.slice(1);
+		return truncateID3v2String(bytes.toString("utf-8"));
 	}
 	throw new Error(`Expected a valid ID3v2.4 string encoding!`);
 };
