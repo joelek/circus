@@ -312,6 +312,7 @@ export function probe(fd: number): schema.Probe {
 			track: 1,
 			album: {
 				title: tags.title,
+				year: tags.year,
 				artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
 			},
 			artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
