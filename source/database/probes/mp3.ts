@@ -142,11 +142,11 @@ function parseID3v22Tags(reader: readers.Binary): Tags {
 		let cursor = { offset: 0 };
 		while (cursor.offset < buffer.length) {
 			let frame = parseID3v22Frame(buffer, cursor);
+			if (!/^[A-Z0-9]{3}$/.test(frame.header.id)) {
+				break;
+			}
 			if (header.flags.is_unsynchronized) {
 				frame.body = resynchronizeID3v2Data(frame.body);
-			}
-			if (frame.header.id === "\0\0\0") {
-				break;
 			}
 			if (frame.header.id === "TCR") {
 				tags.copyright = parseID3v22String(frame.body);
@@ -365,6 +365,9 @@ function parseID3v23Tags(reader: readers.Binary): Tags {
 		let cursor = { offset: 0 };
 		while (cursor.offset < buffer.length) {
 			let frame = parseID3v23Frame(buffer, cursor);
+			if (!/^[A-Z0-9]{4}$/.test(frame.header.id)) {
+				break;
+			}
 			if (frame.header.flags.is_compressed) {
 				throw new Error(`Expected an uncompressed ID3v2.3 frame!`);
 			}
@@ -376,9 +379,6 @@ function parseID3v23Tags(reader: readers.Binary): Tags {
 			}
 			if (header.flags.is_unsynchronized) {
 				frame.body = resynchronizeID3v2Data(frame.body);
-			}
-			if (frame.header.id === "\0\0\0\0") {
-				break;
 			}
 			if (frame.header.id === "TCOP") {
 				tags.copyright = parseID3v23String(frame.body);
@@ -610,6 +610,9 @@ function parseID3v24Tags(reader: readers.Binary): Tags {
 		let cursor = { offset: 0 };
 		while (cursor.offset < buffer.length) {
 			let frame = parseID3v24Frame(buffer, cursor);
+			if (!/^[A-Z0-9]{4}$/.test(frame.header.id)) {
+				break;
+			}
 			if (frame.header.flags.has_data_length_indicator) {
 				throw new Error(`Expected an ID3v2.4 frame without a data length indicator!`);
 			}
@@ -624,9 +627,6 @@ function parseID3v24Tags(reader: readers.Binary): Tags {
 			}
 			if (header.flags.is_unsynchronized || frame.header.flags.is_unsynchronized) {
 				frame.body = resynchronizeID3v2Data(frame.body);
-			}
-			if (frame.header.id === "\0\0\0\0") {
-				break;
 			}
 			if (frame.header.id === "TCOP") {
 				tags.copyright = parseID3v24String(frame.body);
