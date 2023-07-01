@@ -468,7 +468,7 @@ function parseID3v23Tags(reader: readers.Binary): Tags {
 				tags.album = parseID3v23String(frame.body);
 				continue;
 			}
-			if (frame.header.id === "TDRC") {
+			if (frame.header.id === "TYER") {
 				let string = parseID3v23String(frame.body);
 				let parts = /^([0-9]+)$/.exec(string);
 				if (is.present(parts)) {
