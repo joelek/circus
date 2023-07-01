@@ -275,7 +275,7 @@ function parseID3v22Tags(reader: readers.Binary): Tags {
 					continue;
 				}
 			} catch (error) {
-				console.warn(`Error while parsing frame with type ${frame.header.id}!`);
+				console.warn(`Skipping badly coded ID3v2.2 frame with type ${frame.header.id}...`);
 			}
 		}
 		return tags;
@@ -446,15 +446,15 @@ function parseID3v23Tags(reader: readers.Binary): Tags {
 				break;
 			}
 			if (frame.header.flags.is_compressed) {
-				console.warn(`Expected an uncompressed ID3v2.3 frame!`);
+				console.warn(`Skipping compressed ID3v2.3 frame...`);
 				continue;
 			}
 			if (frame.header.flags.is_encrypted) {
-				console.warn(`Expected an unencrypted ID3v2.3 frame!`);
+				console.warn(`Skipping encrypted ID3v2.3 frame...`);
 				continue;
 			}
 			if (frame.header.flags.has_group_information) {
-				console.warn(`Expected an ID3v2.3 frame without group information!`);
+				console.warn(`Skipping ID3v2.3 frame with group information...`);
 				continue;
 			}
 			try {
@@ -514,7 +514,7 @@ function parseID3v23Tags(reader: readers.Binary): Tags {
 					continue;
 				}
 			} catch (error) {
-				console.warn(`Error while parsing frame with type ${frame.header.id}!`);
+				console.warn(`Skipping badly coded ID3v2.3 frame with type ${frame.header.id}...`);
 			}
 		}
 		return tags;
@@ -698,19 +698,19 @@ function parseID3v24Tags(reader: readers.Binary): Tags {
 				break;
 			}
 			if (frame.header.flags.has_data_length_indicator) {
-				console.warn(`Expected an ID3v2.4 frame without a data length indicator!`);
+				console.warn(`Skipping ID3v2.4 frame with data length indicator...`);
 				continue;
 			}
 			if (frame.header.flags.has_group_information) {
-				console.warn(`Expected an ID3v2.4 frame without group information!`);
+				console.warn(`Skipping ID3v2.4 frame with group information...`);
 				continue;
 			}
 			if (frame.header.flags.is_compressed) {
-				console.warn(`Expected an uncompressed ID3v2.4 frame!`);
+				console.warn(`Skipping compressed ID3v2.4 frame...`);
 				continue;
 			}
 			if (frame.header.flags.is_encrypted) {
-				console.warn(`Expected an unencrypted ID3v2.4 frame!`);
+				console.warn(`Skipping encrypted ID3v2.4 frame...`);
 				continue;
 			}
 			try {
@@ -770,7 +770,7 @@ function parseID3v24Tags(reader: readers.Binary): Tags {
 					continue;
 				}
 			} catch (error) {
-				console.warn(`Error while parsing frame with type ${frame.header.id}!`);
+				console.warn(`Skipping badly coded ID3v2.4 frame with type ${frame.header.id}...`);
 			}
 		}
 		return tags;
