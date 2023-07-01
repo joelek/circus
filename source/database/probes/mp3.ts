@@ -145,7 +145,7 @@ function parseID3v22Header(reader: readers.Binary): ID3v22Header {
 			revision,
 			flags: {
 				is_unsynchronized,
-				is_compressed,
+				is_compressed
 			},
 			payload_size
 		};
@@ -218,60 +218,64 @@ function parseID3v22Tags(reader: readers.Binary): Tags {
 			if (!/^[A-Z0-9]{3}$/.test(frame.header.id)) {
 				break;
 			}
-			if (header.flags.is_unsynchronized) {
-				frame.body = resynchronizeID3v2Data(frame.body);
-			}
-			if (frame.header.id === "TCR") {
-				tags.copyright = parseID3v22String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TT2") {
-				tags.title = parseID3v22String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TAL") {
-				tags.album = parseID3v22String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TYE") {
-				let string = parseID3v22String(frame.body);
-				let parts = /^([0-9]+)$/.exec(string);
-				if (is.present(parts)) {
-					tags.year = parseInt(parts[1]);
+			try {
+				if (header.flags.is_unsynchronized) {
+					frame.body = resynchronizeID3v2Data(frame.body);
 				}
-				continue;
-			}
-			if (frame.header.id === "TRK") {
-				let string = parseID3v22String(frame.body);
-				let parts = /^([0-9]+)(?:\/([0-9]+))?$/.exec(string);
-				if (is.present(parts)) {
-					tags.track_number = parseInt(parts[1]);
+				if (frame.header.id === "TCR") {
+					tags.copyright = parseID3v22String(frame.body).trim() || undefined;
+					continue;
 				}
-				continue;
-			}
-			if (frame.header.id === "TPA") {
-				let string = parseID3v22String(frame.body);
-				let parts = /^([0-9]+)(?:\/([0-9]+))?$/.exec(string);
-				if (is.present(parts)) {
-					tags.disc_number = parseInt(parts[1]);
+				if (frame.header.id === "TT2") {
+					tags.title = parseID3v22String(frame.body).trim() || undefined;
+					continue;
 				}
-				continue;
-			}
-			if (frame.header.id === "TP1") {
-				tags.artist = parseID3v22String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TP2") {
-				tags.album_artist = parseID3v22String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TXX") {
-				let string = parseID3v22String(frame.body);
-				let parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
-				if (is.present(parts)) {
-					tags.album_artist = parts[1].trim() || undefined;
+				if (frame.header.id === "TAL") {
+					tags.album = parseID3v22String(frame.body).trim() || undefined;
+					continue;
 				}
-				continue;
+				if (frame.header.id === "TYE") {
+					let string = parseID3v22String(frame.body);
+					let parts = /^([0-9]+)$/.exec(string);
+					if (is.present(parts)) {
+						tags.year = parseInt(parts[1]);
+					}
+					continue;
+				}
+				if (frame.header.id === "TRK") {
+					let string = parseID3v22String(frame.body);
+					let parts = /^([0-9]+)(?:\/([0-9]+))?$/.exec(string);
+					if (is.present(parts)) {
+						tags.track_number = parseInt(parts[1]);
+					}
+					continue;
+				}
+				if (frame.header.id === "TPA") {
+					let string = parseID3v22String(frame.body);
+					let parts = /^([0-9]+)(?:\/([0-9]+))?$/.exec(string);
+					if (is.present(parts)) {
+						tags.disc_number = parseInt(parts[1]);
+					}
+					continue;
+				}
+				if (frame.header.id === "TP1") {
+					tags.artist = parseID3v22String(frame.body).trim() || undefined;
+					continue;
+				}
+				if (frame.header.id === "TP2") {
+					tags.album_artist = parseID3v22String(frame.body).trim() || undefined;
+					continue;
+				}
+				if (frame.header.id === "TXX") {
+					let string = parseID3v22String(frame.body);
+					let parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
+					if (is.present(parts)) {
+						tags.album_artist = parts[1].trim() || undefined;
+					}
+					continue;
+				}
+			} catch (error) {
+				console.warn(`Error while parsing frame with type ${frame.header.id}!`);
 			}
 		}
 		return tags;
@@ -453,60 +457,64 @@ function parseID3v23Tags(reader: readers.Binary): Tags {
 				console.warn(`Expected an ID3v2.3 frame without group information!`);
 				continue;
 			}
-			if (header.flags.is_unsynchronized) {
-				frame.body = resynchronizeID3v2Data(frame.body);
-			}
-			if (frame.header.id === "TCOP") {
-				tags.copyright = parseID3v23String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TIT2") {
-				tags.title = parseID3v23String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TALB") {
-				tags.album = parseID3v23String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TYER") {
-				let string = parseID3v23String(frame.body);
-				let parts = /^([0-9]+)$/.exec(string);
-				if (is.present(parts)) {
-					tags.year = parseInt(parts[1]);
+			try {
+				if (header.flags.is_unsynchronized) {
+					frame.body = resynchronizeID3v2Data(frame.body);
 				}
-				continue;
-			}
-			if (frame.header.id === "TRCK") {
-				let string = parseID3v23String(frame.body);
-				let parts = /^([0-9]+)(?:\/([0-9]+))?$/.exec(string);
-				if (is.present(parts)) {
-					tags.track_number = parseInt(parts[1]);
+				if (frame.header.id === "TCOP") {
+					tags.copyright = parseID3v23String(frame.body).trim() || undefined;
+					continue;
 				}
-				continue;
-			}
-			if (frame.header.id === "TPOS") {
-				let string = parseID3v23String(frame.body);
-				let parts = /^([0-9]+)(?:\/([0-9]+))?$/.exec(string);
-				if (is.present(parts)) {
-					tags.disc_number = parseInt(parts[1]);
+				if (frame.header.id === "TIT2") {
+					tags.title = parseID3v23String(frame.body).trim() || undefined;
+					continue;
 				}
-				continue;
-			}
-			if (frame.header.id === "TPE1") {
-				tags.artist = parseID3v23String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TPE2") {
-				tags.album_artist = parseID3v23String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TXXX") {
-				let string = parseID3v23String(frame.body);
-				let parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
-				if (is.present(parts)) {
-					tags.album_artist = parts[1].trim() || undefined;
+				if (frame.header.id === "TALB") {
+					tags.album = parseID3v23String(frame.body).trim() || undefined;
+					continue;
 				}
-				continue;
+				if (frame.header.id === "TYER") {
+					let string = parseID3v23String(frame.body);
+					let parts = /^([0-9]+)$/.exec(string);
+					if (is.present(parts)) {
+						tags.year = parseInt(parts[1]);
+					}
+					continue;
+				}
+				if (frame.header.id === "TRCK") {
+					let string = parseID3v23String(frame.body);
+					let parts = /^([0-9]+)(?:\/([0-9]+))?$/.exec(string);
+					if (is.present(parts)) {
+						tags.track_number = parseInt(parts[1]);
+					}
+					continue;
+				}
+				if (frame.header.id === "TPOS") {
+					let string = parseID3v23String(frame.body);
+					let parts = /^([0-9]+)(?:\/([0-9]+))?$/.exec(string);
+					if (is.present(parts)) {
+						tags.disc_number = parseInt(parts[1]);
+					}
+					continue;
+				}
+				if (frame.header.id === "TPE1") {
+					tags.artist = parseID3v23String(frame.body).trim() || undefined;
+					continue;
+				}
+				if (frame.header.id === "TPE2") {
+					tags.album_artist = parseID3v23String(frame.body).trim() || undefined;
+					continue;
+				}
+				if (frame.header.id === "TXXX") {
+					let string = parseID3v23String(frame.body);
+					let parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
+					if (is.present(parts)) {
+						tags.album_artist = parts[1].trim() || undefined;
+					}
+					continue;
+				}
+			} catch (error) {
+				console.warn(`Error while parsing frame with type ${frame.header.id}!`);
 			}
 		}
 		return tags;
@@ -705,60 +713,64 @@ function parseID3v24Tags(reader: readers.Binary): Tags {
 				console.warn(`Expected an unencrypted ID3v2.4 frame!`);
 				continue;
 			}
-			if (header.flags.is_unsynchronized || frame.header.flags.is_unsynchronized) {
-				frame.body = resynchronizeID3v2Data(frame.body);
-			}
-			if (frame.header.id === "TCOP") {
-				tags.copyright = parseID3v24String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TIT2") {
-				tags.title = parseID3v24String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TALB") {
-				tags.album = parseID3v24String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TDRC") {
-				let string = parseID3v24String(frame.body);
-				let parts = /^([0-9]+)$/.exec(string);
-				if (is.present(parts)) {
-					tags.year = parseInt(parts[1]);
+			try {
+				if (header.flags.is_unsynchronized || frame.header.flags.is_unsynchronized) {
+					frame.body = resynchronizeID3v2Data(frame.body);
 				}
-				continue;
-			}
-			if (frame.header.id === "TRCK") {
-				let string = parseID3v24String(frame.body);
-				let parts = /^([0-9]+)(?:\/([0-9]+))?$/.exec(string);
-				if (is.present(parts)) {
-					tags.track_number = parseInt(parts[1]);
+				if (frame.header.id === "TCOP") {
+					tags.copyright = parseID3v24String(frame.body).trim() || undefined;
+					continue;
 				}
-				continue;
-			}
-			if (frame.header.id === "TPOS") {
-				let string = parseID3v24String(frame.body);
-				let parts = /^([0-9]+)(?:\/([0-9]+))?$/.exec(string);
-				if (is.present(parts)) {
-					tags.disc_number = parseInt(parts[1]);
+				if (frame.header.id === "TIT2") {
+					tags.title = parseID3v24String(frame.body).trim() || undefined;
+					continue;
 				}
-				continue;
-			}
-			if (frame.header.id === "TPE1") {
-				tags.artist = parseID3v24String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TPE2") {
-				tags.album_artist = parseID3v24String(frame.body).trim() || undefined;
-				continue;
-			}
-			if (frame.header.id === "TXXX") {
-				let string = parseID3v24String(frame.body);
-				let parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
-				if (is.present(parts)) {
-					tags.album_artist = parts[1].trim() || undefined;
+				if (frame.header.id === "TALB") {
+					tags.album = parseID3v24String(frame.body).trim() || undefined;
+					continue;
 				}
-				continue;
+				if (frame.header.id === "TDRC") {
+					let string = parseID3v24String(frame.body);
+					let parts = /^([0-9]+)$/.exec(string);
+					if (is.present(parts)) {
+						tags.year = parseInt(parts[1]);
+					}
+					continue;
+				}
+				if (frame.header.id === "TRCK") {
+					let string = parseID3v24String(frame.body);
+					let parts = /^([0-9]+)(?:\/([0-9]+))?$/.exec(string);
+					if (is.present(parts)) {
+						tags.track_number = parseInt(parts[1]);
+					}
+					continue;
+				}
+				if (frame.header.id === "TPOS") {
+					let string = parseID3v24String(frame.body);
+					let parts = /^([0-9]+)(?:\/([0-9]+))?$/.exec(string);
+					if (is.present(parts)) {
+						tags.disc_number = parseInt(parts[1]);
+					}
+					continue;
+				}
+				if (frame.header.id === "TPE1") {
+					tags.artist = parseID3v24String(frame.body).trim() || undefined;
+					continue;
+				}
+				if (frame.header.id === "TPE2") {
+					tags.album_artist = parseID3v24String(frame.body).trim() || undefined;
+					continue;
+				}
+				if (frame.header.id === "TXXX") {
+					let string = parseID3v24String(frame.body);
+					let parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
+					if (is.present(parts)) {
+						tags.album_artist = parts[1].trim() || undefined;
+					}
+					continue;
+				}
+			} catch (error) {
+				console.warn(`Error while parsing frame with type ${frame.header.id}!`);
 			}
 		}
 		return tags;
