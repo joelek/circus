@@ -787,9 +787,9 @@ enum Version {
 
 enum Layer {
 	RESERVED,
-	LAYER_3,
-	LAYER_2,
-	LAYER_1
+	L3,
+	L2,
+	L1
 };
 
 enum Channels {
@@ -806,32 +806,412 @@ enum Emphasis {
 	CCIT_J17
 };
 
-// The values differ between versions and layers.
 const KILOBITS_PER_SECOND = [
-	-1,
-	32,
-	40,
-	48,
-	56,
-	64,
-	80,
-	96,
-	112,
-	128,
-	160,
-	192,
-	224,
-	256,
-	320,
-	-1
+	// Version.V2_5
+	[
+		// Layer.RESERVED
+		[
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1
+		],
+		// Layer.L3
+		[
+			0,
+			8,
+			16,
+			24,
+			32,
+			40,
+			48,
+			56,
+			64,
+			80,
+			96,
+			112,
+			128,
+			144,
+			160,
+			-1
+		],
+		// Layer.L2
+		[
+			0,
+			8,
+			16,
+			24,
+			32,
+			40,
+			48,
+			56,
+			64,
+			80,
+			96,
+			112,
+			128,
+			144,
+			160,
+			-1
+		],
+		// Layer.L1
+		[
+			0,
+			32,
+			48,
+			56,
+			64,
+			80,
+			96,
+			112,
+			128,
+			144,
+			160,
+			176,
+			192,
+			224,
+			256,
+			-1
+		]
+	],
+	// Version.RESERVED
+	[
+		// Layer.RESERVED
+		[
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1
+		],
+		// Layer.L3
+		[
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1
+		],
+		// Layer.L2
+		[
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1
+		],
+		// Layer.L1
+		[
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1
+		]
+	],
+	// Version.V2
+	[
+		// Layer.RESERVED
+		[
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1
+		],
+		// Layer.L3
+		[
+			0,
+			8,
+			16,
+			24,
+			32,
+			40,
+			48,
+			56,
+			64,
+			80,
+			96,
+			112,
+			128,
+			144,
+			160,
+			-1
+		],
+		// Layer.L2
+		[
+			0,
+			8,
+			16,
+			24,
+			32,
+			40,
+			48,
+			56,
+			64,
+			80,
+			96,
+			112,
+			128,
+			144,
+			160,
+			-1
+		],
+		// Layer.L1
+		[
+			0,
+			32,
+			48,
+			56,
+			64,
+			80,
+			96,
+			112,
+			128,
+			144,
+			160,
+			176,
+			192,
+			224,
+			256,
+			-1
+		]
+	],
+	// Version.V1
+	[
+		// Layer.RESERVED
+		[
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1,
+			-1
+		],
+		// Layer.L3
+		[
+			0,
+			32,
+			40,
+			48,
+			56,
+			64,
+			80,
+			96,
+			112,
+			128,
+			160,
+			192,
+			224,
+			256,
+			320,
+			-1
+		],
+		// Layer.L2
+		[
+			0,
+			32,
+			48,
+			56,
+			64,
+			80,
+			96,
+			112,
+			128,
+			160,
+			192,
+			224,
+			256,
+			320,
+			384,
+			-1
+		],
+		// Layer.L1
+		[
+			0,
+			32,
+			64,
+			96,
+			128,
+			160,
+			192,
+			224,
+			256,
+			288,
+			320,
+			352,
+			384,
+			416,
+			448,
+			-1
+		]
+	]
 ];
 
-// The values differ between versions and layers.
 const SAMPLES_PER_SECOND = [
-	44100,
-	48000,
-	32000,
-	-1
+	// Version.V2_5
+	[
+		11025,
+		1200,
+		8000,
+		-1
+	],
+	// Version.RESERVED
+	[
+		-1,
+		-1,
+		-1,
+		-1
+	],
+	// Version.V2
+	[
+		22050,
+		24000,
+		16000,
+		-1
+	],
+	// Version.V1
+	[
+		44100,
+		48000,
+		32000,
+		-1
+	]
+];
+
+const SAMPLES_PER_FRAME = [
+	// Version.V2_5
+	[
+		// Layer.RESERVED
+		-1,
+		// Layer.L3
+		576,
+		// Layer.L2
+		1152,
+		// Layer.L1
+		384
+	],
+	// Version.RESERVED
+	[
+		// Layer.RESERVED
+		-1,
+		// Layer.L3
+		-1,
+		// Layer.L2
+		-1,
+		// Layer.L1
+		-1
+	],
+	// Version.V2
+	[
+		// Layer.RESERVED
+		-1,
+		// Layer.L3
+		576,
+		// Layer.L2
+		1152,
+		// Layer.L1
+		384
+	],
+	// Version.V1
+	[
+		// Layer.RESERVED
+		-1,
+		// Layer.L3
+		1152,
+		// Layer.L2
+		1152,
+		// Layer.L1
+		384
+	]
+];
+
+const BYTES_PER_SLOT = [
+	// Layer.RESERVED
+	-1,
+	// Layer.L3
+	1,
+	// Layer.L2
+	1,
+	// Layer.L1
+	4
 ];
 
 type MPEGAudioFrameHeader = {
@@ -847,9 +1227,16 @@ type MPEGAudioFrameHeader = {
 	copyrighted: boolean;
 	original: boolean;
 	emphasis: Emphasis;
+	values: {
+		samples_per_second: number;
+		kilobits_per_second: number;
+		samples_per_frame: number;
+		bytes_per_slot: number;
+		frame_length: number;
+		payload_length: number;
+	}
 };
 
-// TODO: Detect invalid configurations.
 function parseMPEGAudioFrameHeader(reader: readers.Binary, probe_distance: number): MPEGAudioFrameHeader {
 	return reader.newContext((read, skip, tell) => {
 		for (let i = 0; i < probe_distance; i++) {
@@ -867,9 +1254,39 @@ function parseMPEGAudioFrameHeader(reader: readers.Binary, probe_distance: numbe
 			let copyrighted = ((buffer[3] & 0x08) >> 3) === 1;
 			let original = ((buffer[3] & 0x04) >> 2) === 1;
 			let emphasis = ((buffer[3] & 0x03) >> 0) as Emphasis;
-			if (sync !== 0x07FF) {
+			if (sync !== 0x07FF || version === Version.RESERVED || layer === Layer.RESERVED) {
 				skip(-3);
 				continue;
+			}
+			let samples_per_second = SAMPLES_PER_SECOND[version][sample_rate_index];
+			if (samples_per_second === -1) {
+				skip(-3);
+				continue;
+			}
+			let kilobits_per_second = KILOBITS_PER_SECOND[version][layer][bitrate_index];
+			if (kilobits_per_second === -1) {
+				skip(-3);
+				continue;
+			}
+			let samples_per_frame = SAMPLES_PER_FRAME[version][layer];
+			if (samples_per_frame === -1) {
+				skip(-3);
+				continue;
+			}
+			let bytes_per_slot = BYTES_PER_SLOT[layer];
+			if (bytes_per_slot === -1) {
+				skip(-3);
+				continue;
+			}
+			let bytes_per_frame = samples_per_frame * kilobits_per_second * 1000 / 8 / samples_per_second;
+			let frame_slots = Math.floor(bytes_per_frame / bytes_per_slot);
+			if (padded) {
+				frame_slots += 1;
+			}
+			let frame_length = frame_slots * bytes_per_slot;
+			let payload_length = frame_length - 4;
+			if (i !== 0) {
+				console.warn(`Skipped ${i} bytes of junk during MPEG header probe!`);
 			}
 			return {
 				version,
@@ -883,7 +1300,15 @@ function parseMPEGAudioFrameHeader(reader: readers.Binary, probe_distance: numbe
 				mode_extension,
 				copyrighted,
 				original,
-				emphasis
+				emphasis,
+				values: {
+					samples_per_second,
+					kilobits_per_second,
+					samples_per_frame,
+					bytes_per_slot,
+					frame_length,
+					payload_length
+				}
 			};
 		}
 		throw new Error(`Expected a MPEG audio frame header!`);
@@ -898,17 +1323,7 @@ type MPEGAudioFrame = {
 function parseMPEGAudioFrame(reader: readers.Binary, probe_distance: number): MPEGAudioFrame {
 	return reader.newContext((read, skip) => {
 		let header = parseMPEGAudioFrameHeader(reader, probe_distance);
-		if (header.version !== Version.V1 || header.layer !== Layer.LAYER_3) {
-			throw new Error(`Expected a MPEG version 1 layer 3 header!`);
-		}
-		// The value differs between versions and layers.
-		let samples_per_frame = 1152;
-		let slots = Math.floor(samples_per_frame * KILOBITS_PER_SECOND[header.bitrate_index] * 1000 / 8 / SAMPLES_PER_SECOND[header.sample_rate_index]);
-		if (header.padded) {
-			slots += 1;
-		}
-		let bytes = slots * 1;
-		let body = read(Buffer.alloc(bytes - 4));
+		let body = read(Buffer.alloc(header.values.payload_length));
 		return {
 			header,
 			body
@@ -972,17 +1387,18 @@ export function probe(fd: number): schema.Probe {
 		id3v2_tags_found = true;
 	} catch (error) {}
 	let frame = parseMPEGAudioFrame(reader, 1152);
+	if (frame.header.version !== Version.V1 || frame.header.layer !== Layer.L3) {
+		throw new Error(`Expected a MPEG version 1 layer 3 header!`);
+	}
 	let duration_ms = 0;
 	try {
 		let xing = parseXingHeader(frame);
 		if (xing.number_of_frames == null) {
 			throw new Error(`Expected Xing header to contain number of frames!`);
 		}
-		// The value differs between versions and layers.
-		let samples_per_frame = 1152;
-		duration_ms = Math.ceil((xing.number_of_frames * samples_per_frame / SAMPLES_PER_SECOND[frame.header.sample_rate_index]) * 1000);
+		duration_ms = Math.ceil((xing.number_of_frames * frame.header.values.samples_per_frame / frame.header.values.samples_per_second) * 1000);
 	} catch (error) {
-		duration_ms = Math.ceil((libfs.fstatSync(fd).size * 8) / (KILOBITS_PER_SECOND[frame.header.bitrate_index] * 1000) * 1000);
+		duration_ms = Math.ceil((libfs.fstatSync(fd).size * 8) / (frame.header.values.kilobits_per_second * 1000) * 1000);
 	}
 	if (!id3v2_tags_found) {
 		tags = parseID3v1Tags(reader);
