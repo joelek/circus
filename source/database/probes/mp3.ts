@@ -1394,10 +1394,17 @@ export function probe(fd: number): schema.Probe {
 	let reader = new readers.Binary(fd);
 	let tags = {} as Tags;
 	let id3v2_tags_found = false;
-	try {
-		tags = parseID3v2Tags(reader);
-		id3v2_tags_found = true;
-	} catch (error) {}
+	while (true) {
+		try {
+			tags = {
+				...tags,
+				...parseID3v2Tags(reader)
+			};
+			id3v2_tags_found = true;
+		} catch (error) {
+			break;
+		}
+	}
 	let frame = parseMPEGAudioFrame(reader, 1152);
 	if (frame.header.version !== Version.V1 || frame.header.layer !== Layer.L3) {
 		throw new Error(`Expected a MPEG version 1 layer 3 header!`);
