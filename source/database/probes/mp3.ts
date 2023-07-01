@@ -849,40 +849,44 @@ type MPEGAudioFrameHeader = {
 	emphasis: Emphasis;
 };
 
-function parseMPEGAudioFrameHeader(reader: readers.Binary): MPEGAudioFrameHeader {
-	return reader.newContext((read, skip) => {
-		let buffer = Buffer.alloc(4);
-		read(buffer);
-		let sync = ((buffer[0] & 0xFF) << 3) | ((buffer[1] & 0xE0) >> 5);
-		let version = ((buffer[1] & 0x18) >> 3) as Version;
-		let layer = ((buffer[1] & 0x06) >> 1) as Layer;
-		let skip_crc = ((buffer[1] & 0x01) >> 0) === 1;
-		let bitrate_index = ((buffer[2] & 0xF0) >> 4);
-		let sample_rate_index = ((buffer[2] & 0x0C) >> 2);
-		let padded = ((buffer[2] & 0x02) >> 1) === 1;
-		let application_private = ((buffer[2] & 0x01) >> 0) === 1;
-		let channels = ((buffer[3] & 0xC0) >> 6) as Channels;
-		let mode_extension = ((buffer[3] & 0x30) >> 4);
-		let copyrighted = ((buffer[3] & 0x08) >> 3) === 1;
-		let original = ((buffer[3] & 0x04) >> 2) === 1;
-		let emphasis = ((buffer[3] & 0x03) >> 0) as Emphasis;
-		if (sync !== 0x07FF) {
-			throw new Error(`Expected a MPEG Audio Frame Header!`);
+// TODO: Detect invalid configurations.
+function parseMPEGAudioFrameHeader(reader: readers.Binary, probe_distance: number): MPEGAudioFrameHeader {
+	return reader.newContext((read, skip, tell) => {
+		for (let i = 0; i < probe_distance; i++) {
+			let buffer = read(Buffer.alloc(4));
+			let sync = ((buffer[0] & 0xFF) << 3) | ((buffer[1] & 0xE0) >> 5);
+			let version = ((buffer[1] & 0x18) >> 3) as Version;
+			let layer = ((buffer[1] & 0x06) >> 1) as Layer;
+			let skip_crc = ((buffer[1] & 0x01) >> 0) === 1;
+			let bitrate_index = ((buffer[2] & 0xF0) >> 4);
+			let sample_rate_index = ((buffer[2] & 0x0C) >> 2);
+			let padded = ((buffer[2] & 0x02) >> 1) === 1;
+			let application_private = ((buffer[2] & 0x01) >> 0) === 1;
+			let channels = ((buffer[3] & 0xC0) >> 6) as Channels;
+			let mode_extension = ((buffer[3] & 0x30) >> 4);
+			let copyrighted = ((buffer[3] & 0x08) >> 3) === 1;
+			let original = ((buffer[3] & 0x04) >> 2) === 1;
+			let emphasis = ((buffer[3] & 0x03) >> 0) as Emphasis;
+			if (sync !== 0x07FF) {
+				skip(-3);
+				continue;
+			}
+			return {
+				version,
+				layer,
+				skip_crc,
+				bitrate_index,
+				sample_rate_index,
+				padded,
+				application_private,
+				channels,
+				mode_extension,
+				copyrighted,
+				original,
+				emphasis
+			};
 		}
-		return {
-			version,
-			layer,
-			skip_crc,
-			bitrate_index,
-			sample_rate_index,
-			padded,
-			application_private,
-			channels,
-			mode_extension,
-			copyrighted,
-			original,
-			emphasis
-		};
+		throw new Error(`Expected a MPEG audio frame header!`);
 	});
 };
 
@@ -891,11 +895,11 @@ type MPEGAudioFrame = {
 	body: Buffer;
 };
 
-function parseMPEGAudioFrame(reader: readers.Binary): MPEGAudioFrame {
+function parseMPEGAudioFrame(reader: readers.Binary, probe_distance: number): MPEGAudioFrame {
 	return reader.newContext((read, skip) => {
-		let header = parseMPEGAudioFrameHeader(reader);
+		let header = parseMPEGAudioFrameHeader(reader, probe_distance);
 		if (header.version !== Version.V1 || header.layer !== Layer.LAYER_3) {
-			throw new Error(`Expected a MPEG Version 1 Layer 3 header!`);
+			throw new Error(`Expected a MPEG version 1 layer 3 header!`);
 		}
 		// The value differs between versions and layers.
 		let samples_per_frame = 1152;
@@ -904,8 +908,7 @@ function parseMPEGAudioFrame(reader: readers.Binary): MPEGAudioFrame {
 			slots += 1;
 		}
 		let bytes = slots * 1;
-		let body = Buffer.alloc(bytes - 4);
-		read(body);
+		let body = read(Buffer.alloc(bytes - 4));
 		return {
 			header,
 			body
@@ -968,7 +971,7 @@ export function probe(fd: number): schema.Probe {
 		tags = parseID3v2Tags(reader);
 		id3v2_tags_found = true;
 	} catch (error) {}
-	let frame = parseMPEGAudioFrame(reader);
+	let frame = parseMPEGAudioFrame(reader, 1152);
 	let duration_ms = 0;
 	try {
 		let xing = parseXingHeader(frame);
