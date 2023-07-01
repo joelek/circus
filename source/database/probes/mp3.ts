@@ -44,7 +44,7 @@ function parseID3v11Tags(reader: readers.Binary): Tags {
 		let year = buffer.slice(offset, offset + 4).toString(); offset += 4;
 		let comment = buffer.slice(offset, offset + 28).toString("latin1"); offset += 28;
 		let track_number = buffer.slice(offset, offset + 2); offset += 2;
-		let genre = buffer.slice(offset, offset + 1).toString(); offset += 1;
+		let genre = buffer.slice(offset, offset + 1); offset += 1;
 		if (id !== "TAG") {
 			throw new Error(`Expected an ID3v1.0 tag!`);
 		}
