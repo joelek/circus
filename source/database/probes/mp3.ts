@@ -43,7 +43,7 @@ function parseID3v11Tags(reader: readers.Binary): Tags {
 		let album = buffer.slice(offset, offset + 30).toString("latin1"); offset += 30;
 		let year = buffer.slice(offset, offset + 4).toString(); offset += 4;
 		let comment = buffer.slice(offset, offset + 28).toString("latin1"); offset += 28;
-		let track_number = buffer.slice(offset, offset + 2).toString(); offset += 2;
+		let track_number = buffer.slice(offset, offset + 2); offset += 2;
 		let genre = buffer.slice(offset, offset + 1).toString(); offset += 1;
 		if (id !== "TAG") {
 			throw new Error(`Expected an ID3v1.0 tag!`);
@@ -55,9 +55,8 @@ function parseID3v11Tags(reader: readers.Binary): Tags {
 		if (is.present(year_parts)) {
 			tags.year = parseInt(year_parts[1]);
 		}
-		let track_number_parts = /^([0-9]+)$/.exec(track_number);
-		if (is.present(track_number_parts)) {
-			tags.track_number = parseInt(track_number_parts[1]);
+		if (track_number[0] === 0x00 && track_number[1] !== 0x00) {
+			tags.track_number = track_number[1];
 		}
 		return tags;
 	});
