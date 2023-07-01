@@ -1407,7 +1407,7 @@ export function probe(fd: number): schema.Probe {
 	}
 	let frame = parseMPEGAudioFrame(reader, 1152);
 	if (frame.header.version !== Version.V1 || frame.header.layer !== Layer.L3) {
-		throw new Error(`Expected a MPEG version 1 layer 3 header!`);
+		throw new Error(`Expected a MPEG ${Version[Version.V1]} ${Layer[Layer.L3]} header (found ${Version[frame.header.version]} ${Layer[frame.header.layer]})!`);
 	}
 	let duration_ms = 0;
 	try {
