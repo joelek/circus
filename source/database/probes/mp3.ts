@@ -222,15 +222,15 @@ function parseID3v22Tags(reader: readers.Binary): Tags {
 				frame.body = resynchronizeID3v2Data(frame.body);
 			}
 			if (frame.header.id === "TCR") {
-				tags.copyright = parseID3v22String(frame.body);
+				tags.copyright = parseID3v22String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TT2") {
-				tags.title =parseID3v22String(frame.body);
+				tags.title = parseID3v22String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TAL") {
-				tags.album = parseID3v22String(frame.body);
+				tags.album = parseID3v22String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TYE") {
@@ -258,18 +258,18 @@ function parseID3v22Tags(reader: readers.Binary): Tags {
 				continue;
 			}
 			if (frame.header.id === "TP1") {
-				tags.artist = parseID3v22String(frame.body);
+				tags.artist = parseID3v22String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TP2") {
-				tags.album_artist = parseID3v22String(frame.body);
+				tags.album_artist = parseID3v22String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TXX") {
 				let string = parseID3v22String(frame.body);
 				let parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
 				if (is.present(parts)) {
-					tags.album_artist = parts[1];
+					tags.album_artist = parts[1].trim() || undefined;
 				}
 				continue;
 			}
@@ -457,15 +457,15 @@ function parseID3v23Tags(reader: readers.Binary): Tags {
 				frame.body = resynchronizeID3v2Data(frame.body);
 			}
 			if (frame.header.id === "TCOP") {
-				tags.copyright = parseID3v23String(frame.body);
+				tags.copyright = parseID3v23String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TIT2") {
-				tags.title = parseID3v23String(frame.body);
+				tags.title = parseID3v23String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TALB") {
-				tags.album = parseID3v23String(frame.body);
+				tags.album = parseID3v23String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TYER") {
@@ -493,18 +493,18 @@ function parseID3v23Tags(reader: readers.Binary): Tags {
 				continue;
 			}
 			if (frame.header.id === "TPE1") {
-				tags.artist = parseID3v23String(frame.body);
+				tags.artist = parseID3v23String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TPE2") {
-				tags.album_artist = parseID3v23String(frame.body);
+				tags.album_artist = parseID3v23String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TXXX") {
 				let string = parseID3v23String(frame.body);
 				let parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
 				if (is.present(parts)) {
-					tags.album_artist = parts[1];
+					tags.album_artist = parts[1].trim() || undefined;
 				}
 				continue;
 			}
@@ -709,15 +709,15 @@ function parseID3v24Tags(reader: readers.Binary): Tags {
 				frame.body = resynchronizeID3v2Data(frame.body);
 			}
 			if (frame.header.id === "TCOP") {
-				tags.copyright = parseID3v24String(frame.body);
+				tags.copyright = parseID3v24String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TIT2") {
-				tags.title = parseID3v24String(frame.body);
+				tags.title = parseID3v24String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TALB") {
-				tags.album = parseID3v24String(frame.body);
+				tags.album = parseID3v24String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TDRC") {
@@ -745,18 +745,18 @@ function parseID3v24Tags(reader: readers.Binary): Tags {
 				continue;
 			}
 			if (frame.header.id === "TPE1") {
-				tags.artist = parseID3v24String(frame.body);
+				tags.artist = parseID3v24String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TPE2") {
-				tags.album_artist = parseID3v24String(frame.body);
+				tags.album_artist = parseID3v24String(frame.body).trim() || undefined;
 				continue;
 			}
 			if (frame.header.id === "TXXX") {
 				let string = parseID3v24String(frame.body);
 				let parts = /^ALBUM ARTIST\0(.+)$/.exec(string);
 				if (is.present(parts)) {
-					tags.album_artist = parts[1];
+					tags.album_artist = parts[1].trim() || undefined;
 				}
 				continue;
 			}
