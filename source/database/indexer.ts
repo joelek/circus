@@ -146,6 +146,9 @@ async function visitDirectory(queue: WritableQueue, path: Array<string>, parent_
 	let dirents = libfs.readdirSync(path.join("/"), { withFileTypes: true });
 	for (let dirent of dirents) {
 		let name = dirent.name;
+		if (name.startsWith(".")) {
+			continue;
+		}
 		if (dirent.isDirectory()) {
 			let directory_id = makeBinaryId("directory", parent_directory_id, name);
 			try {
