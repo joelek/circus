@@ -763,6 +763,10 @@ export const server = apiv2.makeServer({
 						unit: "MILLISECONDS"
 					},
 					{
+						title: "Directories",
+						value: await atlas.stores.directories.length(queue)
+					},
+					{
 						title: "Files",
 						value: await atlas.stores.files.length(queue)
 					},
