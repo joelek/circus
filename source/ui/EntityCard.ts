@@ -279,7 +279,7 @@ export class EntityCardFactory {
 	}
 
 	forDirectory(directory: api.Directory, options: Options = {}): xnode.XElement {
-		options.playbackButton = options.playbackButton ?? undefined;
+		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forDirectory(directory);
 		let link = this.entityLinkFactory.forDirectory(directory);
 		let image = this.ImageBox.forSquare([]);
 		let titles = [
@@ -335,7 +335,11 @@ export class EntityCardFactory {
 	}
 
 	forFile(file: api.File, options: Options = {}): xnode.XElement {
-		options.playbackButton = options.playbackButton ?? undefined;
+		if (options.playbackButton == null) {
+			if (file.mime.startsWith("audio/") || file.mime.startsWith("video/")) {
+				options.playbackButton = this.PlaybackButton.forFile(file);
+			}
+		}
 		let link = this.entityLinkFactory.forFile(file);
 		let image = this.ImageBox.forSquare([]);
 		let titles = [

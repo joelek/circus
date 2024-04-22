@@ -711,6 +711,16 @@ export const server = apiv2.makeServer({
 			}
 		};
 	}),
+	getDirectoryContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let context = await handler.getDirectoryContext(queue, options.directory_id, user_id);
+		return {
+			payload: {
+				context
+			}
+		};
+	}),
 	getFile: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
@@ -718,6 +728,16 @@ export const server = apiv2.makeServer({
 		return {
 			payload: {
 				file
+			}
+		};
+	}),
+	getFileContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let context = await handler.getFileContext(queue, options.file_id, user_id, undefined);
+		return {
+			payload: {
+				context
 			}
 		};
 	}),

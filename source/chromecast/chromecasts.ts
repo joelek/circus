@@ -9,7 +9,7 @@ import * as libcontext from "../player/client";
 import * as autoguard from "@joelek/ts-autoguard";
 import * as sockets from "@joelek/ts-sockets";
 import * as stdlib from "@joelek/ts-stdlib";
-import { Episode, Language, Movie, Track } from "../api/schema/objects";
+import { Episode, Language, Movie, Track, FileContext } from "../api/schema/objects";
 import * as utils from "../utils";
 
 const DEBUG = false;
@@ -24,7 +24,7 @@ function getLanguage(language: Language | undefined): { language: string, name: 
 	};
 }
 
-function makeMediaInformation(item: Episode | Movie | Track, media_server_host: string, token: string): schema.objects.MediaInformation {
+function makeMediaInformation(item: Episode | Movie | Track | FileContext, media_server_host: string, token: string): schema.objects.MediaInformation {
 	if (Episode.is(item)) {
 		let episode = item;
 		let season = episode.season;
@@ -86,6 +86,21 @@ function makeMediaInformation(item: Episode | Movie | Track, media_server_host: 
 				images: album.artwork.map((image) => ({
 					url: `${media_server_host}/api/files/${image.file_id}/content/?token=${token}`
 				}))
+			}
+		};
+	} else if (FileContext.is(item)) {
+		let file = item;
+		return {
+			contentId: `${media_server_host}/api/files/${item.media.file_id}/content/?token=${token}`,
+			contentType: item.media.mime,
+			streamType: "BUFFERED",
+			metadata: {
+				metadataType: 0,
+				title: file.name,
+				subtitle: [
+					file.parent?.name
+				].filter((string) => string != null).join(" \u00b7 "),
+				images: []
 			}
 		};
 	} else {

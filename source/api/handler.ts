@@ -5,7 +5,7 @@ import * as jsondb from "../jsondb";
 import * as is from "../is";
 import * as schema from "./schema/";
 import { default as config } from "../config";
-import { File, ImageFile } from "../database/schema";
+import { File, ImageFile, VideoFile, AudioFile } from "../database/schema";
 import { ReadableQueue, WritableQueue } from "@joelek/atlas";
 import * as atlas from "../database/atlas";
 import { binid, hexid } from "../utils";
@@ -13,6 +13,7 @@ import { getPath } from "../database/indexer";
 import { createDecreasingOrder } from "@joelek/atlas";
 import { ActorResult, AlbumResult, ArtistResult, DiscResult, EpisodeResult, GenreResult, MovieResult, PlaylistResult, SeasonResult, ShowResult, TrackResult, UserResult, YearResult } from "./schema/api";
 import { string } from "../jdb2/asserts";
+import { FileContext, TrackContext } from "./schema/objects";
 
 export async function getLanguageFromSubtitleFile(queue: ReadableQueue, subtitle_file: atlas.SubtitleFile, api_user_id: string): Promise<schema.objects.Language | undefined> {
 	if (subtitle_file.language_id != null) {
@@ -162,7 +163,7 @@ export async function lookupAlbumDiscs(queue: ReadableQueue, album_id: string, a
 
 export async function lookupAlbumContext(queue: ReadableQueue, album_id: string, api_user_id: string): Promise<schema.objects.AlbumContext> {
 	let album = await lookupAlbum(queue, album_id, api_user_id);
-	let discs = await Promise.all((await atlas.links.album_discs.filter(queue, { album_id: binid(album_id )}))
+	let discs = await Promise.all((await atlas.links.album_discs.filter(queue, { album_id: binid(album_id) }))
 		.map((record) => lookupDiscContext(queue, hexid(record.disc_id), api_user_id, album)));
 	return {
 		...album,
@@ -210,7 +211,7 @@ export async function lookupArtistAlbums(queue: ReadableQueue, artist_id: string
 
 export async function lookupArtistContext(queue: ReadableQueue, artist_id: string, api_user_id: string): Promise<schema.objects.ArtistContext> {
 	let artist = await lookupArtist(queue, artist_id, api_user_id);
-	let albums = (await Promise.all((await atlas.links.artist_album_artists.filter(queue, { artist_id: binid(artist_id )}))
+	let albums = (await Promise.all((await atlas.links.artist_album_artists.filter(queue, { artist_id: binid(artist_id) }))
 		.map((record) => lookupAlbumContext(queue, hexid(record.album_id), api_user_id))))
 		.sort(jsondb.NumericSort.decreasing((album) => album.year?.year));
 	return {
@@ -285,7 +286,7 @@ export async function lookupDiscTracks(queue: ReadableQueue, disc_id: string, ap
 
 export async function lookupDiscContext(queue: ReadableQueue, disc_id: string, api_user_id: string, album?: schema.objects.AlbumBase): Promise<schema.objects.DiscContext> {
 	let disc = await lookupDisc(queue, disc_id, api_user_id, album);
-	let tracks = await Promise.all((await atlas.links.disc_tracks.filter(queue, { disc_id: binid(disc_id )}))
+	let tracks = await Promise.all((await atlas.links.disc_tracks.filter(queue, { disc_id: binid(disc_id) }))
 		.map((record) => lookupTrackContext(queue, hexid(record.track_id), api_user_id, disc)));
 	return {
 		...disc,
@@ -509,7 +510,7 @@ export async function lookupPlaylistItems(queue: ReadableQueue, playlist_id: str
 
 export async function lookupPlaylistContext(queue: ReadableQueue, playlist_id: string, api_user_id: string): Promise<schema.objects.PlaylistContext> {
 	let playlist = await lookupPlaylist(queue, playlist_id, api_user_id);
-	let items = await Promise.all((await atlas.links.playlist_playlist_items.filter(queue, { playlist_id: binid(playlist_id )}))
+	let items = await Promise.all((await atlas.links.playlist_playlist_items.filter(queue, { playlist_id: binid(playlist_id) }))
 		.map((record) => lookupPlaylistItemContext(queue, hexid(record.playlist_item_id), api_user_id, playlist)));
 	return {
 		...playlist,
@@ -566,7 +567,7 @@ export async function lookupSeasonEpisodes(queue: ReadableQueue, season_id: stri
 
 export async function lookupSeasonContext(queue: ReadableQueue, season_id: string, api_user_id: string, show?: schema.objects.ShowBase): Promise<schema.objects.SeasonContext> {
 	let season = await lookupSeason(queue, season_id, api_user_id, show);
-	let episodes = await Promise.all((await atlas.links.season_episodes.filter(queue, { season_id: binid(season_id )}))
+	let episodes = await Promise.all((await atlas.links.season_episodes.filter(queue, { season_id: binid(season_id) }))
 		.map((record) => lookupEpisodeContext(queue, hexid(record.episode_id), api_user_id, season)));
 	return {
 		...season,
@@ -618,7 +619,7 @@ export async function lookupShowSeasons(queue: ReadableQueue, show_id: string, a
 
 export async function lookupShowContext(queue: ReadableQueue, show_id: string, api_user_id: string): Promise<schema.objects.ShowContext> {
 	let show = await lookupShow(queue, show_id, api_user_id);
-	let seasons = await Promise.all((await atlas.links.show_seasons.filter(queue, { show_id: binid(show_id )}))
+	let seasons = await Promise.all((await atlas.links.show_seasons.filter(queue, { show_id: binid(show_id) }))
 		.map((record) => lookupSeasonContext(queue, hexid(record.season_id), api_user_id, show)));
 	return {
 		...show,
@@ -814,6 +815,20 @@ export async function getDirectoryFiles(queue: ReadableQueue, directory_id: stri
 	return files;
 };
 
+export async function getDirectoryContext(queue: ReadableQueue, directory_id: string, api_user_id: string): Promise<schema.objects.DirectoryContext> {
+	let directory = await getDirectory(queue, directory_id, api_user_id, undefined);
+	let files = [] as Array<FileContext>;
+	for (let file of await atlas.links.directory_files.filter(queue, { directory_id: binid(directory_id) })) {
+		try {
+			files.push(await getFileContext(queue, hexid(file.file_id), api_user_id, directory));
+		} catch (error) {}
+	}
+	return {
+		...directory,
+		files
+	};
+};
+
 export async function getFileBase(queue: ReadableQueue, file_id: string, user_id: string): Promise<schema.objects.FileBase> {
 	let file = await atlas.stores.files.lookup(queue, { file_id: binid(file_id) });
 	return {
@@ -822,14 +837,61 @@ export async function getFileBase(queue: ReadableQueue, file_id: string, user_id
 	};
 };
 
+async function getFileDetail(queue: ReadableQueue, file: atlas.File) {
+	try {
+		let audio_file = await atlas.stores.audio_files.lookup(queue, file);
+		return {
+			type: "audio" as const,
+			...audio_file,
+			file_id: hexid(audio_file.file_id)
+		};
+	} catch (error) {}
+	try {
+		let video_file = await atlas.stores.video_files.lookup(queue, file);
+		return {
+			type: "video" as const,
+			...video_file,
+			file_id: hexid(video_file.file_id)
+		};
+	} catch (error) {}
+};
+
 export async function getFile(queue: ReadableQueue, file_id: string, user_id: string, parent: schema.objects.DirectoryBase | undefined): Promise<schema.objects.File> {
 	let base = await getFileBase(queue, file_id, user_id);
 	let file = await atlas.stores.files.lookup(queue, { file_id: binid(file_id) });
 	parent = parent ?? (file.parent_directory_id != null ? await getDirectoryBase(queue, hexid(file.parent_directory_id), user_id) : undefined);
+	let mime = (await getFileDetail(queue, file))?.mime ?? "application/octet-stream";
 	return {
 		...base,
 		size: file.size,
-		parent: parent
+		parent: parent,
+		mime: mime
+	};
+};
+
+export async function getFileContext(queue: ReadableQueue, file_id: string, api_user_id: string, parent: schema.objects.DirectoryBase | undefined): Promise<schema.objects.FileContext> {
+	let file = await getFile(queue, file_id, api_user_id, parent);
+	let media: AudioFile | VideoFile | undefined;
+	try {
+		let audio_file = await atlas.stores.audio_files.lookup(queue, { file_id: binid(file_id) });
+		media = {
+			...audio_file,
+			file_id: hexid(audio_file.file_id)
+		};
+	} catch (error) {}
+	try {
+		let video_file = await atlas.stores.video_files.lookup(queue, { file_id: binid(file_id) });
+		media = {
+			...video_file,
+			file_id: hexid(video_file.file_id)
+		};
+	} catch (error) {}
+	if (media == null) {
+		throw `Expected a valid audio or video file!`;
+	}
+	return {
+		...file,
+		media
 	};
 };
 

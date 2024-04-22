@@ -194,7 +194,7 @@ export class EntityRowFactory {
 	}
 
 	forDirectory(directory: api.Directory, options: Options = {}): xnode.XElement {
-		let playbackButton = "playbackButton" in options ? options.playbackButton : undefined;
+		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forDirectory(directory);
 		let link = options.link ?? this.entityLinkFactory.forDirectory(directory);
 		let image = this.ImageBox.forSquare([]);
 		let titles = [
@@ -233,6 +233,11 @@ export class EntityRowFactory {
 
 	forFile(file: api.File, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : undefined;
+		if (playbackButton == null) {
+			if (file.mime.startsWith("audio/") || file.mime.startsWith("video/")) {
+				playbackButton = this.PlaybackButton.forFile(file);
+			}
+		}
 		let link = options.link ?? this.entityLinkFactory.forFile(file);
 		let image = this.ImageBox.forSquare([]);
 		let titles = [

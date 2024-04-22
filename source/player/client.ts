@@ -98,6 +98,18 @@ export class ContextClient {
 				}
 			}
 			return files;
+		} else if (schema.objects.ContextDirectory.is(context)) {
+			let files = [] as schema.objects.ContextItem[];
+			let directory = context;
+			for (let file of directory.files) {
+				files.push(file);
+			}
+			return files;
+		} else if (schema.objects.ContextFile.is(context)) {
+			let files = [] as schema.objects.ContextItem[];
+			let file = context;
+			files.push(file);
+			return files;
 		} else {
 			throw `Expected code to be unreachable!`;
 		}
@@ -261,6 +273,16 @@ export class ContextClient {
 					} else if (schema.objects.ContextYear.is(context)) {
 						return this.contextPath.updateState([
 							context.year_id
+						].filter(is.present));
+					} else if (schema.objects.ContextDirectory.is(context)) {
+						let fileIndex = currentEntryIndex;
+						return this.contextPath.updateState([
+							context.directory_id,
+							context.files[fileIndex]?.file_id
+						].filter(is.present));
+					} else if (schema.objects.ContextFile.is(context)) {
+						return this.contextPath.updateState([
+							context.file_id
 						].filter(is.present));
 					} else {
 						throw `Expected code to be unreachable!`;
@@ -608,6 +630,19 @@ export class ContextClient {
 		return this.sendPlay(artist, index);
 	}
 
+	playDirectory(directory: schema.objects.ContextDirectory, fileIndex?: number): void {
+		let index: number | undefined;
+		if (is.present(fileIndex)) {
+			index = index ?? 0;
+			let files = directory.files;
+			if (fileIndex < 0 || fileIndex >= files.length) {
+				throw `Expected ${fileIndex} to be a number between 0 and ${files.length}!`;
+			}
+			index += fileIndex;
+		}
+		return this.sendPlay(directory, index);
+	}
+
 	playDisc(disc: schema.objects.ContextDisc, trackIndex?: number): void {
 		let index: number | undefined;
 		if (is.present(trackIndex)) {
@@ -623,6 +658,10 @@ export class ContextClient {
 
 	playEpisode(episode: schema.objects.ContextEpisode): void {
 		this.sendPlay(episode);
+	}
+
+	playFile(file: schema.objects.ContextFile): void {
+		return this.sendPlay(file);
 	}
 
 	playMovie(movie: schema.objects.ContextMovie): void {

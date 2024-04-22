@@ -2,7 +2,7 @@ import * as session from "./browserMediaSession";
 import { ArrayObservable, computed, ObservableClass } from "../observers";
 import * as client from "../player/client";
 import * as is from "../is";
-import {  ContextAlbum, ContextArtist, Device } from "../player/schema/objects";
+import {  ContextAlbum, ContextArtist, ContextFile, Device } from "../player/schema/objects";
 import { File, Directory, Actor, Album, Artist, Cue, Disc, Entity, Episode, Genre, Movie, Playlist, PlaylistItem, Season, Show, Track, User, Year } from "../api/schema/objects";
 import * as xml from "../xnode";
 import { formatDuration as format_duration, formatSize, formatTimestamp as format_timestamp } from "../ui/metadata";
@@ -210,6 +210,15 @@ player.currentEntry.addObserver((currentEntry) => {
 					sizes: `${image.width}x${image.height}`,
 					type: image.mime
 				}))
+			});
+		} else if (ContextFile.is(currentEntry)) {
+			let file = currentEntry;
+			mediaPlayerTitle.updateState(file.name);
+			mediaPlayerSubtitle.updateState([
+				currentEntry.parent?.name
+			].filter((string) => string != null).join(" \u00b7 "));
+			session.setMetadata({
+				title: file.name
 			});
 		} else {
 			throw `Expected code to be unreachable!`;
@@ -2015,7 +2024,7 @@ window.requestAnimationFrame(async function computer() {
 			progress += (Date.now() - estimatedProgressTimestamp) / 1000;
 		}
 		scale = progress / (currentEntry.media.duration_ms / 1000);
-		metadata = `${formatTimestamp(progress * 1000)} / ${formatTimestamp(currentEntry.duration_ms)}`;
+		metadata = `${formatTimestamp(progress * 1000)} / ${formatTimestamp(currentEntry.media.duration_ms)}`;
 	}
 	let ref = await progresstrack.ref() as HTMLDivElement;
 	ref.style.setProperty("transform", `scale(${scale}, 1.0)`);
@@ -3754,7 +3763,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 						.bind("data-hide", entities.compute((entities) => entities.length === 0))
 						.add(renderTextHeader(xml.text("Content")))
 						.repeat(entities, (entity, entityIndex) => {
-							return EntityRow.forEntity(entity, {});
+							return EntityRow.forEntity(entity);
 						})
 					)
 				)

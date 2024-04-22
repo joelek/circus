@@ -7,7 +7,7 @@ import * as context from "../player";
 import * as utils from "../utils";
 import { IconFactory } from "./Icon";
 import { Client } from "../api/schema/api/client";
-import { ContextAlbum, ContextArtist, ContextDisc, ContextEpisode, ContextMovie, ContextPlaylist, ContextSeason, ContextShow, ContextTrack, ContextYear } from "../player/schema/objects";
+import { ContextAlbum, ContextArtist, ContextDirectory, ContextDisc, ContextEpisode, ContextFile, ContextMovie, ContextPlaylist, ContextSeason, ContextShow, ContextTrack, ContextYear } from "../player/schema/objects";
 
 const CSS = `
 	.playback-button {
@@ -91,6 +91,17 @@ export class PlaybackButtonFactory {
 		return payload.context;
 	}
 
+	private async getDirectoryContext(directory: api.Directory): Promise<api.DirectoryContext> {
+		let response = await this.rpc.getDirectoryContext({
+			options: {
+				directory_id: directory.directory_id,
+				token: this.player.token.getState() ?? ""
+			}
+		});
+		let payload = await response.payload();
+		return payload.context;
+	}
+
 	private async getDiscContext(disc: api.Disc): Promise<api.DiscContext> {
 		let response = await this.rpc.getDiscContext({
 			options: {
@@ -106,6 +117,17 @@ export class PlaybackButtonFactory {
 		let response = await this.rpc.getEpisodeContext({
 			options: {
 				episode_id: episode.episode_id,
+				token: this.player.token.getState() ?? ""
+			}
+		});
+		let payload = await response.payload();
+		return payload.context;
+	}
+
+	private async getFileContext(file: api.File): Promise<api.FileContext> {
+		let response = await this.rpc.getFileContext({
+			options: {
+				file_id: file.file_id,
 				token: this.player.token.getState() ?? ""
 			}
 		});
@@ -185,7 +207,7 @@ export class PlaybackButtonFactory {
 		this.iconFactory = iconFactory;
 	}
 
-	forEntity(entity: api.Album | api.Artist | api.Cue | api.Disc | api.Episode | api.Movie | api.Playlist | api.Season | api.Show | api.Track): xnode.XElement {
+	forEntity(entity: api.Album | api.Artist | api.Cue | api.Directory | api.Disc | api.Episode | api.File | api.Movie | api.Playlist | api.Season | api.Show | api.Track): xnode.XElement {
 		if (api.Album.is(entity)) {
 			return this.forAlbum(entity);
 		}
@@ -195,8 +217,14 @@ export class PlaybackButtonFactory {
 		if (api.Cue.is(entity)) {
 			return this.forCue(entity);
 		}
+		if (api.Directory.is(entity)) {
+			return this.forDirectory(entity);
+		}
 		if (api.Disc.is(entity)) {
 			return this.forDisc(entity);
+		}
+		if (api.File.is(entity)) {
+			return this.forFile(entity);
 		}
 		if (api.Episode.is(entity)) {
 			return this.forEpisode(entity);
@@ -313,6 +341,26 @@ export class PlaybackButtonFactory {
 		throw `Expected code to be unreachable!`;
 	}
 
+	forDirectory(directory: api.Directory, fileIndex?: number): xnode.XElement {
+		let isContext = observables.computed((context, currentEntry) => {
+			if (!ContextDirectory.is(context) || !ContextFile.is(currentEntry)) {
+				return false;
+			}
+			if (context.directory_id !== directory.directory_id) {
+				return false;
+			}
+			if (fileIndex != null) {
+				if (context.files[fileIndex].file_id !== currentEntry.file_id) {
+					return false;
+				}
+			}
+			return true;
+		}, this.player.context, this.player.currentEntry);
+		return this.make(isContext, {
+			play: async () => this.player.playDirectory(await this.getDirectoryContext(directory), fileIndex)
+		});
+	}
+
 	forDisc(disc: api.Disc, trackIndex?: number): xnode.XElement {
 		let isContext = observables.computed((context, currentEntry) => {
 			if (!ContextDisc.is(context) || !ContextTrack.is(currentEntry)) {
@@ -330,6 +378,21 @@ export class PlaybackButtonFactory {
 		}, this.player.context, this.player.currentEntry);
 		return this.make(isContext, {
 			play: async () => this.player.playDisc(await this.getDiscContext(disc), trackIndex)
+		});
+	}
+
+	forFile(file: api.File): xnode.XElement {
+		let isContext = observables.computed((context, currentEntry) => {
+			if (!ContextFile.is(context) || !ContextFile.is(currentEntry)) {
+				return false;
+			}
+			if (context.file_id !== file.file_id) {
+				return false;
+			}
+			return true;
+		}, this.player.context, this.player.currentEntry);
+		return this.make(isContext, {
+			play: async () => this.player.playFile(await this.getFileContext(file))
 		});
 	}
 

@@ -18,9 +18,13 @@ guard ContextEpisode: ../../api/schema/objects/EpisodeContext;
 
 guard ContextYear: ../../api/schema/objects/YearContext;
 
-guard Context: ContextAlbum | ContextArtist | ContextDisc | ContextTrack | ContextPlaylist | ContextMovie | ContextShow | ContextSeason | ContextEpisode | ContextYear;
+guard ContextDirectory: ../../api/schema/objects/DirectoryContext;
 
-guard ContextItem: ContextTrack | ContextMovie | ContextEpisode;
+guard ContextFile: ../../api/schema/objects/FileContext;
+
+guard Context: ContextAlbum | ContextArtist | ContextDisc | ContextTrack | ContextPlaylist | ContextMovie | ContextShow | ContextSeason | ContextEpisode | ContextYear | ContextDirectory | ContextFile;
+
+guard ContextItem: ContextTrack | ContextMovie | ContextEpisode | ContextFile;
 
 guard Device: {
 	"did": string,

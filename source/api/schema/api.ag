@@ -393,9 +393,19 @@ route getDirectoryFiles(): GET:/directories/<directory_id>/files/ ? <token> & <a
 		files: ./objects/File[]
 	};
 
+route getDirectoryContext(): GET:/directories/<directory_id>/context/ ? <token>
+	=> {
+		context: ./objects/DirectoryContext
+	};
+
 route getFile(): GET:/files/<file_id>/ ? <token>
 	=> {
 		file: ./objects/File
+	};
+
+route getFileContext(): GET:/files/<file_id>/context/ ? <token>
+	=> {
+		context: ./objects/FileContext
 	};
 
 route getFileContent(): GET:/files/<file_id:string>/content/ ? <{ token: string }>

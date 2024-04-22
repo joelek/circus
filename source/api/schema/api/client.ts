@@ -1970,6 +1970,36 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			return new autoguard.api.ServerResponse(response, false);
 		}
 	},
+	"getDirectoryContext": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getDirectoryContext"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("directories");
+		components.push(...autoguard.api.encodeComponents([request.options?.["directory_id"]], true));
+		components.push("context");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["directory_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getDirectoryContext"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
 	"getFile": async (request) => {
 		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getFile"], clientOptions?.debugMode);
 		guard.as(request, "request");
@@ -1995,6 +2025,36 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = await autoguard.api.deserializePayload(raw.payload);
 			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getFile"], clientOptions?.debugMode);
+			let response = guard.as({ status, headers, payload }, "response");
+			return new autoguard.api.ServerResponse(response, false);
+		}
+	},
+	"getFileContext": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getFileContext"], clientOptions?.debugMode);
+		guard.as(request, "request");
+		let method = "GET";
+		let components = new Array<string>();
+		components.push("files");
+		components.push(...autoguard.api.encodeComponents([request.options?.["file_id"]], true));
+		components.push("context");
+		components.push("");
+		let parameters = new Array<[string, string]>();
+		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
+		parameters.push(...autoguard.api.encodeUndeclaredParameterPairs(request.options ?? {}, [...["file_id"], ...parameters.map((parameter) => parameter[0])]));
+		let headers = new Array<[string, string]>();
+		headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(request.headers ?? {}, headers.map((header) => header[0])));
+		let payload = request.payload ?? [];
+		let requestHandler = clientOptions?.requestHandler ?? autoguard.api.xhr;
+		let defaultHeaders = clientOptions?.defaultHeaders?.slice() ?? [];
+		defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+		defaultHeaders.push(["Accept", "application/json; charset=utf-8"]);
+		let raw = await requestHandler(autoguard.api.finalizeRequest({ method, components, parameters, headers, payload }, defaultHeaders), clientOptions);
+		{
+			let status = raw.status;
+			let headers: Record<string, autoguard.api.JSON> = {};
+			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+			let payload = await autoguard.api.deserializePayload(raw.payload);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getFileContext"], clientOptions?.debugMode);
 			let response = guard.as({ status, headers, payload }, "response");
 			return new autoguard.api.ServerResponse(response, false);
 		}
