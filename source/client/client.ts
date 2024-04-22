@@ -853,12 +853,12 @@ style.innerText = `
 		display: grid;
 		gap: 48px;
 		margin: 0px auto;
-		max-width: 1080px;
+		max-width: 1280px;
 		padding: 24px;
 	}
 
 	.content--narrow {
-		max-width: 480px;
+		max-width: 640px;
 	}
 
 
