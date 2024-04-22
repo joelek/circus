@@ -778,9 +778,12 @@ export const server = apiv2.makeServer({
 						value: version?.patch ?? 0
 					},
 					{
-						title: "Build Timestamp",
-						value: app.timestamp,
-						unit: "TIMESTAMP"
+						title: "Build Date",
+						value: new Date(app.timestamp).toISOString().slice(0, 10)
+					},
+					{
+						title: "Build Time",
+						value: new Date(app.timestamp).toISOString().slice(11, 19)
 					},
 					{
 						title: "Library Size",

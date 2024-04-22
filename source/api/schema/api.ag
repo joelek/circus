@@ -401,11 +401,18 @@ route getFile(): GET:/files/<file_id>/ ? <token>
 route getFileContent(): GET:/files/<file_id:string>/content/ ? <{ token: string }>
 	=> binary;
 
+guard NumberStatistic: {
+	title: string,
+	value: number,
+	unit?: "BYTES" | "MILLISECONDS" | "TIMESTAMP"
+};
+
+guard StringStatistic: {
+	title: string,
+	value: string
+};
+
 route GET:/statistics/ ? <{ token: string }>
 	=> {
-		statistics: {
-			title: string,
-			value: number,
-			unit?: "BYTES" | "MILLISECONDS" | "TIMESTAMP"
-		}[]
+		statistics: (NumberStatistic | StringStatistic)[]
 	};

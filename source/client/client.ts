@@ -26,6 +26,7 @@ import * as utils from "../utils";
 const apiclient = apiv2.makeClient({ urlPrefix: "/api" });
 import * as autoguard from "@joelek/ts-autoguard";
 import { string } from "../jdb2/asserts";
+import { NumberStatistic } from "../api/schema/api";
 
 
 
@@ -1613,17 +1614,17 @@ let appheader = xml.element("div.app__header")
 								.add(xml.element("div")
 									.set("style", "display: grid; gap: 16px;")
 									.set("data-hide", `${payload.statistics.length === 0}`)
-									.add(...payload.statistics.map((setting) => {
-										let title = setting.title;
-										let subtitle = "";
-										if (setting.unit === "BYTES") {
-											subtitle = formatSize(setting.value);
-										} else if (setting.unit === "MILLISECONDS") {
-											subtitle = format_duration(setting.value);
-										} else if (setting.unit === "TIMESTAMP") {
-											subtitle = format_timestamp(setting.value);
-										} else {
-											subtitle = `${setting.value}`;
+									.add(...payload.statistics.map((statistic) => {
+										let title = statistic.title;
+										let subtitle = `${statistic.value}`;
+										if (NumberStatistic.is(statistic)) {
+											if (statistic.unit === "BYTES") {
+												subtitle = formatSize(statistic.value);
+											} else if (statistic.unit === "MILLISECONDS") {
+												subtitle = format_duration(statistic.value);
+											} else if (statistic.unit === "TIMESTAMP") {
+												subtitle = format_timestamp(statistic.value);
+											}
 										}
 										return makeStatistic(title, subtitle);
 									}))

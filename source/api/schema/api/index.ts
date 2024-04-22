@@ -162,6 +162,38 @@ export type YearResult = autoguard.guards.Object<{
 	"rank": autoguard.guards.Number
 }, {}>;
 
+export const NumberStatistic: autoguard.serialization.MessageGuard<NumberStatistic> = autoguard.guards.Object.of({
+	"title": autoguard.guards.String,
+	"value": autoguard.guards.Number
+}, {
+	"unit": autoguard.guards.Union.of(
+		autoguard.guards.StringLiteral.of("BYTES"),
+		autoguard.guards.StringLiteral.of("MILLISECONDS"),
+		autoguard.guards.StringLiteral.of("TIMESTAMP")
+	)
+});
+
+export type NumberStatistic = autoguard.guards.Object<{
+	"title": autoguard.guards.String,
+	"value": autoguard.guards.Number
+}, {
+	"unit": autoguard.guards.Union<[
+		autoguard.guards.StringLiteral<"BYTES">,
+		autoguard.guards.StringLiteral<"MILLISECONDS">,
+		autoguard.guards.StringLiteral<"TIMESTAMP">
+	]>
+}>;
+
+export const StringStatistic: autoguard.serialization.MessageGuard<StringStatistic> = autoguard.guards.Object.of({
+	"title": autoguard.guards.String,
+	"value": autoguard.guards.String
+}, {});
+
+export type StringStatistic = autoguard.guards.Object<{
+	"title": autoguard.guards.String,
+	"value": autoguard.guards.String
+}, {}>;
+
 export namespace Autoguard {
 	export const Guards = {
 		"ActorResult": autoguard.guards.Reference.of(() => ActorResult),
@@ -176,7 +208,9 @@ export namespace Autoguard {
 		"ShowResult": autoguard.guards.Reference.of(() => ShowResult),
 		"TrackResult": autoguard.guards.Reference.of(() => TrackResult),
 		"UserResult": autoguard.guards.Reference.of(() => UserResult),
-		"YearResult": autoguard.guards.Reference.of(() => YearResult)
+		"YearResult": autoguard.guards.Reference.of(() => YearResult),
+		"NumberStatistic": autoguard.guards.Reference.of(() => NumberStatistic),
+		"StringStatistic": autoguard.guards.Reference.of(() => StringStatistic)
 	};
 
 	export type Guards = { [A in keyof typeof Guards]: ReturnType<typeof Guards[A]["as"]>; };
@@ -2052,16 +2086,10 @@ export namespace Autoguard {
 		}),
 		"GET:/statistics/": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
-				"statistics": autoguard.guards.Array.of(autoguard.guards.Object.of({
-					"title": autoguard.guards.String,
-					"value": autoguard.guards.Number
-				}, {
-					"unit": autoguard.guards.Union.of(
-						autoguard.guards.StringLiteral.of("BYTES"),
-						autoguard.guards.StringLiteral.of("MILLISECONDS"),
-						autoguard.guards.StringLiteral.of("TIMESTAMP")
-					)
-				}))
+				"statistics": autoguard.guards.Array.of(autoguard.guards.Group.of(autoguard.guards.Union.of(
+					autoguard.guards.Reference.of(() => NumberStatistic),
+					autoguard.guards.Reference.of(() => StringStatistic)
+				)))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,
