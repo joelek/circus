@@ -173,11 +173,17 @@ export class EntityLinkFactory {
 		if (api.CueBase.is(entity)) {
 			return this.forCue(entity);
 		}
+		if (api.DirectoryBase.is(entity)) {
+			return this.forDirectory(entity);
+		}
 		if (api.DiscBase.is(entity)) {
 			return this.forDisc(entity);
 		}
 		if (api.EpisodeBase.is(entity)) {
 			return this.forEpisode(entity);
+		}
+		if (api.FileBase.is(entity)) {
+			return this.forFile(entity);
 		}
 		if (api.GenreBase.is(entity)) {
 			return this.forGenre(entity);

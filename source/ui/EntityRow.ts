@@ -110,11 +110,17 @@ export class EntityRowFactory {
 		if (api.Cue.is(entity)) {
 			return this.forCue(entity, options);
 		}
+		if (api.Directory.is(entity)) {
+			return this.forDirectory(entity, options);
+		}
 		if (api.Disc.is(entity)) {
 			return this.forDisc(entity, options);
 		}
 		if (api.Episode.is(entity)) {
 			return this.forEpisode(entity, options);
+		}
+		if (api.File.is(entity)) {
+			return this.forFile(entity, options);
 		}
 		if (api.Genre.is(entity)) {
 			return this.forGenre(entity, options);
@@ -187,6 +193,17 @@ export class EntityRowFactory {
 		}
 	}
 
+	forDirectory(directory: api.Directory, options: Options = {}): xnode.XElement {
+		let playbackButton = "playbackButton" in options ? options.playbackButton : undefined;
+		let link = options.link ?? this.entityLinkFactory.forDirectory(directory);
+		let image = this.ImageBox.forSquare([]);
+		let titles = [
+			this.entityTitleFactory.forDirectory(directory)
+		];
+		let subtitles = [] as xnode.XElement[];
+		return this.make(link, image, playbackButton, titles, subtitles);
+	}
+
 	forDisc(disc: api.Disc, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forDisc(disc);
 		let link = options.link ?? this.entityLinkFactory.forDisc(disc);
@@ -211,6 +228,17 @@ export class EntityRowFactory {
 			this.entityTitleFactory.forShow(episode.season.show),
 			this.entityTitleFactory.forSeason(episode.season)
 		];
+		return this.make(link, image, playbackButton, titles, subtitles);
+	}
+
+	forFile(file: api.File, options: Options = {}): xnode.XElement {
+		let playbackButton = "playbackButton" in options ? options.playbackButton : undefined;
+		let link = options.link ?? this.entityLinkFactory.forFile(file);
+		let image = this.ImageBox.forSquare([]);
+		let titles = [
+			this.entityTitleFactory.forFile(file)
+		];
+		let subtitles = [] as xnode.XElement[];
 		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 

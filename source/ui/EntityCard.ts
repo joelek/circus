@@ -182,11 +182,17 @@ export class EntityCardFactory {
 		if (api.Cue.is(entity)) {
 			return this.forCue(entity, options);
 		}
+		if (api.Directory.is(entity)) {
+			return this.forDirectory(entity, options);
+		}
 		if (api.Disc.is(entity)) {
 			return this.forDisc(entity, options);
 		}
 		if (api.Episode.is(entity)) {
 			return this.forEpisode(entity, options);
+		}
+		if (api.File.is(entity)) {
+			return this.forFile(entity, options);
 		}
 		if (api.Genre.is(entity)) {
 			return this.forGenre(entity, options);
@@ -273,7 +279,7 @@ export class EntityCardFactory {
 	}
 
 	forDirectory(directory: api.Directory, options: Options = {}): xnode.XElement {
-		//options.playbackButton = options.playbackButton ?? this.PlaybackButton.forDirectory(directory);
+		options.playbackButton = options.playbackButton ?? undefined;
 		let link = this.entityLinkFactory.forDirectory(directory);
 		let image = this.ImageBox.forSquare([]);
 		let titles = [
@@ -329,7 +335,7 @@ export class EntityCardFactory {
 	}
 
 	forFile(file: api.File, options: Options = {}): xnode.XElement {
-		//options.playbackButton = options.playbackButton ?? this.PlaybackButton.forDirectory(directory);
+		options.playbackButton = options.playbackButton ?? undefined;
 		let link = this.entityLinkFactory.forFile(file);
 		let image = this.ImageBox.forSquare([]);
 		let titles = [
@@ -337,7 +343,8 @@ export class EntityCardFactory {
 		];
 		let subtitles = [] as xnode.XElement[];
 		let tags = [
-			"File"
+			"File",
+			metadata.formatSize(file.size)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
 		return this.make(link, image, titles, subtitles, tags, undefined, undefined, options);
 	}

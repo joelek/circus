@@ -3726,70 +3726,41 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		}).then(async (response) => {
 			let payload = await response.payload();
 			let directory = payload.directory;
-			return apiclient.getDirectoryDirectories({
-				options: {
-					directory_id: directory_id,
-					token: token ?? "",
-					offset: 0,
-					anchor: undefined,
-					limit: 100
-				}
-			}).then(async (response) => {
-				let payload = await response.payload();
-				let directories = payload.directories;
-				let offset = 0;
-				let reachedEnd = new ObservableClass(false);
-				let isLoading = new ObservableClass(false);
-				let files = new ArrayObservable<File>([]);
-				let anchor = new ObservableClass(undefined as File | undefined);
-				async function load(): Promise<void> {
-					if (!reachedEnd.getState() && !isLoading.getState()) {
-						isLoading.updateState(true);
-						let response = await apiclient.getDirectoryFiles({
-							options: {
-								directory_id: directory_id,
-								token: token ?? "",
-								anchor: anchor.getState()?.file_id,
-								offset
-							}
-						});
-						let payload = await response.payload();
-						for (let file of payload.files) {
-							files.append(file);
-							anchor.updateState(file);
-						}
-						offset += payload.files.length;
-						if (payload.files.length === 0) {
-							reachedEnd.updateState(true);
-						}
-						isLoading.updateState(false);
+			let reachedEnd = new ObservableClass(false);
+			let isLoading = new ObservableClass(false);
+			let entities = new ArrayObservable<Directory | File>([]);
+			let merger = new DirectoryContentMerger(token ?? "", directory_id);
+			async function load(): Promise<void> {
+				if (!reachedEnd.getState() && !isLoading.getState()) {
+					isLoading.updateState(true);
+					let results = await merger.fetch(12);
+					for (let { entity } of results) {
+						entities.append(entity);
 					}
-				};
-				let element = xml.element("div")
-					.add(xml.element("div.content")
-						.add(EntityCard.forDirectory(directory))
-						.add(xml.element("div")
-							.set("style", "display: grid; gap: 24px;")
-							.set("data-hide", `${directories.length === 0}`)
-							.add(renderTextHeader(xml.text("Directories")))
-							.add(carouselFactory.make(new ArrayObservable(directories.map((directory) => EntityCard.forDirectory(directory)))))
-						)
-						.add(xml.element("div")
-							.set("style", "display: grid; gap: 24px;")
-							.bind("data-hide", files.compute((files) => files.length === 0))
-							.add(renderTextHeader(xml.text("Files")))
-							.add(Grid.make()
-								.repeat(files, (file) => EntityCard.forFile(file))
-							)
-						)
+					if (results.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
+				}
+			};
+			let element = xml.element("div")
+				.add(xml.element("div.content")
+					.add(EntityCard.forDirectory(directory))
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 24px;")
+						.bind("data-hide", entities.compute((entities) => entities.length === 0))
+						.add(renderTextHeader(xml.text("Content")))
+						.repeat(entities, (entity, entityIndex) => {
+							return EntityRow.forEntity(entity, {});
+						})
 					)
+				)
 				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 				.render();
-				return {
-					element,
-					title: `${directory.name}`
-				};
-			});
+			return {
+				element,
+				title: `${directory.name}`
+			};
 		});
 	} else if ((parts = /^files[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let file_id = decodeURIComponent(parts[1]);
@@ -4058,7 +4029,7 @@ function setupRouting(): void {
 }
 setupRouting();
 
-class SearchResultProvider<A> {
+class ResultProvider<A> {
 	private fetcher: (anchor?: A) => Promise<Array<{ entity: A, rank: number }>>;
 	private anchor?: A;
 	private results: Array<{ entity: A, rank: number }>;
@@ -4066,9 +4037,9 @@ class SearchResultProvider<A> {
 	private pending: boolean;
 	private index: number;
 
-	constructor(fetcher: (anchor?: A) => Promise<Array<{ entity: A, rank: number }>>, anchor?: A) {
+	constructor(fetcher: (anchor?: A) => Promise<Array<{ entity: A, rank: number }>>) {
 		this.fetcher = fetcher;
-		this.anchor = anchor;
+		this.anchor = undefined;
 		this.results = [];
 		this.exhausted = false;
 		this.pending = false;
@@ -4131,7 +4102,7 @@ class SearchResultProvider<A> {
 	}
 };
 
-class AlbumSearchResultProvider extends SearchResultProvider<Album> {
+class AlbumSearchResultProvider extends ResultProvider<Album> {
 	constructor(token: string, query: string) {
 		super(async (anchor) => {
 			let response = await apiclient["GET:/albums/<query>"]({
@@ -4147,7 +4118,7 @@ class AlbumSearchResultProvider extends SearchResultProvider<Album> {
 	}
 };
 
-class ArtistSearchResultProvider extends SearchResultProvider<Artist> {
+class ArtistSearchResultProvider extends ResultProvider<Artist> {
 	constructor(token: string, query: string) {
 		super(async (anchor) => {
 			let response = await apiclient["GET:/artists/<query>"]({
@@ -4163,7 +4134,7 @@ class ArtistSearchResultProvider extends SearchResultProvider<Artist> {
 	}
 };
 
-class PlaylistSearchResultProvider extends SearchResultProvider<Playlist> {
+class PlaylistSearchResultProvider extends ResultProvider<Playlist> {
 	constructor(token: string, query: string) {
 		super(async (anchor) => {
 			let response = await apiclient["GET:/playlists/<query>"]({
@@ -4179,7 +4150,7 @@ class PlaylistSearchResultProvider extends SearchResultProvider<Playlist> {
 	}
 };
 
-class ShowSearchResultProvider extends SearchResultProvider<Show> {
+class ShowSearchResultProvider extends ResultProvider<Show> {
 	constructor(token: string, query: string) {
 		super(async (anchor) => {
 			let response = await apiclient["GET:/shows/<query>"]({
@@ -4195,7 +4166,7 @@ class ShowSearchResultProvider extends SearchResultProvider<Show> {
 	}
 };
 
-class EpisodeSearchResultProvider extends SearchResultProvider<Episode> {
+class EpisodeSearchResultProvider extends ResultProvider<Episode> {
 	constructor(token: string, query: string) {
 		super(async (anchor) => {
 			let response = await apiclient["GET:/episodes/<query>"]({
@@ -4211,7 +4182,7 @@ class EpisodeSearchResultProvider extends SearchResultProvider<Episode> {
 	}
 };
 
-class MovieSearchResultProvider extends SearchResultProvider<Movie> {
+class MovieSearchResultProvider extends ResultProvider<Movie> {
 	constructor(token: string, query: string) {
 		super(async (anchor) => {
 			let response = await apiclient["GET:/movies/<query>"]({
@@ -4227,7 +4198,7 @@ class MovieSearchResultProvider extends SearchResultProvider<Movie> {
 	}
 };
 
-class TrackSearchResultProvider extends SearchResultProvider<Track> {
+class TrackSearchResultProvider extends ResultProvider<Track> {
 	constructor(token: string, query: string) {
 		super(async (anchor) => {
 			let response = await apiclient["GET:/tracks/<query>"]({
@@ -4243,7 +4214,7 @@ class TrackSearchResultProvider extends SearchResultProvider<Track> {
 	}
 };
 
-class SeasonSearchResultProvider extends SearchResultProvider<Season> {
+class SeasonSearchResultProvider extends ResultProvider<Season> {
 	constructor(token: string, query: string) {
 		super(async (anchor) => {
 			let response = await apiclient["GET:/seasons/<query>"]({
@@ -4259,7 +4230,7 @@ class SeasonSearchResultProvider extends SearchResultProvider<Season> {
 	}
 };
 
-class DiscSearchResultProvider extends SearchResultProvider<Disc> {
+class DiscSearchResultProvider extends ResultProvider<Disc> {
 	constructor(token: string, query: string) {
 		super(async (anchor) => {
 			let response = await apiclient["GET:/discs/<query>"]({
@@ -4275,7 +4246,7 @@ class DiscSearchResultProvider extends SearchResultProvider<Disc> {
 	}
 };
 
-class UserSearchResultProvider extends SearchResultProvider<User> {
+class UserSearchResultProvider extends ResultProvider<User> {
 	constructor(token: string, query: string) {
 		super(async (anchor) => {
 			let response = await apiclient["GET:/users/<query>"]({
@@ -4291,7 +4262,7 @@ class UserSearchResultProvider extends SearchResultProvider<User> {
 	}
 };
 
-class ActorSearchResultProvider extends SearchResultProvider<Actor> {
+class ActorSearchResultProvider extends ResultProvider<Actor> {
 	constructor(token: string, query: string) {
 		super(async (anchor) => {
 			let response = await apiclient["GET:/actors/<query>"]({
@@ -4307,174 +4278,17 @@ class ActorSearchResultProvider extends SearchResultProvider<Actor> {
 	}
 };
 
-class SearchResultsMerger {
-	private providers: Array<SearchResultProvider<Entity>>;
+class ResultsMerger<A> {
+	protected providers: Array<ResultProvider<A>>;
 
-	constructor(token: string, query: string) {
-		let actors = new SearchResultProvider<Actor>(async (anchor) => {
-			let response = await apiclient["GET:/actors/<query>"]({
-				options: {
-					token,
-					query,
-					anchor: anchor?.actor_id
-				}
-			});
-			let payload = await response.payload();
-			return payload.results;
-		});
-		let albums = new SearchResultProvider<Album>(async (anchor) => {
-			let response = await apiclient["GET:/albums/<query>"]({
-				options: {
-					token,
-					query,
-					anchor: anchor?.album_id
-				}
-			});
-			let payload = await response.payload();
-			return payload.results;
-		});
-		let artists = new SearchResultProvider<Artist>(async (anchor) => {
-			let response = await apiclient["GET:/artists/<query>"]({
-				options: {
-					token,
-					query,
-					anchor: anchor?.artist_id
-				}
-			});
-			let payload = await response.payload();
-			return payload.results;
-		});
-		let discs = new SearchResultProvider<Disc>(async (anchor) => {
-			let response = await apiclient["GET:/discs/<query>"]({
-				options: {
-					token,
-					query,
-					anchor: anchor?.disc_id
-				}
-			});
-			let payload = await response.payload();
-			return payload.results;
-		});
-		let episodes = new SearchResultProvider<Episode>(async (anchor) => {
-			let response = await apiclient["GET:/episodes/<query>"]({
-				options: {
-					token,
-					query,
-					anchor: anchor?.episode_id
-				}
-			});
-			let payload = await response.payload();
-			return payload.results;
-		});
-		let genres = new SearchResultProvider<Genre>(async (anchor) => {
-			let response = await apiclient["GET:/genres/<query>"]({
-				options: {
-					token,
-					query,
-					anchor: anchor?.genre_id
-				}
-			});
-			let payload = await response.payload();
-			return payload.results;
-		});
-		let movies = new SearchResultProvider<Movie>(async (anchor) => {
-			let response = await apiclient["GET:/movies/<query>"]({
-				options: {
-					token,
-					query,
-					anchor: anchor?.movie_id
-				}
-			});
-			let payload = await response.payload();
-			return payload.results;
-		});
-		let seasons = new SearchResultProvider<Season>(async (anchor) => {
-			let response = await apiclient["GET:/seasons/<query>"]({
-				options: {
-					token,
-					query,
-					anchor: anchor?.season_id
-				}
-			});
-			let payload = await response.payload();
-			return payload.results;
-		});
-		let playlists = new SearchResultProvider<Playlist>(async (anchor) => {
-			let response = await apiclient["GET:/playlists/<query>"]({
-				options: {
-					token,
-					query,
-					anchor: anchor?.playlist_id
-				}
-			});
-			let payload = await response.payload();
-			return payload.results;
-		});
-		let shows = new SearchResultProvider<Show>(async (anchor) => {
-			let response = await apiclient["GET:/shows/<query>"]({
-				options: {
-					token,
-					query,
-					anchor: anchor?.show_id
-				}
-			});
-			let payload = await response.payload();
-			return payload.results;
-		});
-		let tracks = new SearchResultProvider<Track>(async (anchor) => {
-			let response = await apiclient["GET:/tracks/<query>"]({
-				options: {
-					token,
-					query,
-					anchor: anchor?.track_id
-				}
-			});
-			let payload = await response.payload();
-			return payload.results;
-		});
-		let users = new SearchResultProvider<User>(async (anchor) => {
-			let response = await apiclient["GET:/users/<query>"]({
-				options: {
-					token,
-					query,
-					anchor: anchor?.user_id
-				}
-			});
-			let payload = await response.payload();
-			return payload.results;
-		});
-		let years = new SearchResultProvider<Year>(async (anchor) => {
-			let response = await apiclient["GET:/years/<query>"]({
-				options: {
-					token,
-					query,
-					anchor: anchor?.year_id
-				}
-			});
-			let payload = await response.payload();
-			return payload.results;
-		});
-		this.providers = [
-			years,
-			artists,
-			albums,
-			movies,
-			shows,
-			tracks,
-			playlists,
-			genres,
-			actors,
-			users,
-			episodes,
-			seasons,
-			discs
-		] as Array<SearchResultProvider<Entity>>;
+	constructor(providers: Array<ResultProvider<A>>) {
+		this.providers = providers;
 	}
 
-	async fetch(limit: number): Promise<Array<{ entity: Entity, rank: number }>> {
-		let entities = [] as Array<{ entity: Entity, rank: number }>;
+	async fetch(limit: number): Promise<Array<{ entity: A, rank: number }>> {
+		let entities = [] as Array<{ entity: A, rank: number }>;
 		while (entities.length < limit) {
-			let candidates = [] as Array<{ result: { entity: Entity, rank: number }, provider: SearchResultProvider<Entity> }>;
+			let candidates = [] as Array<{ result: { entity: A, rank: number }, provider: ResultProvider<A> }>;
 			for (let provider of this.providers) {
 				let result = await provider.peek();
 				if (result == null) {
@@ -4492,5 +4306,217 @@ class SearchResultsMerger {
 			entities.push(candidate.result);
 		}
 		return entities;
+	}
+};
+
+class SearchResultsMerger extends ResultsMerger<Entity> {
+	constructor(token: string, query: string) {
+		let actors = new ResultProvider<Actor>(async (anchor) => {
+			let response = await apiclient["GET:/actors/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.actor_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let albums = new ResultProvider<Album>(async (anchor) => {
+			let response = await apiclient["GET:/albums/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.album_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let artists = new ResultProvider<Artist>(async (anchor) => {
+			let response = await apiclient["GET:/artists/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.artist_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let discs = new ResultProvider<Disc>(async (anchor) => {
+			let response = await apiclient["GET:/discs/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.disc_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let episodes = new ResultProvider<Episode>(async (anchor) => {
+			let response = await apiclient["GET:/episodes/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.episode_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let genres = new ResultProvider<Genre>(async (anchor) => {
+			let response = await apiclient["GET:/genres/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.genre_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let movies = new ResultProvider<Movie>(async (anchor) => {
+			let response = await apiclient["GET:/movies/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.movie_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let seasons = new ResultProvider<Season>(async (anchor) => {
+			let response = await apiclient["GET:/seasons/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.season_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let playlists = new ResultProvider<Playlist>(async (anchor) => {
+			let response = await apiclient["GET:/playlists/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.playlist_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let shows = new ResultProvider<Show>(async (anchor) => {
+			let response = await apiclient["GET:/shows/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.show_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let tracks = new ResultProvider<Track>(async (anchor) => {
+			let response = await apiclient["GET:/tracks/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.track_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let users = new ResultProvider<User>(async (anchor) => {
+			let response = await apiclient["GET:/users/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.user_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		let years = new ResultProvider<Year>(async (anchor) => {
+			let response = await apiclient["GET:/years/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.year_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
+		super([
+			years,
+			artists,
+			albums,
+			movies,
+			shows,
+			tracks,
+			playlists,
+			genres,
+			actors,
+			users,
+			episodes,
+			seasons,
+			discs
+		] as Array<ResultProvider<Entity>>);
+	}
+};
+
+class DirectoryDirectoriesProvider extends ResultProvider<Directory> {
+	constructor(token: string, directory_id: string) {
+		super(async (anchor) => {
+			let response = await apiclient.getDirectoryDirectories({
+				options: {
+					directory_id,
+					token,
+					anchor: anchor?.directory_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.directories.map((directory) => ({
+				rank: 0,
+				entity: directory
+			}));
+		});
+	}
+};
+
+class DirectoryFilesProvider extends ResultProvider<File> {
+	constructor(token: string, directory_id: string) {
+		super(async (anchor) => {
+			let response = await apiclient.getDirectoryFiles({
+				options: {
+					directory_id,
+					token,
+					anchor: anchor?.file_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.files.map((file) => ({
+				rank: 0,
+				entity: file
+			}));
+		});
+	}
+};
+
+class DirectoryContentMerger extends ResultsMerger<Directory | File> {
+	constructor(token: string, directory_id: string) {
+		let directories = new DirectoryDirectoriesProvider(token, directory_id);
+		let files = new DirectoryFilesProvider(token, directory_id);
+		super([
+			directories,
+			files
+		] as Array<ResultProvider<Directory | File>>);
 	}
 };

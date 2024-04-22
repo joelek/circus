@@ -25,11 +25,17 @@ export class EntityTitleFactory {
 		if (api.Artist.is(entity)) {
 			return this.forArtist(entity);
 		}
+		if (api.Directory.is(entity)) {
+			return this.forDirectory(entity);
+		}
 		if (api.Disc.is(entity)) {
 			return this.forDisc(entity);
 		}
 		if (api.Episode.is(entity)) {
 			return this.forEpisode(entity);
+		}
+		if (api.File.is(entity)) {
+			return this.forFile(entity);
 		}
 		if (api.Genre.is(entity)) {
 			return this.forGenre(entity);
