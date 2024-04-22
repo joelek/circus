@@ -726,15 +726,15 @@ export const server = apiv2.makeServer({
 			payload: {
 				statistics: [
 					{
-						title: "Major version",
+						title: "Major Version",
 						value: version?.major ?? 0
 					},
 					{
-						title: "Minor version",
+						title: "Minor Version",
 						value: version?.minor ?? 0
 					},
 					{
-						title: "Patch version",
+						title: "Patch Version",
 						value: version?.patch ?? 0
 					},
 					{
