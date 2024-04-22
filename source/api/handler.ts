@@ -818,6 +818,14 @@ export async function getDirectoryFiles(queue: ReadableQueue, directory_id: stri
 export async function getDirectoryContext(queue: ReadableQueue, directory_id: string, api_user_id: string): Promise<schema.objects.DirectoryContext> {
 	let directory = await getDirectory(queue, directory_id, api_user_id, undefined);
 	let files = [] as Array<FileContext>;
+	for (let directory of await atlas.links.directory_directories.filter(queue, { directory_id: binid(directory_id) })) {
+		for (let file of (await getDirectoryContext(queue, hexid(directory.directory_id), api_user_id)).files) {
+			files.push(await getFileContext(queue, file.file_id, api_user_id, {
+				...directory,
+				directory_id: hexid(directory.directory_id)
+			}));
+		}
+	}
 	for (let file of await atlas.links.directory_files.filter(queue, { directory_id: binid(directory_id) })) {
 		try {
 			files.push(await getFileContext(queue, hexid(file.file_id), api_user_id, directory));
