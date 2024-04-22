@@ -749,13 +749,13 @@ const user_year_affinities = context.createLink(users, year_affinities, {
 const directory_directories = context.createLink(directories, directories, {
 	directory_id: "parent_directory_id"
 }, {
-
+	name: context.createIncreasingOrder()
 });
 
 const directory_files = context.createLink(directories, files, {
 	directory_id: "parent_directory_id"
 }, {
-
+	name: context.createIncreasingOrder()
 });
 
 const file_audio_files = context.createLink(files, audio_files, {
