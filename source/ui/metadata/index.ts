@@ -1,5 +1,4 @@
-export function formatSize(b: number, options?: Partial<{ format: Intl.NumberFormat }>): string {
-	let format = options?.format ?? new Intl.NumberFormat();
+export function formatSize(b: number): string {
 	let kb = b / 1024**1;
 	let mb = b / 1024**2;
 	let gb = b / 1024**3;
@@ -13,7 +12,7 @@ export function formatSize(b: number, options?: Partial<{ format: Intl.NumberFor
 	} else if (kb > 1) {
 		return `${kb.toFixed(2)}kB`;
 	} else {
-		return `${format.format(b)}B`;
+		return `${b}B`;
 	}
 };
 

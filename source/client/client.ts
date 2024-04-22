@@ -1621,7 +1621,7 @@ let appheader = xml.element("div.app__header")
 										} else if (setting.unit === "MILLISECONDS") {
 											subtitle = format_duration(setting.value);
 										} else {
-											subtitle = new Intl.NumberFormat().format(setting.value);
+											subtitle = `${setting.value}`;
 										}
 										return makeStatistic(title, subtitle);
 									}))
