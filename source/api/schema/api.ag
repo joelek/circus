@@ -386,6 +386,6 @@ route GET:/statistics/ ? <{ token: string }>
 		statistics: {
 			title: string,
 			value: number,
-			unit?: "BYTES" | "MILLISECONDS"
+			unit?: "BYTES" | "MILLISECONDS" | "TIMESTAMP"
 		}[]
 	};

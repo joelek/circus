@@ -1620,6 +1620,8 @@ let appheader = xml.element("div.app__header")
 											subtitle = formatSize(setting.value);
 										} else if (setting.unit === "MILLISECONDS") {
 											subtitle = format_duration(setting.value);
+										} else if (setting.unit === "TIMESTAMP") {
+											subtitle = formatTimestamp(setting.value);
 										} else {
 											subtitle = `${setting.value}`;
 										}

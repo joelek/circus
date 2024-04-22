@@ -1944,7 +1944,8 @@ export namespace Autoguard {
 				}, {
 					"unit": autoguard.guards.Union.of(
 						autoguard.guards.StringLiteral.of("BYTES"),
-						autoguard.guards.StringLiteral.of("MILLISECONDS")
+						autoguard.guards.StringLiteral.of("MILLISECONDS"),
+						autoguard.guards.StringLiteral.of("TIMESTAMP")
 					)
 				}))
 			}, {})

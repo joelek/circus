@@ -16,6 +16,13 @@ export function formatSize(b: number): string {
 	}
 };
 
+export function formatTimestamp(timestamp: number): string {
+	let iso = new Date(timestamp).toISOString();
+	let date = iso.slice(0, 10);
+	let time = iso.slice(1, 19);
+	return `${date} ${time}+00:00`;
+};
+
 type Duration = {
 	ms: number,
 	s: number,
