@@ -5,7 +5,7 @@ import * as is from "../is";
 import {  ContextAlbum, ContextArtist, Device } from "../player/schema/objects";
 import { Actor, Album, Artist, Cue, Disc, Entity, Episode, Genre, Movie, Playlist, PlaylistItem, Season, Show, Track, User, Year } from "../api/schema/objects";
 import * as xml from "../xnode";
-import { formatDuration as format_duration, formatSize } from "../ui/metadata";
+import { formatDuration as format_duration, formatSize, formatTimestamp as format_timestamp } from "../ui/metadata";
 import * as apischema from "../api/schema";
 
 import { EntityTitleFactory } from "../ui/EntityTitleFactory";
@@ -1621,7 +1621,7 @@ let appheader = xml.element("div.app__header")
 										} else if (setting.unit === "MILLISECONDS") {
 											subtitle = format_duration(setting.value);
 										} else if (setting.unit === "TIMESTAMP") {
-											subtitle = formatTimestamp(setting.value);
+											subtitle = format_timestamp(setting.value);
 										} else {
 											subtitle = `${setting.value}`;
 										}
