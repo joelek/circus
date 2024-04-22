@@ -30,7 +30,7 @@ function makeMediaInformation(item: Episode | Movie | Track, media_server_host: 
 		let season = episode.season;
 		let show = season.show;
 		return {
-			contentId: `${media_server_host}/api/files/${item.media.file_id}/?token=${token}`,
+			contentId: `${media_server_host}/api/files/${item.media.file_id}/content/?token=${token}`,
 			contentType: episode.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
@@ -43,7 +43,7 @@ function makeMediaInformation(item: Episode | Movie | Track, media_server_host: 
 				trackId: subtitleIndex,
 				type: "TEXT",
 				trackType: "TEXT",
-				trackContentId: `${media_server_host}/api/files/${subtitle.file_id}/?token=${token}`,
+				trackContentId: `${media_server_host}/api/files/${subtitle.file_id}/content/?token=${token}`,
 				trackContentType: subtitle.mime,
 				subtype: "SUBTITLES"
 			}))
@@ -51,14 +51,14 @@ function makeMediaInformation(item: Episode | Movie | Track, media_server_host: 
 	} else if (Movie.is(item)) {
 		let movie = item;
 		return {
-			contentId: `${media_server_host}/api/files/${item.media.file_id}/?token=${token}`,
+			contentId: `${media_server_host}/api/files/${item.media.file_id}/content/?token=${token}`,
 			contentType: movie.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
 				metadataType: 0,
 				title: movie.title,
 				images: movie.artwork.map((image) => ({
-					url: `${media_server_host}/api/files/${image.file_id}/?token=${token}`
+					url: `${media_server_host}/api/files/${image.file_id}/content/?token=${token}`
 				}))
 			},
 			tracks: movie.subtitles.map((subtitle, subtitleIndex) => ({
@@ -66,7 +66,7 @@ function makeMediaInformation(item: Episode | Movie | Track, media_server_host: 
 				trackId: subtitleIndex,
 				type: "TEXT",
 				trackType: "TEXT",
-				trackContentId: `${media_server_host}/api/files/${subtitle.file_id}/?token=${token}`,
+				trackContentId: `${media_server_host}/api/files/${subtitle.file_id}/content/?token=${token}`,
 				trackContentType: subtitle.mime,
 				subtype: "SUBTITLES"
 			}))
@@ -76,7 +76,7 @@ function makeMediaInformation(item: Episode | Movie | Track, media_server_host: 
 		let disc = track.disc;
 		let album = disc.album;
 		return {
-			contentId: `${media_server_host}/api/files/${item.media.file_id}/?token=${token}`,
+			contentId: `${media_server_host}/api/files/${item.media.file_id}/content/?token=${token}`,
 			contentType: item.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
@@ -84,7 +84,7 @@ function makeMediaInformation(item: Episode | Movie | Track, media_server_host: 
 				title: track.title,
 				subtitle: track.artists.map((artist) => artist.title).join(" \u00b7 "),
 				images: album.artwork.map((image) => ({
-					url: `${media_server_host}/api/files/${image.file_id}/?token=${token}`
+					url: `${media_server_host}/api/files/${image.file_id}/content/?token=${token}`
 				}))
 			}
 		};

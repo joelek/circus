@@ -1206,7 +1206,7 @@ export namespace Autoguard {
 			),
 			"payload": autoguard.api.Binary
 		}),
-		"GET:/files/<file_id>/": autoguard.guards.Object.of({
+		"getFileContent": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
 					"file_id": autoguard.guards.String,
@@ -1928,7 +1928,7 @@ export namespace Autoguard {
 				autoguard.api.Headers
 			)
 		}),
-		"GET:/files/<file_id>/": autoguard.guards.Object.of({}, {
+		"getFileContent": autoguard.guards.Object.of({}, {
 			"status": autoguard.guards.Number,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),

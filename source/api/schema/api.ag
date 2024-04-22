@@ -378,7 +378,7 @@ route getYearContext(): GET:/years/<year_id:string>/context/ ? <{ token: string 
 		context: ./objects/YearContext
 	};
 
-route GET:/files/<file_id:string>/ ? <{ token: string }>
+route getFileContent(): GET:/files/<file_id:string>/content/ ? <{ token: string }>
 	=> binary;
 
 route GET:/statistics/ ? <{ token: string }>

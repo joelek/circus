@@ -2548,6 +2548,7 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 		let matchers = new Array<autoguard.api.RouteMatcher>();
 		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("files")));
 		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("content")));
 		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("")));
 		return {
 			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, matchers),
@@ -2560,14 +2561,14 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 				let headers: Record<string, autoguard.api.JSON> = {};
 				headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 				let payload = raw.payload;
-				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["GET:/files/<file_id>/"], serverOptions?.debugMode);
+				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getFileContent"], serverOptions?.debugMode);
 				let request = guard.as({ options, headers, payload }, "request");
 				return {
 					handleRequest: async () => {
-						let response = await routes["GET:/files/<file_id>/"](new autoguard.api.ClientRequest(request, true, auxillary));
+						let response = await routes["getFileContent"](new autoguard.api.ClientRequest(request, true, auxillary));
 						return {
 							validateResponse: async () => {
-								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["GET:/files/<file_id>/"], serverOptions?.debugMode);
+								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getFileContent"], serverOptions?.debugMode);
 								guard.as(response, "response");
 								let status = response.status ?? 200;
 								let headers = new Array<[string, string]>();

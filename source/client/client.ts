@@ -189,7 +189,7 @@ player.currentEntry.addObserver((currentEntry) => {
 			session.setMetadata({
 				title: movie.title,
 				artwork: movie.artwork.map((image) => ({
-					src: `/api/files/${image.file_id}/?token=${token}`,
+					src: `/api/files/${image.file_id}/content/?token=${token}`,
 					sizes: `${image.width}x${image.height}`,
 					type: image.mime
 				}))
@@ -205,7 +205,7 @@ player.currentEntry.addObserver((currentEntry) => {
 				artist: track.artists.map((artist) => artist.title).join(" \u00b7 "),
 				album: album.title,
 				artwork: album.artwork.map((image) => ({
-					src: `/api/files/${image.file_id}/?token=${token}`,
+					src: `/api/files/${image.file_id}/content/?token=${token}`,
 					sizes: `${image.width}x${image.height}`,
 					type: image.mime
 				}))
@@ -227,7 +227,7 @@ player.currentEntry.addObserver((currentEntry) => {
 			lastVideo.src = ``;
 			return;
 		} else {
-			lastVideo.src = `/api/files/${lastLocalEntry.media.file_id}/?token=${token}`;
+			lastVideo.src = `/api/files/${lastLocalEntry.media.file_id}/content/?token=${token}`;
 		}
 	};
 	player.lastLocalEntry.addObserver(computer);
@@ -245,7 +245,7 @@ player.currentEntry.addObserver((currentEntry) => {
 			currentVideo.src = ``;
 			return;
 		} else {
-			currentVideo.src = `/api/files/${currentLocalEntry.media.file_id}/?token=${token}`;
+			currentVideo.src = `/api/files/${currentLocalEntry.media.file_id}/content/?token=${token}`;
 			currentVideo.load();
 		}
 		if (Movie.is(currentLocalEntry) || Episode.is(currentLocalEntry)) {
@@ -253,7 +253,7 @@ player.currentEntry.addObserver((currentEntry) => {
 			let defaultSubtitle = subtitles.find((subtitle) => subtitle.language?.iso_639_2 === "swe") ?? subtitles.find((subtitle) => subtitle.language?.iso_639_2 === "eng") ?? subtitles.find((subtitle) => true);
 			for (let subtitle of subtitles) {
 				let element = document.createElement("track");
-				element.src = `/api/files/${subtitle.file_id}/?token=${token}`;
+				element.src = `/api/files/${subtitle.file_id}/content/?token=${token}`;
 				if (is.present(subtitle.language)) {
 					element.label = subtitle.language.name;
 					element.srclang = subtitle.language.iso_639_1;
@@ -277,7 +277,7 @@ player.currentEntry.addObserver((currentEntry) => {
 			nextVideo.src = ``;
 			return;
 		} else {
-			nextVideo.src = `/api/files/${nextLocalEntry.media.file_id}/?token=${token}`;
+			nextVideo.src = `/api/files/${nextLocalEntry.media.file_id}/content/?token=${token}`;
 		}
 	};
 	player.nextLocalEntry.addObserver(computer);

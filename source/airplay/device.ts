@@ -81,11 +81,11 @@ export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
 			let context = new player.ContextClient(url, (url) => new sockets.WebSocketClient(url));
 			observers.computed(async (currentLocalEntry, token) => {
 				if (is.present(currentLocalEntry) && is.present(token)) {
-					let url = `${media_server_host}/api/files/${currentLocalEntry.media.file_id}/?token=${token}`;
+					let url = `${media_server_host}/api/files/${currentLocalEntry.media.file_id}/content/?token=${token}`;
 					await api.play(outbound, correlation_id, url, 0.0);
 					if (Episode.is(currentLocalEntry) || Movie.is(currentLocalEntry)) {
 						for (let subtitle of currentLocalEntry.subtitles) {
-							let url = `${media_server_host}/api/files/${subtitle.file_id}/?token=${token}`;
+							let url = `${media_server_host}/api/files/${subtitle.file_id}/content/?token=${token}`;
 							// TODO: Figure out how to show subtitles through AirPlay.
 						}
 					}

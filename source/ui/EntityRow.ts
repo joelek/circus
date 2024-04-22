@@ -156,7 +156,7 @@ export class EntityRowFactory {
 	forAlbum(album: api.Album, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forAlbum(album);
 		let link = options.link ?? this.entityLinkFactory.forAlbum(album);
-		let image = this.ImageBox.forSquare(album.artwork.map((image) => `/api/files/${image.file_id}/`));
+		let image = this.ImageBox.forSquare(album.artwork.map((image) => `/api/files/${image.file_id}/content/`));
 		let titles = [
 			this.entityTitleFactory.forAlbum(album)
 		];
@@ -167,7 +167,7 @@ export class EntityRowFactory {
 	forArtist(artist: api.Artist, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forArtist(artist);
 		let link = options.link ?? this.entityLinkFactory.forArtist(artist);
-		let image = this.ImageBox.forSquare(artist.artwork.map((image) => `/api/files/${image.file_id}/`));
+		let image = this.ImageBox.forSquare(artist.artwork.map((image) => `/api/files/${image.file_id}/content/`));
 		let titles = [
 			this.entityTitleFactory.forArtist(artist)
 		];
@@ -190,7 +190,7 @@ export class EntityRowFactory {
 	forDisc(disc: api.Disc, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forDisc(disc);
 		let link = options.link ?? this.entityLinkFactory.forDisc(disc);
-		let image = this.ImageBox.forSquare(disc.album.artwork.map((image) => `/api/files/${image.file_id}/`));
+		let image = this.ImageBox.forSquare(disc.album.artwork.map((image) => `/api/files/${image.file_id}/content/`));
 		let titles = [
 			this.entityTitleFactory.forDisc(disc)
 		];
@@ -227,7 +227,7 @@ export class EntityRowFactory {
 	forMovie(movie: api.Movie, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forMovie(movie);
 		let link = options.link ?? this.entityLinkFactory.forMovie(movie);
-		let image = this.ImageBox.forSquare(movie.artwork.map((image) => `/api/files/${image.file_id}/`));
+		let image = this.ImageBox.forSquare(movie.artwork.map((image) => `/api/files/${image.file_id}/content/`));
 		let titles = [
 			this.entityTitleFactory.forMovie(movie)
 		];
@@ -238,7 +238,7 @@ export class EntityRowFactory {
 	forPlaylist(playlist: api.Playlist, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forPlaylist(playlist);
 		let link = options.link ?? this.entityLinkFactory.forPlaylist(playlist);
-		let image = this.ImageBox.forLandscape(playlist.artwork.map((image) => `/api/files/${image.file_id}/`), true);
+		let image = this.ImageBox.forLandscape(playlist.artwork.map((image) => `/api/files/${image.file_id}/content/`), true);
 		let titles = [
 			this.entityTitleFactory.forPlaylist(playlist)
 		];
@@ -251,7 +251,7 @@ export class EntityRowFactory {
 	forSeason(season: api.Season, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forSeason(season);
 		let link = options.link ?? this.entityLinkFactory.forSeason(season);
-		let image = this.ImageBox.forSquare(season.show.artwork.map((image) => `/api/files/${image.file_id}/`));
+		let image = this.ImageBox.forSquare(season.show.artwork.map((image) => `/api/files/${image.file_id}/content/`));
 		let titles = [
 			this.entityTitleFactory.forSeason(season)
 		];
@@ -264,7 +264,7 @@ export class EntityRowFactory {
 	forShow(show: api.Show, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forShow(show);
 		let link = options.link ?? this.entityLinkFactory.forShow(show);
-		let image = this.ImageBox.forSquare(show.artwork.map((image) => `/api/files/${image.file_id}/`));
+		let image = this.ImageBox.forSquare(show.artwork.map((image) => `/api/files/${image.file_id}/content/`));
 		let titles = [
 			this.entityTitleFactory.forShow(show)
 		];
@@ -275,7 +275,7 @@ export class EntityRowFactory {
 	forTrack(track: api.Track, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forTrack(track);
 		let link = options.link ?? this.entityLinkFactory.forTrack(track);
-		let image = this.ImageBox.forSquare(track.disc.album.artwork.map((image) => `/api/files/${image.file_id}/`));
+		let image = this.ImageBox.forSquare(track.disc.album.artwork.map((image) => `/api/files/${image.file_id}/content/`));
 		let titles = [
 			this.entityTitleFactory.forTrack(track)
 		];
@@ -303,7 +303,7 @@ export class EntityRowFactory {
 	forYear(year: api.Year, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forYear(year);
 		let link = options.link ?? this.entityLinkFactory.forYear(year);
-		let image = this.ImageBox.forLandscape(year.artwork.map((image) => `/api/files/${image.file_id}/`), true);
+		let image = this.ImageBox.forLandscape(year.artwork.map((image) => `/api/files/${image.file_id}/content/`), true);
 		let titles = [
 			this.entityTitleFactory.forYear(year)
 		];

@@ -681,7 +681,7 @@ export const server = apiv2.makeServer({
 			}
 		};
 	}),
-	"GET:/files/<file_id>/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+	getFileContent: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
 		let file = await handler.lookupFile(queue, options.file_id, user_id);

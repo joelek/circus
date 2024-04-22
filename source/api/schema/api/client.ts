@@ -1875,13 +1875,14 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			return new autoguard.api.ServerResponse(response, false);
 		}
 	},
-	"GET:/files/<file_id>/": async (request) => {
-		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["GET:/files/<file_id>/"], clientOptions?.debugMode);
+	"getFileContent": async (request) => {
+		let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getFileContent"], clientOptions?.debugMode);
 		guard.as(request, "request");
 		let method = "GET";
 		let components = new Array<string>();
 		components.push("files");
 		components.push(...autoguard.api.encodeComponents([request.options?.["file_id"]], true));
+		components.push("content");
 		components.push("");
 		let parameters = new Array<[string, string]>();
 		parameters.push(...autoguard.api.encodeParameterPairs("token", [request.options?.["token"]], true));
@@ -1899,7 +1900,7 @@ export const makeClient = (clientOptions?: autoguard.api.ClientOptions): Client 
 			let headers: Record<string, autoguard.api.JSON> = {};
 			headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
 			let payload = raw.payload;
-			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["GET:/files/<file_id>/"], clientOptions?.debugMode);
+			let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getFileContent"], clientOptions?.debugMode);
 			let response = guard.as({ status, headers, payload }, "response");
 			return new autoguard.api.ServerResponse(response, true);
 		}
