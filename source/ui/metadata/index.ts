@@ -1,18 +1,18 @@
 export function formatSize(b: number): string {
-	let kb = b / 1024**1;
-	let mb = b / 1024**2;
-	let gb = b / 1024**3;
-	let tb = b / 1024**4;
-	if (tb > 1) {
-		return `${tb.toFixed(2)}TB`;
-	} else if (gb > 1) {
-		return `${gb.toFixed(2)}GB`;
-	} else if (mb > 1) {
-		return `${mb.toFixed(2)}MB`;
-	} else if (kb > 1) {
-		return `${kb.toFixed(2)}kB`;
+	let kb = Math.floor(b / 1024);
+	let mb = Math.floor(kb / 1024);
+	let gb = Math.floor(mb / 1024);
+	let tb = Math.floor(gb / 1024);
+	if (tb >= 10) {
+		return `${tb} TB`;
+	} else if (gb >= 10) {
+		return `${gb} GB`;
+	} else if (mb >= 10) {
+		return `${mb} MB`;
+	} else if (kb >= 10) {
+		return `${kb} kB`;
 	} else {
-		return `${b}B`;
+		return `${b} B`;
 	}
 };
 
