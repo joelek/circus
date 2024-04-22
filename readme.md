@@ -201,4 +201,4 @@ Ports, paths and other settings can be configured through altering the config fi
 * Verify external track metadata functionality.
 * Change line heights to prevent the truncation of capital letters with umlauts.
 * Index keyframes and create movie and episode subpage with list.
-* Add support for viewing, navigating and playing files directly from media directories.
+* Optimize directory context playback.
