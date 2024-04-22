@@ -2546,6 +2546,174 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 	endpoints.push((raw, auxillary) => {
 		let method = "GET";
 		let matchers = new Array<autoguard.api.RouteMatcher>();
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("directories")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("")));
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, matchers),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options: Record<string, autoguard.api.JSON> = {};
+				options["directory_id"] = matchers[1].getValue();
+				options["token"] = autoguard.api.decodeParameterValue(raw.parameters, "token", true);
+				options = { ...options, ...autoguard.api.decodeUndeclaredParameters(raw.parameters, Object.keys(options)) };
+				let headers: Record<string, autoguard.api.JSON> = {};
+				headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+				let payload = raw.payload;
+				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getDirectory"], serverOptions?.debugMode);
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getDirectory"](new autoguard.api.ClientRequest(request, true, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getDirectory"], serverOptions?.debugMode);
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = autoguard.api.serializePayload(response.payload);
+								let defaultHeaders = serverOptions?.defaultHeaders?.slice() ?? [];
+								defaultHeaders.push(["Content-Type", "application/json; charset=utf-8"]);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, defaultHeaders);
+							}
+						};
+					}
+				};
+			}
+		};
+	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let matchers = new Array<autoguard.api.RouteMatcher>();
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("directories")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("directories")));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("")));
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, matchers),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options: Record<string, autoguard.api.JSON> = {};
+				options["directory_id"] = matchers[1].getValue();
+				options["token"] = autoguard.api.decodeParameterValue(raw.parameters, "token", true);
+				options["anchor"] = autoguard.api.decodeParameterValue(raw.parameters, "anchor", true);
+				options["offset"] = autoguard.api.decodeParameterValue(raw.parameters, "offset", false);
+				options["limit"] = autoguard.api.decodeParameterValue(raw.parameters, "limit", false);
+				options = { ...options, ...autoguard.api.decodeUndeclaredParameters(raw.parameters, Object.keys(options)) };
+				let headers: Record<string, autoguard.api.JSON> = {};
+				headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+				let payload = raw.payload;
+				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getDirectoryDirectories"], serverOptions?.debugMode);
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getDirectoryDirectories"](new autoguard.api.ClientRequest(request, true, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getDirectoryDirectories"], serverOptions?.debugMode);
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = autoguard.api.serializePayload(response.payload);
+								let defaultHeaders = serverOptions?.defaultHeaders?.slice() ?? [];
+								defaultHeaders.push(["Content-Type", "application/json; charset=utf-8"]);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, defaultHeaders);
+							}
+						};
+					}
+				};
+			}
+		};
+	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let matchers = new Array<autoguard.api.RouteMatcher>();
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("directories")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("files")));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("")));
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, matchers),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options: Record<string, autoguard.api.JSON> = {};
+				options["directory_id"] = matchers[1].getValue();
+				options["token"] = autoguard.api.decodeParameterValue(raw.parameters, "token", true);
+				options["anchor"] = autoguard.api.decodeParameterValue(raw.parameters, "anchor", true);
+				options["offset"] = autoguard.api.decodeParameterValue(raw.parameters, "offset", false);
+				options["limit"] = autoguard.api.decodeParameterValue(raw.parameters, "limit", false);
+				options = { ...options, ...autoguard.api.decodeUndeclaredParameters(raw.parameters, Object.keys(options)) };
+				let headers: Record<string, autoguard.api.JSON> = {};
+				headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+				let payload = raw.payload;
+				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getDirectoryFiles"], serverOptions?.debugMode);
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getDirectoryFiles"](new autoguard.api.ClientRequest(request, true, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getDirectoryFiles"], serverOptions?.debugMode);
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = autoguard.api.serializePayload(response.payload);
+								let defaultHeaders = serverOptions?.defaultHeaders?.slice() ?? [];
+								defaultHeaders.push(["Content-Type", "application/json; charset=utf-8"]);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, defaultHeaders);
+							}
+						};
+					}
+				};
+			}
+		};
+	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let matchers = new Array<autoguard.api.RouteMatcher>();
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("files")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("")));
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, matchers),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options: Record<string, autoguard.api.JSON> = {};
+				options["file_id"] = matchers[1].getValue();
+				options["token"] = autoguard.api.decodeParameterValue(raw.parameters, "token", true);
+				options = { ...options, ...autoguard.api.decodeUndeclaredParameters(raw.parameters, Object.keys(options)) };
+				let headers: Record<string, autoguard.api.JSON> = {};
+				headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+				let payload = raw.payload;
+				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getFile"], serverOptions?.debugMode);
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getFile"](new autoguard.api.ClientRequest(request, true, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getFile"], serverOptions?.debugMode);
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = autoguard.api.serializePayload(response.payload);
+								let defaultHeaders = serverOptions?.defaultHeaders?.slice() ?? [];
+								defaultHeaders.push(["Content-Type", "application/json; charset=utf-8"]);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, defaultHeaders);
+							}
+						};
+					}
+				};
+			}
+		};
+	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let matchers = new Array<autoguard.api.RouteMatcher>();
 		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("files")));
 		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
 		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("content")));

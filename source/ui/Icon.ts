@@ -357,6 +357,17 @@ export class IconFactory {
 			);
 	}
 
+	makeFolder(options?: Options): xnode.XElement {
+		return xnode.element("svg")
+			.set("class", getClass(options?.direction))
+			.set("width", "12px")
+			.set("height", "12px")
+			.set("viewBox", "0 0 24 24")
+			.add(xnode.element("path")
+				.set("d", "M21,6l-3.999,0c0,0,0,0-0.001,0h-1.455H15c-0.723,0-1.676-0.589-2-1.236L12.79,4.342C12.132,3.029,10.468,2,9,2L3,2C1.346,2,0,3.346,0,5v14c0,1.654,1.346,3,3,3h18c1.654,0,3-1.346,3-3V9C24,7.346,22.654,6,21,6z M3,4l6,0c0.723,0,1.676,0.589,2,1.236l0.211,0.422C11.271,5.776,11.346,5.888,11.42,6L2,6V5C2,4.449,2.449,4,3,4z M22,19c0,0.551-0.449,1-1,1H3c-0.551,0-1-0.449-1-1V8l13.546,0L21,8c0.551,0,1,0.449,1,1V19z")
+			);
+	}
+
 	static makeStyle(): xnode.XElement {
 		return xnode.element("style")
 			.add(xnode.text(CSS));

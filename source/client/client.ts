@@ -3,7 +3,7 @@ import { ArrayObservable, computed, ObservableClass } from "../observers";
 import * as client from "../player/client";
 import * as is from "../is";
 import {  ContextAlbum, ContextArtist, Device } from "../player/schema/objects";
-import { Actor, Album, Artist, Cue, Disc, Entity, Episode, Genre, Movie, Playlist, PlaylistItem, Season, Show, Track, User, Year } from "../api/schema/objects";
+import { File, Directory, Actor, Album, Artist, Cue, Disc, Entity, Episode, Genre, Movie, Playlist, PlaylistItem, Season, Show, Track, User, Year } from "../api/schema/objects";
 import * as xml from "../xnode";
 import { formatDuration as format_duration, formatSize, formatTimestamp as format_timestamp } from "../ui/metadata";
 import * as apischema from "../api/schema";
@@ -3715,6 +3715,101 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			element,
 			title: `Years`
 		};
+	} else if ((parts = /^directories[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
+		let directory_id = decodeURIComponent(parts[1]);
+		return apiclient.getDirectory({
+			options: {
+				directory_id: directory_id,
+				token: token ?? ""
+			}
+		}).then(async (response) => {
+			let payload = await response.payload();
+			let directory = payload.directory;
+			return apiclient.getDirectoryDirectories({
+				options: {
+					directory_id: directory_id,
+					token: token ?? "",
+					offset: 0,
+					anchor: undefined,
+					limit: 100
+				}
+			}).then(async (response) => {
+				let payload = await response.payload();
+				let directories = payload.directories;
+				let offset = 0;
+				let reachedEnd = new ObservableClass(false);
+				let isLoading = new ObservableClass(false);
+				let files = new ArrayObservable<File>([]);
+				let anchor = new ObservableClass(undefined as File | undefined);
+				async function load(): Promise<void> {
+					if (!reachedEnd.getState() && !isLoading.getState()) {
+						isLoading.updateState(true);
+						let response = await apiclient.getDirectoryFiles({
+							options: {
+								directory_id: directory_id,
+								token: token ?? "",
+								anchor: anchor.getState()?.file_id,
+								offset
+							}
+						});
+						let payload = await response.payload();
+						for (let file of payload.files) {
+							files.append(file);
+							anchor.updateState(file);
+						}
+						offset += payload.files.length;
+						if (payload.files.length === 0) {
+							reachedEnd.updateState(true);
+						}
+						isLoading.updateState(false);
+					}
+				};
+				let element = xml.element("div")
+					.add(xml.element("div.content")
+						.add(EntityCard.forDirectory(directory))
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.set("data-hide", `${directories.length === 0}`)
+							.add(renderTextHeader(xml.text("Directories")))
+							.add(carouselFactory.make(new ArrayObservable(directories.map((directory) => EntityCard.forDirectory(directory)))))
+						)
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.bind("data-hide", files.compute((files) => files.length === 0))
+							.add(renderTextHeader(xml.text("Files")))
+							.add(Grid.make()
+								.repeat(files, (file) => EntityCard.forFile(file))
+							)
+						)
+					)
+				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+				.render();
+				return {
+					element,
+					title: `${directory.name}`
+				};
+			});
+		});
+	} else if ((parts = /^files[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
+		let file_id = decodeURIComponent(parts[1]);
+		return apiclient.getFile({
+			options: {
+				file_id: file_id,
+				token: token ?? ""
+			}
+		}).then(async (response) => {
+			let payload = await response.payload();
+			let file = payload.file;
+			let element = xml.element("div")
+				.add(xml.element("div.content")
+					.add(EntityCard.forFile(file, { compactDescription: false }))
+				)
+				.render();
+			return {
+				element,
+				title: `${file.name}`
+			};
+		});
 	} else {
 		return apiclient["GET:/users/<user_id>/shows/"]({
 			options: {
@@ -3767,6 +3862,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 							.add(makeIconLink(Icon.makeSpeaker(), "Listen", "audio/"))
 							.add(makeIconLink(Icon.makeMagnifyingGlass(), "Search", "search/"))
 							.add(makeIconLink(Icon.makeCalendar(), "Years", "years/"))
+							.add(makeIconLink(Icon.makeFolder(), "Directories", "directories/0000000000000000/"))
 						)
 						.add(xml.element("div")
 							.set("style", "display: grid; gap: 24px")

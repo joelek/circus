@@ -6,12 +6,14 @@ import { Album } from ".././objects";
 import { AlbumContext } from ".././objects";
 import { Artist } from ".././objects";
 import { ArtistContext } from ".././objects";
+import { Directory } from ".././objects";
 import { Disc } from ".././objects";
 import { DiscContext } from ".././objects";
 import { Entity } from ".././objects";
 import { Episode } from ".././objects";
 import { EpisodeContext } from ".././objects";
 import { ErrorMessage } from ".././messages";
+import { File } from ".././objects";
 import { Genre } from ".././objects";
 import { Movie } from ".././objects";
 import { MovieContext } from ".././objects";
@@ -1206,6 +1208,74 @@ export namespace Autoguard {
 			),
 			"payload": autoguard.api.Binary
 		}),
+		"getDirectory": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"directory_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getDirectoryDirectories": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"directory_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {
+					"anchor": autoguard.guards.String,
+					"offset": autoguard.guards.Integer,
+					"limit": autoguard.guards.Integer
+				}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getDirectoryFiles": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"directory_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {
+					"anchor": autoguard.guards.String,
+					"offset": autoguard.guards.Integer,
+					"limit": autoguard.guards.Integer
+				}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getFile": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"file_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
 		"getFileContent": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
@@ -1920,6 +1990,50 @@ export namespace Autoguard {
 		"getYearContext": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
 				"context": autoguard.guards.Reference.of(() => YearContext)
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getDirectory": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"directory": autoguard.guards.Reference.of(() => Directory)
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getDirectoryDirectories": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"directories": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Directory))
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getDirectoryFiles": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"files": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => File))
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getFile": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"file": autoguard.guards.Reference.of(() => File)
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,

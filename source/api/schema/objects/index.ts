@@ -714,13 +714,67 @@ export type YearContext = autoguard.guards.Intersection<[
 	}, {}>
 ]>;
 
+export const DirectoryBase: autoguard.serialization.MessageGuard<DirectoryBase> = autoguard.guards.Object.of({
+	"directory_id": autoguard.guards.String,
+	"name": autoguard.guards.String
+}, {});
+
+export type DirectoryBase = autoguard.guards.Object<{
+	"directory_id": autoguard.guards.String,
+	"name": autoguard.guards.String
+}, {}>;
+
+export const Directory: autoguard.serialization.MessageGuard<Directory> = autoguard.guards.Intersection.of(
+	autoguard.guards.Reference.of(() => DirectoryBase),
+	autoguard.guards.Object.of({}, {
+		"parent": autoguard.guards.Reference.of(() => DirectoryBase)
+	})
+);
+
+export type Directory = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<DirectoryBase>,
+	autoguard.guards.Object<{}, {
+		"parent": autoguard.guards.Reference<DirectoryBase>
+	}>
+]>;
+
+export const FileBase: autoguard.serialization.MessageGuard<FileBase> = autoguard.guards.Object.of({
+	"file_id": autoguard.guards.String,
+	"name": autoguard.guards.String
+}, {});
+
+export type FileBase = autoguard.guards.Object<{
+	"file_id": autoguard.guards.String,
+	"name": autoguard.guards.String
+}, {}>;
+
+export const File: autoguard.serialization.MessageGuard<File> = autoguard.guards.Intersection.of(
+	autoguard.guards.Reference.of(() => FileBase),
+	autoguard.guards.Object.of({
+		"size": autoguard.guards.Number
+	}, {
+		"parent": autoguard.guards.Reference.of(() => DirectoryBase)
+	})
+);
+
+export type File = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<FileBase>,
+	autoguard.guards.Object<{
+		"size": autoguard.guards.Number
+	}, {
+		"parent": autoguard.guards.Reference<DirectoryBase>
+	}>
+]>;
+
 export const EntityBase: autoguard.serialization.MessageGuard<EntityBase> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => ActorBase),
 	autoguard.guards.Reference.of(() => AlbumBase),
 	autoguard.guards.Reference.of(() => ArtistBase),
 	autoguard.guards.Reference.of(() => CueBase),
+	autoguard.guards.Reference.of(() => DirectoryBase),
 	autoguard.guards.Reference.of(() => DiscBase),
 	autoguard.guards.Reference.of(() => EpisodeBase),
+	autoguard.guards.Reference.of(() => FileBase),
 	autoguard.guards.Reference.of(() => GenreBase),
 	autoguard.guards.Reference.of(() => MovieBase),
 	autoguard.guards.Reference.of(() => PlaylistBase),
@@ -736,8 +790,10 @@ export type EntityBase = autoguard.guards.Union<[
 	autoguard.guards.Reference<AlbumBase>,
 	autoguard.guards.Reference<ArtistBase>,
 	autoguard.guards.Reference<CueBase>,
+	autoguard.guards.Reference<DirectoryBase>,
 	autoguard.guards.Reference<DiscBase>,
 	autoguard.guards.Reference<EpisodeBase>,
+	autoguard.guards.Reference<FileBase>,
 	autoguard.guards.Reference<GenreBase>,
 	autoguard.guards.Reference<MovieBase>,
 	autoguard.guards.Reference<PlaylistBase>,
@@ -753,8 +809,10 @@ export const Entity: autoguard.serialization.MessageGuard<Entity> = autoguard.gu
 	autoguard.guards.Reference.of(() => Album),
 	autoguard.guards.Reference.of(() => Artist),
 	autoguard.guards.Reference.of(() => Cue),
+	autoguard.guards.Reference.of(() => Directory),
 	autoguard.guards.Reference.of(() => Disc),
 	autoguard.guards.Reference.of(() => Episode),
+	autoguard.guards.Reference.of(() => File),
 	autoguard.guards.Reference.of(() => Genre),
 	autoguard.guards.Reference.of(() => Movie),
 	autoguard.guards.Reference.of(() => Playlist),
@@ -770,8 +828,10 @@ export type Entity = autoguard.guards.Union<[
 	autoguard.guards.Reference<Album>,
 	autoguard.guards.Reference<Artist>,
 	autoguard.guards.Reference<Cue>,
+	autoguard.guards.Reference<Directory>,
 	autoguard.guards.Reference<Disc>,
 	autoguard.guards.Reference<Episode>,
+	autoguard.guards.Reference<File>,
 	autoguard.guards.Reference<Genre>,
 	autoguard.guards.Reference<Movie>,
 	autoguard.guards.Reference<Playlist>,
@@ -829,6 +889,10 @@ export namespace Autoguard {
 		"YearBase": autoguard.guards.Reference.of(() => YearBase),
 		"Year": autoguard.guards.Reference.of(() => Year),
 		"YearContext": autoguard.guards.Reference.of(() => YearContext),
+		"DirectoryBase": autoguard.guards.Reference.of(() => DirectoryBase),
+		"Directory": autoguard.guards.Reference.of(() => Directory),
+		"FileBase": autoguard.guards.Reference.of(() => FileBase),
+		"File": autoguard.guards.Reference.of(() => File),
 		"EntityBase": autoguard.guards.Reference.of(() => EntityBase),
 		"Entity": autoguard.guards.Reference.of(() => Entity)
 	};

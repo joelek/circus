@@ -272,6 +272,20 @@ export class EntityCardFactory {
 		}
 	}
 
+	forDirectory(directory: api.Directory, options: Options = {}): xnode.XElement {
+		//options.playbackButton = options.playbackButton ?? this.PlaybackButton.forDirectory(directory);
+		let link = this.entityLinkFactory.forDirectory(directory);
+		let image = this.ImageBox.forSquare([]);
+		let titles = [
+			this.entityTitleFactory.forDirectory(directory)
+		];
+		let subtitles = [] as xnode.XElement[];
+		let tags = [
+			"Directory"
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		return this.make(link, image, titles, subtitles, tags, undefined, undefined, options);
+	}
+
 	forDisc(disc: api.Disc, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forDisc(disc);
 		let link = this.entityLinkFactory.forDisc(disc);
@@ -312,6 +326,20 @@ export class EntityCardFactory {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("\u2713")));
 		}
 		return this.make(link, image, titles, subtitles, tags, episode.summary, episode.copyright, options);
+	}
+
+	forFile(file: api.File, options: Options = {}): xnode.XElement {
+		//options.playbackButton = options.playbackButton ?? this.PlaybackButton.forDirectory(directory);
+		let link = this.entityLinkFactory.forFile(file);
+		let image = this.ImageBox.forSquare([]);
+		let titles = [
+			this.entityTitleFactory.forFile(file)
+		];
+		let subtitles = [] as xnode.XElement[];
+		let tags = [
+			"File"
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		return this.make(link, image, titles, subtitles, tags, undefined, undefined, options);
 	}
 
 	forGenre(genre: api.Genre, options: Options = {}): xnode.XElement {

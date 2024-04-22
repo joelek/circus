@@ -681,10 +681,50 @@ export const server = apiv2.makeServer({
 			}
 		};
 	}),
+	getDirectory: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let directory = await handler.getDirectory(queue, options.directory_id, user_id, undefined);
+		return {
+			payload: {
+				directory
+			}
+		};
+	}),
+	getDirectoryDirectories: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let directories = await handler.getDirectoryDirectories(queue, options.directory_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 12);
+		return {
+			payload: {
+				directories
+			}
+		};
+	}),
+	getDirectoryFiles: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let files = await handler.getDirectoryFiles(queue, options.directory_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 12);
+		return {
+			payload: {
+				files
+			}
+		};
+	}),
+	getFile: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let file = await handler.getFile(queue, options.file_id, user_id, undefined);
+		return {
+			payload: {
+				file
+			}
+		};
+	}),
 	getFileContent: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let file = await handler.lookupFile(queue, options.file_id, user_id);
+		let file = await handler.lookupFileWithPathAndMime(queue, options.file_id, user_id);
 		let range = autoguard.api.parseRangeHeader(request.headers().range, libfs.statSync(file.path).size);
 		let stream = libfs.createReadStream(file.path, {
 			start: range.offset,

@@ -72,6 +72,10 @@ export class EntityLinkFactory {
 		return this.make(`video/cues/${cue.cue_id}/`, cue);
 	}
 
+	forDirectory(directory: api.DirectoryBase): xnode.XElement {
+		return this.make(`directories/${directory.directory_id}/`, directory);
+	}
+
 	forDisc(disc: api.DiscBase): xnode.XElement {
 		return this.make(`audio/discs/${disc.disc_id}/`, disc);
 	}
@@ -86,6 +90,10 @@ export class EntityLinkFactory {
 
 	forEpisodes(): xnode.XElement {
 		return this.make(`video/episodes/`);
+	}
+
+	forFile(file: api.FileBase): xnode.XElement {
+		return this.make(`files/${file.file_id}/`, file);
 	}
 
 	forGenre(genre: api.GenreBase): xnode.XElement {

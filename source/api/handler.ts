@@ -43,7 +43,7 @@ export function getStreamWeight(timestamp_ms: number): number {
 	return Math.pow(0.5, weeks);
 };
 
-export async function lookupFile(queue: ReadableQueue, file_id: string, user_id: string): Promise<File & { mime: string, path: string }> {
+export async function lookupFileWithPathAndMime(queue: ReadableQueue, file_id: string, user_id: string): Promise<File & { mime: string, path: string }> {
 	let file = await atlas.stores.files.lookup(queue, { file_id: binid(file_id) });
 	let mime = "application/octet-stream";
 	try {
@@ -763,6 +763,73 @@ export async function lookupYearContext(queue: ReadableQueue, year_id: string, a
 	return {
 		...year,
 		albums
+	};
+};
+
+export async function getDirectoryBase(queue: ReadableQueue, directory_id: string, user_id: string): Promise<schema.objects.DirectoryBase> {
+	if (directory_id === "0000000000000000") {
+		return {
+			directory_id: "0000000000000000",
+			name: "(media root)"
+		};
+	}
+	let directory = await atlas.stores.directories.lookup(queue, { directory_id: binid(directory_id) });
+	return {
+		directory_id: hexid(directory.directory_id),
+		name: directory.name
+	};
+};
+
+export async function getDirectory(queue: ReadableQueue, directory_id: string, user_id: string, parent: schema.objects.DirectoryBase | undefined): Promise<schema.objects.Directory> {
+	if (directory_id === "0000000000000000") {
+		return {
+			directory_id: directory_id,
+			name: "(media root)"
+		};
+	}
+	let base = await getDirectoryBase(queue, directory_id, user_id);
+	let directory = await atlas.stores.directories.lookup(queue, { directory_id: binid(directory_id) });
+	parent = parent ?? (directory.parent_directory_id != null ? await getDirectoryBase(queue, hexid(directory.parent_directory_id), user_id) : undefined);
+	return {
+		...base,
+		parent: parent
+	};
+};
+
+export async function getDirectoryDirectories(queue: ReadableQueue, directory_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Directory[]> {
+	let directories = [] as Array<schema.objects.Directory>;
+	let parent = await getDirectoryBase(queue, directory_id, user_id);
+	for (let directory of await atlas.links.directory_directories.filter(queue, directory_id === "0000000000000000" ? undefined : { directory_id: binid(directory_id) }, anchor != null ? { directory_id: binid(anchor) } : undefined, length)) {
+		directories.push(await getDirectory(queue, hexid(directory.directory_id), user_id, parent));
+	}
+	return directories;
+};
+
+export async function getDirectoryFiles(queue: ReadableQueue, directory_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.File[]> {
+	let files = [] as Array<schema.objects.File>;
+	let parent = await getDirectoryBase(queue, directory_id, user_id);
+	for (let file of await atlas.links.directory_files.filter(queue, directory_id === "0000000000000000" ? undefined : { directory_id: binid(directory_id) }, anchor != null ? { file_id: binid(anchor) } : undefined, length)) {
+		files.push(await getFile(queue, hexid(file.file_id), user_id, parent));
+	}
+	return files;
+};
+
+export async function getFileBase(queue: ReadableQueue, file_id: string, user_id: string): Promise<schema.objects.FileBase> {
+	let file = await atlas.stores.files.lookup(queue, { file_id: binid(file_id) });
+	return {
+		file_id: hexid(file.file_id),
+		name: file.name
+	};
+};
+
+export async function getFile(queue: ReadableQueue, file_id: string, user_id: string, parent: schema.objects.DirectoryBase | undefined): Promise<schema.objects.File> {
+	let base = await getFileBase(queue, file_id, user_id);
+	let file = await atlas.stores.files.lookup(queue, { file_id: binid(file_id) });
+	parent = parent ?? (file.parent_directory_id != null ? await getDirectoryBase(queue, hexid(file.parent_directory_id), user_id) : undefined);
+	return {
+		...base,
+		size: file.size,
+		parent: parent
 	};
 };
 

@@ -259,6 +259,25 @@ guard YearContext: Year & {
 	"albums": AlbumContext[]
 };
 
-guard EntityBase: ActorBase | AlbumBase | ArtistBase | CueBase | DiscBase | EpisodeBase | GenreBase | MovieBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase;
+guard DirectoryBase: {
+	"directory_id": string,
+	"name": string
+};
 
-guard Entity: Actor | Album | Artist | Cue | Disc | Episode | Genre | Movie | Playlist | Season | Show | Track | User | Year;
+guard Directory: DirectoryBase & {
+	"parent"?: DirectoryBase
+};
+
+guard FileBase: {
+	"file_id": string,
+	"name": string
+};
+
+guard File: FileBase & {
+	"size": number,
+	"parent"?: DirectoryBase
+};
+
+guard EntityBase: ActorBase | AlbumBase | ArtistBase | CueBase | DirectoryBase | DiscBase | EpisodeBase | FileBase | GenreBase | MovieBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase;
+
+guard Entity: Actor | Album | Artist | Cue | Directory | Disc | Episode | File | Genre | Movie | Playlist | Season | Show | Track | User | Year;

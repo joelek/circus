@@ -67,12 +67,20 @@ export class EntityTitleFactory {
 		return this.make(this.entityLinkFactory.forArtist(artist), artist.title);
 	}
 
+	forDirectory(directory: api.DirectoryBase): xnode.XElement {
+		return this.make(this.entityLinkFactory.forDirectory(directory), directory.name);
+	}
+
 	forDisc(disc: api.DiscBase): xnode.XElement {
 		return this.make(this.entityLinkFactory.forDisc(disc), `Disc ${disc.number}`);
 	}
 
 	forEpisode(episode: api.EpisodeBase): xnode.XElement {
 		return this.make(this.entityLinkFactory.forEpisode(episode), episode.title);
+	}
+
+	forFile(file: api.FileBase): xnode.XElement {
+		return this.make(this.entityLinkFactory.forFile(file), file.name);
 	}
 
 	forGenre(genre: api.GenreBase): xnode.XElement {
