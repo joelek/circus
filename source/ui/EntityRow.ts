@@ -232,12 +232,7 @@ export class EntityRowFactory {
 	}
 
 	forFile(file: api.File, options: Options = {}): xnode.XElement {
-		let playbackButton = "playbackButton" in options ? options.playbackButton : undefined;
-		if (playbackButton == null) {
-			if (file.mime.startsWith("audio/") || file.mime.startsWith("video/")) {
-				playbackButton = this.PlaybackButton.forFile(file);
-			}
-		}
+		let playbackButton = "playbackButton" in options ? options.playbackButton : file.mime.startsWith("audio/") || file.mime.startsWith("video/") ? this.PlaybackButton.forFile(file) : undefined;
 		let link = options.link ?? this.entityLinkFactory.forFile(file);
 		let image = this.ImageBox.forSquare([]);
 		let titles = [
