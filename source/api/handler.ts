@@ -770,7 +770,7 @@ export async function getDirectoryBase(queue: ReadableQueue, directory_id: strin
 	if (directory_id === "0000000000000000") {
 		return {
 			directory_id: "0000000000000000",
-			name: "(media root)"
+			name: "Media Root"
 		};
 	}
 	let directory = await atlas.stores.directories.lookup(queue, { directory_id: binid(directory_id) });
@@ -784,7 +784,7 @@ export async function getDirectory(queue: ReadableQueue, directory_id: string, u
 	if (directory_id === "0000000000000000") {
 		return {
 			directory_id: directory_id,
-			name: "(media root)"
+			name: "Media Root"
 		};
 	}
 	let base = await getDirectoryBase(queue, directory_id, user_id);
