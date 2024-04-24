@@ -2324,16 +2324,14 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forTrack(track, { compactDescription: false }))
-				)
-				.add(xml.element("div.content")
 					.add(entityNavLinkFactory.forTrack(last, next))
-				)
-				.add(xml.element("div.content")
-					.set("style", "display: grid; gap: 24px;")
-					.add(renderTextHeader(xml.text("Appearances")))
-					.bind("data-hide", playlists.compute((playlists) => playlists.length === 0))
-					.add(Grid.make()
-						.repeat(playlists, (playlist) => EntityCard.forPlaylist(playlist))
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 24px;")
+						.add(renderTextHeader(xml.text("Appearances")))
+						.bind("data-hide", playlists.compute((playlists) => playlists.length === 0))
+						.add(Grid.make()
+							.repeat(playlists, (playlist) => EntityCard.forPlaylist(playlist))
+						)
 					)
 				)
 				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
@@ -2366,11 +2364,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Tracks")))
-			)
-			.add(xml.element("div.content")
 				.add(makeSearchField(query))
-			)
-			.add(xml.element("div.content")
 				.add(Grid.make()
 					.repeat(tracks, (track) => EntityCard.forTrack(track))
 				)
@@ -2406,16 +2400,14 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forSeason(season, { compactDescription: false }))
-				)
-				.add(xml.element("div.content")
-					.set("style", "display: grid; gap: 24px;")
-					.repeat(episodes, (episode, episodeIndex) => {
-						return EntityCard.forEpisode(episode, {
-							playbackButton: PlaybackButton.forSeason(season, episodeIndex)
-						});
-					})
-				)
-				.add(xml.element("div.content")
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 24px;")
+						.repeat(episodes, (episode, episodeIndex) => {
+							return EntityCard.forEpisode(episode, {
+								playbackButton: PlaybackButton.forSeason(season, episodeIndex)
+							});
+						})
+					)
 					.add(entityNavLinkFactory.forSeason(last, next))
 				)
 				.render();
@@ -2447,11 +2439,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Seasons")))
-			)
-			.add(xml.element("div.content")
 				.add(makeSearchField(query))
-			)
-			.add(xml.element("div.content")
 				.add(Grid.make()
 					.repeat(seasons, (season) => EntityCard.forSeason(season))
 				)
@@ -2487,16 +2475,14 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forDisc(disc, { compactDescription: false }))
-				)
-				.add(xml.element("div.content")
-					.set("style", "display: grid; gap: 16px;")
-					.repeat(tracks, (track, trackIndex) => {
-						return EntityRow.forTrack(track, {
-							playbackButton: PlaybackButton.forDisc(disc, trackIndex)
-						});
-					})
-				)
-				.add(xml.element("div.content")
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 16px;")
+						.repeat(tracks, (track, trackIndex) => {
+							return EntityRow.forTrack(track, {
+								playbackButton: PlaybackButton.forDisc(disc, trackIndex)
+							});
+						})
+					)
 					.add(entityNavLinkFactory.forDisc(last, next))
 				)
 				.render();
@@ -2528,11 +2514,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Discs")))
-			)
-			.add(xml.element("div.content")
 				.add(makeSearchField(query))
-			)
-			.add(xml.element("div.content")
 				.add(Grid.make()
 					.repeat(discs, (disc) => EntityCard.forDisc(disc))
 				)
@@ -2584,13 +2566,13 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(renderTextHeader(xml.text(user.name)))
-				)
-				.add(xml.element("div.content")
-					.set("style", "display: grid; gap: 24px")
-					.bind("data-hide", playlists.compute((playlists) => playlists.length === 0))
-					.add(renderTextHeader(xml.text("Playlists")))
-					.add(Grid.make()
-						.repeat(playlists, (playlist) => EntityCard.forPlaylist(playlist))
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 24px")
+						.bind("data-hide", playlists.compute((playlists) => playlists.length === 0))
+						.add(renderTextHeader(xml.text("Playlists")))
+						.add(Grid.make()
+							.repeat(playlists, (playlist) => EntityCard.forPlaylist(playlist))
+						)
 					)
 				)
 				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
@@ -2623,13 +2605,11 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Users")))
-			)
-			.add(xml.element("div.content")
 				.add(makeSearchField(query))
-			)
-			.add(xml.element("div.content")
-				.add(Grid.make()
-					.repeat(users, (user) => EntityCard.forUser(user))
+				.add(xml.element("div")
+					.add(Grid.make()
+						.repeat(users, (user) => EntityCard.forUser(user))
+					)
 				)
 			)
 			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
@@ -2733,11 +2713,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Actors")))
-			)
-			.add(xml.element("div.content")
 				.add(makeSearchField(query))
-			)
-			.add(xml.element("div.content")
 				.add(Grid.make()
 					.repeat(actors, (actor) => EntityCard.forActor(actor))
 				)
@@ -2771,28 +2747,31 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forAlbum(album, { compactDescription: false }))
-				)
-				.repeat(discs, (disc, discIndex) => {
-					let tracks = new ArrayObservable<Track>([]);
-					apiclient.getDiscTracks({
-						options: {
-							disc_id: disc.disc_id,
-							token: token ?? ""
-						}
-					}).then(async (response) => {
-						let payload = await response.payload();
-						tracks.update(payload.tracks);
-					});
-					let element = xml.element("div.content")
-						.set("style", "display: grid; gap: 16px;")
-						.add(renderTextHeader(xml.text(`Disc ${disc.number}`)))
-						.repeat(tracks, (track, trackIndex) => {
-							return EntityRow.forTrack(track, {
-								playbackButton: PlaybackButton.forAlbum(album, discIndex, trackIndex)
-							});
+					.repeat(discs, (disc, discIndex) => {
+						let tracks = new ArrayObservable<Track>([]);
+						apiclient.getDiscTracks({
+							options: {
+								disc_id: disc.disc_id,
+								token: token ?? ""
+							}
+						}).then(async (response) => {
+							let payload = await response.payload();
+							tracks.update(payload.tracks);
 						});
-					return element;
-				})
+						let element = xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.add(renderTextHeader(xml.text(`Disc ${disc.number}`)))
+							.add(xml.element("div")
+								.set("style", "display: grid; gap: 16px;")
+								.repeat(tracks, (track, trackIndex) => {
+									return EntityRow.forTrack(track, {
+										playbackButton: PlaybackButton.forAlbum(album, discIndex, trackIndex)
+									});
+								})
+							);
+						return element;
+					})
+				)
 				.render();
 			return {
 				element,
@@ -2822,11 +2801,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Albums")))
-			)
-			.add(xml.element("div.content")
 				.add(makeSearchField(query))
-			)
-			.add(xml.element("div.content")
 				.add(Grid.make()
 					.repeat(albums, (album) => EntityCard.forAlbum(album))
 				)
@@ -2862,36 +2837,36 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forArtist(artist, { compactDescription: false }))
-				)
-				.add(tracks.length === 0 ? undefined : xml.element("div.content")
-					.set("style", "display: grid; gap: 24px;")
-					.add(renderTextHeader(xml.text("Popular tracks")))
+					.add(tracks.length === 0 ? undefined : xml.element("div")
+						.set("style", "display: grid; gap: 24px;")
+						.add(renderTextHeader(xml.text("Popular tracks")))
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 16px;")
+							.add(...tracks.map((track) => {
+								return EntityRow.forTrack(track);
+							}))
+						)
+					)
 					.add(xml.element("div")
-						.set("style", "display: grid; gap: 16px;")
-						.add(...tracks.map((track) => {
-							return EntityRow.forTrack(track);
-						}))
+						.bind("data-hide", albums.compute((albums) => albums.length === 0))
+						.set("style", "display: grid; gap: 24px;")
+						.add(renderTextHeader(xml.text("Discography")))
+						.add(Grid.make()
+							.repeat(albums, (album, albumIndex) => {
+								return EntityCard.forAlbum(album, {
+									playbackButton: PlaybackButton.forArtist(artist, albumIndex)
+								});
+							})
+						)
 					)
-				)
-				.add(xml.element("div.content")
-					.bind("data-hide", albums.compute((albums) => albums.length === 0))
-					.set("style", "display: grid; gap: 24px;")
-					.add(renderTextHeader(xml.text("Discography")))
-					.add(Grid.make()
-						.repeat(albums, (album, albumIndex) => {
-							return EntityCard.forAlbum(album, {
-								playbackButton: PlaybackButton.forArtist(artist, albumIndex)
-							});
-						})
-					)
-				)
-				.add(appearances.length === 0 ? undefined : xml.element("div.content")
-					.set("style", "display: grid; gap: 24px;")
-					.add(renderTextHeader(xml.text("Appearances")))
-					.add(Grid.make()
-						.add(...appearances.map((album) => {
-							return EntityCard.forAlbum(album);
-						}))
+					.add(appearances.length === 0 ? undefined : xml.element("div")
+						.set("style", "display: grid; gap: 24px;")
+						.add(renderTextHeader(xml.text("Appearances")))
+						.add(Grid.make()
+							.add(...appearances.map((album) => {
+								return EntityCard.forAlbum(album);
+							}))
+						)
 					)
 				)
 				.render();
@@ -2923,11 +2898,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Artists")))
-			)
-			.add(xml.element("div.content")
 				.add(makeSearchField(query))
-			)
-			.add(xml.element("div.content")
 				.add(Grid.make()
 					.repeat(artists, (artist) => EntityCard.forArtist(artist))
 				)
@@ -2966,30 +2937,30 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forPlaylist(playlist, { compactDescription: false }))
-				)
-				.add(xml.element("div.content")
-					.bind("data-hide", items.compute((items) => items.length === 0))
-					.set("style", "display: grid; gap: 16px;")
-					.repeat(items, (item, itemIndex) => xml.element("div")
-						.set("style", "align-items: center; display: grid; grid-template-columns: 1fr min-content; gap: 16px;")
-						.add(EntityRow.forTrack(item.track, {
-							playbackButton: PlaybackButton.forPlaylist(playlist, itemIndex)
-						}))
-						.add(makeButton()
-							.set("data-hide", `${!hasWritePermission}`)
-							.on("click", async () => {
-								let response = await playlists.deletePlaylistItem({
-									playlist_item: {
-										playlist_item_id: item.playlist_item_id
+					.add(xml.element("div")
+						.bind("data-hide", items.compute((items) => items.length === 0))
+						.set("style", "display: grid; gap: 16px;")
+						.repeat(items, (item, itemIndex) => xml.element("div")
+							.set("style", "align-items: center; display: grid; grid-template-columns: 1fr min-content; gap: 16px;")
+							.add(EntityRow.forTrack(item.track, {
+								playbackButton: PlaybackButton.forPlaylist(playlist, itemIndex)
+							}))
+							.add(makeButton()
+								.set("data-hide", `${!hasWritePermission}`)
+								.on("click", async () => {
+									let response = await playlists.deletePlaylistItem({
+										playlist_item: {
+											playlist_item_id: item.playlist_item_id
+										}
+									});
+									if (response.errors.length > 0) {
+										return;
 									}
-								});
-								if (response.errors.length > 0) {
-									return;
-								}
-								// TODO: Remove item instead of navigating.
-								navigate(uri);
-							})
-							.add(Icon.makeMinus())
+									// TODO: Remove item instead of navigating.
+									navigate(uri);
+								})
+								.add(Icon.makeMinus())
+							)
 						)
 					)
 				)
@@ -3022,11 +2993,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Playlists")))
-			)
-			.add(xml.element("div.content")
 				.add(makeSearchField(query))
-			)
-			.add(xml.element("div.content")
 				.add(Grid.make()
 					.repeat(playlists, (playlist) => EntityCard.forPlaylist(playlist))
 				)
@@ -3129,18 +3096,16 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forShow(show, { compactDescription: false }))
-				)
-				.add(xml.element("div.content")
-					.set("data-hide", `${actors.length === 0}`)
-					.set("style", "display: grid; gap: 16px;")
-					.add(...actors.slice(0, 3).map((actor) => EntityRow.forActor(actor)))
-				)
-				.add(xml.element("div.content")
-					.set("style", "display: grid; gap: 24px;")
-					.add(renderTextHeader(xml.text("Next episode")))
-					.repeat(nextEpisodeElements, (element) => element)
-				)
-				.add(xml.element("div.content")
+					.add(xml.element("div")
+						.set("data-hide", `${actors.length === 0}`)
+						.set("style", "display: grid; gap: 16px;")
+						.add(...actors.slice(0, 3).map((actor) => EntityRow.forActor(actor)))
+					)
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 24px;")
+						.add(renderTextHeader(xml.text("Next episode")))
+						.repeat(nextEpisodeElements, (element) => element)
+					)
 					.add(Grid.make()
 						.repeat(seasons, (season, seasonIndex) => EntityCard.forSeason(season, {
 							playbackButton: PlaybackButton.forShow(show, seasonIndex)
@@ -3176,11 +3141,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Shows")))
-			)
-			.add(xml.element("div.content")
 				.add(makeSearchField(query))
-			)
-			.add(xml.element("div.content")
 				.add(Grid.make()
 					.repeat(shows, (show) => EntityCard.forShow(show))
 				)
@@ -3206,8 +3167,6 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forEpisode(episode, { compactDescription: false }))
-				)
-				.add(xml.element("div.content")
 					.add(entityNavLinkFactory.forEpisode(last, next))
 				)
 				.render();
@@ -3239,11 +3198,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Episodes")))
-			)
-			.add(xml.element("div.content")
 				.add(makeSearchField(query))
-			)
-			.add(xml.element("div.content")
 				.add(Grid.make()
 					.repeat(episodes, (episode) => EntityCard.forEpisode(episode))
 				)
@@ -3296,18 +3251,18 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forMovie(movie, { compactDescription: false }))
-				)
-				.add(xml.element("div.content")
-					.set("data-hide", `${actors.length === 0}`)
-					.set("style", "display: grid; gap: 16px;")
-					.add(...actors.slice(0, 3).map((actor) => EntityRow.forActor(actor)))
-				)
-				.add(xml.element("div.content")
-					.bind("data-hide", movies.compute((movies) => movies.length === 0))
-					.set("style", "display: grid; gap: 16px;")
-					.add(renderTextHeader(xml.text("Suggested movies")))
-					.add(Grid.make()
-						.repeat(movies, (movie) => EntityCard.forMovie(movie))
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 16px;")
+						.set("data-hide", `${actors.length === 0}`)
+						.add(...actors.slice(0, 3).map((actor) => EntityRow.forActor(actor)))
+					)
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 24px;")
+						.bind("data-hide", movies.compute((movies) => movies.length === 0))
+						.add(renderTextHeader(xml.text("Suggested movies")))
+						.add(Grid.make()
+							.repeat(movies, (movie) => EntityCard.forMovie(movie))
+						)
 					)
 				)
 				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
@@ -3340,11 +3295,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		let element = xml.element("div")
 			.add(xml.element("div.content")
 				.add(renderTextHeader(xml.text("Movies")))
-			)
-			.add(xml.element("div.content")
 				.add(makeSearchField(query))
-			)
-			.add(xml.element("div.content")
 				.add(Grid.make()
 					.repeat(movies, (movie) => EntityCard.forMovie(movie))
 				)
@@ -3405,18 +3356,18 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 				let element = xml.element("div")
 					.add(xml.element("div.content")
 						.add(renderTextHeader(xml.text(genre.title)))
-					)
-					.add(shows.length === 0 ? undefined : xml.element("div.content")
-						.set("style", "display: grid; gap: 24px;")
-						.add(renderTextHeader(xml.text("Shows")))
-						.add(carouselFactory.make(new ArrayObservable(shows.map((show) => EntityCard.forShow(show)))))
-					)
-					.add(xml.element("div.content")
-						.bind("data-hide", movies.compute((movies) => movies.length === 0))
-						.set("style", "display: grid; gap: 24px;")
-						.add(renderTextHeader(xml.text("Movies")))
-						.add(Grid.make()
-							.repeat(movies, (movie) => EntityCard.forMovie(movie))
+						.add(shows.length === 0 ? undefined : xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.add(renderTextHeader(xml.text("Shows")))
+							.add(carouselFactory.make(new ArrayObservable(shows.map((show) => EntityCard.forShow(show)))))
+						)
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.bind("data-hide", movies.compute((movies) => movies.length === 0))
+							.add(renderTextHeader(xml.text("Movies")))
+							.add(Grid.make()
+								.repeat(movies, (movie) => EntityCard.forMovie(movie))
+							)
 						)
 					)
 					.add(observe(xml.element("div").set("style", "height: 1px;"), load))
@@ -3507,7 +3458,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 					.add(makeIconLink(Icon.makePerson(), "Actors", "actors/"))
 				)
 				.add(xml.element("div")
-					.set("style", "display: grid; gap: 24px")
+					.set("style", "display: grid; gap: 24px;")
 					.bind("data-hide", movies.compute((movies) => movies.length === 0))
 					.add(renderTextHeader(xml.text("Recently added movies")))
 					.add(Grid.make()
@@ -3765,9 +3716,9 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 				.add(xml.element("div.content")
 					.add(EntityCard.forDirectory(directory))
 					.add(xml.element("div")
-						.set("style", "display: grid; gap: 24px;")
+						.set("style", "display: grid; gap: 16px;")
 						.add(xml.element("div")
-							.set("style", "display: grid; gap: 24px;")
+							.set("style", "display: grid; gap: 16px;")
 							.bind("data-hide", directories.compute((directories) => directories.length === 0))
 							.repeat(directories, (directory, directoryIndex) => {
 								return EntityRow.forDirectory(directory, {
@@ -3776,7 +3727,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 							})
 						)
 						.add(xml.element("div")
-							.set("style", "display: grid; gap: 24px;")
+							.set("style", "display: grid; gap: 16px;")
 							.bind("data-hide", files.compute((files) => files.length === 0))
 							.repeat(files, (file, fileIndex) => {
 								return EntityRow.forFile(file, {
