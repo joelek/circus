@@ -3960,7 +3960,7 @@ async function navigate(uri: string, use_cache: boolean = false): Promise<void> 
 				)
 			)
 			.add(xml.element("div")
-				.set("style", "display: grid; gap: 16px;")
+				.set("style", "display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));")
 				.add(xml.element("button")
 					.add(xml.text("Login"))
 					.on("click", async () => {
