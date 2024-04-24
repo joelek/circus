@@ -3738,14 +3738,19 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			let directory = payload.directory;
 			let reachedEnd = new ObservableClass(false);
 			let isLoading = new ObservableClass(false);
-			let entities = new ArrayObservable<Directory | File>([]);
+			let directories = new ArrayObservable<Directory>([]);
+			let files = new ArrayObservable<File>([]);
 			let merger = new DirectoryContentMerger(token ?? "", directory_id);
 			async function load(): Promise<void> {
 				if (!reachedEnd.getState() && !isLoading.getState()) {
 					isLoading.updateState(true);
 					let results = await merger.fetch(12);
 					for (let { entity } of results) {
-						entities.append(entity);
+						if (Directory.is(entity)) {
+							directories.append(entity);
+						} else {
+							files.append(entity);
+						}
 					}
 					if (results.length === 0) {
 						reachedEnd.updateState(true);
@@ -3758,12 +3763,24 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 					.add(EntityCard.forDirectory(directory))
 					.add(xml.element("div")
 						.set("style", "display: grid; gap: 24px;")
-						.bind("data-hide", entities.compute((entities) => entities.length === 0))
-						.repeat(entities, (entity, entityIndex) => {
-							return EntityRow.forEntity(entity, {
-								playbackButton: PlaybackButton.forDirectory(directory, entityIndex)
-							});
-						})
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.bind("data-hide", directories.compute((directories) => directories.length === 0))
+							.repeat(directories, (directory, directoryIndex) => {
+								return EntityRow.forDirectory(directory, {
+									playbackButton: PlaybackButton.forDirectory(directory)
+								});
+							})
+						)
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.bind("data-hide", files.compute((files) => files.length === 0))
+							.repeat(files, (file, fileIndex) => {
+								return EntityRow.forFile(file, {
+									playbackButton: PlaybackButton.forDirectory(directory, fileIndex)
+								});
+							})
+						)
 					)
 				)
 				.add(observe(xml.element("div").set("style", "height: 1px;"), load))

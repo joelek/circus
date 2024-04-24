@@ -8,7 +8,6 @@ import * as utils from "../utils";
 import { IconFactory } from "./Icon";
 import { Client } from "../api/schema/api/client";
 import { ContextAlbum, ContextArtist, ContextDirectory, ContextDisc, ContextEpisode, ContextFile, ContextMovie, ContextPlaylist, ContextSeason, ContextShow, ContextTrack, ContextYear } from "../player/schema/objects";
-import { getIndexRange, getTotalNumberOfFiles } from "../player/client";
 
 const CSS = `
 	.playback-button {
@@ -342,27 +341,23 @@ export class PlaybackButtonFactory {
 		throw `Expected code to be unreachable!`;
 	}
 
-	forDirectory(directory: api.Directory, entryIndex?: number): xnode.XElement {
-		let isContext = observables.computed((context, currentEntry, currentEntryIndex) => {
+	forDirectory(directory: api.Directory, fileIndex?: number): xnode.XElement {
+		let isContext = observables.computed((context, currentEntry) => {
 			if (!ContextDirectory.is(context) || !ContextFile.is(currentEntry)) {
 				return false;
 			}
 			if (context.directory_id !== directory.directory_id) {
 				return false;
 			}
-			if (currentEntryIndex == null) {
-				return false;
-			}
-			if (entryIndex != null) {
-				let { offset, length } = getIndexRange(context, entryIndex);
-				if (currentEntryIndex < offset || currentEntryIndex >= offset + length) {
+			if (fileIndex != null) {
+				if (context.files[fileIndex].file_id !== currentEntry.file_id) {
 					return false;
 				}
 			}
 			return true;
-		}, this.player.context, this.player.currentEntry, this.player.currentEntryIndex);
+		}, this.player.context, this.player.currentEntry);
 		return this.make(isContext, {
-			play: async () => this.player.playDirectory(await this.getDirectoryContext(directory), entryIndex)
+			play: async () => this.player.playDirectory(await this.getDirectoryContext(directory), fileIndex)
 		});
 	}
 

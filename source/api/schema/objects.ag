@@ -269,7 +269,6 @@ guard Directory: DirectoryBase & {
 };
 
 guard DirectoryContext: Directory & {
-	"directories": DirectoryContext[],
 	"files": FileContext[]
 };
 

@@ -3,31 +3,6 @@ import * as observers from "../observers/";
 import * as schema from "./schema/";
 import * as typesockets from "../typesockets/client";
 
-export function getTotalNumberOfFiles(directory: schema.objects.ContextDirectory): number {
-	let total = 0;
-	for (let subdirectory of directory.directories) {
-		total += getTotalNumberOfFiles(subdirectory);
-	}
-	total += directory.files.length;
-	return total;
-};
-
-export function getIndexRange(directory: schema.objects.ContextDirectory, entryIndex: number): { offset: number; length: number; } {
-	let offset = 0;
-	for (let i = 0; i < entryIndex; i++) {
-		if (i < directory.directories.length) {
-			offset += getTotalNumberOfFiles(directory.directories[i]);
-		} else {
-			offset += 1;
-		}
-	}
-	let length = entryIndex < directory.directories.length ? getTotalNumberOfFiles(directory.directories[entryIndex]) : 1;
-	return {
-		offset,
-		length
-	};
-};
-
 export class ContextClient {
 	private tsc: typesockets.TypeSocketClient<schema.messages.Autoguard.Guards>;
 	readonly estimatedProgress = new observers.ObservableClass(undefined as number | undefined);
@@ -126,15 +101,9 @@ export class ContextClient {
 		} else if (schema.objects.ContextDirectory.is(context)) {
 			let files = [] as schema.objects.ContextItem[];
 			let directory = context;
-			function flatten(directory: schema.objects.ContextDirectory): void {
-				for (let subdirectory of directory.directories) {
-					flatten(subdirectory);
-				}
-				for (let file of directory.files) {
-					files.push(file);
-				}
+			for (let file of directory.files) {
+				files.push(file);
 			}
-			flatten(directory);
 			return files;
 		} else if (schema.objects.ContextFile.is(context)) {
 			let files = [] as schema.objects.ContextItem[];
@@ -661,15 +630,15 @@ export class ContextClient {
 		return this.sendPlay(artist, index);
 	}
 
-	playDirectory(directory: schema.objects.ContextDirectory, entryIndex?: number): void {
+	playDirectory(directory: schema.objects.ContextDirectory, fileIndex?: number): void {
 		let index: number | undefined;
-		if (is.present(entryIndex)) {
-			let directories = directory.directories;
+		if (is.present(fileIndex)) {
+			index = index ?? 0;
 			let files = directory.files;
-			if (entryIndex < 0 || entryIndex >= directories.length + files.length) {
-				throw `Expected ${entryIndex} to be a number between 0 and ${directories.length + files.length}!`;
+			if (fileIndex < 0 || fileIndex >= files.length) {
+				throw `Expected ${fileIndex} to be a number between 0 and ${files.length}!`;
 			}
-			index = getIndexRange(directory, entryIndex).offset;
+			index += fileIndex;
 		}
 		return this.sendPlay(directory, index);
 	}

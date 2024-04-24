@@ -830,11 +830,6 @@ export async function getDirectoryContext(queue: ReadableQueue, directory_id: st
 		directory_id: directory.directory_id,
 		name: directory.name
 	};
-	for (let subdirectory of await atlas.links.directory_directories.filter(queue, directory_id === "0000000000000000" ? undefined : { directory_id: binid(directory_id) })) {
-		try {
-			directories.push(await getDirectoryContext(queue, hexid(subdirectory.directory_id), api_user_id, directory_as_parent));
-		} catch (error) {}
-	}
 	for (let file of await atlas.links.directory_files.filter(queue, directory_id === "0000000000000000" ? undefined : { directory_id: binid(directory_id) })) {
 		try {
 			files.push(await getFileContext(queue, hexid(file.file_id), api_user_id, directory_as_parent));
@@ -842,7 +837,6 @@ export async function getDirectoryContext(queue: ReadableQueue, directory_id: st
 	}
 	return {
 		...directory,
-		directories,
 		files
 	};
 };

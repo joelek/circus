@@ -741,7 +741,6 @@ export type Directory = autoguard.guards.Intersection<[
 export const DirectoryContext: autoguard.serialization.MessageGuard<DirectoryContext> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => Directory),
 	autoguard.guards.Object.of({
-		"directories": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => DirectoryContext)),
 		"files": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => FileContext))
 	}, {})
 );
@@ -749,7 +748,6 @@ export const DirectoryContext: autoguard.serialization.MessageGuard<DirectoryCon
 export type DirectoryContext = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<Directory>,
 	autoguard.guards.Object<{
-		"directories": autoguard.guards.Array<autoguard.guards.Reference<DirectoryContext>>,
 		"files": autoguard.guards.Array<autoguard.guards.Reference<FileContext>>
 	}, {}>
 ]>;
