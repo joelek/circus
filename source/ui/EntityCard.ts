@@ -337,11 +337,7 @@ export class EntityCardFactory {
 	}
 
 	forFile(file: api.File, options: Options = {}): xnode.XElement {
-		if (options.playbackButton == null) {
-			if (file.mime.startsWith("audio/") || file.mime.startsWith("video/")) {
-				options.playbackButton = this.PlaybackButton.forFile(file);
-			}
-		}
+		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forFile(file);
 		let link = this.entityLinkFactory.forFile(file);
 		let image = this.ImageBox.forSquare([]);
 		let titles = [

@@ -269,6 +269,7 @@ guard Directory: DirectoryBase & {
 };
 
 guard DirectoryContext: Directory & {
+	"directories": DirectoryContext[],
 	"files": FileContext[]
 };
 
@@ -280,11 +281,11 @@ guard FileBase: {
 guard File: FileBase & {
 	"size": number,
 	"parent"?: DirectoryBase,
-	"mime": string
+	"media": ../../database/schema/AudioFile | ../../database/schema/VideoFile
 };
 
 guard FileContext: File & {
-	"media": ../../database/schema/AudioFile | ../../database/schema/VideoFile
+
 };
 
 guard EntityBase: ActorBase | AlbumBase | ArtistBase | CueBase | DirectoryBase | DiscBase | EpisodeBase | FileBase | GenreBase | MovieBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase;

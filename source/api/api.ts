@@ -714,7 +714,7 @@ export const server = apiv2.makeServer({
 	getDirectoryContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let context = await handler.getDirectoryContext(queue, options.directory_id, user_id);
+		let context = await handler.getDirectoryContext(queue, options.directory_id, user_id, undefined);
 		return {
 			payload: {
 				context

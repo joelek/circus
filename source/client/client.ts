@@ -3763,7 +3763,9 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 						.bind("data-hide", entities.compute((entities) => entities.length === 0))
 						.add(renderTextHeader(xml.text("Content")))
 						.repeat(entities, (entity, entityIndex) => {
-							return EntityRow.forEntity(entity);
+							return EntityRow.forEntity(entity, {
+								playbackButton: PlaybackButton.forDirectory(directory, entityIndex)
+							});
 						})
 					)
 				)

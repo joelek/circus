@@ -741,6 +741,7 @@ export type Directory = autoguard.guards.Intersection<[
 export const DirectoryContext: autoguard.serialization.MessageGuard<DirectoryContext> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => Directory),
 	autoguard.guards.Object.of({
+		"directories": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => DirectoryContext)),
 		"files": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => FileContext))
 	}, {})
 );
@@ -748,6 +749,7 @@ export const DirectoryContext: autoguard.serialization.MessageGuard<DirectoryCon
 export type DirectoryContext = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<Directory>,
 	autoguard.guards.Object<{
+		"directories": autoguard.guards.Array<autoguard.guards.Reference<DirectoryContext>>,
 		"files": autoguard.guards.Array<autoguard.guards.Reference<FileContext>>
 	}, {}>
 ]>;
@@ -766,7 +768,10 @@ export const File: autoguard.serialization.MessageGuard<File> = autoguard.guards
 	autoguard.guards.Reference.of(() => FileBase),
 	autoguard.guards.Object.of({
 		"size": autoguard.guards.Number,
-		"mime": autoguard.guards.String
+		"media": autoguard.guards.Union.of(
+			autoguard.guards.Reference.of(() => AudioFile),
+			autoguard.guards.Reference.of(() => VideoFile)
+		)
 	}, {
 		"parent": autoguard.guards.Reference.of(() => DirectoryBase)
 	})
@@ -776,7 +781,10 @@ export type File = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<FileBase>,
 	autoguard.guards.Object<{
 		"size": autoguard.guards.Number,
-		"mime": autoguard.guards.String
+		"media": autoguard.guards.Union<[
+			autoguard.guards.Reference<AudioFile>,
+			autoguard.guards.Reference<VideoFile>
+		]>
 	}, {
 		"parent": autoguard.guards.Reference<DirectoryBase>
 	}>
@@ -784,22 +792,12 @@ export type File = autoguard.guards.Intersection<[
 
 export const FileContext: autoguard.serialization.MessageGuard<FileContext> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => File),
-	autoguard.guards.Object.of({
-		"media": autoguard.guards.Union.of(
-			autoguard.guards.Reference.of(() => AudioFile),
-			autoguard.guards.Reference.of(() => VideoFile)
-		)
-	}, {})
+	autoguard.guards.Object.of({}, {})
 );
 
 export type FileContext = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<File>,
-	autoguard.guards.Object<{
-		"media": autoguard.guards.Union<[
-			autoguard.guards.Reference<AudioFile>,
-			autoguard.guards.Reference<VideoFile>
-		]>
-	}, {}>
+	autoguard.guards.Object<{}, {}>
 ]>;
 
 export const EntityBase: autoguard.serialization.MessageGuard<EntityBase> = autoguard.guards.Union.of(

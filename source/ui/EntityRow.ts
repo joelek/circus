@@ -234,7 +234,7 @@ export class EntityRowFactory {
 	}
 
 	forFile(file: api.File, options: Options = {}): xnode.XElement {
-		let playbackButton = "playbackButton" in options ? options.playbackButton : file.mime.startsWith("audio/") || file.mime.startsWith("video/") ? this.PlaybackButton.forFile(file) : undefined;
+		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forFile(file);
 		let link = options.link ?? this.entityLinkFactory.forFile(file);
 		let image = this.ImageBox.forSquare([]);
 		let titles = [

@@ -30,7 +30,7 @@ function makeMediaInformation(item: Episode | Movie | Track | FileContext, media
 		let season = episode.season;
 		let show = season.show;
 		return {
-			contentId: `${media_server_host}/api/files/${item.media.file_id}/content/?token=${token}`,
+			contentId: `${media_server_host}/api/files/${episode.media.file_id}/content/?token=${token}`,
 			contentType: episode.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
@@ -51,7 +51,7 @@ function makeMediaInformation(item: Episode | Movie | Track | FileContext, media
 	} else if (Movie.is(item)) {
 		let movie = item;
 		return {
-			contentId: `${media_server_host}/api/files/${item.media.file_id}/content/?token=${token}`,
+			contentId: `${media_server_host}/api/files/${movie.media.file_id}/content/?token=${token}`,
 			contentType: movie.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
@@ -76,8 +76,8 @@ function makeMediaInformation(item: Episode | Movie | Track | FileContext, media
 		let disc = track.disc;
 		let album = disc.album;
 		return {
-			contentId: `${media_server_host}/api/files/${item.media.file_id}/content/?token=${token}`,
-			contentType: item.media.mime,
+			contentId: `${media_server_host}/api/files/${track.media.file_id}/content/?token=${token}`,
+			contentType: track.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
 				metadataType: 0,
@@ -91,8 +91,8 @@ function makeMediaInformation(item: Episode | Movie | Track | FileContext, media
 	} else if (FileContext.is(item)) {
 		let file = item;
 		return {
-			contentId: `${media_server_host}/api/files/${item.media.file_id}/content/?token=${token}`,
-			contentType: item.media.mime,
+			contentId: `${media_server_host}/api/files/${file.media.file_id}/content/?token=${token}`,
+			contentType: file.media.mime,
 			streamType: "BUFFERED",
 			metadata: {
 				metadataType: 0,
