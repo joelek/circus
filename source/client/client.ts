@@ -866,9 +866,12 @@ style.innerText = `
 		padding: 24px;
 	}
 
-	.content--narrow {
-		max-width: 720px;
+	.drawer-content {
+		display: grid;
+		gap: 48px;
+		padding: 24px;
 	}
+
 
 
 
@@ -1576,7 +1579,7 @@ let appheader = xml.element("div.app__header")
 								}
 							});
 							let payload = await response.payload();
-							let modalPage = xml.element("div.content.content--narrow")
+							let modalPage = xml.element("div.drawer-content")
 								.add(xml.element("div")
 									.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr min-content;")
 									.add(renderTextHeader(xml.text("Change settings")))
@@ -1766,7 +1769,7 @@ let modals = xml.element("div.modal-container")
 	)
 	.add(xml.element("div.scroll-container")
 		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "devices"))
-		.add(xml.element("div.content.content--narrow")
+		.add(xml.element("div.drawer-content")
 			.add(xml.element("div.device-selector")
 				.add(xml.element("div")
 					.set("style", "align-items: center; display: grid; gap: 16px; grid-template-columns: 1fr min-content;")
@@ -1809,7 +1812,7 @@ let modals = xml.element("div.modal-container")
 	)
 	.add(xml.element("div.scroll-container")
 		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "login"))
-		.add(xml.element("div.content.content--narrow")
+		.add(xml.element("div.drawer-content")
 			.add(xml.element("div.login-modal")
 				.add(xml.element("div")
 					.set("style", "display: grid; gap: 16px;")
@@ -1864,7 +1867,7 @@ let modals = xml.element("div.modal-container")
 	)
 	.add(xml.element("div.scroll-container")
 		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "register"))
-		.add(xml.element("div.content.content--narrow")
+		.add(xml.element("div.drawer-content")
 			.add(xml.element("div.login-modal")
 				.add(xml.element("div")
 					.set("style", "display: grid; gap: 16px;")
@@ -1955,7 +1958,7 @@ let modals = xml.element("div.modal-container")
 	)
 	.add(xml.element("div.scroll-container")
 		.bind("data-hide", showModal.addObserver((showModal) => showModal !== "context"))
-		.add(xml.element("div.content.content--narrow")
+		.add(xml.element("div.drawer-content")
 			.repeat(contextMenuItems, (contextMenuItem) => contextMenuItem)
 		)
 	);
@@ -3966,7 +3969,8 @@ async function navigate(uri: string, use_cache: boolean = false): Promise<void> 
 		while (is.present(mount.lastChild)) {
 			mount.lastChild.remove();
 		}
-		mount.appendChild(xml.element("div.content.content--narrow")
+		mount.appendChild(xml.element("div.content")
+			.set("style", "max-width: 720px;")
 			.add(xml.element("div")
 				.set("style", "display: grid; gap: 24px;")
 				.add(renderTextHeader(
