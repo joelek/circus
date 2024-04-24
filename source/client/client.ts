@@ -3768,7 +3768,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 							.bind("data-hide", directories.compute((directories) => directories.length === 0))
 							.repeat(directories, (directory, directoryIndex) => {
 								return EntityRow.forDirectory(directory, {
-									playbackButton: PlaybackButton.forDirectory(directory)
+									playbackButton: undefined
 								});
 							})
 						)
