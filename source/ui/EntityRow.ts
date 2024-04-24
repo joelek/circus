@@ -200,7 +200,9 @@ export class EntityRowFactory {
 		let titles = [
 			this.entityTitleFactory.forDirectory(directory)
 		];
-		let subtitles = [] as xnode.XElement[];
+		let subtitles = is.present(directory.parent) ? [
+			this.entityTitleFactory.forDirectory(directory.parent)
+		] : [] as xnode.XElement[];
 		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 
@@ -238,7 +240,9 @@ export class EntityRowFactory {
 		let titles = [
 			this.entityTitleFactory.forFile(file)
 		];
-		let subtitles = [] as xnode.XElement[];
+		let subtitles = is.present(file.parent) ? [
+			this.entityTitleFactory.forDirectory(file.parent)
+		] : [] as xnode.XElement[];
 		return this.make(link, image, playbackButton, titles, subtitles);
 	}
 

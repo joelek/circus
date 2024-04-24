@@ -285,7 +285,9 @@ export class EntityCardFactory {
 		let titles = [
 			this.entityTitleFactory.forDirectory(directory)
 		];
-		let subtitles = [] as xnode.XElement[];
+		let subtitles = is.present(directory.parent) ? [
+			this.entityTitleFactory.forDirectory(directory.parent)
+		] : [] as xnode.XElement[];
 		let tags = [
 			"Directory"
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
@@ -345,7 +347,9 @@ export class EntityCardFactory {
 		let titles = [
 			this.entityTitleFactory.forFile(file)
 		];
-		let subtitles = [] as xnode.XElement[];
+		let subtitles = is.present(file.parent) ? [
+			this.entityTitleFactory.forDirectory(file.parent)
+		] : [] as xnode.XElement[];
 		let tags = [
 			"File",
 			metadata.formatSize(file.size)
