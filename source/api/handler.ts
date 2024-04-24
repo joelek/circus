@@ -771,7 +771,7 @@ export async function getDirectoryBase(queue: ReadableQueue, directory_id: strin
 	if (directory_id === "0000000000000000") {
 		return {
 			directory_id: "0000000000000000",
-			name: "Media Root"
+			name: "Directories"
 		};
 	}
 	let directory = await atlas.stores.directories.lookup(queue, { directory_id: binid(directory_id) });
@@ -785,14 +785,14 @@ export async function getDirectory(queue: ReadableQueue, directory_id: string, a
 	if (directory_id === "0000000000000000") {
 		return {
 			directory_id: directory_id,
-			name: "Media Root"
+			name: "Directories"
 		};
 	}
 	let base = await getDirectoryBase(queue, directory_id, api_user_id);
 	let directory = await atlas.stores.directories.lookup(queue, { directory_id: binid(directory_id) });
 	parent = parent ?? (directory.parent_directory_id != null ? await getDirectoryBase(queue, hexid(directory.parent_directory_id), api_user_id) : {
 		directory_id: "0000000000000000",
-		name: "Media Root"
+		name: "Directories"
 	});
 	return {
 		...base,
@@ -878,7 +878,7 @@ export async function getFile(queue: ReadableQueue, file_id: string, api_user_id
 	let file = await atlas.stores.files.lookup(queue, { file_id: binid(file_id) });
 	parent = parent ?? (file.parent_directory_id != null ? await getDirectoryBase(queue, hexid(file.parent_directory_id), api_user_id) : {
 		directory_id: "0000000000000000",
-		name: "Media Root"
+		name: "Directories"
 	});
 	let media = await getFileMedia(queue, file);
 	return {

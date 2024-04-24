@@ -3846,7 +3846,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 							.add(makeIconLink(Icon.makeSpeaker(), "Listen", "audio/"))
 							.add(makeIconLink(Icon.makeMagnifyingGlass(), "Search", "search/"))
 							.add(makeIconLink(Icon.makeCalendar(), "Years", "years/"))
-							.add(makeIconLink(Icon.makeFolder(), "Media Root", "directories/0000000000000000/"))
+							.add(makeIconLink(Icon.makeFolder(), "Directories", "directories/0000000000000000/"))
 						)
 						.add(xml.element("div")
 							.set("style", "display: grid; gap: 24px")
