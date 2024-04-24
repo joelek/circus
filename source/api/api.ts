@@ -583,11 +583,6 @@ export const server = apiv2.makeServer({
 	"GET:/users/<user_id>/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		if (options.user_id === user_id) {
-			atlas.transactionManager.enqueueWritableTransaction(async (queue) => {
-				// TODO: Refresh token expiry.
-			});
-		}
 		let user = await handler.lookupUser(queue, options.user_id || user_id, user_id);
 		return {
 			payload: {
