@@ -36,14 +36,18 @@ export const server = apiv2.makeServer({
 		let token = await libauth.createToken(queue, headers["x-circus-username"], headers["x-circus-password"]);
 		return {
 			headers: {
-				"x-circus-token": token
+				"x-circus-token": token,
+				"Cache-Control": "no-store"
 			}
 		}
 	}),
 	"POST:/users/": (request) => atlas.transactionManager.enqueueWritableTransaction(async (queue) => {
 		let payload = await handler.createUser(queue, await request.payload());
 		return {
-			payload
+			payload,
+			headers: {
+				"Cache-Control": "no-store"
+			}
 		};
 	}),
 	"GET:/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
@@ -918,4 +922,9 @@ export const server = apiv2.makeServer({
 			}
 		};
 	})
-}, { urlPrefix: "/api" });
+}, {
+	urlPrefix: "/api",
+	defaultHeaders: [
+		["Cache-Control", "private,max-age=86400"]
+	]
+});
