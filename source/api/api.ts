@@ -913,4 +913,7 @@ export const server = apiv2.makeServer({
 			}
 		};
 	})
-}, { urlPrefix: "/api" });
+}, {
+	urlPrefix: "/api",
+	defaultHeaders: []
+});
