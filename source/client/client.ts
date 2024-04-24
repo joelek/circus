@@ -862,12 +862,12 @@ style.innerText = `
 		display: grid;
 		gap: 48px;
 		margin: 0px auto;
-		max-width: 1280px;
+		max-width: 1608px;
 		padding: 24px;
 	}
 
 	.content--narrow {
-		max-width: 640px;
+		max-width: 720px;
 	}
 
 
@@ -1248,8 +1248,9 @@ style.innerText = `
 	}
 
 	.offline-indicator {
+		box-sizing: border-box;
 		margin: 0px auto;
-		max-width: 1080px;
+		max-width: 1608px;
 		padding: 8px;
 	}
 
