@@ -26,7 +26,7 @@ export class XText implements XNode<globalThis.Text> {
 }
 
 export interface Listener<A extends keyof HTMLElementEventMap> {
-	(event: HTMLElementEventMap[A]): void;
+	(event: HTMLElementEventMap[A]): void | Promise<void>;
 }
 
 export interface Renderer<A> {
@@ -89,12 +89,12 @@ export class XElement implements XNode<globalThis.Element> {
 			listeners = new Array<Listener<A>>();
 			this.listeners.set(kind, listeners as any);
 		}
-		listeners.push((event) => {
+		listeners.push(async (event) => {
 			if (override) {
 				event.preventDefault();
 				event.stopPropagation();
 			}
-			listener(event);
+			await listener(event);
 		});
 		return this;
 	}
