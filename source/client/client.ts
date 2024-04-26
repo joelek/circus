@@ -55,7 +55,6 @@ window.addEventListener("focus", () => {
 	if (!playlists.isOnline()) {
 		playlists.reconnect();
 	}
-	//req<{}, {}>("/discover", {}, () => {});
 });
 
 function hideModalMenu(): void {
@@ -81,231 +80,257 @@ window.addEventListener("keydown", (event) => {
 	}
 });
 
+// Attach a mousedown listener to the body element in order to trigger the listener before all click handlers.
+let videoElementMayBeLocked = new ObservableClass(true);
+function setupVideoElementUnlocker(element: HTMLVideoElement): void {
+	if (!videoElementMayBeLocked.getState()) {
+		return;
+	}
+	async function unlock(event: Event) {
+		event.stopPropagation();
+		event.preventDefault();
+		document.body.removeEventListener("mousedown", unlock);
+		// The source needs to have a duration greater than 0ms in order for "ended" to fire properly on Safari for IOS.
+		element.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbAAqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV////////////////////////////////////////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQDkAAAAAAAAAGw9wrNaQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/+MYxDsAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/+MYxHYAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+		element.addEventListener("ended", function ended() {
+			element.removeEventListener("ended", ended);
+			videoElementMayBeLocked.updateState(false);
+		});
+		await element.play();
+	}
+	document.body.addEventListener("mousedown", unlock, false);
+};
 let lastVideo = document.createElement("video");
 let currentVideo = document.createElement("video");
 let nextVideo = document.createElement("video");
 
+setupVideoElementUnlocker(currentVideo);
+
 let canCurrentVideoSeek = new ObservableClass(false);
 let canCurrentVideoPlay = new ObservableClass(false);
 
-currentVideo.addEventListener("loadstart", () => {
+videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
+	if (videoElementMayBeLocked) {
+		return;
+	}
 
-});
-currentVideo.addEventListener("loadedmetadata", () => {
-	session.update();
-});
-currentVideo.addEventListener("loadedmetadata", () => {
-	canCurrentVideoSeek.updateState(true);
-});
-currentVideo.addEventListener("loadeddata", () => {
+	currentVideo.addEventListener("loadstart", () => {
 
-});
-currentVideo.addEventListener("canplay", () => {
+	});
+	currentVideo.addEventListener("loadedmetadata", () => {
+		session.update();
+	});
+	currentVideo.addEventListener("loadedmetadata", () => {
+		canCurrentVideoSeek.updateState(true);
+	});
+	currentVideo.addEventListener("loadeddata", () => {
 
-});
-currentVideo.addEventListener("canplaythrough", () => {
-	canCurrentVideoPlay.updateState(true);
-});
-currentVideo.addEventListener("waiting", () => {
-	canCurrentVideoPlay.updateState(false);
-});
-currentVideo.addEventListener("stalled", () => {
+	});
+	currentVideo.addEventListener("canplay", () => {
 
-});
-currentVideo.addEventListener("suspended", () => {
+	});
+	currentVideo.addEventListener("canplaythrough", () => {
+		canCurrentVideoPlay.updateState(true);
+	});
+	currentVideo.addEventListener("waiting", () => {
+		canCurrentVideoPlay.updateState(false);
+	});
+	currentVideo.addEventListener("stalled", () => {
 
-});
-currentVideo.addEventListener("seeking", () => {
-	canCurrentVideoPlay.updateState(false);
-});
-currentVideo.addEventListener("seeked", () => {
-	canCurrentVideoPlay.updateState(true);
-});
-currentVideo.addEventListener("playing", () => {
-	player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
-});
-currentVideo.addEventListener("playing", () => {
-	player.setPlaying(true);
-});
-currentVideo.addEventListener("pause", () => {
-	player.setPlaying(false);
-});
-currentVideo.addEventListener("ended", () => {
-	player.next();
-});
+	});
+	currentVideo.addEventListener("suspended", () => {
+
+	});
+	currentVideo.addEventListener("seeking", () => {
+		canCurrentVideoPlay.updateState(false);
+	});
+	currentVideo.addEventListener("seeked", () => {
+		canCurrentVideoPlay.updateState(true);
+	});
+	currentVideo.addEventListener("playing", () => {
+		player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
+	});
+	currentVideo.addEventListener("playing", () => {
+		player.setPlaying(true);
+	});
+	currentVideo.addEventListener("pause", () => {
+		player.setPlaying(false);
+	});
+	currentVideo.addEventListener("ended", () => {
+		player.next();
+	});
 
 
-{
-	let computer = () => {
-		if (canCurrentVideoSeek.getState()) {
-			currentVideo.currentTime = player.progress.getState() ?? 0;
-		}
-	};
-	canCurrentVideoSeek.addObserver(computer);
-	player.progress.addObserver(computer);
-}
-{
-	let computer = async () => {
-		if (canCurrentVideoPlay.getState()) {
-			if (player.playback.getState()) {
-				await currentVideo.play();
+	{
+		let computer = () => {
+			if (canCurrentVideoSeek.getState()) {
+				currentVideo.currentTime = player.progress.getState() ?? 0;
+			}
+		};
+		canCurrentVideoSeek.addObserver(computer);
+		player.progress.addObserver(computer);
+	}
+	{
+		let computer = async () => {
+			if (canCurrentVideoPlay.getState()) {
+				if (player.playback.getState()) {
+					await currentVideo.play();
+				} else {
+					currentVideo.pause();
+				}
 			} else {
 				currentVideo.pause();
 			}
+		};
+		// The computer will not be awaited by ObservableClass since it doesn't handle async observers. This may throw errors when play() is interrupted.
+		canCurrentVideoPlay.addObserver(computer);
+		player.playback.addObserver(computer);
+	}
+
+	{
+		let computer = () => {
+			let canPlayLast = player.canPlayLast.getState();
+			let canPlayCurrent = player.canPlayCurrent.getState();
+			let canPlayNext = player.canPlayNext.getState();
+			session.setHandlers({
+				play: canPlayCurrent ? player.resume.bind(player) : null,
+				pause: canPlayCurrent ? player.pause.bind(player) : null,
+				previoustrack: canPlayLast ? player.last.bind(player) : null,
+				seekto: canPlayCurrent ? (details) => {
+					player.seek(details.seekTime ?? undefined);
+				} : null,
+				nexttrack: canPlayNext ? player.next.bind(player) : null
+			});
+		};
+		player.canPlayLast.addObserver(computer);
+		player.canPlayCurrent.addObserver(computer);
+		player.canPlayNext.addObserver(computer);
+	}
+	let mediaPlayerTitle = new ObservableClass(""); // not used
+	let mediaPlayerSubtitle = new ObservableClass(""); // not used
+	player.currentEntry.addObserver((currentEntry) => {
+		if (is.present(currentEntry)) {
+			if (Episode.is(currentEntry)) {
+				let episode = currentEntry;
+				let season = episode.season;
+				let show = season.show;
+				mediaPlayerTitle.updateState(episode.title);
+				mediaPlayerSubtitle.updateState([ show.title, `Season ${episode.season.number}` ].join(" \u00b7 "));
+				session.setMetadata({
+					title: episode.title
+				});
+			} else if (Movie.is(currentEntry)) {
+				let movie = currentEntry;
+				mediaPlayerTitle.updateState(movie.title);
+				mediaPlayerSubtitle.updateState(movie.genres.map((genre) => genre.title).join(" \u00b7 "));
+				session.setMetadata({
+					title: movie.title,
+					artwork: movie.artwork.map((image) => ({
+						src: `/api/files/${image.file_id}/content/?token=${token}`,
+						sizes: `${image.width}x${image.height}`,
+						type: image.mime
+					}))
+				});
+			} else if (Track.is(currentEntry)) {
+				let track = currentEntry;
+				let disc = track.disc;
+				let album = disc.album;
+				mediaPlayerTitle.updateState(track.title);
+				mediaPlayerSubtitle.updateState([ ...track.artists.map((artist) => artist.title), track.disc.album.title ].join(" \u00b7 "));
+				session.setMetadata({
+					title: track.title,
+					artist: track.artists.map((artist) => artist.title).join(" \u00b7 "),
+					album: album.title,
+					artwork: album.artwork.map((image) => ({
+						src: `/api/files/${image.file_id}/content/?token=${token}`,
+						sizes: `${image.width}x${image.height}`,
+						type: image.mime
+					}))
+				});
+			} else if (ContextFile.is(currentEntry)) {
+				let file = currentEntry;
+				mediaPlayerTitle.updateState(file.name);
+				mediaPlayerSubtitle.updateState([
+					currentEntry.parent?.name
+				].filter((string) => string != null).join(" \u00b7 "));
+				session.setMetadata({
+					title: file.name
+				});
+			} else {
+				throw `Expected code to be unreachable!`;
+			}
 		} else {
-			currentVideo.pause();
+			mediaPlayerTitle.updateState("");
+			mediaPlayerSubtitle.updateState("");
+			session.setMetadata({});
 		}
-	};
-	// The computer will not be awaited by ObservableClass since it doesn't handle async observers. This may throw errors when play() is interrupted.
-	canCurrentVideoPlay.addObserver(computer);
-	player.playback.addObserver(computer);
-}
-{
-	let computer = () => {
-		let canPlayLast = player.canPlayLast.getState();
-		let canPlayCurrent = player.canPlayCurrent.getState();
-		let canPlayNext = player.canPlayNext.getState();
-		session.setHandlers({
-			play: canPlayCurrent ? player.resume.bind(player) : null,
-			pause: canPlayCurrent ? player.pause.bind(player) : null,
-			previoustrack: canPlayLast ? player.last.bind(player) : null,
-			seekto: canPlayCurrent ? (details) => {
-				player.seek(details.seekTime ?? undefined);
-			} : null,
-			nexttrack: canPlayNext ? player.next.bind(player) : null
-		});
-	};
-	player.canPlayLast.addObserver(computer);
-	player.canPlayCurrent.addObserver(computer);
-	player.canPlayNext.addObserver(computer);
-}
-let mediaPlayerTitle = new ObservableClass("");
-let mediaPlayerSubtitle = new ObservableClass("");
-player.currentEntry.addObserver((currentEntry) => {
-	if (is.present(currentEntry)) {
-		if (Episode.is(currentEntry)) {
-			let episode = currentEntry;
-			let season = episode.season;
-			let show = season.show;
-			mediaPlayerTitle.updateState(episode.title);
-			mediaPlayerSubtitle.updateState([ show.title, `Season ${episode.season.number}` ].join(" \u00b7 "));
-			session.setMetadata({
-				title: episode.title
-			});
-		} else if (Movie.is(currentEntry)) {
-			let movie = currentEntry;
-			mediaPlayerTitle.updateState(movie.title);
-			mediaPlayerSubtitle.updateState(movie.genres.map((genre) => genre.title).join(" \u00b7 "));
-			session.setMetadata({
-				title: movie.title,
-				artwork: movie.artwork.map((image) => ({
-					src: `/api/files/${image.file_id}/content/?token=${token}`,
-					sizes: `${image.width}x${image.height}`,
-					type: image.mime
-				}))
-			});
-		} else if (Track.is(currentEntry)) {
-			let track = currentEntry;
-			let disc = track.disc;
-			let album = disc.album;
-			mediaPlayerTitle.updateState(track.title);
-			mediaPlayerSubtitle.updateState([ ...track.artists.map((artist) => artist.title), track.disc.album.title ].join(" \u00b7 "));
-			session.setMetadata({
-				title: track.title,
-				artist: track.artists.map((artist) => artist.title).join(" \u00b7 "),
-				album: album.title,
-				artwork: album.artwork.map((image) => ({
-					src: `/api/files/${image.file_id}/content/?token=${token}`,
-					sizes: `${image.width}x${image.height}`,
-					type: image.mime
-				}))
-			});
-		} else if (ContextFile.is(currentEntry)) {
-			let file = currentEntry;
-			mediaPlayerTitle.updateState(file.name);
-			mediaPlayerSubtitle.updateState([
-				currentEntry.parent?.name
-			].filter((string) => string != null).join(" \u00b7 "));
-			session.setMetadata({
-				title: file.name
-			});
-		} else {
-			throw `Expected code to be unreachable!`;
-		}
-	} else {
-		mediaPlayerTitle.updateState("");
-		mediaPlayerSubtitle.updateState("");
-		session.setMetadata({});
+	});
+	{
+		let computer = () => {
+			let lastLocalEntry = player.lastLocalEntry.getState();
+			let token = player.token.getState();
+			if (is.absent(lastLocalEntry) || is.absent(token)) {
+				lastVideo.src = ``;
+				return;
+			} else {
+				lastVideo.src = `/api/files/${lastLocalEntry.media.file_id}/content/?token=${token}`;
+			}
+		};
+		player.lastLocalEntry.addObserver(computer);
+		player.token.addObserver(computer);
+	}
+	{
+		let computer = () => {
+			canCurrentVideoPlay.updateState(false);
+			canCurrentVideoSeek.updateState(false);
+			let currentLocalEntry = player.currentLocalEntry.getState();
+			let token = player.token.getState();
+			while (is.present(currentVideo.lastChild)) {
+				currentVideo.removeChild(currentVideo.lastChild);
+			}
+			if (is.absent(currentLocalEntry) || is.absent(token)) {
+				currentVideo.src = ``;
+				return;
+			} else {
+				currentVideo.src = `/api/files/${currentLocalEntry.media.file_id}/content/?token=${token}`;
+				currentVideo.load();
+			}
+			if (Movie.is(currentLocalEntry) || Episode.is(currentLocalEntry)) {
+				let subtitles = currentLocalEntry.subtitles;
+				let defaultSubtitle = subtitles.find((subtitle) => subtitle.language?.iso_639_2 === "swe") ?? subtitles.find((subtitle) => subtitle.language?.iso_639_2 === "eng") ?? subtitles.find((subtitle) => true);
+				for (let subtitle of subtitles) {
+					let element = document.createElement("track");
+					element.src = `/api/files/${subtitle.file_id}/content/?token=${token}`;
+					if (is.present(subtitle.language)) {
+						element.label = subtitle.language.name;
+						element.srclang = subtitle.language.iso_639_1;
+						element.kind = "subtitles";
+					}
+					if (subtitle === defaultSubtitle) {
+						element.setAttribute("default", "");
+					}
+					currentVideo.appendChild(element);
+				}
+			}
+		};
+		player.currentLocalEntry.addObserver(computer);
+		player.token.addObserver(computer);
+	}
+	{
+		let computer = () => {
+			let nextLocalEntry = player.nextLocalEntry.getState();
+			let token = player.token.getState();
+			if (is.absent(nextLocalEntry) || is.absent(token)) {
+				nextVideo.src = ``;
+				return;
+			} else {
+				nextVideo.src = `/api/files/${nextLocalEntry.media.file_id}/content/?token=${token}`;
+			}
+		};
+		player.nextLocalEntry.addObserver(computer);
+		player.token.addObserver(computer);
 	}
 });
-{
-	let computer = () => {
-		let lastLocalEntry = player.lastLocalEntry.getState();
-		let token = player.token.getState();
-		if (is.absent(lastLocalEntry) || is.absent(token)) {
-			lastVideo.src = ``;
-			return;
-		} else {
-			lastVideo.src = `/api/files/${lastLocalEntry.media.file_id}/content/?token=${token}`;
-		}
-	};
-	player.lastLocalEntry.addObserver(computer);
-	player.token.addObserver(computer);
-}
-{
-	let computer = () => {
-		canCurrentVideoPlay.updateState(false);
-		canCurrentVideoSeek.updateState(false);
-		let currentLocalEntry = player.currentLocalEntry.getState();
-		let token = player.token.getState();
-		while (is.present(currentVideo.lastChild)) {
-			currentVideo.removeChild(currentVideo.lastChild);
-		}
-		if (is.absent(currentLocalEntry) || is.absent(token)) {
-			currentVideo.src = ``;
-			return;
-		} else {
-			currentVideo.src = `/api/files/${currentLocalEntry.media.file_id}/content/?token=${token}`;
-			currentVideo.load();
-		}
-		if (Movie.is(currentLocalEntry) || Episode.is(currentLocalEntry)) {
-			let subtitles = currentLocalEntry.subtitles;
-			let defaultSubtitle = subtitles.find((subtitle) => subtitle.language?.iso_639_2 === "swe") ?? subtitles.find((subtitle) => subtitle.language?.iso_639_2 === "eng") ?? subtitles.find((subtitle) => true);
-			for (let subtitle of subtitles) {
-				let element = document.createElement("track");
-				element.src = `/api/files/${subtitle.file_id}/content/?token=${token}`;
-				if (is.present(subtitle.language)) {
-					element.label = subtitle.language.name;
-					element.srclang = subtitle.language.iso_639_1;
-					element.kind = "subtitles";
-				}
-				if (subtitle === defaultSubtitle) {
-					element.setAttribute("default", "");
-				}
-				currentVideo.appendChild(element);
-			}
-		}
-	};
-	player.currentLocalEntry.addObserver(computer);
-	player.token.addObserver(computer);
-}
-{
-	let computer = () => {
-		let nextLocalEntry = player.nextLocalEntry.getState();
-		let token = player.token.getState();
-		if (is.absent(nextLocalEntry) || is.absent(token)) {
-			nextVideo.src = ``;
-			return;
-		} else {
-			nextVideo.src = `/api/files/${nextLocalEntry.media.file_id}/content/?token=${token}`;
-		}
-	};
-	player.nextLocalEntry.addObserver(computer);
-	player.token.addObserver(computer);
-}
-
-
-
 
 
 
