@@ -141,6 +141,7 @@ export class ContextClient {
 		this.context.updateState(context);
 		this.currentEntryIndex.updateState(index);
 		this.order.updateState(order);
+		this.progress.updateState(0);
 		this.playback.updateState(true);
 		this.playing.updateState(false);
 		this.isCurrentEntryVideo.updateState(false);
