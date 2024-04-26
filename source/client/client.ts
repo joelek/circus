@@ -2004,13 +2004,26 @@ let mount = xml.element("div.scroll-container")
 maincontent.appendChild(mount);
 maincontent.appendChild(modals.render());
 
+let messageBarMessage = new ObservableClass("" as string);
+let hideMessageBar = messageBarMessage.addObserver((message) => message === "");
+{
+	let computer = () => {
+		if (!player.isOnline.getState()) {
+			messageBarMessage.updateState("Playback system offline, attempting to reconnect...");
+		} else {
+			messageBarMessage.updateState("");
+		}
+	};
+	player.isOnline.addObserver(computer);
+}
+
 let mpw = xml.element("div.app__navigation")
 	.bind("data-hide", showUserInterface.addObserver((showUserInterface) => !showUserInterface))
 	.add(xml.element("div.app__message-bar")
-		.bind("data-hide", player.isOnline.addObserver((isOnline) => isOnline))
+		.bind("data-hide", hideMessageBar)
 		.add(xml.element("div.offline-indicator")
 			.add(xml.element("div.offline-indicator__content")
-				.add(xml.text("Playback system offline, attempting to reconnect..."))
+				.add(xml.text(messageBarMessage))
 			)
 		)
 	)
