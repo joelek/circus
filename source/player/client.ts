@@ -547,6 +547,18 @@ export class ContextClient {
 		this.tsc.close();
 	}
 
+	enable(): void {
+		let localDevice = this.localDevice.getState();
+		if (localDevice != null) {
+			this.tsc.send("SetLocalDevice", {
+				device: {
+					...localDevice,
+					enabled: true
+				}
+			});
+		}
+	}
+
 	last(): void {
 		let lastEntryIndex = this.lastEntryIndex.getState();
 		if (is.present(lastEntryIndex)) {

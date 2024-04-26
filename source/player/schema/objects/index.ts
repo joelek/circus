@@ -111,7 +111,8 @@ export const Device: autoguard.serialization.MessageGuard<Device> = autoguard.gu
 	"id": autoguard.guards.String,
 	"protocol": autoguard.guards.String,
 	"name": autoguard.guards.String,
-	"type": autoguard.guards.String
+	"type": autoguard.guards.String,
+	"enabled": autoguard.guards.Boolean
 }, {});
 
 export type Device = autoguard.guards.Object<{
@@ -119,7 +120,8 @@ export type Device = autoguard.guards.Object<{
 	"id": autoguard.guards.String,
 	"protocol": autoguard.guards.String,
 	"name": autoguard.guards.String,
-	"type": autoguard.guards.String
+	"type": autoguard.guards.String,
+	"enabled": autoguard.guards.Boolean
 }, {}>;
 
 export const Session: autoguard.serialization.MessageGuard<Session> = autoguard.guards.Object.of({

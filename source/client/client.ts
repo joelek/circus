@@ -45,7 +45,7 @@ function makeUrl(tail: string): string {
 }
 
 let did = utils.generateHexId(16);
-let player = new client.ContextClient(makeUrl(`context/?type=browser&name=Client&did=${did}`));
+let player = new client.ContextClient(makeUrl(`context/?type=browser&name=Client&did=${did}&enabled=false`));
 let playlists = new PlaylistsClient(makeUrl(`playlists/`));
 
 window.addEventListener("focus", () => {
@@ -113,6 +113,7 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 	if (videoElementMayBeLocked) {
 		return;
 	}
+	player.enable();
 
 	currentVideo.addEventListener("loadstart", () => {
 
@@ -1037,7 +1038,6 @@ style.innerText = `
 
 	.device-selector__device {
 		align-items: center;
-		cursor: pointer;
 		display: grid;
 		gap: 16px;
 		grid-template-columns: min-content 1fr;
@@ -1637,7 +1637,21 @@ let appheader = xml.element("div.app__header")
 									.repeat(devicelist, (device) => xml.element("div.device-selector__device")
 										.add(makeButton()
 											.set("data-active", "" + device.active)
+											.set("data-enabled", "" + device.enabled)
 											.add(Icon.makeBroadcast())
+											.on("click", () => {
+												if (device.enabled) {
+													player.transfer({
+														did: device.did,
+														id: device.id,
+														protocol: device.protocol,
+														name: device.name,
+														type: device.type,
+														enabled: device.enabled
+													});
+													modalPageElements.update([]);
+												}
+											})
 										)
 										.add(xml.element("div.device-selector__device-info")
 											.add(xml.element("div.device-selector__device-name")
@@ -1647,16 +1661,6 @@ let appheader = xml.element("div.app__header")
 												.add(xml.text(device.local ? "Local device" : "Remote device"))
 											)
 										)
-										.on("click", () => {
-											player.transfer({
-												did: device.did,
-												id: device.id,
-												protocol: device.protocol,
-												name: device.name,
-												type: device.type
-											});
-											modalPageElements.update([]);
-										})
 									)
 								)
 								.add(xml.element("div")
@@ -1820,7 +1824,21 @@ let modals = xml.element("div.modal-container")
 					.repeat(devicelist, (device) => xml.element("div.device-selector__device")
 						.add(makeButton()
 							.set("data-active", "" + device.active)
+							.set("data-enabled", "" + device.enabled)
 							.add(Icon.makeBroadcast())
+							.on("click", () => {
+									if (device.enabled) {
+									player.transfer({
+										did: device.did,
+										id: device.id,
+										protocol: device.protocol,
+										name: device.name,
+										type: device.type,
+										enabled: device.enabled
+									});
+									showDevices.updateState(false);
+								}
+							})
 						)
 						.add(xml.element("div.device-selector__device-info")
 							.add(xml.element("div.device-selector__device-name")
@@ -1830,16 +1848,6 @@ let modals = xml.element("div.modal-container")
 								.add(xml.text(device.local ? "Local device" : "Remote device"))
 							)
 						)
-						.on("click", () => {
-							player.transfer({
-								did: device.did,
-								id: device.id,
-								protocol: device.protocol,
-								name: device.name,
-								type: device.type
-							});
-							showDevices.updateState(false);
-						})
 					)
 				)
 			)

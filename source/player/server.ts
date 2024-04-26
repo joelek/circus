@@ -23,12 +23,14 @@ function makeDevice(connection_id: string, connection_url: string): schema.objec
 	let protocol = getQuery(url, "protocol").pop() ?? "";
 	let name = getQuery(url, "name").pop() ?? "";
 	let type = getQuery(url, "type").pop() ?? "";
+	let enabled = getQuery(url, "enabled").pop() !== "false";
 	return {
 		did: did,
 		id: connection_id,
 		protocol: protocol,
 		name: name,
-		type: type
+		type: type,
+		enabled: enabled
 	};
 }
 
@@ -250,6 +252,17 @@ export class ContextServer {
 				this.tss.send("SetContext", session.devices.getState().map((device) => {
 					return device.id;
 				}), message.data);
+			});
+		}));
+		this.tss.addEventListener("app", "SetLocalDevice", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+			await this.getExistingSession(queue, message.connection_id, (session) => {
+				let devices = session.devices.getState();
+				let index = devices.findIndex((device) => device.id === message.connection_id);
+				if (index < 0) {
+					return;
+				}
+				devices.splice(index, 1, message.data.device);
+				session.devices.updateState([...devices]);
 			});
 		}));
 		this.tss.addEventListener("app", "SetDevice", (message) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {

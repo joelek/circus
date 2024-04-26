@@ -31,7 +31,8 @@ guard Device: {
 	"id": string,
 	"protocol": string,
 	"name": string,
-	"type": string
+	"type": string,
+	"enabled": boolean
 };
 
 guard Session: {
