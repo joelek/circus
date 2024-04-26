@@ -271,9 +271,12 @@ export class ContextServer {
 					return device.id;
 				}), message.data);
 				if (is.present(session.device)) {
-					this.tss.send("SetToken", session.device.id, {
-						token: this.tokens.get(message.connection_id)
-					});
+					let token = this.tokens.get(session.device.id);
+					if (is.absent(token)) {
+						this.tss.send("SetToken", session.device.id, {
+							token: this.tokens.get(message.connection_id)
+						});
+					}
 				}
 			});
 		}));
