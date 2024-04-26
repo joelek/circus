@@ -2014,6 +2014,7 @@ function formatTimestamp(ms: number): string {
 
 window.requestAnimationFrame(async function computer() {
 	let currentEntry = player.currentEntry.getState();
+	let playback = player.playback.getState();
 	let playing = player.playing.getState();
 	let estimatedProgress = player.estimatedProgress.getState();
 	let estimatedProgressTimestamp = player.estimatedProgressTimestamp.getState();
@@ -2026,6 +2027,9 @@ window.requestAnimationFrame(async function computer() {
 		}
 		scale = progress / (currentEntry.media.duration_ms / 1000);
 		metadata = `${formatTimestamp(progress * 1000)} / ${formatTimestamp(currentEntry.media.duration_ms)}`;
+	}
+	if (playback && !playing) {
+		metadata = "Buffering...";
 	}
 	let ref = await progresstrack.ref() as HTMLDivElement;
 	ref.style.setProperty("transform", `scale(${scale}, 1.0)`);
