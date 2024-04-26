@@ -85,71 +85,80 @@ let lastVideo = document.createElement("video");
 let currentVideo = document.createElement("video");
 let nextVideo = document.createElement("video");
 
-let unlocked = new ObservableClass(false);
-let silence = "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA==";
-player.playback.addObserver(async (playback) => {
-	if (!unlocked.getState() && playback) {
-		currentVideo.src = silence;
-		try {
-			await currentVideo.play();
-		} catch (error) {}
-		unlocked.updateState(true);
-	}
+let canCurrentVideoSeek = new ObservableClass(false);
+let canCurrentVideoPlay = new ObservableClass(false);
+
+currentVideo.addEventListener("loadstart", () => {
+
 });
-currentVideo.addEventListener("ended", () => {
-	if (currentVideo.src !== silence) {
-		player.next();
-	}
+currentVideo.addEventListener("loadedmetadata", () => {
+	session.update();
 });
-let isLoading = new ObservableClass(true);
-isLoading.addObserver((isLoading) => {
-	if (!isLoading) {
-		session.update();
-	}
+currentVideo.addEventListener("loadedmetadata", () => {
+	canCurrentVideoSeek.updateState(true);
 });
 currentVideo.addEventListener("loadeddata", () => {
-	if (currentVideo.src !== silence) {
-		isLoading.updateState(false);
-	}
+
+});
+currentVideo.addEventListener("canplay", () => {
+
+});
+currentVideo.addEventListener("canplaythrough", () => {
+	canCurrentVideoPlay.updateState(true);
+});
+currentVideo.addEventListener("waiting", () => {
+	canCurrentVideoPlay.updateState(false);
+});
+currentVideo.addEventListener("stalled", () => {
+
+});
+currentVideo.addEventListener("suspended", () => {
+
+});
+currentVideo.addEventListener("seeking", () => {
+	canCurrentVideoPlay.updateState(false);
+});
+currentVideo.addEventListener("seeked", () => {
+	canCurrentVideoPlay.updateState(true);
 });
 currentVideo.addEventListener("playing", () => {
-	if (currentVideo.src !== silence) {
-		player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
-	}
+	player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
 });
 currentVideo.addEventListener("playing", () => {
-	if (currentVideo.src !== silence) {
-		player.setPlaying(true);
-	}
+	player.setPlaying(true);
 });
 currentVideo.addEventListener("pause", () => {
-	if (currentVideo.src !== silence) {
-		player.setPlaying(false);
-	}
+	player.setPlaying(false);
 });
+currentVideo.addEventListener("ended", () => {
+	player.next();
+});
+
+
 {
-	let computer = async () => {
-		if (!isLoading.getState()) {
+	let computer = () => {
+		if (canCurrentVideoSeek.getState()) {
 			currentVideo.currentTime = player.progress.getState() ?? 0;
 		}
 	};
+	canCurrentVideoSeek.addObserver(computer);
 	player.progress.addObserver(computer);
-	isLoading.addObserver(computer);
 }
 {
 	let computer = async () => {
-		if (!isLoading.getState()) {
+		if (canCurrentVideoPlay.getState()) {
 			if (player.playback.getState()) {
-				try {
-					await currentVideo.play();
-				} catch (error) {}
+				await currentVideo.play();
 			} else {
 				currentVideo.pause();
 			}
+		} else {
+			currentVideo.pause();
 		}
 	};
+	// The computer will not be awaited by ObservableClass since it doesn't handle async observers. This may throw errors when play() is interrupted.
+	canCurrentVideoPlay.addObserver(computer);
 	player.playback.addObserver(computer);
-	isLoading.addObserver(computer);
 }
 {
 	let computer = () => {
@@ -245,7 +254,8 @@ player.currentEntry.addObserver((currentEntry) => {
 }
 {
 	let computer = () => {
-		isLoading.updateState(true);
+		canCurrentVideoPlay.updateState(false);
+		canCurrentVideoSeek.updateState(false);
 		let currentLocalEntry = player.currentLocalEntry.getState();
 		let token = player.token.getState();
 		while (is.present(currentVideo.lastChild)) {
