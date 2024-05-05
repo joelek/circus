@@ -548,7 +548,7 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 		let probe: probes.schema.Probe = {
 			resources: []
 		};
-		if (file.name.endsWith(".vtt")) {
+		if (file.name.toLowerCase().endsWith(".vtt")) {
 			probe = probes.vtt.probe(fd);
 			let subtitle_resources = probe.resources.filter((resource): resource is probes.schema.SubtitleResource => resource.type === "subtitle");
 			let subtitle_resource = subtitle_resources.shift();
@@ -584,7 +584,7 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 				} */
 				await indexMetadata(queue, probe);
 			}
-		} else if (file.name.endsWith(".json")) {
+		} else if (file.name.toLowerCase().endsWith(".json")) {
 			probe = probes.json.probe(fd);
 			let metadata_resources = probe.resources.filter((resource): resource is probes.schema.MetadataResource => resource.type === "metadata");
 			let metadata_resource = metadata_resources.shift();
@@ -595,7 +595,7 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 				});
 				await indexMetadata(queue, probe);
 			}
-		} else if (file.name.endsWith(".mp3")) {
+		} else if (file.name.toLowerCase().endsWith(".mp3")) {
 			probe = probes.mp3.probe(fd);
 			let audio_resources = probe.resources.filter((resource): resource is probes.schema.AudioResource => resource.type === "audio");
 			let audio_resource = audio_resources.shift();
@@ -607,7 +607,7 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 				});
 				await indexMetadata(queue, probe, file_id);
 			}
-		} else if (file.name.endsWith(".mp4")) {
+		} else if (file.name.toLowerCase().endsWith(".mp4")) {
 			probe = probes.mp4.probe(fd);
 			let audio_resources = probe.resources.filter((resource): resource is probes.schema.AudioResource => resource.type === "audio");
 			let video_resources = probe.resources.filter((resource): resource is probes.schema.VideoResource => resource.type === "video");
@@ -630,7 +630,7 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 				});
 				await indexMetadata(queue, probe, file_id);
 			}
-		} else if (file.name.endsWith(".jpg") || file.name.endsWith(".jpeg")) {
+		} else if (file.name.toLowerCase().endsWith(".jpg") || file.name.toLowerCase().endsWith(".jpeg")) {
 			probe = probes.jpeg.probe(fd);
 			let image_resources = probe.resources.filter((resource): resource is probes.schema.ImageResource => resource.type === "image");
 			let image_resource = image_resources.shift();
@@ -643,7 +643,7 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 				});
 				await indexMetadata(queue, probe);
 			}
-		} else if (file.name.endsWith(".wav") || file.name.endsWith(".wave")) {
+		} else if (file.name.toLowerCase().endsWith(".wav") || file.name.toLowerCase().endsWith(".wave")) {
 			probe = probes.wav.probe(fd);
 			let audio_resources = probe.resources.filter((resource): resource is probes.schema.AudioResource => resource.type === "audio");
 			let audio_resource = audio_resources.shift();
