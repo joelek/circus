@@ -26,8 +26,8 @@ class RIFFChunk {
 		offset += buffer.length;
 		let type = buffer.subarray(0, 4).toString("ascii");
 		let length = buffer.readUInt32LE(4);
-		if (length > section.length) {
-			throw new Error(`Expected a length of at most ${section.length} bytes, got ${length}!`);
+		if (length > section.length - buffer.length) {
+			throw new Error(`Expected a length of at most ${section.length - buffer.length} bytes, got ${length}!`);
 		}
 		return new RIFFChunk(fd, type, {
 			offset,
@@ -40,9 +40,10 @@ export function probe(fd: number): schema.Probe {
 	let result: schema.Probe = {
 		resources: []
 	};
+	let file_size = libfs.fstatSync(fd).size;
 	let root_chunk = RIFFChunk.parse(fd, {
 		offset: 0,
-		length: libfs.fstatSync(fd).size
+		length: file_size
 	});
 	if (root_chunk.type !== "RIFF") {
 		throw new Error(`Expected a "RIFF" chunk, got "${root_chunk.type}"!`);
@@ -63,7 +64,7 @@ export function probe(fd: number): schema.Probe {
 	}
 	let data_chunk = RIFFChunk.parse(fd, {
 		offset: format_chunk.body.offset + format_chunk.body.length,
-		length: root_chunk.body.length - (format_chunk.body.offset + format_chunk.body.length)
+		length: file_size - (format_chunk.body.offset + format_chunk.body.length)
 	});
 	if (data_chunk.type !== "data") {
 		throw new Error(`Expected a "data" chunk, got "${data_chunk.type}"!`);
