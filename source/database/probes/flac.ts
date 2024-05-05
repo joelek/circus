@@ -1,5 +1,17 @@
 import * as libfs from "fs";
 import * as schema from "./schema";
+import * as is from "../../is";
+
+type Tags = {
+	title?: string,
+	album?: string,
+	year?: number,
+	track_number?: number,
+	disc_number?: number,
+	artist?: string,
+	album_artist?: string,
+	copyright?: string
+};
 
 type Section = {
 	offset: number;
@@ -92,6 +104,55 @@ const StreamInfoBlock = {
 	}
 };
 
+type VorbisCommentBlock = {
+	vendor: string;
+	tags: Array<{ key: string; value: string; }>;
+};
+
+const VorbisCommentBlock = {
+	parse(fd: number, block: MetadataBlock): VorbisCommentBlock {
+		if (block.type !== MetadataBlockType.VORBIS_COMMENT) {
+			throw new Error(`Expected a "VORBIS_COMMENT" metadata block, got "${MetadataBlockType[block.type]}"!`);
+		}
+		let offset = block.body.offset;
+		let dword = Buffer.alloc(4);
+		if (libfs.readSync(fd, dword, 0, dword.length, offset) !== dword.length) {
+			throw new Error(`Expected to read exactly ${dword.length} bytes!`);
+		}
+		offset += dword.length;
+		let vendor = Buffer.alloc(dword.readUint32LE(0));
+		if (libfs.readSync(fd, vendor, 0, vendor.length, offset) !== vendor.length) {
+			throw new Error(`Expected to read exactly ${vendor.length} bytes!`);
+		}
+		offset += vendor.length;
+		if (libfs.readSync(fd, dword, 0, dword.length, offset) !== dword.length) {
+			throw new Error(`Expected to read exactly ${dword.length} bytes!`);
+		}
+		offset += dword.length;
+		let number_of_tags = dword.readUint32LE(0);
+		let tags: Array<{ key: string; value: string; }> = [];
+		for (let i = 0; i < number_of_tags; i++) {
+			if (libfs.readSync(fd, dword, 0, dword.length, offset) !== dword.length) {
+				throw new Error(`Expected to read exactly ${dword.length} bytes!`);
+			}
+			offset += dword.length;
+			let buffer = Buffer.alloc(dword.readUint32LE(0));
+			if (libfs.readSync(fd, buffer, 0, buffer.length, offset) !== buffer.length) {
+				throw new Error(`Expected to read exactly ${buffer.length} bytes!`);
+			}
+			offset += buffer.length;
+			let string = buffer.toString("utf-8").split("=");
+			let key = string[0];
+			let value = string.slice(1).join("=");
+			tags.push({ key, value });
+		}
+		return {
+			vendor: vendor.toString("utf-8"),
+			tags
+		};
+	}
+};
+
 export function probe(fd: number): schema.Probe {
 	let result: schema.Probe = {
 		resources: []
@@ -120,6 +181,84 @@ export function probe(fd: number): schema.Probe {
 	}
 	let stream_info_block = StreamInfoBlock.parse(fd, metadata_blocks[0]);
 	let duration_ms = Math.ceil(stream_info_block.total_samples / stream_info_block.sample_rate_hz * 1000);
+	let tags: Tags = {};
+	let vorbis_comment_block = metadata_blocks.find((one) => one.type === MetadataBlockType.VORBIS_COMMENT);
+	if (vorbis_comment_block != null) {
+		let vorbis_comment = VorbisCommentBlock.parse(fd, vorbis_comment_block);
+		let album = vorbis_comment.tags.find((tag) => tag.key.toLowerCase() === "album");
+		if (album != null) {
+			tags.album = album.value;
+		}
+		let artist = vorbis_comment.tags.find((tag) => tag.key.toLowerCase() === "artist");
+		if (artist != null) {
+			tags.artist = artist.value;
+		}
+		let album_artist = vorbis_comment.tags.find((tag) => tag.key.toLowerCase() === "albumartist");
+		if (album_artist != null) {
+			tags.album_artist = album_artist.value;
+		}
+		let disc_number = vorbis_comment.tags.find((tag) => tag.key.toLowerCase() === "discnumber");
+		if (disc_number != null) {
+			let parts = /^([0-9]+)$/.exec(disc_number.value);
+			if (parts != null) {
+				tags.disc_number = parseInt(parts[1]);
+			}
+		}
+		let track_number = vorbis_comment.tags.find((tag) => tag.key.toLowerCase() === "tracknumber");
+		if (track_number != null) {
+			let parts = /^([0-9]+)$/.exec(track_number.value);
+			if (parts != null) {
+				tags.track_number = parseInt(parts[1]);
+			}
+		}
+		let date = vorbis_comment.tags.find((tag) => tag.key.toLowerCase() === "date");
+		if (date != null) {
+			let parts = /^([0-9]+)$/.exec(date.value);
+			if (parts != null) {
+				tags.year = parseInt(parts[1]);
+			}
+		}
+		let title = vorbis_comment.tags.find((tag) => tag.key.toLowerCase() === "title");
+		if (title != null) {
+			tags.title = title.value;
+		}
+		let copyright = vorbis_comment.tags.find((tag) => tag.key.toLowerCase() === "copyright");
+		if (copyright != null) {
+			tags.copyright = copyright.value;
+		}
+	}
+	if (is.present(tags.title) && is.present(tags.disc_number) && is.present(tags.track_number) && is.present(tags.album)) {
+		let metadata: schema.TrackMetadata = {
+			type: "track",
+			title: tags.title,
+			disc: tags.disc_number,
+			track: tags.track_number,
+			album: {
+				title: tags.album,
+				year: tags.year,
+				artists: is.absent(tags.album_artist) ? [] : tags.album_artist.split(";").map((artist) => artist.trim())
+			},
+			artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
+			copyright: tags.copyright
+		};
+		result.metadata = metadata;
+	} else if (is.present(tags.title) && is.present(tags.artist)) {
+		// TODO: Remove stray track indexing when media directories are presented in the UI.
+		let metadata: schema.TrackMetadata = {
+			type: "track",
+			title: tags.title,
+			disc: 1,
+			track: 1,
+			album: {
+				title: `${tags.title} by ${tags.artist}`,
+				year: tags.year,
+				artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
+			},
+			artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
+			copyright: tags.copyright
+		};
+		result.metadata = metadata;
+	}
 	result.resources.push({
 		type: "audio",
 		duration_ms
