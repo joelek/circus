@@ -603,7 +603,10 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 				await stores.audio_files.insert(queue, {
 					file_id: file_id,
 					mime: "audio/mp3",
-					duration_ms: audio_resource.duration_ms
+					duration_ms: audio_resource.duration_ms,
+					sample_rate_hz: audio_resource.sample_rate_hz ?? null,
+					channel_count: audio_resource.channel_count ?? null,
+					bits_per_sample: audio_resource.bits_per_sample ?? null
 				});
 				await indexMetadata(queue, probe, file_id);
 			}
@@ -626,7 +629,10 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 				await stores.audio_files.insert(queue, {
 					file_id: file_id,
 					mime: "audio/mp4",
-					duration_ms: audio_resource.duration_ms
+					duration_ms: audio_resource.duration_ms,
+					sample_rate_hz: audio_resource.sample_rate_hz ?? null,
+					channel_count: audio_resource.channel_count ?? null,
+					bits_per_sample: audio_resource.bits_per_sample ?? null
 				});
 				await indexMetadata(queue, probe, file_id);
 			}
@@ -651,7 +657,10 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 				await stores.audio_files.insert(queue, {
 					file_id: file_id,
 					mime: "audio/wav",
-					duration_ms: audio_resource.duration_ms
+					duration_ms: audio_resource.duration_ms,
+					sample_rate_hz: audio_resource.sample_rate_hz ?? null,
+					channel_count: audio_resource.channel_count ?? null,
+					bits_per_sample: audio_resource.bits_per_sample ?? null
 				});
 				await indexMetadata(queue, probe, file_id);
 			}
@@ -663,7 +672,10 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 				await stores.audio_files.insert(queue, {
 					file_id: file_id,
 					mime: "audio/flac",
-					duration_ms: audio_resource.duration_ms
+					duration_ms: audio_resource.duration_ms,
+					sample_rate_hz: audio_resource.sample_rate_hz ?? null,
+					channel_count: audio_resource.channel_count ?? null,
+					bits_per_sample: audio_resource.bits_per_sample ?? null
 				});
 				await indexMetadata(queue, probe, file_id);
 			}

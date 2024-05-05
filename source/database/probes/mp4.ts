@@ -40,7 +40,7 @@ class Atom {
 	getChild(type: string): Atom {
 		let children = this.getChildren(type);
 		if (children.length !== 1) {
-			throw `Expected exactly one child!`;
+			throw `Expected exactly one child with type "${type}"!`;
 		}
 		return children[0];
 	}
@@ -131,9 +131,32 @@ export function probe(fd: number): schema.Probe {
 					height
 				};
 			} else if (duration_ms > 0) {
+				let sample_rate_hz: number | undefined;
+				let channel_count: number | undefined;
+				let bits_per_sample: number | undefined;
+				try {
+					let stsd = trak.getChild("mdia").getChild("minf").getChild("stbl").getChild("stsd");
+					let buffer = stsd.readBody();
+					let version = buffer.readUint8(0);
+					if (version !== 0) {
+						throw new Error(`Expected a "STSD" atom with version 0!`);
+					}
+					let flags = buffer.readUintBE(1, 3);
+					let number_of_entries = buffer.readUint32BE(4);
+					let size_of_entry = buffer.readUint32BE(8);
+					let format = buffer.readUint32BE(12);
+					channel_count = buffer.readUint16BE(32);
+					sample_rate_hz = buffer.readUint16BE(40);
+					bits_per_sample = buffer.readUint16BE(34); // Not really technically correct.
+				} catch (error) {
+					console.log(error);
+				}
 				return {
 					type: "audio",
-					duration_ms
+					duration_ms,
+					sample_rate_hz,
+					channel_count,
+					bits_per_sample
 				};
 			} else {
 				return {

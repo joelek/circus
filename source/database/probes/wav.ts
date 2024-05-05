@@ -77,15 +77,18 @@ export function probe(fd: number): schema.Probe {
 	if (audio_format !== 1) {
 		throw new Error(`Expected linear PCM audio format!`);
 	}
-	let number_of_channels = format.readUint16LE(2);
-	let sample_rate = format.readUint32LE(4);
+	let channel_count = format.readUint16LE(2);
+	let sample_rate_hz = format.readUint32LE(4);
 	let byte_rate = format.readUint32LE(8);
 	let block_align = format.readUint16LE(12);
 	let bits_per_sample = format.readUint16LE(14);
 	let duration_ms = Math.ceil(data_chunk.body.length * 1000 / byte_rate);
 	result.resources.push({
 		type: "audio",
-		duration_ms
+		duration_ms,
+		sample_rate_hz,
+		channel_count,
+		bits_per_sample
 	});
 	return result;
 };

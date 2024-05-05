@@ -51,7 +51,10 @@ export type File = atlas.RecordOf<typeof files>;
 const audio_files = context.createStore({
 	file_id: context.createBinaryField(),
 	mime: context.createStringField(), // "audio/mp4" | "audio/mp3"
-	duration_ms: context.createIntegerField()
+	duration_ms: context.createIntegerField(),
+	sample_rate_hz: context.createNullableIntegerField(),
+	channel_count: context.createNullableIntegerField(),
+	bits_per_sample: context.createNullableIntegerField()
 }, ["file_id"], {
 
 });

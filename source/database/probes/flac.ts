@@ -181,6 +181,9 @@ export function probe(fd: number): schema.Probe {
 	}
 	let stream_info_block = StreamInfoBlock.parse(fd, metadata_blocks[0]);
 	let duration_ms = Math.ceil(stream_info_block.total_samples / stream_info_block.sample_rate_hz * 1000);
+	let sample_rate_hz = stream_info_block.sample_rate_hz;
+	let channel_count = stream_info_block.number_of_channels;
+	let bits_per_sample = stream_info_block.bits_per_sample;
 	let tags: Tags = {};
 	let vorbis_comment_block = metadata_blocks.find((one) => one.type === MetadataBlockType.VORBIS_COMMENT);
 	if (vorbis_comment_block != null) {
@@ -261,7 +264,10 @@ export function probe(fd: number): schema.Probe {
 	}
 	result.resources.push({
 		type: "audio",
-		duration_ms
+		duration_ms,
+		sample_rate_hz,
+		channel_count,
+		bits_per_sample
 	});
 	return result;
 };

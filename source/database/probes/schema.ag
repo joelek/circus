@@ -76,7 +76,10 @@ guard Metadata: ShowMetadata | EpisodeMetadata | MovieMetadata | TrackMetadata |
 
 guard AudioResource: {
 	"type": "audio",
-	"duration_ms": number
+	"duration_ms": number,
+	"sample_rate_hz"?: number,
+	"channel_count"?: number,
+	"bits_per_sample"?: number
 };
 
 guard ImageResource: {

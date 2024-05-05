@@ -189,12 +189,20 @@ export type Metadata = autoguard.guards.Union<[
 export const AudioResource: autoguard.serialization.MessageGuard<AudioResource> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("audio"),
 	"duration_ms": autoguard.guards.Number
-}, {});
+}, {
+	"sample_rate_hz": autoguard.guards.Number,
+	"channel_count": autoguard.guards.Number,
+	"bits_per_sample": autoguard.guards.Number
+});
 
 export type AudioResource = autoguard.guards.Object<{
 	"type": autoguard.guards.StringLiteral<"audio">,
 	"duration_ms": autoguard.guards.Number
-}, {}>;
+}, {
+	"sample_rate_hz": autoguard.guards.Number,
+	"channel_count": autoguard.guards.Number,
+	"bits_per_sample": autoguard.guards.Number
+}>;
 
 export const ImageResource: autoguard.serialization.MessageGuard<ImageResource> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("image"),
