@@ -679,6 +679,21 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 				});
 				await indexMetadata(queue, probe, file_id);
 			}
+		} else if (file.name.toLowerCase().endsWith(".ogg")) {
+			probe = probes.ogg.probe(fd);
+			let audio_resources = probe.resources.filter((resource): resource is probes.schema.AudioResource => resource.type === "audio");
+			let audio_resource = audio_resources.shift();
+			if (is.present(audio_resource)) {
+				await stores.audio_files.insert(queue, {
+					file_id: file_id,
+					mime: "audio/ogg",
+					duration_ms: audio_resource.duration_ms,
+					sample_rate_hz: audio_resource.sample_rate_hz ?? null,
+					channel_count: audio_resource.channel_count ?? null,
+					bits_per_sample: audio_resource.bits_per_sample ?? null
+				});
+				await indexMetadata(queue, probe, file_id);
+			}
 		}
 	} catch (error) {
 		console.log(`Indexing failed for "${path}"!`);
