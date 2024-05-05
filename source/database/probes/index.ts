@@ -1,3 +1,4 @@
+export * as flac from "./flac";
 export * as jpeg from "./jpeg";
 export * as json from "./json";
 export * as mp3 from "./mp3";
