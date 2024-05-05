@@ -34,6 +34,7 @@ Circus features a blazingly fast, custom engine for probing and indexing of cont
 * JSON
 * MP3
 * MP4
+* OGG
 * VTT
 * WAV
 
