@@ -643,6 +643,18 @@ async function indexFile(queue: WritableQueue, file: File): Promise<void> {
 				});
 				await indexMetadata(queue, probe);
 			}
+		} else if (file.name.endsWith(".wav") || file.name.endsWith(".wave")) {
+			probe = probes.wav.probe(fd);
+			let audio_resources = probe.resources.filter((resource): resource is probes.schema.AudioResource => resource.type === "audio");
+			let audio_resource = audio_resources.shift();
+			if (is.present(audio_resource)) {
+				await stores.audio_files.insert(queue, {
+					file_id: file_id,
+					mime: "audio/wav",
+					duration_ms: audio_resource.duration_ms
+				});
+				await indexMetadata(queue, probe, file_id);
+			}
 		}
 	} catch (error) {
 		console.log(`Indexing failed for "${path}"!`);
