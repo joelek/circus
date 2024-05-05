@@ -29,6 +29,7 @@ Video: MP4 (H264 + AAC)
 
 Circus features a blazingly fast, custom engine for probing and indexing of content. The engine supports the file formats listed below.
 
+* FLAC
 * JPEG
 * JSON
 * MP3
