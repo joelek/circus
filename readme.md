@@ -34,6 +34,7 @@ Circus features a blazingly fast, custom engine for probing and indexing of cont
 * MP3
 * MP4
 * VTT
+* WAV
 
 Stream information and metadata is extracted from all supported files. The information is stored and indexed into a custom database system.
 
