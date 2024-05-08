@@ -1168,6 +1168,9 @@ style.innerText = `
 		white-space: nowrap;
 	}
 
+	.media-player .image-box {
+		background-color: rgb(31, 31, 31);
+	}
 
 
 
