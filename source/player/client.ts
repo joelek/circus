@@ -55,6 +55,11 @@ export class ContextClient {
 				}
 			}
 			return files;
+		} else if (schema.objects.ContextDisc.is(context)) {
+			let files = [] as schema.objects.ContextItem[];
+			let disc = context;
+			files.push(...disc.tracks);
+			return files;
 		} else if (schema.objects.ContextEpisode.is(context)) {
 			let files = [] as schema.objects.ContextItem[];
 			let episode = context;
@@ -227,6 +232,12 @@ export class ContextClient {
 							context.albums[albumIndex]?.album_id,
 							context.albums[albumIndex]?.discs[discIndex]?.disc_id,
 							context.albums[albumIndex]?.discs[discIndex]?.tracks[trackIndex]?.track_id
+						].filter(is.present));
+					} else if (schema.objects.ContextDisc.is(context)) {
+						let trackIndex = currentEntryIndex;
+						return this.contextPath.updateState([
+							context.disc_id,
+							context.tracks[trackIndex]?.track_id,
 						].filter(is.present));
 					} else if (schema.objects.ContextEpisode.is(context)) {
 						return this.contextPath.updateState([
