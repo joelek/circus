@@ -3,7 +3,7 @@ import { ArrayObservable, computed, ObservableClass } from "../observers";
 import * as client from "../player/client";
 import * as is from "../is";
 import {  ContextAlbum, ContextArtist, ContextFile, Device } from "../player/schema/objects";
-import { File, Directory, Actor, Album, Artist, Cue, Disc, Entity, Episode, Genre, Movie, Playlist, PlaylistItem, Season, Show, Track, User, Year } from "../api/schema/objects";
+import { Category, File, Directory, Actor, Album, Artist, Cue, Disc, Entity, Episode, Genre, Movie, Playlist, PlaylistItem, Season, Show, Track, User, Year } from "../api/schema/objects";
 import * as xml from "../xnode";
 import { formatDuration as format_duration, formatSize, formatTimestamp as format_timestamp } from "../ui/metadata";
 import * as apischema from "../api/schema";
@@ -2346,6 +2346,106 @@ function observe(element: xml.XElement, handler: () => Promise<void>): xml.XElem
 let updateviewforuri = async (uri: string): Promise<{ element: Element, title: string }> => {
 	let parts: RegExpExecArray | null;
 	if (false) {
+	} else if ((parts = /^audio[/]genres[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
+		let category_id = decodeURIComponent(parts[1]);
+		return apiclient["GET:/categories/<category_id>/"]({
+			options: {
+				category_id,
+				token: token ?? ""
+			}
+		}).then(async (response) => {
+			let payload = await response.payload();
+			let category = payload.category;
+			let offset = 0;
+			let reachedEnd = new ObservableClass(false);
+			let isLoading = new ObservableClass(false);
+			let albums = new ArrayObservable<Album>([]);
+			let anchor = new ObservableClass(undefined as Album | undefined);
+			async function load(): Promise<void> {
+				if (!reachedEnd.getState() && !isLoading.getState()) {
+					isLoading.updateState(true);
+					let response = await apiclient["GET:/categories/<category_id>/albums/"]({
+						options: {
+							category_id: category_id,
+							token: token ?? "",
+							anchor: anchor.getState()?.album_id,
+							offset
+						}
+					});
+					let payload = await response.payload();
+					for (let album of payload.albums) {
+						albums.append(album);
+						anchor.updateState(album);
+					}
+					offset += payload.albums.length;
+					if (payload.albums.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
+				}
+			};
+			let element = xml.element("div")
+				.add(xml.element("div.content")
+					.add(renderTextHeader(xml.text(category.title)))
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 24px;")
+						.bind("data-hide", albums.compute((albums) => albums.length === 0))
+						.add(renderTextHeader(xml.text("Albums")))
+						.add(Grid.make()
+							.repeat(albums, (album) => EntityCard.forAlbum(album))
+						)
+					)
+				)
+				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+				.render();
+			return {
+				element,
+				title: `${category.title}`
+			};
+		});
+	} else if ((parts = /^audio[/]genres[/]([^/?]*)/.exec(uri)) !== null) {
+		let query = decodeURIComponent(parts[1]);
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let categories = new ArrayObservable<Category>([]);
+		let anchor = new ObservableClass(undefined as Category | undefined);
+		async function load(): Promise<void> {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				let response = await apiclient["GET:/categories/<query>"]({
+					options: {
+						query,
+						token: token ?? "",
+						anchor: anchor.getState()?.category_id,
+						offset,
+						limit: 100
+					}
+				});
+				let payload = await response.payload();
+				for (let { entity } of payload.results) {
+					categories.append(entity);
+					anchor.updateState(entity);
+				}
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
+			}
+		};
+		let element = xml.element("div")
+			.add(xml.element("div.content")
+				.add(Grid.make({ mini: true })
+					.repeat(categories, (category) => makeIconLink(Icon.makePieChart(), category.title, `audio/genres/${category.category_id}/`))
+				)
+			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+			.render();
+		return {
+			element,
+			title: `Genres`
+		};
 	} else if ((parts = /^audio[/]tracks[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let track_id = decodeURIComponent(parts[1]);
 		let offset = 0;
@@ -3099,6 +3199,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 				.add(Grid.make({ mini: true })
 					.add(makeIconLink(Icon.makeDisc(), "Albums", "audio/albums/"))
 					.add(makeIconLink(Icon.makePerson(), "Artists", "audio/artists/"))
+					.add(makeIconLink(Icon.makePieChart(), "Genres", "audio/genres/"))
 					.add(makeIconLink(Icon.makeBulletList(), "Playlists", "audio/playlists/"))
 					.add(makeIconLink(Icon.makeNote(), "Tracks", "audio/tracks/"))
 				)
@@ -4422,6 +4523,17 @@ class SearchResultsMerger extends ResultsMerger<Entity> {
 			let payload = await response.payload();
 			return payload.results;
 		});
+		let categories = new ResultProvider<Category>(async (anchor) => {
+			let response = await apiclient["GET:/categories/<query>"]({
+				options: {
+					token,
+					query,
+					anchor: anchor?.category_id
+				}
+			});
+			let payload = await response.payload();
+			return payload.results;
+		});
 		let movies = new ResultProvider<Movie>(async (anchor) => {
 			let response = await apiclient["GET:/movies/<query>"]({
 				options: {
@@ -4508,6 +4620,7 @@ class SearchResultsMerger extends ResultsMerger<Entity> {
 			tracks,
 			playlists,
 			genres,
+			categories,
 			actors,
 			users,
 			episodes,

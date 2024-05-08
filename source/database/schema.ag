@@ -97,6 +97,17 @@ guard TrackArtist: {
 	"order": number
 };
 
+guard Category: {
+	"category_id": string,
+	"name": string
+};
+
+guard AlbumCategory: {
+	"album_id": string,
+	"category_id": string,
+	"order": number
+};
+
 guard Show: {
 	"show_id": string,
 	"name": string,

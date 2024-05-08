@@ -11,7 +11,7 @@ import * as atlas from "../database/atlas";
 import { binid, hexid } from "../utils";
 import { getPath } from "../database/indexer";
 import { createDecreasingOrder } from "@joelek/atlas";
-import { ActorResult, AlbumResult, ArtistResult, DiscResult, EpisodeResult, GenreResult, MovieResult, PlaylistResult, SeasonResult, ShowResult, TrackResult, UserResult, YearResult } from "./schema/api";
+import { ActorResult, AlbumResult, ArtistResult, CategoryResult, DiscResult, EpisodeResult, GenreResult, MovieResult, PlaylistResult, SeasonResult, ShowResult, TrackResult, UserResult, YearResult } from "./schema/api";
 import { string } from "../jdb2/asserts";
 import { DirectoryContext, FileContext, TrackContext } from "./schema/objects";
 
@@ -151,7 +151,9 @@ export async function lookupAlbum(queue: ReadableQueue, album_id: string, api_us
 		affinity: atlas.adjustAffinity(album.affinity),
 		duration_ms: album.duration_ms,
 		tidal: album.tidal ?? undefined,
-		copyright: album.copyright ?? undefined
+		copyright: album.copyright ?? undefined,
+		categories: await Promise.all((await atlas.links.album_album_categories.filter(queue, album))
+			.map((record) => lookupCategoryBase(queue, hexid(record.category_id), api_user_id)))
 	};
 };
 
@@ -369,6 +371,31 @@ export async function lookupGenre(queue: ReadableQueue, genre_id: string, api_us
 		...genre_base,
 		affinity: atlas.adjustAffinity(genre.affinity)
 	};
+};
+
+export async function lookupCategoryBase(queue: ReadableQueue, category_id: string, api_user_id: string): Promise<schema.objects.CategoryBase> {
+	let categories = await atlas.stores.categories.lookup(queue, { category_id: binid(category_id) });
+	return {
+		category_id: hexid(categories.category_id),
+		title: categories.name
+	};
+};
+
+export async function lookupCategory(queue: ReadableQueue, category_id: string, api_user_id: string): Promise<schema.objects.Category> {
+	let category_base = await lookupCategoryBase(queue, category_id, api_user_id);
+	let category = await atlas.stores.categories.lookup(queue, { category_id: binid(category_id) });
+	return {
+		...category_base,
+		affinity: atlas.adjustAffinity(category.affinity)
+	};
+};
+
+export async function getAlbumsFromCategories(queue: ReadableQueue, category_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Album[]> {
+	let albums = [] as Array<schema.objects.Album>;
+	for (let entry of await atlas.links.category_album_categories.filter(queue, { category_id: binid(category_id) }, anchor != null ? { category_id: binid(category_id), album_id: binid(anchor) } : undefined, length)) {
+		albums.push(await lookupAlbum(queue, hexid(entry.album_id), user_id));
+	}
+	return albums;
 };
 
 export async function lookupMovieBase(queue: ReadableQueue, movie_id: string, api_user_id: string): Promise<schema.objects.MovieBase> {
@@ -960,6 +987,18 @@ export async function searchForGenres(queue: ReadableQueue, query: string, ancho
 		.map(async (result) => {
 			let { record, rank } = { ...result };
 			let entity = await lookupGenre(queue, hexid(record.genre_id), user_id)
+			return {
+				entity,
+				rank
+			};
+		}));
+};
+
+export async function searchForCategories(queue: ReadableQueue, query: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<CategoryResult[]> {
+	return await Promise.all((await atlas.stores.categories.search(queue, query, anchor != null ? { category_id: binid(anchor) } : undefined, length))
+		.map(async (result) => {
+			let { record, rank } = { ...result };
+			let entity = await lookupCategory(queue, hexid(record.category_id), user_id)
 			return {
 				entity,
 				rank

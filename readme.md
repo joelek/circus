@@ -138,7 +138,10 @@ External image and metadata files may be used to supply additional information t
 		}
 	],
 	"copyright"?: "Copyright information",
-	"tidal"?: 12345
+	"tidal"?: 12345,
+	"genres"?: [
+		"Genre name"
+	]
 }
 ```
 

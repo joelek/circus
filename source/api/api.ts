@@ -317,6 +317,36 @@ export const server = apiv2.makeServer({
 			}
 		};
 	}),
+	"GET:/categories/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let results = await handler.searchForCategories(queue, options.query, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
+		return {
+			payload: {
+				results
+			}
+		};
+	}),
+	"GET:/categories/<category_id>/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let category = await handler.lookupCategory(queue, options.category_id, user_id);
+		return {
+			payload: {
+				category
+			}
+		};
+	}),
+	"GET:/categories/<category_id>/albums/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let albums = await handler.getAlbumsFromCategories(queue, options.category_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 12);
+		return {
+			payload: {
+				albums
+			}
+		};
+	}),
 	"GET:/movies/<query>": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
@@ -888,6 +918,10 @@ export const server = apiv2.makeServer({
 					{
 						title: "Genres",
 						value: await atlas.stores.genres.length(queue)
+					},
+					{
+						title: "Categories",
+						value: await atlas.stores.categories.length(queue)
 					},
 					{
 						title: "Actors",

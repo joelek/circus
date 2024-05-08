@@ -8,6 +8,15 @@ guard Language: LanguageBase & {
 	"iso_639_2": string
 };
 
+guard CategoryBase: {
+	"category_id": string,
+	"title": string
+};
+
+guard Category: CategoryBase & {
+	"affinity": number
+};
+
 guard ActorBase: {
 	"actor_id": string,
 	"name": string
@@ -45,7 +54,8 @@ guard Album: AlbumBase & {
 	"copyright"?: string,
 	"affinity": number,
 	"duration_ms": number,
-	"tidal"?: number
+	"tidal"?: number,
+	"categories"?: CategoryBase[]
 };
 
 guard AlbumContext: Album & {

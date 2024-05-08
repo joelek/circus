@@ -134,7 +134,8 @@ export const AlbumMetadata: autoguard.serialization.MessageGuard<AlbumMetadata> 
 }, {
 	"year": autoguard.guards.Number,
 	"copyright": autoguard.guards.String,
-	"tidal": autoguard.guards.Number
+	"tidal": autoguard.guards.Number,
+	"genres": autoguard.guards.Array.of(autoguard.guards.String)
 });
 
 export type AlbumMetadata = autoguard.guards.Object<{
@@ -151,7 +152,8 @@ export type AlbumMetadata = autoguard.guards.Object<{
 }, {
 	"year": autoguard.guards.Number,
 	"copyright": autoguard.guards.String,
-	"tidal": autoguard.guards.Number
+	"tidal": autoguard.guards.Number,
+	"genres": autoguard.guards.Array<autoguard.guards.String>
 }>;
 
 export const ArtistMetadata: autoguard.serialization.MessageGuard<ArtistMetadata> = autoguard.guards.Object.of({

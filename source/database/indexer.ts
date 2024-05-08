@@ -538,6 +538,18 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			}
 			track_ids.push(track_id);
 		}
+		for (let [index, name] of (metadata.genres ?? []).entries()) {
+			let category_id = makeBinaryId("category", name);
+			await stores.categories.update(queue, {
+				category_id: category_id,
+				name: name
+			});
+			await stores.album_categories.insert(queue, {
+				category_id: category_id,
+				album_id: album_id,
+				order: index
+			});
+		}
 		await associateAlbumFiles(queue, album_id, track_ids, ...file_ids);
 	} else if (probes.schema.ArtistMetadata.is(metadata)) {
 		let artist = metadata;
@@ -906,6 +918,13 @@ async function removeBrokenEntities(queue: WritableQueue): Promise<void> {
 		let show_genres = await links.genre_show_genres.filter(queue, genre);
 		if (movie_genres.length === 0 && show_genres.length === 0) {
 			await stores.genres.remove(queue, genre);
+		}
+	}
+	console.log(`Removing categories without albums...`);
+	for (let category of await stores.categories.filter(queue)) {
+		let album_categories = await links.category_album_categories.filter(queue, category);
+		if (album_categories.length === 0) {
+			await stores.categories.remove(queue, category);
 		}
 	}
 	console.log(`Removing years without albums, movies and episodes...`);

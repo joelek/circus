@@ -6,6 +6,7 @@ import { Album } from ".././objects";
 import { AlbumContext } from ".././objects";
 import { Artist } from ".././objects";
 import { ArtistContext } from ".././objects";
+import { Category } from ".././objects";
 import { Directory } from ".././objects";
 import { DirectoryContext } from ".././objects";
 import { Disc } from ".././objects";
@@ -91,6 +92,16 @@ export const GenreResult: autoguard.serialization.MessageGuard<GenreResult> = au
 
 export type GenreResult = autoguard.guards.Object<{
 	"entity": autoguard.guards.Reference<Genre>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
+export const CategoryResult: autoguard.serialization.MessageGuard<CategoryResult> = autoguard.guards.Object.of({
+	"entity": autoguard.guards.Reference.of(() => Category),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type CategoryResult = autoguard.guards.Object<{
+	"entity": autoguard.guards.Reference<Category>,
 	"rank": autoguard.guards.Number
 }, {}>;
 
@@ -204,6 +215,7 @@ export namespace Autoguard {
 		"DiscResult": autoguard.guards.Reference.of(() => DiscResult),
 		"EpisodeResult": autoguard.guards.Reference.of(() => EpisodeResult),
 		"GenreResult": autoguard.guards.Reference.of(() => GenreResult),
+		"CategoryResult": autoguard.guards.Reference.of(() => CategoryResult),
 		"MovieResult": autoguard.guards.Reference.of(() => MovieResult),
 		"PlaylistResult": autoguard.guards.Reference.of(() => PlaylistResult),
 		"SeasonResult": autoguard.guards.Reference.of(() => SeasonResult),
@@ -652,6 +664,59 @@ export namespace Autoguard {
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
 					"genre_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {
+					"anchor": autoguard.guards.String,
+					"offset": autoguard.guards.Number,
+					"limit": autoguard.guards.Number
+				}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"GET:/categories/<query>": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"query": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {
+					"anchor": autoguard.guards.String,
+					"offset": autoguard.guards.Number,
+					"limit": autoguard.guards.Number
+				}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"GET:/categories/<category_id>/": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"category_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"GET:/categories/<category_id>/albums/": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"category_id": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
 					"anchor": autoguard.guards.String,
@@ -1674,6 +1739,39 @@ export namespace Autoguard {
 		"GET:/genres/<genre_id>/shows/": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
 				"shows": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Show))
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"GET:/categories/<query>": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => CategoryResult))
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"GET:/categories/<category_id>/": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"category": autoguard.guards.Reference.of(() => Category)
+			}, {})
+		}, {
+			"status": autoguard.guards.Number,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"GET:/categories/<category_id>/albums/": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"albums": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Album))
 			}, {})
 		}, {
 			"status": autoguard.guards.Number,

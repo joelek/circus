@@ -242,6 +242,28 @@ export type TrackArtist = autoguard.guards.Object<{
 	"order": autoguard.guards.Number
 }, {}>;
 
+export const Category: autoguard.serialization.MessageGuard<Category> = autoguard.guards.Object.of({
+	"category_id": autoguard.guards.String,
+	"name": autoguard.guards.String
+}, {});
+
+export type Category = autoguard.guards.Object<{
+	"category_id": autoguard.guards.String,
+	"name": autoguard.guards.String
+}, {}>;
+
+export const AlbumCategory: autoguard.serialization.MessageGuard<AlbumCategory> = autoguard.guards.Object.of({
+	"album_id": autoguard.guards.String,
+	"category_id": autoguard.guards.String,
+	"order": autoguard.guards.Number
+}, {});
+
+export type AlbumCategory = autoguard.guards.Object<{
+	"album_id": autoguard.guards.String,
+	"category_id": autoguard.guards.String,
+	"order": autoguard.guards.Number
+}, {}>;
+
 export const Show: autoguard.serialization.MessageGuard<Show> = autoguard.guards.Object.of({
 	"show_id": autoguard.guards.String,
 	"name": autoguard.guards.String
@@ -550,6 +572,8 @@ export namespace Autoguard {
 		"TrackFile": autoguard.guards.Reference.of(() => TrackFile),
 		"AlbumArtist": autoguard.guards.Reference.of(() => AlbumArtist),
 		"TrackArtist": autoguard.guards.Reference.of(() => TrackArtist),
+		"Category": autoguard.guards.Reference.of(() => Category),
+		"AlbumCategory": autoguard.guards.Reference.of(() => AlbumCategory),
 		"Show": autoguard.guards.Reference.of(() => Show),
 		"ShowFile": autoguard.guards.Reference.of(() => ShowFile),
 		"Season": autoguard.guards.Reference.of(() => Season),

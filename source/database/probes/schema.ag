@@ -63,7 +63,8 @@ guard AlbumMetadata: {
 		"copyright"?: string
 	}[],
 	"copyright"?: string,
-	"tidal"?: number
+	"tidal"?: number,
+	"genres"?: string[]
 };
 
 guard ArtistMetadata: {

@@ -167,6 +167,26 @@ route GET:/genres/<genre_id:string>/shows/ ? <{ token: string, anchor?: plain, o
 		shows: ./objects/Show[]
 	};
 
+guard CategoryResult: {
+	entity: ./objects/Category,
+	rank: number
+};
+
+route GET:/categories/<query:string> ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
+	=> {
+		results: CategoryResult[]
+	};
+
+route GET:/categories/<category_id:string>/ ? <{ token: string }>
+	=> {
+		category: ./objects/Category
+	};
+
+route GET:/categories/<category_id:string>/albums/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
+	=> {
+		albums: ./objects/Album[]
+	};
+
 guard MovieResult: {
 	entity: ./objects/Movie,
 	rank: number

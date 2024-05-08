@@ -364,6 +364,24 @@ const show_genres = context.createStore({
 
 export type ShowGenre = atlas.RecordOf<typeof show_genres>;
 
+const categories = context.createStore({
+	category_id: context.createBinaryField(),
+	name: context.createStringField({ searchable: true }),
+	affinity: context.createNumberField()
+}, ["category_id"], {
+	name: context.createIncreasingOrder()
+});
+
+export type Category = atlas.RecordOf<typeof categories>;
+
+const album_categories = context.createStore({
+	album_id: context.createBinaryField(),
+	category_id: context.createBinaryField(),
+	order: context.createIntegerField()
+}, ["album_id", "category_id"], {
+
+});
+
 const subtitles = context.createStore({
 	subtitle_id: context.createBinaryField(),
 	file_id: context.createBinaryField()
@@ -492,6 +510,16 @@ const genre_affinities = context.createStore({
 });
 
 export type GenreAffinity = atlas.RecordOf<typeof genre_affinities>;
+
+const category_affinities = context.createStore({
+	category_id: context.createBinaryField(),
+	user_id: context.createBinaryField(),
+	affinity: context.createNumberField()
+}, ["user_id", "category_id"], {
+
+});
+
+export type CategoryAffinity = atlas.RecordOf<typeof category_affinities>;
 
 const playlist_affinities = context.createStore({
 	playlist_id: context.createBinaryField(),
@@ -708,6 +736,18 @@ const genre_genre_affinities = context.createLink(genres, genre_affinities, {
 });
 
 const user_genre_affinities = context.createLink(users, genre_affinities, {
+	user_id: "user_id"
+}, {
+	affinity: context.createDecreasingOrder()
+});
+
+const category_category_affinities = context.createLink(categories, category_affinities, {
+	category_id: "category_id"
+}, {
+
+});
+
+const user_category_affinities = context.createLink(users, category_affinities, {
 	user_id: "user_id"
 }, {
 	affinity: context.createDecreasingOrder()
@@ -972,6 +1012,18 @@ const show_show_genres = context.createLink(shows, show_genres, {
 	order: context.createIncreasingOrder()
 });
 
+const category_album_categories = context.createLink(categories, album_categories, {
+	category_id: "category_id"
+}, {
+
+});
+
+const album_album_categories = context.createLink(albums, album_categories, {
+	album_id: "album_id"
+}, {
+	order: context.createIncreasingOrder()
+});
+
 const subtitle_cues = context.createLink(subtitles, cues, {
 	subtitle_id: "subtitle_id"
 }, {
@@ -1126,6 +1178,8 @@ export const transactionManager = context.createTransactionManager("./private/db
 	genres,
 	movie_genres,
 	show_genres,
+	categories,
+	album_categories,
 	subtitles,
 	cues,
 	users,
@@ -1145,6 +1199,7 @@ export const transactionManager = context.createTransactionManager("./private/db
 	artist_affinities,
 	actor_affinities,
 	genre_affinities,
+	category_affinities,
 	playlist_affinities,
 	year_affinities,
 	movie_suggestions
@@ -1186,6 +1241,8 @@ export const transactionManager = context.createTransactionManager("./private/db
 	movie_movie_genres,
 	genre_show_genres,
 	show_show_genres,
+	category_album_categories,
+	album_album_categories,
 	subtitle_cues,
 	user_keys,
 	user_tokens,
@@ -1217,6 +1274,8 @@ export const transactionManager = context.createTransactionManager("./private/db
 	actor_actor_affinities,
 	user_genre_affinities,
 	genre_genre_affinities,
+	user_category_affinities,
+	category_category_affinities,
 	user_playlist_affinities,
 	playlist_playlist_affinities,
 	user_year_affinities,
@@ -1377,6 +1436,23 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 				playlist_affinity.affinity += (await stores.playlist_affinities.lookup(queue, playlist_affinity)).affinity;
 			} catch (error) {}
 			await stores.playlist_affinities.insert(queue, playlist_affinity);
+		}
+		let album_categories = await links.album_album_categories.filter(queue, album);
+		for (let album_category of album_categories) {
+			let category = await stores.categories.lookup(queue, album_category);
+			await stores.categories.insert(queue, {
+				...category,
+				affinity: category.affinity + affinity
+			});
+			let category_affinity: CategoryAffinity = {
+				...category,
+				...stream,
+				affinity
+			};
+			try {
+				category_affinity.affinity += (await stores.category_affinities.lookup(queue, category_affinity)).affinity;
+			} catch (error) {}
+			await stores.category_affinities.insert(queue, category_affinity);
 		}
 	}
 };

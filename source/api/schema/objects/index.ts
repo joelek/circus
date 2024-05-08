@@ -32,6 +32,30 @@ export type Language = autoguard.guards.Intersection<[
 	}, {}>
 ]>;
 
+export const CategoryBase: autoguard.serialization.MessageGuard<CategoryBase> = autoguard.guards.Object.of({
+	"category_id": autoguard.guards.String,
+	"title": autoguard.guards.String
+}, {});
+
+export type CategoryBase = autoguard.guards.Object<{
+	"category_id": autoguard.guards.String,
+	"title": autoguard.guards.String
+}, {}>;
+
+export const Category: autoguard.serialization.MessageGuard<Category> = autoguard.guards.Intersection.of(
+	autoguard.guards.Reference.of(() => CategoryBase),
+	autoguard.guards.Object.of({
+		"affinity": autoguard.guards.Number
+	}, {})
+);
+
+export type Category = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<CategoryBase>,
+	autoguard.guards.Object<{
+		"affinity": autoguard.guards.Number
+	}, {}>
+]>;
+
 export const ActorBase: autoguard.serialization.MessageGuard<ActorBase> = autoguard.guards.Object.of({
 	"actor_id": autoguard.guards.String,
 	"name": autoguard.guards.String
@@ -123,7 +147,8 @@ export const Album: autoguard.serialization.MessageGuard<Album> = autoguard.guar
 	}, {
 		"year": autoguard.guards.Reference.of(() => YearBase),
 		"copyright": autoguard.guards.String,
-		"tidal": autoguard.guards.Number
+		"tidal": autoguard.guards.Number,
+		"categories": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => CategoryBase))
 	})
 );
 
@@ -136,7 +161,8 @@ export type Album = autoguard.guards.Intersection<[
 	}, {
 		"year": autoguard.guards.Reference<YearBase>,
 		"copyright": autoguard.guards.String,
-		"tidal": autoguard.guards.Number
+		"tidal": autoguard.guards.Number,
+		"categories": autoguard.guards.Array<autoguard.guards.Reference<CategoryBase>>
 	}>
 ]>;
 
@@ -878,6 +904,8 @@ export namespace Autoguard {
 	export const Guards = {
 		"LanguageBase": autoguard.guards.Reference.of(() => LanguageBase),
 		"Language": autoguard.guards.Reference.of(() => Language),
+		"CategoryBase": autoguard.guards.Reference.of(() => CategoryBase),
+		"Category": autoguard.guards.Reference.of(() => Category),
 		"ActorBase": autoguard.guards.Reference.of(() => ActorBase),
 		"Actor": autoguard.guards.Reference.of(() => Actor),
 		"ArtistBase": autoguard.guards.Reference.of(() => ArtistBase),
