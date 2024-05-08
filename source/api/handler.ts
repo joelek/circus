@@ -725,7 +725,10 @@ export async function lookupTrack(queue: ReadableQueue, track_id: string, user_i
 		last_stream_date: streams.pop()?.timestamp_ms,
 		media: {
 			...media,
-			file_id: hexid(media.file_id)
+			file_id: hexid(media.file_id),
+			sample_rate_hz: media.sample_rate_hz ?? undefined,
+			channel_count: media.channel_count ?? undefined,
+			bits_per_sample: media.bits_per_sample ?? undefined
 		},
 		copyright: record.copyright ?? undefined,
 		affinity: atlas.adjustAffinity(record.affinity),
@@ -881,7 +884,10 @@ async function getFileMedia(queue: ReadableQueue, file: atlas.File): Promise<Aud
 		let audio_file = await atlas.stores.audio_files.lookup(queue, file);
 		return {
 			...audio_file,
-			file_id: hexid(audio_file.file_id)
+			file_id: hexid(audio_file.file_id),
+			sample_rate_hz: audio_file.sample_rate_hz ?? undefined,
+			channel_count: audio_file.channel_count ?? undefined,
+			bits_per_sample: audio_file.bits_per_sample ?? undefined
 		};
 	} catch (error) {}
 	try {

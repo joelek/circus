@@ -42,7 +42,11 @@ export const AudioFile: autoguard.serialization.MessageGuard<AudioFile> = autogu
 		autoguard.guards.StringLiteral.of("audio/mp3")
 	),
 	"duration_ms": autoguard.guards.Number
-}, {});
+}, {
+	"sample_rate_hz": autoguard.guards.Number,
+	"channel_count": autoguard.guards.Number,
+	"bits_per_sample": autoguard.guards.Number
+});
 
 export type AudioFile = autoguard.guards.Object<{
 	"file_id": autoguard.guards.String,
@@ -52,7 +56,11 @@ export type AudioFile = autoguard.guards.Object<{
 		autoguard.guards.StringLiteral<"audio/mp3">
 	]>,
 	"duration_ms": autoguard.guards.Number
-}, {}>;
+}, {
+	"sample_rate_hz": autoguard.guards.Number,
+	"channel_count": autoguard.guards.Number,
+	"bits_per_sample": autoguard.guards.Number
+}>;
 
 export const ImageFile: autoguard.serialization.MessageGuard<ImageFile> = autoguard.guards.Object.of({
 	"file_id": autoguard.guards.String,

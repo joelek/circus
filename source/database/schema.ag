@@ -15,7 +15,10 @@ guard File: {
 guard AudioFile: {
 	"file_id": string,
 	"mime": string | "audio/mp4" | "audio/mp3",
-	"duration_ms": number
+	"duration_ms": number,
+	"sample_rate_hz"?: number,
+	"channel_count"?: number,
+	"bits_per_sample"?: number
 };
 
 guard ImageFile: {
