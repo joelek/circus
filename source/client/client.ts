@@ -2653,7 +2653,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 				.render();
 			return {
 				element,
-				title: `Disc ${disc.number}`
+				title: disc.title ?? `Disc ${disc.number}`
 			};
 		});
 	} else if ((parts = /^audio[/]discs[/]([^/?]*)/.exec(uri)) !== null) {
@@ -2925,7 +2925,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 						});
 						let element = xml.element("div")
 							.set("style", "display: grid; gap: 24px;")
-							.add(renderTextHeader(xml.text(`Disc ${disc.number}`)))
+							.add(renderTextHeader(xml.text(disc.title ?? `Disc ${disc.number}`)))
 							.add(xml.element("div")
 								.set("style", "display: grid; gap: 16px;")
 								.repeat(tracks, (track, trackIndex) => {

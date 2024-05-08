@@ -103,6 +103,10 @@ External image and metadata files may be used to supply additional information t
 	"type": "track",
 	"title": "Track title",
 	"disc": 1,
+	"disc": {
+		"number": 1,
+		"title"?: "Disc title"
+	},
 	"track": 1,
 	"album": {
 		"title": "Album title",
@@ -124,6 +128,10 @@ External image and metadata files may be used to supply additional information t
 	"type": "album",
 	"title": "Album title",
 	"disc": 1,
+	"disc": {
+		"number": 1,
+		"title"?: "Disc title"
+	},
 	"year"?: 2000,
 	"artists": [
 		"Artist name"

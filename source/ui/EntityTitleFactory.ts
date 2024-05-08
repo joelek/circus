@@ -82,7 +82,7 @@ export class EntityTitleFactory {
 	}
 
 	forDisc(disc: api.DiscBase): xnode.XElement {
-		return this.make(this.entityLinkFactory.forDisc(disc), `Disc ${disc.number}`);
+		return this.make(this.entityLinkFactory.forDisc(disc), disc.title ?? `Disc ${disc.number}`);
 	}
 
 	forEpisode(episode: api.EpisodeBase): xnode.XElement {

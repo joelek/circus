@@ -89,7 +89,14 @@ export type MovieMetadata = autoguard.guards.Object<{
 export const TrackMetadata: autoguard.serialization.MessageGuard<TrackMetadata> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("track"),
 	"title": autoguard.guards.String,
-	"disc": autoguard.guards.Number,
+	"disc": autoguard.guards.Union.of(
+		autoguard.guards.Number,
+		autoguard.guards.Object.of({
+			"number": autoguard.guards.Number
+		}, {
+			"title": autoguard.guards.String
+		})
+	),
 	"track": autoguard.guards.Number,
 	"album": autoguard.guards.Object.of({
 		"title": autoguard.guards.String,
@@ -106,7 +113,14 @@ export const TrackMetadata: autoguard.serialization.MessageGuard<TrackMetadata> 
 export type TrackMetadata = autoguard.guards.Object<{
 	"type": autoguard.guards.StringLiteral<"track">,
 	"title": autoguard.guards.String,
-	"disc": autoguard.guards.Number,
+	"disc": autoguard.guards.Union<[
+		autoguard.guards.Number,
+		autoguard.guards.Object<{
+			"number": autoguard.guards.Number
+		}, {
+			"title": autoguard.guards.String
+		}>
+	]>,
 	"track": autoguard.guards.Number,
 	"album": autoguard.guards.Object<{
 		"title": autoguard.guards.String,
@@ -123,7 +137,14 @@ export type TrackMetadata = autoguard.guards.Object<{
 export const AlbumMetadata: autoguard.serialization.MessageGuard<AlbumMetadata> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("album"),
 	"title": autoguard.guards.String,
-	"disc": autoguard.guards.Number,
+	"disc": autoguard.guards.Union.of(
+		autoguard.guards.Number,
+		autoguard.guards.Object.of({
+			"number": autoguard.guards.Number
+		}, {
+			"title": autoguard.guards.String
+		})
+	),
 	"artists": autoguard.guards.Array.of(autoguard.guards.String),
 	"tracks": autoguard.guards.Array.of(autoguard.guards.Object.of({
 		"title": autoguard.guards.String,
@@ -141,7 +162,14 @@ export const AlbumMetadata: autoguard.serialization.MessageGuard<AlbumMetadata> 
 export type AlbumMetadata = autoguard.guards.Object<{
 	"type": autoguard.guards.StringLiteral<"album">,
 	"title": autoguard.guards.String,
-	"disc": autoguard.guards.Number,
+	"disc": autoguard.guards.Union<[
+		autoguard.guards.Number,
+		autoguard.guards.Object<{
+			"number": autoguard.guards.Number
+		}, {
+			"title": autoguard.guards.String
+		}>
+	]>,
 	"artists": autoguard.guards.Array<autoguard.guards.String>,
 	"tracks": autoguard.guards.Array<autoguard.guards.Object<{
 		"title": autoguard.guards.String,

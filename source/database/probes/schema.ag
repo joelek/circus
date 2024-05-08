@@ -39,7 +39,10 @@ guard MovieMetadata: {
 guard TrackMetadata: {
 	"type": "track",
 	"title": string,
-	"disc": number,
+	"disc": number | {
+		"number": number,
+		"title"?: string
+	},
 	"track": number,
 	"album": {
 		"title": string,
@@ -54,7 +57,10 @@ guard TrackMetadata: {
 guard AlbumMetadata: {
 	"type": "album",
 	"title": string,
-	"disc": number,
+	"disc": number | {
+		"number": number,
+		"title"?: string
+	},
 	"year"?: number,
 	"artists": string[],
 	"tracks": {

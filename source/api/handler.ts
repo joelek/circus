@@ -266,7 +266,8 @@ export async function lookupDiscBase(queue: ReadableQueue, disc_id: string, api_
 	return {
 		disc_id: hexid(disc.disc_id),
 		album: is.present(album) ? album : await lookupAlbumBase(queue, hexid(disc.album_id), api_user_id),
-		number: disc.number
+		number: disc.number,
+		title: disc.title ?? undefined
 	};
 };
 

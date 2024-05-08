@@ -163,6 +163,7 @@ const discs = context.createStore({
 	disc_id: context.createBinaryField(),
 	album_id: context.createBinaryField(),
 	number: context.createIntegerField(),
+	title: context.createNullableStringField({ searchable: true }),
 	timestamp_ms: context.createNullableIntegerField(),
 	affinity: context.createNumberField(),
 	duration_ms: context.createIntegerField()

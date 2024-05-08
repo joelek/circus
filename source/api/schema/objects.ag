@@ -65,7 +65,8 @@ guard AlbumContext: Album & {
 guard DiscBase: {
 	"disc_id": string,
 	"album": AlbumBase,
-	"number": number
+	"number": number,
+	"title"?: string
 };
 
 guard Disc: DiscBase & {

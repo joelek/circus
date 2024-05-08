@@ -184,13 +184,17 @@ export const DiscBase: autoguard.serialization.MessageGuard<DiscBase> = autoguar
 	"disc_id": autoguard.guards.String,
 	"album": autoguard.guards.Reference.of(() => AlbumBase),
 	"number": autoguard.guards.Number
-}, {});
+}, {
+	"title": autoguard.guards.String
+});
 
 export type DiscBase = autoguard.guards.Object<{
 	"disc_id": autoguard.guards.String,
 	"album": autoguard.guards.Reference<AlbumBase>,
 	"number": autoguard.guards.Number
-}, {}>;
+}, {
+	"title": autoguard.guards.String
+}>;
 
 export const Disc: autoguard.serialization.MessageGuard<Disc> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => DiscBase),

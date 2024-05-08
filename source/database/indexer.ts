@@ -452,11 +452,16 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 				order: index
 			});
 		}
-		let disc_id = makeBinaryId("disc", album_id, `${metadata.disc}`);
-		await stores.discs.update(queue, {
+		let disc_id = makeBinaryId("disc", album_id, typeof metadata.disc === "number" ? metadata.disc : metadata.disc.number);
+		await stores.discs.update(queue, typeof metadata.disc === "number" ? {
 			disc_id: disc_id,
 			album_id: album_id,
 			number: metadata.disc
+		} : {
+			disc_id: disc_id,
+			album_id: album_id,
+			number: metadata.disc.number,
+			title: metadata.disc.title ?? null
 		});
 		let track_id = makeBinaryId("track", disc_id, `${metadata.track}`);
 		await stores.tracks.update(queue, {
@@ -508,11 +513,16 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 				order: index
 			});
 		}
-		let disc_id = makeBinaryId("disc", album_id, `${metadata.disc}`);
-		await stores.discs.update(queue, {
+		let disc_id = makeBinaryId("disc", album_id, typeof metadata.disc === "number" ? metadata.disc : metadata.disc.number);
+		await stores.discs.update(queue, typeof metadata.disc === "number" ? {
 			disc_id: disc_id,
 			album_id: album_id,
 			number: metadata.disc
+		} : {
+			disc_id: disc_id,
+			album_id: album_id,
+			number: metadata.disc.number,
+			title: metadata.disc.title ?? null
 		});
 		let track_ids = [] as Array<Uint8Array>;
 		for (let [index, track] of metadata.tracks.entries()) {
