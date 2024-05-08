@@ -297,6 +297,6 @@ guard FileContext: File & {
 
 };
 
-guard EntityBase: ActorBase | AlbumBase | ArtistBase | CueBase | DirectoryBase | DiscBase | EpisodeBase | FileBase | GenreBase | MovieBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase;
+guard EntityBase: ActorBase | AlbumBase | ArtistBase | CategoryBase | CueBase | DirectoryBase | DiscBase | EpisodeBase | FileBase | GenreBase | MovieBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase;
 
-guard Entity: Actor | Album | Artist | Cue | Directory | Disc | Episode | File | Genre | Movie | Playlist | Season | Show | Track | User | Year;
+guard Entity: Actor | Album | Artist | Category | Cue | Directory | Disc | Episode | File | Genre | Movie | Playlist | Season | Show | Track | User | Year;

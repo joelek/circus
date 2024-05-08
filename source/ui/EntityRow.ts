@@ -107,6 +107,9 @@ export class EntityRowFactory {
 		if (api.Artist.is(entity)) {
 			return this.forArtist(entity, options);
 		}
+		if (api.Category.is(entity)) {
+			return this.forCategory(entity, options);
+		}
 		if (api.Cue.is(entity)) {
 			return this.forCue(entity, options);
 		}
@@ -179,6 +182,16 @@ export class EntityRowFactory {
 		];
 		let subtitles = new Array<xnode.XElement>();
 		return this.make(link, image, playbackButton, titles, subtitles);
+	}
+
+	forCategory(category: api.CategoryBase, options: Options = {}): xnode.XElement {
+		let link = options.link ?? this.entityLinkFactory.forCategory(category);
+		let image = this.ImageBox.forSquare([]);
+		let titles = [
+			this.entityTitleFactory.forCategory(category)
+		];
+		let subtitles = [] as xnode.XElement[];
+		return this.make(link, image, undefined, titles, subtitles);
 	}
 
 	forCue(cue: api.Cue, options: Options = {}): xnode.XElement {

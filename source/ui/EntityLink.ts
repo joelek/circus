@@ -68,6 +68,10 @@ export class EntityLinkFactory {
 		return this.make(`audio/artists/`);
 	}
 
+	forCategory(category: api.CategoryBase): xnode.XElement {
+		return this.make(`audio/genres/${category.category_id}/`, category);
+	}
+
 	forCue(cue: api.CueBase): xnode.XElement {
 		return this.make(`video/cues/${cue.cue_id}/`, cue);
 	}

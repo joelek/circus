@@ -73,6 +73,10 @@ export class EntityTitleFactory {
 		return this.make(this.entityLinkFactory.forArtist(artist), artist.title);
 	}
 
+	forCategory(category: api.CategoryBase): xnode.XElement {
+		return this.make(this.entityLinkFactory.forCategory(category), category.title);
+	}
+
 	forDirectory(directory: api.DirectoryBase): xnode.XElement {
 		return this.make(this.entityLinkFactory.forDirectory(directory), directory.name);
 	}
