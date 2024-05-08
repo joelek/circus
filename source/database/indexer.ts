@@ -48,6 +48,18 @@ function makeBinaryId(...components: Array<Uint8Array | string | number | undefi
 	return Uint8Array.from(buffer);
 }
 
+function makePathBinaryId(...components: Array<string>): Uint8Array {
+	let parent_directory: Uint8Array | null = null;
+	let last = components.pop();
+	if (last == null) {
+		throw new Error();
+	}
+	for (let component of components) {
+		parent_directory = makeBinaryId("directory", parent_directory, component);
+	}
+	return makeBinaryId("file", parent_directory, last);
+}
+
 if (!libfs.existsSync(config.media_path.join("/"))) {
 	libfs.mkdirSync(config.media_path.join("/"));
 }
@@ -160,13 +172,13 @@ async function visitDirectory(queue: WritableQueue, path: Array<string>, parent_
 					parent_directory_id
 				});
 			}
-			await visitDirectory(queue, [...path, dirent.name], directory_id);
+			await visitDirectory(queue, [...path, name], directory_id);
 		} else if (dirent.isFile()) {
 			let file_id = makeBinaryId("file", parent_directory_id, name);
 			try {
 				await stores.files.lookup(queue, { file_id });
 			} catch (error) {
-				let stats = libfs.statSync(path.join("/"));
+				let stats = libfs.statSync(path.join("/")); // Path should probably be appended by name here.
 				let index_timestamp = null;
 				let size = stats.size;
 				await stores.files.insert(queue, {
