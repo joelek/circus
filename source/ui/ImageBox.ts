@@ -12,20 +12,32 @@ const CSS = `
 		will-change: opacity;
 	}
 
-	.image-box--poster {
-		padding-bottom: ${3/2 * 100}%;
-	}
-
-	.image-box--square {
+	.image-box--1-1 {
 		padding-bottom: ${1/1 * 100}%;
 	}
 
-	.image-box--video {
+	.image-box--4-3 {
+		padding-bottom: ${3/4 * 100}%;
+	}
+
+	.image-box--3-4 {
+		padding-bottom: ${4/3 * 100}%;
+	}
+
+	.image-box--3-2 {
+		padding-bottom: ${2/3 * 100}%;
+	}
+
+	.image-box--2-3 {
+		padding-bottom: ${3/2 * 100}%;
+	}
+
+	.image-box--16-9 {
 		padding-bottom: ${9/16 * 100}%;
 	}
 
-	.image-box--landscape {
-		padding-bottom: ${2/3 * 100}%;
+	.image-box--9-16 {
+		padding-bottom: ${9/16 * 100}%;
 	}
 
 	.image-box--multiple {
@@ -40,7 +52,9 @@ const CSS = `
 	}
 
 	.image-box__image {
+		height: 100%;
 		position: absolute;
+		object-fit: contain;
 		width: 100%;
 	}
 
@@ -48,9 +62,10 @@ const CSS = `
 	.image-box__image:nth-child(1) {
 		border-radius: 2px;
 		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
-		transform: translate(-50%, -50%) scale(50%);
+		transform: translate(-50%, -50%) scale(75%);
 		left: 50%;
 		top: 50%;
+		width: auto;
 		z-index: 3;
 	}
 
@@ -58,9 +73,10 @@ const CSS = `
 	.image-box__image:nth-child(2) {
 		border-radius: 2px;
 		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
-		transform: translate(-50%, -50%) scale(33.3%);
+		transform: translate(-50%, -50%) scale(50%);
 		left: 25%;
 		top: 50%;
+		width: auto;
 		z-index: 2;
 	}
 
@@ -68,9 +84,10 @@ const CSS = `
 	.image-box__image:nth-child(3) {
 		border-radius: 2px;
 		box-shadow: 0px 0px 32px rgb(0, 0, 0, 0.50);
-		transform: translate(-50%, -50%) scale(33.3%);
+		transform: translate(-50%, -50%) scale(50%);
 		left: 75%;
 		top: 50%;
+		width: auto;
 		z-index: 1;
 	}
 
@@ -90,6 +107,52 @@ const CSS = `
 	}
 `;
 
+export type AspectRatio = {
+	x: number;
+	y: number;
+};
+
+const TARGETS = {
+	"1:1": { x:  1, y:  1 },
+	"4:3": { x:  4, y:  3 },
+	"3:4": { x:  3, y:  4 },
+	"3:2": { x:  3, y:  2 },
+	"2:3": { x:  2, y:  3 },
+	"16:9": { x: 16, y:  9 },
+	"9:16": { x:  9, y: 16 }
+};
+
+export const AspectRatio = {
+	TARGETS,
+
+	computeOverlap(target: AspectRatio, source: AspectRatio): number {
+		let a = source.x * target.y;
+		let b = target.x * source.y;
+		// If source is wider than target.
+		if (a > b) {
+			return b / a;
+		} else {
+			return a / b;
+		}
+	},
+
+	getOptimal(source: AspectRatio): AspectRatio {
+		let candidates = Object.values(TARGETS).map((target) => {
+			let overlap = AspectRatio.computeOverlap(target, source);
+			return {
+				target,
+				overlap
+			};
+		});
+		candidates.sort((one, two) => one.overlap - two.overlap);
+		let candidate = candidates.pop();
+		if (candidate == null) {
+			throw new Error();
+		}
+		return candidate.target;
+	}
+};
+
 export class ImageBoxFactory {
 	private token: observables.ObservableClass<undefined | string>;
 
@@ -97,8 +160,9 @@ export class ImageBoxFactory {
 		this.token = token;
 	}
 
-	for(urls: Array<string>, multiple?: boolean, format: "poster" | "square" | "video" | "landscape" = "square"): xnode.XElement {
-		let node = xnode.element(`div.image-box.image-box--${format}${multiple ? ".image-box--multiple" : ""}`);
+	for(urls: Array<string>, multiple?: boolean, ar?: AspectRatio): xnode.XElement {
+		ar = ar ?? TARGETS["1:1"];
+		let node = xnode.element(`div.image-box.image-box--${ar.x}-${ar.y}${multiple ? ".image-box--multiple" : ""}`);
 		let content = xnode.element(`div.image-box__content`);
 		for (let url of urls) {
 			if (is.absent(url)) {
@@ -121,20 +185,20 @@ export class ImageBoxFactory {
 			.add(content);
 	}
 
-	forPoster(urls: Array<string>, multiple?: boolean): xnode.XElement {
-		return this.for(urls, multiple, "poster");
+	forPortrait(urls: Array<string>, multiple?: boolean): xnode.XElement {
+		return this.for(urls, multiple, TARGETS["2:3"]);
 	}
 
 	forSquare(urls: Array<string>, multiple?: boolean): xnode.XElement {
-		return this.for(urls, multiple, "square");
+		return this.for(urls, multiple, TARGETS["1:1"]);
 	}
 
 	forVideo(urls: Array<string>, multiple?: boolean): xnode.XElement {
-		return this.for(urls, multiple, "video");
+		return this.for(urls, multiple, TARGETS["16:9"]);
 	}
 
 	forLandscape(urls: Array<string>, multiple?: boolean): xnode.XElement {
-		return this.for(urls, multiple, "landscape");
+		return this.for(urls, multiple, TARGETS["3:2"]);
 	}
 
 	static makeStyle(): xnode.XElement {

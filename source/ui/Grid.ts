@@ -2,13 +2,14 @@ import * as xnode from "../xnode";
 
 const CSS = `
 	.grid {
-		align-items: start;
+		align-items: baseline;
 		display: grid;
 		gap: 24px;
 		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 	}
 
 	.grid--mini {
+		align-items: start;
 		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
 	}
 `;

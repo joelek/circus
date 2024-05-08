@@ -5,8 +5,9 @@ import * as metadata from "./metadata";
 import * as is from "../is";
 import { EntityTitleFactory } from "./EntityTitleFactory";
 import { EntityLinkFactory } from "./EntityLink";
-import { ImageBoxFactory } from "./ImageBox";
+import { ImageBoxFactory, AspectRatio } from "./ImageBox";
 import { PlaybackButtonFactory } from "./PlaybackButton";
+import { ImageFile } from "../database/schema";
 
 const CSS = `
 	.entity-card {
@@ -162,6 +163,25 @@ export class EntityCardFactory {
 		);
 	}
 
+	protected makeImage(artwork: Array<ImageFile>, default_ar?: AspectRatio): xnode.XElement {
+		let shared_ar: AspectRatio | undefined;
+		for (let image_file of artwork) {
+			let optimal_ar = AspectRatio.getOptimal({ x: image_file.width, y: image_file.height });
+			if (shared_ar == null) {
+				shared_ar = optimal_ar;
+			} else {
+				// If optimal aspect ratio is tall.
+				if (optimal_ar.y > optimal_ar.x) {
+					// If optimal aspect ratio is taller than shared aspect ratio.
+					if (optimal_ar.y * shared_ar.x > shared_ar.y * optimal_ar.x) {
+						shared_ar = optimal_ar;
+					}
+				}
+			}
+		}
+		return this.ImageBox.for(artwork.map((image) => `/api/files/${image.file_id}/content/`), undefined, shared_ar ?? default_ar);
+	}
+
 	constructor(entityTitleFactory: EntityTitleFactory, entityLinkFactory: EntityLinkFactory, ImageBox: ImageBoxFactory, PlaybackButton: PlaybackButtonFactory) {
 		this.entityTitleFactory = entityTitleFactory;
 		this.entityLinkFactory = entityLinkFactory;
@@ -223,7 +243,7 @@ export class EntityCardFactory {
 
 	forActor(actor: api.Actor, options: Options = {}): xnode.XElement {
 		let link = this.entityLinkFactory.forActor(actor);
-		let image = this.ImageBox.forSquare([]);
+		let image = this.makeImage([], AspectRatio.TARGETS["1:1"]);
 		let titles = [
 			this.entityTitleFactory.forActor(actor)
 		];
@@ -237,7 +257,7 @@ export class EntityCardFactory {
 	forAlbum(album: api.Album, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forAlbum(album);
 		let link = this.entityLinkFactory.forAlbum(album);
-		let image = this.ImageBox.forSquare(album.artwork.map((image) => `/api/files/${image.file_id}/content/`));
+		let image = this.makeImage(album.artwork, AspectRatio.TARGETS["1:1"]);
 		let titles = [
 			this.entityTitleFactory.forAlbum(album)
 		];
@@ -253,7 +273,7 @@ export class EntityCardFactory {
 	forArtist(artist: api.Artist, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forArtist(artist);
 		let link = this.entityLinkFactory.forArtist(artist);
-		let image = this.ImageBox.forSquare(artist.artwork.map((image) => `/api/files/${image.file_id}/content/`));
+		let image = this.makeImage(artist.artwork, AspectRatio.TARGETS["1:1"]);
 		let titles = [
 			this.entityTitleFactory.forArtist(artist)
 		];
@@ -281,7 +301,7 @@ export class EntityCardFactory {
 	forDirectory(directory: api.Directory, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forDirectory(directory);
 		let link = this.entityLinkFactory.forDirectory(directory);
-		let image = this.ImageBox.forSquare([]);
+		let image = this.makeImage([], AspectRatio.TARGETS["1:1"]);
 		let titles = [
 			this.entityTitleFactory.forDirectory(directory)
 		];
@@ -297,7 +317,7 @@ export class EntityCardFactory {
 	forDisc(disc: api.Disc, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forDisc(disc);
 		let link = this.entityLinkFactory.forDisc(disc);
-		let image = this.ImageBox.forSquare(disc.album.artwork.map((image) => `/api/files/${image.file_id}/content/`));
+		let image = this.makeImage(disc.album.artwork, AspectRatio.TARGETS["1:1"]);
 		let titles = [
 			this.entityTitleFactory.forDisc(disc)
 		];
@@ -339,7 +359,7 @@ export class EntityCardFactory {
 	forFile(file: api.File, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forFile(file);
 		let link = this.entityLinkFactory.forFile(file);
-		let image = this.ImageBox.forSquare([]);
+		let image = this.makeImage([], AspectRatio.TARGETS["1:1"]);
 		let titles = [
 			this.entityTitleFactory.forFile(file)
 		];
@@ -355,7 +375,7 @@ export class EntityCardFactory {
 
 	forGenre(genre: api.Genre, options: Options = {}): xnode.XElement {
 		let link = this.entityLinkFactory.forGenre(genre);
-		let image = this.ImageBox.forSquare([]);
+		let image = this.makeImage([], AspectRatio.TARGETS["1:1"]);
 		let titles = [
 			this.entityTitleFactory.forGenre(genre)
 		];
@@ -369,7 +389,7 @@ export class EntityCardFactory {
 	forMovie(movie: api.Movie, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forMovie(movie);
 		let link = this.entityLinkFactory.forMovie(movie);
-		let image = this.ImageBox.forPoster(movie.artwork.map((image) => `/api/files/${image.file_id}/content/`));
+		let image = this.makeImage(movie.artwork, AspectRatio.TARGETS["2:3"]);
 		let titles = [
 			this.entityTitleFactory.forMovie(movie)
 		];
@@ -408,7 +428,7 @@ export class EntityCardFactory {
 	forSeason(season: api.Season, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forSeason(season);
 		let link = this.entityLinkFactory.forSeason(season);
-		let image = this.ImageBox.forPoster(season.show.artwork.map((image) => `/api/files/${image.file_id}/content/`));
+		let image = this.makeImage(season.show.artwork, AspectRatio.TARGETS["2:3"]);
 		let titles = [
 			this.entityTitleFactory.forSeason(season)
 		];
@@ -425,7 +445,7 @@ export class EntityCardFactory {
 	forShow(show: api.Show, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forShow(show);
 		let link = this.entityLinkFactory.forShow(show);
-		let image = this.ImageBox.forPoster(show.artwork.map((image) => `/api/files/${image.file_id}/content/`));
+		let image = this.makeImage(show.artwork, AspectRatio.TARGETS["2:3"]);
 		let titles = [
 			this.entityTitleFactory.forShow(show)
 		];
@@ -440,7 +460,7 @@ export class EntityCardFactory {
 	forTrack(track: api.Track, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forTrack(track);
 		let link = this.entityLinkFactory.forTrack(track);
-		let image = this.ImageBox.forSquare(track.disc.album.artwork.map((image) => `/api/files/${image.file_id}/content/`));
+		let image = this.makeImage(track.disc.album.artwork, AspectRatio.TARGETS["1:1"]);
 		let titles = [
 			this.entityTitleFactory.forTrack(track)
 		];
@@ -457,7 +477,7 @@ export class EntityCardFactory {
 
 	forUser(user: api.User, options: Options = {}): xnode.XElement {
 		let link = this.entityLinkFactory.forUser(user);
-		let image = this.ImageBox.forSquare([]);
+		let image = this.makeImage([], AspectRatio.TARGETS["1:1"]);
 		let titles = [
 			this.entityTitleFactory.forUser(user)
 		];
