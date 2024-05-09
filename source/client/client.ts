@@ -115,7 +115,7 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 	}
 	player.enable();
 	//@ts-ignore
-	player.tsc.url = `context/?type=browser&name=Client&did=${did}&enabled=true`;
+	player.tsc.url = makeUrl(`context/?type=browser&name=Client&did=${did}&enabled=true`);
 
 	currentVideo.addEventListener("loadstart", () => {
 
