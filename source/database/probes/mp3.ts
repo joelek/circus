@@ -1352,7 +1352,14 @@ type XingHeader = {
 
 function parseXingHeader(frame: MPEGAudioFrame): XingHeader {
 	let offset = 0;
-	let zeroes = frame.body.slice(offset, offset + 32); offset += 32;
+	for (let i = 0; i < 32; i++) {
+		let id = frame.body.slice(offset, offset + 4);
+		if (id.toString() === "Xing" || id.toString() === "Info") {
+			break;
+		} else {
+			offset += 1;
+		}
+	}
 	let id = frame.body.slice(offset, offset + 4); offset += 4;
 	let flags = frame.body.slice(offset, offset + 4); offset += 4;
 	if (id.toString() !== "Xing" && id.toString() !== "Info") {
