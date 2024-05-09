@@ -1413,8 +1413,8 @@ export function probe(fd: number): schema.Probe {
 		}
 	}
 	let frame = parseMPEGAudioFrame(reader, 1152);
-	if (frame.header.version !== Version.V1 || frame.header.layer !== Layer.L3) {
-		throw new Error(`Expected a MPEG ${Version[Version.V1]} ${Layer[Layer.L3]} header (found ${Version[frame.header.version]} ${Layer[frame.header.layer]})!`);
+	if (frame.header.layer !== Layer.L3) {
+		throw new Error(`Expected a MPEG 1/2/2.5 ${Layer[Layer.L3]} header (found ${Version[frame.header.version]} ${Layer[frame.header.layer]})!`);
 	}
 	let duration_ms = 0;
 	let sample_rate_hz = frame.header.values.samples_per_second;
