@@ -2925,7 +2925,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 						});
 						let element = xml.element("div")
 							.set("style", "display: grid; gap: 24px;")
-							.add(renderTextHeader(xml.text(disc.title ?? `Disc ${disc.number}`)))
+							.add(renderTextHeader(entityTitleFactory.forDisc(disc)))
 							.add(xml.element("div")
 								.set("style", "display: grid; gap: 16px;")
 								.repeat(tracks, (track, trackIndex) => {
