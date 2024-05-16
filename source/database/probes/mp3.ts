@@ -11,7 +11,8 @@ type Tags = {
 	disc_number?: number,
 	artist?: string,
 	album_artist?: string,
-	copyright?: string
+	copyright?: string,
+	genre?: string
 };
 
 
@@ -20,7 +21,200 @@ type Tags = {
 
 
 
-
+const ID3V1_GENRES = [
+	"Blues",
+	"Classic Rock",
+	"Country",
+	"Dance",
+	"Disco",
+	"Funk",
+	"Grunge",
+	"Hip-Hop",
+	"Jazz",
+	"Metal",
+	"New Age",
+	"Oldies",
+	"Other",
+	"Pop",
+	"Rhythm and Blues",
+	"Rap",
+	"Reggae",
+	"Rock",
+	"Techno",
+	"Industrial",
+	"Alternative",
+	"Ska",
+	"Death Metal",
+	"Pranks",
+	"Soundtrack",
+	"Euro-Techno",
+	"Ambient",
+	"Trip-Hop",
+	"Vocal",
+	"Jazz & Funk",
+	"Fusion",
+	"Trance",
+	"Classical",
+	"Instrumental",
+	"Acid",
+	"House",
+	"Game",
+	"Sound clip",
+	"Gospel",
+	"Noise",
+	"Alternative Rock",
+	"Bass",
+	"Soul",
+	"Punk",
+	"Space",
+	"Meditative",
+	"Instrumental Pop",
+	"Instrumental Rock",
+	"Ethnic",
+	"Gothic",
+	"Darkwave",
+	"Techno-Industrial",
+	"Electronic",
+	"Pop-Folk",
+	"Eurodance",
+	"Dream",
+	"Southern Rock",
+	"Comedy",
+	"Cult",
+	"Gangsta",
+	"Top 40",
+	"Christian Rap",
+	"Pop/Funk",
+	"Jungle music",
+	"Native US",
+	"Cabaret",
+	"New Wave",
+	"Psychedelic",
+	"Rave",
+	"Showtunes",
+	"Trailer",
+	"Lo-Fi",
+	"Tribal",
+	"Acid Punk",
+	"Acid Jazz",
+	"Polka",
+	"Retro",
+	"Musical",
+	"Rock ’n’ Roll",
+	"Hard Rock",
+	"Folk",
+	"Folk-Rock",
+	"National Folk",
+	"Swing",
+	"Fast Fusion",
+	"Bebop",
+	"Latin",
+	"Revival",
+	"Celtic",
+	"Bluegrass",
+	"Avantgarde",
+	"Gothic Rock",
+	"Progressive Rock",
+	"Psychedelic Rock",
+	"Symphonic Rock",
+	"Slow Rock",
+	"Big Band",
+	"Chorus",
+	"Easy Listening",
+	"Acoustic",
+	"Humour",
+	"Speech",
+	"Chanson",
+	"Opera",
+	"Chamber Music",
+	"Sonata",
+	"Symphony",
+	"Booty Bass",
+	"Primus",
+	"Porn Groove",
+	"Satire",
+	"Slow Jam",
+	"Club",
+	"Tango",
+	"Samba",
+	"Folklore",
+	"Ballad",
+	"Power Ballad",
+	"Rhythmic Soul",
+	"Freestyle",
+	"Duet",
+	"Punk Rock",
+	"Drum Solo",
+	"A cappella",
+	"Euro-House",
+	"Dance Hall",
+	"Goa music",
+	"Drum & Bass",
+	"Club-House",
+	"Hardcore Techno",
+	"Terror",
+	"Indie",
+	"BritPop",
+	"Negerpunk",
+	"Polsk Punk",
+	"Beat",
+	"Christian Gangsta Rap",
+	"Heavy Metal",
+	"Black Metal",
+	"Crossover",
+	"Contemporary Christian",
+	"Christian Rock",
+	"Merengue",
+	"Salsa",
+	"Thrash Metal",
+	"Anime",
+	"Jpop",
+	"Synthpop",
+	"Abstract",
+	"Art Rock",
+	"Baroque",
+	"Bhangra",
+	"Big beat",
+	"Breakbeat",
+	"Chillout",
+	"Downtempo",
+	"Dub",
+	"EBM",
+	"Eclectic",
+	"Electro",
+	"Electroclash",
+	"Emo",
+	"Experimental",
+	"Garage",
+	"Global",
+	"IDM",
+	"Illbient",
+	"Industro-Goth",
+	"Jam Band",
+	"Krautrock",
+	"Leftfield",
+	"Lounge",
+	"Math Rock",
+	"New Romantic",
+	"Nu-Breakz",
+	"Post-Punk",
+	"Post-Rock",
+	"Psytrance",
+	"Shoegaze",
+	"Space Rock",
+	"Trop Rock",
+	"World Music",
+	"Neoclassical",
+	"Audiobook",
+	"Audio Theatre",
+	"Neue Deutsche Welle",
+	"Podcast",
+	"Indie-Rock",
+	"G-Funk",
+	"Dubstep",
+	"Garage Rock",
+	"Psybient"
+];
 
 
 
@@ -58,6 +252,7 @@ function parseID3v11Tags(reader: readers.Binary): Tags {
 		if (track_number[0] === 0x00 && track_number[1] !== 0x00) {
 			tags.track_number = track_number[1];
 		}
+		tags.genre = ID3V1_GENRES[genre[0]];
 		return tags;
 	});
 };
@@ -273,6 +468,15 @@ function parseID3v22Tags(reader: readers.Binary): Tags {
 						tags.album_artist = parts[1].trim() || undefined;
 					}
 					continue;
+				}
+				if (frame.header.id === "TCO") {
+					let string = parseID3v22String(frame.body);
+					let parts = /^([0-9]+)$/.exec(string);
+					if (is.present(parts)) {
+						tags.genre = ID3V1_GENRES[parseInt(parts[1])];
+					} else {
+						tags.genre = string.trim() || undefined;
+					}
 				}
 			} catch (error) {
 				console.warn(`Skipping badly coded ID3v2.2 frame with type ${frame.header.id}...`);
@@ -512,6 +716,15 @@ function parseID3v23Tags(reader: readers.Binary): Tags {
 						tags.album_artist = parts[1].trim() || undefined;
 					}
 					continue;
+				}
+				if (frame.header.id === "TCON") {
+					let string = parseID3v23String(frame.body);
+					let parts = /^([0-9]+)$/.exec(string);
+					if (is.present(parts)) {
+						tags.genre = ID3V1_GENRES[parseInt(parts[1])];
+					} else {
+						tags.genre = string.trim() || undefined;
+					}
 				}
 			} catch (error) {
 				console.warn(`Skipping badly coded ID3v2.3 frame with type ${frame.header.id}...`);
@@ -768,6 +981,15 @@ function parseID3v24Tags(reader: readers.Binary): Tags {
 						tags.album_artist = parts[1].trim() || undefined;
 					}
 					continue;
+				}
+				if (frame.header.id === "TCON") {
+					let string = parseID3v24String(frame.body);
+					let parts = /^([0-9]+)$/.exec(string);
+					if (is.present(parts)) {
+						tags.genre = ID3V1_GENRES[parseInt(parts[1])];
+					} else {
+						tags.genre = string.trim() || undefined;
+					}
 				}
 			} catch (error) {
 				console.warn(`Skipping badly coded ID3v2.4 frame with type ${frame.header.id}...`);
@@ -1452,7 +1674,8 @@ export function probe(fd: number): schema.Probe {
 			album: {
 				title: tags.album,
 				year: tags.year,
-				artists: is.absent(tags.album_artist) ? [] : tags.album_artist.split(";").map((artist) => artist.trim())
+				artists: is.absent(tags.album_artist) ? [] : tags.album_artist.split(";").map((artist) => artist.trim()),
+				genres: is.absent(tags.genre) ? [] : tags.genre.split(";").map((genre) => genre.trim())
 			},
 			artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
 			copyright: tags.copyright
@@ -1469,6 +1692,7 @@ export function probe(fd: number): schema.Probe {
 				title: `${tags.title} by ${tags.artist}`,
 				year: tags.year,
 				artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
+				genres: is.absent(tags.genre) ? [] : tags.genre.split(";").map((genre) => genre.trim())
 			},
 			artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
 			copyright: tags.copyright
