@@ -272,6 +272,23 @@ export function probe(fd: number): schema.Probe {
 					copyright: tags.copyright
 				};
 				result.metadata = metadata;
+			} else if (is.present(tags.title) && is.present(tags.artist)) {
+				// TODO: Remove stray track indexing when media directories are presented in the UI.
+				let metadata: schema.TrackMetadata = {
+					type: "track",
+					title: tags.title,
+					disc: 1,
+					track: 1,
+					album: {
+						title: `${tags.title} by ${tags.artist}`,
+						year: tags.year,
+						artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
+						genres: is.absent(tags.genre) ? [] : tags.genre.split(";").map((genre) => genre.trim())
+					},
+					artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
+					copyright: tags.copyright
+				};
+				result.metadata = metadata;
 			}
 		}
 	} catch (error) {}
