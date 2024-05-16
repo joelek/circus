@@ -114,7 +114,10 @@ External image and metadata files may be used to supply additional information t
 		"artists": [
 			"Artist name"
 		],
-		"tidal"?: 12345
+		"tidal"?: 12345,
+		"genres"?: [
+			"Genre name"
+		]
 	},
 	"artists": [
 		"Artist name"

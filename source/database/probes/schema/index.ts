@@ -103,7 +103,8 @@ export const TrackMetadata: autoguard.serialization.MessageGuard<TrackMetadata> 
 		"artists": autoguard.guards.Array.of(autoguard.guards.String)
 	}, {
 		"year": autoguard.guards.Number,
-		"tidal": autoguard.guards.Number
+		"tidal": autoguard.guards.Number,
+		"genres": autoguard.guards.Array.of(autoguard.guards.String)
 	}),
 	"artists": autoguard.guards.Array.of(autoguard.guards.String)
 }, {
@@ -127,7 +128,8 @@ export type TrackMetadata = autoguard.guards.Object<{
 		"artists": autoguard.guards.Array<autoguard.guards.String>
 	}, {
 		"year": autoguard.guards.Number,
-		"tidal": autoguard.guards.Number
+		"tidal": autoguard.guards.Number,
+		"genres": autoguard.guards.Array<autoguard.guards.String>
 	}>,
 	"artists": autoguard.guards.Array<autoguard.guards.String>
 }, {

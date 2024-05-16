@@ -483,6 +483,18 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 				order: index
 			});
 		}
+		for (let [index, name] of (metadata.album.genres ?? []).entries()) {
+			let category_id = makeBinaryId("category", name);
+			await stores.categories.update(queue, {
+				category_id: category_id,
+				name: name
+			});
+			await stores.album_categories.insert(queue, {
+				category_id: category_id,
+				album_id: album_id,
+				order: index
+			});
+		}
 		await associateTrackFiles(queue, track_id, ...file_ids);
 	} else if (probes.schema.AlbumMetadata.is(metadata)) {
 		let year_id: Uint8Array | undefined;

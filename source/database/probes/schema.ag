@@ -48,7 +48,8 @@ guard TrackMetadata: {
 		"title": string,
 		"year"?: number,
 		"artists": string[],
-		"tidal"?: number
+		"tidal"?: number,
+		"genres"?: string[]
 	},
 	"artists": string[],
 	"copyright"?: string
