@@ -55,7 +55,7 @@ guard Album: AlbumBase & {
 	"affinity": number,
 	"duration_ms": number,
 	"tidal"?: number,
-	"categories"?: CategoryBase[]
+	"categories": CategoryBase[]
 };
 
 guard AlbumContext: Album & {

@@ -143,12 +143,12 @@ export const Album: autoguard.serialization.MessageGuard<Album> = autoguard.guar
 	autoguard.guards.Object.of({
 		"artists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ArtistBase)),
 		"affinity": autoguard.guards.Number,
-		"duration_ms": autoguard.guards.Number
+		"duration_ms": autoguard.guards.Number,
+		"categories": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => CategoryBase))
 	}, {
 		"year": autoguard.guards.Reference.of(() => YearBase),
 		"copyright": autoguard.guards.String,
-		"tidal": autoguard.guards.Number,
-		"categories": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => CategoryBase))
+		"tidal": autoguard.guards.Number
 	})
 );
 
@@ -157,12 +157,12 @@ export type Album = autoguard.guards.Intersection<[
 	autoguard.guards.Object<{
 		"artists": autoguard.guards.Array<autoguard.guards.Reference<ArtistBase>>,
 		"affinity": autoguard.guards.Number,
-		"duration_ms": autoguard.guards.Number
+		"duration_ms": autoguard.guards.Number,
+		"categories": autoguard.guards.Array<autoguard.guards.Reference<CategoryBase>>
 	}, {
 		"year": autoguard.guards.Reference<YearBase>,
 		"copyright": autoguard.guards.String,
-		"tidal": autoguard.guards.Number,
-		"categories": autoguard.guards.Array<autoguard.guards.Reference<CategoryBase>>
+		"tidal": autoguard.guards.Number
 	}>
 ]>;
 
