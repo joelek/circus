@@ -215,7 +215,5 @@ Ports, paths and other settings can be configured through altering the config fi
 * Index generated images.
 * Move authentication to typesockets.
 * Add synchronization (latency estimation) to playback protocol.
-* Verify external track metadata functionality.
 * Change line heights to prevent the truncation of capital letters with umlauts.
 * Index keyframes and create movie and episode subpage with list.
-* Optimize directory context playback.
