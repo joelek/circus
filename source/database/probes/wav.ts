@@ -55,19 +55,28 @@ export function probe(fd: number): schema.Probe {
 	if (body_type.subarray(0, 4).toString("ascii") !== "WAVE") {
 		throw new Error(`Expected a "WAVE" chunk list!`);
 	}
-	let format_chunk = RIFFChunk.parse(fd, {
+	let section: Section = {
 		offset: root_chunk.body.offset + 4,
 		length: root_chunk.body.length - 4
-	});
-	if (format_chunk.type !== "fmt ") {
-		throw new Error(`Expected a "fmt " chunk, got "${format_chunk.type}"!`);
+	};
+	let chunks: Array<RIFFChunk> = [];
+	while (true) {
+		try {
+			let chunk = RIFFChunk.parse(fd, section);
+			chunks.push(chunk);
+			section.offset += 8 + chunk.body.length;
+			section.length -= 8 + chunk.body.length;
+		} catch (error) {
+			break;
+		}
 	}
-	let data_chunk = RIFFChunk.parse(fd, {
-		offset: format_chunk.body.offset + format_chunk.body.length,
-		length: file_size - (format_chunk.body.offset + format_chunk.body.length)
-	});
-	if (data_chunk.type !== "data") {
-		throw new Error(`Expected a "data" chunk, got "${data_chunk.type}"!`);
+	let format_chunk = chunks.find((chunk) => chunk.type === "fmt ");
+	if (format_chunk == null) {
+		throw new Error(`Expected a "fmt " chunk!`);
+	}
+	let data_chunk = chunks.find((chunk) => chunk.type === "data");
+	if (data_chunk == null) {
+		throw new Error(`Expected a "data" chunk!`);
 	}
 	let format = Buffer.alloc(16);
 	if (libfs.readSync(fd, format, 0, format.length, format_chunk.body.offset) !== format.length) {
