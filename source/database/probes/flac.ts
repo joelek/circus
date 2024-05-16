@@ -10,7 +10,8 @@ type Tags = {
 	disc_number?: number,
 	artist?: string,
 	album_artist?: string,
-	copyright?: string
+	copyright?: string,
+	genre?: string
 };
 
 type Section = {
@@ -229,6 +230,10 @@ export function probe(fd: number): schema.Probe {
 		if (copyright != null) {
 			tags.copyright = copyright.value;
 		}
+		let genre = vorbis_comment.tags.find((tag) => tag.key.toLowerCase() === "genre");
+		if (genre != null) {
+			tags.genre = genre.value;
+		}
 	}
 	if (is.present(tags.title) && is.present(tags.disc_number) && is.present(tags.track_number) && is.present(tags.album)) {
 		let metadata: schema.TrackMetadata = {
@@ -239,7 +244,8 @@ export function probe(fd: number): schema.Probe {
 			album: {
 				title: tags.album,
 				year: tags.year,
-				artists: is.absent(tags.album_artist) ? [] : tags.album_artist.split(";").map((artist) => artist.trim())
+				artists: is.absent(tags.album_artist) ? [] : tags.album_artist.split(";").map((artist) => artist.trim()),
+				genres: is.absent(tags.genre) ? [] : tags.genre.split(";").map((genre) => genre.trim())
 			},
 			artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
 			copyright: tags.copyright
@@ -256,6 +262,7 @@ export function probe(fd: number): schema.Probe {
 				title: `${tags.title} by ${tags.artist}`,
 				year: tags.year,
 				artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
+				genres: is.absent(tags.genre) ? [] : tags.genre.split(";").map((genre) => genre.trim())
 			},
 			artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
 			copyright: tags.copyright
