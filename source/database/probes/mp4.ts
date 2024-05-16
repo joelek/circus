@@ -103,7 +103,8 @@ type Tags = {
 	album_artist?: string,
 	disc_number?: number,
 	track_number?: number,
-	copyright?: string
+	copyright?: string,
+	genre?: string
 };
 
 export function probe(fd: number): schema.Probe {
@@ -222,6 +223,10 @@ export function probe(fd: number): schema.Probe {
 			let buffer = ilst.getChild("disk").getChild("data").readBody();
 			tags.disc_number = buffer.readUInt32BE(8);
 		} catch (error) {}
+		try {
+			let buffer = ilst.getChild("\u00A9gen").getChild("data").readBody();
+			tags.genre = buffer.slice(8).toString();
+		} catch (error) {}
 		if (result.resources.find((resource) => resource.type === "video")) {
 			if (is.present(tags.episode) && is.present(tags.season_number) && is.present(tags.episode_number) && is.present(tags.show)) {
 				let metadata: schema.EpisodeMetadata = {
@@ -234,7 +239,7 @@ export function probe(fd: number): schema.Probe {
 					show: {
 						title: tags.show,
 						summary: undefined,
-						genres: [],
+						genres: is.absent(tags.genre) ? [] : tags.genre.split(";").map((genre) => genre.trim()),
 						actors: []
 					}
 				};
@@ -245,7 +250,7 @@ export function probe(fd: number): schema.Probe {
 					title: tags.title,
 					year: tags.year,
 					summary: tags.comment,
-					genres: [],
+					genres: is.absent(tags.genre) ? [] : tags.genre.split(";").map((genre) => genre.trim()),
 					actors: []
 				};
 				result.metadata = metadata;
@@ -260,7 +265,8 @@ export function probe(fd: number): schema.Probe {
 					album: {
 						title: tags.album,
 						year: tags.year,
-						artists: is.absent(tags.album_artist) ? [] : tags.album_artist.split(";").map((artist) => artist.trim())
+						artists: is.absent(tags.album_artist) ? [] : tags.album_artist.split(";").map((artist) => artist.trim()),
+						genres: is.absent(tags.genre) ? [] : tags.genre.split(";").map((genre) => genre.trim())
 					},
 					artists: is.absent(tags.artist) ? [] : tags.artist.split(";").map((artist) => artist.trim()),
 					copyright: tags.copyright
