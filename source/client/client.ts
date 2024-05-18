@@ -108,6 +108,7 @@ setupVideoElementUnlocker(currentVideo);
 
 let canCurrentVideoSeek = new ObservableClass(false);
 let canCurrentVideoPlay = new ObservableClass(false);
+let canCurrentVideoLoad = new ObservableClass(false);
 
 videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 	if (videoElementMayBeLocked) {
@@ -118,7 +119,7 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 	player.tsc.url = makeUrl(`context/?type=browser&name=Client&did=${did}&enabled=true`);
 
 	currentVideo.addEventListener("loadstart", () => {
-
+		canCurrentVideoLoad.updateState(false);
 	});
 	currentVideo.addEventListener("loadedmetadata", () => {
 		session.update();
@@ -141,7 +142,7 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 	currentVideo.addEventListener("stalled", () => {
 
 	});
-	currentVideo.addEventListener("suspended", () => {
+	currentVideo.addEventListener("suspend", () => {
 
 	});
 	currentVideo.addEventListener("seeking", () => {
@@ -161,6 +162,12 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 	});
 	currentVideo.addEventListener("ended", () => {
 		player.next();
+	});
+	currentVideo.addEventListener("error", (event) => {
+		if (player.currentLocalEntry.getState() != null) {
+			player.pause();
+			canCurrentVideoLoad.updateState(true);
+		}
 	});
 
 
@@ -187,6 +194,18 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 		};
 		// The computer will not be awaited by ObservableClass since it doesn't handle async observers. This may throw errors when play() is interrupted.
 		canCurrentVideoPlay.addObserver(computer);
+		player.playback.addObserver(computer);
+	}
+
+	{
+		let computer = async () => {
+			if (canCurrentVideoLoad.getState()) {
+				if (player.playback.getState()) {
+					currentVideo.load();
+				}
+			}
+		};
+		canCurrentVideoLoad.addObserver(computer);
 		player.playback.addObserver(computer);
 	}
 
@@ -286,6 +305,7 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 		let computer = () => {
 			canCurrentVideoPlay.updateState(false);
 			canCurrentVideoSeek.updateState(false);
+			canCurrentVideoLoad.updateState(false);
 			let currentLocalEntry = player.currentLocalEntry.getState();
 			let token = player.token.getState();
 			while (is.present(currentVideo.lastChild)) {
@@ -296,7 +316,7 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 				return;
 			} else {
 				currentVideo.src = `/api/files/${currentLocalEntry.media.file_id}/content/?token=${token}`;
-				currentVideo.load();
+				canCurrentVideoLoad.updateState(true);
 			}
 			if (Movie.is(currentLocalEntry) || Episode.is(currentLocalEntry)) {
 				let subtitles = currentLocalEntry.subtitles;
