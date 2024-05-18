@@ -114,7 +114,7 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 		return;
 	}
 	player.enable();
-	//@ts-ignore
+	// @ts-ignore
 	player.tsc.url = makeUrl(`context/?type=browser&name=Client&did=${did}&enabled=true`);
 
 	currentVideo.addEventListener("loadstart", () => {
@@ -2087,7 +2087,7 @@ window.requestAnimationFrame(async function computer() {
 			progress += (Date.now() - estimatedProgressTimestamp) / 1000;
 		}
 		scale = progress / (currentEntry.media.duration_ms / 1000);
-		metadata = `${formatTimestamp(progress * 1000)} / ${formatTimestamp(currentEntry.media.duration_ms)}`;
+		metadata = `${formatTimestamp(Math.min(progress * 1000, currentEntry.media.duration_ms))} / ${formatTimestamp(currentEntry.media.duration_ms)}`;
 	}
 	if (playback && !playing) {
 		metadata = "Buffering...";
