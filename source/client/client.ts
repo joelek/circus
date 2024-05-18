@@ -2226,23 +2226,29 @@ let mp = xml.element("div.content")
 		.add(xml.element("div.media-player__bottom")
 			.add(makeButton({ style: "flat" })
 				.bind("data-active", player.shuffle.addObserver(a => a))
+				.bind("data-enabled", player.isOnline.addObserver(a => a))
 				.add(Icon.makeShuffle()
 						.set("width", "16px")
 						.set("height", "16px")
 				)
 				.on("click", () => {
-					player.toggleShuffle();
+					if (player.isOnline.getState()) {
+						player.toggleShuffle();
+					}
 				})
 			)
 			.add(progress)
 			.add(makeButton({ style: "flat" })
 				.bind("data-active", player.repeat.addObserver(a => a))
+				.bind("data-enabled", player.isOnline.addObserver(a => a))
 				.add(Icon.makeRepeat()
 						.set("width", "16px")
 						.set("height", "16px")
 				)
 				.on("click", () => {
-					player.toggleRepeat();
+					if (player.isOnline.getState()) {
+						player.toggleRepeat();
+					}
 				})
 			)
 		)
