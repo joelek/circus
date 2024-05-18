@@ -110,6 +110,8 @@ let canCurrentVideoSeek = new ObservableClass(false);
 let canCurrentVideoPlay = new ObservableClass(false);
 let canCurrentVideoLoad = new ObservableClass(false);
 
+let videoEventLog = new ArrayObservable<{ timestamp: number; type: string; }>([]);
+
 videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 	if (videoElementMayBeLocked) {
 		return;
@@ -119,55 +121,72 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 	player.tsc.url = makeUrl(`context/?type=browser&name=Client&did=${did}&enabled=true`);
 
 	currentVideo.addEventListener("loadstart", () => {
+		videoEventLog.append({ timestamp: Date.now(), type: "loadstart" });
 		canCurrentVideoLoad.updateState(false);
 	});
-	currentVideo.addEventListener("loadedmetadata", () => {
-		session.update();
+	currentVideo.addEventListener("durationchange", () => {
+		videoEventLog.append({ timestamp: Date.now(), type: "durationchange" });
 	});
 	currentVideo.addEventListener("loadedmetadata", () => {
+		videoEventLog.append({ timestamp: Date.now(), type: "loadedmetadata" });
+		session.update();
 		canCurrentVideoSeek.updateState(true);
 	});
 	currentVideo.addEventListener("loadeddata", () => {
+		videoEventLog.append({ timestamp: Date.now(), type: "loadeddata" });
 
 	});
 	currentVideo.addEventListener("canplay", () => {
+		videoEventLog.append({ timestamp: Date.now(), type: "canplay" });
 
 	});
 	currentVideo.addEventListener("canplaythrough", () => {
+		videoEventLog.append({ timestamp: Date.now(), type: "canplaythrough" });
 		canCurrentVideoPlay.updateState(true);
 	});
 	currentVideo.addEventListener("waiting", () => {
+		videoEventLog.append({ timestamp: Date.now(), type: "waiting" })
 		canCurrentVideoPlay.updateState(false);
 	});
 	currentVideo.addEventListener("stalled", () => {
-
+		videoEventLog.append({ timestamp: Date.now(), type: "stalled" })
 	});
 	currentVideo.addEventListener("suspend", () => {
-
+		videoEventLog.append({ timestamp: Date.now(), type: "suspend" })
 	});
 	currentVideo.addEventListener("seeking", () => {
+		videoEventLog.append({ timestamp: Date.now(), type: "seeking" })
 		canCurrentVideoPlay.updateState(false);
 	});
 	currentVideo.addEventListener("seeked", () => {
+		videoEventLog.append({ timestamp: Date.now(), type: "seeked" })
 		canCurrentVideoPlay.updateState(true);
 	});
-	currentVideo.addEventListener("playing", () => {
-		player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
+	currentVideo.addEventListener("play", () => {
+		videoEventLog.append({ timestamp: Date.now(), type: "play" })
 	});
 	currentVideo.addEventListener("playing", () => {
+		videoEventLog.append({ timestamp: Date.now(), type: "playing" })
+		player.isCurrentEntryVideo.updateState(currentVideo.videoWidth > 0 && currentVideo.videoHeight > 0);
 		player.setPlaying(true);
 	});
 	currentVideo.addEventListener("pause", () => {
+		videoEventLog.append({ timestamp: Date.now(), type: "pause" })
 		player.setPlaying(false);
 	});
 	currentVideo.addEventListener("ended", () => {
+		videoEventLog.append({ timestamp: Date.now(), type: "ended" })
 		player.next();
 	});
 	currentVideo.addEventListener("error", (event) => {
+		videoEventLog.append({ timestamp: Date.now(), type: "error" })
 		if (player.currentLocalEntry.getState() != null) {
 			player.pause();
 			canCurrentVideoLoad.updateState(true);
 		}
+	});
+	currentVideo.addEventListener("emptied", (event) => {
+		videoEventLog.append({ timestamp: Date.now(), type: "emptied" })
 	});
 
 
@@ -312,9 +331,11 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 				currentVideo.removeChild(currentVideo.lastChild);
 			}
 			if (is.absent(currentLocalEntry) || is.absent(token)) {
+				videoEventLog.append({ timestamp: Date.now(), type: `file_id: ""` });
 				currentVideo.src = ``;
 				return;
 			} else {
+				videoEventLog.append({ timestamp: Date.now(), type: `file_id: "${currentLocalEntry.media.file_id}"` });
 				currentVideo.src = `/api/files/${currentLocalEntry.media.file_id}/content/?token=${token}`;
 				canCurrentVideoLoad.updateState(true);
 			}
@@ -1705,6 +1726,16 @@ let appheader = xml.element("div.app__header")
 										}
 										return makeStatistic(title, subtitle);
 									}))
+								)
+								.add(xml.element("div")
+									.set("style", "display: grid; gap: 16px;")
+									.add(xml.element("a")
+										.set("href", "internal/player-status/")
+										.on("click", () => navigate("internal/player-status/"))
+										.add(xml.element("div.statistic__title")
+											.add(xml.text("Player Status"))
+										)
+									)
 								);
 							modalPageElements.update([modalPage]);
 						}
@@ -2375,6 +2406,24 @@ function observe(element: xml.XElement, handler: () => Promise<void>): xml.XElem
 let updateviewforuri = async (uri: string): Promise<{ element: Element, title: string }> => {
 	let parts: RegExpExecArray | null;
 	if (false) {
+	} else if ((parts = /^internal[/]player-status[/]/.exec(uri)) !== null) {
+		let element = xml.element("div")
+			.add(xml.element("div.content")
+				.add(renderTextHeader(xml.text("Player Status")))
+				.add(xml.element("div")
+					.set("style", "display: grid; gap: 24px;")
+					.add(renderTextHeader(xml.text("Event Log")))
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 16px;")
+						.repeat(videoEventLog, ({ timestamp, type }) => makeStatistic(type, new Date(timestamp).toISOString().slice(11, 11 + 8)))
+					)
+				)
+			)
+			.render();
+		return {
+			element,
+			title: "Player Status"
+		};
 	} else if ((parts = /^audio[/]genres[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
 		let category_id = decodeURIComponent(parts[1]);
 		return apiclient["GET:/categories/<category_id>/"]({
