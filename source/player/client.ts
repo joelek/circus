@@ -573,7 +573,6 @@ export class ContextClient {
 	last(): void {
 		let lastEntryIndex = this.lastEntryIndex.getState();
 		if (is.present(lastEntryIndex)) {
-			this.currentEntryIndex.updateState(undefined);
 			this.progress.updateState(undefined);
 			this.currentEntryIndex.updateState(lastEntryIndex);
 			this.tsc.send("SetIndex", {
@@ -587,7 +586,6 @@ export class ContextClient {
 	next(): void {
 		let nextEntryIndex = this.nextEntryIndex.getState();
 		if (is.present(nextEntryIndex)) {
-			this.currentEntryIndex.updateState(undefined);
 			this.progress.updateState(undefined);
 			this.currentEntryIndex.updateState(nextEntryIndex);
 			this.tsc.send("SetIndex", {
