@@ -108,7 +108,6 @@ setupVideoElementUnlocker(currentVideo);
 
 let canCurrentVideoSeek = new ObservableClass(false);
 let canCurrentVideoPlay = new ObservableClass(false);
-let canCurrentVideoLoad = new ObservableClass(false);
 
 let videoEventLog = new ArrayObservable<{ timestamp: number; type: string; }>([]);
 
@@ -122,7 +121,6 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 
 	currentVideo.addEventListener("loadstart", () => {
 		videoEventLog.append({ timestamp: Date.now(), type: "loadstart" });
-		canCurrentVideoLoad.updateState(false);
 	});
 	currentVideo.addEventListener("durationchange", () => {
 		videoEventLog.append({ timestamp: Date.now(), type: "durationchange" });
@@ -147,6 +145,7 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 	currentVideo.addEventListener("waiting", () => {
 		videoEventLog.append({ timestamp: Date.now(), type: "waiting" })
 		canCurrentVideoPlay.updateState(false);
+		player.setPlaying(false);
 	});
 	currentVideo.addEventListener("stalled", () => {
 		videoEventLog.append({ timestamp: Date.now(), type: "stalled" })
@@ -156,14 +155,13 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 	});
 	currentVideo.addEventListener("seeking", () => {
 		videoEventLog.append({ timestamp: Date.now(), type: "seeking" })
-		canCurrentVideoPlay.updateState(false);
 	});
 	currentVideo.addEventListener("seeked", () => {
 		videoEventLog.append({ timestamp: Date.now(), type: "seeked" })
-		canCurrentVideoPlay.updateState(true);
 	});
 	currentVideo.addEventListener("play", () => {
 		videoEventLog.append({ timestamp: Date.now(), type: "play" })
+		player.play();
 	});
 	currentVideo.addEventListener("playing", () => {
 		videoEventLog.append({ timestamp: Date.now(), type: "playing" })
@@ -173,6 +171,10 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 	currentVideo.addEventListener("pause", () => {
 		videoEventLog.append({ timestamp: Date.now(), type: "pause" })
 		player.setPlaying(false);
+		// Ignore the pause event emitted just before the "ended" event in order not to disrupt auto playback.
+		if (currentVideo.currentTime < currentVideo.duration) {
+			player.pause();
+		}
 	});
 	currentVideo.addEventListener("ended", () => {
 		videoEventLog.append({ timestamp: Date.now(), type: "ended" })
@@ -182,7 +184,6 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 		videoEventLog.append({ timestamp: Date.now(), type: "error" })
 		if (player.currentLocalEntry.getState() != null) {
 			player.pause();
-			canCurrentVideoLoad.updateState(true);
 		}
 	});
 	currentVideo.addEventListener("emptied", (event) => {
@@ -207,24 +208,10 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 				} else {
 					currentVideo.pause();
 				}
-			} else {
-				currentVideo.pause();
 			}
 		};
 		// The computer will not be awaited by ObservableClass since it doesn't handle async observers. This may throw errors when play() is interrupted.
 		canCurrentVideoPlay.addObserver(computer);
-		player.playback.addObserver(computer);
-	}
-
-	{
-		let computer = async () => {
-			if (canCurrentVideoLoad.getState()) {
-				if (player.playback.getState()) {
-					currentVideo.load();
-				}
-			}
-		};
-		canCurrentVideoLoad.addObserver(computer);
 		player.playback.addObserver(computer);
 	}
 
@@ -324,7 +311,6 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 		let computer = () => {
 			canCurrentVideoPlay.updateState(false);
 			canCurrentVideoSeek.updateState(false);
-			canCurrentVideoLoad.updateState(false);
 			let currentLocalEntry = player.currentLocalEntry.getState();
 			let token = player.token.getState();
 			while (is.present(currentVideo.lastChild)) {
@@ -337,7 +323,7 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 			} else {
 				videoEventLog.append({ timestamp: Date.now(), type: `file_id: "${currentLocalEntry.media.file_id}"` });
 				currentVideo.src = `/api/files/${currentLocalEntry.media.file_id}/content/?token=${token}`;
-				canCurrentVideoLoad.updateState(true);
+				currentVideo.load();
 			}
 			if (Movie.is(currentLocalEntry) || Episode.is(currentLocalEntry)) {
 				let subtitles = currentLocalEntry.subtitles;
@@ -2141,7 +2127,7 @@ window.requestAnimationFrame(async function computer() {
 		metadata = `${formatTimestamp(Math.min(progress * 1000, currentEntry.media.duration_ms))} / ${formatTimestamp(currentEntry.media.duration_ms)}`;
 	}
 	if (playback && !playing) {
-		metadata = "Buffering...";
+		metadata = "Loading...";
 	}
 	let ref = await progresstrack.ref() as HTMLDivElement;
 	ref.style.setProperty("transform", `scale(${scale}, 1.0)`);
