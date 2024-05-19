@@ -126,11 +126,11 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 	});
 	currentVideo.addEventListener("durationchange", () => {
 		videoEventLog.append({ timestamp: Date.now(), type: "durationchange" });
+		session.update();
+		canCurrentVideoSeek.updateState(true);
 	});
 	currentVideo.addEventListener("loadedmetadata", () => {
 		videoEventLog.append({ timestamp: Date.now(), type: "loadedmetadata" });
-		session.update();
-		canCurrentVideoSeek.updateState(true);
 	});
 	currentVideo.addEventListener("loadeddata", () => {
 		videoEventLog.append({ timestamp: Date.now(), type: "loadeddata" });
