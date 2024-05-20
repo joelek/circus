@@ -2401,7 +2401,14 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 					.add(renderTextHeader(xml.text("Event Log")))
 					.add(xml.element("div")
 						.set("style", "display: grid; gap: 16px;")
-						.repeat(videoEventLog, ({ timestamp, type }) => makeStatistic(type, new Date(timestamp).toISOString().slice(11, 11 + 8)))
+						.repeat(videoEventLog, ({ timestamp, type }) => {
+							let date = new Date(timestamp);
+							let h = date.getHours().toString().padStart(2, "0");
+							let m = date.getMinutes().toString().padStart(2, "0");
+							let s = date.getSeconds().toString().padStart(2, "0");
+							let ms = date.getMilliseconds().toString().padStart(3, "0");
+							return makeStatistic(type, `${h}:${m}:${s}.${ms}`);
+						})
 					)
 				)
 			)
