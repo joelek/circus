@@ -256,11 +256,11 @@ export function probe(fd: number): schema.Probe {
 				result.metadata = metadata;
 			}
 		} else if (result.resources.find((resource) => resource.type === "audio")) {
-			if (is.present(tags.title) && is.present(tags.disc_number) && is.present(tags.track_number) && is.present(tags.album)) {
+			if (is.present(tags.title) && is.present(tags.track_number) && is.present(tags.album)) {
 				let metadata: schema.TrackMetadata = {
 					type: "track",
 					title: tags.title,
-					disc: tags.disc_number,
+					disc: tags.disc_number ?? 1,
 					track: tags.track_number,
 					album: {
 						title: tags.album,
