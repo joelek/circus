@@ -128,7 +128,13 @@ async function requestHandler(request: libhttp.IncomingMessage, response: libhtt
 			"display": "standalone",
 			"theme_color": "#df4f7f",
 			"background_color":"#1f1f1f",
-			"icons": []
+			"icons": [
+				{
+					"src": "logo.png",
+					"sizes": "256x256",
+					"type": "image/png"
+				}
+			]
 		}));
 		return;
 	}
