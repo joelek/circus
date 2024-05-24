@@ -179,15 +179,15 @@ export class EntityCardFactory {
 	protected makeImage(artwork: Array<ImageFile>, default_ar?: AspectRatio): xnode.XElement {
 		let shared_ar: AspectRatio | undefined;
 		for (let image_file of artwork) {
-			let optimal_ar = AspectRatio.getOptimal({ x: image_file.width, y: image_file.height });
+			let image_ar = { x: image_file.width, y: image_file.height };
 			if (shared_ar == null) {
-				shared_ar = optimal_ar;
+				shared_ar = image_ar;
 			} else {
-				// If optimal aspect ratio is tall.
-				if (optimal_ar.y > optimal_ar.x) {
-					// If optimal aspect ratio is taller than shared aspect ratio.
-					if (optimal_ar.y * shared_ar.x > shared_ar.y * optimal_ar.x) {
-						shared_ar = optimal_ar;
+				// If image aspect ratio is tall.
+				if (image_ar.y > image_ar.x) {
+					// If image aspect ratio is taller than shared aspect ratio.
+					if (image_ar.y * shared_ar.x > shared_ar.y * image_ar.x) {
+						shared_ar = image_ar;
 					}
 				}
 			}
