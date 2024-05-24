@@ -12,34 +12,6 @@ const CSS = `
 		will-change: opacity;
 	}
 
-	.image-box--1-1 {
-		padding-bottom: ${1/1 * 100}%;
-	}
-
-	.image-box--4-3 {
-		padding-bottom: ${3/4 * 100}%;
-	}
-
-	.image-box--3-4 {
-		padding-bottom: ${4/3 * 100}%;
-	}
-
-	.image-box--3-2 {
-		padding-bottom: ${2/3 * 100}%;
-	}
-
-	.image-box--2-3 {
-		padding-bottom: ${3/2 * 100}%;
-	}
-
-	.image-box--16-9 {
-		padding-bottom: ${9/16 * 100}%;
-	}
-
-	.image-box--9-16 {
-		padding-bottom: ${9/16 * 100}%;
-	}
-
 	.image-box--multiple {
 
 	}
@@ -162,7 +134,7 @@ export class ImageBoxFactory {
 
 	for(urls: Array<string>, multiple?: boolean, ar?: AspectRatio): xnode.XElement {
 		ar = ar ?? TARGETS["1:1"];
-		let node = xnode.element(`div.image-box.image-box--${ar.x}-${ar.y}${multiple ? ".image-box--multiple" : ""}`);
+		let node = xnode.element(`div.image-box${multiple ? ".image-box--multiple" : ""}`).set("style", `padding-bottom: ${ar.y / ar.x * 100}%;`);
 		let content = xnode.element(`div.image-box__content`);
 		for (let url of urls) {
 			if (is.absent(url)) {
