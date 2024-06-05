@@ -204,7 +204,7 @@ export async function lookupArtist(queue: ReadableQueue, artist_id: string, api_
 	};
 };
 
-// TODO: Optimize.
+// TODO: Optimize. Needs filtering and ordering of records in many-to-many stores using fields from original stores.
 export async function lookupArtistAlbums(queue: ReadableQueue, artist_id: string, api_user_id: string, artist: schema.objects.ArtistBase): Promise<Array<schema.objects.Album>> {
 	let albums = (await Promise.all((await atlas.links.artist_album_artists.filter(queue, { artist_id: binid(artist_id) }))
 		.map((album_artist) => lookupAlbum(queue, hexid(album_artist.album_id), api_user_id))))
@@ -212,7 +212,7 @@ export async function lookupArtistAlbums(queue: ReadableQueue, artist_id: string
 	return albums;
 };
 
-// TODO: Optimize.
+// TODO: Optimize. Needs filtering and ordering of records in many-to-many stores using fields from original stores.
 export async function lookupArtistContext(queue: ReadableQueue, artist_id: string, api_user_id: string): Promise<schema.objects.ArtistContext> {
 	let artist = await lookupArtist(queue, artist_id, api_user_id);
 	let albums = (await Promise.all((await atlas.links.artist_album_artists.filter(queue, { artist_id: binid(artist_id) }))
@@ -1175,7 +1175,7 @@ export async function searchForEntities(queue: ReadableQueue, query: string, use
 	return entities; */
 };
 
-// TODO: Optimize.
+// TODO: Optimize. Needs complex queries. Non-trivial.
 export async function getArtistAppearances(queue: ReadableQueue, artist_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
 	let artist = await atlas.stores.artists.lookup(queue, { artist_id: binid(artist_id) });
 	let map = new Map<string, number>();
@@ -1204,7 +1204,7 @@ export async function getArtistAppearances(queue: ReadableQueue, artist_id: stri
 		.map((album_id) => lookupAlbum(queue, album_id, user_id)));
 };
 
-// TODO: Optimize.
+// TODO: Optimize. Needs filtering and ordering of records in many-to-many stores using fields from original stores.
 export async function getArtistTracks(queue: ReadableQueue, artist_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Track[]> {
 	let artist = await atlas.stores.artists.lookup(queue, { artist_id: binid(artist_id) });
 	let map = new Map<string, number>();
@@ -1222,7 +1222,7 @@ export async function getArtistTracks(queue: ReadableQueue, artist_id: string, o
 		.map((track_id) => lookupTrack(queue, track_id, user_id)));
 }
 
-// TODO: Optimize.
+// TODO: Optimize. Needs unique results from filtered store. Probably trivial.
 export async function getPlaylistAppearances(queue: ReadableQueue, track_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Playlist[]> {
 	let track = await atlas.stores.tracks.lookup(queue, { track_id: binid(track_id) });
 	let map = new Map<string, number>();
