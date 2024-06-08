@@ -109,7 +109,7 @@ const CSS = `
 	}
 `;
 
-function isHighQualityAudioFile({ sample_rate_hz, channel_count, bits_per_sample }: AudioFile): boolean {
+function isHighDefinitionAudioFile({ sample_rate_hz, channel_count, bits_per_sample }: AudioFile): boolean {
 	if (sample_rate_hz == null || sample_rate_hz < 44100) {
 		return false;
 	}
@@ -122,7 +122,7 @@ function isHighQualityAudioFile({ sample_rate_hz, channel_count, bits_per_sample
 	return true;
 }
 
-function isHighQualityVideoFile({ width, height }: VideoFile): boolean {
+function isHighDefinitionVideoFile({ width, height }: VideoFile): boolean {
 	let is_ultrawide = width * 9 > 16 * height;
 	if (is_ultrawide) {
 		return width >= 1280;
@@ -376,8 +376,8 @@ export class EntityCardFactory {
 			is.present(episode.year) ? `${episode.year.year}` : undefined,
 			metadata.formatDuration(episode.duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		if (isHighQualityVideoFile(episode.media)) {
-			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("HQ")));
+		if (isHighDefinitionVideoFile(episode.media)) {
+			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("HD")));
 		}
 		if (is.present(episode.last_stream_date)) {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("\u2713")));
@@ -428,8 +428,8 @@ export class EntityCardFactory {
 			is.present(movie.year) ? `${movie.year.year}` : undefined,
 			metadata.formatDuration(movie.duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		if (isHighQualityVideoFile(movie.media)) {
-			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("HQ")));
+		if (isHighDefinitionVideoFile(movie.media)) {
+			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("HD")));
 		}
 		if (is.present(movie.last_stream_date)) {
 			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("\u2713")));
@@ -501,8 +501,8 @@ export class EntityCardFactory {
 			"Track",
 			metadata.formatDuration(track.duration_ms)
 		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
-		if (isHighQualityAudioFile(track.media)) {
-			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("HQ")));
+		if (isHighDefinitionAudioFile(track.media)) {
+			tags.unshift(xnode.element("div.entity-card__tag.entity-card__tag--accent").add(xnode.text("HD")));
 		}
 		return this.make(link, image, titles, subtitles, tags, undefined, track.copyright, options);
 	}
