@@ -217,3 +217,4 @@ Ports, paths and other settings can be configured through altering the config fi
 * Add synchronization (latency estimation) to playback protocol.
 * Change line heights to prevent the truncation of capital letters with umlauts.
 * Index keyframes and create movie and episode subpage with list.
+* Add setting for controlling local device discovery.
