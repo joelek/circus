@@ -1151,7 +1151,7 @@ const getPlaylistItemsAfterPlaylist = context.createQuery(playlist_items, {
 	track_id: context.createEqualityOperator(),
 	playlist_id: context.createGreaterThanOperator()
 }, {
-	playlist_id: context.createIncreasingOrder() // TODO: Remove when issue is fixed in Atlas.
+	playlist_id: context.createIncreasingOrder()
 });
 
 export const transactionManager = context.createTransactionManager("./private/db/", {
