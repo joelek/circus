@@ -579,7 +579,7 @@ export const server = apiv2.makeServer({
 	"GET:/tracks/<track_id>/playlists/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);
-		let playlists = await handler.getPlaylistAppearances(queue, options.track_id, options.offset ?? 0, options.limit ?? 12, user_id);
+		let playlists = await handler.getPlaylistAppearances(queue, options.track_id, options.anchor, options.offset ?? 0, options.limit ?? 12, user_id);
 		return {
 			payload: {
 				playlists

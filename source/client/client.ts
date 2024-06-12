@@ -2523,6 +2523,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		let reachedEnd = new ObservableClass(false);
 		let isLoading = new ObservableClass(false);
 		let playlists = new ArrayObservable<Playlist>([]);
+		let anchor = new ObservableClass(undefined as Playlist | undefined);
 		async function load(): Promise<void> {
 			if (!reachedEnd.getState() && !isLoading.getState()) {
 				isLoading.updateState(true);
@@ -2530,12 +2531,14 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 					options: {
 						track_id,
 						token: token ?? "",
+						anchor: anchor.getState()?.playlist_id,
 						offset
 					}
 				});
 				let payload = await response.payload();
 				for (let playlist of payload.playlists) {
 					playlists.append(playlist);
+					anchor.updateState(playlist);
 				}
 				offset += payload.playlists.length;
 				if (payload.playlists.length === 0) {

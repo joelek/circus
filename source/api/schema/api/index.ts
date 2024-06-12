@@ -1086,8 +1086,9 @@ export namespace Autoguard {
 					"track_id": autoguard.guards.String,
 					"token": autoguard.guards.String
 				}, {
+					"anchor": autoguard.guards.String,
 					"offset": autoguard.guards.Number,
-					"limit": autoguard.guards.Number
+					"limit": new autoguard.guards.IntegerGuard(1, undefined)
 				}),
 				autoguard.api.Options
 			)
@@ -1449,7 +1450,7 @@ export namespace Autoguard {
 				autoguard.api.Headers
 			)
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"payload": autoguard.api.Binary
 		}),
 		"POST:/users/": autoguard.guards.Object.of({
@@ -1458,7 +1459,7 @@ export namespace Autoguard {
 				autoguard.guards.Reference.of(() => ErrorMessage)
 			)
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1469,7 +1470,7 @@ export namespace Autoguard {
 				"entities": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Entity))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1480,7 +1481,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ActorResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1491,7 +1492,7 @@ export namespace Autoguard {
 				"actor": autoguard.guards.Reference.of(() => Actor)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1502,7 +1503,7 @@ export namespace Autoguard {
 				"movies": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Movie))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1513,7 +1514,7 @@ export namespace Autoguard {
 				"shows": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Show))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1524,7 +1525,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => AlbumResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1535,7 +1536,7 @@ export namespace Autoguard {
 				"albums": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Album))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1546,7 +1547,7 @@ export namespace Autoguard {
 				"album": autoguard.guards.Reference.of(() => Album)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1557,7 +1558,7 @@ export namespace Autoguard {
 				"discs": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Disc))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1568,7 +1569,7 @@ export namespace Autoguard {
 				"context": autoguard.guards.Reference.of(() => AlbumContext)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1579,7 +1580,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ArtistResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1592,7 +1593,7 @@ export namespace Autoguard {
 				"appearances": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Album))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1603,7 +1604,7 @@ export namespace Autoguard {
 				"albums": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Album))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1614,7 +1615,7 @@ export namespace Autoguard {
 				"context": autoguard.guards.Reference.of(() => ArtistContext)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1625,7 +1626,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => DiscResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1639,7 +1640,7 @@ export namespace Autoguard {
 				"next": autoguard.guards.Reference.of(() => Disc)
 			})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1650,7 +1651,7 @@ export namespace Autoguard {
 				"tracks": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Track))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1661,7 +1662,7 @@ export namespace Autoguard {
 				"context": autoguard.guards.Reference.of(() => DiscContext)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1672,7 +1673,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => EpisodeResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1686,7 +1687,7 @@ export namespace Autoguard {
 				"next": autoguard.guards.Reference.of(() => Episode)
 			})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1697,7 +1698,7 @@ export namespace Autoguard {
 				"context": autoguard.guards.Reference.of(() => EpisodeContext)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1708,7 +1709,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => GenreResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1719,7 +1720,7 @@ export namespace Autoguard {
 				"genre": autoguard.guards.Reference.of(() => Genre)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1730,7 +1731,7 @@ export namespace Autoguard {
 				"movies": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Movie))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1741,7 +1742,7 @@ export namespace Autoguard {
 				"shows": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Show))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1752,7 +1753,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => CategoryResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1763,7 +1764,7 @@ export namespace Autoguard {
 				"category": autoguard.guards.Reference.of(() => Category)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1774,7 +1775,7 @@ export namespace Autoguard {
 				"albums": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Album))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1785,7 +1786,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => MovieResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1796,7 +1797,7 @@ export namespace Autoguard {
 				"movies": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Movie))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1808,7 +1809,7 @@ export namespace Autoguard {
 				"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1819,7 +1820,7 @@ export namespace Autoguard {
 				"movies": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Movie))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1830,7 +1831,7 @@ export namespace Autoguard {
 				"context": autoguard.guards.Reference.of(() => MovieContext)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1841,7 +1842,7 @@ export namespace Autoguard {
 				"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1852,7 +1853,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => PlaylistResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1863,7 +1864,7 @@ export namespace Autoguard {
 				"playlist": autoguard.guards.Reference.of(() => Playlist)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1874,7 +1875,7 @@ export namespace Autoguard {
 				"items": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => PlaylistItem))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1885,7 +1886,7 @@ export namespace Autoguard {
 				"context": autoguard.guards.Reference.of(() => PlaylistContext)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1896,7 +1897,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => SeasonResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1910,7 +1911,7 @@ export namespace Autoguard {
 				"next": autoguard.guards.Reference.of(() => Season)
 			})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1921,7 +1922,7 @@ export namespace Autoguard {
 				"episodes": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Episode))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1932,7 +1933,7 @@ export namespace Autoguard {
 				"context": autoguard.guards.Reference.of(() => SeasonContext)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1943,7 +1944,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ShowResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1955,7 +1956,7 @@ export namespace Autoguard {
 				"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1966,7 +1967,7 @@ export namespace Autoguard {
 				"seasons": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Season))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1977,7 +1978,7 @@ export namespace Autoguard {
 				"context": autoguard.guards.Reference.of(() => ShowContext)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1988,7 +1989,7 @@ export namespace Autoguard {
 				"actors": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Actor))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -1999,7 +2000,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => TrackResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2013,7 +2014,7 @@ export namespace Autoguard {
 				"next": autoguard.guards.Reference.of(() => Track)
 			})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2024,7 +2025,7 @@ export namespace Autoguard {
 				"playlists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Playlist))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2035,7 +2036,7 @@ export namespace Autoguard {
 				"context": autoguard.guards.Reference.of(() => TrackContext)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2046,7 +2047,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => UserResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2057,7 +2058,7 @@ export namespace Autoguard {
 				"user": autoguard.guards.Reference.of(() => User)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2068,7 +2069,7 @@ export namespace Autoguard {
 				"albums": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Album))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2079,7 +2080,7 @@ export namespace Autoguard {
 				"artists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Artist))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2090,7 +2091,7 @@ export namespace Autoguard {
 				"playlists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Playlist))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2101,7 +2102,7 @@ export namespace Autoguard {
 				"shows": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Show))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2112,7 +2113,7 @@ export namespace Autoguard {
 				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => YearResult))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2123,7 +2124,7 @@ export namespace Autoguard {
 				"year": autoguard.guards.Reference.of(() => Year)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2134,7 +2135,7 @@ export namespace Autoguard {
 				"albums": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Album))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2145,7 +2146,7 @@ export namespace Autoguard {
 				"movies": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Movie))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2156,7 +2157,7 @@ export namespace Autoguard {
 				"context": autoguard.guards.Reference.of(() => YearContext)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2167,7 +2168,7 @@ export namespace Autoguard {
 				"directory": autoguard.guards.Reference.of(() => Directory)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2178,7 +2179,7 @@ export namespace Autoguard {
 				"directories": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Directory))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2189,7 +2190,7 @@ export namespace Autoguard {
 				"files": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => File))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2200,7 +2201,7 @@ export namespace Autoguard {
 				"context": autoguard.guards.Reference.of(() => DirectoryContext)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2211,7 +2212,7 @@ export namespace Autoguard {
 				"file": autoguard.guards.Reference.of(() => File)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2222,14 +2223,14 @@ export namespace Autoguard {
 				"context": autoguard.guards.Reference.of(() => FileContext)
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
 			)
 		}),
 		"getFileContent": autoguard.guards.Object.of({}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
@@ -2244,7 +2245,7 @@ export namespace Autoguard {
 				)))
 			}, {})
 		}, {
-			"status": autoguard.guards.Number,
+			"status": autoguard.guards.Integer,
 			"headers": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers

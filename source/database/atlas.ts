@@ -1147,6 +1147,13 @@ const getRecentlyUpdatedEpisodes = context.createQuery(episodes, {
 	timestamp_ms: context.createDecreasingOrder()
 });
 
+const getPlaylistItemsAfterPlaylist = context.createQuery(playlist_items, {
+	track_id: context.createEqualityOperator(),
+	playlist_id: context.createGreaterThanOperator()
+}, {
+	playlist_id: context.createIncreasingOrder() // TODO: Remove when issue is fixed in Atlas.
+});
+
 export const transactionManager = context.createTransactionManager("./private/db/", {
 	languages,
 	directories,
@@ -1294,7 +1301,8 @@ export const transactionManager = context.createTransactionManager("./private/db
 	getRecentlyUpdatedMovies,
 	getRecentlyUpdatedShows,
 	getRecentlyUpdatedSeasons,
-	getRecentlyUpdatedEpisodes
+	getRecentlyUpdatedEpisodes,
+	getPlaylistItemsAfterPlaylist
 });
 
 export const stores = transactionManager.stores;

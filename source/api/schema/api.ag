@@ -323,7 +323,7 @@ route GET:/tracks/<track_id:string>/ ? <{ token: string }>
 		next?: ./objects/Track
 	};
 
-route GET:/tracks/<track_id:string>/playlists/ ? <{ token: string, offset?: number, limit?: number }>
+route GET:/tracks/<track_id:string>/playlists/ ? <{ token: string, anchor?: plain, offset?: number, limit?: integer(1,*) }>
 	=> {
 		playlists: ./objects/Playlist[]
 	};

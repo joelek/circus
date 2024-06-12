@@ -103,7 +103,7 @@ export type MediaInformation = autoguard.guards.Object<{
 }>;
 
 export const GenericMediaMetadata: autoguard.serialization.MessageGuard<GenericMediaMetadata> = autoguard.guards.Object.of({
-	"metadataType": autoguard.guards.NumberLiteral.of(0)
+	"metadataType": autoguard.guards.IntegerLiteral.of(0)
 }, {
 	"title": autoguard.guards.String,
 	"subtitle": autoguard.guards.String,
@@ -112,7 +112,7 @@ export const GenericMediaMetadata: autoguard.serialization.MessageGuard<GenericM
 });
 
 export type GenericMediaMetadata = autoguard.guards.Object<{
-	"metadataType": autoguard.guards.NumberLiteral<0>
+	"metadataType": autoguard.guards.IntegerLiteral<0>
 }, {
 	"title": autoguard.guards.String,
 	"subtitle": autoguard.guards.String,
@@ -121,7 +121,7 @@ export type GenericMediaMetadata = autoguard.guards.Object<{
 }>;
 
 export const MovieMediaMetadata: autoguard.serialization.MessageGuard<MovieMediaMetadata> = autoguard.guards.Object.of({
-	"metadataType": autoguard.guards.NumberLiteral.of(1)
+	"metadataType": autoguard.guards.IntegerLiteral.of(1)
 }, {
 	"title": autoguard.guards.String,
 	"subtitle": autoguard.guards.String,
@@ -131,7 +131,7 @@ export const MovieMediaMetadata: autoguard.serialization.MessageGuard<MovieMedia
 });
 
 export type MovieMediaMetadata = autoguard.guards.Object<{
-	"metadataType": autoguard.guards.NumberLiteral<1>
+	"metadataType": autoguard.guards.IntegerLiteral<1>
 }, {
 	"title": autoguard.guards.String,
 	"subtitle": autoguard.guards.String,
@@ -141,7 +141,7 @@ export type MovieMediaMetadata = autoguard.guards.Object<{
 }>;
 
 export const TvShowMediaMetadata: autoguard.serialization.MessageGuard<TvShowMediaMetadata> = autoguard.guards.Object.of({
-	"metadataType": autoguard.guards.NumberLiteral.of(2)
+	"metadataType": autoguard.guards.IntegerLiteral.of(2)
 }, {
 	"seriesTitle": autoguard.guards.String,
 	"subtitle": autoguard.guards.String,
@@ -152,7 +152,7 @@ export const TvShowMediaMetadata: autoguard.serialization.MessageGuard<TvShowMed
 });
 
 export type TvShowMediaMetadata = autoguard.guards.Object<{
-	"metadataType": autoguard.guards.NumberLiteral<2>
+	"metadataType": autoguard.guards.IntegerLiteral<2>
 }, {
 	"seriesTitle": autoguard.guards.String,
 	"subtitle": autoguard.guards.String,
@@ -163,7 +163,7 @@ export type TvShowMediaMetadata = autoguard.guards.Object<{
 }>;
 
 export const MusicTrackMediaMetadata: autoguard.serialization.MessageGuard<MusicTrackMediaMetadata> = autoguard.guards.Object.of({
-	"metadataType": autoguard.guards.NumberLiteral.of(3)
+	"metadataType": autoguard.guards.IntegerLiteral.of(3)
 }, {
 	"albumName": autoguard.guards.String,
 	"title": autoguard.guards.String,
@@ -177,7 +177,7 @@ export const MusicTrackMediaMetadata: autoguard.serialization.MessageGuard<Music
 });
 
 export type MusicTrackMediaMetadata = autoguard.guards.Object<{
-	"metadataType": autoguard.guards.NumberLiteral<3>
+	"metadataType": autoguard.guards.IntegerLiteral<3>
 }, {
 	"albumName": autoguard.guards.String,
 	"title": autoguard.guards.String,
@@ -191,7 +191,7 @@ export type MusicTrackMediaMetadata = autoguard.guards.Object<{
 }>;
 
 export const PhotoMediaMetadata: autoguard.serialization.MessageGuard<PhotoMediaMetadata> = autoguard.guards.Object.of({
-	"metadataType": autoguard.guards.NumberLiteral.of(4)
+	"metadataType": autoguard.guards.IntegerLiteral.of(4)
 }, {
 	"title": autoguard.guards.String,
 	"artist": autoguard.guards.String,
@@ -204,7 +204,7 @@ export const PhotoMediaMetadata: autoguard.serialization.MessageGuard<PhotoMedia
 });
 
 export type PhotoMediaMetadata = autoguard.guards.Object<{
-	"metadataType": autoguard.guards.NumberLiteral<4>
+	"metadataType": autoguard.guards.IntegerLiteral<4>
 }, {
 	"title": autoguard.guards.String,
 	"artist": autoguard.guards.String,

@@ -1222,21 +1222,19 @@ export async function getArtistTracks(queue: ReadableQueue, artist_id: string, o
 		.map((track_id) => lookupTrack(queue, track_id, user_id)));
 }
 
-// TODO: Optimize. Needs unique results from filtered store. Probably trivial.
-export async function getPlaylistAppearances(queue: ReadableQueue, track_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Playlist[]> {
-	let track = await atlas.stores.tracks.lookup(queue, { track_id: binid(track_id) });
-	let map = new Map<string, number>();
-	let playlist_items = await atlas.links.track_playlist_items.filter(queue, track);
-	for (let playlist_item of playlist_items) {
-		let key = hexid(playlist_item.playlist_id);
-		let value = map.get(key) ?? 0;
-		map.set(key, value + 2);
+// TODO: Optimize further. Needs grouped/unique results from filtered store.
+export async function getPlaylistAppearances(queue: ReadableQueue, track_id: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Playlist[]> {
+	let playlists = [] as schema.objects.Playlist[];
+	let playlist_id = anchor == null ? Uint8Array.of() : binid(anchor);
+	while (playlists.length < length) {
+		let playlist_items = await atlas.queries.getPlaylistItemsAfterPlaylist.filter(queue, { track_id: binid(track_id), playlist_id }, undefined, 1);
+		if (playlist_items.length === 0) {
+			break;
+		}
+		playlists.push(await lookupPlaylist(queue, hexid(playlist_items[0].playlist_id), user_id));
+		playlist_id = playlist_items[0].playlist_id;
 	}
-	return await Promise.all(Array.from(map.entries())
-		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
-		.slice(offset, offset + length)
-		.map((entry) => entry[0])
-		.map((playlist_id) => lookupPlaylist(queue, playlist_id, user_id)));
+	return playlists;
 };
 
 export async function getMovieSuggestions(queue: ReadableQueue, movie_id: string, anchor: string | undefined, offset: number, length: number, user_id: string): Promise<schema.objects.Movie[]> {
