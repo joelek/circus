@@ -1367,6 +1367,7 @@ export const stats = {
 
 export async function runIndexer(): Promise<void> {
 	console.log(`Running indexer...`);
+	let t0 = process.hrtime.bigint();
 	await transactionManager.enqueueWritableTransaction(async (queue) => {
 		await stores.languages.insert(queue, {
 			language_id: makeBinaryId("language", "en"),
@@ -1478,7 +1479,9 @@ export async function runIndexer(): Promise<void> {
 			} catch (error) {}
 		}
 	});
-	console.log(`Indexing finished.`);
+	let t1 = process.hrtime.bigint();
+	let duration_s = Math.round((Number(t1 - t0) / 1000 / 1000 / 1000));
+	console.log(`Indexing finished after ${duration_s} seconds.`);
 	if (global.gc) {
 		global.gc();
 		let mbs = process.memoryUsage().heapUsed / 1024 / 1024;
