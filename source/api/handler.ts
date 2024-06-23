@@ -1204,22 +1204,17 @@ export async function getArtistAppearances(queue: ReadableQueue, artist_id: stri
 		.map((album_id) => lookupAlbum(queue, album_id, user_id)));
 };
 
-// TODO: Optimize. Needs filtering and ordering of records in many-to-many stores using fields from original stores.
 export async function getArtistTracks(queue: ReadableQueue, artist_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Track[]> {
 	let artist = await atlas.stores.artists.lookup(queue, { artist_id: binid(artist_id) });
-	let map = new Map<string, number>();
-	let track_artists = await atlas.links.artist_track_artists.filter(queue, artist);
+	let track_artists = await atlas.queries.getArtistTracksByAffinity.filter(queue, {
+		artist_id: artist.artist_id,
+		track_affinity: 0
+	}, undefined, length);
+	let tracks = [] as Array<schema.objects.Track>;
 	for (let track_artist of track_artists) {
-		let track = await atlas.stores.tracks.lookup(queue, track_artist);
-		if (track.affinity > 0) {
-			map.set(hexid(track_artist.track_id), track.affinity);
-		}
+		tracks.push(await lookupTrack(queue, hexid(track_artist.track_id), user_id));
 	}
-	return await Promise.all(Array.from(map.entries())
-		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
-		.slice(offset, offset + length)
-		.map((entry) => entry[0])
-		.map((track_id) => lookupTrack(queue, track_id, user_id)));
+	return tracks;
 }
 
 // TODO: Optimize further. Needs grouped/unique results from filtered store.

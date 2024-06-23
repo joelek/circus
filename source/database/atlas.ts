@@ -1157,6 +1157,13 @@ const getPlaylistItemsAfterPlaylist = context.createQuery(playlist_items, {
 	playlist_id: context.createIncreasingOrder()
 });
 
+const getArtistTracksByAffinity = context.createQuery(track_artists, {
+	artist_id: context.createEqualityOperator(),
+	track_affinity: context.createGreaterThanOperator()
+}, {
+	track_affinity: context.createDecreasingOrder()
+});
+
 export const transactionManager = context.createTransactionManager("./private/db/", {
 	languages,
 	directories,
@@ -1305,7 +1312,8 @@ export const transactionManager = context.createTransactionManager("./private/db
 	getRecentlyUpdatedShows,
 	getRecentlyUpdatedSeasons,
 	getRecentlyUpdatedEpisodes,
-	getPlaylistItemsAfterPlaylist
+	getPlaylistItemsAfterPlaylist,
+	getArtistTracksByAffinity
 });
 
 export const stores = transactionManager.stores;
