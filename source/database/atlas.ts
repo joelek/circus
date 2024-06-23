@@ -1316,6 +1316,8 @@ export const transactionManager = context.createTransactionManager("./private/db
 	getArtistTracksByAffinity
 });
 
+// fs.writeFileSync("stats.json", JSON.stringify(transactionManager.getStatistics(), null, "\t"));
+
 export const stores = transactionManager.stores;
 export const links = transactionManager.links;
 export const queries = transactionManager.queries;
