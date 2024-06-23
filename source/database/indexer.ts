@@ -480,7 +480,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			await stores.track_artists.insert(queue, {
 				track_id: track_id,
 				artist_id: artist_id,
-				order: index
+				order: index,
+				track_affinity: null
 			});
 		}
 		for (let [index, name] of (metadata.album.genres ?? []).entries()) {
@@ -555,7 +556,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 				await stores.track_artists.insert(queue, {
 					track_id: track_id,
 					artist_id: artist_id,
-					order: index
+					order: index,
+					track_affinity: null
 				});
 			}
 			track_ids.push(track_id);
