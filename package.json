@@ -1,7 +1,7 @@
 {
 	"bin": {},
 	"devDependencies": {
-		"@joelek/atlas": "github:joelek/atlas#master",
+		"@joelek/atlas": "github:joelek/atlas#semver:^1.4",
 		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^5.14",
 		"@joelek/ts-bundle": "github:joelek/ts-bundle#semver:^1.3",
 		"@joelek/ts-sockets": "github:joelek/ts-sockets#semver:^2.2",
