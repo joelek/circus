@@ -1175,9 +1175,10 @@ export async function searchForEntities(queue: ReadableQueue, query: string, use
 	return entities; */
 };
 
-// TODO: Optimize. Needs complex queries. Non-trivial.
+// TODO: Precompute.
 export async function getArtistAppearances(queue: ReadableQueue, artist_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Album[]> {
-	let artist = await atlas.stores.artists.lookup(queue, { artist_id: binid(artist_id) });
+	return [];
+/* 	let artist = await atlas.stores.artists.lookup(queue, { artist_id: binid(artist_id) });
 	let map = new Map<string, number>();
 	let track_artists = await atlas.links.artist_track_artists.filter(queue, artist);
 	for (let track_artist of track_artists) {
@@ -1201,7 +1202,7 @@ export async function getArtistAppearances(queue: ReadableQueue, artist_id: stri
 		.sort(jsondb.NumericSort.decreasing((entry) => entry[1]))
 		.slice(offset, offset + length)
 		.map((entry) => entry[0])
-		.map((album_id) => lookupAlbum(queue, album_id, user_id)));
+		.map((album_id) => lookupAlbum(queue, album_id, user_id))); */
 };
 
 export async function getArtistTracks(queue: ReadableQueue, artist_id: string, offset: number, length: number, user_id: string): Promise<schema.objects.Track[]> {
