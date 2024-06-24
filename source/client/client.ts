@@ -3111,10 +3111,8 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 						.set("style", "display: grid; gap: 24px;")
 						.add(renderTextHeader(xml.text("Discography")))
 						.add(Grid.make()
-							.repeat(albums, (album, albumIndex) => {
-								return EntityCard.forAlbum(album, {
-									playbackButton: PlaybackButton.forArtist(artist, albumIndex)
-								});
+							.repeat(albums, (album) => {
+								return EntityCard.forAlbum(album);
 							})
 						)
 					)
