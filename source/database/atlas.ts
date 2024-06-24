@@ -201,7 +201,8 @@ export type TrackFile = atlas.RecordOf<typeof track_files>;
 const album_artists = context.createStore({
 	album_id: context.createBinaryField(),
 	artist_id: context.createBinaryField(),
-	order: context.createIntegerField()
+	order: context.createIntegerField(),
+	year: context.createNullableIntegerField()
 }, ["album_id", "artist_id"], {
 
 });
@@ -899,6 +900,8 @@ const album_album_artists = context.createLink(albums, album_artists, {
 	album_id: "album_id"
 }, {
 	order: context.createIncreasingOrder()
+}, {
+	year: "year"
 });
 
 const artist_album_artists = context.createLink(artists, album_artists, {

@@ -449,7 +449,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			await stores.album_artists.insert(queue, {
 				album_id: album_id,
 				artist_id: artist_id,
-				order: index
+				order: index,
+				year: null
 			});
 		}
 		let disc_id = makeBinaryId("disc", album_id, typeof metadata.disc === "number" ? metadata.disc : metadata.disc.number);
@@ -523,7 +524,8 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			await stores.album_artists.insert(queue, {
 				album_id: album_id,
 				artist_id: artist_id,
-				order: index
+				order: index,
+				year: null
 			});
 		}
 		let disc_id = makeBinaryId("disc", album_id, typeof metadata.disc === "number" ? metadata.disc : metadata.disc.number);
