@@ -204,20 +204,22 @@ export async function lookupArtist(queue: ReadableQueue, artist_id: string, api_
 	};
 };
 
-// TODO: Optimize. Needs filtering and ordering of records in many-to-many stores using fields from original stores.
-export async function lookupArtistAlbums(queue: ReadableQueue, artist_id: string, api_user_id: string, artist: schema.objects.ArtistBase): Promise<Array<schema.objects.Album>> {
-	let albums = (await Promise.all((await atlas.links.artist_album_artists.filter(queue, { artist_id: binid(artist_id) }))
-		.map((album_artist) => lookupAlbum(queue, hexid(album_artist.album_id), api_user_id))))
-		.sort(jsondb.NumericSort.decreasing((album) => album.year?.year));
+export async function lookupArtistAlbums(queue: ReadableQueue, artist_id: string, api_user_id: string): Promise<Array<schema.objects.Album>> {
+	let album_artists = await atlas.queries.getArtistAlbumsByYear.filter(queue, { artist_id: binid(artist_id) }, undefined, undefined);
+	let albums: Array<schema.objects.Album> = [];
+	for (let album_artist of album_artists) {
+		albums.push(await lookupAlbum(queue, hexid(album_artist.album_id), api_user_id));
+	}
 	return albums;
 };
 
-// TODO: Optimize. Needs filtering and ordering of records in many-to-many stores using fields from original stores.
 export async function lookupArtistContext(queue: ReadableQueue, artist_id: string, api_user_id: string): Promise<schema.objects.ArtistContext> {
 	let artist = await lookupArtist(queue, artist_id, api_user_id);
-	let albums = (await Promise.all((await atlas.links.artist_album_artists.filter(queue, { artist_id: binid(artist_id) }))
-		.map((record) => lookupAlbumContext(queue, hexid(record.album_id), api_user_id))))
-		.sort(jsondb.NumericSort.decreasing((album) => album.year?.year));
+	let album_artists = await atlas.queries.getArtistAlbumsByYear.filter(queue, { artist_id: binid(artist_id) }, undefined, undefined);
+	let albums: Array<schema.objects.AlbumContext> = [];
+	for (let album_artist of album_artists) {
+		albums.push(await lookupAlbumContext(queue, hexid(album_artist.album_id), api_user_id));
+	}
 	return {
 		...artist,
 		albums
