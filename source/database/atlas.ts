@@ -1170,6 +1170,12 @@ const getArtistTracksByAffinity = context.createQuery(track_artists, {
 	track_affinity: context.createDecreasingOrder()
 });
 
+const getArtistAlbumsByYear = context.createQuery(album_artists, {
+	artist_id: context.createEqualityOperator()
+}, {
+	year: context.createDecreasingOrder()
+});
+
 export const transactionManager = context.createTransactionManager("./private/db/", {
 	languages,
 	directories,
@@ -1319,7 +1325,8 @@ export const transactionManager = context.createTransactionManager("./private/db
 	getRecentlyUpdatedSeasons,
 	getRecentlyUpdatedEpisodes,
 	getPlaylistItemsAfterPlaylist,
-	getArtistTracksByAffinity
+	getArtistTracksByAffinity,
+	getArtistAlbumsByYear
 });
 
 // fs.writeFileSync("stats.json", JSON.stringify(transactionManager.getStatistics(), null, "\t"));
