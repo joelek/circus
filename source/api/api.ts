@@ -175,8 +175,11 @@ export const server = apiv2.makeServer({
 	}),
 	getArtistAlbums: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
+		let anchor = options.anchor;
+		let offset = options.offset;
+		let limit = options.limit;
 		let api_user_id = await auth.getUserId(queue, options.token);
-		let albums = await handler.lookupArtistAlbums(queue, options.artist_id, api_user_id);
+		let albums = await handler.lookupArtistAlbums(queue, options.artist_id, api_user_id, anchor, offset ?? 0, limit ?? 12);
 		return {
 			payload: {
 				albums

@@ -204,8 +204,8 @@ export async function lookupArtist(queue: ReadableQueue, artist_id: string, api_
 	};
 };
 
-export async function lookupArtistAlbums(queue: ReadableQueue, artist_id: string, api_user_id: string): Promise<Array<schema.objects.Album>> {
-	let album_artists = await atlas.queries.getArtistAlbumsByYear.filter(queue, { artist_id: binid(artist_id) }, undefined, undefined);
+export async function lookupArtistAlbums(queue: ReadableQueue, artist_id: string, api_user_id: string, anchor: string | undefined, offset: number, length: number): Promise<Array<schema.objects.Album>> {
+	let album_artists = await atlas.queries.getArtistAlbumsByYear.filter(queue, { artist_id: binid(artist_id) }, anchor == null ? undefined : { album_id: binid(anchor), artist_id: binid(artist_id) }, length);
 	let albums: Array<schema.objects.Album> = [];
 	for (let album_artist of album_artists) {
 		albums.push(await lookupAlbum(queue, hexid(album_artist.album_id), api_user_id));

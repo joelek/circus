@@ -3065,16 +3065,34 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			let artist = payload.artist;
 			let tracks = payload.tracks;
 			let appearances = payload.appearances;
+			let offset = 0;
+			let reachedEnd = new ObservableClass(false);
+			let isLoading = new ObservableClass(false);
 			let albums = new ArrayObservable<Album>([]);
-			apiclient.getArtistAlbums({
-				options: {
-					artist_id,
-					token: token ?? ""
+			let anchor = new ObservableClass(undefined as Album | undefined);
+			async function load(): Promise<void> {
+				if (!reachedEnd.getState() && !isLoading.getState()) {
+					isLoading.updateState(true);
+					let response = await apiclient.getArtistAlbums({
+						options: {
+							artist_id: artist.artist_id,
+							token: token ?? "",
+							anchor: anchor.getState()?.album_id,
+							offset
+						}
+					});
+					let payload = await response.payload();
+					for (let album of payload.albums) {
+						albums.append(album);
+						anchor.updateState(album);
+					}
+					offset += payload.albums.length;
+					if (payload.albums.length === 0) {
+						reachedEnd.updateState(true);
+					}
+					isLoading.updateState(false);
 				}
-			}).then(async (response) => {
-				let payload = await response.payload();
-				albums.update(payload.albums);
-			});
+			};
 			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forArtist(artist, { compactDescription: false }))
@@ -3110,6 +3128,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 						)
 					)
 				)
+				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
 				.render();
 			return {
 				element,

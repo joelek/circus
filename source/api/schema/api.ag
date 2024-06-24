@@ -83,7 +83,7 @@ route GET:/artists/<artist_id:string>/ ? <{ token: string }>
 		appearances: ./objects/Album[]
 	};
 
-route getArtistAlbums(): GET:/artists/<artist_id:string>/albums/ ? <{ token: string }>
+route getArtistAlbums(): GET:/artists/<artist_id:string>/albums/ ? <{ token: string, anchor?: plain, offset?: number, limit?: number }>
 	=> {
 		albums: ./objects/Album[]
 	};

@@ -469,7 +469,11 @@ export namespace Autoguard {
 				autoguard.guards.Object.of({
 					"artist_id": autoguard.guards.String,
 					"token": autoguard.guards.String
-				}, {}),
+				}, {
+					"anchor": autoguard.guards.String,
+					"offset": autoguard.guards.Number,
+					"limit": autoguard.guards.Number
+				}),
 				autoguard.api.Options
 			)
 		}, {
