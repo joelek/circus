@@ -143,7 +143,8 @@ const albums = context.createStore({
 	timestamp_ms: context.createNullableIntegerField(),
 	affinity: context.createNumberField(),
 	duration_ms: context.createIntegerField(),
-	tidal: context.createNullableIntegerField()
+	tidal: context.createNullableIntegerField(),
+	year: context.createNullableIntegerField()
 }, ["album_id"], {
 	title: context.createIncreasingOrder()
 });
@@ -1086,6 +1087,8 @@ const year_albums = context.createLink(years, albums, {
 	year_id: "year_id"
 }, {
 	title: context.createIncreasingOrder()
+}, {
+	year: "year"
 });
 
 const year_episodes = context.createLink(years, episodes, {
