@@ -3366,9 +3366,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 						.repeat(nextEpisodeElements, (element) => element)
 					)
 					.add(Grid.make()
-						.repeat(seasons, (season, seasonIndex) => EntityCard.forSeason(season, {
-							playbackButton: PlaybackButton.forShow(show, seasonIndex)
-						}))
+						.repeat(seasons, (season) => EntityCard.forSeason(season))
 					)
 				)
 				.render();
