@@ -107,6 +107,10 @@ export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 		return this.socket.getRequestHandler();
 	}
 
+	getUpgradeHandler() {
+		return this.socket.getUpgradeHandler();
+	}
+
 	removeEventListener<B extends keyof TypeSocketServerMessageMap<A>, C extends keyof TypeSocketServerMessageMap<A>[B]>(namespace: B, type: C, listener: stdlib.routing.MessageObserver<TypeSocketServerMessageMap<A>[B][C]>): void {
 		this.router.removeObserver(namespace, type, listener);
 	}

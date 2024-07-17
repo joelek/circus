@@ -2,6 +2,7 @@ import * as libfs from "fs";
 import * as libhttp from "http";
 import * as libhttps from "https";
 import * as libos from "os";
+import * as libnet from "net";
 import * as libtls from "tls";
 import * as api from "../api/api";
 import * as indexer from "../database/indexer";
@@ -23,12 +24,6 @@ async function requestHandler(request: libhttp.IncomingMessage, response: libhtt
 	let host = request.headers["host"] || "";
 	let method = request.method || "";
 	let path = request.url || "";
-	if (/^[/]sockets[/]context[/]/.test(path)) {
-		return contextServer.getRequestHandler()(request, response);
-	}
-	if (/^[/]sockets[/]playlists[/]/.test(path)) {
-		return playlistsServer.getRequestHandler()(request, response);
-	}
 	let startMs = Date.now();
 	response.on("finish", () => {
 		let duration_ms = Date.now() - startMs;
@@ -163,6 +158,18 @@ async function requestHandler(request: libhttp.IncomingMessage, response: libhtt
 	return;
 }
 
+async function upgradeHandler(request: libhttp.IncomingMessage, socket: libnet.Socket): Promise<void> {
+	let host = request.headers["host"] || "";
+	let method = request.method || "";
+	let path = request.url || "";
+	if (/^[/]sockets[/]context[/]/.test(path)) {
+		return contextServer.getUpgradeHandler()(request, socket);
+	}
+	if (/^[/]sockets[/]playlists[/]/.test(path)) {
+		return playlistsServer.getUpgradeHandler()(request, socket);
+	}
+}
+
 if (!libfs.existsSync("./private/certs/")) {
 	libfs.mkdirSync("./private/certs/", { recursive: true });
 }
@@ -188,6 +195,7 @@ function getLocalIp(family: string = "ipv4"): string {
 let hostname = getLocalIp();
 let media_server_host = `http://${hostname}:${config.http_port}`;
 let http_server = libhttp.createServer({}, requestHandler);
+http_server.on("upgrade", upgradeHandler);
 http_server.listen(config.http_port, () => {
 	console.log(`http://${hostname}:${config.http_port}`);
 });
@@ -206,6 +214,7 @@ if (libfs.existsSync(config.certificate_path.join("/")) && libfs.existsSync(conf
 		cert: libfs.readFileSync(config.certificate_path.join("/")),
 		dhparam: libfs.existsSync("./private/certs/dhparam.pem") ? libfs.readFileSync("./private/certs/dhparam.pem") : undefined
 	}, requestHandler);
+	https_server.on("upgrade", upgradeHandler);
 	https_server.listen(config.https_port, () => {
 		console.log(`https://${hostname}:${config.https_port}`);
 	});

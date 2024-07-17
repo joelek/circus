@@ -425,4 +425,8 @@ export class ContextServer {
 	getRequestHandler(): libhttp.RequestListener {
 		return this.tss.getRequestHandler();
 	}
+
+	getUpgradeHandler() {
+		return this.tss.getUpgradeHandler();
+	}
 }
