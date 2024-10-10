@@ -1385,7 +1385,9 @@ style.innerText = `
 	}
 
 	.icon-link__content {
+		box-sizing: border-box;
 		height: 100%;
+		padding: 12px;
 		position: absolute;
 			top: 0%;
 			left: 0%;
@@ -1410,6 +1412,7 @@ style.innerText = `
 		text-overflow: ellipsis;
 		transition: color 0.125s;
 		white-space: nowrap;
+		width: 100%;
 	}
 
 	@media (hover: hover) and (pointer: fine) {
