@@ -106,7 +106,7 @@ export class EntityTitleFactory {
 	}
 
 	forSeason(season: api.SeasonBase): xnode.XElement {
-		return this.make(this.entityLinkFactory.forSeason(season), `Season ${season.number}`);
+		return this.make(this.entityLinkFactory.forSeason(season), season.title ?? `Season ${season.number}`);
 	}
 
 	forShow(show: api.ShowBase): xnode.XElement {

@@ -577,7 +577,8 @@ export async function lookupSeasonBase(queue: ReadableQueue, season_id: string, 
 	return {
 		season_id: hexid(season.season_id),
 		number: season.number,
-		show: is.present(show) ? show : await lookupShowBase(queue, hexid(season.show_id), api_user_id)
+		show: is.present(show) ? show : await lookupShowBase(queue, hexid(season.show_id), api_user_id),
+		title: season.title ?? undefined
 	};
 };
 

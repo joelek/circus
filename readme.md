@@ -62,6 +62,10 @@ External image and metadata files may be used to supply additional information t
 	"type": "episode",
 	"title": "Episode title",
 	"season": 1,
+	"season": {
+		"number": 1,
+		"title"?: "Season title"
+	},
 	"episode": 1,
 	"year"?: 2000,
 	"summary"?: "Episode summary.",

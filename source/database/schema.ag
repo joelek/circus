@@ -126,7 +126,8 @@ guard ShowFile: {
 guard Season: {
 	"season_id": string,
 	"show_id": string,
-	"number": number
+	"number": number,
+	"title"?: string
 };
 
 guard Episode: {

@@ -25,7 +25,14 @@ export type ShowMetadata = autoguard.guards.Object<{
 export const EpisodeMetadata: autoguard.serialization.MessageGuard<EpisodeMetadata> = autoguard.guards.Object.of({
 	"type": autoguard.guards.StringLiteral.of("episode"),
 	"title": autoguard.guards.String,
-	"season": autoguard.guards.Number,
+	"season": autoguard.guards.Union.of(
+		autoguard.guards.Number,
+		autoguard.guards.Object.of({
+			"number": autoguard.guards.Number
+		}, {
+			"title": autoguard.guards.String
+		})
+	),
 	"episode": autoguard.guards.Number,
 	"show": autoguard.guards.Object.of({
 		"title": autoguard.guards.String,
@@ -45,7 +52,14 @@ export const EpisodeMetadata: autoguard.serialization.MessageGuard<EpisodeMetada
 export type EpisodeMetadata = autoguard.guards.Object<{
 	"type": autoguard.guards.StringLiteral<"episode">,
 	"title": autoguard.guards.String,
-	"season": autoguard.guards.Number,
+	"season": autoguard.guards.Union<[
+		autoguard.guards.Number,
+		autoguard.guards.Object<{
+			"number": autoguard.guards.Number
+		}, {
+			"title": autoguard.guards.String
+		}>
+	]>,
 	"episode": autoguard.guards.Number,
 	"show": autoguard.guards.Object<{
 		"title": autoguard.guards.String,

@@ -10,7 +10,10 @@ guard ShowMetadata: {
 guard EpisodeMetadata: {
 	"type": "episode",
 	"title": string,
-	"season": number,
+	"season": number | {
+		"number": number,
+		"title"?: string
+	},
 	"episode": number,
 	"year"?: number,
 	"summary"?: string,

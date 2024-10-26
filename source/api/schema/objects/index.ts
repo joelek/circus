@@ -532,13 +532,17 @@ export const SeasonBase: autoguard.serialization.MessageGuard<SeasonBase> = auto
 	"season_id": autoguard.guards.String,
 	"number": autoguard.guards.Number,
 	"show": autoguard.guards.Reference.of(() => ShowBase)
-}, {});
+}, {
+	"title": autoguard.guards.String
+});
 
 export type SeasonBase = autoguard.guards.Object<{
 	"season_id": autoguard.guards.String,
 	"number": autoguard.guards.Number,
 	"show": autoguard.guards.Reference<ShowBase>
-}, {}>;
+}, {
+	"title": autoguard.guards.String
+}>;
 
 export const Season: autoguard.serialization.MessageGuard<Season> = autoguard.guards.Intersection.of(
 	autoguard.guards.Reference.of(() => SeasonBase),

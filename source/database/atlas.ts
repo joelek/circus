@@ -249,7 +249,8 @@ const seasons = context.createStore({
 	number: context.createIntegerField(),
 	timestamp_ms: context.createNullableIntegerField(),
 	affinity: context.createNumberField(),
-	duration_ms: context.createIntegerField()
+	duration_ms: context.createIntegerField(),
+	title: context.createNullableStringField({ searchable: true }),
 }, ["season_id"], {
 
 });

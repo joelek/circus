@@ -243,7 +243,7 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 				let season = episode.season;
 				let show = season.show;
 				mediaPlayerTitle.updateState(episode.title);
-				mediaPlayerSubtitle.updateState([ show.title, `Season ${episode.season.number}` ].join(" \u00b7 "));
+				mediaPlayerSubtitle.updateState([ show.title, season.title ?? `Season ${season.number}` ].join(" \u00b7 "));
 				session.setMetadata({
 					title: episode.title
 				});
@@ -2652,7 +2652,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 				.render();
 			return {
 				element,
-				title: `Season ${season.number}`
+				title: season.title ?? `Season ${season.number}`
 			};
 		});
 	} else if ((parts = /^video[/]seasons[/]([^/?]*)/.exec(uri)) !== null) {

@@ -195,7 +195,8 @@ guard ShowContext: Show & {
 guard SeasonBase: {
 	"season_id": string,
 	"number": number,
-	"show": ShowBase
+	"show": ShowBase,
+	"title"?: string
 };
 
 guard Season: SeasonBase & {

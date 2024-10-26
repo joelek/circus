@@ -340,10 +340,15 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 			imdb: metadata.show.imdb ?? null
 		});
 		let season_id = makeBinaryId("season", show_id, `${metadata.season}`);
-		await stores.seasons.update(queue, {
+		await stores.seasons.update(queue, typeof metadata.season === "number" ? {
 			season_id: season_id,
 			show_id: show_id,
 			number: metadata.season
+		} : {
+			season_id: season_id,
+			show_id: show_id,
+			number: metadata.season.number,
+			title: metadata.season.title ?? null
 		});
 		let episode_id = makeBinaryId("episode", season_id, `${metadata.episode}`);
 		await stores.episodes.update(queue, {

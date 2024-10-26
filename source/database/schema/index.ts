@@ -302,13 +302,17 @@ export const Season: autoguard.serialization.MessageGuard<Season> = autoguard.gu
 	"season_id": autoguard.guards.String,
 	"show_id": autoguard.guards.String,
 	"number": autoguard.guards.Number
-}, {});
+}, {
+	"title": autoguard.guards.String
+});
 
 export type Season = autoguard.guards.Object<{
 	"season_id": autoguard.guards.String,
 	"show_id": autoguard.guards.String,
 	"number": autoguard.guards.Number
-}, {}>;
+}, {
+	"title": autoguard.guards.String
+}>;
 
 export const Episode: autoguard.serialization.MessageGuard<Episode> = autoguard.guards.Object.of({
 	"episode_id": autoguard.guards.String,
