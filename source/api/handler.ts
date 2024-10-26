@@ -10,10 +10,8 @@ import { ReadableQueue, WritableQueue } from "@joelek/atlas";
 import * as atlas from "../database/atlas";
 import { binid, hexid } from "../utils";
 import { getPath } from "../database/indexer";
-import { createDecreasingOrder } from "@joelek/atlas";
 import { ActorResult, AlbumResult, ArtistResult, CategoryResult, DiscResult, EpisodeResult, GenreResult, MovieResult, PlaylistResult, SeasonResult, ShowResult, TrackResult, UserResult, YearResult } from "./schema/api";
-import { string } from "../jdb2/asserts";
-import { DirectoryContext, FileContext, TrackContext } from "./schema/objects";
+import { DirectoryContext, FileContext } from "./schema/objects";
 
 export async function getLanguageFromSubtitleFile(queue: ReadableQueue, subtitle_file: atlas.SubtitleFile, api_user_id: string): Promise<schema.objects.Language | undefined> {
 	if (subtitle_file.language_id != null) {

@@ -2,8 +2,8 @@ import * as session from "./browserMediaSession";
 import { ArrayObservable, computed, ObservableClass } from "../observers";
 import * as client from "../player/client";
 import * as is from "../is";
-import {  ContextAlbum, ContextArtist, ContextFile, Device } from "../player/schema/objects";
-import { Category, File, Directory, Actor, Album, Artist, Cue, Disc, Entity, Episode, Genre, Movie, Playlist, PlaylistItem, Season, Show, Track, User, Year } from "../api/schema/objects";
+import {  ContextFile, Device } from "../player/schema/objects";
+import { Category, File, Directory, Actor, Album, Artist, Disc, Entity, Episode, Genre, Movie, Playlist, PlaylistItem, Season, Show, Track, User, Year } from "../api/schema/objects";
 import * as xml from "../xnode";
 import { formatDuration as format_duration, formatSize, formatTimestamp as format_timestamp } from "../ui/metadata";
 import * as apischema from "../api/schema";
@@ -19,13 +19,10 @@ import { EntityRowFactory } from "../ui/EntityRow";
 import { PlaybackButtonFactory } from "../ui/PlaybackButton";
 import { EntityNavLinkFactory } from "../ui/EntityNavLinkFactory";
 import { PlaylistsClient } from "../playlists/client";
-import { encode } from "../database/vtt/vtt";
 import * as apiv2 from "../api/schema/api/client";
 import * as utils from "../utils";
 
 const apiclient = apiv2.makeClient({ urlPrefix: "/api" });
-import * as autoguard from "@joelek/ts-autoguard";
-import { string } from "../jdb2/asserts";
 import { NumberStatistic } from "../api/schema/api";
 
 

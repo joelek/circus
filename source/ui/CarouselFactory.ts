@@ -1,5 +1,4 @@
 import * as observers from "../observers";
-import * as is from "../is";
 import * as xnode from "../xnode";
 import { IconFactory } from "./Icon";
 

@@ -1,4 +1,3 @@
-import * as is from "../is";
 import * as observers from "../observers/";
 import * as jsondb from "../jsondb/";
 import * as messages from "./schema/messages";

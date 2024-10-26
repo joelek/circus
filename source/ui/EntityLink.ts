@@ -1,5 +1,4 @@
 import * as api from "../api/schema/objects";
-import * as is from "../is";
 import * as observers from "../observers";
 import * as xnode from "../xnode";
 
