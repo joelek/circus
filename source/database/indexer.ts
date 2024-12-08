@@ -1,6 +1,6 @@
 import * as libcrypto from "crypto";
 import * as libfs from "fs";
-import * as autoguard from "@joelek/ts-autoguard";
+import * as autoguard from "@joelek/autoguard";
 import * as schema from "./schema";
 import * as indices from "../jsondb/";
 import * as is from "../is";

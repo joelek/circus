@@ -1,5 +1,5 @@
-import * as autoguard from "@joelek/ts-autoguard";
-import * as stdlib from "@joelek/ts-stdlib";
+import * as autoguard from "@joelek/autoguard";
+import * as stdlib from "@joelek/stdlib";
 import * as schema from "./schema";
 import * as is from "../is";
 

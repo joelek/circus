@@ -1,7 +1,7 @@
 import * as libcrypto from "crypto";
 import * as libfs from "fs";
-import * as autoguard from "@joelek/ts-autoguard";
-import * as stdlib from "@joelek/ts-stdlib";
+import * as autoguard from "@joelek/autoguard";
+import * as stdlib from "@joelek/stdlib";
 import * as is from "../is";
 import { sorters } from "../jsondb";
 

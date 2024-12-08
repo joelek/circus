@@ -1,4 +1,4 @@
-import * as autoguard from "@joelek/ts-autoguard";
+import * as autoguard from "@joelek/autoguard";
 import * as libfs from "fs";
 import * as is from "../../is";
 import * as vtt from "../vtt/vtt";

@@ -1,7 +1,7 @@
 import * as libhttp from "http";
-import * as autoguard from "@joelek/ts-autoguard";
-import * as stdlib from "@joelek/ts-stdlib";
-import * as sockets from "@joelek/ts-sockets";
+import * as autoguard from "@joelek/autoguard";
+import * as stdlib from "@joelek/stdlib";
+import * as websockets from "@joelek/websockets";
 import * as shared from "./shared";
 
 export type TypeSocketServerMessageMap<A extends stdlib.routing.MessageMap<A>> = {
@@ -35,13 +35,13 @@ export type TypeSocketServerMessageMap<A extends stdlib.routing.MessageMap<A>> =
 export class TypeSocketServer<A extends stdlib.routing.MessageMap<A>> {
 	private router: stdlib.routing.NamespacedMessageRouter<TypeSocketServerMessageMap<A>>;
 	private serializer: shared.Serializer<A>;
-	private socket: sockets.WebSocketServer;
+	private socket: websockets.WebSocketServer;
 	private debug: boolean;
 
 	constructor(guards: autoguard.serialization.MessageGuardMap<A>, debug: boolean = false) {
 		this.router = new stdlib.routing.NamespacedMessageRouter<TypeSocketServerMessageMap<A>>();
 		this.serializer = new shared.Serializer<A>(guards);
-		this.socket = new sockets.WebSocketServer();
+		this.socket = new websockets.WebSocketServer();
 		this.debug = debug;
 		this.socket.addEventListener("connect", (message) => {
 			let connection_id = message.connection_id;

@@ -32,7 +32,7 @@
 
 import * as libcrypto from "crypto";
 import * as libfs from "fs";
-import * as stdlib from "@joelek/ts-stdlib";
+import * as stdlib from "@joelek/stdlib";
 import * as is from "../is";
 import { IntegerAssert } from "./asserts/integer";
 import { StreamIterable } from "../jdb";

@@ -1,5 +1,5 @@
 import * as libnet from "net";
-import * as stdlib from "@joelek/ts-stdlib";
+import * as stdlib from "@joelek/stdlib";
 import * as is from "../is";
 
 export type Header = {

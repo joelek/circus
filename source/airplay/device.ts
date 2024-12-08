@@ -1,6 +1,6 @@
 import * as libcrypto from "crypto";
-import * as sockets from "@joelek/ts-sockets";
-import * as stdlib from "@joelek/ts-stdlib";
+import * as websockets from "@joelek/websockets";
+import * as stdlib from "@joelek/stdlib";
 import * as player from "../player/client";
 import * as is from "../is";
 import * as observers from "../observers/";
@@ -78,7 +78,7 @@ export class Device extends stdlib.routing.MessageRouter<DeviceEventMap> {
 			});
 			let did = utils.generateHexId(16);
 			let url = `${websocket_host}/sockets/context/?protocol=airplay&name=${encodeURIComponent(device_name)}&type=${encodeURIComponent(device_type)}&did=${did}`;
-			let context = new player.ContextClient(url, (url) => new sockets.WebSocketClient(url));
+			let context = new player.ContextClient(url, (url) => new websockets.WebSocketClient(url));
 			observers.computed(async (currentLocalEntry, token) => {
 				if (is.present(currentLocalEntry) && is.present(token)) {
 					let url = `${media_server_host}/api/files/${currentLocalEntry.media.file_id}/content/?token=${token}`;

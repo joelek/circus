@@ -1,4 +1,4 @@
-import * as stdlib from "@joelek/ts-stdlib";
+import * as stdlib from "@joelek/stdlib";
 import * as is from "../is";
 import * as sorters from "./sorters";
 import * as jdb from "../jdb";

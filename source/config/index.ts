@@ -1,4 +1,4 @@
-import { guards as autoguard } from "@joelek/ts-autoguard";
+import { guards as autoguard } from "@joelek/autoguard";
 import * as libfs from "fs";
 import * as schema from "./schema";
 

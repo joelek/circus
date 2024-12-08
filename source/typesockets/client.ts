@@ -1,10 +1,10 @@
-import * as autoguard from "@joelek/ts-autoguard";
-import * as stdlib from "@joelek/ts-stdlib";
-import * as sockets from "@joelek/ts-sockets/dist/lib/shared";
+import * as autoguard from "@joelek/autoguard";
+import * as stdlib from "@joelek/stdlib";
+import * as websockets from "@joelek/websockets/dist/lib/shared";
 import * as shared from "./shared";
 import * as is from "../is";
 
-export type WebSocketFactory = (url: string) => sockets.WebSocketLike;
+export type WebSocketFactory = (url: string) => websockets.WebSocketLike;
 
 export type TypeSocketClientMessageMap<A extends stdlib.routing.MessageMap<A>> = {
 	sys: {
@@ -31,7 +31,7 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	private serializer: shared.Serializer<A>;
 	private url: string;
 	private factory: WebSocketFactory;
-	private socket: sockets.WebSocketLike;
+	private socket: websockets.WebSocketLike;
 	private requests: Map<string, (type: keyof A, data: A[keyof A]) => void>;
 
 	private makeId(): string {
@@ -43,7 +43,7 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 		return string;
 	}
 
-	private makeSocket(): sockets.WebSocketLike {
+	private makeSocket(): websockets.WebSocketLike {
 		let socket = this.factory(this.url);
 		socket.addEventListener("close", this.onClose.bind(this));
 		socket.addEventListener("error", this.onError.bind(this));
@@ -52,18 +52,18 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 		return socket;
 	}
 
-	private onClose(event: sockets.WebSocketEventMapLike["close"]): void {
+	private onClose(event: websockets.WebSocketEventMapLike["close"]): void {
 		this.router.route("sys", "disconnect", {});
 	}
 
-	private onError(event: sockets.WebSocketEventMapLike["error"]): void {
+	private onError(event: websockets.WebSocketEventMapLike["error"]): void {
 		setTimeout(() => {
 			this.socket = this.makeSocket();
 		}, this.nextConnectionAttemptDelay);
 		this.nextConnectionAttemptDelay = Math.round(this.nextConnectionAttemptDelay * this.nextConnectionAttemptDelayFactor);
 	}
 
-	private onMessage(event: sockets.WebSocketEventMapLike["message"]): void {
+	private onMessage(event: websockets.WebSocketEventMapLike["message"]): void {
 		try {
 			this.serializer.deserialize(event.data as string, (type, data, id) => {
 				this.router.route("sys", "message", {
@@ -84,13 +84,13 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 		}
 	}
 
-	private onOpen(event: sockets.WebSocketEventMapLike["open"]): void {
+	private onOpen(event: websockets.WebSocketEventMapLike["open"]): void {
 		this.nextConnectionAttemptDelay = 2000;
 		this.router.route("sys", "connect", {});
 	}
 
 	private queue(payload: string): void {
-		if (this.socket.readyState === sockets.ReadyState.OPEN) {
+		if (this.socket.readyState === websockets.ReadyState.OPEN) {
 			this.socket.send(payload);
 		} else {
 			let onopen = () => {
@@ -121,7 +121,7 @@ export class TypeSocketClient<A extends stdlib.routing.MessageMap<A>> {
 	}
 
 	reconnect(): void {
-		if (this.socket.readyState === sockets.ReadyState.CLOSED) {
+		if (this.socket.readyState === websockets.ReadyState.CLOSED) {
 			this.socket = this.makeSocket();
 		}
 	}

@@ -1,5 +1,5 @@
 import * as jdb from "./index";
-import * as autoguard from "@joelek/ts-autoguard";
+import * as autoguard from "@joelek/autoguard";
 
 type Person = {
 	person_id: string,
