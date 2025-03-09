@@ -36,7 +36,7 @@ function makeMediaInformation(item: Episode | Movie | Track | FileContext, media
 			metadata: {
 				metadataType: 0,
 				title: episode.title,
-				subtitle: show.title
+				subtitle: [show.title, season.title ?? `Season ${season.number}`].join(" \u00b7 ")
 			},
 			tracks: episode.subtitles.map((subtitle, subtitleIndex) => ({
 				...getLanguage(subtitle.language),
@@ -57,6 +57,7 @@ function makeMediaInformation(item: Episode | Movie | Track | FileContext, media
 			metadata: {
 				metadataType: 0,
 				title: movie.title,
+				subtitle: movie.genres.map((genre) => genre.title).join(" \u00b7 "),
 				images: movie.artwork.map((image) => ({
 					url: `${media_server_host}/api/files/${image.file_id}/content/?token=${token}`
 				}))
@@ -82,7 +83,7 @@ function makeMediaInformation(item: Episode | Movie | Track | FileContext, media
 			metadata: {
 				metadataType: 0,
 				title: track.title,
-				subtitle: track.artists.map((artist) => artist.title).join(" \u00b7 "),
+				subtitle: [...track.artists.map((artist) => artist.title), track.disc.album.title].join(" \u00b7 "),
 				images: album.artwork.map((image) => ({
 					url: `${media_server_host}/api/files/${image.file_id}/content/?token=${token}`
 				}))
