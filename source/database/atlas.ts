@@ -1336,6 +1336,7 @@ export const stores = transactionManager.stores;
 export const links = transactionManager.links;
 export const queries = transactionManager.queries;
 
+// Computations work until 2078-06-04T00:00:00.000Z
 // Double precision can store positive values between 2^-1022 (inclusive) and 2^1024 (exclusive).
 export function computeAffinity(timestamp_ms: number): number {
 	let time_base_ms = (1000 * 60 * 60 * 24 * 7 * 2);
