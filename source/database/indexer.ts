@@ -1496,6 +1496,7 @@ export async function runIndexer(): Promise<void> {
 		let mbs = process.memoryUsage().heapUsed / 1024 / 1024;
 		console.log(`Memory usage: ${mbs.toFixed()} MB`);
 	}
+	libfs.writeFileSync("./private/stats.json", JSON.stringify(transactionManager.getStatistics(), null, "\t"));
 };
 
 runIndexer()
