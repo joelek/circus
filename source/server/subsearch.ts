@@ -43,7 +43,7 @@ async function generateStill(target: string[], source: string[]): Promise<void> 
 				"-i", source.join("/"),
 				"-q:v", "1",
 				"-frames:v", "1",
-				"-f", "singlejpeg",
+				"-f", "mjpeg",
 				"-fflags", "+bitexact",
 				"-map_metadata", "-1",
 				still.join("/"),
