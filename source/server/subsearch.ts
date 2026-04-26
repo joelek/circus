@@ -49,9 +49,9 @@ async function generateStill(target: string[], source: string[]): Promise<void> 
 				still.join("/"),
 				"-y"
 			]);
-			cp.on("error", () => {
+			cp.on("error", (error) => {
 				deleteTree(wd.join("/"));
-				return reject();
+				return reject(error);
 			});
 			cp.on("exit", () => {
 				renameFile(still, target);
@@ -121,7 +121,9 @@ async function processQueue(): Promise<void> {
 	}
 	try {
 		await generateStill(job.target, job.source);
-	} catch (error) {}
+	} catch (error) {
+		console.log(error);
+	}
 	setTimeout(processQueue, 10 * 1000);
 }
 
@@ -137,6 +139,7 @@ dbschema.transactionManager.enqueueReadableTransaction(async (queue) => {
 			});
 		}
 	}
+	console.log(`Stills queue contains ${stillsTranscodingQueue.length} jobs.`);
 	setTimeout(processQueue);
 });
 

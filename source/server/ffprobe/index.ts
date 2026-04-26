@@ -3,11 +3,11 @@
 import * as autoguard from "@joelek/autoguard/dist/lib-shared";
 
 export const VideoFrame: autoguard.serialization.MessageGuard<VideoFrame> = autoguard.guards.Object.of({
-	"pkt_pts_time": autoguard.guards.String
+	"pts_time": autoguard.guards.String
 }, {});
 
 export type VideoFrame = autoguard.guards.Object<{
-	"pkt_pts_time": autoguard.guards.String
+	"pts_time": autoguard.guards.String
 }, {}>;
 
 export const FramesResult: autoguard.serialization.MessageGuard<FramesResult> = autoguard.guards.Object.of({

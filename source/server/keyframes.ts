@@ -66,7 +66,7 @@ export async function getKeyframeOffsets(paths: Array<string>, streamIndex: numb
 			"-select_streams", `${streamIndex}`,
 			"-skip_frame", "nokey",
 			"-show_frames",
-			"-show_entries", "frame=pkt_pts_time",
+			"-show_entries", "frame=pts_time",
 			"-of", "json"
 		]);
 		let chunks = new Array<Buffer>();
@@ -81,11 +81,10 @@ export async function getKeyframeOffsets(paths: Array<string>, streamIndex: numb
 			try {
 				let json = libffprobe.FramesResult.as(JSON.parse(string));
 				let frames = json.frames.map((frame) => {
-					return Math.round(Number.parseFloat(frame.pkt_pts_time) * 1000);
+					return Math.round(Number.parseFloat(frame.pts_time) * 1000);
 				});
 				resolve(frames);
 			} catch (error) {
-				//console.log(`Keyframes failed for ${paths.join("/")}!`);
 				reject(error);
 			}
 		})

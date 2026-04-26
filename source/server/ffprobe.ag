@@ -1,5 +1,5 @@
 guard VideoFrame: {
-	"pkt_pts_time": string
+	"pts_time": string
 };
 
 guard FramesResult: {
