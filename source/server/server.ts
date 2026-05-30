@@ -196,10 +196,12 @@ let hostname = getLocalIp();
 let media_server_host = `http://${hostname}:${config.http_port}`;
 let http_server = libhttp.createServer({}, requestHandler);
 http_server.on("upgrade", upgradeHandler);
-http_server.listen(config.http_port, () => {
+http_server.keepAliveTimeout = 60 * 1000;
+libnet.createServer((socket) => {
+	http_server.emit("connection", socket);
+}).listen(config.http_port, () => {
 	console.log(`http://${hostname}:${config.http_port}`);
 });
-http_server.keepAliveTimeout = 60 * 1000;
 if (libfs.existsSync(config.certificate_path.join("/")) && libfs.existsSync(config.certificate_key_path.join("/"))) {
 	let https_server = libhttps.createServer({
 		SNICallback: (servername, callback) => {
@@ -215,10 +217,12 @@ if (libfs.existsSync(config.certificate_path.join("/")) && libfs.existsSync(conf
 		dhparam: libfs.existsSync("./private/certs/dhparam.pem") ? libfs.readFileSync("./private/certs/dhparam.pem") : undefined
 	}, requestHandler);
 	https_server.on("upgrade", upgradeHandler);
-	https_server.listen(config.https_port, () => {
+	https_server.keepAliveTimeout = 60 * 1000;
+	libnet.createServer((socket) => {
+		https_server.emit("connection", socket);
+	}).listen(config.https_port, () => {
 		console.log(`https://${hostname}:${config.https_port}`);
 	});
-	https_server.keepAliveTimeout = 60 * 1000;
 	let websocket_host = `wss://${hostname}:${config.https_port}`;
 	airplay.observe(websocket_host, media_server_host);
 	chromecasts.observe(websocket_host, media_server_host);
