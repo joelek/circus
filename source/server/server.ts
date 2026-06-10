@@ -25,9 +25,11 @@ async function requestHandler(request: libhttp.IncomingMessage, response: libhtt
 	let method = request.method || "";
 	let path = request.url || "";
 	let startMs = Date.now();
+	let startBytesWritten = request.socket.bytesWritten;
 	response.on("finish", () => {
 		let duration_ms = Date.now() - startMs;
-		process.stderr.write(`${response.statusCode} ${method}:${path} (${duration_ms} ms)\n`);
+		let bytesWritten = request.socket.bytesWritten - startBytesWritten;
+		process.stderr.write(`${response.statusCode} ${method}:${path} (${bytesWritten} bytes in ${duration_ms} ms)\n`);
 	});
 	if (false && /^[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+(:[0-9]+)?$/.test(host)) {
 		response.writeHead(400);
