@@ -7,6 +7,7 @@ const CSS = `
 	.image-box {
 		background-color: ${theme.BACKGROUND_3};
 		border-radius: 4px;
+		border: 6px solid transparent;
 		overflow: hidden;
 		position: relative;
 		will-change: opacity;
@@ -16,11 +17,8 @@ const CSS = `
 
 	}
 
-	.image-box__content {
-		height: 100%;
-		object-fit: contain;
-		position: absolute;
-		width: 100%;
+	.image-box__images {
+		position: relative;
 	}
 
 	.image-box__image {
@@ -134,14 +132,14 @@ export class ImageBoxFactory {
 
 	for(urls: Array<string>, multiple?: boolean, ar?: AspectRatio): xnode.XElement {
 		ar = ar ?? TARGETS["1:1"];
-		let node = xnode.element(`div.image-box${multiple ? ".image-box--multiple" : ""}`).set("style", `padding-bottom: ${ar.y / ar.x * 100}%;`);
-		let content = xnode.element(`div.image-box__content`);
+		let node = xnode.element(`div.image-box${multiple ? ".image-box--multiple" : ""}`);
+		let images = xnode.element(`div.image-box__images`).set("style", `padding-bottom: ${ar.y / ar.x * 100}%;`);
 		for (let url of urls) {
 			if (is.absent(url)) {
 				continue;
 			}
 			let isLoaded = new observables.ObservableClass(false);
-			content.add(xnode.element("img.image-box__image")
+			images.add(xnode.element("img.image-box__image")
 				.bind("data-opaque", isLoaded.addObserver((isLoaded) => isLoaded))
 				.bind("src", this.token.addObserver((token) => {
 					if (is.present(token) && is.present(url)) {
@@ -154,7 +152,7 @@ export class ImageBoxFactory {
 			);
 		}
 		return node
-			.add(content);
+			.add(images)
 	}
 
 	forPortrait(urls: Array<string>, multiple?: boolean): xnode.XElement {
