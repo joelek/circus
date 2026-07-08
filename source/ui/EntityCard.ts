@@ -192,7 +192,7 @@ export class EntityCardFactory {
 				}
 			}
 		}
-		return this.ImageBox.for(artwork.map((image) => `/api/files/${image.file_id}/content/`), undefined, shared_ar ?? default_ar);
+		return this.ImageBox.for(artwork.map((image) => `/api/files/${image.file_id}/content/`), false, true, shared_ar ?? default_ar);
 	}
 
 	constructor(entityTitleFactory: EntityTitleFactory, entityLinkFactory: EntityLinkFactory, ImageBox: ImageBoxFactory, PlaybackButton: PlaybackButtonFactory) {
@@ -316,7 +316,7 @@ export class EntityCardFactory {
 
 	forCue(cue: api.Cue, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forCue(cue);
-		options.image = this.ImageBox.forVideo([`/media/gifs/${cue.cue_id}/`]);
+		options.image = this.ImageBox.forVideo([`/media/gifs/${cue.cue_id}/`], false, true);
 		if (false) {
 		} else if (api.Episode.is(cue.media)) {
 			return this.forEpisode(cue.media, options);
@@ -363,7 +363,7 @@ export class EntityCardFactory {
 	forEpisode(episode: api.Episode, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forEpisode(episode);
 		let link = this.entityLinkFactory.forEpisode(episode);
-		let image = this.ImageBox.forVideo([`/media/stills/${episode.media.file_id}/`]);
+		let image = this.ImageBox.forVideo([`/media/stills/${episode.media.file_id}/`], false, true);
 		let titles = [
 			this.entityTitleFactory.forEpisode(episode)
 		];
@@ -440,7 +440,7 @@ export class EntityCardFactory {
 	forPlaylist(playlist: api.Playlist, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forPlaylist(playlist);
 		let link = this.entityLinkFactory.forPlaylist(playlist);
-		let image = this.ImageBox.forLandscape(playlist.artwork.map((image) => `/api/files/${image.file_id}/content/`), true);
+		let image = this.ImageBox.forLandscape(playlist.artwork.map((image) => `/api/files/${image.file_id}/content/`), true, true);
 		let titles = [
 			this.entityTitleFactory.forPlaylist(playlist)
 		];
@@ -527,7 +527,7 @@ export class EntityCardFactory {
 	forYear(year: api.Year, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forYear(year);
 		let link = this.entityLinkFactory.forYear(year);
-		let image = this.ImageBox.forLandscape(year.artwork.map((image) => `/api/files/${image.file_id}/content/`), true);
+		let image = this.ImageBox.forLandscape(year.artwork.map((image) => `/api/files/${image.file_id}/content/`), true, true);
 		let titles = [
 			this.entityTitleFactory.forYear(year)
 		];

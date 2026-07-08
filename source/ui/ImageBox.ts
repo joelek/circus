@@ -7,7 +7,6 @@ const CSS = `
 	.image-box {
 		background-color: ${theme.BACKGROUND_3};
 		border-radius: 4px;
-		border: 6px solid transparent;
 		overflow: hidden;
 		position: relative;
 		will-change: opacity;
@@ -15,6 +14,10 @@ const CSS = `
 
 	.image-box--multiple {
 
+	}
+
+	.image-box--border {
+		border: 12px solid transparent;
 	}
 
 	.image-box__images {
@@ -130,9 +133,9 @@ export class ImageBoxFactory {
 		this.token = token;
 	}
 
-	for(urls: Array<string>, multiple?: boolean, ar?: AspectRatio): xnode.XElement {
+	for(urls: Array<string>, multiple?: boolean, border?: boolean, ar?: AspectRatio): xnode.XElement {
 		ar = ar ?? TARGETS["1:1"];
-		let node = xnode.element(`div.image-box${multiple ? ".image-box--multiple" : ""}`);
+		let node = xnode.element(`div.image-box${multiple ? ".image-box--multiple" : ""}${border ? ".image-box--border" : ""}`);
 		let images = xnode.element(`div.image-box__images`).set("style", `padding-bottom: ${ar.y / ar.x * 100}%;`);
 		for (let url of urls) {
 			if (is.absent(url)) {
@@ -155,20 +158,20 @@ export class ImageBoxFactory {
 			.add(images)
 	}
 
-	forPortrait(urls: Array<string>, multiple?: boolean): xnode.XElement {
-		return this.for(urls, multiple, TARGETS["2:3"]);
+	forPortrait(urls: Array<string>, multiple?: boolean, border?: boolean): xnode.XElement {
+		return this.for(urls, multiple, border, TARGETS["2:3"]);
 	}
 
-	forSquare(urls: Array<string>, multiple?: boolean): xnode.XElement {
-		return this.for(urls, multiple, TARGETS["1:1"]);
+	forSquare(urls: Array<string>, multiple?: boolean, border?: boolean): xnode.XElement {
+		return this.for(urls, multiple, border, TARGETS["1:1"]);
 	}
 
-	forVideo(urls: Array<string>, multiple?: boolean): xnode.XElement {
-		return this.for(urls, multiple, TARGETS["16:9"]);
+	forVideo(urls: Array<string>, multiple?: boolean, border?: boolean): xnode.XElement {
+		return this.for(urls, multiple, border, TARGETS["16:9"]);
 	}
 
-	forLandscape(urls: Array<string>, multiple?: boolean): xnode.XElement {
-		return this.for(urls, multiple, TARGETS["3:2"]);
+	forLandscape(urls: Array<string>, multiple?: boolean, border?: boolean): xnode.XElement {
+		return this.for(urls, multiple, border, TARGETS["3:2"]);
 	}
 
 	static makeStyle(): xnode.XElement {
