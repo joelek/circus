@@ -24,8 +24,8 @@ const CSS = `
 
 	.entity-card__playback {
 		position: absolute;
-			bottom: 16px;
-			right: 16px;
+			bottom: 24px;
+			right: 24px;
 	}
 
 	.entity-card__content {
