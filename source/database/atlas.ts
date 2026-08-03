@@ -1461,6 +1461,23 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 				artist_affinity.affinity += (await stores.artist_affinities.lookup(queue, artist_affinity)).affinity;
 			} catch (error) {}
 			await stores.artist_affinities.insert(queue, artist_affinity);
+			let artist_categories = await links.artist_artist_categories.filter(queue, track_artist);
+			for (let artist_category of artist_categories) {
+				let category = await stores.categories.lookup(queue, artist_category);
+				await stores.categories.insert(queue, {
+					...category,
+					affinity: category.affinity + affinity
+				});
+				let category_affinity: CategoryAffinity = {
+					...category,
+					...stream,
+					affinity
+				};
+				try {
+					category_affinity.affinity += (await stores.category_affinities.lookup(queue, category_affinity)).affinity;
+				} catch (error) {}
+				await stores.category_affinities.insert(queue, category_affinity);
+			}
 		}
 		let album_artists = await links.album_album_artists.filter(queue, album);
 		for (let album_artist of album_artists) {
@@ -1478,6 +1495,23 @@ async function createTrackStream(queue: WritableQueue, stream: Stream): Promise<
 				artist_affinity.affinity += (await stores.artist_affinities.lookup(queue, artist_affinity)).affinity;
 			} catch (error) {}
 			await stores.artist_affinities.insert(queue, artist_affinity);
+			let artist_categories = await links.artist_artist_categories.filter(queue, album_artist);
+			for (let artist_category of artist_categories) {
+				let category = await stores.categories.lookup(queue, artist_category);
+				await stores.categories.insert(queue, {
+					...category,
+					affinity: category.affinity + affinity
+				});
+				let category_affinity: CategoryAffinity = {
+					...category,
+					...stream,
+					affinity
+				};
+				try {
+					category_affinity.affinity += (await stores.category_affinities.lookup(queue, category_affinity)).affinity;
+				} catch (error) {}
+				await stores.category_affinities.insert(queue, category_affinity);
+			}
 		}
 		let playlist_items = await links.track_playlist_items.filter(queue, track);
 		for (let playlist_item of playlist_items) {
