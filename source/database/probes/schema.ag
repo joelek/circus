@@ -80,7 +80,9 @@ guard AlbumMetadata: {
 guard ArtistMetadata: {
 	"type": "artist",
 	"name": string,
-	"tidal"?: number
+	"tidal"?: number,
+	"musicbrainz"?: string,
+	"genres"?: string[]
 };
 
 guard Metadata: ShowMetadata | EpisodeMetadata | MovieMetadata | TrackMetadata | AlbumMetadata | ArtistMetadata;

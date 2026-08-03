@@ -204,14 +204,18 @@ export const ArtistMetadata: autoguard.serialization.MessageGuard<ArtistMetadata
 	"type": autoguard.guards.StringLiteral.of("artist"),
 	"name": autoguard.guards.String
 }, {
-	"tidal": autoguard.guards.Number
+	"tidal": autoguard.guards.Number,
+	"musicbrainz": autoguard.guards.String,
+	"genres": autoguard.guards.Array.of(autoguard.guards.String)
 });
 
 export type ArtistMetadata = autoguard.guards.Object<{
 	"type": autoguard.guards.StringLiteral<"artist">,
 	"name": autoguard.guards.String
 }, {
-	"tidal": autoguard.guards.Number
+	"tidal": autoguard.guards.Number,
+	"musicbrainz": autoguard.guards.String,
+	"genres": autoguard.guards.Array<autoguard.guards.String>
 }>;
 
 export const Metadata: autoguard.serialization.MessageGuard<Metadata> = autoguard.guards.Union.of(

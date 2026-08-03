@@ -198,7 +198,10 @@ export async function lookupArtist(queue: ReadableQueue, artist_id: string, api_
 		...artist_base,
 		affinity: atlas.adjustAffinity(artist.affinity),
 		duration_ms: artist.duration_ms,
-		tidal: artist.tidal ?? undefined
+		tidal: artist.tidal ?? undefined,
+		musicbrainz: artist.musicbrainz ?? undefined,
+		categories: await Promise.all((await atlas.links.artist_artist_categories.filter(queue, artist))
+			.map((record) => lookupCategoryBase(queue, hexid(record.category_id), api_user_id)))
 	};
 };
 

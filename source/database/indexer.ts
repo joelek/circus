@@ -588,8 +588,21 @@ async function indexMetadata(queue: WritableQueue, probe: probes.schema.Probe, .
 		await stores.artists.update(queue, {
 			artist_id: artist_id,
 			name: artist.name,
-			tidal: artist.tidal
+			tidal: artist.tidal ?? null,
+			musicbrainz: artist.musicbrainz ?? null
 		});
+		for (let [index, name] of (artist.genres ?? []).entries()) {
+			let category_id = makeBinaryId("category", name);
+			await stores.categories.update(queue, {
+				category_id: category_id,
+				name: name
+			});
+			await stores.artist_categories.insert(queue, {
+				category_id: category_id,
+				artist_id: artist_id,
+				order: index
+			});
+		}
 		await associateArtistFiles(queue, artist_id, ...file_ids);
 	}
 };
@@ -951,10 +964,11 @@ async function removeBrokenEntities(queue: WritableQueue): Promise<void> {
 			await stores.genres.remove(queue, genre);
 		}
 	}
-	console.log(`Removing categories without albums...`);
+	console.log(`Removing categories without albums and artists...`);
 	for (let category of await stores.categories.filter(queue)) {
 		let album_categories = await links.category_album_categories.filter(queue, category);
-		if (album_categories.length === 0) {
+		let artist_categories = await links.category_artist_categories.filter(queue, category);
+		if (album_categories.length === 0 && artist_categories.length === 0) {
 			await stores.categories.remove(queue, category);
 		}
 	}

@@ -164,7 +164,11 @@ External image and metadata files may be used to supply additional information t
 {
 	"type": "artist",
 	"name": "Artist name",
-	"tidal"?: 12345
+	"tidal"?: 12345,
+	"musicbrainz"?: string,
+	"genres"?: [
+		"Genre name"
+	]
 }
 ```
 

@@ -35,7 +35,9 @@ guard ArtistBase: {
 guard Artist: ArtistBase & {
 	"affinity": number,
 	"duration_ms": number,
-	"tidal"?: number
+	"tidal"?: number,
+	"musicbrainz"?: string,
+	"categories": CategoryBase[]
 };
 
 guard ArtistContext: Artist & {

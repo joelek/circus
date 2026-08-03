@@ -119,7 +119,8 @@ const artists = context.createStore({
 	name: context.createStringField({ searchable: true }),
 	affinity: context.createNumberField(),
 	duration_ms: context.createIntegerField(),
-	tidal: context.createNullableIntegerField()
+	tidal: context.createNullableIntegerField(),
+	musicbrainz: context.createNullableStringField()
 }, ["artist_id"], {
 	name: context.createIncreasingOrder()
 });
@@ -384,6 +385,14 @@ const album_categories = context.createStore({
 	category_id: context.createBinaryField(),
 	order: context.createIntegerField()
 }, ["album_id", "category_id"], {
+
+});
+
+const artist_categories = context.createStore({
+	artist_id: context.createBinaryField(),
+	category_id: context.createBinaryField(),
+	order: context.createIntegerField()
+}, ["artist_id", "category_id"], {
 
 });
 
@@ -1033,6 +1042,18 @@ const album_album_categories = context.createLink(albums, album_categories, {
 	order: context.createIncreasingOrder()
 });
 
+const category_artist_categories = context.createLink(categories, artist_categories, {
+	category_id: "category_id"
+}, {
+
+});
+
+const artist_artist_categories = context.createLink(artists, artist_categories, {
+	artist_id: "artist_id"
+}, {
+	order: context.createIncreasingOrder()
+});
+
 const subtitle_cues = context.createLink(subtitles, cues, {
 	subtitle_id: "subtitle_id"
 }, {
@@ -1211,6 +1232,7 @@ export const transactionManager = context.createTransactionManager("./private/db
 	show_genres,
 	categories,
 	album_categories,
+	artist_categories,
 	subtitles,
 	cues,
 	users,
@@ -1274,6 +1296,8 @@ export const transactionManager = context.createTransactionManager("./private/db
 	show_show_genres,
 	category_album_categories,
 	album_album_categories,
+	category_artist_categories,
+	artist_artist_categories,
 	subtitle_cues,
 	user_keys,
 	user_tokens,

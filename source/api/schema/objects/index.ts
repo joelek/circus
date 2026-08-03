@@ -96,9 +96,11 @@ export const Artist: autoguard.serialization.MessageGuard<Artist> = autoguard.gu
 	autoguard.guards.Reference.of(() => ArtistBase),
 	autoguard.guards.Object.of({
 		"affinity": autoguard.guards.Number,
-		"duration_ms": autoguard.guards.Number
+		"duration_ms": autoguard.guards.Number,
+		"categories": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => CategoryBase))
 	}, {
-		"tidal": autoguard.guards.Number
+		"tidal": autoguard.guards.Number,
+		"musicbrainz": autoguard.guards.String
 	})
 );
 
@@ -106,9 +108,11 @@ export type Artist = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<ArtistBase>,
 	autoguard.guards.Object<{
 		"affinity": autoguard.guards.Number,
-		"duration_ms": autoguard.guards.Number
+		"duration_ms": autoguard.guards.Number,
+		"categories": autoguard.guards.Array<autoguard.guards.Reference<CategoryBase>>
 	}, {
-		"tidal": autoguard.guards.Number
+		"tidal": autoguard.guards.Number,
+		"musicbrainz": autoguard.guards.String
 	}>
 ]>;
 

@@ -665,6 +665,17 @@ contextMenuEntity.addObserver(async (contextMenuEntity) => {
 					})
 			);
 		}
+		let musicbrainz = contextMenuEntity.musicbrainz;
+		if (is.present(musicbrainz)) {
+			contextMenuItems.append(
+				xml.element("button")
+					.add(xml.text("Musicbrainz"))
+					.on("click", async () => {
+						window.open(`https://musicbrainz.org/artist/${musicbrainz}`);
+						showContextMenu.updateState(false);
+					})
+			);
+		}
 	} else if (apischema.objects.Album.is(contextMenuEntity)) {
 		let tidal = contextMenuEntity.tidal;
 		if (is.present(tidal)) {
