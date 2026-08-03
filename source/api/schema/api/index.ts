@@ -717,6 +717,25 @@ export namespace Autoguard {
 			),
 			"payload": autoguard.api.Binary
 		}),
+		"GET:/categories/<category_id>/artists/": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"category_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {
+					"anchor": autoguard.guards.String,
+					"offset": autoguard.guards.Number,
+					"limit": autoguard.guards.Number
+				}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
 		"GET:/categories/<category_id>/albums/": autoguard.guards.Object.of({
 			"options": autoguard.guards.Intersection.of(
 				autoguard.guards.Object.of({
@@ -1766,6 +1785,17 @@ export namespace Autoguard {
 		"GET:/categories/<category_id>/": autoguard.guards.Object.of({
 			"payload": autoguard.guards.Object.of({
 				"category": autoguard.guards.Reference.of(() => Category)
+			}, {})
+		}, {
+			"status": autoguard.guards.Integer,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"GET:/categories/<category_id>/artists/": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"artists": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Artist))
 			}, {})
 		}, {
 			"status": autoguard.guards.Integer,

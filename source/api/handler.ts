@@ -396,6 +396,14 @@ export async function lookupCategory(queue: ReadableQueue, category_id: string, 
 	};
 };
 
+export async function getArtistsFromCategories(queue: ReadableQueue, category_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Artist[]> {
+	let artists = [] as Array<schema.objects.Artist>;
+	for (let entry of await atlas.links.category_artist_categories.filter(queue, { category_id: binid(category_id) }, anchor != null ? { category_id: binid(category_id), artist_id: binid(anchor) } : undefined, length)) {
+		artists.push(await lookupArtist(queue, hexid(entry.artist_id), user_id));
+	}
+	return artists;
+};
+
 export async function getAlbumsFromCategories(queue: ReadableQueue, category_id: string, user_id: string, anchor: string | undefined, offset: number, length: number): Promise<schema.objects.Album[]> {
 	let albums = [] as Array<schema.objects.Album>;
 	for (let entry of await atlas.links.category_album_categories.filter(queue, { category_id: binid(category_id) }, anchor != null ? { category_id: binid(category_id), album_id: binid(anchor) } : undefined, length)) {

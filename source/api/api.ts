@@ -339,6 +339,16 @@ export const server = apiv2.makeServer({
 			}
 		};
 	}),
+	"GET:/categories/<category_id>/artists/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let user_id = await auth.getUserId(queue, options.token);
+		let artists = await handler.getArtistsFromCategories(queue, options.category_id, user_id, options.anchor, options.offset ?? 0, options.limit ?? 12);
+		return {
+			payload: {
+				artists
+			}
+		};
+	}),
 	"GET:/categories/<category_id>/albums/": (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
 		let options = request.options();
 		let user_id = await auth.getUserId(queue, options.token);

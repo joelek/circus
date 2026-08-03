@@ -2438,52 +2438,68 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 		}).then(async (response) => {
 			let payload = await response.payload();
 			let category = payload.category;
-			let offset = 0;
-			let reachedEnd = new ObservableClass(false);
-			let isLoading = new ObservableClass(false);
-			let albums = new ArrayObservable<Album>([]);
-			let anchor = new ObservableClass(undefined as Album | undefined);
-			async function load(): Promise<void> {
-				if (!reachedEnd.getState() && !isLoading.getState()) {
-					isLoading.updateState(true);
-					let response = await apiclient["GET:/categories/<category_id>/albums/"]({
-						options: {
-							category_id: category_id,
-							token: token ?? "",
-							anchor: anchor.getState()?.album_id,
-							offset
-						}
-					});
-					let payload = await response.payload();
-					for (let album of payload.albums) {
-						albums.append(album);
-						anchor.updateState(album);
-					}
-					offset += payload.albums.length;
-					if (payload.albums.length === 0) {
-						reachedEnd.updateState(true);
-					}
-					isLoading.updateState(false);
+			return apiclient["GET:/categories/<category_id>/artists/"]({
+				options: {
+					category_id: category_id,
+					token: token ?? "",
+					anchor: undefined
 				}
-			};
-			let element = xml.element("div")
-				.add(xml.element("div.content")
-					.add(renderTextHeader(xml.text(category.title)))
-					.add(xml.element("div")
-						.set("style", "display: grid; gap: 24px;")
-						.bind("data-hide", albums.compute((albums) => albums.length === 0))
-						.add(renderTextHeader(xml.text("Albums")))
-						.add(Grid.make()
-							.repeat(albums, (album) => EntityCard.forAlbum(album))
+			}).then(async (response) => {
+			let payload = await response.payload();
+			let artists = payload.artists;
+				let offset = 0;
+				let reachedEnd = new ObservableClass(false);
+				let isLoading = new ObservableClass(false);
+				let albums = new ArrayObservable<Album>([]);
+				let anchor = new ObservableClass(undefined as Album | undefined);
+				async function load(): Promise<void> {
+					if (!reachedEnd.getState() && !isLoading.getState()) {
+						isLoading.updateState(true);
+						let response = await apiclient["GET:/categories/<category_id>/albums/"]({
+							options: {
+								category_id: category_id,
+								token: token ?? "",
+								anchor: anchor.getState()?.album_id,
+								offset
+							}
+						});
+						let payload = await response.payload();
+						for (let album of payload.albums) {
+							albums.append(album);
+							anchor.updateState(album);
+						}
+						offset += payload.albums.length;
+						if (payload.albums.length === 0) {
+							reachedEnd.updateState(true);
+						}
+						isLoading.updateState(false);
+					}
+				};
+				let element = xml.element("div")
+					.add(xml.element("div.content")
+						.add(renderTextHeader(xml.text(category.title)))
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.set("data-hide", `${artists.length === 0}`)
+							.add(renderTextHeader(xml.text("Artists")))
+							.add(carouselFactory.make(new ArrayObservable(artists.map((artist) => EntityCard.forArtist(artist)))))
+						)
+						.add(xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.bind("data-hide", albums.compute((albums) => albums.length === 0))
+							.add(renderTextHeader(xml.text("Albums")))
+							.add(Grid.make()
+								.repeat(albums, (album) => EntityCard.forAlbum(album))
+							)
 						)
 					)
-				)
-				.add(observe(xml.element("div").set("style", "height: 1px;"), load))
-				.render();
-			return {
-				element,
-				title: `${category.title}`
-			};
+					.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+					.render();
+				return {
+					element,
+					title: `${category.title}`
+				};
+			});
 		});
 	} else if ((parts = /^audio[/]genres[/]([^/?]*)/.exec(uri)) !== null) {
 		let query = decodeURIComponent(parts[1]);
@@ -3107,6 +3123,11 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			let element = xml.element("div")
 				.add(xml.element("div.content")
 					.add(EntityCard.forArtist(artist, { compactDescription: false }))
+					.add(xml.element("div")
+						.set("style", "display: grid; gap: 16px;")
+						.set("data-hide", `${artist.categories.length === 0}`)
+						.add(...artist.categories.slice(0, 3).map((category) => EntityRow.forCategory(category)))
+					)
 					.add(tracks.length === 0 ? undefined : xml.element("div")
 						.set("style", "display: grid; gap: 24px;")
 						.add(renderTextHeader(xml.text("Popular tracks")))
