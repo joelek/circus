@@ -3013,7 +3013,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 					.add(xml.element("div")
 						.set("style", "display: grid; gap: 16px;")
 						.set("data-hide", `${album.categories.length === 0}`)
-						.add(...album.categories.slice(0, 3).map((category) => EntityRow.forCategory(category)))
+						.add(...album.categories.map((category) => EntityRow.forCategory(category)))
 					)
 					.repeat(discs, (disc, discIndex) => {
 						let tracks = new ArrayObservable<Track>([]);
@@ -3126,7 +3126,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 					.add(xml.element("div")
 						.set("style", "display: grid; gap: 16px;")
 						.set("data-hide", `${artist.categories.length === 0}`)
-						.add(...artist.categories.slice(0, 3).map((category) => EntityRow.forCategory(category)))
+						.add(...artist.categories.map((category) => EntityRow.forCategory(category)))
 					)
 					.add(tracks.length === 0 ? undefined : xml.element("div")
 						.set("style", "display: grid; gap: 24px;")
