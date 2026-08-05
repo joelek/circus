@@ -17,7 +17,7 @@ const CSS = `
 	}
 
 	.image-box--border {
-		border: 12px solid transparent;
+		border: 6px solid transparent;
 	}
 
 	.image-box__images {
