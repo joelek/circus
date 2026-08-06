@@ -30,7 +30,10 @@ export const AudioStream: autoguard.serialization.MessageGuard<AudioStream> = au
 	autoguard.guards.Reference.of(() => StreamCommon),
 	autoguard.guards.Object.of({
 		"codec_type": autoguard.guards.StringLiteral.of("audio"),
+		"time_base": autoguard.guards.String,
+		"start_pts": autoguard.guards.Integer,
 		"start_time": autoguard.guards.String,
+		"duration_ts": autoguard.guards.Integer,
 		"duration": autoguard.guards.String
 	}, {})
 );
@@ -39,7 +42,10 @@ export type AudioStream = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<StreamCommon>,
 	autoguard.guards.Object<{
 		"codec_type": autoguard.guards.StringLiteral<"audio">,
+		"time_base": autoguard.guards.String,
+		"start_pts": autoguard.guards.Integer,
 		"start_time": autoguard.guards.String,
+		"duration_ts": autoguard.guards.Integer,
 		"duration": autoguard.guards.String
 	}, {}>
 ]>;
@@ -82,7 +88,10 @@ export const VideoStream: autoguard.serialization.MessageGuard<VideoStream> = au
 	autoguard.guards.Reference.of(() => StreamCommon),
 	autoguard.guards.Object.of({
 		"codec_type": autoguard.guards.StringLiteral.of("video"),
+		"time_base": autoguard.guards.String,
+		"start_pts": autoguard.guards.Integer,
 		"start_time": autoguard.guards.String,
+		"duration_ts": autoguard.guards.Integer,
 		"duration": autoguard.guards.String,
 		"width": autoguard.guards.Number,
 		"height": autoguard.guards.Number
@@ -93,7 +102,10 @@ export type VideoStream = autoguard.guards.Intersection<[
 	autoguard.guards.Reference<StreamCommon>,
 	autoguard.guards.Object<{
 		"codec_type": autoguard.guards.StringLiteral<"video">,
+		"time_base": autoguard.guards.String,
+		"start_pts": autoguard.guards.Integer,
 		"start_time": autoguard.guards.String,
+		"duration_ts": autoguard.guards.Integer,
 		"duration": autoguard.guards.String,
 		"width": autoguard.guards.Number,
 		"height": autoguard.guards.Number
@@ -168,6 +180,42 @@ export type FormatResult = autoguard.guards.Object<{
 	"format": autoguard.guards.Reference<Format>
 }, {}>;
 
+export const Packet: autoguard.serialization.MessageGuard<Packet> = autoguard.guards.Object.of({
+	"codec_type": autoguard.guards.Union.of(
+		autoguard.guards.StringLiteral.of("audio"),
+		autoguard.guards.StringLiteral.of("video")
+	),
+	"stream_index": autoguard.guards.Integer,
+	"pts": autoguard.guards.Integer,
+	"pts_time": autoguard.guards.String,
+	"dts": autoguard.guards.Integer,
+	"dts_time": autoguard.guards.String,
+	"duration": autoguard.guards.Integer,
+	"duration_time": autoguard.guards.String
+}, {});
+
+export type Packet = autoguard.guards.Object<{
+	"codec_type": autoguard.guards.Union<[
+		autoguard.guards.StringLiteral<"audio">,
+		autoguard.guards.StringLiteral<"video">
+	]>,
+	"stream_index": autoguard.guards.Integer,
+	"pts": autoguard.guards.Integer,
+	"pts_time": autoguard.guards.String,
+	"dts": autoguard.guards.Integer,
+	"dts_time": autoguard.guards.String,
+	"duration": autoguard.guards.Integer,
+	"duration_time": autoguard.guards.String
+}, {}>;
+
+export const PacketsResult: autoguard.serialization.MessageGuard<PacketsResult> = autoguard.guards.Object.of({
+	"packets": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => Packet))
+}, {});
+
+export type PacketsResult = autoguard.guards.Object<{
+	"packets": autoguard.guards.Array<autoguard.guards.Reference<Packet>>
+}, {}>;
+
 export namespace Autoguard {
 	export const Guards = {
 		"VideoFrame": autoguard.guards.Reference.of(() => VideoFrame),
@@ -180,7 +228,9 @@ export namespace Autoguard {
 		"Stream": autoguard.guards.Reference.of(() => Stream),
 		"StreamsResult": autoguard.guards.Reference.of(() => StreamsResult),
 		"Format": autoguard.guards.Reference.of(() => Format),
-		"FormatResult": autoguard.guards.Reference.of(() => FormatResult)
+		"FormatResult": autoguard.guards.Reference.of(() => FormatResult),
+		"Packet": autoguard.guards.Reference.of(() => Packet),
+		"PacketsResult": autoguard.guards.Reference.of(() => PacketsResult)
 	};
 
 	export type Guards = { [A in keyof typeof Guards]: ReturnType<typeof Guards[A]["as"]>; };

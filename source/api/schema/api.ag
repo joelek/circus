@@ -451,3 +451,51 @@ route GET:/statistics/ ? <{ token: string }>
 	=> {
 		statistics: (NumberStatistic | StringStatistic)[]
 	};
+
+guard ChannelEpisode: {
+	start_utc: integer,
+	program: ./objects/Episode
+};
+
+guard ChannelMovie: {
+	start_utc: integer,
+	program: ./objects/Movie
+};
+
+guard ChannelProgram: ChannelEpisode | ChannelMovie;
+
+guard ChannelResult: {
+	entity: ./objects/Channel,
+	rank: number
+};
+
+route getChannels(): GET:/channels/<query> ? <token> & <anchor?> & <offset?:integer> & <limit?:integer>
+	=> {
+		results: ChannelResult[]
+	};
+
+route getChannel(): GET:/channels/<channel_id>/ ? <token>
+	=> {
+		channel: ./objects/Channel,
+		programs: ChannelProgram[]
+	};
+
+route getChannelContext(): GET:/channels/<channel_id>/context/ ? <token>
+	=> {
+		context: ./objects/ChannelContext
+	};
+
+route getChannelContent(): GET:/channels/<channel_id>/content/ ? <token>
+	=> binary;
+
+route getChannelContentMediaPlaylist(): GET:/channels/<channel_id>/content/media/ ? <token>
+	=> binary;
+
+route getChannelContentMediaSegment(): GET:/channels/<channel_id>/content/media/<program_index:integer(0,*)>/<segment_index:integer(0,*)>/ ? <token>
+	=> binary;
+
+route getChannelContentSubtitlePlaylist(): GET:/channels/<channel_id>/content/subtitle/ ? <token>
+	=> binary;
+
+route getChannelContentSubtitleSegment(): GET:/channels/<channel_id>/content/subtitle/<program_index:integer(0,*)>/<segment_index:integer(0,*)>/ ? <token>
+	=> binary;

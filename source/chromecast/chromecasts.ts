@@ -9,7 +9,7 @@ import * as libcontext from "../player/client";
 import * as autoguard from "@joelek/autoguard";
 import * as websockets from "@joelek/websockets";
 import * as stdlib from "@joelek/stdlib";
-import { Episode, Language, Movie, Track, FileContext } from "../api/schema/objects";
+import { Episode, Language, Movie, Track, FileContext, ChannelContext } from "../api/schema/objects";
 import * as utils from "../utils";
 
 const DEBUG = false;
@@ -24,7 +24,7 @@ function getLanguage(language: Language | undefined): { language: string, name: 
 	};
 }
 
-function makeMediaInformation(item: Episode | Movie | Track | FileContext, media_server_host: string, token: string): schema.objects.MediaInformation {
+function makeMediaInformation(item: Episode | Movie | Track | FileContext | ChannelContext, media_server_host: string, token: string): schema.objects.MediaInformation {
 	if (Episode.is(item)) {
 		let episode = item;
 		let season = episode.season;
@@ -104,7 +104,21 @@ function makeMediaInformation(item: Episode | Movie | Track | FileContext, media
 				images: []
 			}
 		};
+	} else if (ChannelContext.is(item)) {
+		let channel = item;
+		return {
+			contentId: `${media_server_host}/api/channels/${channel.channel_id}/content/?token=${token}`,
+			contentType: "application/vnd.apple.mpegurl",
+			streamType: "LIVE",
+			metadata: {
+				metadataType: 0,
+				title: channel.title,
+				subtitle: [].filter((string) => string != null).join(" \u00b7 "),
+				images: []
+			}
+		};
 	} else {
+		let dummy: never = item;
 		throw `Expected code to be unreachable!`;
 	}
 }

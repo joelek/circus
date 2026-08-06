@@ -115,7 +115,13 @@ export class ContextClient {
 			let file = context;
 			files.push(file);
 			return files;
+		} else if (schema.objects.ContextChannel.is(context)) {
+			let files = [] as schema.objects.ContextItem[];
+			let file = context;
+			files.push(file);
+			return files;
 		} else {
+			let dummy: never = context;
 			throw `Expected code to be unreachable!`;
 		}
 	}
@@ -296,7 +302,12 @@ export class ContextClient {
 						return this.contextPath.updateState([
 							context.file_id
 						].filter(is.present));
+					} else if (schema.objects.ContextChannel.is(context)) {
+						return this.contextPath.updateState([
+							context.channel_id
+						].filter(is.present));
 					} else {
+						let dummy: never = context;
 						throw `Expected code to be unreachable!`;
 					}
 				}
@@ -652,6 +663,10 @@ export class ContextClient {
 			}
 		}
 		return this.sendPlay(artist, index);
+	}
+
+	playChannel(channel: schema.objects.ContextChannel): void {
+		return this.sendPlay(channel);
 	}
 
 	playDirectory(directory: schema.objects.ContextDirectory, fileIndex?: number): void {

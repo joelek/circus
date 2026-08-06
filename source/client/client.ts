@@ -2,8 +2,8 @@ import * as session from "./browserMediaSession";
 import { ArrayObservable, computed, ObservableClass } from "../observers";
 import * as client from "../player/client";
 import * as is from "../is";
-import {  ContextFile, Device } from "../player/schema/objects";
-import { Category, File, Directory, Actor, Album, Artist, Disc, Entity, Episode, Genre, Movie, Playlist, PlaylistItem, Season, Show, Track, User, Year } from "../api/schema/objects";
+import {  ContextChannel, ContextFile, Device } from "../player/schema/objects";
+import { Category, File, Directory, Actor, Album, Artist, Disc, Entity, Episode, Genre, Movie, Playlist, PlaylistItem, Season, Show, Track, User, Year, Channel } from "../api/schema/objects";
 import * as xml from "../xnode";
 import { formatDuration as format_duration, formatSize, formatTimestamp as format_timestamp } from "../ui/metadata";
 import * as apischema from "../api/schema";
@@ -23,7 +23,7 @@ import * as apiv2 from "../api/schema/api/client";
 import * as utils from "../utils";
 
 const apiclient = apiv2.makeClient({ urlPrefix: "/api" });
-import { NumberStatistic } from "../api/schema/api";
+import { ChannelProgram, NumberStatistic } from "../api/schema/api";
 
 
 
@@ -178,6 +178,7 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 		player.next();
 	});
 	currentVideo.addEventListener("error", (event) => {
+		console.log((event.target as any)?.error);
 		videoEventLog.append({ timestamp: Date.now(), type: "error" })
 		if (player.currentLocalEntry.getState() != null) {
 			player.pause();
@@ -281,7 +282,15 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 				session.setMetadata({
 					title: file.name
 				});
+			} else if (ContextChannel.is(currentEntry)) {
+				let channel = currentEntry;
+				mediaPlayerTitle.updateState(channel.title);
+				mediaPlayerSubtitle.updateState([].filter((string) => string != null).join(" \u00b7 "));
+				session.setMetadata({
+					title: channel.title
+				});
 			} else {
+				let dummy: never = currentEntry;
 				throw `Expected code to be unreachable!`;
 			}
 		} else {
@@ -298,7 +307,11 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 				lastVideo.src = ``;
 				return;
 			} else {
-				lastVideo.src = `/api/files/${lastLocalEntry.media.file_id}/content/?token=${token}`;
+				if ("media" in lastLocalEntry) {
+					lastVideo.src = `/api/files/${lastLocalEntry.media.file_id}/content/?token=${token}`;
+				} else {
+					lastVideo.src = "";
+				}
 			}
 		};
 		player.lastLocalEntry.addObserver(computer);
@@ -318,8 +331,13 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 				currentVideo.src = ``;
 				return;
 			} else {
-				videoEventLog.append({ timestamp: Date.now(), type: `file_id: "${currentLocalEntry.media.file_id}"` });
-				currentVideo.src = `/api/files/${currentLocalEntry.media.file_id}/content/?token=${token}`;
+				if ("media" in currentLocalEntry) {
+					videoEventLog.append({ timestamp: Date.now(), type: `file_id: "${currentLocalEntry.media.file_id}"` });
+					currentVideo.src = `/api/files/${currentLocalEntry.media.file_id}/content/?token=${token}`;
+				} else {
+					videoEventLog.append({ timestamp: Date.now(), type: `channel_id: "${currentLocalEntry.channel_id}"` });
+					currentVideo.src = `/api/channels/${currentLocalEntry.channel_id}/content/?token=${token}`;
+				}
 				currentVideo.load();
 			}
 			if (Movie.is(currentLocalEntry) || Episode.is(currentLocalEntry)) {
@@ -351,7 +369,11 @@ videoElementMayBeLocked.addObserver((videoElementMayBeLocked) => {
 				nextVideo.src = ``;
 				return;
 			} else {
-				nextVideo.src = `/api/files/${nextLocalEntry.media.file_id}/content/?token=${token}`;
+				if ("media" in nextLocalEntry) {
+					nextVideo.src = `/api/files/${nextLocalEntry.media.file_id}/content/?token=${token}`;
+				} else {
+					nextVideo.src = "";
+				}
 			}
 		};
 		player.nextLocalEntry.addObserver(computer);
@@ -2134,8 +2156,10 @@ window.requestAnimationFrame(async function computer() {
 		if (playing) {
 			progress += (Date.now() - estimatedProgressTimestamp) / 1000;
 		}
-		scale = progress / (currentEntry.media.duration_ms / 1000);
-		metadata = `${formatTimestamp(Math.min(progress * 1000, currentEntry.media.duration_ms))} / ${formatTimestamp(currentEntry.media.duration_ms)}`;
+		if ("media" in currentEntry) {
+			scale = progress / (currentEntry.media.duration_ms / 1000);
+			metadata = `${formatTimestamp(Math.min(progress * 1000, currentEntry.media.duration_ms))} / ${formatTimestamp(currentEntry.media.duration_ms)}`;
+		}
 	}
 	if (playback && !playing) {
 		metadata = "Loading...";
@@ -2153,8 +2177,10 @@ async function progressupdate(page_x: number): Promise<void> {
 	let factor = Math.max(0.0, Math.min(x / w, 1.0));
 	let currentEntry = player.currentEntry.getState();
 	if (is.present(currentEntry)) {
-		let progress = factor * currentEntry.media.duration_ms / 1000;
-		player.seek(progress);
+		if ("media" in currentEntry) {
+			let progress = factor * currentEntry.media.duration_ms / 1000;
+			player.seek(progress);
+		}
 	}
 }
 let progressactive = false;
@@ -3710,6 +3736,81 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 			element,
 			title: `Genres`
 		};
+	} else if ((parts = /^video[/]channels[/]([0-9a-f]{16})[/]/.exec(uri)) !== null) {
+		let channel_id = decodeURIComponent(parts[1]);
+		return apiclient.getChannel({
+			options: {
+				channel_id: channel_id,
+				token: token ?? ""
+			}
+		}).then(async (response) => {
+			let payload = await response.payload();
+			let channel = payload.channel;
+			let programs = new ArrayObservable<ChannelProgram>([]);
+			programs.update(payload.programs);
+			let element = xml.element("div")
+				.add(xml.element("div.content")
+					.add(EntityCard.forChannel(channel, { compactDescription: false }))
+					.repeat(programs, (program, programIndex) => {
+						let start = new Date(program.start_utc);
+						return xml.element("div")
+							.set("style", "display: grid; gap: 24px;")
+							.add(renderTextHeader(xml.text(`${start.getHours().toString().padStart(2, "0")}:${start.getMinutes().toString().padStart(2, "0")}`)))
+							.add(EntityRow.forEntity(program.program, {
+								playbackButton: undefined
+							})
+						);
+					})
+				)
+				.render();
+			return {
+				element,
+				title: `${channel.title}`
+			};
+		});
+	} else if ((parts = /^video[/]channels[/]([^/?]*)/.exec(uri)) !== null) {
+		let query = decodeURIComponent(parts[1]);
+		let offset = 0;
+		let reachedEnd = new ObservableClass(false);
+		let isLoading = new ObservableClass(false);
+		let channels = new ArrayObservable<Channel>([]);
+		let anchor = new ObservableClass(undefined as Channel | undefined);
+		async function load(): Promise<void> {
+			if (!reachedEnd.getState() && !isLoading.getState()) {
+				isLoading.updateState(true);
+				let response = await apiclient.getChannels({
+					options: {
+						query,
+						token: token ?? "",
+						anchor: anchor.getState()?.channel_id,
+						offset,
+						limit: 100
+					}
+				});
+				let payload = await response.payload();
+				for (let { entity } of payload.results) {
+					channels.append(entity);
+					anchor.updateState(entity);
+				}
+				offset += payload.results.length;
+				if (payload.results.length === 0) {
+					reachedEnd.updateState(true);
+				}
+				isLoading.updateState(false);
+			}
+		};
+		let element = xml.element("div")
+			.add(xml.element("div.content")
+				.add(Grid.make({ mini: true })
+					.repeat(channels, (channel) => makeIconLink(Icon.makeCalendar(), `${channel.title}`, `video/channels/${channel.channel_id}/`))
+				)
+			)
+			.add(observe(xml.element("div").set("style", "height: 1px;"), load))
+			.render();
+		return {
+			element,
+			title: `Channels`
+		};
 	} else if ((parts = /^video[/]/.exec(uri)) !== null) {
 		let offset = 0;
 		let reachedEnd = new ObservableClass(false);
@@ -3744,6 +3845,7 @@ let updateviewforuri = async (uri: string): Promise<{ element: Element, title: s
 					.add(makeIconLink(Icon.makeStar(), "Movies", "video/movies/"))
 					.add(makeIconLink(Icon.makeMonitor(), "Shows", "video/shows/"))
 					.add(makeIconLink(Icon.makePieChart(), "Genres", "video/genres/"))
+					.add(makeIconLink(Icon.makeCalendar(), "Channels", "video/channels/"))
 					.add(makeIconLink(Icon.makePerson(), "Actors", "actors/"))
 				)
 				.add(xml.element("div")

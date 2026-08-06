@@ -82,6 +82,10 @@ export class EntityNavLinkFactory {
 		return this.make("artist", last, next);
 	}
 
+	forChannel(last: api.ChannelBase | undefined, next: api.ChannelBase | undefined): xnode.XElement {
+		return this.make("channel", last, next);
+	}
+
 	forCue(last: api.CueBase | undefined, next: api.CueBase | undefined): xnode.XElement {
 		return this.make("cue", last, next);
 	}

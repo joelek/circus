@@ -9,6 +9,7 @@ import * as atlas from "../database/atlas";
 import { binid } from "../utils";
 import { stats } from "../database/indexer";
 import * as app from "../app.json";
+import { getChannels, getChannelContent, getChannelMediaSegment, getChannelSubtitleSegment, getChannelContentPlaylist } from "../server/channels";
 
 function getVersion(): {
 	major: number,
@@ -38,7 +39,7 @@ export const server = apiv2.makeServer({
 			headers: {
 				"x-circus-token": token
 			}
-		}
+		};
 	}),
 	"POST:/users/": (request) => atlas.transactionManager.enqueueWritableTransaction(async (queue) => {
 		let payload = await handler.createUser(queue, await request.payload());
@@ -809,7 +810,7 @@ export const server = apiv2.makeServer({
 				"Accept-Ranges": "bytes",
 				"Cache-Control": "private,max-age=86400",
 				"Content-Length": `${range.length}`,
-				"Content-Range": range.length > 0 ? `bytes ${range.offset}-${range.offset+range.length-1}/${range.size}` : `bytes */${range.size}`,
+				"Content-Range": range.length > 0 ? `bytes ${range.offset}-${range.offset + range.length - 1}/${range.size}` : `bytes */${range.size}`,
 				"Content-Type": file.mime
 			},
 			payload: stream
@@ -957,6 +958,130 @@ export const server = apiv2.makeServer({
 					}
 				]
 			}
+		};
+	}),
+	getChannels: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let api_user_id = await auth.getUserId(queue, options.token);
+		let channels = await getChannels(api_user_id);
+		if (options.anchor != null) {
+			channels = channels.slice(channels.findIndex((channel) => channel.channel.channel_id === options.anchor) + 1);
+		}
+		if (options.offset != null) {
+			// channels = channels.slice(options.offset);
+		}
+		if (options.limit != null) {
+			channels = channels.slice(0, options.limit);
+		}
+		return {
+			payload: {
+				results: channels.map((channel) => ({
+					entity: channel.channel,
+					rank: 0
+				}))
+			}
+		};
+	}),
+	getChannel: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let api_user_id = await auth.getUserId(queue, options.token);
+		let channels = await getChannels(api_user_id);
+		let channel = channels.find((channel) => channel.channel.channel_id === options.channel_id);
+		if (channel == null) {
+			throw 404;
+		}
+		return {
+			payload: {
+				channel: channel.channel,
+				programs: channel.programs
+			}
+		};
+	}),
+	getChannelContext: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let api_user_id = await auth.getUserId(queue, options.token);
+		let channels = await getChannels(api_user_id);
+		let channel = channels.find((channel) => channel.channel.channel_id === options.channel_id);
+		if (channel == null) {
+			throw 404;
+		}
+		// TODO: Inject time zone offset.
+		return {
+			payload: {
+				context: channel.channel
+			}
+		};
+	}),
+	getChannelContent: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let api_user_id = await auth.getUserId(queue, options.token);
+		let content = await getChannelContent(options.channel_id, options.token, api_user_id);
+		return {
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+				"Content-Type": "application/vnd.apple.mpegurl"
+			},
+			payload: [Buffer.from(content, "utf-8")]
+		};
+	}),
+	getChannelContentMediaPlaylist: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let api_user_id = await auth.getUserId(queue, options.token);
+		let content = await getChannelContentPlaylist(options.channel_id, options.token, api_user_id);
+		return {
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+				"Content-Type": "application/vnd.apple.mpegurl"
+			},
+			payload: [Buffer.from(content, "utf-8")]
+		};
+	}),
+	getChannelContentMediaSegment: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let api_user_id = await auth.getUserId(queue, options.token);
+		let content = await getChannelMediaSegment(options.channel_id, api_user_id, options.program_index, options.segment_index);
+		let range = autoguard.api.parseRangeHeader(request.headers().range, content.length);
+		return {
+			status: range.status,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+				"Accept-Ranges": "bytes",
+				"Cache-Control": "private,max-age=86400",
+				"Content-Length": `${range.length}`,
+				"Content-Range": range.length > 0 ? `bytes ${range.offset}-${range.offset + range.length - 1}/${range.size}` : `bytes */${range.size}`,
+				"Content-Type": "video/mp2t",
+			},
+			payload: [content]
+		};
+	}),
+	getChannelContentSubtitlePlaylist: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let api_user_id = await auth.getUserId(queue, options.token);
+		let content = await getChannelContentPlaylist(options.channel_id, options.token, api_user_id);
+		return {
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+				"Content-Type": "application/vnd.apple.mpegurl"
+			},
+			payload: [Buffer.from(content, "utf-8")]
+		};
+	}),
+	getChannelContentSubtitleSegment: (request) => atlas.transactionManager.enqueueReadableTransaction(async (queue) => {
+		let options = request.options();
+		let api_user_id = await auth.getUserId(queue, options.token);
+		let content = await getChannelSubtitleSegment(options.channel_id, api_user_id, options.program_index, options.segment_index);
+		let range = autoguard.api.parseRangeHeader(request.headers().range, content.length);
+		return {
+			status: range.status,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+				"Accept-Ranges": "bytes",
+				"Cache-Control": "private,max-age=86400",
+				"Content-Length": `${range.length}`,
+				"Content-Range": range.length > 0 ? `bytes ${range.offset}-${range.offset + range.length - 1}/${range.size}` : `bytes */${range.size}`,
+				"Content-Type": "text/vtt",
+			},
+			payload: [content]
 		};
 	})
 }, {

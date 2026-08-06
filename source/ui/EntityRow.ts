@@ -110,6 +110,9 @@ export class EntityRowFactory {
 		if (api.Category.is(entity)) {
 			return this.forCategory(entity, options);
 		}
+		if (api.Channel.is(entity)) {
+			return this.forChannel(entity, options);
+		}
 		if (api.Cue.is(entity)) {
 			return this.forCue(entity, options);
 		}
@@ -149,6 +152,7 @@ export class EntityRowFactory {
 		if (api.Year.is(entity)) {
 			return this.forYear(entity, options);
 		}
+		let dummy: never = entity;
 		throw `Expected code to be unreachable!`;
 	}
 
@@ -194,6 +198,17 @@ export class EntityRowFactory {
 		return this.make(link, image, undefined, titles, subtitles);
 	}
 
+	forChannel(channel: api.Channel, options: Options = {}): xnode.XElement {
+		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forChannel(channel);
+		let link = options.link ?? this.entityLinkFactory.forChannel(channel);
+		let image = this.ImageBox.forSquare([]);
+		let titles = [
+			this.entityTitleFactory.forChannel(channel)
+		];
+		let subtitles = new Array<xnode.XElement>();
+		return this.make(link, image, playbackButton, titles, subtitles);
+	}
+
 	forCue(cue: api.Cue, options: Options = {}): xnode.XElement {
 		let playbackButton = "playbackButton" in options ? options.playbackButton : this.PlaybackButton.forCue(cue);
 		if (false) {
@@ -202,6 +217,7 @@ export class EntityRowFactory {
 		} else if (api.Movie.is(cue.media)) {
 			return this.forMovie(cue.media, { ...options, playbackButton });
 		} else {
+			let dummy: never = cue.media;
 			throw `Expected code to be unreachable!`;
 		}
 	}

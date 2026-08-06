@@ -7,7 +7,7 @@ import * as context from "../player";
 import * as utils from "../utils";
 import { IconFactory } from "./Icon";
 import { Client } from "../api/schema/api/client";
-import { ContextAlbum, ContextArtist, ContextDirectory, ContextDisc, ContextEpisode, ContextFile, ContextMovie, ContextPlaylist, ContextSeason, ContextShow, ContextTrack, ContextYear } from "../player/schema/objects";
+import { ContextAlbum, ContextArtist, ContextChannel, ContextDirectory, ContextDisc, ContextEpisode, ContextFile, ContextMovie, ContextPlaylist, ContextSeason, ContextShow, ContextTrack, ContextYear } from "../player/schema/objects";
 
 const CSS = `
 	.playback-button {
@@ -84,6 +84,17 @@ export class PlaybackButtonFactory {
 		let response = await this.rpc.getArtistContext({
 			options: {
 				artist_id: artist.artist_id,
+				token: this.player.token.getState() ?? ""
+			}
+		});
+		let payload = await response.payload();
+		return payload.context;
+	}
+
+	private async getChannelContext(channel: api.Channel): Promise<api.ChannelContext> {
+		let response = await this.rpc.getChannelContext({
+			options: {
+				channel_id: channel.channel_id,
 				token: this.player.token.getState() ?? ""
 			}
 		});
@@ -214,6 +225,9 @@ export class PlaybackButtonFactory {
 		if (api.Artist.is(entity)) {
 			return this.forArtist(entity);
 		}
+		if (api.Channel.is(entity)) {
+			return this.forChannel(entity);
+		}
 		if (api.Cue.is(entity)) {
 			return this.forCue(entity);
 		}
@@ -244,6 +258,7 @@ export class PlaybackButtonFactory {
 		if (api.Track.is(entity)) {
 			return this.forTrack(entity);
 		}
+		let dummy: never = entity;
 		throw `Expected code to be unreachable!`;
 	}
 
@@ -302,6 +317,21 @@ export class PlaybackButtonFactory {
 		});
 	}
 
+	forChannel(channel: api.Channel): xnode.XElement {
+		let isContext = observables.computed((context, currentEntry) => {
+			if (!ContextChannel.is(context) || !ContextChannel.is(currentEntry)) {
+				return false;
+			}
+			if (context.channel_id !== channel.channel_id) {
+				return false;
+			}
+			return true;
+		}, this.player.context, this.player.currentEntry);
+		return this.make(isContext, {
+			play: async () => this.player.playChannel(await this.getChannelContext(channel))
+		});
+	}
+
 	forCue(cue: api.Cue): xnode.XElement {
 		let start_s = Math.max(0, cue.start_ms / 1000 - 0.25);
 		if (false) {
@@ -338,6 +368,7 @@ export class PlaybackButtonFactory {
 				}
 			});
 		}
+		let dummy: never = cue.media;
 		throw `Expected code to be unreachable!`;
 	}
 

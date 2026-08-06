@@ -12,7 +12,10 @@ guard StreamCommon: {
 
 guard AudioStream: StreamCommon & {
 	"codec_type": "audio",
+	"time_base": string,
+	"start_pts": integer,
 	"start_time": string,
+	"duration_ts": integer,
 	"duration": string
 };
 
@@ -29,7 +32,10 @@ guard SubtitleStream: StreamCommon & {
 
 guard VideoStream: StreamCommon & {
 	"codec_type": "video",
+	"time_base": string,
+	"start_pts": integer,
 	"start_time": string,
+	"duration_ts": integer,
 	"duration": string,
 	"width": number,
 	"height": number
@@ -61,4 +67,19 @@ guard Format: {
 
 guard FormatResult: {
 	"format": Format
+};
+
+guard Packet: {
+	"codec_type": "audio" | "video",
+	"stream_index": integer,
+	"pts": integer,
+	"pts_time": string,
+	"dts": integer,
+	"dts_time": string,
+	"duration": integer,
+	"duration_time": string
+};
+
+guard PacketsResult: {
+	packets: Packet[]
 };

@@ -836,11 +836,42 @@ export type FileContext = autoguard.guards.Intersection<[
 	autoguard.guards.Object<{}, {}>
 ]>;
 
+export const ChannelBase: autoguard.serialization.MessageGuard<ChannelBase> = autoguard.guards.Object.of({
+	"channel_id": autoguard.guards.String,
+	"title": autoguard.guards.String
+}, {});
+
+export type ChannelBase = autoguard.guards.Object<{
+	"channel_id": autoguard.guards.String,
+	"title": autoguard.guards.String
+}, {}>;
+
+export const Channel: autoguard.serialization.MessageGuard<Channel> = autoguard.guards.Intersection.of(
+	autoguard.guards.Reference.of(() => ChannelBase),
+	autoguard.guards.Object.of({}, {})
+);
+
+export type Channel = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<ChannelBase>,
+	autoguard.guards.Object<{}, {}>
+]>;
+
+export const ChannelContext: autoguard.serialization.MessageGuard<ChannelContext> = autoguard.guards.Intersection.of(
+	autoguard.guards.Reference.of(() => Channel),
+	autoguard.guards.Object.of({}, {})
+);
+
+export type ChannelContext = autoguard.guards.Intersection<[
+	autoguard.guards.Reference<Channel>,
+	autoguard.guards.Object<{}, {}>
+]>;
+
 export const EntityBase: autoguard.serialization.MessageGuard<EntityBase> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => ActorBase),
 	autoguard.guards.Reference.of(() => AlbumBase),
 	autoguard.guards.Reference.of(() => ArtistBase),
 	autoguard.guards.Reference.of(() => CategoryBase),
+	autoguard.guards.Reference.of(() => ChannelBase),
 	autoguard.guards.Reference.of(() => CueBase),
 	autoguard.guards.Reference.of(() => DirectoryBase),
 	autoguard.guards.Reference.of(() => DiscBase),
@@ -861,6 +892,7 @@ export type EntityBase = autoguard.guards.Union<[
 	autoguard.guards.Reference<AlbumBase>,
 	autoguard.guards.Reference<ArtistBase>,
 	autoguard.guards.Reference<CategoryBase>,
+	autoguard.guards.Reference<ChannelBase>,
 	autoguard.guards.Reference<CueBase>,
 	autoguard.guards.Reference<DirectoryBase>,
 	autoguard.guards.Reference<DiscBase>,
@@ -881,6 +913,7 @@ export const Entity: autoguard.serialization.MessageGuard<Entity> = autoguard.gu
 	autoguard.guards.Reference.of(() => Album),
 	autoguard.guards.Reference.of(() => Artist),
 	autoguard.guards.Reference.of(() => Category),
+	autoguard.guards.Reference.of(() => Channel),
 	autoguard.guards.Reference.of(() => Cue),
 	autoguard.guards.Reference.of(() => Directory),
 	autoguard.guards.Reference.of(() => Disc),
@@ -901,6 +934,7 @@ export type Entity = autoguard.guards.Union<[
 	autoguard.guards.Reference<Album>,
 	autoguard.guards.Reference<Artist>,
 	autoguard.guards.Reference<Category>,
+	autoguard.guards.Reference<Channel>,
 	autoguard.guards.Reference<Cue>,
 	autoguard.guards.Reference<Directory>,
 	autoguard.guards.Reference<Disc>,
@@ -971,6 +1005,9 @@ export namespace Autoguard {
 		"FileBase": autoguard.guards.Reference.of(() => FileBase),
 		"File": autoguard.guards.Reference.of(() => File),
 		"FileContext": autoguard.guards.Reference.of(() => FileContext),
+		"ChannelBase": autoguard.guards.Reference.of(() => ChannelBase),
+		"Channel": autoguard.guards.Reference.of(() => Channel),
+		"ChannelContext": autoguard.guards.Reference.of(() => ChannelContext),
 		"EntityBase": autoguard.guards.Reference.of(() => EntityBase),
 		"Entity": autoguard.guards.Reference.of(() => Entity)
 	};

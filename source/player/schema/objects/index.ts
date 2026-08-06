@@ -3,6 +3,7 @@
 import * as autoguard from "@joelek/autoguard/dist/lib-shared";
 import { AlbumContext } from "../../../api/schema/objects";
 import { ArtistContext } from "../../../api/schema/objects";
+import { ChannelContext } from "../../../api/schema/objects";
 import { DirectoryContext } from "../../../api/schema/objects";
 import { DiscContext } from "../../../api/schema/objects";
 import { EpisodeContext } from "../../../api/schema/objects";
@@ -62,6 +63,10 @@ export const ContextFile: autoguard.serialization.MessageGuard<ContextFile> = au
 
 export type ContextFile = autoguard.guards.Reference<FileContext>;
 
+export const ContextChannel: autoguard.serialization.MessageGuard<ContextChannel> = autoguard.guards.Reference.of(() => ChannelContext);
+
+export type ContextChannel = autoguard.guards.Reference<ChannelContext>;
+
 export const Context: autoguard.serialization.MessageGuard<Context> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => ContextAlbum),
 	autoguard.guards.Reference.of(() => ContextArtist),
@@ -74,7 +79,8 @@ export const Context: autoguard.serialization.MessageGuard<Context> = autoguard.
 	autoguard.guards.Reference.of(() => ContextEpisode),
 	autoguard.guards.Reference.of(() => ContextYear),
 	autoguard.guards.Reference.of(() => ContextDirectory),
-	autoguard.guards.Reference.of(() => ContextFile)
+	autoguard.guards.Reference.of(() => ContextFile),
+	autoguard.guards.Reference.of(() => ContextChannel)
 );
 
 export type Context = autoguard.guards.Union<[
@@ -89,21 +95,24 @@ export type Context = autoguard.guards.Union<[
 	autoguard.guards.Reference<ContextEpisode>,
 	autoguard.guards.Reference<ContextYear>,
 	autoguard.guards.Reference<ContextDirectory>,
-	autoguard.guards.Reference<ContextFile>
+	autoguard.guards.Reference<ContextFile>,
+	autoguard.guards.Reference<ContextChannel>
 ]>;
 
 export const ContextItem: autoguard.serialization.MessageGuard<ContextItem> = autoguard.guards.Union.of(
 	autoguard.guards.Reference.of(() => ContextTrack),
 	autoguard.guards.Reference.of(() => ContextMovie),
 	autoguard.guards.Reference.of(() => ContextEpisode),
-	autoguard.guards.Reference.of(() => ContextFile)
+	autoguard.guards.Reference.of(() => ContextFile),
+	autoguard.guards.Reference.of(() => ContextChannel)
 );
 
 export type ContextItem = autoguard.guards.Union<[
 	autoguard.guards.Reference<ContextTrack>,
 	autoguard.guards.Reference<ContextMovie>,
 	autoguard.guards.Reference<ContextEpisode>,
-	autoguard.guards.Reference<ContextFile>
+	autoguard.guards.Reference<ContextFile>,
+	autoguard.guards.Reference<ContextChannel>
 ]>;
 
 export const Device: autoguard.serialization.MessageGuard<Device> = autoguard.guards.Object.of({
@@ -164,6 +173,7 @@ export namespace Autoguard {
 		"ContextYear": autoguard.guards.Reference.of(() => ContextYear),
 		"ContextDirectory": autoguard.guards.Reference.of(() => ContextDirectory),
 		"ContextFile": autoguard.guards.Reference.of(() => ContextFile),
+		"ContextChannel": autoguard.guards.Reference.of(() => ContextChannel),
 		"Context": autoguard.guards.Reference.of(() => Context),
 		"ContextItem": autoguard.guards.Reference.of(() => ContextItem),
 		"Device": autoguard.guards.Reference.of(() => Device),

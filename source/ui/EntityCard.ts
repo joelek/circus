@@ -215,6 +215,9 @@ export class EntityCardFactory {
 		if (api.Category.is(entity)) {
 			return this.forCategory(entity, options);
 		}
+		if (api.Channel.is(entity)) {
+			return this.forChannel(entity, options);
+		}
 		if (api.Cue.is(entity)) {
 			return this.forCue(entity, options);
 		}
@@ -254,6 +257,7 @@ export class EntityCardFactory {
 		if (api.Year.is(entity)) {
 			return this.forYear(entity, options);
 		}
+		let dummy: never = entity;
 		throw `Expected code to be unreachable!`;
 	}
 
@@ -314,6 +318,20 @@ export class EntityCardFactory {
 		return this.make(link, image, titles, subtitles, tags, undefined, undefined, options);
 	}
 
+	forChannel(channel: api.Channel, options: Options = {}): xnode.XElement {
+		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forChannel(channel);
+		let link = this.entityLinkFactory.forChannel(channel);
+		let image = this.ImageBox.forSquare([], false, true);
+		let titles = [
+			this.entityTitleFactory.forChannel(channel)
+		];
+		let subtitles = new Array<xnode.XElement>();
+		let tags = [
+			"Channel"
+		].filter(is.present).map((tag) => xnode.element("div.entity-card__tag").add(xnode.text(tag)));
+		return this.make(link, image, titles, subtitles, tags, undefined, undefined, options);
+	}
+
 	forCue(cue: api.Cue, options: Options = {}): xnode.XElement {
 		options.playbackButton = options.playbackButton ?? this.PlaybackButton.forCue(cue);
 		options.image = this.ImageBox.forVideo([`/media/gifs/${cue.cue_id}/`], false, true);
@@ -323,6 +341,7 @@ export class EntityCardFactory {
 		} else if (api.Movie.is(cue.media)) {
 			return this.forMovie(cue.media, options);
 		} else {
+			let dummy: never = cue.media;
 			throw `Expected code to be unreachable!`;
 		}
 	}

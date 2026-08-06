@@ -71,6 +71,10 @@ export class EntityLinkFactory {
 		return this.make(`audio/genres/${category.category_id}/`, category);
 	}
 
+	forChannel(channel: api.ChannelBase): xnode.XElement {
+		return this.make(`video/channels/${channel.channel_id}/`, channel);
+	}
+
 	forCue(cue: api.CueBase): xnode.XElement {
 		return this.make(`video/cues/${cue.cue_id}/`, cue);
 	}
@@ -173,6 +177,12 @@ export class EntityLinkFactory {
 		if (api.ArtistBase.is(entity)) {
 			return this.forArtist(entity);
 		}
+		if (api.CategoryBase.is(entity)) {
+			return this.forCategory(entity);
+		}
+		if (api.ChannelBase.is(entity)) {
+			return this.forChannel(entity);
+		}
 		if (api.CueBase.is(entity)) {
 			return this.forCue(entity);
 		}
@@ -212,6 +222,7 @@ export class EntityLinkFactory {
 		if (api.YearBase.is(entity)) {
 			return this.forYear(entity);
 		}
+		let dummy: never = entity;
 		throw `Expected code to be unreachable!`;
 	}
 

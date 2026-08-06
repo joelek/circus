@@ -301,6 +301,19 @@ guard FileContext: File & {
 
 };
 
-guard EntityBase: ActorBase | AlbumBase | ArtistBase | CategoryBase | CueBase | DirectoryBase | DiscBase | EpisodeBase | FileBase | GenreBase | MovieBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase;
+guard ChannelBase: {
+	"channel_id": string,
+	"title": string
+};
 
-guard Entity: Actor | Album | Artist | Category | Cue | Directory | Disc | Episode | File | Genre | Movie | Playlist | Season | Show | Track | User | Year;
+guard Channel: ChannelBase & {
+
+};
+
+guard ChannelContext: Channel & {
+
+};
+
+guard EntityBase: ActorBase | AlbumBase | ArtistBase | CategoryBase | ChannelBase | CueBase | DirectoryBase | DiscBase | EpisodeBase | FileBase | GenreBase | MovieBase | PlaylistBase | SeasonBase | ShowBase | TrackBase | UserBase | YearBase;
+
+guard Entity: Actor | Album | Artist | Category | Channel | Cue | Directory | Disc | Episode | File | Genre | Movie | Playlist | Season | Show | Track | User | Year;

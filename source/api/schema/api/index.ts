@@ -7,6 +7,8 @@ import { AlbumContext } from ".././objects";
 import { Artist } from ".././objects";
 import { ArtistContext } from ".././objects";
 import { Category } from ".././objects";
+import { Channel } from ".././objects";
+import { ChannelContext } from ".././objects";
 import { Directory } from ".././objects";
 import { DirectoryContext } from ".././objects";
 import { Disc } from ".././objects";
@@ -207,6 +209,46 @@ export type StringStatistic = autoguard.guards.Object<{
 	"value": autoguard.guards.String
 }, {}>;
 
+export const ChannelEpisode: autoguard.serialization.MessageGuard<ChannelEpisode> = autoguard.guards.Object.of({
+	"start_utc": autoguard.guards.Integer,
+	"program": autoguard.guards.Reference.of(() => Episode)
+}, {});
+
+export type ChannelEpisode = autoguard.guards.Object<{
+	"start_utc": autoguard.guards.Integer,
+	"program": autoguard.guards.Reference<Episode>
+}, {}>;
+
+export const ChannelMovie: autoguard.serialization.MessageGuard<ChannelMovie> = autoguard.guards.Object.of({
+	"start_utc": autoguard.guards.Integer,
+	"program": autoguard.guards.Reference.of(() => Movie)
+}, {});
+
+export type ChannelMovie = autoguard.guards.Object<{
+	"start_utc": autoguard.guards.Integer,
+	"program": autoguard.guards.Reference<Movie>
+}, {}>;
+
+export const ChannelProgram: autoguard.serialization.MessageGuard<ChannelProgram> = autoguard.guards.Union.of(
+	autoguard.guards.Reference.of(() => ChannelEpisode),
+	autoguard.guards.Reference.of(() => ChannelMovie)
+);
+
+export type ChannelProgram = autoguard.guards.Union<[
+	autoguard.guards.Reference<ChannelEpisode>,
+	autoguard.guards.Reference<ChannelMovie>
+]>;
+
+export const ChannelResult: autoguard.serialization.MessageGuard<ChannelResult> = autoguard.guards.Object.of({
+	"entity": autoguard.guards.Reference.of(() => Channel),
+	"rank": autoguard.guards.Number
+}, {});
+
+export type ChannelResult = autoguard.guards.Object<{
+	"entity": autoguard.guards.Reference<Channel>,
+	"rank": autoguard.guards.Number
+}, {}>;
+
 export namespace Autoguard {
 	export const Guards = {
 		"ActorResult": autoguard.guards.Reference.of(() => ActorResult),
@@ -224,7 +266,11 @@ export namespace Autoguard {
 		"UserResult": autoguard.guards.Reference.of(() => UserResult),
 		"YearResult": autoguard.guards.Reference.of(() => YearResult),
 		"NumberStatistic": autoguard.guards.Reference.of(() => NumberStatistic),
-		"StringStatistic": autoguard.guards.Reference.of(() => StringStatistic)
+		"StringStatistic": autoguard.guards.Reference.of(() => StringStatistic),
+		"ChannelEpisode": autoguard.guards.Reference.of(() => ChannelEpisode),
+		"ChannelMovie": autoguard.guards.Reference.of(() => ChannelMovie),
+		"ChannelProgram": autoguard.guards.Reference.of(() => ChannelProgram),
+		"ChannelResult": autoguard.guards.Reference.of(() => ChannelResult)
 	};
 
 	export type Guards = { [A in keyof typeof Guards]: ReturnType<typeof Guards[A]["as"]>; };
@@ -1459,6 +1505,134 @@ export namespace Autoguard {
 				autoguard.api.Headers
 			),
 			"payload": autoguard.api.Binary
+		}),
+		"getChannels": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"query": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {
+					"anchor": autoguard.guards.String,
+					"offset": autoguard.guards.Integer,
+					"limit": autoguard.guards.Integer
+				}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getChannel": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"channel_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getChannelContext": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"channel_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getChannelContent": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"channel_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getChannelContentMediaPlaylist": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"channel_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getChannelContentMediaSegment": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"channel_id": autoguard.guards.String,
+					"program_index": new autoguard.guards.IntegerGuard(0, undefined),
+					"segment_index": new autoguard.guards.IntegerGuard(0, undefined),
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getChannelContentSubtitlePlaylist": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"channel_id": autoguard.guards.String,
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getChannelContentSubtitleSegment": autoguard.guards.Object.of({
+			"options": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({
+					"channel_id": autoguard.guards.String,
+					"program_index": new autoguard.guards.IntegerGuard(0, undefined),
+					"segment_index": new autoguard.guards.IntegerGuard(0, undefined),
+					"token": autoguard.guards.String
+				}, {}),
+				autoguard.api.Options
+			)
+		}, {
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
 		})
 	};
 
@@ -2284,6 +2458,80 @@ export namespace Autoguard {
 				autoguard.guards.Object.of({}, {}),
 				autoguard.api.Headers
 			)
+		}),
+		"getChannels": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"results": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ChannelResult))
+			}, {})
+		}, {
+			"status": autoguard.guards.Integer,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getChannel": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"channel": autoguard.guards.Reference.of(() => Channel),
+				"programs": autoguard.guards.Array.of(autoguard.guards.Reference.of(() => ChannelProgram))
+			}, {})
+		}, {
+			"status": autoguard.guards.Integer,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getChannelContext": autoguard.guards.Object.of({
+			"payload": autoguard.guards.Object.of({
+				"context": autoguard.guards.Reference.of(() => ChannelContext)
+			}, {})
+		}, {
+			"status": autoguard.guards.Integer,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			)
+		}),
+		"getChannelContent": autoguard.guards.Object.of({}, {
+			"status": autoguard.guards.Integer,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getChannelContentMediaPlaylist": autoguard.guards.Object.of({}, {
+			"status": autoguard.guards.Integer,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getChannelContentMediaSegment": autoguard.guards.Object.of({}, {
+			"status": autoguard.guards.Integer,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getChannelContentSubtitlePlaylist": autoguard.guards.Object.of({}, {
+			"status": autoguard.guards.Integer,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
+		}),
+		"getChannelContentSubtitleSegment": autoguard.guards.Object.of({}, {
+			"status": autoguard.guards.Integer,
+			"headers": autoguard.guards.Intersection.of(
+				autoguard.guards.Object.of({}, {}),
+				autoguard.api.Headers
+			),
+			"payload": autoguard.api.Binary
 		})
 	};
 

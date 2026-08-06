@@ -22,9 +22,11 @@ guard ContextDirectory: ../../api/schema/objects/DirectoryContext;
 
 guard ContextFile: ../../api/schema/objects/FileContext;
 
-guard Context: ContextAlbum | ContextArtist | ContextDisc | ContextTrack | ContextPlaylist | ContextMovie | ContextShow | ContextSeason | ContextEpisode | ContextYear | ContextDirectory | ContextFile;
+guard ContextChannel: ../../api/schema/objects/ChannelContext;
 
-guard ContextItem: ContextTrack | ContextMovie | ContextEpisode | ContextFile;
+guard Context: ContextAlbum | ContextArtist | ContextDisc | ContextTrack | ContextPlaylist | ContextMovie | ContextShow | ContextSeason | ContextEpisode | ContextYear | ContextDirectory | ContextFile | ContextChannel;
+
+guard ContextItem: ContextTrack | ContextMovie | ContextEpisode | ContextFile | ContextChannel;
 
 guard Device: {
 	"did": string,

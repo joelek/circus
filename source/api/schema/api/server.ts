@@ -3046,5 +3046,345 @@ export const makeServer = (routes: autoguard.api.Server<shared.Autoguard.Request
 			}
 		};
 	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let matchers = new Array<autoguard.api.RouteMatcher>();
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("channels")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, matchers),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options: Record<string, autoguard.api.JSON> = {};
+				options["query"] = matchers[1].getValue();
+				options["token"] = autoguard.api.decodeParameterValue(raw.parameters, "token", true);
+				options["anchor"] = autoguard.api.decodeParameterValue(raw.parameters, "anchor", true);
+				options["offset"] = autoguard.api.decodeParameterValue(raw.parameters, "offset", false);
+				options["limit"] = autoguard.api.decodeParameterValue(raw.parameters, "limit", false);
+				options = { ...options, ...autoguard.api.decodeUndeclaredParameters(raw.parameters, Object.keys(options)) };
+				let headers: Record<string, autoguard.api.JSON> = {};
+				headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+				let payload = raw.payload;
+				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getChannels"], serverOptions?.debugMode);
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getChannels"](new autoguard.api.ClientRequest(request, true, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getChannels"], serverOptions?.debugMode);
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = autoguard.api.serializePayload(response.payload);
+								let defaultHeaders = serverOptions?.defaultHeaders?.slice() ?? [];
+								defaultHeaders.push(["Content-Type", "application/json; charset=utf-8"]);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, defaultHeaders);
+							}
+						};
+					}
+				};
+			}
+		};
+	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let matchers = new Array<autoguard.api.RouteMatcher>();
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("channels")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("")));
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, matchers),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options: Record<string, autoguard.api.JSON> = {};
+				options["channel_id"] = matchers[1].getValue();
+				options["token"] = autoguard.api.decodeParameterValue(raw.parameters, "token", true);
+				options = { ...options, ...autoguard.api.decodeUndeclaredParameters(raw.parameters, Object.keys(options)) };
+				let headers: Record<string, autoguard.api.JSON> = {};
+				headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+				let payload = raw.payload;
+				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getChannel"], serverOptions?.debugMode);
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getChannel"](new autoguard.api.ClientRequest(request, true, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getChannel"], serverOptions?.debugMode);
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = autoguard.api.serializePayload(response.payload);
+								let defaultHeaders = serverOptions?.defaultHeaders?.slice() ?? [];
+								defaultHeaders.push(["Content-Type", "application/json; charset=utf-8"]);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, defaultHeaders);
+							}
+						};
+					}
+				};
+			}
+		};
+	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let matchers = new Array<autoguard.api.RouteMatcher>();
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("channels")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("context")));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("")));
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, matchers),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options: Record<string, autoguard.api.JSON> = {};
+				options["channel_id"] = matchers[1].getValue();
+				options["token"] = autoguard.api.decodeParameterValue(raw.parameters, "token", true);
+				options = { ...options, ...autoguard.api.decodeUndeclaredParameters(raw.parameters, Object.keys(options)) };
+				let headers: Record<string, autoguard.api.JSON> = {};
+				headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+				let payload = raw.payload;
+				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getChannelContext"], serverOptions?.debugMode);
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getChannelContext"](new autoguard.api.ClientRequest(request, true, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getChannelContext"], serverOptions?.debugMode);
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = autoguard.api.serializePayload(response.payload);
+								let defaultHeaders = serverOptions?.defaultHeaders?.slice() ?? [];
+								defaultHeaders.push(["Content-Type", "application/json; charset=utf-8"]);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, defaultHeaders);
+							}
+						};
+					}
+				};
+			}
+		};
+	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let matchers = new Array<autoguard.api.RouteMatcher>();
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("channels")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("content")));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("")));
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, matchers),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options: Record<string, autoguard.api.JSON> = {};
+				options["channel_id"] = matchers[1].getValue();
+				options["token"] = autoguard.api.decodeParameterValue(raw.parameters, "token", true);
+				options = { ...options, ...autoguard.api.decodeUndeclaredParameters(raw.parameters, Object.keys(options)) };
+				let headers: Record<string, autoguard.api.JSON> = {};
+				headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+				let payload = raw.payload;
+				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getChannelContent"], serverOptions?.debugMode);
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getChannelContent"](new autoguard.api.ClientRequest(request, true, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getChannelContent"], serverOptions?.debugMode);
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = response.payload ?? [];
+								let defaultHeaders = serverOptions?.defaultHeaders?.slice() ?? [];
+								defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, defaultHeaders);
+							}
+						};
+					}
+				};
+			}
+		};
+	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let matchers = new Array<autoguard.api.RouteMatcher>();
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("channels")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("content")));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("media")));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("")));
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, matchers),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options: Record<string, autoguard.api.JSON> = {};
+				options["channel_id"] = matchers[1].getValue();
+				options["token"] = autoguard.api.decodeParameterValue(raw.parameters, "token", true);
+				options = { ...options, ...autoguard.api.decodeUndeclaredParameters(raw.parameters, Object.keys(options)) };
+				let headers: Record<string, autoguard.api.JSON> = {};
+				headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+				let payload = raw.payload;
+				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getChannelContentMediaPlaylist"], serverOptions?.debugMode);
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getChannelContentMediaPlaylist"](new autoguard.api.ClientRequest(request, true, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getChannelContentMediaPlaylist"], serverOptions?.debugMode);
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = response.payload ?? [];
+								let defaultHeaders = serverOptions?.defaultHeaders?.slice() ?? [];
+								defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, defaultHeaders);
+							}
+						};
+					}
+				};
+			}
+		};
+	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let matchers = new Array<autoguard.api.RouteMatcher>();
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("channels")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("content")));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("media")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, false, new autoguard.guards.IntegerGuard(0, undefined)));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, false, new autoguard.guards.IntegerGuard(0, undefined)));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("")));
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, matchers),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options: Record<string, autoguard.api.JSON> = {};
+				options["channel_id"] = matchers[1].getValue();
+				options["program_index"] = matchers[4].getValue();
+				options["segment_index"] = matchers[5].getValue();
+				options["token"] = autoguard.api.decodeParameterValue(raw.parameters, "token", true);
+				options = { ...options, ...autoguard.api.decodeUndeclaredParameters(raw.parameters, Object.keys(options)) };
+				let headers: Record<string, autoguard.api.JSON> = {};
+				headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+				let payload = raw.payload;
+				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getChannelContentMediaSegment"], serverOptions?.debugMode);
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getChannelContentMediaSegment"](new autoguard.api.ClientRequest(request, true, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getChannelContentMediaSegment"], serverOptions?.debugMode);
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = response.payload ?? [];
+								let defaultHeaders = serverOptions?.defaultHeaders?.slice() ?? [];
+								defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, defaultHeaders);
+							}
+						};
+					}
+				};
+			}
+		};
+	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let matchers = new Array<autoguard.api.RouteMatcher>();
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("channels")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("content")));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("subtitle")));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("")));
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, matchers),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options: Record<string, autoguard.api.JSON> = {};
+				options["channel_id"] = matchers[1].getValue();
+				options["token"] = autoguard.api.decodeParameterValue(raw.parameters, "token", true);
+				options = { ...options, ...autoguard.api.decodeUndeclaredParameters(raw.parameters, Object.keys(options)) };
+				let headers: Record<string, autoguard.api.JSON> = {};
+				headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+				let payload = raw.payload;
+				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getChannelContentSubtitlePlaylist"], serverOptions?.debugMode);
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getChannelContentSubtitlePlaylist"](new autoguard.api.ClientRequest(request, true, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getChannelContentSubtitlePlaylist"], serverOptions?.debugMode);
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = response.payload ?? [];
+								let defaultHeaders = serverOptions?.defaultHeaders?.slice() ?? [];
+								defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, defaultHeaders);
+							}
+						};
+					}
+				};
+			}
+		};
+	});
+	endpoints.push((raw, auxillary) => {
+		let method = "GET";
+		let matchers = new Array<autoguard.api.RouteMatcher>();
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("channels")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, true, autoguard.guards.String));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("content")));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("subtitle")));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, false, new autoguard.guards.IntegerGuard(0, undefined)));
+		matchers.push(new autoguard.api.DynamicRouteMatcher(1, 1, false, new autoguard.guards.IntegerGuard(0, undefined)));
+		matchers.push(new autoguard.api.StaticRouteMatcher(decodeURIComponent("")));
+		return {
+			acceptsComponents: () => autoguard.api.acceptsComponents(raw.components, matchers),
+			acceptsMethod: () => autoguard.api.acceptsMethod(raw.method, method),
+			validateRequest: async () => {
+				let options: Record<string, autoguard.api.JSON> = {};
+				options["channel_id"] = matchers[1].getValue();
+				options["program_index"] = matchers[4].getValue();
+				options["segment_index"] = matchers[5].getValue();
+				options["token"] = autoguard.api.decodeParameterValue(raw.parameters, "token", true);
+				options = { ...options, ...autoguard.api.decodeUndeclaredParameters(raw.parameters, Object.keys(options)) };
+				let headers: Record<string, autoguard.api.JSON> = {};
+				headers = { ...headers, ...autoguard.api.decodeUndeclaredHeaders(raw.headers, Object.keys(headers)) };
+				let payload = raw.payload;
+				let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Requests["getChannelContentSubtitleSegment"], serverOptions?.debugMode);
+				let request = guard.as({ options, headers, payload }, "request");
+				return {
+					handleRequest: async () => {
+						let response = await routes["getChannelContentSubtitleSegment"](new autoguard.api.ClientRequest(request, true, auxillary));
+						return {
+							validateResponse: async () => {
+								let guard = autoguard.api.wrapMessageGuard(shared.Autoguard.Responses["getChannelContentSubtitleSegment"], serverOptions?.debugMode);
+								guard.as(response, "response");
+								let status = response.status ?? 200;
+								let headers = new Array<[string, string]>();
+								headers.push(...autoguard.api.encodeUndeclaredHeaderPairs(response.headers ?? {}, headers.map((header) => header[0])));
+								let payload = response.payload ?? [];
+								let defaultHeaders = serverOptions?.defaultHeaders?.slice() ?? [];
+								defaultHeaders.push(["Content-Type", "application/octet-stream"]);
+								return autoguard.api.finalizeResponse({ status, headers, payload }, defaultHeaders);
+							}
+						};
+					}
+				};
+			}
+		};
+	});
 	return (request, response) => autoguard.api.route(endpoints, request, response, serverOptions);
 };

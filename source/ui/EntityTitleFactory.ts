@@ -25,6 +25,15 @@ export class EntityTitleFactory {
 		if (api.Artist.is(entity)) {
 			return this.forArtist(entity);
 		}
+		if (api.Category.is(entity)) {
+			return this.forCategory(entity);
+		}
+		if (api.Channel.is(entity)) {
+			return this.forChannel(entity);
+		}
+		if (api.Cue.is(entity)) {
+			return this.forCue(entity);
+		}
 		if (api.Directory.is(entity)) {
 			return this.forDirectory(entity);
 		}
@@ -58,6 +67,10 @@ export class EntityTitleFactory {
 		if (api.User.is(entity)) {
 			return this.forUser(entity);
 		}
+		if (api.Year.is(entity)) {
+			return this.forYear(entity);
+		}
+		let dummy: never = entity;
 		throw `Expected code to be unreachable!`;
 	}
 
@@ -75,6 +88,14 @@ export class EntityTitleFactory {
 
 	forCategory(category: api.CategoryBase): xnode.XElement {
 		return this.make(this.entityLinkFactory.forCategory(category), category.title);
+	}
+
+	forChannel(channel: api.ChannelBase): xnode.XElement {
+		return this.make(this.entityLinkFactory.forChannel(channel), channel.title);
+	}
+
+	forCue(cue: api.CueBase): xnode.XElement {
+		return this.make(this.entityLinkFactory.forCue(cue), `Cue`);
 	}
 
 	forDirectory(directory: api.DirectoryBase): xnode.XElement {
