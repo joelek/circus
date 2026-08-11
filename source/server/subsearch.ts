@@ -127,6 +127,7 @@ async function processQueue(): Promise<void> {
 	setTimeout(processQueue, 10 * 1000);
 }
 
+// NOTE: This runs before indexer.
 dbschema.transactionManager.enqueueReadableTransaction(async (queue) => {
 	for (let video_file of await dbschema.stores.video_files.filter(queue)) {
 		let target = [".", "private", "stills", utils.hexid(video_file.file_id)];

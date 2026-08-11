@@ -207,7 +207,7 @@ class MessageHandler {
 				}
 				onmessage(message);
 			} catch (error) {
-				console.log(error);
+				console.log("MessageHandler incoming message error", error);
 			}
 		});
 	}
@@ -327,7 +327,7 @@ class MediaHandler {
 				this.listeners.route(type, data);
 			});
 		} catch (error) {
-			console.log(JSON.stringify(data, null, 2));
+			console.log("MediaHandler incoming message error", JSON.stringify(data, null, 2));
 		}
 	}
 
@@ -475,6 +475,9 @@ class ChromecastPlayer {
 						if (this.context.isDeviceLocal.getState()) {
 							if (status.playerState === "IDLE") {
 								this.context.setPlaying(false);
+								if (status.idleReason != null) {
+									this.mediaHandler.mediaSessionId.updateState(undefined);
+								}
 								if (status.idleReason === "FINISHED") {
 									this.context.next();
 								}
@@ -492,8 +495,6 @@ class ChromecastPlayer {
 								this.context.setPlaying(false);
 							}
 						}
-					} else {
-						this.mediaHandler.mediaSessionId.updateState(undefined);
 					}
 				}
 			}
