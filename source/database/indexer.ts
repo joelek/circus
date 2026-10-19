@@ -1513,7 +1513,7 @@ export async function runIndexer(): Promise<void> {
 	libfs.writeFileSync("./private/stats.json", JSON.stringify(transactionManager.getStatistics(), null, "\t"));
 };
 
-runIndexer()
+export const INDEXER = runIndexer()
 	.catch((error) => console.log(error));
 
 process.on("SIGTERM", () => {
